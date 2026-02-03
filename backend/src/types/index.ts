@@ -421,17 +421,176 @@ export interface GoHireInvitationResponse {
   message: string;
 }
 
-// Interview Evaluation Types
+// Interview Evaluation Types - Comprehensive
 export interface InterviewEvaluation {
-  overallScore: number;
-  technicalScore: number;
-  communicationScore: number;
-  cultureFitScore: number;
-  strengths: string[];
-  weaknesses: string[];
-  keyInsights: string[];
-  hiringRecommendation: string;
-  suggestedFollowUp: string[];
+  // Core scores and decision
+  score: number; // 0-100 overall match score
+  summary: string; // Persuasive candidate highlight intro
+  strengths: string[]; // 3-5 key strengths with evidence
+  weaknesses: string[]; // 2-4 potential concerns or gaps
+  recommendation: string; // Detailed hiring recommendation with reasoning
+  hiringDecision: 'Strong Hire' | 'Hire' | 'Weak Hire' | 'No Hire' | 'Disqualified';
+
+  // Skills assessment (legacy compatibility)
+  skillsAssessment: SkillAssessment[];
+
+  // 1. Must-Have Requirements Analysis (Critical - determines disqualification)
+  mustHaveAnalysis: MustHaveInterviewAnalysis;
+
+  // 2. Technical Capability Assessment
+  technicalAnalysis: TechnicalAnalysis;
+
+  // 3. JD Match & Extra Skills
+  jdMatch: JDMatchAnalysis;
+
+  // 4. Behavioral Analysis
+  behavioralAnalysis: BehavioralAnalysis;
+
+  // 5. Interviewer's Kit
+  interviewersKit: InterviewersKit;
+
+  // 6. Level & Fit Assessment
+  levelAssessment: 'Expert' | 'Senior' | 'Intermediate' | 'Junior';
+  expertAdvice: string; // Professional advice on level, potential growth, specific fit
+  suitableWorkTypes: string[]; // Specific roles they're best suited for
+
+  // 7. Question-Answer Assessment
+  questionAnswerAssessment: QuestionAnswerAssessment[];
+
+  // 8. Cheating Analysis (optional)
+  cheatingAnalysis?: CheatingAnalysis;
+}
+
+// Must-Have Interview Analysis - Determines disqualification
+export interface MustHaveInterviewAnalysis {
+  // Extracted must-have requirements from JD
+  extractedMustHaves: {
+    skills: Array<{
+      skill: string;
+      reason: string; // Why it's a must-have
+      criticality: 'Dealbreaker' | 'Critical' | 'Important';
+    }>;
+    experiences: Array<{
+      experience: string;
+      reason: string;
+      minimumYears?: string;
+      criticality: 'Dealbreaker' | 'Critical' | 'Important';
+    }>;
+    qualifications: Array<{
+      qualification: string;
+      reason: string;
+      criticality: 'Dealbreaker' | 'Critical' | 'Important';
+    }>;
+  };
+  
+  // Verification through interview answers
+  interviewVerification: {
+    verified: Array<{
+      requirement: string;
+      verifiedBy: string; // Which Q&A verified this
+      evidence: string; // Quote or summary proving competency
+      confidenceLevel: 'High' | 'Medium' | 'Low';
+    }>;
+    failed: Array<{
+      requirement: string;
+      failedAt: string; // Which Q&A revealed the failure
+      reason: string; // Why they failed (wrong answer, no knowledge, etc.)
+      severity: 'Dealbreaker' | 'Critical' | 'Significant';
+    }>;
+    notTested: Array<{
+      requirement: string;
+      recommendation: string; // What to ask in next round
+    }>;
+  };
+  
+  // Scoring
+  mustHaveScore: number; // 0-100
+  passRate: string; // e.g., "3/5 must-haves verified"
+  
+  // Disqualification
+  disqualified: boolean;
+  disqualificationReasons: string[];
+  
+  // Overall assessment
+  assessment: string;
+}
+
+export interface SkillAssessment {
+  skill: string;
+  rating: 'Excellent' | 'Good' | 'Adequate' | 'Insufficient' | 'Not Demonstrated';
+  evidence: string;
+}
+
+export interface TechnicalAnalysis {
+  summary: string; // Deep dive into technical depth/breadth
+  depthRating: 'Expert' | 'Advanced' | 'Intermediate' | 'Novice';
+  details: string[]; // Specific technical points/findings
+  provenSkills: string[]; // Skills with demonstrated real depth
+  claimedButUnverified: string[]; // Skills claimed but not proven
+  responseQuality: 'High' | 'Medium' | 'Low';
+}
+
+export interface JDMatchAnalysis {
+  requirements: JDRequirementMatch[];
+  hardRequirementsAnalysis: HardRequirementAnalysis[];
+  extraSkillsFound: string[]; // Skills NOT in JD but demonstrated
+  summary: string;
+}
+
+export interface JDRequirementMatch {
+  requirement: string; // Copy verbatim from JD
+  matchLevel: 'High' | 'Medium' | 'Low' | 'None';
+  score: number; // 0-10
+  explanation: string; // Evidence-based justification
+}
+
+export interface HardRequirementAnalysis {
+  requirement: string; // The mandatory requirement
+  met: boolean;
+  analysis: string; // Explanation of why met or not
+}
+
+export interface BehavioralAnalysis {
+  summary: string; // Assessment of soft skills/culture
+  compatibility: 'High' | 'Medium' | 'Low';
+  details: string[]; // e.g., "Communication: Clear", "Adaptability: Strong"
+}
+
+export interface InterviewersKit {
+  suggestedQuestions: string[]; // Questions to probe gaps/verify skills
+  focusAreas: string[]; // Areas needing more investigation
+}
+
+export interface QuestionAnswerAssessment {
+  question: string; // The question asked
+  answer: string; // Summary of candidate's response
+  score: number; // 0-100 score for this specific answer
+  correctness: 'Correct' | 'Partially Correct' | 'Incorrect';
+  thoughtProcess: string; // Evaluation of their reasoning
+  logicalThinking: string; // Evaluation of their logic
+  clarity: 'High' | 'Medium' | 'Low';
+  completeness: 'Complete' | 'Partial' | 'Incomplete';
+  // Must-have requirement linkage
+  relatedMustHave?: string; // If this Q&A tests a must-have requirement
+  mustHaveVerified?: boolean; // If a must-have requirement, did they pass?
+  weight: 'Must-Have' | 'Important' | 'Nice-to-Have'; // Question importance weight
+}
+
+// Cheating Detection Types
+export interface CheatingAnalysis {
+  suspicionScore: number; // 0-100 (0=definitely genuine, 100=definitely AI-assisted)
+  riskLevel: 'Low' | 'Medium' | 'High' | 'Critical';
+  summary: string; // 2-3 sentence assessment
+  indicators: CheatingIndicator[];
+  authenticitySignals: string[]; // List of genuine behavior signs found
+  recommendation: string; // Action recommendation
+}
+
+export interface CheatingIndicator {
+  type: string; // Category name
+  description: string; // What was detected
+  severity: 'Low' | 'Medium' | 'High';
+  evidence: string; // Direct quote or example
 }
 
 // API Request Types
@@ -451,6 +610,8 @@ export interface EvaluateInterviewRequest {
   resume: string;
   jd: string;
   interviewScript: string;
+  includeCheatingDetection?: boolean;
+  userInstructions?: string;
 }
 
 // API Response Types

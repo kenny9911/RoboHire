@@ -337,13 +337,21 @@ router.post('/parse-jd', upload.single('file'), async (req: Request, res: Respon
 /**
  * POST /api/v1/evaluate-interview
  * Evaluate an interview transcript
+ * Optional: include_cheating_detection (boolean) - Run cheating detection analysis
+ * Optional: user_instructions (string) - Special instructions for evaluation
  */
 router.post('/evaluate-interview', async (req: Request, res: Response) => {
   const requestId = generateRequestId();
   logger.startRequest(requestId, '/api/v1/evaluate-interview', 'POST');
 
   try {
-    const { resume, jd, interviewScript } = req.body as EvaluateInterviewRequest;
+    const { 
+      resume, 
+      jd, 
+      interviewScript,
+      includeCheatingDetection,
+      userInstructions 
+    } = req.body as EvaluateInterviewRequest;
 
     // Step 1: Validate input
     const validateStep = logger.startStep(requestId, 'Validate input');
@@ -360,16 +368,28 @@ router.post('/evaluate-interview', async (req: Request, res: Response) => {
       resumeLength: resume.length,
       jdLength: jd.length,
       scriptLength: interviewScript.length,
+      includeCheatingDetection: !!includeCheatingDetection,
+      hasUserInstructions: !!userInstructions,
     });
 
-    // Step 2: Execute agent
-    const result = await evaluationAgent.evaluate(resume, jd, interviewScript, requestId);
+    // Step 2: Execute agent with optional cheating detection
+    const result = await evaluationAgent.evaluate(
+      resume, 
+      jd, 
+      interviewScript,
+      {
+        includeCheatingDetection: !!includeCheatingDetection,
+        userInstructions,
+      },
+      requestId
+    );
 
     logger.endRequest(requestId, 'success', 200);
     return res.json({
       success: true,
       data: result,
       requestId,
+      cheatingDetectionIncluded: !!includeCheatingDetection,
     });
   } catch (error) {
     logger.error('API', 'evaluate-interview failed', {

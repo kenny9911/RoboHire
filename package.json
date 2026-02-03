@@ -12,7 +12,12 @@
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
     "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
-    "start": "npm run start --workspace=backend"
+    "start": "npm run start --workspace=backend",
+    "restart": "./scripts/restart.sh",
+    "stop": "./scripts/stop.sh",
+    "services:start": "./scripts/start.sh",
+    "services:stop": "./scripts/stop.sh",
+    "services:restart": "./scripts/restart.sh"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

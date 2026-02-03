@@ -9,9 +9,9 @@ import EvaluateInterview from './pages/EvaluateInterview';
 const navItems = [
   { path: '/', label: 'Match Resume', icon: '🎯' },
   { path: '/invite', label: 'Invite Candidate', icon: '✉️' },
+  { path: '/evaluate', label: 'Evaluate Interview', icon: '📊' },
   { path: '/parse-resume', label: 'Parse Resume', icon: '📄' },
   { path: '/parse-jd', label: 'Parse JD', icon: '📋' },
-  { path: '/evaluate', label: 'Evaluate Interview', icon: '📊' },
 ];
 
 function App() {
