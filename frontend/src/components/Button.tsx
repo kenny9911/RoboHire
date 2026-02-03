@@ -7,7 +7,7 @@ interface ButtonProps {
 }
 
 export default function Button({ onClick, loading, disabled, children, variant = 'primary' }: ButtonProps) {
-  const baseStyles = 'px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2';
+  const baseStyles = 'px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto';
   const variants = {
     primary: 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300',
     secondary: 'bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:bg-gray-100',

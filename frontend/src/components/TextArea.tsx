@@ -113,7 +113,7 @@ export default function TextArea({ label, value, onChange, placeholder, rows = 6
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
+        className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
       />
       {showActions && value.trim() && (
         <div className="mt-1 text-xs text-gray-400 text-right">

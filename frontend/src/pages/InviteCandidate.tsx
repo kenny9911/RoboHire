@@ -56,6 +56,7 @@ export default function InviteCandidate() {
       return;
     }
 
+    setShowExternalApi(true);
     setLoading(true);
     setError(null);
     setResult(null);
