@@ -7,6 +7,7 @@ import JsonViewer from '../components/JsonViewer';
 import EvaluationResultDisplay from '../components/EvaluationResultDisplay';
 import ApiInfoPanel from '../components/ApiInfoPanel';
 import { useFormData } from '../context/FormDataContext';
+import { useTranslation } from 'react-i18next';
 
 interface EvaluationData {
   score: number;
@@ -103,6 +104,7 @@ interface ApiResponse {
 }
 
 export default function EvaluateInterview() {
+  const { t } = useTranslation();
   const { formData, setEvaluateInterviewData } = useFormData();
   const { resume, jd, interviewScript } = formData.evaluateInterview;
 
@@ -125,7 +127,7 @@ export default function EvaluateInterview() {
 
   const handleSubmit = async () => {
     if (!resume.trim() || !jd.trim() || !interviewScript.trim()) {
-      setError('Please provide resume, job description, and interview transcript');
+      setError(t('pages.evaluateInterview.errorMissingFields'));
       return;
     }
 
@@ -164,8 +166,8 @@ export default function EvaluateInterview() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800">Evaluate Interview</h2>
-        <p className="text-gray-500 mt-1">Analyze an interview transcript against resume and JD</p>
+        <h2 className="text-2xl font-bold text-gray-800">{t('pages.evaluateInterview.title')}</h2>
+        <p className="text-gray-500 mt-1">{t('pages.evaluateInterview.subtitle')}</p>
       </div>
 
       <ApiInfoPanel
@@ -186,34 +188,34 @@ export default function EvaluateInterview() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <TextArea
-          label="Resume"
+          label={t('pages.evaluateInterview.resumeLabel')}
           value={resume}
           onChange={setResume}
-          placeholder="Paste resume content here..."
+          placeholder={t('pages.evaluateInterview.resumePlaceholder')}
           rows={8}
         />
         <TextArea
-          label="Job Description"
+          label={t('pages.evaluateInterview.jdLabel')}
           value={jd}
           onChange={setJd}
-          placeholder="Paste job description here..."
+          placeholder={t('pages.evaluateInterview.jdPlaceholder')}
           rows={8}
         />
       </div>
 
       <div className="mb-6">
         <TextArea
-          label="Interview Transcript"
+          label={t('pages.evaluateInterview.interviewLabel')}
           value={interviewScript}
           onChange={setInterviewScript}
-          placeholder="Paste the interview transcript here..."
+          placeholder={t('pages.evaluateInterview.interviewPlaceholder')}
           rows={10}
         />
       </div>
 
       {/* Options Section */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Evaluation Options</h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('pages.evaluateInterview.optionsTitle')}</h3>
         
         {/* Cheating Detection Toggle */}
         <div className="flex items-center mb-4">
@@ -226,23 +228,23 @@ export default function EvaluateInterview() {
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             <span className="ml-3 text-sm font-medium text-gray-700">
-              Include Cheating Detection
+              {t('pages.evaluateInterview.includeCheating')}
             </span>
           </label>
           <span className="ml-2 text-xs text-gray-500">
-            (Analyzes responses for AI/LLM-assisted answers)
+            {t('pages.evaluateInterview.cheatingHint')}
           </span>
         </div>
 
         {/* User Instructions */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Special Instructions (Optional)
+            {t('pages.evaluateInterview.specialInstructions')}
           </label>
           <textarea
             value={userInstructions}
             onChange={(e) => setUserInstructions(e.target.value)}
-            placeholder="Add any special instructions for the evaluation, e.g., 'Focus on system design skills' or 'Pay attention to communication clarity'"
+            placeholder={t('pages.evaluateInterview.specialInstructionsPlaceholder')}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
           />
@@ -251,13 +253,13 @@ export default function EvaluateInterview() {
 
       <div className="mb-6">
         <Button onClick={handleSubmit} loading={loading}>
-          {includeCheatingDetection ? 'Evaluate Interview (with Cheating Detection)' : 'Evaluate Interview'}
+          {includeCheatingDetection ? t('pages.evaluateInterview.buttonWithCheating') : t('pages.evaluateInterview.buttonDefault')}
         </Button>
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-700">Evaluation Result</h3>
+          <h3 className="text-lg font-semibold text-gray-700">{t('pages.evaluateInterview.resultTitle')}</h3>
           {result?.data && (
             <div className="flex gap-2">
               <button
@@ -268,7 +270,7 @@ export default function EvaluateInterview() {
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                Formatted View
+                {t('actions.formattedView')}
               </button>
               <button
                 onClick={() => setViewMode('json')}
@@ -278,7 +280,7 @@ export default function EvaluateInterview() {
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                JSON View
+                {t('actions.jsonView')}
               </button>
             </div>
           )}
@@ -290,8 +292,8 @@ export default function EvaluateInterview() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <span className="text-gray-600">
                 {includeCheatingDetection 
-                  ? 'Evaluating interview and running cheating detection...' 
-                  : 'Evaluating interview...'}
+                  ? t('pages.evaluateInterview.loadingWithCheating') 
+                  : t('pages.evaluateInterview.loadingDefault')}
               </span>
             </div>
           </div>
@@ -299,7 +301,7 @@ export default function EvaluateInterview() {
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-            <span className="font-medium">Error:</span> {error}
+            <span className="font-medium">{t('messages.error')}:</span> {error}
           </div>
         )}
 
@@ -307,14 +309,14 @@ export default function EvaluateInterview() {
           <>
             {result.cheatingDetectionIncluded && (
               <div className="mb-4 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                Cheating detection analysis included in results
+                {t('pages.evaluateInterview.cheatingIncluded')}
               </div>
             )}
             
             {viewMode === 'formatted' ? (
               <EvaluationResultDisplay data={result.data} />
             ) : (
-              <JsonViewer data={result.data} title="Evaluation Result JSON" />
+              <JsonViewer data={result.data} title={t('pages.evaluateInterview.jsonTitle')} />
             )}
           </>
         )}

@@ -1,0 +1,153 @@
+{
+  "app": {
+    "title": "GoHire API",
+    "subtitle": "Panel de Administracion"
+  },
+  "language": {
+    "label": "Idioma"
+  },
+  "nav": {
+    "matchResume": "Emparejar CV",
+    "inviteCandidate": "Invitar Candidato",
+    "evaluateInterview": "Evaluar Entrevista",
+    "parseResume": "Analizar CV",
+    "parseJd": "Analizar JD"
+  },
+  "actions": {
+    "paste": "Pegar",
+    "pasted": "Pegado",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "clear": "Limpiar",
+    "download": "Descargar",
+    "search": "Buscar...",
+    "expand": "Expandir",
+    "collapse": "Contraer",
+    "formatted": "Formateado",
+    "json": "JSON",
+    "formattedView": "Vista formateada",
+    "jsonView": "Vista JSON",
+    "newAnalysis": "Nuevo analisis",
+    "analyzing": "Analizando...",
+    "analyzeMatch": "Analizar coincidencia"
+  },
+  "status": {
+    "sending": "Enviando...",
+    "requestId": "ID de solicitud",
+    "status": "Estado"
+  },
+  "units": {
+    "characters": "caracteres",
+    "lines": "lineas"
+  },
+  "messages": {
+    "noResults": "Aun no hay resultados. Envia una solicitud para verlos.",
+    "error": "Error",
+    "thisMayTake": "Esto puede tardar 10-15 segundos...",
+    "noMatchesFound": "No se encontraron coincidencias"
+  },
+  "tooltips": {
+    "paste": "Pegar desde el portapapeles (Ctrl+V)",
+    "copy": "Copiar al portapapeles (Ctrl+C)",
+    "clear": "Limpiar contenido",
+    "downloadJson": "Descargar JSON",
+    "copyJson": "Copiar JSON"
+  },
+  "components": {
+    "fileUpload": {
+      "defaultLabel": "Subir PDF",
+      "dragDrop": "Arrastra y suelta o haz clic para explorar"
+    },
+    "resultViewer": {
+      "title": "Resultado"
+    },
+    "jsonViewer": {
+      "title": "Respuesta JSON"
+    }
+  },
+  "pages": {
+    "matchResume": {
+      "title": "Emparejar CV con JD",
+      "subtitle": "Analiza que tan bien coincide un CV con una descripcion de puesto",
+      "resultsTitle": "Resultados del analisis",
+      "resultsSubtitle": "Analisis completo de ajuste candidato-puesto",
+      "resumeLabel": "CV",
+      "jdLabel": "Descripcion del puesto",
+      "resumePlaceholder": "Paste resume content here...\n\nExample:\nJohn Doe\nSenior Software Engineer\njohn.doe@email.com\n\nEXPERIENCE:\nGoogle (2019-2024) - Senior Software Engineer\n- Led team of 5 engineers\n- Built React dashboard for 10M+ users\n\nSKILLS: Python, JavaScript, React, Node.js, AWS\n\nEDUCATION:\nMIT - BS Computer Science, 2017",
+      "jdPlaceholder": "Paste job description here...\n\nExample:\nSenior Software Engineer at TechCorp\nLocation: San Francisco, CA\n\nAbout the role:\nWe are looking for a Senior Software Engineer to lead our backend team.\n\nRequired Qualifications:\n- 5+ years of software engineering experience\n- Expert-level Python programming\n- Strong experience with React\n\nNice to have:\n- AWS or cloud infrastructure experience\n- Machine Learning background\n\nResponsibilities:\n- Lead technical design decisions\n- Mentor junior engineers",
+      "errorMissing": "Proporciona el CV y la descripcion del puesto"
+    },
+    "inviteCandidate": {
+      "title": "Invitar candidato a entrevista",
+      "subtitle": "Enviar invitacion via GoHire 一键邀约 API",
+      "toggleExternal": "Mostrar solicitud externa de GoHire API",
+      "externalHint": "Ver la solicitud real enviada a GoHire 一键邀约 API para pruebas",
+      "recruiterEmail": "Correo del reclutador",
+      "interviewerRequirement": "Requisitos del entrevistador",
+      "optional": "(opcional)",
+      "recruiterPlaceholder": "hr@yourcompany.com",
+      "interviewerPlaceholder": "p. ej., preguntar por ubicacion preferida, salario esperado...",
+      "recruiterHelp": "Se usa para notificaciones y como destinatario BCC",
+      "interviewerHelp": "Requisitos adicionales para la entrevista (ubicacion, rondas, etc.)",
+      "resumeLabel": "CV (debe incluir nombre y correo del candidato)",
+      "resumePlaceholder": "Pega el contenido del CV... Debe incluir nombre y correo.",
+      "jdLabel": "Descripcion del puesto",
+      "jdPlaceholder": "Pega la descripcion del puesto...",
+      "sendInvitation": "Enviar invitacion",
+      "successTitle": "¡Invitacion enviada con exito!",
+      "candidateInfo": "Informacion del candidato",
+      "name": "Nombre",
+      "email": "Correo",
+      "position": "Puesto",
+      "loginLink": "Enlace de acceso",
+      "scanQr": "Escanear QR",
+      "wechatHint": "Para acceso movil via WeChat",
+      "errorTitle": "La invitacion fallo",
+      "apiResponse": "Respuesta API",
+      "errorMissingResumeJd": "Proporciona el CV y la descripcion del puesto",
+      "errorMissingRecruiter": "Proporciona el correo del reclutador",
+      "externalApiTitle": "GoHire API externa",
+      "copyCode": "Copiar codigo",
+      "tip": "Consejo: copia y ejecuta este codigo para probar la GoHire API"
+    },
+    "parseResume": {
+      "title": "Analizar CV",
+      "subtitle": "Extraer datos estructurados de un PDF de CV",
+      "uploadLabel": "Subir PDF del CV",
+      "parseButton": "Analizar CV",
+      "parsedData": "Datos analizados",
+      "errorMissingFile": "Sube un archivo PDF de CV"
+    },
+    "parseJd": {
+      "title": "Analizar descripcion del puesto",
+      "subtitle": "Extraer datos estructurados de un PDF de JD",
+      "uploadLabel": "Subir PDF de JD",
+      "parseButton": "Analizar JD",
+      "parsedData": "Datos analizados",
+      "errorMissingFile": "Sube un archivo PDF de descripcion del puesto"
+    },
+    "evaluateInterview": {
+      "title": "Evaluar entrevista",
+      "subtitle": "Analiza una entrevista contra el CV y la JD",
+      "resumeLabel": "CV",
+      "jdLabel": "Descripcion del puesto",
+      "interviewLabel": "Transcripcion de entrevista",
+      "resumePlaceholder": "Pega el contenido del CV...",
+      "jdPlaceholder": "Pega la descripcion del puesto...",
+      "interviewPlaceholder": "Pega la transcripcion de la entrevista...",
+      "optionsTitle": "Opciones de evaluacion",
+      "includeCheating": "Incluir deteccion de trampa",
+      "cheatingHint": "(Analiza respuestas asistidas por AI/LLM)",
+      "specialInstructions": "Instrucciones especiales (opcional)",
+      "specialInstructionsPlaceholder": "Agrega instrucciones especiales, p. ej., 'Enfocarse en diseno de sistemas'",
+      "buttonWithCheating": "Evaluar entrevista (con deteccion de trampa)",
+      "buttonDefault": "Evaluar entrevista",
+      "resultTitle": "Resultado de evaluacion",
+      "loadingDefault": "Evaluando entrevista...",
+      "loadingWithCheating": "Evaluando entrevista y deteccion de trampa...",
+      "cheatingIncluded": "Se incluyo analisis de deteccion de trampa",
+      "errorMissingFields": "Proporciona CV, descripcion del puesto y transcripcion de entrevista",
+      "jsonTitle": "Resultado de evaluacion JSON"
+    }
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "app": {
+    "title": "GoHire API",
+    "subtitle": "Painel Administrativo"
+  },
+  "language": {
+    "label": "Idioma"
+  },
+  "nav": {
+    "matchResume": "Combinar Curriculo",
+    "inviteCandidate": "Convidar Candidato",
+    "evaluateInterview": "Avaliar Entrevista",
+    "parseResume": "Analisar Curriculo",
+    "parseJd": "Analisar JD"
+  },
+  "actions": {
+    "paste": "Colar",
+    "pasted": "Colado",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "clear": "Limpar",
+    "download": "Baixar",
+    "search": "Pesquisar...",
+    "expand": "Expandir",
+    "collapse": "Recolher",
+    "formatted": "Formatado",
+    "json": "JSON",
+    "formattedView": "Visualizacao formatada",
+    "jsonView": "Visualizacao JSON",
+    "newAnalysis": "Nova analise",
+    "analyzing": "Analisando...",
+    "analyzeMatch": "Analisar correspondencia"
+  },
+  "status": {
+    "sending": "Enviando...",
+    "requestId": "ID da solicitacao",
+    "status": "Status"
+  },
+  "units": {
+    "characters": "caracteres",
+    "lines": "linhas"
+  },
+  "messages": {
+    "noResults": "Nenhum resultado ainda. Envie uma solicitacao para ver.",
+    "error": "Erro",
+    "thisMayTake": "Isso pode levar 10-15 segundos...",
+    "noMatchesFound": "Nenhuma correspondencia encontrada"
+  },
+  "tooltips": {
+    "paste": "Colar da area de transferencia (Ctrl+V)",
+    "copy": "Copiar para a area de transferencia (Ctrl+C)",
+    "clear": "Limpar conteudo",
+    "downloadJson": "Baixar JSON",
+    "copyJson": "Copiar JSON"
+  },
+  "components": {
+    "fileUpload": {
+      "defaultLabel": "Enviar PDF",
+      "dragDrop": "Arraste e solte ou clique para procurar"
+    },
+    "resultViewer": {
+      "title": "Resultado"
+    },
+    "jsonViewer": {
+      "title": "Resposta JSON"
+    }
+  },
+  "pages": {
+    "matchResume": {
+      "title": "Combinar Curriculo com JD",
+      "subtitle": "Analise o quanto um curriculo combina com uma descricao de vaga",
+      "resultsTitle": "Resultados da analise",
+      "resultsSubtitle": "Analise completa de adequacao candidato-vaga",
+      "resumeLabel": "Curriculo",
+      "jdLabel": "Descricao da vaga",
+      "resumePlaceholder": "Paste resume content here...\n\nExample:\nJohn Doe\nSenior Software Engineer\njohn.doe@email.com\n\nEXPERIENCE:\nGoogle (2019-2024) - Senior Software Engineer\n- Led team of 5 engineers\n- Built React dashboard for 10M+ users\n\nSKILLS: Python, JavaScript, React, Node.js, AWS\n\nEDUCATION:\nMIT - BS Computer Science, 2017",
+      "jdPlaceholder": "Paste job description here...\n\nExample:\nSenior Software Engineer at TechCorp\nLocation: San Francisco, CA\n\nAbout the role:\nWe are looking for a Senior Software Engineer to lead our backend team.\n\nRequired Qualifications:\n- 5+ years of software engineering experience\n- Expert-level Python programming\n- Strong experience with React\n\nNice to have:\n- AWS or cloud infrastructure experience\n- Machine Learning background\n\nResponsibilities:\n- Lead technical design decisions\n- Mentor junior engineers",
+      "errorMissing": "Forneca o curriculo e a descricao da vaga"
+    },
+    "inviteCandidate": {
+      "title": "Convidar candidato para entrevista",
+      "subtitle": "Enviar convite via GoHire 一键邀约 API",
+      "toggleExternal": "Mostrar solicitacao externa da GoHire API",
+      "externalHint": "Veja a solicitacao real enviada para GoHire 一键邀约 API",
+      "recruiterEmail": "Email do recrutador",
+      "interviewerRequirement": "Requisitos do entrevistador",
+      "optional": "(opcional)",
+      "recruiterPlaceholder": "hr@yourcompany.com",
+      "interviewerPlaceholder": "ex.: preferencia de local, expectativa salarial...",
+      "recruiterHelp": "Usado para notificacoes e como destinatario BCC",
+      "interviewerHelp": "Requisitos adicionais para a entrevista (local, etapas, etc.)",
+      "resumeLabel": "Curriculo (deve incluir nome e email)",
+      "resumePlaceholder": "Cole o curriculo... deve incluir nome e email.",
+      "jdLabel": "Descricao da vaga",
+      "jdPlaceholder": "Cole a descricao da vaga...",
+      "sendInvitation": "Enviar convite",
+      "successTitle": "Convite enviado com sucesso!",
+      "candidateInfo": "Informacoes do candidato",
+      "name": "Nome",
+      "email": "Email",
+      "position": "Cargo",
+      "loginLink": "Link de acesso",
+      "scanQr": "Escanear QR",
+      "wechatHint": "Acesso movel via WeChat",
+      "errorTitle": "Falha no convite",
+      "apiResponse": "Resposta da API",
+      "errorMissingResumeJd": "Forneca o curriculo e a descricao da vaga",
+      "errorMissingRecruiter": "Forneca o email do recrutador",
+      "externalApiTitle": "GoHire API externa",
+      "copyCode": "Copiar codigo",
+      "tip": "Dica: copie e execute este codigo para testar a GoHire API diretamente"
+    },
+    "parseResume": {
+      "title": "Analisar curriculo",
+      "subtitle": "Extrair dados estruturados de um PDF de curriculo",
+      "uploadLabel": "Enviar PDF do curriculo",
+      "parseButton": "Analisar curriculo",
+      "parsedData": "Dados analisados",
+      "errorMissingFile": "Envie um arquivo PDF de curriculo"
+    },
+    "parseJd": {
+      "title": "Analisar descricao da vaga",
+      "subtitle": "Extrair dados estruturados de um PDF de JD",
+      "uploadLabel": "Enviar PDF de JD",
+      "parseButton": "Analisar JD",
+      "parsedData": "Dados analisados",
+      "errorMissingFile": "Envie um PDF de descricao da vaga"
+    },
+    "evaluateInterview": {
+      "title": "Avaliar entrevista",
+      "subtitle": "Analise a entrevista com base no curriculo e JD",
+      "resumeLabel": "Curriculo",
+      "jdLabel": "Descricao da vaga",
+      "interviewLabel": "Transcricao da entrevista",
+      "resumePlaceholder": "Cole o curriculo...",
+      "jdPlaceholder": "Cole a descricao da vaga...",
+      "interviewPlaceholder": "Cole a transcricao da entrevista...",
+      "optionsTitle": "Opcoes de avaliacao",
+      "includeCheating": "Incluir deteccao de trapaça",
+      "cheatingHint": "(Analisa respostas assistidas por AI/LLM)",
+      "specialInstructions": "Instrucoes especiais (opcional)",
+      "specialInstructionsPlaceholder": "Adicione instrucoes, ex.: 'Focar em design de sistemas'",
+      "buttonWithCheating": "Avaliar entrevista (com deteccao)",
+      "buttonDefault": "Avaliar entrevista",
+      "resultTitle": "Resultado da avaliacao",
+      "loadingDefault": "Avaliando entrevista...",
+      "loadingWithCheating": "Avaliando entrevista e deteccao de trapaça...",
+      "cheatingIncluded": "Analise de deteccao de trapaça incluida",
+      "errorMissingFields": "Forneca curriculo, descricao da vaga e transcricao",
+      "jsonTitle": "Resultado da avaliacao JSON"
+    }
+  }
+}

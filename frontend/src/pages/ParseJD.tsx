@@ -4,12 +4,14 @@ import FileUpload from '../components/FileUpload';
 import Button from '../components/Button';
 import ResultViewer from '../components/ResultViewer';
 import ApiInfoPanel from '../components/ApiInfoPanel';
+import { useTranslation } from 'react-i18next';
 
 interface ApiResponse {
   requestId?: string;
 }
 
 export default function ParseJD() {
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ export default function ParseJD() {
 
   const handleSubmit = async () => {
     if (!file) {
-      setError('Please upload a job description PDF file');
+      setError(t('pages.parseJd.errorMissingFile'));
       return;
     }
 
@@ -57,8 +59,8 @@ export default function ParseJD() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800">Parse Job Description</h2>
-        <p className="text-gray-500 mt-1">Extract structured data from a JD PDF</p>
+        <h2 className="text-2xl font-bold text-gray-800">{t('pages.parseJd.title')}</h2>
+        <p className="text-gray-500 mt-1">{t('pages.parseJd.subtitle')}</p>
       </div>
 
       <ApiInfoPanel
@@ -75,18 +77,18 @@ export default function ParseJD() {
         <FileUpload
           onFileSelect={setFile}
           accept=".pdf"
-          label="Upload JD PDF"
+          label={t('pages.parseJd.uploadLabel')}
         />
       </div>
 
       <div className="mb-6">
         <Button onClick={handleSubmit} loading={loading} disabled={!file}>
-          Parse JD
+          {t('pages.parseJd.parseButton')}
         </Button>
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">Parsed Data</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-3">{t('pages.parseJd.parsedData')}</h3>
         <ResultViewer 
           data={result} 
           loading={loading} 

@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import ResultViewer from '../components/ResultViewer';
 import ApiInfoPanel from '../components/ApiInfoPanel';
 import { useFormData } from '../context/FormDataContext';
+import { useTranslation } from 'react-i18next';
 
 interface ApiResponse {
   requestId?: string;
@@ -23,6 +24,7 @@ const DEFAULT_RECRUITER_EMAIL = 'hr@lightark.ai';
 const GOHIRE_API_URL = 'https://report-agent.gohire.top/instant/instant/v1/invitation';
 
 export default function InviteCandidate() {
+  const { t } = useTranslation();
   const { formData, setInviteCandidateData } = useFormData();
   const { resume, jd, recruiterEmail, interviewerRequirement } = formData.inviteCandidate;
 
@@ -47,12 +49,12 @@ export default function InviteCandidate() {
 
   const handleSubmit = async () => {
     if (!resume.trim() || !jd.trim()) {
-      setError('Please provide both resume and job description');
+      setError(t('pages.inviteCandidate.errorMissingResumeJd'));
       return;
     }
 
     if (!recruiterEmail.trim()) {
-      setError('Please provide recruiter email');
+      setError(t('pages.inviteCandidate.errorMissingRecruiter'));
       return;
     }
 
@@ -91,8 +93,8 @@ export default function InviteCandidate() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800">Invite Candidate to Interview</h2>
-        <p className="text-gray-500 mt-1">Send interview invitation via GoHire 一键邀约 API</p>
+        <h2 className="text-2xl font-bold text-gray-800">{t('pages.inviteCandidate.title')}</h2>
+        <p className="text-gray-500 mt-1">{t('pages.inviteCandidate.subtitle')}</p>
       </div>
 
       <ApiInfoPanel
@@ -120,10 +122,10 @@ export default function InviteCandidate() {
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          {showExternalApi ? '▼' : '▶'} Show External GoHire API Request
+          {showExternalApi ? '▼' : '▶'} {t('pages.inviteCandidate.toggleExternal')}
         </button>
         <span className="text-xs text-gray-500">
-          View the actual request sent to GoHire 一键邀约 API for testing
+          {t('pages.inviteCandidate.externalHint')}
         </span>
       </div>
 
@@ -141,32 +143,32 @@ export default function InviteCandidate() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Recruiter Email <span className="text-red-500">*</span>
+            {t('pages.inviteCandidate.recruiterEmail')} <span className="text-red-500">*</span>
           </label>
           <input
             type="email"
             value={recruiterEmail}
             onChange={(e) => setRecruiterEmail(e.target.value)}
-            placeholder="hr@yourcompany.com"
+            placeholder={t('pages.inviteCandidate.recruiterPlaceholder')}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Used for receiving notifications and as BCC recipient
+            {t('pages.inviteCandidate.recruiterHelp')}
           </p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Interviewer Requirement <span className="text-gray-400">(optional)</span>
+            {t('pages.inviteCandidate.interviewerRequirement')} <span className="text-gray-400">{t('pages.inviteCandidate.optional')}</span>
           </label>
           <input
             type="text"
             value={interviewerRequirement}
             onChange={(e) => setInterviewerRequirement(e.target.value)}
-            placeholder="e.g., Ask about work location preference, salary expectation..."
+            placeholder={t('pages.inviteCandidate.interviewerPlaceholder')}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Additional requirements for the interview (location, rounds, etc.)
+            {t('pages.inviteCandidate.interviewerHelp')}
           </p>
         </div>
       </div>
@@ -174,24 +176,24 @@ export default function InviteCandidate() {
       {/* Resume and JD */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <TextArea
-          label="Resume (must include candidate's name and email)"
+          label={t('pages.inviteCandidate.resumeLabel')}
           value={resume}
           onChange={setResume}
-          placeholder="Paste resume content here... Must include candidate's name and email address."
+          placeholder={t('pages.inviteCandidate.resumePlaceholder')}
           rows={12}
         />
         <TextArea
-          label="Job Description"
+          label={t('pages.inviteCandidate.jdLabel')}
           value={jd}
           onChange={setJd}
-          placeholder="Paste job description here..."
+          placeholder={t('pages.inviteCandidate.jdPlaceholder')}
           rows={12}
         />
       </div>
 
       <div className="mb-6">
         <Button onClick={handleSubmit} loading={loading}>
-          Send Invitation
+          {t('pages.inviteCandidate.sendInvitation')}
         </Button>
       </div>
 
@@ -201,21 +203,21 @@ export default function InviteCandidate() {
           <div className="flex items-start gap-4">
             <div className="text-3xl">✅</div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-green-800 mb-2">Invitation Sent Successfully!</h3>
+              <h3 className="text-lg font-bold text-green-800 mb-2">{t('pages.inviteCandidate.successTitle')}</h3>
               <p className="text-green-700 mb-4">{result.data.message}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white rounded-lg p-4 border border-green-200">
-                  <h4 className="font-medium text-gray-700 mb-2">Candidate Info</h4>
+                  <h4 className="font-medium text-gray-700 mb-2">{t('pages.inviteCandidate.candidateInfo')}</h4>
                   <div className="space-y-1 text-sm">
-                    <p><span className="text-gray-500">Name:</span> <span className="font-medium">{result.data.name}</span></p>
-                    <p><span className="text-gray-500">Email:</span> <span className="font-medium">{result.data.email}</span></p>
-                    <p><span className="text-gray-500">Position:</span> <span className="font-medium">{result.data.job_title}</span></p>
+                    <p><span className="text-gray-500">{t('pages.inviteCandidate.name')}:</span> <span className="font-medium">{result.data.name}</span></p>
+                    <p><span className="text-gray-500">{t('pages.inviteCandidate.email')}:</span> <span className="font-medium">{result.data.email}</span></p>
+                    <p><span className="text-gray-500">{t('pages.inviteCandidate.position')}:</span> <span className="font-medium">{result.data.job_title}</span></p>
                   </div>
                 </div>
                 
                 <div className="bg-white rounded-lg p-4 border border-green-200">
-                  <h4 className="font-medium text-gray-700 mb-2">Login Link</h4>
+                  <h4 className="font-medium text-gray-700 mb-2">{t('pages.inviteCandidate.loginLink')}</h4>
                   <a
                     href={result.data.login_url}
                     target="_blank"
@@ -237,8 +239,8 @@ export default function InviteCandidate() {
                     />
                   </div>
                   <div className="text-sm text-gray-600">
-                    <p className="font-medium">Scan QR Code</p>
-                    <p>For mobile access via WeChat</p>
+                    <p className="font-medium">{t('pages.inviteCandidate.scanQr')}</p>
+                    <p>{t('pages.inviteCandidate.wechatHint')}</p>
                   </div>
                 </div>
               )}
@@ -253,7 +255,7 @@ export default function InviteCandidate() {
           <div className="flex items-start gap-4">
             <div className="text-3xl">❌</div>
             <div>
-              <h3 className="text-lg font-bold text-red-800 mb-2">Invitation Failed</h3>
+              <h3 className="text-lg font-bold text-red-800 mb-2">{t('pages.inviteCandidate.errorTitle')}</h3>
               <p className="text-red-700">{error}</p>
             </div>
           </div>
@@ -262,7 +264,7 @@ export default function InviteCandidate() {
 
       {/* Full Response */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">API Response</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-3">{t('pages.inviteCandidate.apiResponse')}</h3>
         <ResultViewer data={result} loading={loading} error={null} title="invitation-response" />
       </div>
     </div>
@@ -280,6 +282,7 @@ interface ExternalApiCodePanelProps {
 type CodeTab = 'curl' | 'javascript' | 'python';
 
 function ExternalApiCodePanel({ recruiterEmail, jdContent, interviewerRequirement, resumeText }: ExternalApiCodePanelProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<CodeTab>('curl');
   const [copied, setCopied] = useState(false);
 
@@ -368,7 +371,7 @@ print(data)`;
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-indigo-900 border-b border-indigo-700">
         <div className="flex items-center gap-2">
-          <span className="text-indigo-300 text-sm font-medium">🔗 GoHire External API</span>
+          <span className="text-indigo-300 text-sm font-medium">🔗 {t('pages.inviteCandidate.externalApiTitle')}</span>
           <code className="text-indigo-400 text-xs font-mono">POST {GOHIRE_API_URL}</code>
         </div>
       </div>
@@ -409,14 +412,14 @@ print(data)`;
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Copied!
+              {t('actions.copied')}
             </>
           ) : (
             <>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              Copy Code
+              {t('pages.inviteCandidate.copyCode')}
             </>
           )}
         </button>
@@ -432,7 +435,7 @@ print(data)`;
 
       {/* Footer */}
       <div className="px-4 py-2 bg-gray-800 border-t border-gray-700 text-xs text-gray-400">
-        <span className="text-indigo-400">💡 Tip:</span> Copy and run this code in your terminal/console to test the GoHire API directly
+        <span className="text-indigo-400">💡</span> {t('pages.inviteCandidate.tip')}
       </div>
     </div>
   );

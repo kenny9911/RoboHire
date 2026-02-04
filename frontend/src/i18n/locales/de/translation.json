@@ -1,0 +1,153 @@
+{
+  "app": {
+    "title": "GoHire API",
+    "subtitle": "Admin-Dashboard"
+  },
+  "language": {
+    "label": "Sprache"
+  },
+  "nav": {
+    "matchResume": "Lebenslauf abgleichen",
+    "inviteCandidate": "Kandidaten einladen",
+    "evaluateInterview": "Interview bewerten",
+    "parseResume": "Lebenslauf parsen",
+    "parseJd": "JD parsen"
+  },
+  "actions": {
+    "paste": "Einfugen",
+    "pasted": "Eingefugt",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "clear": "Leeren",
+    "download": "Herunterladen",
+    "search": "Suchen...",
+    "expand": "Erweitern",
+    "collapse": "Einklappen",
+    "formatted": "Formatiert",
+    "json": "JSON",
+    "formattedView": "Formatierte Ansicht",
+    "jsonView": "JSON-Ansicht",
+    "newAnalysis": "Neue Analyse",
+    "analyzing": "Analyse lauft...",
+    "analyzeMatch": "Abgleich analysieren"
+  },
+  "status": {
+    "sending": "Wird gesendet...",
+    "requestId": "Anfrage-ID",
+    "status": "Status"
+  },
+  "units": {
+    "characters": "Zeichen",
+    "lines": "Zeilen"
+  },
+  "messages": {
+    "noResults": "Noch keine Ergebnisse. Senden Sie eine Anfrage.",
+    "error": "Fehler",
+    "thisMayTake": "Das kann 10-15 Sekunden dauern...",
+    "noMatchesFound": "Keine Treffer gefunden"
+  },
+  "tooltips": {
+    "paste": "Aus der Zwischenablage einfugen (Ctrl+V)",
+    "copy": "In die Zwischenablage kopieren (Ctrl+C)",
+    "clear": "Inhalt leeren",
+    "downloadJson": "JSON herunterladen",
+    "copyJson": "JSON kopieren"
+  },
+  "components": {
+    "fileUpload": {
+      "defaultLabel": "PDF hochladen",
+      "dragDrop": "Ziehen und ablegen oder klicken zum Durchsuchen"
+    },
+    "resultViewer": {
+      "title": "Ergebnis"
+    },
+    "jsonViewer": {
+      "title": "JSON-Antwort"
+    }
+  },
+  "pages": {
+    "matchResume": {
+      "title": "Lebenslauf mit JD abgleichen",
+      "subtitle": "Analyse, wie gut ein Lebenslauf zur Stellenbeschreibung passt",
+      "resultsTitle": "Analyseergebnisse",
+      "resultsSubtitle": "Umfassende Analyse der Kandidaten-Passung",
+      "resumeLabel": "Lebenslauf",
+      "jdLabel": "Stellenbeschreibung",
+      "resumePlaceholder": "Paste resume content here...\n\nExample:\nJohn Doe\nSenior Software Engineer\njohn.doe@email.com\n\nEXPERIENCE:\nGoogle (2019-2024) - Senior Software Engineer\n- Led team of 5 engineers\n- Built React dashboard for 10M+ users\n\nSKILLS: Python, JavaScript, React, Node.js, AWS\n\nEDUCATION:\nMIT - BS Computer Science, 2017",
+      "jdPlaceholder": "Paste job description here...\n\nExample:\nSenior Software Engineer at TechCorp\nLocation: San Francisco, CA\n\nAbout the role:\nWe are looking for a Senior Software Engineer to lead our backend team.\n\nRequired Qualifications:\n- 5+ years of software engineering experience\n- Expert-level Python programming\n- Strong experience with React\n\nNice to have:\n- AWS or cloud infrastructure experience\n- Machine Learning background\n\nResponsibilities:\n- Lead technical design decisions\n- Mentor junior engineers",
+      "errorMissing": "Bitte Lebenslauf und Stellenbeschreibung angeben"
+    },
+    "inviteCandidate": {
+      "title": "Kandidaten zum Interview einladen",
+      "subtitle": "Einladung uber GoHire 一键邀约 API senden",
+      "toggleExternal": "Externe GoHire-API-Anfrage anzeigen",
+      "externalHint": "Die tatsachliche Anfrage an GoHire 一键邀约 API anzeigen",
+      "recruiterEmail": "Recruiter-E-Mail",
+      "interviewerRequirement": "Interviewer-Anforderungen",
+      "optional": "(optional)",
+      "recruiterPlaceholder": "hr@yourcompany.com",
+      "interviewerPlaceholder": "z. B. Standortpraferenz, Gehaltserwartung...",
+      "recruiterHelp": "Fur Benachrichtigungen und als BCC-Empfanger",
+      "interviewerHelp": "Zusatzliche Anforderungen (Ort, Runden usw.)",
+      "resumeLabel": "Lebenslauf (mit Name und E-Mail)",
+      "resumePlaceholder": "Lebenslauf einfügen... Name und E-Mail erforderlich.",
+      "jdLabel": "Stellenbeschreibung",
+      "jdPlaceholder": "Stellenbeschreibung einfugen...",
+      "sendInvitation": "Einladung senden",
+      "successTitle": "Einladung erfolgreich gesendet!",
+      "candidateInfo": "Kandidateninfo",
+      "name": "Name",
+      "email": "E-Mail",
+      "position": "Position",
+      "loginLink": "Login-Link",
+      "scanQr": "QR-Code scannen",
+      "wechatHint": "Mobiler Zugriff uber WeChat",
+      "errorTitle": "Einladung fehlgeschlagen",
+      "apiResponse": "API-Antwort",
+      "errorMissingResumeJd": "Bitte Lebenslauf und Stellenbeschreibung angeben",
+      "errorMissingRecruiter": "Bitte Recruiter-E-Mail angeben",
+      "externalApiTitle": "GoHire externe API",
+      "copyCode": "Code kopieren",
+      "tip": "Tipp: Code kopieren und im Terminal ausfuhren, um die GoHire API zu testen"
+    },
+    "parseResume": {
+      "title": "Lebenslauf parsen",
+      "subtitle": "Strukturierte Daten aus einem PDF extrahieren",
+      "uploadLabel": "Lebenslauf-PDF hochladen",
+      "parseButton": "Lebenslauf parsen",
+      "parsedData": "Geparste Daten",
+      "errorMissingFile": "Bitte eine Lebenslauf-PDF hochladen"
+    },
+    "parseJd": {
+      "title": "Stellenbeschreibung parsen",
+      "subtitle": "Strukturierte Daten aus einem JD-PDF extrahieren",
+      "uploadLabel": "JD-PDF hochladen",
+      "parseButton": "JD parsen",
+      "parsedData": "Geparste Daten",
+      "errorMissingFile": "Bitte eine Stellenbeschreibungs-PDF hochladen"
+    },
+    "evaluateInterview": {
+      "title": "Interview bewerten",
+      "subtitle": "Interview mit Lebenslauf und JD vergleichen",
+      "resumeLabel": "Lebenslauf",
+      "jdLabel": "Stellenbeschreibung",
+      "interviewLabel": "Interview-Transkript",
+      "resumePlaceholder": "Lebenslauf einfugen...",
+      "jdPlaceholder": "Stellenbeschreibung einfugen...",
+      "interviewPlaceholder": "Interview-Transkript einfugen...",
+      "optionsTitle": "Bewertungsoptionen",
+      "includeCheating": "Betrugserkennung einschliessen",
+      "cheatingHint": "(Analysiert Antworten auf AI/LLM-Unterstutzung)",
+      "specialInstructions": "Spezielle Hinweise (optional)",
+      "specialInstructionsPlaceholder": "Spezielle Hinweise, z. B. 'Fokus auf Systemdesign'",
+      "buttonWithCheating": "Interview bewerten (mit Betrugserkennung)",
+      "buttonDefault": "Interview bewerten",
+      "resultTitle": "Bewertungsergebnis",
+      "loadingDefault": "Interview wird bewertet...",
+      "loadingWithCheating": "Interview wird bewertet und Betrugserkennung lauft...",
+      "cheatingIncluded": "Betrugserkennung in den Ergebnissen enthalten",
+      "errorMissingFields": "Bitte Lebenslauf, JD und Interview-Transkript angeben",
+      "jsonTitle": "Bewertungsergebnis JSON"
+    }
+  }
+}

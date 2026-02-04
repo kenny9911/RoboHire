@@ -1,0 +1,153 @@
+{
+  "app": {
+    "title": "GoHire API",
+    "subtitle": "管理ダッシュボード"
+  },
+  "language": {
+    "label": "言語"
+  },
+  "nav": {
+    "matchResume": "レジュメ照合",
+    "inviteCandidate": "候補者招待",
+    "evaluateInterview": "面接評価",
+    "parseResume": "レジュメ解析",
+    "parseJd": "JD解析"
+  },
+  "actions": {
+    "paste": "貼り付け",
+    "pasted": "貼り付け済み",
+    "copy": "コピー",
+    "copied": "コピー完了",
+    "clear": "クリア",
+    "download": "ダウンロード",
+    "search": "検索...",
+    "expand": "展開",
+    "collapse": "折りたたみ",
+    "formatted": "整形",
+    "json": "JSON",
+    "formattedView": "整形ビュー",
+    "jsonView": "JSONビュー",
+    "newAnalysis": "新規分析",
+    "analyzing": "分析中...",
+    "analyzeMatch": "照合する"
+  },
+  "status": {
+    "sending": "送信中...",
+    "requestId": "リクエストID",
+    "status": "ステータス"
+  },
+  "units": {
+    "characters": "文字",
+    "lines": "行"
+  },
+  "messages": {
+    "noResults": "結果はまだありません。リクエストを送信してください。",
+    "error": "エラー",
+    "thisMayTake": "10〜15秒かかる場合があります...",
+    "noMatchesFound": "一致する結果がありません"
+  },
+  "tooltips": {
+    "paste": "クリップボードから貼り付け (Ctrl+V)",
+    "copy": "クリップボードにコピー (Ctrl+C)",
+    "clear": "内容をクリア",
+    "downloadJson": "JSONをダウンロード",
+    "copyJson": "JSONをコピー"
+  },
+  "components": {
+    "fileUpload": {
+      "defaultLabel": "PDFをアップロード",
+      "dragDrop": "ドラッグ＆ドロップまたはクリックで選択"
+    },
+    "resultViewer": {
+      "title": "結果"
+    },
+    "jsonViewer": {
+      "title": "JSONレスポンス"
+    }
+  },
+  "pages": {
+    "matchResume": {
+      "title": "レジュメとJDの照合",
+      "subtitle": "候補者のレジュメと職務内容の一致度を分析",
+      "resultsTitle": "照合分析結果",
+      "resultsSubtitle": "候補者と職務の適合性を総合分析",
+      "resumeLabel": "レジュメ",
+      "jdLabel": "職務記述",
+      "resumePlaceholder": "Paste resume content here...\n\nExample:\nJohn Doe\nSenior Software Engineer\njohn.doe@email.com\n\nEXPERIENCE:\nGoogle (2019-2024) - Senior Software Engineer\n- Led team of 5 engineers\n- Built React dashboard for 10M+ users\n\nSKILLS: Python, JavaScript, React, Node.js, AWS\n\nEDUCATION:\nMIT - BS Computer Science, 2017",
+      "jdPlaceholder": "Paste job description here...\n\nExample:\nSenior Software Engineer at TechCorp\nLocation: San Francisco, CA\n\nAbout the role:\nWe are looking for a Senior Software Engineer to lead our backend team.\n\nRequired Qualifications:\n- 5+ years of software engineering experience\n- Expert-level Python programming\n- Strong experience with React\n\nNice to have:\n- AWS or cloud infrastructure experience\n- Machine Learning background\n\nResponsibilities:\n- Lead technical design decisions\n- Mentor junior engineers",
+      "errorMissing": "レジュメと職務記述を入力してください"
+    },
+    "inviteCandidate": {
+      "title": "候補者を面接に招待",
+      "subtitle": "GoHire 一键邀约 API で面接招待を送信",
+      "toggleExternal": "外部 GoHire API リクエストを表示",
+      "externalHint": "GoHire 一键邀约 API に送信された実際のリクエストを確認",
+      "recruiterEmail": "採用担当メール",
+      "interviewerRequirement": "面接要件",
+      "optional": "（任意）",
+      "recruiterPlaceholder": "hr@yourcompany.com",
+      "interviewerPlaceholder": "例：勤務地の希望、希望年収について質問...",
+      "recruiterHelp": "通知受信用およびBCC受信者として使用",
+      "interviewerHelp": "面接の追加要件（場所、回数など）",
+      "resumeLabel": "レジュメ（候補者の名前とメールを含む）",
+      "resumePlaceholder": "レジュメ内容を貼り付け...候補者の名前とメールを含めてください。",
+      "jdLabel": "職務記述",
+      "jdPlaceholder": "職務記述を貼り付け...",
+      "sendInvitation": "招待を送信",
+      "successTitle": "招待を送信しました！",
+      "candidateInfo": "候補者情報",
+      "name": "氏名",
+      "email": "メール",
+      "position": "職位",
+      "loginLink": "ログインリンク",
+      "scanQr": "QRコードをスキャン",
+      "wechatHint": "WeChatでモバイルアクセス",
+      "errorTitle": "招待に失敗しました",
+      "apiResponse": "APIレスポンス",
+      "errorMissingResumeJd": "レジュメと職務記述を入力してください",
+      "errorMissingRecruiter": "採用担当メールを入力してください",
+      "externalApiTitle": "GoHire 外部 API",
+      "copyCode": "コードをコピー",
+      "tip": "ヒント：このコードをコピーしてターミナル/コンソールで実行し、GoHire API を直接テストできます"
+    },
+    "parseResume": {
+      "title": "レジュメ解析",
+      "subtitle": "レジュメPDFから構造化データを抽出",
+      "uploadLabel": "レジュメPDFをアップロード",
+      "parseButton": "レジュメを解析",
+      "parsedData": "解析結果",
+      "errorMissingFile": "レジュメPDFファイルをアップロードしてください"
+    },
+    "parseJd": {
+      "title": "職務記述の解析",
+      "subtitle": "JD PDFから構造化データを抽出",
+      "uploadLabel": "JD PDFをアップロード",
+      "parseButton": "JDを解析",
+      "parsedData": "解析結果",
+      "errorMissingFile": "職務記述PDFファイルをアップロードしてください"
+    },
+    "evaluateInterview": {
+      "title": "面接評価",
+      "subtitle": "レジュメとJDに基づいて面接記録を分析",
+      "resumeLabel": "レジュメ",
+      "jdLabel": "職務記述",
+      "interviewLabel": "面接記録",
+      "resumePlaceholder": "レジュメ内容を貼り付け...",
+      "jdPlaceholder": "職務記述を貼り付け...",
+      "interviewPlaceholder": "面接記録を貼り付け...",
+      "optionsTitle": "評価オプション",
+      "includeCheating": "不正検知を含める",
+      "cheatingHint": "（AI/LLM支援の回答を分析）",
+      "specialInstructions": "特別な指示（任意）",
+      "specialInstructionsPlaceholder": "評価の特別な指示を追加（例：システム設計重視、コミュニケーションを重視）",
+      "buttonWithCheating": "面接を評価（不正検知あり）",
+      "buttonDefault": "面接を評価",
+      "resultTitle": "評価結果",
+      "loadingDefault": "面接を評価中...",
+      "loadingWithCheating": "面接を評価し不正検知を実行中...",
+      "cheatingIncluded": "結果に不正検知分析が含まれています",
+      "errorMissingFields": "レジュメ、職務記述、面接記録を入力してください",
+      "jsonTitle": "評価結果 JSON"
+    }
+  }
+}

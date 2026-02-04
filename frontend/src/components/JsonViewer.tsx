@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface JsonViewerProps {
   data: unknown;
@@ -73,6 +74,7 @@ function highlightJson(obj: unknown, indent: number = 0): JSX.Element[] {
 }
 
 export default function JsonViewer({ data, title }: JsonViewerProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -126,14 +128,14 @@ export default function JsonViewer({ data, title }: JsonViewerProps) {
             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
           </div>
-          <span className="text-gray-300 font-mono text-sm">{title || 'JSON Response'}</span>
+          <span className="text-gray-300 font-mono text-sm">{title || t('components.jsonViewer.title')}</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Search */}
           <div className="relative">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={t('actions.search')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="px-3 py-1.5 text-sm bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:outline-none focus:border-gray-500 placeholder-gray-500 w-40"
@@ -158,14 +160,14 @@ export default function JsonViewer({ data, title }: JsonViewerProps) {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
-                Expand
+                {t('actions.expand')}
               </>
             ) : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
-                Collapse
+                {t('actions.collapse')}
               </>
             )}
           </button>
@@ -178,7 +180,7 @@ export default function JsonViewer({ data, title }: JsonViewerProps) {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Download
+            {t('actions.download')}
           </button>
           
           {/* Copy */}
@@ -194,14 +196,14 @@ export default function JsonViewer({ data, title }: JsonViewerProps) {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Copied!
+                {t('actions.copied')}
               </>
             ) : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                Copy
+                {t('actions.copy')}
               </>
             )}
           </button>
@@ -213,7 +215,7 @@ export default function JsonViewer({ data, title }: JsonViewerProps) {
         {searchTerm ? (
           // Simple text display when searching
           <pre className="p-6 text-sm font-mono whitespace-pre-wrap text-gray-700">
-            {filteredJsonString || 'No matches found'}
+            {filteredJsonString || t('messages.noMatchesFound')}
           </pre>
         ) : (
           // Syntax highlighted display
@@ -225,8 +227,8 @@ export default function JsonViewer({ data, title }: JsonViewerProps) {
       
       {/* Footer */}
       <div className="bg-gray-100 px-6 py-3 flex items-center justify-between text-xs text-gray-500 border-t border-gray-200">
-        <span>{jsonString.length.toLocaleString()} characters</span>
-        <span>{jsonString.split('\n').length.toLocaleString()} lines</span>
+        <span>{jsonString.length.toLocaleString()} {t('units.characters')}</span>
+        <span>{jsonString.split('\n').length.toLocaleString()} {t('units.lines')}</span>
       </div>
     </div>
   );

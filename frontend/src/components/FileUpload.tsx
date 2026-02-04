@@ -1,4 +1,5 @@
 import { useRef, useState, DragEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
@@ -6,10 +7,12 @@ interface FileUploadProps {
   label?: string;
 }
 
-export default function FileUpload({ onFileSelect, accept = '.pdf', label = 'Upload PDF' }: FileUploadProps) {
+export default function FileUpload({ onFileSelect, accept = '.pdf', label }: FileUploadProps) {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const displayLabel = label || t('components.fileUpload.defaultLabel');
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
@@ -67,8 +70,8 @@ export default function FileUpload({ onFileSelect, accept = '.pdf', label = 'Upl
         <p className="text-indigo-600 font-medium">{fileName}</p>
       ) : (
         <>
-          <p className="text-gray-600 font-medium">{label}</p>
-          <p className="text-gray-400 text-sm mt-1">Drag & drop or click to browse</p>
+          <p className="text-gray-600 font-medium">{displayLabel}</p>
+          <p className="text-gray-400 text-sm mt-1">{t('components.fileUpload.dragDrop')}</p>
         </>
       )}
     </div>

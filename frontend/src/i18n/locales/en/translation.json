@@ -1,0 +1,153 @@
+{
+  "app": {
+    "title": "GoHire API",
+    "subtitle": "Admin Dashboard"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "nav": {
+    "matchResume": "Match Resume",
+    "inviteCandidate": "Invite Candidate",
+    "evaluateInterview": "Evaluate Interview",
+    "parseResume": "Parse Resume",
+    "parseJd": "Parse JD"
+  },
+  "actions": {
+    "paste": "Paste",
+    "pasted": "Pasted!",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "clear": "Clear",
+    "download": "Download",
+    "search": "Search...",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "formatted": "Formatted",
+    "json": "JSON",
+    "formattedView": "Formatted View",
+    "jsonView": "JSON View",
+    "newAnalysis": "New Analysis",
+    "analyzing": "Analyzing...",
+    "analyzeMatch": "Analyze Match"
+  },
+  "status": {
+    "sending": "Sending...",
+    "requestId": "Request ID",
+    "status": "Status"
+  },
+  "units": {
+    "characters": "characters",
+    "lines": "lines"
+  },
+  "messages": {
+    "noResults": "No results yet. Submit a request to see results.",
+    "error": "Error",
+    "thisMayTake": "This may take 10-15 seconds...",
+    "noMatchesFound": "No matches found"
+  },
+  "tooltips": {
+    "paste": "Paste from clipboard (Ctrl+V)",
+    "copy": "Copy to clipboard (Ctrl+C)",
+    "clear": "Clear content",
+    "downloadJson": "Download JSON",
+    "copyJson": "Copy JSON"
+  },
+  "components": {
+    "fileUpload": {
+      "defaultLabel": "Upload PDF",
+      "dragDrop": "Drag & drop or click to browse"
+    },
+    "resultViewer": {
+      "title": "Result"
+    },
+    "jsonViewer": {
+      "title": "JSON Response"
+    }
+  },
+  "pages": {
+    "matchResume": {
+      "title": "Match Resume with JD",
+      "subtitle": "Analyze how well a candidate's resume matches a job description",
+      "resultsTitle": "Match Analysis Results",
+      "resultsSubtitle": "Comprehensive candidate-job fit analysis",
+      "resumeLabel": "Resume",
+      "jdLabel": "Job Description",
+      "resumePlaceholder": "Paste resume content here...\n\nExample:\nJohn Doe\nSenior Software Engineer\njohn.doe@email.com\n\nEXPERIENCE:\nGoogle (2019-2024) - Senior Software Engineer\n- Led team of 5 engineers\n- Built React dashboard for 10M+ users\n\nSKILLS: Python, JavaScript, React, Node.js, AWS\n\nEDUCATION:\nMIT - BS Computer Science, 2017",
+      "jdPlaceholder": "Paste job description here...\n\nExample:\nSenior Software Engineer at TechCorp\nLocation: San Francisco, CA\n\nAbout the role:\nWe are looking for a Senior Software Engineer to lead our backend team.\n\nRequired Qualifications:\n- 5+ years of software engineering experience\n- Expert-level Python programming\n- Strong experience with React\n\nNice to have:\n- AWS or cloud infrastructure experience\n- Machine Learning background\n\nResponsibilities:\n- Lead technical design decisions\n- Mentor junior engineers",
+      "errorMissing": "Please provide both resume and job description"
+    },
+    "inviteCandidate": {
+      "title": "Invite Candidate to Interview",
+      "subtitle": "Send interview invitation via GoHire \u4e00\u952e\u9080\u7ea6 API",
+      "toggleExternal": "Show External GoHire API Request",
+      "externalHint": "View the actual request sent to GoHire \u4e00\u952e\u9080\u7ea6 API for testing",
+      "recruiterEmail": "Recruiter Email",
+      "interviewerRequirement": "Interviewer Requirement",
+      "optional": "(optional)",
+      "recruiterPlaceholder": "hr@yourcompany.com",
+      "interviewerPlaceholder": "e.g., Ask about work location preference, salary expectation...",
+      "recruiterHelp": "Used for receiving notifications and as BCC recipient",
+      "interviewerHelp": "Additional requirements for the interview (location, rounds, etc.)",
+      "resumeLabel": "Resume (must include candidate's name and email)",
+      "resumePlaceholder": "Paste resume content here... Must include candidate's name and email address.",
+      "jdLabel": "Job Description",
+      "jdPlaceholder": "Paste job description here...",
+      "sendInvitation": "Send Invitation",
+      "successTitle": "Invitation Sent Successfully!",
+      "candidateInfo": "Candidate Info",
+      "name": "Name",
+      "email": "Email",
+      "position": "Position",
+      "loginLink": "Login Link",
+      "scanQr": "Scan QR Code",
+      "wechatHint": "For mobile access via WeChat",
+      "errorTitle": "Invitation Failed",
+      "apiResponse": "API Response",
+      "errorMissingResumeJd": "Please provide both resume and job description",
+      "errorMissingRecruiter": "Please provide recruiter email",
+      "externalApiTitle": "GoHire External API",
+      "copyCode": "Copy Code",
+      "tip": "Tip: Copy and run this code in your terminal/console to test the GoHire API directly"
+    },
+    "parseResume": {
+      "title": "Parse Resume",
+      "subtitle": "Extract structured data from a resume PDF",
+      "uploadLabel": "Upload Resume PDF",
+      "parseButton": "Parse Resume",
+      "parsedData": "Parsed Data",
+      "errorMissingFile": "Please upload a resume PDF file"
+    },
+    "parseJd": {
+      "title": "Parse Job Description",
+      "subtitle": "Extract structured data from a JD PDF",
+      "uploadLabel": "Upload JD PDF",
+      "parseButton": "Parse JD",
+      "parsedData": "Parsed Data",
+      "errorMissingFile": "Please upload a job description PDF file"
+    },
+    "evaluateInterview": {
+      "title": "Evaluate Interview",
+      "subtitle": "Analyze an interview transcript against resume and JD",
+      "resumeLabel": "Resume",
+      "jdLabel": "Job Description",
+      "interviewLabel": "Interview Transcript",
+      "resumePlaceholder": "Paste resume content here...",
+      "jdPlaceholder": "Paste job description here...",
+      "interviewPlaceholder": "Paste the interview transcript here...",
+      "optionsTitle": "Evaluation Options",
+      "includeCheating": "Include Cheating Detection",
+      "cheatingHint": "(Analyzes responses for AI/LLM-assisted answers)",
+      "specialInstructions": "Special Instructions (Optional)",
+      "specialInstructionsPlaceholder": "Add any special instructions for the evaluation, e.g., 'Focus on system design skills' or 'Pay attention to communication clarity'",
+      "buttonWithCheating": "Evaluate Interview (with Cheating Detection)",
+      "buttonDefault": "Evaluate Interview",
+      "resultTitle": "Evaluation Result",
+      "loadingDefault": "Evaluating interview...",
+      "loadingWithCheating": "Evaluating interview and running cheating detection...",
+      "cheatingIncluded": "Cheating detection analysis included in results",
+      "errorMissingFields": "Please provide resume, job description, and interview transcript",
+      "jsonTitle": "Evaluation Result JSON"
+    }
+  }
+}

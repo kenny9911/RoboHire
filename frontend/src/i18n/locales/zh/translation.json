@@ -1,0 +1,153 @@
+{
+  "app": {
+    "title": "GoHire API",
+    "subtitle": "管理面板"
+  },
+  "language": {
+    "label": "语言"
+  },
+  "nav": {
+    "matchResume": "简历匹配",
+    "inviteCandidate": "邀请候选人",
+    "evaluateInterview": "面试评估",
+    "parseResume": "解析简历",
+    "parseJd": "解析JD"
+  },
+  "actions": {
+    "paste": "粘贴",
+    "pasted": "已粘贴！",
+    "copy": "复制",
+    "copied": "已复制！",
+    "clear": "清空",
+    "download": "下载",
+    "search": "搜索...",
+    "expand": "展开",
+    "collapse": "收起",
+    "formatted": "格式化",
+    "json": "JSON",
+    "formattedView": "格式化视图",
+    "jsonView": "JSON 视图",
+    "newAnalysis": "新分析",
+    "analyzing": "分析中...",
+    "analyzeMatch": "开始匹配"
+  },
+  "status": {
+    "sending": "发送中...",
+    "requestId": "请求 ID",
+    "status": "状态"
+  },
+  "units": {
+    "characters": "字符",
+    "lines": "行"
+  },
+  "messages": {
+    "noResults": "暂无结果。提交请求后可查看结果。",
+    "error": "错误",
+    "thisMayTake": "这可能需要 10-15 秒...",
+    "noMatchesFound": "未找到匹配内容"
+  },
+  "tooltips": {
+    "paste": "从剪贴板粘贴 (Ctrl+V)",
+    "copy": "复制到剪贴板 (Ctrl+C)",
+    "clear": "清空内容",
+    "downloadJson": "下载 JSON",
+    "copyJson": "复制 JSON"
+  },
+  "components": {
+    "fileUpload": {
+      "defaultLabel": "上传 PDF",
+      "dragDrop": "拖拽文件或点击浏览"
+    },
+    "resultViewer": {
+      "title": "结果"
+    },
+    "jsonViewer": {
+      "title": "JSON 响应"
+    }
+  },
+  "pages": {
+    "matchResume": {
+      "title": "简历与JD匹配",
+      "subtitle": "分析候选人简历与职位描述的匹配度",
+      "resultsTitle": "匹配分析结果",
+      "resultsSubtitle": "候选人与岗位匹配的综合分析",
+      "resumeLabel": "简历",
+      "jdLabel": "职位描述",
+      "resumePlaceholder": "Paste resume content here...\n\nExample:\nJohn Doe\nSenior Software Engineer\njohn.doe@email.com\n\nEXPERIENCE:\nGoogle (2019-2024) - Senior Software Engineer\n- Led team of 5 engineers\n- Built React dashboard for 10M+ users\n\nSKILLS: Python, JavaScript, React, Node.js, AWS\n\nEDUCATION:\nMIT - BS Computer Science, 2017",
+      "jdPlaceholder": "Paste job description here...\n\nExample:\nSenior Software Engineer at TechCorp\nLocation: San Francisco, CA\n\nAbout the role:\nWe are looking for a Senior Software Engineer to lead our backend team.\n\nRequired Qualifications:\n- 5+ years of software engineering experience\n- Expert-level Python programming\n- Strong experience with React\n\nNice to have:\n- AWS or cloud infrastructure experience\n- Machine Learning background\n\nResponsibilities:\n- Lead technical design decisions\n- Mentor junior engineers",
+      "errorMissing": "请提供简历和职位描述"
+    },
+    "inviteCandidate": {
+      "title": "邀请候选人面试",
+      "subtitle": "通过 GoHire 一键邀约 API 发送面试邀请",
+      "toggleExternal": "显示外部 GoHire API 请求",
+      "externalHint": "查看发送到 GoHire 一键邀约 API 的实际请求以便测试",
+      "recruiterEmail": "招聘邮箱",
+      "interviewerRequirement": "面试要求",
+      "optional": "（可选）",
+      "recruiterPlaceholder": "hr@yourcompany.com",
+      "interviewerPlaceholder": "例如：询问工作地点偏好、薪资期望等...",
+      "recruiterHelp": "用于接收通知并作为抄送收件人",
+      "interviewerHelp": "面试的附加要求（地点、轮次等）",
+      "resumeLabel": "简历（需包含候选人姓名和邮箱）",
+      "resumePlaceholder": "在此粘贴简历内容...需包含候选人姓名和邮箱。",
+      "jdLabel": "职位描述",
+      "jdPlaceholder": "在此粘贴职位描述...",
+      "sendInvitation": "发送邀请",
+      "successTitle": "邀请发送成功！",
+      "candidateInfo": "候选人信息",
+      "name": "姓名",
+      "email": "邮箱",
+      "position": "职位",
+      "loginLink": "登录链接",
+      "scanQr": "扫码",
+      "wechatHint": "使用微信移动端访问",
+      "errorTitle": "邀请失败",
+      "apiResponse": "API 响应",
+      "errorMissingResumeJd": "请提供简历和职位描述",
+      "errorMissingRecruiter": "请提供招聘邮箱",
+      "externalApiTitle": "GoHire 外部 API",
+      "copyCode": "复制代码",
+      "tip": "提示：复制并在终端/控制台运行此代码，可直接测试 GoHire API"
+    },
+    "parseResume": {
+      "title": "解析简历",
+      "subtitle": "从简历 PDF 中提取结构化数据",
+      "uploadLabel": "上传简历 PDF",
+      "parseButton": "解析简历",
+      "parsedData": "解析结果",
+      "errorMissingFile": "请上传简历 PDF 文件"
+    },
+    "parseJd": {
+      "title": "解析职位描述",
+      "subtitle": "从 JD PDF 中提取结构化数据",
+      "uploadLabel": "上传 JD PDF",
+      "parseButton": "解析 JD",
+      "parsedData": "解析结果",
+      "errorMissingFile": "请上传职位描述 PDF 文件"
+    },
+    "evaluateInterview": {
+      "title": "面试评估",
+      "subtitle": "根据简历和JD分析面试记录",
+      "resumeLabel": "简历",
+      "jdLabel": "职位描述",
+      "interviewLabel": "面试记录",
+      "resumePlaceholder": "在此粘贴简历内容...",
+      "jdPlaceholder": "在此粘贴职位描述...",
+      "interviewPlaceholder": "在此粘贴面试记录...",
+      "optionsTitle": "评估选项",
+      "includeCheating": "包含作弊检测",
+      "cheatingHint": "（分析是否存在 AI/LLM 辅助回答）",
+      "specialInstructions": "特殊说明（可选）",
+      "specialInstructionsPlaceholder": "添加评估的特殊说明，例如“重点关注系统设计能力”或“关注表达清晰度”",
+      "buttonWithCheating": "评估面试（含作弊检测）",
+      "buttonDefault": "评估面试",
+      "resultTitle": "评估结果",
+      "loadingDefault": "正在评估面试...",
+      "loadingWithCheating": "正在评估面试并进行作弊检测...",
+      "cheatingIncluded": "结果中包含作弊检测分析",
+      "errorMissingFields": "请提供简历、职位描述和面试记录",
+      "jsonTitle": "评估结果 JSON"
+    }
+  }
+}
