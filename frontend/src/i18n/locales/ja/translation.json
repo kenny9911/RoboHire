@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "GoHire API",
+    "title": "RoboHire API",
     "subtitle": "管理ダッシュボード"
   },
   "language": {
@@ -79,9 +79,9 @@
     },
     "inviteCandidate": {
       "title": "候補者を面接に招待",
-      "subtitle": "GoHire 一键邀约 API で面接招待を送信",
-      "toggleExternal": "外部 GoHire API リクエストを表示",
-      "externalHint": "GoHire 一键邀约 API に送信された実際のリクエストを確認",
+      "subtitle": "RoboHire 一键邀约 API で面接招待を送信",
+      "toggleExternal": "外部 RoboHire API リクエストを表示",
+      "externalHint": "RoboHire 一键邀约 API に送信された実際のリクエストを確認",
       "recruiterEmail": "採用担当メール",
       "interviewerRequirement": "面接要件",
       "optional": "（任意）",
@@ -106,9 +106,9 @@
       "apiResponse": "APIレスポンス",
       "errorMissingResumeJd": "レジュメと職務記述を入力してください",
       "errorMissingRecruiter": "採用担当メールを入力してください",
-      "externalApiTitle": "GoHire 外部 API",
+      "externalApiTitle": "RoboHire 外部 API",
       "copyCode": "コードをコピー",
-      "tip": "ヒント：このコードをコピーしてターミナル/コンソールで実行し、GoHire API を直接テストできます"
+      "tip": "ヒント：このコードをコピーしてターミナル/コンソールで実行し、RoboHire API を直接テストできます"
     },
     "parseResume": {
       "title": "レジュメ解析",

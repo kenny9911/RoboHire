@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GoHire API - Restart All Services Script
+# RoboHire API - Restart All Services Script
 # This script stops any running services and restarts them
 
 set -e
@@ -17,7 +17,7 @@ BACKEND_PORT=4607
 FRONTEND_PORT=3607
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║           GoHire API - Restart All Services                ║${NC}"
+echo -e "${BLUE}║           RoboHire API - Restart All Services                ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 

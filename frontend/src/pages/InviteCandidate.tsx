@@ -21,7 +21,7 @@ interface ApiResponse {
 
 // Default recruiter email from environment or fallback
 const DEFAULT_RECRUITER_EMAIL = 'hr@lightark.ai';
-const GOHIRE_API_URL = 'https://report-agent.gohire.top/instant/instant/v1/invitation';
+const ROBOHIRE_API_URL = 'https://report-agent.robohire.io/instant/instant/v1/invitation';
 
 export default function InviteCandidate() {
   const { t } = useTranslation();
@@ -295,14 +295,14 @@ function ExternalApiCodePanel({ recruiterEmail, jdContent, interviewerRequiremen
 
   const generateCurl = () => {
     const bodyJson = JSON.stringify(requestBody, null, 2);
-    return `curl --location --request POST '${GOHIRE_API_URL}' \\
+    return `curl --location --request POST '${ROBOHIRE_API_URL}' \\
 --header 'Content-Type: application/json' \\
 --data-raw '${bodyJson}'`;
   };
 
   const generateJavaScript = () => {
     const bodyJson = JSON.stringify(requestBody, null, 2);
-    return `const response = await fetch('${GOHIRE_API_URL}', {
+    return `const response = await fetch('${ROBOHIRE_API_URL}', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -326,7 +326,7 @@ console.log(data);`;
 payload = ${pythonBody}
 
 response = requests.post(
-    '${GOHIRE_API_URL}',
+    '${ROBOHIRE_API_URL}',
     json=payload
 )
 
@@ -372,7 +372,7 @@ print(data)`;
       <div className="flex items-center justify-between px-4 py-2 bg-indigo-900 border-b border-indigo-700">
         <div className="flex items-center gap-2">
           <span className="text-indigo-300 text-sm font-medium">🔗 {t('pages.inviteCandidate.externalApiTitle')}</span>
-          <code className="text-indigo-400 text-xs font-mono">POST {GOHIRE_API_URL}</code>
+          <code className="text-indigo-400 text-xs font-mono">POST {ROBOHIRE_API_URL}</code>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "GoHire API",
+    "title": "RoboHire API",
     "subtitle": "管理面板"
   },
   "language": {
@@ -65,6 +65,236 @@
       "title": "JSON 响应"
     }
   },
+  "auth": {
+    "welcomeBack": "欢迎回来",
+    "createAccount": "创建账户",
+    "loginSubtitle": "登录以访问您的控制面板",
+    "signupSubtitle": "用 AI 开启智能招聘",
+    "signIn": "登录",
+    "signUp": "注册",
+    "continueWithGoogle": "使用 Google 登录",
+    "continueWithGitHub": "使用 GitHub 登录",
+    "continueWithLinkedIn": "使用 LinkedIn 登录",
+    "orContinueWith": "或使用邮箱继续",
+    "name": "姓名",
+    "namePlaceholder": "张三",
+    "company": "公司",
+    "companyPlaceholder": "科技公司",
+    "optional": "可选",
+    "email": "邮箱",
+    "emailPlaceholder": "you@example.com",
+    "password": "密码",
+    "passwordPlaceholderSignup": "至少8个字符",
+    "signInButton": "登录",
+    "createAccountButton": "创建账户",
+    "loading": "请稍候...",
+    "termsAgreement": "创建账户即表示您同意我们的",
+    "termsOfService": "服务条款",
+    "and": "和",
+    "privacyPolicy": "隐私政策",
+    "backToHome": "返回首页"
+  },
+  "landing": {
+    "nav": {
+      "services": "服务",
+      "howItWorks": "工作原理",
+      "features": "功能特点",
+      "pricing": "价格",
+      "signIn": "登录",
+      "getStarted": "开始使用",
+      "dashboard": "控制面板"
+    },
+    "hero": {
+      "badge": "AI 驱动的招聘平台",
+      "headline": "比别人更快地",
+      "headlineHighlight": "招到精英人才",
+      "subheadline": "告别花费大量时间翻阅简历堆。我们的 AI 招聘助手自动筛选候选人、进行面试，并提供全面的评估报告。",
+      "ctaPrimary": "免费开始招聘",
+      "ctaSecondary": "探索 API",
+      "stat1": "节省时间",
+      "stat2": "筛选更快",
+      "stat3": "合作企业",
+      "stat4": "全天候服务"
+    },
+    "services": {
+      "title": "两种强大的招聘方式",
+      "subtitle": "选择适合您需求的方案 - 或同时使用两者以获得最大效率。",
+      "hiring": {
+        "title": "开始招聘",
+        "subtitle": "AI 招聘助手",
+        "description": "让 AI 处理繁重工作。我们的招聘助手自动筛选简历、进行面试并生成评估报告。专注于重要的事情 - 与优秀候选人会面。",
+        "feature1": "自动简历筛选",
+        "feature2": "AI 驱动面试",
+        "feature3": "全面评估报告",
+        "feature4": "Webhook 集成",
+        "cta": "立即开始招聘",
+        "badge": "最受欢迎"
+      },
+      "api": {
+        "title": "RoboHire API",
+        "subtitle": "面向开发者",
+        "description": "将强大的 AI 招聘能力集成到您现有的系统中。通过我们全面的 API 套件解析简历、匹配候选人、评估面试等。",
+        "feature1": "简历与 JD 解析",
+        "feature2": "AI 候选人匹配",
+        "feature3": "面试评估",
+        "feature4": "RESTful API 接口",
+        "cta": "探索 API"
+      }
+    },
+    "howItWorks": {
+      "badge": "简单流程",
+      "title": "RoboHire 工作原理",
+      "subtitle": "我们使用 AI 作为您的招聘助手，审核每份简历，联系和面试匹配的候选人，并自动发送全面的评估报告。",
+      "step1": {
+        "title": "设置职位",
+        "description": "描述您理想的候选人或上传职位描述。指定必备技能、经验要求和加分项。其余的交给我们。"
+      },
+      "step2": {
+        "title": "接入您的工作流",
+        "description": "通过 API 或 Webhook 与您现有的 ATS 集成。无需复杂操作 - 只需将候选人管道指向 RoboHire，我们将接管一切。"
+      },
+      "step3": {
+        "title": "获取最佳匹配",
+        "description": "我们的 AI 筛选每份申请，进行初步面试，并按匹配度对候选人进行排名。您只需与合适的人交流。"
+      },
+      "step4": {
+        "title": "即时获取报告",
+        "description": "通过 Webhook 接收全面的评估报告。了解每个候选人匹配的原因 - 技能评估、面试分析和录用建议。"
+      }
+    },
+    "features": {
+      "badge": "强大功能",
+      "title": "智能招聘所需的一切",
+      "subtitle": "从 AI 筛选到自动面试，我们提供所有工具来改变您的招聘流程。",
+      "aiScreening": {
+        "title": "AI 简历筛选",
+        "description": "我们的 AI 根据您的要求分析每份简历，识别必备技能、经验差距和潜在能力。"
+      },
+      "autoInterviews": {
+        "title": "自动面试",
+        "description": "AI 全天候进行初步筛选面试，提出相关问题并实时评估回答。"
+      },
+      "evalReports": {
+        "title": "评估报告",
+        "description": "获取包含技能评估、面试分析、优缺点和录用建议的全面报告。"
+      },
+      "timeSavings": {
+        "title": "节省 90% 时间",
+        "description": "不再花费数小时审核不匹配的候选人。将时间集中在最适合您团队的人选上。"
+      },
+      "apiAccess": {
+        "title": "开发者 API",
+        "description": "完整的 REST API 访问，用于解析、匹配和评估。将 AI 招聘能力集成到您现有的系统中。"
+      },
+      "webhooks": {
+        "title": "Webhook 推送",
+        "description": "通过 Webhook 自动接收入围候选人和评估报告。与您的工作流无缝集成。"
+      },
+      "multilingual": {
+        "title": "多语言支持",
+        "description": "支持 7 种语言，包括英语、中文、日语、西班牙语、法语、葡萄牙语和德语。"
+      },
+      "cheatingDetection": {
+        "title": "作弊检测",
+        "description": "先进的 AI 分析来检测 AI 辅助回答，确保您评估的是真实的候选人能力。"
+      }
+    },
+    "cta": {
+      "title": "准备好智能招聘了吗？",
+      "subtitle": "加入数百家使用 AI 更快找到精英人才的公司。立即开始免费试用 - 无需信用卡。",
+      "primary": "免费开始招聘",
+      "secondary": "联系销售",
+      "benefit1": "无需信用卡",
+      "benefit2": "14 天免费试用",
+      "benefit3": "随时取消"
+    },
+    "footer": {
+      "tagline": "AI 驱动的招聘平台，帮助您比他人更快地找到和雇用精英人才。",
+      "product": "产品",
+      "startHiring": "开始招聘",
+      "apiDocs": "API 文档",
+      "pricing": "价格",
+      "changelog": "更新日志",
+      "company": "公司",
+      "about": "关于我们",
+      "blog": "博客",
+      "careers": "加入我们",
+      "contact": "联系我们",
+      "resources": "资源",
+      "help": "帮助中心",
+      "guides": "指南",
+      "api": "API 参考",
+      "status": "服务状态",
+      "legal": "法律",
+      "privacy": "隐私政策",
+      "terms": "服务条款",
+      "cookies": "Cookie 政策",
+      "security": "安全",
+      "rights": "版权所有。"
+    }
+  },
+  "hiring": {
+    "welcome": "欢迎！我是您的 AI 招聘助手。告诉我您正在招聘的职位，我会帮助您找到完美的候选人。\n\n您可以描述您理想的候选人，粘贴职位描述，或上传 JD 文件。您在寻找什么？",
+    "gotIt": "好的！我已经记录了您的要求。让我总结一下：\n\n",
+    "confirm": "这样对吗？您可以：\n- 输入'是'开始招聘\n- 添加更多详情\n- 上传完整的 JD 以获得更准确的匹配",
+    "moreInfo": "这是一个好的开始！您能告诉我更多关于：\n\n",
+    "orUpload": "或者您可以上传职位描述文件以获得更详细的匹配。",
+    "loginRequired": "要创建招聘请求并开始接收候选人，您需要先登录。\n\n",
+    "loginPrompt": "点击下方按钮登录或创建账户。您的招聘要求将被保存。",
+    "updated": "明白了！我已更新您的要求。准备好开始招聘了吗？输入'是'继续，或继续添加详情。",
+    "jdParsed": "我已分析了您的职位描述。以下是我发现的：\n\n",
+    "jdConfirm": "您想继续使用这些要求，还是想添加任何特定条件？",
+    "success": "您的招聘请求已创建！🎉\n\n",
+    "nextSteps": "**接下来会发生什么：**\n",
+    "dashboard": "控制面板",
+    "error": "创建请求时出现问题：",
+    "tryAgain": "请重试或联系支持团队。",
+    "signIn": "登录",
+    "thinking": "思考中...",
+    "readyToStart": "准备好开始招聘了吗？",
+    "signInToSave": "登录以保存您的招聘请求并开始接收候选人。",
+    "signInToContinue": "登录以继续",
+    "goToDashboard": "前往控制面板",
+    "uploadJd": "上传职位描述",
+    "inputPlaceholder": "描述您理想的候选人...",
+    "helperText": "按 Enter 发送，Shift+Enter 换行。上传 JD 文件可获得更详细的匹配。"
+  },
+  "dashboard": {
+    "nav": {
+      "dashboard": "控制面板",
+      "newHiring": "新招聘",
+      "apiPlayground": "API 测试"
+    },
+    "welcome": "欢迎回来",
+    "user": "用户",
+    "subtitle": "管理您的招聘请求并追踪候选人。",
+    "logout": "退出登录",
+    "loading": "加载中...",
+    "actions": {
+      "newHiring": "开始新招聘",
+      "newHiringDesc": "创建新的职位",
+      "api": "API 测试",
+      "apiDesc": "测试 API 接口",
+      "stats": "统计",
+      "activeRequests": "个活跃请求"
+    },
+    "requests": {
+      "title": "您的招聘请求",
+      "new": "新请求",
+      "empty": "暂无招聘请求",
+      "emptyDesc": "创建您的第一个招聘请求以开始寻找候选人。",
+      "create": "创建招聘请求",
+      "candidates": "候选人",
+      "created": "创建于"
+    }
+  },
+  "apiPlayground": {
+    "title": "API 测试",
+    "dashboard": "控制面板",
+    "startHiring": "开始招聘",
+    "endpoints": "API 接口",
+    "logout": "退出登录"
+  },
   "pages": {
     "matchResume": {
       "title": "简历与JD匹配",
@@ -79,9 +309,9 @@
     },
     "inviteCandidate": {
       "title": "邀请候选人面试",
-      "subtitle": "通过 GoHire 一键邀约 API 发送面试邀请",
-      "toggleExternal": "显示外部 GoHire API 请求",
-      "externalHint": "查看发送到 GoHire 一键邀约 API 的实际请求以便测试",
+      "subtitle": "通过 RoboHire API 发送面试邀请",
+      "toggleExternal": "显示外部 RoboHire API 请求",
+      "externalHint": "查看发送到 RoboHire API 的实际请求以便测试",
       "recruiterEmail": "招聘邮箱",
       "interviewerRequirement": "面试要求",
       "optional": "（可选）",
@@ -106,9 +336,9 @@
       "apiResponse": "API 响应",
       "errorMissingResumeJd": "请提供简历和职位描述",
       "errorMissingRecruiter": "请提供招聘邮箱",
-      "externalApiTitle": "GoHire 外部 API",
+      "externalApiTitle": "RoboHire 外部 API",
       "copyCode": "复制代码",
-      "tip": "提示：复制并在终端/控制台运行此代码，可直接测试 GoHire API"
+      "tip": "提示：复制并在终端/控制台运行此代码，可直接测试 RoboHire API"
     },
     "parseResume": {
       "title": "解析简历",
@@ -139,7 +369,7 @@
       "includeCheating": "包含作弊检测",
       "cheatingHint": "（分析是否存在 AI/LLM 辅助回答）",
       "specialInstructions": "特殊说明（可选）",
-      "specialInstructionsPlaceholder": "添加评估的特殊说明，例如“重点关注系统设计能力”或“关注表达清晰度”",
+      "specialInstructionsPlaceholder": "添加评估的特殊说明，例如'重点关注系统设计能力'或'关注表达清晰度'",
       "buttonWithCheating": "评估面试（含作弊检测）",
       "buttonDefault": "评估面试",
       "resultTitle": "评估结果",

@@ -1,9 +1,16 @@
-# GoHire API
+# RoboHire API
 
 AI-Powered Recruitment APIs with multi-LLM provider support.
 
 ## Features
 
+### Platform
+- **Start Hiring Service**: AI-powered hiring agent that screens candidates, conducts interviews, and delivers evaluation reports
+- **User Authentication**: Email/password login with Google, GitHub, and LinkedIn OAuth
+- **Hiring Dashboard**: Manage hiring requests and track candidates
+- **Modern Landing Page**: SEO-optimized marketing page with i18n support (7 languages)
+
+### AI-Powered APIs
 - **5 AI-Powered APIs** for recruitment automation
 - **Multi-LLM Provider Support**: OpenAI, OpenRouter, Google Gemini
 - **Language Detection**: Automatically responds in the same language as the job description
@@ -12,6 +19,7 @@ AI-Powered Recruitment APIs with multi-LLM provider support.
 - **Comprehensive Logging**: File-based JSON Lines logging with daily rotation
 - **Document Storage**: Automatic caching of parsed documents and match results
 - **Interview Questions Generator**: Technical, behavioral, and situational questions with probing areas
+- **Cheating Detection**: AI analysis to detect AI-assisted interview answers
 
 ## Screenshots
 
@@ -24,6 +32,33 @@ The admin dashboard provides an easy way to test all APIs with built-in code exa
 
 ## API Endpoints
 
+### Authentication
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/signup` | POST | Register a new user |
+| `/api/auth/login` | POST | Login with email/password |
+| `/api/auth/logout` | POST | Logout current user |
+| `/api/auth/me` | GET | Get current user profile |
+| `/api/auth/google` | GET | Google OAuth login |
+| `/api/auth/github` | GET | GitHub OAuth login |
+| `/api/auth/linkedin` | GET | LinkedIn OAuth login |
+
+**Demo Account:** `demo@robohire.io` / `demo1234`
+
+### Hiring Requests (Protected)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/hiring-requests` | POST | Create hiring request |
+| `/api/v1/hiring-requests` | GET | List user's hiring requests |
+| `/api/v1/hiring-requests/:id` | GET | Get hiring request with candidates |
+| `/api/v1/hiring-requests/:id` | PATCH | Update hiring request |
+| `/api/v1/hiring-requests/:id` | DELETE | Delete hiring request |
+| `/api/v1/hiring-requests/:id/candidates` | GET | List candidates |
+
+### AI Recruitment APIs
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/v1/match-resume` | POST | Match resume against job description with detailed scoring |
@@ -31,6 +66,11 @@ The admin dashboard provides an easy way to test all APIs with built-in code exa
 | `/api/v1/parse-resume` | POST | Parse resume PDF to structured JSON (with caching) |
 | `/api/v1/parse-jd` | POST | Parse job description PDF to structured JSON (with caching) |
 | `/api/v1/evaluate-interview` | POST | Evaluate interview transcript |
+
+### System
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | `/api/v1/health` | GET | Health check endpoint |
 | `/api/v1/stats` | GET | Detailed usage statistics |
 | `/api/v1/documents` | GET | List all stored documents and match results |
@@ -47,8 +87,8 @@ The admin dashboard provides an easy way to test all APIs with built-in code exa
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/GoHireAPI.git
-cd GoHireAPI
+git clone https://github.com/yourusername/RoboHireAPI.git
+cd RoboHireAPI
 
 # Install dependencies for all workspaces
 npm install
@@ -96,7 +136,11 @@ npm run dev --workspace=frontend  # Starts frontend on port 3607
 
 ### Access the Application
 
-- **Admin Dashboard**: http://localhost:3607
+- **Landing Page**: http://localhost:3607
+- **Login**: http://localhost:3607/login
+- **Start Hiring**: http://localhost:3607/start-hiring
+- **Dashboard**: http://localhost:3607/dashboard (requires login)
+- **API Playground**: http://localhost:3607/api-playground (requires login)
 - **API Server**: http://localhost:4607
 - **API Documentation**: http://localhost:4607 (root endpoint)
 
@@ -178,7 +222,7 @@ curl -X POST http://localhost:4607/api/v1/evaluate-interview \
 ## Project Structure
 
 ```
-GoHireAPI/
+RoboHireAPI/
 ├── backend/
 │   ├── src/
 │   │   ├── index.ts                    # Express server entry

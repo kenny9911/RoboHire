@@ -1,10 +1,10 @@
-import { InviteCandidateRequest, GoHireInvitationResponse } from '../types/index.js';
+import { InviteCandidateRequest, RoboHireInvitationResponse } from '../types/index.js';
 import { logger } from '../services/LoggerService.js';
 
-const GOHIRE_INVITATION_API = 'https://report-agent.gohire.top/instant/instant/v1/invitation';
+const ROBOHIRE_INVITATION_API = 'https://report-agent.robohire.io/instant/instant/v1/invitation';
 
 /**
- * Agent for sending interview invitations via GoHire 一键邀约 API
+ * Agent for sending interview invitations via RoboHire 一键邀约 API
  * Calls the external API to create invitation and send email to candidate
  */
 export class InviteAgent {
@@ -15,7 +15,7 @@ export class InviteAgent {
   }
 
   /**
-   * Send an interview invitation via GoHire API
+   * Send an interview invitation via RoboHire API
    */
   async sendInvitation(
     resume: string,
@@ -23,8 +23,8 @@ export class InviteAgent {
     recruiterEmail?: string,
     interviewerRequirement?: string,
     requestId?: string
-  ): Promise<GoHireInvitationResponse> {
-    const stepId = logger.startStep(requestId || '', `${this.agentName}: Call GoHire API`);
+  ): Promise<RoboHireInvitationResponse> {
+    const stepId = logger.startStep(requestId || '', `${this.agentName}: Call RoboHire API`);
     
     // Use provided email or fall back to environment variable
     const email = recruiterEmail || process.env.RECRUITER_EMAIL || process.env.recruiter_email || 'hr@lightark.ai';
@@ -36,7 +36,7 @@ export class InviteAgent {
       resume_text: resume,
     };
 
-    logger.info(this.agentName, 'Sending invitation request to GoHire API', {
+    logger.info(this.agentName, 'Sending invitation request to RoboHire API', {
       recruiter_email: email,
       jd_length: jd.length,
       resume_length: resume.length,
@@ -46,7 +46,7 @@ export class InviteAgent {
     try {
       const startTime = Date.now();
       
-      const response = await fetch(GOHIRE_INVITATION_API, {
+      const response = await fetch(ROBOHIRE_INVITATION_API, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,18 +58,18 @@ export class InviteAgent {
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.error(this.agentName, 'GoHire API request failed', {
+        logger.error(this.agentName, 'RoboHire API request failed', {
           status: response.status,
           statusText: response.statusText,
           error: errorText,
         }, requestId);
         logger.endStep(requestId || '', stepId, 'failed', { error: errorText });
-        throw new Error(`GoHire API error: ${response.status} - ${errorText}`);
+        throw new Error(`RoboHire API error: ${response.status} - ${errorText}`);
       }
 
-      const result = await response.json() as GoHireInvitationResponse;
+      const result = await response.json() as RoboHireInvitationResponse;
 
-      logger.info(this.agentName, 'GoHire API response received', {
+      logger.info(this.agentName, 'RoboHire API response received', {
         candidate_email: result.email,
         candidate_name: result.name,
         job_title: result.job_title,
@@ -98,7 +98,7 @@ export class InviteAgent {
 
   /**
    * Generate an interview invitation (legacy method for backward compatibility)
-   * Now calls the GoHire API instead of generating email locally
+   * Now calls the RoboHire API instead of generating email locally
    */
   async generateInvitation(
     resume: string,
@@ -106,7 +106,7 @@ export class InviteAgent {
     requestId?: string,
     recruiterEmail?: string,
     interviewerRequirement?: string
-  ): Promise<GoHireInvitationResponse> {
+  ): Promise<RoboHireInvitationResponse> {
     return this.sendInvitation(resume, jd, recruiterEmail, interviewerRequirement, requestId);
   }
 }

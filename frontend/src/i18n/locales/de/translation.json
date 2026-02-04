@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "GoHire API",
+    "title": "RoboHire API",
     "subtitle": "Admin-Dashboard"
   },
   "language": {
@@ -79,9 +79,9 @@
     },
     "inviteCandidate": {
       "title": "Kandidaten zum Interview einladen",
-      "subtitle": "Einladung uber GoHire 一键邀约 API senden",
-      "toggleExternal": "Externe GoHire-API-Anfrage anzeigen",
-      "externalHint": "Die tatsachliche Anfrage an GoHire 一键邀约 API anzeigen",
+      "subtitle": "Einladung uber RoboHire 一键邀约 API senden",
+      "toggleExternal": "Externe RoboHire-API-Anfrage anzeigen",
+      "externalHint": "Die tatsachliche Anfrage an RoboHire 一键邀约 API anzeigen",
       "recruiterEmail": "Recruiter-E-Mail",
       "interviewerRequirement": "Interviewer-Anforderungen",
       "optional": "(optional)",
@@ -106,9 +106,9 @@
       "apiResponse": "API-Antwort",
       "errorMissingResumeJd": "Bitte Lebenslauf und Stellenbeschreibung angeben",
       "errorMissingRecruiter": "Bitte Recruiter-E-Mail angeben",
-      "externalApiTitle": "GoHire externe API",
+      "externalApiTitle": "RoboHire externe API",
       "copyCode": "Code kopieren",
-      "tip": "Tipp: Code kopieren und im Terminal ausfuhren, um die GoHire API zu testen"
+      "tip": "Tipp: Code kopieren und im Terminal ausfuhren, um die RoboHire API zu testen"
     },
     "parseResume": {
       "title": "Lebenslauf parsen",

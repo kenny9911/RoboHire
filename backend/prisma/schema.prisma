@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String?
+  company       String?
+  avatar        String?
+  provider      String?   // 'email', 'google', 'github', 'linkedin'
+  providerId    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  hiringRequests HiringRequest[]
+  sessions       Session[]
+
+  @@index([email])
+  @@index([provider, providerId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model HiringRequest {
+  id              String   @id @default(cuid())
+  userId          String
+  title           String
+  requirements    String   @db.Text
+  jobDescription  String?  @db.Text
+  status          String   @default("active") // active, paused, closed
+  webhookUrl      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  candidates Candidate[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Candidate {
+  id               String   @id @default(cuid())
+  hiringRequestId  String
+  name             String
+  email            String
+  resumeText       String   @db.Text
+  matchScore       Int?
+  status           String   @default("pending") // pending, screening, interviewed, shortlisted, rejected
+  evaluationReport Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  hiringRequest HiringRequest @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
+
+  @@index([hiringRequestId])
+  @@index([status])
+  @@index([email])
+}

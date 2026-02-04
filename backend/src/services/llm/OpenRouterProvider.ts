@@ -10,8 +10,8 @@ export class OpenRouterProvider implements LLMProvider {
       apiKey,
       baseURL: 'https://openrouter.ai/api/v1',
       defaultHeaders: {
-        'HTTP-Referer': 'https://gohire.ai',
-        'X-Title': 'GoHire API',
+        'HTTP-Referer': 'https://robohire.io',
+        'X-Title': 'RoboHire API',
       },
     });
     this.defaultModel = defaultModel;

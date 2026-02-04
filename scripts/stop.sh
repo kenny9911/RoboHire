@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GoHire API - Stop All Services Script
+# RoboHire API - Stop All Services Script
 
 # Colors for output
 RED='\033[0;31m'
@@ -13,7 +13,7 @@ BACKEND_PORT=4607
 FRONTEND_PORT=3607
 
 echo -e "${YELLOW}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${YELLOW}║           GoHire API - Stop All Services                   ║${NC}"
+echo -e "${YELLOW}║           RoboHire API - Stop All Services                   ║${NC}"
 echo -e "${YELLOW}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 

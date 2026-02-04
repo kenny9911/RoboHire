@@ -93,7 +93,7 @@ router.post('/match-resume', async (req: Request, res: Response) => {
 
 /**
  * POST /api/v1/invite-candidate
- * Send interview invitation via GoHire 一键邀约 API
+ * Send interview invitation via RoboHire 一键邀约 API
  */
 router.post('/invite-candidate', async (req: Request, res: Response) => {
   const requestId = generateRequestId();
@@ -120,7 +120,7 @@ router.post('/invite-candidate', async (req: Request, res: Response) => {
       hasInterviewerRequirement: !!interviewer_requirement,
     });
 
-    // Step 2: Call GoHire 一键邀约 API
+    // Step 2: Call RoboHire 一键邀约 API
     const result = await inviteAgent.generateInvitation(
       resume,
       jd,

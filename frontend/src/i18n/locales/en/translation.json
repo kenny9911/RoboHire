@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "GoHire API",
+    "title": "RoboHire API",
     "subtitle": "Admin Dashboard"
   },
   "language": {
@@ -65,6 +65,236 @@
       "title": "JSON Response"
     }
   },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "createAccount": "Create your account",
+    "loginSubtitle": "Sign in to access your dashboard",
+    "signupSubtitle": "Start hiring smarter with AI",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithGitHub": "Continue with GitHub",
+    "continueWithLinkedIn": "Continue with LinkedIn",
+    "orContinueWith": "or continue with email",
+    "name": "Name",
+    "namePlaceholder": "John Doe",
+    "company": "Company",
+    "companyPlaceholder": "Acme Inc.",
+    "optional": "optional",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholderSignup": "At least 8 characters",
+    "signInButton": "Sign In",
+    "createAccountButton": "Create Account",
+    "loading": "Please wait...",
+    "termsAgreement": "By creating an account, you agree to our",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "backToHome": "Back to home"
+  },
+  "landing": {
+    "nav": {
+      "services": "Services",
+      "howItWorks": "How It Works",
+      "features": "Features",
+      "pricing": "Pricing",
+      "signIn": "Sign In",
+      "getStarted": "Get Started",
+      "dashboard": "Dashboard"
+    },
+    "hero": {
+      "badge": "AI-Powered Hiring Platform",
+      "headline": "Hire Elite Candidates",
+      "headlineHighlight": "Before Others",
+      "subheadline": "Say goodbye to spending long hours going through piles of resumes. Our AI hiring agent vets candidates, conducts interviews, and delivers comprehensive evaluation reports automatically.",
+      "ctaPrimary": "Start Hiring Free",
+      "ctaSecondary": "Explore API",
+      "stat1": "Time Saved",
+      "stat2": "Faster Screening",
+      "stat3": "Companies",
+      "stat4": "Always Available"
+    },
+    "services": {
+      "title": "Two Powerful Ways to Hire",
+      "subtitle": "Choose the solution that fits your needs - or use both for maximum efficiency.",
+      "hiring": {
+        "title": "Start Hiring",
+        "subtitle": "AI Hiring Agent",
+        "description": "Let AI handle the heavy lifting. Our hiring agent screens resumes, conducts interviews, and delivers evaluation reports automatically. Focus on what matters - meeting great candidates.",
+        "feature1": "Automated resume screening",
+        "feature2": "AI-powered interviews",
+        "feature3": "Comprehensive evaluation reports",
+        "feature4": "Webhook integration",
+        "cta": "Start Hiring Now",
+        "badge": "Most Popular"
+      },
+      "api": {
+        "title": "RoboHire API",
+        "subtitle": "For Developers",
+        "description": "Integrate powerful AI recruitment capabilities into your existing systems. Parse resumes, match candidates, evaluate interviews, and more with our comprehensive API suite.",
+        "feature1": "Resume & JD parsing",
+        "feature2": "AI candidate matching",
+        "feature3": "Interview evaluation",
+        "feature4": "RESTful API endpoints",
+        "cta": "Explore API"
+      }
+    },
+    "howItWorks": {
+      "badge": "Simple Process",
+      "title": "How RoboHire Works",
+      "subtitle": "We use AI to act as a hiring agent that vets each resume, contacts and interviews matched candidates, and sends you comprehensive evaluation reports automatically.",
+      "step1": {
+        "title": "Set Up Your Job Opening",
+        "description": "Describe your ideal candidate or upload a job description. Specify must-have skills, experience requirements, and nice-to-haves. We handle the rest."
+      },
+      "step2": {
+        "title": "Plug Into Your Workflow",
+        "description": "Integrate with your existing ATS via API or webhooks. No heavy lifting required - just point your candidate pipeline to RoboHire and we take over."
+      },
+      "step3": {
+        "title": "Receive Best Matches",
+        "description": "Our AI screens every application, conducts initial interviews, and ranks candidates by fit. You only spend time with the right people."
+      },
+      "step4": {
+        "title": "Get Instant Reports",
+        "description": "Receive comprehensive evaluation reports via webhook. Know exactly why each candidate is a match - skills assessment, interview analysis, and hiring recommendations."
+      }
+    },
+    "features": {
+      "badge": "Powerful Features",
+      "title": "Everything You Need to Hire Smarter",
+      "subtitle": "From AI screening to automated interviews, we provide all the tools to transform your hiring process.",
+      "aiScreening": {
+        "title": "AI Resume Screening",
+        "description": "Our AI analyzes every resume against your requirements, identifying must-have skills, experience gaps, and hidden potential."
+      },
+      "autoInterviews": {
+        "title": "Automated Interviews",
+        "description": "AI conducts initial screening interviews 24/7, asking relevant questions and evaluating responses in real-time."
+      },
+      "evalReports": {
+        "title": "Evaluation Reports",
+        "description": "Get comprehensive reports with skill assessments, interview analysis, strengths, weaknesses, and hiring recommendations."
+      },
+      "timeSavings": {
+        "title": "90% Time Savings",
+        "description": "Stop spending hours reviewing mismatched candidates. Focus your time only on the best fits for your team."
+      },
+      "apiAccess": {
+        "title": "Developer API",
+        "description": "Full REST API access for parsing, matching, and evaluation. Integrate AI hiring capabilities into your existing systems."
+      },
+      "webhooks": {
+        "title": "Webhook Delivery",
+        "description": "Receive shortlisted candidates and evaluation reports automatically via webhooks. Seamless integration with your workflow."
+      },
+      "multilingual": {
+        "title": "Multilingual Support",
+        "description": "Support for 7 languages including English, Chinese, Japanese, Spanish, French, Portuguese, and German."
+      },
+      "cheatingDetection": {
+        "title": "Cheating Detection",
+        "description": "Advanced AI analysis to detect AI-assisted answers, ensuring you evaluate genuine candidate capabilities."
+      }
+    },
+    "cta": {
+      "title": "Ready to Hire Smarter?",
+      "subtitle": "Join hundreds of companies using AI to find elite candidates faster. Start your free trial today - no credit card required.",
+      "primary": "Start Hiring Free",
+      "secondary": "Talk to Sales",
+      "benefit1": "No credit card required",
+      "benefit2": "14-day free trial",
+      "benefit3": "Cancel anytime"
+    },
+    "footer": {
+      "tagline": "AI-powered hiring platform that helps you find and hire elite candidates before others.",
+      "product": "Product",
+      "startHiring": "Start Hiring",
+      "apiDocs": "API Documentation",
+      "pricing": "Pricing",
+      "changelog": "Changelog",
+      "company": "Company",
+      "about": "About Us",
+      "blog": "Blog",
+      "careers": "Careers",
+      "contact": "Contact",
+      "resources": "Resources",
+      "help": "Help Center",
+      "guides": "Guides",
+      "api": "API Reference",
+      "status": "Status",
+      "legal": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "security": "Security",
+      "rights": "All rights reserved."
+    }
+  },
+  "hiring": {
+    "welcome": "Welcome! I'm your AI hiring assistant. Tell me about the role you're hiring for, and I'll help you find the perfect candidates.\n\nYou can describe your ideal candidate, paste a job description, or upload a JD file. What are you looking for?",
+    "gotIt": "Great! I've captured your requirements. Let me summarize what I understand:\n\n",
+    "confirm": "Does this look correct? You can:\n- Type 'yes' to start hiring\n- Add more details\n- Upload a full JD for more context",
+    "moreInfo": "That's a good start! Can you tell me more about:\n\n",
+    "orUpload": "Or you can upload a job description file for more detailed matching.",
+    "loginRequired": "To create your hiring request and start receiving candidates, you'll need to sign in first.\n\n",
+    "loginPrompt": "Click the button below to sign in or create an account. Your hiring requirements will be saved.",
+    "updated": "Got it! I've updated your requirements. Ready to start hiring? Type 'yes' to proceed, or continue adding details.",
+    "jdParsed": "I've analyzed your job description. Here's what I found:\n\n",
+    "jdConfirm": "Would you like to proceed with these requirements, or would you like to add any specific criteria?",
+    "success": "Your hiring request has been created! 🎉\n\n",
+    "nextSteps": "**What happens next:**\n",
+    "dashboard": "Dashboard",
+    "error": "There was an issue creating your request: ",
+    "tryAgain": "Please try again or contact support if the issue persists.",
+    "signIn": "Sign In",
+    "thinking": "Thinking...",
+    "readyToStart": "Ready to Start Hiring?",
+    "signInToSave": "Sign in to save your hiring request and start receiving candidates.",
+    "signInToContinue": "Sign In to Continue",
+    "goToDashboard": "Go to Dashboard",
+    "uploadJd": "Upload Job Description",
+    "inputPlaceholder": "Describe your ideal candidate...",
+    "helperText": "Press Enter to send, Shift+Enter for new line. Upload a JD file for more detailed matching."
+  },
+  "dashboard": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "newHiring": "New Hiring",
+      "apiPlayground": "API Playground"
+    },
+    "welcome": "Welcome back",
+    "user": "there",
+    "subtitle": "Manage your hiring requests and track candidates.",
+    "logout": "Logout",
+    "loading": "Loading...",
+    "actions": {
+      "newHiring": "Start New Hiring",
+      "newHiringDesc": "Create a new job opening",
+      "api": "API Playground",
+      "apiDesc": "Test API endpoints",
+      "stats": "Statistics",
+      "activeRequests": "active requests"
+    },
+    "requests": {
+      "title": "Your Hiring Requests",
+      "new": "New Request",
+      "empty": "No hiring requests yet",
+      "emptyDesc": "Create your first hiring request to start finding candidates.",
+      "create": "Create Hiring Request",
+      "candidates": "candidates",
+      "created": "Created"
+    }
+  },
+  "apiPlayground": {
+    "title": "API Playground",
+    "dashboard": "Dashboard",
+    "startHiring": "Start Hiring",
+    "endpoints": "API Endpoints",
+    "logout": "Logout"
+  },
   "pages": {
     "matchResume": {
       "title": "Match Resume with JD",
@@ -79,9 +309,9 @@
     },
     "inviteCandidate": {
       "title": "Invite Candidate to Interview",
-      "subtitle": "Send interview invitation via GoHire \u4e00\u952e\u9080\u7ea6 API",
-      "toggleExternal": "Show External GoHire API Request",
-      "externalHint": "View the actual request sent to GoHire \u4e00\u952e\u9080\u7ea6 API for testing",
+      "subtitle": "Send interview invitation via RoboHire API",
+      "toggleExternal": "Show External RoboHire API Request",
+      "externalHint": "View the actual request sent to RoboHire API for testing",
       "recruiterEmail": "Recruiter Email",
       "interviewerRequirement": "Interviewer Requirement",
       "optional": "(optional)",
@@ -106,9 +336,9 @@
       "apiResponse": "API Response",
       "errorMissingResumeJd": "Please provide both resume and job description",
       "errorMissingRecruiter": "Please provide recruiter email",
-      "externalApiTitle": "GoHire External API",
+      "externalApiTitle": "RoboHire External API",
       "copyCode": "Copy Code",
-      "tip": "Tip: Copy and run this code in your terminal/console to test the GoHire API directly"
+      "tip": "Tip: Copy and run this code in your terminal/console to test the RoboHire API directly"
     },
     "parseResume": {
       "title": "Parse Resume",

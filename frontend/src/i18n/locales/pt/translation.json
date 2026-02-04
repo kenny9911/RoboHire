@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "GoHire API",
+    "title": "RoboHire API",
     "subtitle": "Painel Administrativo"
   },
   "language": {
@@ -79,9 +79,9 @@
     },
     "inviteCandidate": {
       "title": "Convidar candidato para entrevista",
-      "subtitle": "Enviar convite via GoHire 一键邀约 API",
-      "toggleExternal": "Mostrar solicitacao externa da GoHire API",
-      "externalHint": "Veja a solicitacao real enviada para GoHire 一键邀约 API",
+      "subtitle": "Enviar convite via RoboHire 一键邀约 API",
+      "toggleExternal": "Mostrar solicitacao externa da RoboHire API",
+      "externalHint": "Veja a solicitacao real enviada para RoboHire 一键邀约 API",
       "recruiterEmail": "Email do recrutador",
       "interviewerRequirement": "Requisitos do entrevistador",
       "optional": "(opcional)",
@@ -106,9 +106,9 @@
       "apiResponse": "Resposta da API",
       "errorMissingResumeJd": "Forneca o curriculo e a descricao da vaga",
       "errorMissingRecruiter": "Forneca o email do recrutador",
-      "externalApiTitle": "GoHire API externa",
+      "externalApiTitle": "RoboHire API externa",
       "copyCode": "Copiar codigo",
-      "tip": "Dica: copie e execute este codigo para testar a GoHire API diretamente"
+      "tip": "Dica: copie e execute este codigo para testar a RoboHire API diretamente"
     },
     "parseResume": {
       "title": "Analisar curriculo",

@@ -400,7 +400,7 @@ export interface InvitationEmail {
 }
 
 // 一键邀约 API Response
-export interface GoHireInvitationResponse {
+export interface RoboHireInvitationResponse {
   email: string;
   bcc: string[];
   name: string;

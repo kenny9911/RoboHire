@@ -1,94 +1,652 @@
-# GoHire API Documentation
+# RoboHire API Documentation
 
-## Overview
+Complete API reference for the RoboHire AI-Powered Recruitment Platform.
 
-GoHire API is an AI-powered recruitment platform that provides intelligent resume matching, parsing, and interview evaluation capabilities.
-
-**Base URL:** `http://localhost:4607/api/v1`
-
-**Content-Type:** `application/json` (except for file uploads which use `multipart/form-data`)
+**Base URL:** `http://localhost:4607`
 
 ---
 
 ## Table of Contents
 
-1. [Match Resume with JD](#1-match-resume-with-jd)
-2. [Invite Candidate to Interview](#2-invite-candidate-to-interview)
-3. [Parse Resume](#3-parse-resume)
-4. [Parse Job Description](#4-parse-job-description)
-5. [Evaluate Interview](#5-evaluate-interview)
-6. [Health Check](#6-health-check)
-7. [Statistics](#7-statistics)
-8. [List Documents](#8-list-documents)
-9. [Error Handling](#error-handling)
-10. [Rate Limiting](#rate-limiting)
+- [Authentication](#authentication)
+  - [Sign Up](#sign-up)
+  - [Login](#login)
+  - [Logout](#logout)
+  - [Get Current User](#get-current-user)
+  - [Update Profile](#update-profile)
+  - [Change Password](#change-password)
+  - [OAuth Login](#oauth-login)
+- [Hiring Requests](#hiring-requests)
+  - [Create Hiring Request](#create-hiring-request)
+  - [List Hiring Requests](#list-hiring-requests)
+  - [Get Hiring Request](#get-hiring-request)
+  - [Update Hiring Request](#update-hiring-request)
+  - [Delete Hiring Request](#delete-hiring-request)
+  - [List Candidates](#list-candidates)
+  - [Update Candidate Status](#update-candidate-status)
+- [AI Recruitment APIs](#ai-recruitment-apis)
+  - [Match Resume](#match-resume)
+  - [Parse Resume](#parse-resume)
+  - [Parse Job Description](#parse-job-description)
+  - [Invite Candidate](#invite-candidate)
+  - [Evaluate Interview](#evaluate-interview)
+- [System Endpoints](#system-endpoints)
+  - [Health Check](#health-check)
+  - [Usage Statistics](#usage-statistics)
+  - [List Documents](#list-documents)
+  - [Log Information](#log-information)
 
 ---
 
-## 1. Match Resume with JD
+## Authentication
 
-Analyze how well a candidate's resume matches a job description. Returns detailed scoring, skill analysis, and interview recommendations.
+All authentication endpoints are prefixed with `/api/auth`.
 
-### Endpoint
+### Demo Account
 
+For testing purposes, a demo account is available:
+
+| Field | Value |
+|-------|-------|
+| Email | `demo@robohire.io` |
+| Password | `demo1234` |
+
+### Sign Up
+
+Create a new user account.
+
+**Endpoint:** `POST /api/auth/signup`
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123",
+  "name": "John Doe",
+  "company": "Acme Inc."
+}
 ```
-POST /api/v1/match-resume
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| email | string | Yes | User's email address |
+| password | string | Yes | Password (min 8 characters) |
+| name | string | No | User's full name |
+| company | string | No | Company name |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "clx123abc",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "company": "Acme Inc.",
+      "avatar": null,
+      "provider": "email",
+      "createdAt": "2026-02-04T12:00:00.000Z",
+      "updatedAt": "2026-02-04T12:00:00.000Z"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
 ```
 
-### Request
-
-#### Headers
-
-| Header | Value | Required |
-|--------|-------|----------|
-| Content-Type | application/json | Yes |
-
-#### Body Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| resume | string | Yes | Full text content of the candidate's resume |
-| jd | string | Yes | Full text content of the job description |
-
-#### Example Request
+**cURL:**
 
 ```bash
-curl -X POST 'http://localhost:4607/api/v1/match-resume' \
-  -H 'Content-Type: application/json' \
+curl -X POST http://localhost:4607/api/auth/signup \
+  -H "Content-Type: application/json" \
   -d '{
-    "resume": "John Doe\nSenior Software Engineer\n5 years experience in Python, React, AWS...",
-    "jd": "Senior Software Engineer\nRequirements: 5+ years experience, Python, React, AWS..."
+    "email": "user@example.com",
+    "password": "securepassword123",
+    "name": "John Doe",
+    "company": "Acme Inc."
   }'
 ```
 
-```javascript
-const response = await fetch('http://localhost:4607/api/v1/match-resume', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    resume: "John Doe\nSenior Software Engineer...",
-    jd: "Senior Software Engineer\nRequirements..."
-  })
-});
-const data = await response.json();
+---
+
+### Login
+
+Authenticate with email and password.
+
+**Endpoint:** `POST /api/auth/login`
+
+**Request Body:**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
 ```
 
-```python
-import requests
+**Response:**
 
-response = requests.post(
-    'http://localhost:4607/api/v1/match-resume',
-    json={
-        'resume': 'John Doe\nSenior Software Engineer...',
-        'jd': 'Senior Software Engineer\nRequirements...'
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "clx123abc",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "company": "Acme Inc."
+    },
+    "token": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+**cURL:**
+
+```bash
+curl -X POST http://localhost:4607/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "demo@robohire.io",
+    "password": "demo1234"
+  }'
+```
+
+---
+
+### Logout
+
+Log out the current user and invalidate the session.
+
+**Endpoint:** `POST /api/auth/logout`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+
+---
+
+### Get Current User
+
+Get the authenticated user's profile.
+
+**Endpoint:** `GET /api/auth/me`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "clx123abc",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "company": "Acme Inc.",
+      "avatar": null,
+      "provider": "email",
+      "createdAt": "2026-02-04T12:00:00.000Z",
+      "updatedAt": "2026-02-04T12:00:00.000Z"
     }
-)
-data = response.json()
+  }
+}
 ```
 
-### Response
+**cURL:**
 
-#### Success Response (200 OK)
+```bash
+curl -X GET http://localhost:4607/api/auth/me \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+### Update Profile
+
+Update the current user's profile information.
+
+**Endpoint:** `PATCH /api/auth/profile`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+
+**Request Body:**
+
+```json
+{
+  "name": "John Smith",
+  "company": "New Company Inc.",
+  "avatar": "https://example.com/avatar.jpg"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "clx123abc",
+      "email": "user@example.com",
+      "name": "John Smith",
+      "company": "New Company Inc.",
+      "avatar": "https://example.com/avatar.jpg"
+    }
+  }
+}
+```
+
+---
+
+### Change Password
+
+Change the current user's password.
+
+**Endpoint:** `POST /api/auth/change-password`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+
+**Request Body:**
+
+```json
+{
+  "currentPassword": "oldpassword123",
+  "newPassword": "newpassword456"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+---
+
+### OAuth Login
+
+Authenticate using OAuth providers.
+
+**Google:** `GET /api/auth/google`
+**GitHub:** `GET /api/auth/github`
+**LinkedIn:** `GET /api/auth/linkedin`
+
+These endpoints redirect to the respective OAuth provider. After authentication, users are redirected to `/dashboard` with a session cookie.
+
+---
+
+## Hiring Requests
+
+All hiring request endpoints are prefixed with `/api/v1/hiring-requests` and require authentication.
+
+### Create Hiring Request
+
+Create a new hiring request.
+
+**Endpoint:** `POST /api/v1/hiring-requests`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+| Content-Type | application/json |
+
+**Request Body:**
+
+```json
+{
+  "title": "Senior Software Engineer",
+  "requirements": "5+ years experience in Python and JavaScript. Strong system design skills. Experience with AWS or GCP.",
+  "jobDescription": "Full job description text here...",
+  "webhookUrl": "https://your-app.com/webhook/candidates"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| title | string | Yes | Job title |
+| requirements | string | Yes | Key requirements for the role |
+| jobDescription | string | No | Full job description |
+| webhookUrl | string | No | URL to receive candidate notifications |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clx456def",
+    "userId": "clx123abc",
+    "title": "Senior Software Engineer",
+    "requirements": "5+ years experience...",
+    "jobDescription": "Full job description...",
+    "status": "active",
+    "webhookUrl": "https://your-app.com/webhook/candidates",
+    "createdAt": "2026-02-04T12:00:00.000Z",
+    "updatedAt": "2026-02-04T12:00:00.000Z"
+  }
+}
+```
+
+**cURL:**
+
+```bash
+curl -X POST http://localhost:4607/api/v1/hiring-requests \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Senior Software Engineer",
+    "requirements": "5+ years experience in Python and JavaScript"
+  }'
+```
+
+---
+
+### List Hiring Requests
+
+Get all hiring requests for the authenticated user.
+
+**Endpoint:** `GET /api/v1/hiring-requests`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| status | string | - | Filter by status (active, paused, closed) |
+| limit | number | 20 | Number of results to return |
+| offset | number | 0 | Number of results to skip |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "clx456def",
+      "title": "Senior Software Engineer",
+      "requirements": "5+ years experience...",
+      "status": "active",
+      "createdAt": "2026-02-04T12:00:00.000Z",
+      "_count": {
+        "candidates": 15
+      }
+    }
+  ],
+  "pagination": {
+    "total": 5,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+**cURL:**
+
+```bash
+curl -X GET "http://localhost:4607/api/v1/hiring-requests?status=active&limit=10" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+### Get Hiring Request
+
+Get a single hiring request with its candidates.
+
+**Endpoint:** `GET /api/v1/hiring-requests/:id`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clx456def",
+    "title": "Senior Software Engineer",
+    "requirements": "5+ years experience...",
+    "jobDescription": "Full job description...",
+    "status": "active",
+    "webhookUrl": null,
+    "createdAt": "2026-02-04T12:00:00.000Z",
+    "updatedAt": "2026-02-04T12:00:00.000Z",
+    "candidates": [
+      {
+        "id": "clx789ghi",
+        "name": "Jane Doe",
+        "email": "jane@example.com",
+        "matchScore": 85,
+        "status": "shortlisted"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Update Hiring Request
+
+Update a hiring request.
+
+**Endpoint:** `PATCH /api/v1/hiring-requests/:id`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+| Content-Type | application/json |
+
+**Request Body:**
+
+```json
+{
+  "title": "Updated Job Title",
+  "status": "paused"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| title | string | Updated job title |
+| requirements | string | Updated requirements |
+| jobDescription | string | Updated job description |
+| webhookUrl | string | Updated webhook URL |
+| status | string | Status: active, paused, or closed |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clx456def",
+    "title": "Updated Job Title",
+    "status": "paused",
+    "updatedAt": "2026-02-04T13:00:00.000Z"
+  }
+}
+```
+
+---
+
+### Delete Hiring Request
+
+Delete a hiring request and all associated candidates.
+
+**Endpoint:** `DELETE /api/v1/hiring-requests/:id`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Hiring request deleted successfully"
+}
+```
+
+---
+
+### List Candidates
+
+Get candidates for a specific hiring request.
+
+**Endpoint:** `GET /api/v1/hiring-requests/:id/candidates`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| status | string | - | Filter by status |
+| limit | number | 50 | Number of results |
+| offset | number | 0 | Skip results |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "clx789ghi",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "resumeText": "Resume content...",
+      "matchScore": 85,
+      "status": "shortlisted",
+      "evaluationReport": { ... },
+      "createdAt": "2026-02-04T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 15,
+    "limit": 50,
+    "offset": 0
+  }
+}
+```
+
+---
+
+### Update Candidate Status
+
+Update a candidate's status.
+
+**Endpoint:** `PATCH /api/v1/hiring-requests/:id/candidates/:candidateId`
+
+**Headers:**
+
+| Header | Value |
+|--------|-------|
+| Authorization | Bearer {token} |
+| Content-Type | application/json |
+
+**Request Body:**
+
+```json
+{
+  "status": "shortlisted"
+}
+```
+
+**Valid statuses:** `pending`, `screening`, `interviewed`, `shortlisted`, `rejected`
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clx789ghi",
+    "status": "shortlisted",
+    "updatedAt": "2026-02-04T13:00:00.000Z"
+  }
+}
+```
+
+---
+
+## AI Recruitment APIs
+
+These endpoints provide AI-powered recruitment analysis. All endpoints are under `/api/v1`.
+
+### Match Resume
+
+Analyze how well a candidate's resume matches a job description.
+
+**Endpoint:** `POST /api/v1/match-resume`
+
+**Request Body:**
+
+```json
+{
+  "resume": "John Doe\nSenior Software Engineer\njohn@example.com\n\nEXPERIENCE:\nGoogle (2019-2024)\n- Led team of 5 engineers\n- Built React dashboard\n\nSKILLS: Python, JavaScript, React, Node.js, AWS",
+  "jd": "Senior Software Engineer\n\nRequirements:\n- 5+ years experience\n- Python and JavaScript\n- React experience\n- AWS knowledge"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| resume | string | Yes | Full resume text |
+| jd | string | Yes | Full job description text |
+
+**Response Structure:**
 
 ```json
 {
@@ -98,485 +656,184 @@ data = response.json()
       "candidateName": "John Doe",
       "totalYearsExperience": "5 years",
       "currentRole": "Senior Software Engineer",
-      "technicalSkills": ["Python", "React", "AWS", "PostgreSQL"],
+      "technicalSkills": ["Python", "JavaScript", "React"],
       "softSkills": ["Leadership", "Communication"],
-      "industries": ["Technology", "E-commerce"],
-      "educationLevel": "Bachelor's in Computer Science",
-      "certifications": ["AWS Solutions Architect"],
-      "keyAchievements": ["Led team of 5 engineers", "Reduced latency by 40%"]
+      "keyAchievements": ["Led team of 5", "Built dashboard for 10M+ users"]
     },
     "jdAnalysis": {
       "jobTitle": "Senior Software Engineer",
       "seniorityLevel": "Senior",
       "requiredYearsExperience": "5+ years",
-      "mustHaveSkills": ["Python", "React", "AWS"],
-      "niceToHaveSkills": ["Kubernetes", "GraphQL"],
-      "industryFocus": "Technology",
-      "keyResponsibilities": ["Design scalable systems", "Mentor junior developers"]
+      "mustHaveSkills": ["Python", "JavaScript", "React"],
+      "niceToHaveSkills": ["AWS", "Machine Learning"]
     },
     "mustHaveAnalysis": {
       "extractedMustHaves": {
-        "skills": [
-          { "skill": "Python", "reason": "Core backend language", "explicitlyStated": true }
-        ],
-        "experiences": [
-          { "experience": "5+ years software development", "reason": "Senior role requirement", "minimumYears": "5 years" }
-        ],
-        "qualifications": [
-          { "qualification": "Bachelor's degree in CS or related field", "reason": "Standard requirement" }
-        ]
+        "skills": [{"skill": "Python", "reason": "Core requirement"}],
+        "experiences": [{"experience": "5+ years", "minimumYears": "5"}]
       },
       "candidateEvaluation": {
         "meetsAllMustHaves": true,
-        "matchedSkills": [
-          { "skill": "Python", "candidateEvidence": "5 years Python experience", "proficiency": "Expert" }
-        ],
-        "missingSkills": [],
-        "matchedExperiences": [
-          { "experience": "5+ years", "candidateEvidence": "5 years at TechCorp", "exceeds": false }
-        ],
-        "missingExperiences": [],
-        "matchedQualifications": ["Bachelor's in Computer Science"],
-        "missingQualifications": []
+        "matchedSkills": [{"skill": "Python", "proficiency": "Expert"}],
+        "missingSkills": []
       },
       "mustHaveScore": 95,
-      "disqualified": false,
-      "disqualificationReasons": [],
-      "gapAnalysis": "Candidate meets all must-have requirements with strong evidence."
-    },
-    "niceToHaveAnalysis": {
-      "extractedNiceToHaves": {
-        "skills": [
-          { "skill": "Kubernetes", "valueAdd": "Container orchestration experience" }
-        ],
-        "experiences": [],
-        "qualifications": []
-      },
-      "candidateEvaluation": {
-        "matchedSkills": [],
-        "matchedExperiences": [],
-        "matchedQualifications": [],
-        "bonusSkills": ["Docker", "CI/CD pipelines"]
-      },
-      "niceToHaveScore": 40,
-      "competitiveAdvantage": "Strong DevOps background provides additional value."
-    },
-    "skillMatch": {
-      "matchedMustHave": [
-        { "skill": "Python", "proficiencyLevel": "Expert", "evidenceFromResume": "Led Python backend development" }
-      ],
-      "missingMustHave": [],
-      "matchedNiceToHave": [],
-      "missingNiceToHave": ["Kubernetes"],
-      "additionalRelevantSkills": ["Docker", "Redis"]
-    },
-    "skillMatchScore": {
-      "score": 85,
-      "breakdown": {
-        "mustHaveScore": 95,
-        "niceToHaveScore": 40,
-        "depthOfExpertise": 80
-      },
-      "skillApplicationAnalysis": "Skills are well-applied in relevant projects.",
-      "credibilityFlags": {
-        "hasRedFlags": false,
-        "concerns": [],
-        "positiveIndicators": ["Specific metrics provided", "Clear progression"]
-      }
-    },
-    "experienceMatch": {
-      "required": "5+ years",
-      "candidate": "5 years",
-      "yearsGap": "Meets requirement",
-      "assessment": "Experience level aligns well with requirements."
-    },
-    "experienceValidation": {
-      "score": 88,
-      "relevanceToRole": "High",
-      "gaps": [],
-      "strengths": [
-        { "area": "Backend development", "impact": "Directly relevant to role" }
-      ],
-      "careerProgression": "Steady growth from junior to senior roles."
-    },
-    "candidatePotential": {
-      "growthTrajectory": "Strong upward trajectory",
-      "leadershipIndicators": ["Led team of 5", "Mentored 3 junior developers"],
-      "learningAgility": "Demonstrated by learning new technologies",
-      "uniqueValueProps": ["Full-stack capability", "Strong DevOps knowledge"],
-      "cultureFitIndicators": ["Collaborative", "Results-oriented"],
-      "riskFactors": []
+      "disqualified": false
     },
     "overallMatchScore": {
-      "score": 85,
+      "score": 87,
       "grade": "A",
-      "breakdown": {
-        "skillMatchWeight": 40,
-        "skillMatchScore": 85,
-        "experienceWeight": 35,
-        "experienceScore": 88,
-        "potentialWeight": 25,
-        "potentialScore": 82
-      },
       "confidence": "High"
     },
     "overallFit": {
       "verdict": "Strong Match",
-      "summary": "Candidate is a strong match with relevant experience and skills.",
-      "topReasons": ["Meets all must-have skills", "Relevant industry experience", "Leadership experience"],
-      "interviewFocus": ["System design depth", "Team leadership style"],
+      "summary": "Excellent candidate with all required skills...",
       "hiringRecommendation": "Strongly Recommend",
-      "suggestedRole": ""
-    },
-    "recommendations": {
-      "forRecruiter": ["Proceed to technical interview", "Verify AWS certification"],
-      "forCandidate": ["Highlight Kubernetes learning plans"],
-      "interviewQuestions": ["Describe a complex system you designed", "How do you mentor junior developers?"]
+      "interviewFocus": ["System design depth", "Leadership experience"]
     },
     "suggestedInterviewQuestions": {
       "technical": [
         {
-          "area": "System Design",
-          "subArea": "Scalability",
+          "area": "Python",
           "questions": [
             {
-              "question": "Design a rate-limiting system for our API.",
-              "purpose": "Assess system design skills",
-              "lookFor": ["Distributed systems knowledge", "Trade-off analysis"],
-              "followUps": ["How would you handle burst traffic?"],
-              "difficulty": "Advanced",
-              "timeEstimate": "15-20 minutes"
+              "question": "Describe your experience with Python async programming",
+              "purpose": "Assess advanced Python knowledge",
+              "difficulty": "Advanced"
             }
           ]
         }
       ],
-      "behavioral": [],
-      "experienceValidation": [],
-      "situational": [],
-      "cultureFit": [],
-      "redFlagProbing": []
-    },
-    "areasToProbeDeeper": [
-      {
-        "area": "AWS Experience Depth",
-        "priority": "Medium",
-        "reason": "Verify hands-on production experience",
-        "subAreas": [
-          {
-            "name": "Infrastructure as Code",
-            "specificConcerns": ["Level of Terraform/CloudFormation experience"],
-            "validationQuestions": ["What IaC tools have you used in production?"],
-            "greenFlags": ["Specific examples with metrics"],
-            "redFlags": ["Vague answers", "Only theoretical knowledge"]
-          }
-        ],
-        "suggestedApproach": "Start with open-ended questions, then drill into specifics."
-      }
-    ]
+      "behavioral": [...],
+      "situational": [...]
+    }
   },
-  "requestId": "req_1706812345_abc123",
-  "savedAs": "John_Doe_Senior_Software_Engineer_2026-02-01T12-30-45.json"
+  "requestId": "req_abc123"
 }
 ```
 
-#### Error Response (400 Bad Request)
-
-```json
-{
-  "success": false,
-  "error": "Both resume and jd fields are required",
-  "requestId": "req_1706812345_abc123"
-}
-```
-
----
-
-## 2. Invite Candidate to Interview
-
-Generate a personalized interview invitation email based on the candidate's resume and job description.
-
-### Endpoint
-
-```
-POST /api/v1/invite-candidate
-```
-
-### Request
-
-#### Body Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| resume | string | Yes | Full text content of the candidate's resume |
-| jd | string | Yes | Full text content of the job description |
-
-#### Example Request
+**cURL:**
 
 ```bash
-curl -X POST 'http://localhost:4607/api/v1/invite-candidate' \
-  -H 'Content-Type: application/json' \
+curl -X POST http://localhost:4607/api/v1/match-resume \
+  -H "Content-Type: application/json" \
   -d '{
-    "resume": "John Doe\nSenior Software Engineer...",
-    "jd": "Senior Software Engineer position at TechCorp..."
+    "resume": "John Doe\nSoftware Engineer...",
+    "jd": "Senior Software Engineer\nRequirements..."
   }'
 ```
 
+**JavaScript:**
+
 ```javascript
-const response = await fetch('http://localhost:4607/api/v1/invite-candidate', {
+const response = await fetch('http://localhost:4607/api/v1/match-resume', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    resume: "John Doe\nSenior Software Engineer...",
-    jd: "Senior Software Engineer position at TechCorp..."
+    resume: 'John Doe\nSoftware Engineer...',
+    jd: 'Senior Software Engineer\nRequirements...'
   })
 });
 const data = await response.json();
 ```
 
+**Python:**
+
 ```python
 import requests
 
 response = requests.post(
-    'http://localhost:4607/api/v1/invite-candidate',
+    'http://localhost:4607/api/v1/match-resume',
     json={
-        'resume': 'John Doe\nSenior Software Engineer...',
-        'jd': 'Senior Software Engineer position at TechCorp...'
+        'resume': 'John Doe\nSoftware Engineer...',
+        'jd': 'Senior Software Engineer\nRequirements...'
     }
 )
 data = response.json()
 ```
 
-### Response
-
-#### Success Response (200 OK)
-
-```json
-{
-  "success": true,
-  "data": {
-    "subject": "Interview Invitation: Senior Software Engineer at TechCorp",
-    "body": "Dear John,\n\nThank you for your interest in the Senior Software Engineer position at TechCorp...\n\nBest regards,\nTechCorp Hiring Team"
-  },
-  "requestId": "req_1706812346_def456"
-}
-```
-
 ---
 
-## 3. Parse Resume
+### Parse Resume
 
-Extract structured data from a resume PDF file.
+Extract structured data from a resume PDF.
 
-### Endpoint
+**Endpoint:** `POST /api/v1/parse-resume`
 
-```
-POST /api/v1/parse-resume
-```
+**Content-Type:** `multipart/form-data`
 
-### Request
+**Form Fields:**
 
-#### Headers
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| file | File | Yes | Resume PDF file |
 
-| Header | Value | Required |
-|--------|-------|----------|
-| Content-Type | multipart/form-data | Yes |
-
-#### Body Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| file | file | Yes | Resume PDF file (max 10MB) |
-
-#### Example Request
-
-```bash
-curl -X POST 'http://localhost:4607/api/v1/parse-resume' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@/path/to/resume.pdf'
-```
-
-```javascript
-const formData = new FormData();
-formData.append('file', fileInput.files[0]);
-
-const response = await fetch('http://localhost:4607/api/v1/parse-resume', {
-  method: 'POST',
-  body: formData
-});
-const data = await response.json();
-```
-
-```python
-import requests
-
-with open('resume.pdf', 'rb') as f:
-    response = requests.post(
-        'http://localhost:4607/api/v1/parse-resume',
-        files={'file': ('resume.pdf', f, 'application/pdf')}
-    )
-data = response.json()
-```
-
-### Response
-
-#### Success Response (200 OK)
+**Response:**
 
 ```json
 {
   "success": true,
   "data": {
     "name": "John Doe",
-    "email": "john.doe@email.com",
+    "email": "john@example.com",
     "phone": "+1-555-123-4567",
-    "location": "San Francisco, CA",
     "linkedin": "linkedin.com/in/johndoe",
     "github": "github.com/johndoe",
-    "website": "johndoe.dev",
-    "summary": "Senior Software Engineer with 5+ years of experience...",
+    "skills": {
+      "technical": ["Python", "JavaScript", "React"],
+      "soft": ["Leadership", "Communication"],
+      "tools": ["Git", "Docker", "AWS"]
+    },
     "experience": [
       {
-        "title": "Senior Software Engineer",
-        "company": "TechCorp",
-        "location": "San Francisco, CA",
-        "startDate": "2021-01",
-        "endDate": "Present",
-        "isCurrent": true,
-        "description": "Led development of microservices architecture...",
+        "company": "Google",
+        "role": "Senior Software Engineer",
+        "duration": "2019 - 2024",
         "achievements": [
-          "Reduced API latency by 40%",
-          "Led team of 5 engineers"
-        ],
-        "technologies": ["Python", "React", "AWS"]
+          "Led team of 5 engineers",
+          "Built React dashboard serving 10M+ users"
+        ]
       }
     ],
     "education": [
       {
-        "degree": "Bachelor of Science",
-        "field": "Computer Science",
-        "institution": "Stanford University",
-        "location": "Stanford, CA",
-        "graduationDate": "2018",
-        "gpa": "3.8",
-        "honors": ["Magna Cum Laude"],
-        "relevantCoursework": ["Distributed Systems", "Machine Learning"]
+        "institution": "MIT",
+        "degree": "BS Computer Science",
+        "year": "2017"
       }
     ],
-    "skills": {
-      "technical": ["Python", "JavaScript", "React", "AWS", "PostgreSQL"],
-      "soft": ["Leadership", "Communication", "Problem Solving"],
-      "languages": ["English (Native)", "Spanish (Conversational)"],
-      "tools": ["Git", "Docker", "Kubernetes", "Jenkins"]
-    },
-    "certifications": [
-      {
-        "name": "AWS Solutions Architect",
-        "issuer": "Amazon Web Services",
-        "date": "2022",
-        "expirationDate": "2025",
-        "credentialId": "ABC123"
-      }
-    ],
-    "projects": [
-      {
-        "name": "E-commerce Platform",
-        "description": "Built a scalable e-commerce platform...",
-        "technologies": ["Python", "React", "AWS"],
-        "url": "github.com/johndoe/ecommerce",
-        "highlights": ["Handles 10k concurrent users"]
-      }
-    ],
-    "awards": [
-      {
-        "name": "Employee of the Year",
-        "issuer": "TechCorp",
-        "date": "2023",
-        "description": "Recognized for exceptional performance"
-      }
-    ],
-    "publications": [],
-    "patents": [],
-    "volunteerWork": [],
-    "rawText": "Full extracted text from PDF..."
+    "certifications": ["AWS Solutions Architect"],
+    "rawText": "Full extracted text..."
   },
-  "requestId": "req_1706812347_ghi789",
   "cached": false,
-  "savedAs": "John_Doe_Resume.json"
+  "requestId": "req_def456"
 }
 ```
 
-#### Cached Response
+**cURL:**
 
-If the same document was previously parsed:
-
-```json
-{
-  "success": true,
-  "data": { ... },
-  "requestId": "req_1706812348_jkl012",
-  "cached": true,
-  "message": "Using cached parsed resume"
-}
+```bash
+curl -X POST http://localhost:4607/api/v1/parse-resume \
+  -F "file=@resume.pdf"
 ```
 
 ---
 
-## 4. Parse Job Description
+### Parse Job Description
 
-Extract structured data from a job description PDF file.
+Extract structured data from a job description PDF.
 
-### Endpoint
+**Endpoint:** `POST /api/v1/parse-jd`
 
-```
-POST /api/v1/parse-jd
-```
+**Content-Type:** `multipart/form-data`
 
-### Request
+**Form Fields:**
 
-#### Headers
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| file | File | Yes | Job description PDF file |
 
-| Header | Value | Required |
-|--------|-------|----------|
-| Content-Type | multipart/form-data | Yes |
-
-#### Body Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| file | file | Yes | Job description PDF file (max 10MB) |
-
-#### Example Request
-
-```bash
-curl -X POST 'http://localhost:4607/api/v1/parse-jd' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@/path/to/job_description.pdf'
-```
-
-```javascript
-const formData = new FormData();
-formData.append('file', fileInput.files[0]);
-
-const response = await fetch('http://localhost:4607/api/v1/parse-jd', {
-  method: 'POST',
-  body: formData
-});
-const data = await response.json();
-```
-
-```python
-import requests
-
-with open('job_description.pdf', 'rb') as f:
-    response = requests.post(
-        'http://localhost:4607/api/v1/parse-jd',
-        files={'file': ('job_description.pdf', f, 'application/pdf')}
-    )
-data = response.json()
-```
-
-### Response
-
-#### Success Response (200 OK)
+**Response:**
 
 ```json
 {
@@ -584,316 +841,334 @@ data = response.json()
   "data": {
     "title": "Senior Software Engineer",
     "company": "TechCorp",
-    "department": "Engineering",
-    "location": "San Francisco, CA",
-    "workType": "Hybrid",
+    "location": "San Francisco, CA (Remote OK)",
     "employmentType": "Full-time",
     "experienceLevel": "Senior",
-    "salaryRange": "$150,000 - $200,000",
-    "companyDescription": "TechCorp is a leading technology company...",
-    "teamDescription": "Join our Platform Engineering team...",
-    "jobOverview": "We are looking for a Senior Software Engineer...",
-    "responsibilities": [
-      "Design and implement scalable backend services",
-      "Mentor junior engineers",
-      "Participate in architecture decisions"
-    ],
     "requirements": {
       "mustHave": [
-        {
-          "requirement": "5+ years of software development experience",
-          "category": "Experience",
-          "details": "In a production environment"
-        },
-        {
-          "requirement": "Proficiency in Python or Go",
-          "category": "Technical Skill",
-          "details": "Backend development"
-        }
+        "5+ years software engineering experience",
+        "Python and JavaScript expertise"
       ],
       "niceToHave": [
-        {
-          "requirement": "Experience with Kubernetes",
-          "category": "Technical Skill",
-          "details": "Container orchestration"
-        }
+        "AWS experience",
+        "Machine Learning background"
       ]
     },
-    "skills": {
-      "technical": ["Python", "Go", "AWS", "PostgreSQL", "Redis"],
-      "soft": ["Leadership", "Communication", "Problem Solving"]
+    "responsibilities": [
+      "Lead technical design decisions",
+      "Mentor junior developers"
+    ],
+    "qualifications": {
+      "education": ["BS in Computer Science or equivalent"],
+      "skills": {
+        "technical": ["Python", "JavaScript", "React"],
+        "soft": ["Leadership", "Communication"]
+      }
+    },
+    "compensation": {
+      "salary": "$150,000 - $200,000",
+      "bonus": "15% annual bonus",
+      "equity": "Stock options available"
     },
     "benefits": [
-      "Competitive salary",
       "Health insurance",
       "401k matching",
-      "Remote work options"
+      "Unlimited PTO"
     ],
-    "compensation": {
-      "baseSalary": "$150,000 - $200,000",
-      "bonus": "15-20% annual bonus",
-      "equity": "Stock options available",
-      "otherBenefits": ["Health", "401k", "PTO"]
-    },
-    "applicationProcess": "Submit resume and cover letter",
-    "applicationDeadline": "2026-03-01",
-    "contactInfo": {
-      "recruiter": "Jane Smith",
-      "email": "recruiting@techcorp.com"
-    },
-    "additionalInfo": "Equal opportunity employer",
-    "rawText": "Full extracted text from PDF..."
+    "rawText": "Full extracted text..."
   },
-  "requestId": "req_1706812349_mno345",
   "cached": false,
-  "savedAs": "Senior_Software_Engineer_TechCorp.json"
+  "requestId": "req_ghi789"
 }
+```
+
+**cURL:**
+
+```bash
+curl -X POST http://localhost:4607/api/v1/parse-jd \
+  -F "file=@job_description.pdf"
 ```
 
 ---
 
-## 5. Evaluate Interview
+### Invite Candidate
 
-Analyze an interview transcript against the candidate's resume and job description.
+Generate a personalized interview invitation email and create an interview session.
 
-### Endpoint
+**Endpoint:** `POST /api/v1/invite-candidate`
 
-```
-POST /api/v1/evaluate-interview
-```
+**Request Body:**
 
-### Request
-
-#### Body Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| resume | string | Yes | Full text content of the candidate's resume |
-| jd | string | Yes | Full text content of the job description |
-| interviewScript | string | Yes | Full transcript of the interview |
-
-#### Example Request
-
-```bash
-curl -X POST 'http://localhost:4607/api/v1/evaluate-interview' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "resume": "John Doe\nSenior Software Engineer...",
-    "jd": "Senior Software Engineer position...",
-    "interviewScript": "Interviewer: Tell me about yourself.\nCandidate: I am a software engineer with 5 years..."
-  }'
+```json
+{
+  "resume": "Jane Smith\nEmail: jane@example.com\nFrontend Developer with 3 years experience...",
+  "jd": "Frontend Engineer at TechCorp\nRequirements: React, TypeScript...",
+  "recruiter_email": "hr@techcorp.com",
+  "interviewer_requirement": "Ask about remote work preferences and salary expectations"
+}
 ```
 
-```javascript
-const response = await fetch('http://localhost:4607/api/v1/evaluate-interview', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    resume: "John Doe\nSenior Software Engineer...",
-    jd: "Senior Software Engineer position...",
-    interviewScript: "Interviewer: Tell me about yourself..."
-  })
-});
-const data = await response.json();
-```
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| resume | string | Yes | Resume text (must include name and email) |
+| jd | string | Yes | Job description text |
+| recruiter_email | string | No | Email for notifications and BCC |
+| interviewer_requirement | string | No | Additional interview instructions |
 
-```python
-import requests
-
-response = requests.post(
-    'http://localhost:4607/api/v1/evaluate-interview',
-    json={
-        'resume': 'John Doe\nSenior Software Engineer...',
-        'jd': 'Senior Software Engineer position...',
-        'interviewScript': 'Interviewer: Tell me about yourself...'
-    }
-)
-data = response.json()
-```
-
-### Response
-
-#### Success Response (200 OK)
+**Response:**
 
 ```json
 {
   "success": true,
   "data": {
-    "overallScore": 82,
-    "technicalScore": 85,
-    "communicationScore": 80,
-    "cultureFitScore": 78,
-    "strengths": [
-      "Strong technical knowledge",
-      "Clear communication",
-      "Good problem-solving approach"
-    ],
-    "weaknesses": [
-      "Could provide more specific examples",
-      "Limited discussion of leadership experience"
-    ],
-    "keyInsights": [
-      "Demonstrated deep understanding of distributed systems",
-      "Showed enthusiasm for the role"
-    ],
-    "recommendation": "Proceed to next round",
-    "suggestedNextSteps": [
-      "Technical deep-dive interview",
-      "Team fit interview"
-    ]
+    "email": "jane@example.com",
+    "name": "Jane Smith",
+    "login_url": "https://interview.robohire.io/session/abc123",
+    "qrcode_url": "https://api.robohire.io/qr/abc123.png",
+    "job_title": "Frontend Engineer",
+    "company_name": "TechCorp",
+    "message": "Invitation sent successfully"
   },
-  "requestId": "req_1706812350_pqr678"
+  "requestId": "req_jkl012"
 }
+```
+
+**cURL:**
+
+```bash
+curl -X POST http://localhost:4607/api/v1/invite-candidate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resume": "Jane Smith\nEmail: jane@example.com\nFrontend Developer...",
+    "jd": "Frontend Engineer at TechCorp...",
+    "recruiter_email": "hr@techcorp.com"
+  }'
 ```
 
 ---
 
-## 6. Health Check
+### Evaluate Interview
 
-Check the API server status and get basic statistics.
+Evaluate an interview transcript against the resume and job description.
 
-### Endpoint
+**Endpoint:** `POST /api/v1/evaluate-interview`
 
+**Request Body:**
+
+```json
+{
+  "resume": "Candidate resume text...",
+  "jd": "Job description text...",
+  "interviewScript": "Interviewer: Tell me about yourself?\nCandidate: I'm a software engineer with 5 years of experience...\nInterviewer: Describe a challenging project?\nCandidate: ...",
+  "includeCheatingDetection": true,
+  "userInstructions": "Focus on system design skills"
+}
 ```
-GET /api/v1/health
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| resume | string | Yes | Candidate's resume text |
+| jd | string | Yes | Job description text |
+| interviewScript | string | Yes | Full interview transcript |
+| includeCheatingDetection | boolean | No | Include AI-assisted answer detection |
+| userInstructions | string | No | Special evaluation instructions |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "score": 78,
+    "summary": "Strong technical candidate with solid problem-solving skills...",
+    "hiringDecision": "Hire",
+    "strengths": [
+      "Deep knowledge of React ecosystem",
+      "Clear communication",
+      "Strong problem-solving approach"
+    ],
+    "weaknesses": [
+      "Limited experience with distributed systems",
+      "Could improve on system design explanations"
+    ],
+    "recommendation": "Recommend hiring for mid-level position with mentorship on system design",
+    "mustHaveAnalysis": {
+      "mustHaveScore": 85,
+      "passRate": "4/5 must-haves verified",
+      "disqualified": false,
+      "interviewVerification": {
+        "verified": [
+          {
+            "requirement": "React experience",
+            "verifiedBy": "Q3: React hooks question",
+            "evidence": "Demonstrated deep understanding of useEffect cleanup",
+            "confidenceLevel": "High"
+          }
+        ],
+        "failed": [],
+        "notTested": [
+          {
+            "requirement": "AWS experience",
+            "recommendation": "Ask about deployment experience in follow-up"
+          }
+        ]
+      }
+    },
+    "technicalAnalysis": {
+      "summary": "Solid mid-to-senior level technical skills",
+      "depthRating": "Advanced",
+      "provenSkills": ["React", "JavaScript", "REST APIs"],
+      "claimedButUnverified": ["Python", "Docker"]
+    },
+    "questionAnswerAssessment": [
+      {
+        "question": "Tell me about yourself?",
+        "answer": "I'm a software engineer with 5 years...",
+        "score": 80,
+        "correctness": "Correct",
+        "clarity": "High"
+      }
+    ],
+    "cheatingAnalysis": {
+      "suspicionScore": 15,
+      "riskLevel": "Low",
+      "summary": "Responses appear genuine with natural hesitations and personal examples",
+      "indicators": [],
+      "authenticitySignals": [
+        "Personal anecdotes included",
+        "Natural thinking pauses",
+        "Admitted uncertainty appropriately"
+      ]
+    },
+    "interviewersKit": {
+      "suggestedQuestions": [
+        "Can you walk through deploying an application to AWS?",
+        "Describe your experience with Docker in production"
+      ],
+      "focusAreas": ["Cloud infrastructure", "CI/CD pipelines"]
+    },
+    "levelAssessment": "Senior",
+    "expertAdvice": "Candidate shows strong potential for senior role. Consider for team lead track with mentorship."
+  },
+  "requestId": "req_mno345"
+}
 ```
 
-### Request
+**cURL:**
 
 ```bash
-curl 'http://localhost:4607/api/v1/health'
+curl -X POST http://localhost:4607/api/v1/evaluate-interview \
+  -H "Content-Type: application/json" \
+  -d '{
+    "resume": "Candidate resume...",
+    "jd": "Job description...",
+    "interviewScript": "Q: Tell me about yourself?\nA: ...",
+    "includeCheatingDetection": true
+  }'
 ```
 
-### Response
+---
 
-#### Success Response (200 OK)
+## System Endpoints
+
+### Health Check
+
+Check API health and get system statistics.
+
+**Endpoint:** `GET /api/v1/health`
+
+**Response:**
 
 ```json
 {
   "status": "healthy",
-  "timestamp": "2026-02-01T12:30:45.123Z",
-  "uptime": "2h 15m 30s",
-  "llmProvider": "openrouter",
-  "llmModel": "google/gemini-2.0-flash",
+  "uptime": 3600,
+  "timestamp": "2026-02-04T12:00:00.000Z",
+  "provider": "openrouter",
+  "model": "google/gemini-3-flash-preview",
   "stats": {
     "totalRequests": 150,
-    "successfulRequests": 145,
-    "failedRequests": 5,
-    "averageResponseTime": "2.5s"
+    "totalTokens": 500000,
+    "estimatedCost": 0.25
   }
 }
 ```
 
+**cURL:**
+
+```bash
+curl http://localhost:4607/api/v1/health
+```
+
 ---
 
-## 7. Statistics
+### Usage Statistics
 
 Get detailed usage statistics.
 
-### Endpoint
+**Endpoint:** `GET /api/v1/stats`
 
-```
-GET /api/v1/stats
-```
-
-### Request
-
-```bash
-curl 'http://localhost:4607/api/v1/stats'
-```
-
-### Response
-
-#### Success Response (200 OK)
+**Response:**
 
 ```json
 {
   "success": true,
   "data": {
-    "totalRequests": 150,
-    "totalLLMCalls": 200,
-    "totalTokensUsed": 500000,
-    "totalCost": 2.50,
-    "averageRequestTime": 2500,
-    "requestsByEndpoint": {
-      "/api/v1/match-resume": 50,
-      "/api/v1/parse-resume": 40,
-      "/api/v1/parse-jd": 30,
-      "/api/v1/invite-candidate": 20,
-      "/api/v1/evaluate-interview": 10
+    "endpoints": {
+      "match-resume": {
+        "calls": 50,
+        "tokens": 200000,
+        "avgLatency": 5200
+      },
+      "parse-resume": {
+        "calls": 30,
+        "tokens": 50000,
+        "avgLatency": 3100
+      }
     },
-    "uptime": "2h 15m 30s"
+    "totalRequests": 150,
+    "totalTokens": 500000,
+    "estimatedCost": 0.25,
+    "uptime": 3600
   }
 }
 ```
 
 ---
 
-## 8. List Documents
+### List Documents
 
-List all stored parsed documents and match results.
+List all cached documents and match results.
 
-### Endpoint
+**Endpoint:** `GET /api/v1/documents`
 
-```
-GET /api/v1/documents
-```
-
-### Request
-
-```bash
-curl 'http://localhost:4607/api/v1/documents'
-```
-
-### Response
-
-#### Success Response (200 OK)
+**Response:**
 
 ```json
 {
   "success": true,
   "data": {
-    "stats": {
-      "resumeCount": 15,
-      "jdCount": 8,
-      "matchResultCount": 25,
-      "storageDir": "./parsed-documents"
-    },
     "resumes": [
       {
-        "id": "resume_1706812345_abc",
-        "hash": "a1b2c3d4e5f6g7h8",
-        "originalFilename": "John_Doe_Resume.pdf",
-        "savedFilename": "John_Doe_Resume.json",
-        "parsedAt": "2026-02-01T10:30:00.000Z",
+        "filename": "John_Doe_Resume.json",
         "name": "John Doe",
-        "email": "john@email.com",
-        "preview": "John Doe\nSenior Software Engineer..."
+        "parsedAt": "2026-02-04T12:00:00.000Z"
       }
     ],
     "jds": [
       {
-        "id": "jd_1706812346_def",
-        "hash": "h8g7f6e5d4c3b2a1",
-        "originalFilename": "Senior_Engineer_JD.pdf",
-        "savedFilename": "Senior_Engineer_JD.json",
-        "parsedAt": "2026-02-01T10:35:00.000Z",
+        "filename": "Senior_Engineer_JD.json",
         "title": "Senior Software Engineer",
-        "company": "TechCorp",
-        "preview": "Senior Software Engineer at TechCorp..."
+        "parsedAt": "2026-02-04T12:00:00.000Z"
       }
     ],
     "matchResults": [
       {
-        "id": "match_1706812350_ghi",
-        "savedFilename": "John_Doe_Senior_Software_Engineer_2026-02-01T12-30-45.json",
-        "matchedAt": "2026-02-01T12:30:45.000Z",
-        "candidateName": "John Doe",
-        "jobTitle": "Senior Software Engineer",
-        "overallScore": 85,
-        "grade": "A",
-        "recommendation": "Strongly Recommend",
-        "requestId": "req_1706812350_xyz"
+        "filename": "John_Doe_Senior_Engineer_2026-02-04.json",
+        "candidate": "John Doe",
+        "job": "Senior Software Engineer",
+        "score": 87,
+        "matchedAt": "2026-02-04T12:00:00.000Z"
       }
     ]
   }
@@ -902,86 +1177,116 @@ curl 'http://localhost:4607/api/v1/documents'
 
 ---
 
-## Error Handling
+### Log Information
 
-All API endpoints follow a consistent error response format.
+Get log file information.
 
-### Error Response Format
+**Endpoint:** `GET /api/v1/logs`
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "logDirectory": "./logs",
+    "files": [
+      {
+        "name": "all-2026-02-04.jsonl",
+        "size": 1024000,
+        "entries": 5000
+      },
+      {
+        "name": "error-2026-02-04.jsonl",
+        "size": 2048,
+        "entries": 5
+      },
+      {
+        "name": "llm-2026-02-04.jsonl",
+        "size": 512000,
+        "entries": 150
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Error Responses
+
+All endpoints return errors in a consistent format:
 
 ```json
 {
   "success": false,
-  "error": "Error message describing what went wrong",
-  "requestId": "req_1706812345_abc123"
+  "error": "Error message description",
+  "code": "ERROR_CODE"
 }
 ```
 
-### HTTP Status Codes
+### Common Error Codes
 
-| Status Code | Description |
-|-------------|-------------|
-| 200 | Success |
-| 400 | Bad Request - Invalid input parameters |
-| 401 | Unauthorized - Authentication required |
-| 403 | Forbidden - Access denied |
-| 404 | Not Found - Resource not found |
-| 422 | Unprocessable Entity - Validation error |
-| 429 | Too Many Requests - Rate limit exceeded |
-| 500 | Internal Server Error - Server-side error |
-
-### Common Errors
-
-#### Missing Required Fields (400)
-
-```json
-{
-  "success": false,
-  "error": "Both resume and jd fields are required",
-  "requestId": "req_1706812345_abc123"
-}
-```
-
-#### Invalid File Type (400)
-
-```json
-{
-  "success": false,
-  "error": "Only PDF files are allowed",
-  "requestId": "req_1706812345_abc123"
-}
-```
-
-#### File Too Large (400)
-
-```json
-{
-  "success": false,
-  "error": "File size exceeds 10MB limit",
-  "requestId": "req_1706812345_abc123"
-}
-```
-
-#### LLM Service Error (500)
-
-```json
-{
-  "success": false,
-  "error": "Failed to process request with LLM service",
-  "requestId": "req_1706812345_abc123"
-}
-```
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| AUTH_REQUIRED | 401 | Authentication required |
+| INVALID_TOKEN | 401 | Invalid or expired token |
+| RATE_LIMITED | 429 | Too many requests |
+| VALIDATION_ERROR | 400 | Invalid request data |
+| NOT_FOUND | 404 | Resource not found |
+| INTERNAL_ERROR | 500 | Internal server error |
 
 ---
 
 ## Rate Limiting
 
-Currently, no rate limiting is implemented. However, be mindful of LLM API costs when making requests.
+Authentication endpoints are rate-limited to **5 requests per minute** per IP address.
 
-### Recommendations
+When rate-limited, you'll receive:
 
-- Cache results where possible (resume/JD parsing is automatically cached)
-- Batch operations when processing multiple documents
-- Use the `/documents` endpoint to check for existing parsed documents
+```json
+{
+  "success": false,
+  "error": "Too many requests. Please try again later.",
+  "code": "RATE_LIMITED",
+  "retryAfter": 45
+}
+```
+
+---
+
+## Webhooks
+
+When a `webhookUrl` is configured for a hiring request, RoboHire will send POST requests with candidate updates:
+
+```json
+{
+  "event": "candidate.screened",
+  "hiringRequestId": "clx456def",
+  "candidate": {
+    "id": "clx789ghi",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "matchScore": 85,
+    "status": "screening"
+  },
+  "evaluationReport": {
+    "summary": "Strong candidate...",
+    "recommendation": "Proceed to interview"
+  },
+  "timestamp": "2026-02-04T12:00:00.000Z"
+}
+```
+
+### Webhook Events
+
+| Event | Description |
+|-------|-------------|
+| `candidate.received` | New candidate application received |
+| `candidate.screened` | AI screening completed |
+| `candidate.interviewed` | AI interview completed |
+| `candidate.shortlisted` | Candidate shortlisted |
+| `candidate.rejected` | Candidate rejected |
 
 ---
 
@@ -989,136 +1294,56 @@ Currently, no rate limiting is implemented. However, be mindful of LLM API costs
 
 ### JavaScript/TypeScript
 
-```javascript
-// Example wrapper class
-class GoHireAPI {
-  constructor(baseUrl = 'http://localhost:4607/api/v1') {
-    this.baseUrl = baseUrl;
-  }
+```typescript
+import { RoboHireClient } from '@robohire/sdk';
 
-  async matchResume(resume, jd) {
-    const response = await fetch(`${this.baseUrl}/match-resume`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume, jd })
-    });
-    return response.json();
-  }
+const client = new RoboHireClient({
+  baseUrl: 'http://localhost:4607',
+  token: 'your_jwt_token'
+});
 
-  async parseResume(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await fetch(`${this.baseUrl}/parse-resume`, {
-      method: 'POST',
-      body: formData
-    });
-    return response.json();
-  }
+// Match resume
+const match = await client.matchResume({
+  resume: 'John Doe...',
+  jd: 'Senior Engineer...'
+});
 
-  async parseJD(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await fetch(`${this.baseUrl}/parse-jd`, {
-      method: 'POST',
-      body: formData
-    });
-    return response.json();
-  }
-
-  async inviteCandidate(resume, jd) {
-    const response = await fetch(`${this.baseUrl}/invite-candidate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume, jd })
-    });
-    return response.json();
-  }
-
-  async evaluateInterview(resume, jd, interviewScript) {
-    const response = await fetch(`${this.baseUrl}/evaluate-interview`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume, jd, interviewScript })
-    });
-    return response.json();
-  }
-}
-
-// Usage
-const api = new GoHireAPI();
-const result = await api.matchResume(resumeText, jdText);
+// Create hiring request
+const request = await client.hiringRequests.create({
+  title: 'Senior Engineer',
+  requirements: '5+ years experience...'
+});
 ```
 
 ### Python
 
 ```python
-import requests
-from typing import Optional, Dict, Any
+from robohire import RoboHireClient
 
-class GoHireAPI:
-    def __init__(self, base_url: str = 'http://localhost:4607/api/v1'):
-        self.base_url = base_url
-    
-    def match_resume(self, resume: str, jd: str) -> Dict[str, Any]:
-        response = requests.post(
-            f'{self.base_url}/match-resume',
-            json={'resume': resume, 'jd': jd}
-        )
-        return response.json()
-    
-    def parse_resume(self, file_path: str) -> Dict[str, Any]:
-        with open(file_path, 'rb') as f:
-            response = requests.post(
-                f'{self.base_url}/parse-resume',
-                files={'file': f}
-            )
-        return response.json()
-    
-    def parse_jd(self, file_path: str) -> Dict[str, Any]:
-        with open(file_path, 'rb') as f:
-            response = requests.post(
-                f'{self.base_url}/parse-jd',
-                files={'file': f}
-            )
-        return response.json()
-    
-    def invite_candidate(self, resume: str, jd: str) -> Dict[str, Any]:
-        response = requests.post(
-            f'{self.base_url}/invite-candidate',
-            json={'resume': resume, 'jd': jd}
-        )
-        return response.json()
-    
-    def evaluate_interview(self, resume: str, jd: str, interview_script: str) -> Dict[str, Any]:
-        response = requests.post(
-            f'{self.base_url}/evaluate-interview',
-            json={'resume': resume, 'jd': jd, 'interviewScript': interview_script}
-        )
-        return response.json()
+client = RoboHireClient(
+    base_url='http://localhost:4607',
+    token='your_jwt_token'
+)
 
-# Usage
-api = GoHireAPI()
-result = api.match_resume(resume_text, jd_text)
+# Match resume
+match = client.match_resume(
+    resume='John Doe...',
+    jd='Senior Engineer...'
+)
+
+# Create hiring request
+request = client.hiring_requests.create(
+    title='Senior Engineer',
+    requirements='5+ years experience...'
+)
 ```
-
----
-
-## Changelog
-
-### v1.0.0 (2026-02-01)
-
-- Initial release
-- Match Resume with JD API
-- Parse Resume API (with caching)
-- Parse JD API (with caching)
-- Invite Candidate API
-- Evaluate Interview API
-- Health check and statistics endpoints
-- Document listing endpoint
-- Match results persistence with candidate name and job title in filename
 
 ---
 
 ## Support
 
-For issues and feature requests, please contact the development team or create an issue in the repository.
+For issues, feature requests, or questions:
+
+- **GitHub Issues:** [github.com/robohire/api/issues](https://github.com/robohire/api/issues)
+- **Email:** support@robohire.io
+- **Documentation:** [docs.robohire.io](https://docs.robohire.io)
