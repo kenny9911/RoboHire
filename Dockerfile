@@ -38,6 +38,9 @@ WORKDIR /app
 # 复制后端 package.json
 COPY backend/package*.json ./
 
+# 复制 Prisma schema（需要在 postinstall prisma generate 之前）
+COPY backend/prisma/ ./prisma/
+
 # 配置 npm 使用国内镜像源并安装依赖
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm config set fetch-retry-mintimeout 20000 && \
