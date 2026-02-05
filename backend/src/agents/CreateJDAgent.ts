@@ -1,5 +1,6 @@
 import { llmService } from '../services/llm/LLMService.js';
 import { languageService } from '../services/LanguageService.js';
+import { logger } from '../services/LoggerService.js';
 
 export interface CreateJDInput {
   title?: string;
@@ -20,6 +21,7 @@ export class CreateJDAgent {
     const preferredLanguage = preferredLocale
       ? languageService.getLanguageFromLocale(preferredLocale)
       : null;
+    const resolvedLanguage = preferredLanguage || languageService.detectLanguage(languageSource || '');
     const languageInstruction = preferredLanguage
       ? languageService.getLanguageInstructionForLanguage(preferredLanguage)
       : languageService.getLanguageInstruction(languageSource || '');
@@ -58,15 +60,186 @@ Guidelines:
 
     const userPrompt = promptParts.join('\n\n');
 
-    const response = await llmService.chat(
-      [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      { temperature: 0.4, requestId: input.requestId }
+    try {
+      const response = await llmService.chat(
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        { temperature: 0.4, requestId: input.requestId }
+      );
+
+      return response.trim();
+    } catch (error) {
+      logger.error('HIRING_JD', 'LLM JD generation failed, using fallback', {
+        error: error instanceof Error ? error.message : String(error),
+        language: resolvedLanguage,
+      }, input.requestId);
+
+      return this.buildFallbackMarkdown({
+        title,
+        requirements,
+        existingJD,
+        language: resolvedLanguage,
+      });
+    }
+  }
+
+  private buildFallbackMarkdown(input: {
+    title: string;
+    requirements: string;
+    existingJD: string;
+    language: string;
+  }): string {
+    const headings = this.getHeadingLabels(input.language);
+    const title = input.title || headings.jobTitle;
+    const overview = this.pickOverview(input.existingJD, input.requirements);
+
+    const responsibilities = this.toBulletList(
+      this.pickListSource(input.existingJD, input.requirements)
+    );
+    const requirements = this.toBulletList(
+      this.pickListSource(input.requirements, input.existingJD)
     );
 
-    return response.trim();
+    const responsibilitiesContent = responsibilities.length
+      ? responsibilities.map((item) => `- ${item}`).join('\n')
+      : 'TBD';
+    const requirementsContent = requirements.length
+      ? requirements.map((item) => `- ${item}`).join('\n')
+      : 'TBD';
+
+    return [
+      `# ${title}`,
+      '',
+      `## ${headings.overview}`,
+      overview || 'TBD',
+      '',
+      `## ${headings.responsibilities}`,
+      responsibilitiesContent,
+      '',
+      `## ${headings.requirements}`,
+      requirementsContent,
+      '',
+      `## ${headings.niceToHaves}`,
+      'TBD',
+      '',
+      `## ${headings.benefits}`,
+      'TBD',
+    ].join('\n');
+  }
+
+  private pickOverview(existingJD: string, requirements: string): string {
+    const source = existingJD || requirements;
+    if (!source) return '';
+    const paragraph = source.split(/\n\s*\n/)[0]?.trim() || '';
+    return paragraph;
+  }
+
+  private pickListSource(primary: string, secondary: string): string {
+    return primary || secondary;
+  }
+
+  private toBulletList(text: string, maxItems = 8): string[] {
+    if (!text) return [];
+
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const bulletLines = lines
+      .filter((line) => /^[-*•]/.test(line))
+      .map((line) => line.replace(/^[-*•]\s*/, '').trim())
+      .filter(Boolean);
+
+    if (bulletLines.length > 0) {
+      return bulletLines.slice(0, maxItems);
+    }
+
+    const sentences = text
+      .split(/[。；;.!?]+/)
+      .map((sentence) => sentence.trim())
+      .filter(Boolean);
+
+    return sentences.slice(0, maxItems);
+  }
+
+  private getHeadingLabels(language: string): {
+    jobTitle: string;
+    overview: string;
+    responsibilities: string;
+    requirements: string;
+    niceToHaves: string;
+    benefits: string;
+  } {
+    const labels: Record<string, {
+      jobTitle: string;
+      overview: string;
+      responsibilities: string;
+      requirements: string;
+      niceToHaves: string;
+      benefits: string;
+    }> = {
+      Chinese: {
+        jobTitle: '职位名称',
+        overview: '概述',
+        responsibilities: '职责',
+        requirements: '任职要求',
+        niceToHaves: '加分项',
+        benefits: '福利待遇',
+      },
+      Japanese: {
+        jobTitle: '職種名',
+        overview: '概要',
+        responsibilities: '職務内容',
+        requirements: '応募資格',
+        niceToHaves: '歓迎条件',
+        benefits: '福利厚生',
+      },
+      Spanish: {
+        jobTitle: 'Título del puesto',
+        overview: 'Resumen',
+        responsibilities: 'Responsabilidades',
+        requirements: 'Requisitos',
+        niceToHaves: 'Deseables',
+        benefits: 'Beneficios',
+      },
+      French: {
+        jobTitle: 'Intitulé du poste',
+        overview: 'Aperçu',
+        responsibilities: 'Responsabilités',
+        requirements: 'Exigences',
+        niceToHaves: 'Atouts',
+        benefits: 'Avantages',
+      },
+      Portuguese: {
+        jobTitle: 'Título da vaga',
+        overview: 'Visão geral',
+        responsibilities: 'Responsabilidades',
+        requirements: 'Requisitos',
+        niceToHaves: 'Diferenciais',
+        benefits: 'Benefícios',
+      },
+      German: {
+        jobTitle: 'Stellentitel',
+        overview: 'Überblick',
+        responsibilities: 'Aufgaben',
+        requirements: 'Anforderungen',
+        niceToHaves: 'Wünschenswert',
+        benefits: 'Benefits',
+      },
+      English: {
+        jobTitle: 'Job Title',
+        overview: 'Overview',
+        responsibilities: 'Responsibilities',
+        requirements: 'Requirements',
+        niceToHaves: 'Nice-to-haves',
+        benefits: 'Benefits',
+      },
+    };
+
+    return labels[language] || labels.English;
   }
 }
 

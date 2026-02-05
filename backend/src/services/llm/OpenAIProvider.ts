@@ -27,9 +27,12 @@ export class OpenAIProvider implements LLMProvider {
       max_tokens: options?.maxTokens,
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = response?.choices?.[0]?.message?.content;
     if (!content) {
-      throw new Error('No content in OpenAI response');
+      const errorMessage =
+        (response as { error?: { message?: string } })?.error?.message ||
+        'No content in OpenAI response';
+      throw new Error(errorMessage);
     }
 
     return {

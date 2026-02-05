@@ -8,7 +8,7 @@ export class OpenRouterProvider implements LLMProvider {
   constructor(apiKey: string, defaultModel: string) {
     this.client = new OpenAI({
       apiKey,
-      baseURL: 'https://openrouter.ai/api/v1',
+      baseURL: process.env.OPENROUTER_API_BASE_URL || 'https://openrouter.ai/api/v1',
       defaultHeaders: {
         'HTTP-Referer': 'https://robohire.io',
         'X-Title': 'RoboHire API',
@@ -34,9 +34,12 @@ export class OpenRouterProvider implements LLMProvider {
       max_tokens: options?.maxTokens,
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = response?.choices?.[0]?.message?.content;
     if (!content) {
-      throw new Error('No content in OpenRouter response');
+      const errorMessage =
+        (response as { error?: { message?: string } })?.error?.message ||
+        'No content in OpenRouter response';
+      throw new Error(errorMessage);
     }
 
     return {
