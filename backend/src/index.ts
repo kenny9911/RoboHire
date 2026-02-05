@@ -1,4 +1,4 @@
-// Load environment variables FIRST before any other imports
+// Load environment variables FIRST before any other imports2
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
