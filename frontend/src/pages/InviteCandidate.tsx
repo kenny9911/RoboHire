@@ -21,7 +21,7 @@ interface ApiResponse {
 
 // Default recruiter email from environment or fallback
 const DEFAULT_RECRUITER_EMAIL = import.meta.env.VITE_DEFAULT_RECRUITER_EMAIL || 'hr@lightark.ai';
-const ROBOHIRE_API_URL = import.meta.env.VITE_ROBOHIRE_API_URL || 'https://report-agent.gohire.top/instant/instant/v1/invitation';
+const ROBOHIRE_API_URL = import.meta.env.ROBOHIRE_INVITATION_API || 'https://report-agent.gohire.top/instant/instant/v1/invitation';
 
 export default function InviteCandidate() {
   const { t } = useTranslation();
