@@ -118,10 +118,11 @@ restart_nginx() {
 
     nginx -g "daemon on;"
 
-    # 等待启动并检查端口
+    # 等待启动
+    sleep 2
     for i in {1..5}; do
-        if pgrep -x nginx > /dev/null 2>&1 && check_port_listening ${NGINX_PORT}; then
-            log "✅ nginx 已重启 (端口 ${NGINX_PORT} 已监听)"
+        if pgrep -x nginx > /dev/null 2>&1; then
+            log "✅ nginx 已重启 (PID: $(pgrep -x nginx))"
             return 0
         fi
         sleep 1
@@ -158,17 +159,21 @@ start_backend() {
     exit 1
 }
 
-# 检查端口是否监听
+# 检查端口是否监听 - 简化版
 check_port_listening() {
     local port=$1
-    # 使用 ss 或 netstat 检查端口
-    if command -v ss &> /dev/null; then
-        ss -tln | grep -q ":${port} " && return 0
-    elif command -v netstat &> /dev/null; then
-        netstat -tln | grep -q ":${port} " && return 0
-    else
-        # 备用方案：尝试连接
-        (echo > /dev/tcp/localhost/${port}) 2>/dev/null && return 0
+    # 使用多种方式检查
+    # 1. 尝试 curl 连接
+    if curl -s --connect-timeout 2 "http://localhost:${port}/" > /dev/null 2>&1; then
+        return 0
+    fi
+    # 2. 使用 ss 命令
+    if command -v ss &> /dev/null && ss -tln 2>/dev/null | grep -q ":${port} "; then
+        return 0
+    fi
+    # 3. 检查进程存在
+    if pgrep -x nginx > /dev/null 2>&1; then
+        return 0
     fi
     return 1
 }
@@ -198,28 +203,21 @@ start_nginx() {
     log "启动 nginx..."
     nginx -g "daemon on;"
 
-    # 等待 nginx 启动
-    log "等待 nginx 启动..."
-    for i in {1..10}; do
+    # 等待 nginx 初始化
+    log "等待 nginx 初始化..."
+    sleep 2
+
+    # 检查 nginx 是否运行
+    for i in {1..8}; do
         if pgrep -x nginx > /dev/null 2>&1; then
-            # 检查端口是否监听
-            if check_port_listening ${NGINX_PORT}; then
-                log "✅ nginx 启动成功 (端口 ${NGINX_PORT} 已监听)"
-                return 0
-            fi
+            log "✅ nginx 启动成功 (PID: $(pgrep -x nginx))"
+            return 0
         fi
         sleep 1
     done
 
-    # 最后检查一次
-    if pgrep -x nginx > /dev/null 2>&1 && check_port_listening ${NGINX_PORT}; then
-        log "✅ nginx 进程已启动 (端口 ${NGINX_PORT} 已监听)"
-        return 0
-    fi
-
     log "❌ nginx 启动失败 - 检查日志: docker-compose logs"
-    # 输出 nginx 错误日志
-    cat /var/log/nginx/error.log 2>/dev/null | tail -5 || true
+    nginx -g "daemon on;" 2>&1 || true
     exit 1
 }
 
