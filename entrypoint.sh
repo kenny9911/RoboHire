@@ -210,14 +210,22 @@ start_nginx() {
     # 检查 nginx 是否运行
     for i in {1..8}; do
         if pgrep -x nginx > /dev/null 2>&1; then
-            log "✅ nginx 启动成功 (PID: $(pgrep -x nginx))"
+            NGINX_PID=$(pgrep -x nginx | head -1)
+            log "✅ nginx 启动成功 (PID: $NGINX_PID)"
             return 0
         fi
         sleep 1
     done
 
-    log "❌ nginx 启动失败 - 检查日志: docker-compose logs"
-    nginx -g "daemon on;" 2>&1 || true
+    # nginx 启动失败，输出详细错误
+    log "❌ nginx 启动失败，输出错误信息:"
+    nginx 2>&1 || true
+    log ""
+    log "检查 nginx 错误日志:"
+    cat /var/log/nginx/error.log 2>/dev/null | tail -10 || echo "无法读取错误日志"
+    log ""
+    log "检查端口占用:"
+    netstat -tlnp 2>/dev/null | grep -E ':80|:4607' || ss -tlnp 2>/dev/null | grep -E ':80|:4607' || echo "无法检查端口"
     exit 1
 }
 
