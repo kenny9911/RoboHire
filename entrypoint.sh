@@ -8,6 +8,10 @@ echo "=========================================="
 # 设置环境变量
 export NODE_ENV=production
 
+# 增加文件描述符限制 (nginx 需要)
+ulimit -n 65535 2>/dev/null || true
+echo "文件描述符限制: $(ulimit -n)"
+
 # 配置参数
 HEALTH_CHECK_INTERVAL=10       # 健康检查间隔（秒）
 MAX_RESTART_ATTEMPTS=5         # 最大连续重启次数
@@ -150,6 +154,21 @@ start_backend() {
     exit 1
 }
 
+# 检查端口是否监听
+check_port_listening() {
+    local port=$1
+    # 使用 ss 或 netstat 检查端口
+    if command -v ss &> /dev/null; then
+        ss -tln | grep -q ":${port} " && return 0
+    elif command -v netstat &> /dev/null; then
+        netstat -tln | grep -q ":${port} " && return 0
+    else
+        # 备用方案：尝试连接
+        (echo > /dev/tcp/localhost/${port}) 2>/dev/null && return 0
+    fi
+    return 1
+}
+
 # 启动 nginx
 start_nginx() {
     log "[2/2] 启动 nginx on port ${NGINX_PORT}..."
@@ -179,25 +198,24 @@ start_nginx() {
     log "等待 nginx 启动..."
     for i in {1..10}; do
         if pgrep -x nginx > /dev/null 2>&1; then
-            # 额外检查端口是否监听
-            if curl -s http://localhost:${NGINX_PORT}/health > /dev/null 2>&1 || \
-               curl -s http://localhost:${NGINX_PORT}/ > /dev/null 2>&1; then
-                log "✅ nginx 启动成功"
+            # 检查端口是否监听
+            if check_port_listening ${NGINX_PORT}; then
+                log "✅ nginx 启动成功 (端口 ${NGINX_PORT} 已监听)"
                 return 0
             fi
         fi
         sleep 1
     done
 
-    # 检查最后一次
-    if pgrep -x nginx > /dev/null 2>&1; then
-        log "✅ nginx 进程已启动 (端口可能还在初始化)"
+    # 最后检查一次
+    if pgrep -x nginx > /dev/null 2>&1 && check_port_listening ${NGINX_PORT}; then
+        log "✅ nginx 进程已启动 (端口 ${NGINX_PORT} 已监听)"
         return 0
     fi
 
-    log "❌ nginx 启动失败"
-    # 输出详细错误
-    nginx -g "daemon on;" 2>&1 || true
+    log "❌ nginx 启动失败 - 检查日志: docker-compose logs"
+    # 输出 nginx 错误日志
+    cat /var/log/nginx/error.log 2>/dev/null | tail -5 || true
     exit 1
 }
 
