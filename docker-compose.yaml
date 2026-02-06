@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   roboHire-api:
     build:
@@ -7,8 +5,8 @@ services:
       dockerfile: Dockerfile
       args:
         BUILD_DATE: ${BUILD_DATE:-$(date +%Y%m%d-%H%M)}
-    image: harbor.lightark.cc/iagent/roboHire-api:${BUILD_DATE:-latest}
-    container_name: roboHire-api
+    image: harbor.lightark.cc/iagent/robohire-api:${BUILD_DATE:-latest}
+    container_name: robohire-api
     environment:
       - WORKERS=1
     env_file:
