@@ -97,13 +97,30 @@ restart_nginx() {
     # 停止 nginx
     log "🛑 停止 nginx..."
     pkill -x nginx 2>/dev/null || true
-    sleep 1
+    sleep 2
 
-    # 启动 nginx
+    # 重新测试配置并启动
     log "🚀 启动 nginx..."
+
+    # 测试配置
+    if ! nginx -t 2>&1; then
+        log "❌ nginx 配置错误，无法重启"
+        return 1
+    fi
+
     nginx -g "daemon on;"
 
-    log "✅ nginx 已重启"
+    # 等待启动
+    for i in {1..5}; do
+        if pgrep -x nginx > /dev/null 2>&1; then
+            log "✅ nginx 已重启"
+            return 0
+        fi
+        sleep 1
+    done
+
+    log "❌ nginx 重启失败"
+    return 1
 }
 
 # 启动后端服务
@@ -137,16 +154,51 @@ start_backend() {
 start_nginx() {
     log "[2/2] 启动 nginx on port ${NGINX_PORT}..."
 
-    nginx -g "daemon on;"
+    # 先检查是否已有 nginx 运行
+    if pgrep -x nginx > /dev/null 2>&1; then
+        log "⚠️  nginx 已在运行，先停止..."
+        pkill -x nginx 2>/dev/null || true
+        sleep 2
+    fi
 
-    # 验证 nginx 启动
-    sleep 1
-    if ! pgrep -x nginx > /dev/null; then
-        log "❌ nginx 启动失败"
+    # 测试 nginx 配置
+    log "测试 nginx 配置..."
+    if ! nginx -t 2>&1; then
+        log "❌ nginx 配置错误:"
+        nginx -t 2>&1 | while read line; do
+            log "   $line"
+        done
         exit 1
     fi
 
-    log "✅ nginx 启动成功"
+    # 启动 nginx
+    log "启动 nginx..."
+    nginx -g "daemon on;"
+
+    # 等待 nginx 启动
+    log "等待 nginx 启动..."
+    for i in {1..10}; do
+        if pgrep -x nginx > /dev/null 2>&1; then
+            # 额外检查端口是否监听
+            if curl -s http://localhost:${NGINX_PORT}/health > /dev/null 2>&1 || \
+               curl -s http://localhost:${NGINX_PORT}/ > /dev/null 2>&1; then
+                log "✅ nginx 启动成功"
+                return 0
+            fi
+        fi
+        sleep 1
+    done
+
+    # 检查最后一次
+    if pgrep -x nginx > /dev/null 2>&1; then
+        log "✅ nginx 进程已启动 (端口可能还在初始化)"
+        return 0
+    fi
+
+    log "❌ nginx 启动失败"
+    # 输出详细错误
+    nginx -g "daemon on;" 2>&1 || true
+    exit 1
 }
 
 # 主进程监控循环
