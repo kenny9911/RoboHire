@@ -9,7 +9,6 @@ export class OpenRouterProvider implements LLMProvider {
   private defaultModel: string;
 
   constructor(apiKey: string, defaultModel: string) {
-    const baseURL = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
 
     this.client = new OpenAI({
       apiKey,

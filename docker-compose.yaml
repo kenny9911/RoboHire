@@ -1,14 +1,14 @@
 version: "3.9"
 
 services:
-  gohire-api:
+  roboHire-api:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         BUILD_DATE: ${BUILD_DATE:-$(date +%Y%m%d-%H%M)}
-    image: harbor.lightark.cc/iagent/gohire-api:${BUILD_DATE:-latest}
-    container_name: gohire-api
+    image: harbor.lightark.cc/iagent/roboHire-api:${BUILD_DATE:-latest}
+    container_name: roboHire-api
     environment:
       - WORKERS=1
     env_file:
@@ -17,7 +17,7 @@ services:
       - "33607:80"
       - "34607:4607"
     volumes:
-      - ./logs/gohire-api:/app/logs
+      - ./logs/roboHire-api:/app/logs
       - ./api_data:/data
     restart: unless-stopped
     extra_hosts:
