@@ -44,14 +44,10 @@ check_backend_alive() {
 # 检查 nginx 是否存活
 check_nginx_alive() {
     # 检查 nginx 主进程
-    if ! pgrep -x nginx > /dev/null 2>&1; then
-        return 1
+    if pgrep -x nginx > /dev/null 2>&1; then
+        return 0
     fi
-    # 检查端口是否监听
-    if ! check_port_listening ${NGINX_PORT}; then
-        return 1
-    fi
-    return 0
+    return 1
 }
 
 # 重启后端服务
@@ -159,89 +155,30 @@ start_backend() {
     exit 1
 }
 
-# 检查端口是否监听 - 简化版
-check_port_listening() {
-    local port=$1
-    # 使用多种方式检查
-    # 1. 尝试 curl 连接
-    if curl -s --connect-timeout 2 "http://localhost:${port}/" > /dev/null 2>&1; then
-        return 0
-    fi
-    # 2. 使用 ss 命令
-    if command -v ss &> /dev/null && ss -tln 2>/dev/null | grep -q ":${port} "; then
-        return 0
-    fi
-    # 3. 检查进程存在
-    if pgrep -x nginx > /dev/null 2>&1; then
-        return 0
-    fi
-    return 1
-}
-
-# 停止占用端口的进程
-kill_port_process() {
-    local port=$1
-    log "检查端口 ${port} 占用情况..."
-
-    # 使用 fuser 杀死占用端口的进程
-    if command -v fuser &> /dev/null; then
-        fuser -k ${port}/tcp 2>/dev/null || true
-        sleep 2
-    fi
-
-    # 确保 nginx 完全停止
-    pkill -9 -x nginx 2>/dev/null || true
-    sleep 2
-}
-
-# 启动 nginx
+# 启动 nginx - 智能检测是否已运行
 start_nginx() {
     log "[2/2] 启动 nginx on port ${NGINX_PORT}..."
 
-    # 停止任何占用端口的进程
-    kill_port_process ${NGINX_PORT}
-
-    # 再次确认 nginx 已停止
-    pkill -9 -x nginx 2>/dev/null || true
-    sleep 1
-
-    # 测试 nginx 配置
-    log "测试 nginx 配置..."
-    if ! nginx -t 2>&1; then
-        log "❌ nginx 配置错误:"
-        nginx -t 2>&1 | while read line; do
-            log "   $line"
-        done
-        exit 1
+    # 检查 nginx 是否已经在运行
+    if pgrep -x nginx > /dev/null 2>&1; then
+        NGINX_PID=$(pgrep -x nginx | head -1)
+        log "✅ nginx 已在运行 (PID: $NGINX_PID)"
+        return 0
     fi
 
-    # 启动 nginx
+    # nginx 未运行，启动它
     log "启动 nginx..."
     nginx -g "daemon on;"
-
-    # 等待 nginx 初始化
-    log "等待 nginx 初始化..."
     sleep 2
 
-    # 检查 nginx 是否运行
-    for i in {1..8}; do
-        if pgrep -x nginx > /dev/null 2>&1; then
-            NGINX_PID=$(pgrep -x nginx | head -1)
-            log "✅ nginx 启动成功 (PID: $NGINX_PID)"
-            return 0
-        fi
-        sleep 1
-    done
+    # 验证启动成功
+    if pgrep -x nginx > /dev/null 2>&1; then
+        NGINX_PID=$(pgrep -x nginx | head -1)
+        log "✅ nginx 启动成功 (PID: $NGINX_PID)"
+        return 0
+    fi
 
-    # nginx 启动失败，输出详细错误
-    log "❌ nginx 启动失败，输出错误信息:"
-    nginx 2>&1 || true
-    log ""
-    log "检查 nginx 错误日志:"
-    cat /var/log/nginx/error.log 2>/dev/null | tail -10 || echo "无法读取错误日志"
-    log ""
-    log "检查端口占用:"
-    netstat -tlnp 2>/dev/null | grep -E ':80|:4607' || ss -tlnp 2>/dev/null | grep -E ':80|:4607' || echo "无法检查端口"
+    log "❌ nginx 启动失败"
     exit 1
 }
 
