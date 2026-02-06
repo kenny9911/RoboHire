@@ -5,7 +5,9 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Try root .env first (local dev), then backend/.env (Render / production)
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Now import everything else
 import express from 'express';
@@ -26,8 +28,13 @@ const PORT = process.env.PORT || 4607;
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL 
+  origin: process.env.NODE_ENV === 'production'
+    ? [
+        process.env.FRONTEND_URL || 'https://robohire.io',
+        'https://robohire.io',
+        'https://www.robohire.io',
+        'https://api.robohire.io',
+      ]
     : ['http://localhost:3607', 'http://localhost:5173'],
   credentials: true,
 }));

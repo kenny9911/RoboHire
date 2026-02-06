@@ -252,6 +252,23 @@
     "updated": "Got it! I've updated your requirements. Ready to start hiring? Type 'yes' to proceed, or continue adding details.",
     "jdParsed": "I've analyzed your job description. Here's what I found:\n\n",
     "jdConfirm": "Would you like to proceed with these requirements, or would you like to add any specific criteria?",
+    "confirmTitle": "Confirm hiring request",
+    "confirmSubtitle": "Review and edit the position title before creating the request.",
+    "titleLabel": "Position title",
+    "titlePlaceholder": "e.g., Senior Full Stack Engineer",
+    "titleGenerating": "Generating a title...",
+    "titleError": "We couldn't generate a title. Please edit it manually.",
+    "jdLabel": "Job description",
+    "jdMarkdownLabel": "Markdown",
+    "jdPlaceholder": "Draft will appear here...",
+    "jdGenerating": "Generating job description...",
+    "jdPreview": "Preview",
+    "jdPreviewEmpty": "Preview will appear here...",
+    "jdAiGenerate": "Generate with AI",
+    "jdAiRefine": "Refine with AI",
+    "jdError": "We couldn't generate a job description. Please edit it manually.",
+    "createRequest": "Create hiring request",
+    "defaultTitle": "New Hiring Request",
     "success": "Your hiring request has been created! 🎉\n\n",
     "nextSteps": "**What happens next:**\n",
     "dashboard": "Dashboard",
@@ -470,7 +487,9 @@
   "dashboard": {
     "nav": {
       "dashboard": "Dashboard",
+      "stats": "Statistics",
       "newHiring": "New Hiring",
+      "apiKeys": "API Keys",
       "apiPlayground": "API Playground"
     },
     "welcome": "Welcome back",
@@ -481,6 +500,8 @@
     "actions": {
       "newHiring": "Start New Hiring",
       "newHiringDesc": "Create a new job opening",
+      "apiKeys": "API Keys",
+      "apiKeysDesc": "Manage API access",
       "api": "API Playground",
       "apiDesc": "Test API endpoints",
       "stats": "Statistics",
@@ -493,8 +514,80 @@
       "emptyDesc": "Create your first hiring request to start finding candidates.",
       "create": "Create Hiring Request",
       "candidates": "candidates",
-      "created": "Created"
+      "created": "Created",
+      "viewDetail": "View details"
+    },
+    "detail": {
+      "back": "Back to requests",
+      "updated": "Updated",
+      "created": "Created",
+      "candidatesCount": "{{count}} candidates",
+      "matches": "Matches",
+      "invited": "Invitations sent",
+      "interviewsCompleted": "Interviews completed",
+      "requirements": "Requirements",
+      "jobDescription": "Job description",
+      "noJobDescription": "No job description yet.",
+      "candidates": "Candidates",
+      "noCandidates": "No candidates yet.",
+      "candidate": "Candidate",
+      "matchScore": "Match score",
+      "status": "Status",
+      "lastUpdated": "Last updated",
+      "notFound": "Request not found",
+      "loadError": "Failed to load request details"
+    },
+    "candidateStatus": {
+      "pending": "Pending",
+      "screening": "Screening",
+      "interviewed": "Interviewed",
+      "shortlisted": "Shortlisted",
+      "rejected": "Rejected"
     }
+  },
+  "stats": {
+    "title": "Statistics",
+    "subtitle": "Overview of your hiring pipeline",
+    "cards": {
+      "totalRequests": "Total requests",
+      "activeRequests": "{{count}} active",
+      "totalCandidates": "Total candidates",
+      "invitationsSent": "{{count}} invitations sent",
+      "interviewsCompleted": "Interviews completed",
+      "avgMatchScore": "Avg match score {{score}}",
+      "avgMatchScoreEmpty": "Avg match score --"
+    },
+    "sections": {
+      "requestStatus": "Request status",
+      "candidateStatus": "Candidate status",
+      "recentRequests": "Recent requests"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "closed": "Closed",
+      "pending": "Pending",
+      "screening": "Screening",
+      "interviewed": "Interviewed",
+      "shortlisted": "Shortlisted",
+      "rejected": "Rejected"
+    },
+    "empty": "No requests yet",
+    "requestCandidates": "{{count}} candidates"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "You are all caught up.",
+    "viewAll": "View all activity",
+    "match": "New match",
+    "invitation": "Invitation sent",
+    "interview": "Interview completed",
+    "subtitle": "{{name}} · {{request}}",
+    "candidate": "Candidate",
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
   },
   "apiPlayground": {
     "title": "API Playground",

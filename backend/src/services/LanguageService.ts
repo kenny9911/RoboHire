@@ -54,6 +54,42 @@ export class LanguageService {
     ],
   };
 
+  private readonly LANGUAGE_INSTRUCTIONS: Record<string, string> = {
+    Chinese: '请使用中文回复。',
+    Japanese: '日本語で回答してください。',
+    Korean: '한국어로 답변해 주세요.',
+    German: 'Bitte antworten Sie auf Deutsch.',
+    French: 'Veuillez répondre en français.',
+    Spanish: 'Por favor responda en español.',
+    Portuguese: 'Por favor, responda em português.',
+    Russian: 'Пожалуйста, отвечайте на русском языке.',
+    Arabic: 'الرجاء الرد باللغة العربية.',
+    Thai: 'กรุณาตอบเป็นภาษาไทย',
+    English: 'Please respond in English.',
+  };
+
+  private readonly LOCALE_LANGUAGE_MAP: Record<string, string> = {
+    en: 'English',
+    'en-us': 'English',
+    'en-gb': 'English',
+    zh: 'Chinese',
+    'zh-cn': 'Chinese',
+    'zh-hans': 'Chinese',
+    'zh-tw': 'Chinese',
+    'zh-hant': 'Chinese',
+    ja: 'Japanese',
+    ko: 'Korean',
+    de: 'German',
+    fr: 'French',
+    es: 'Spanish',
+    pt: 'Portuguese',
+    'pt-br': 'Portuguese',
+    'pt-pt': 'Portuguese',
+    ru: 'Russian',
+    ar: 'Arabic',
+    th: 'Thai',
+  };
+
   /**
    * Detect the primary language of the given text
    * @param text The text to analyze (typically JD content)
@@ -121,6 +157,28 @@ export class LanguageService {
     return detectedLanguage;
   }
 
+  private normalizeLocale(locale: string): string {
+    return locale.trim().toLowerCase().replace('_', '-');
+  }
+
+  getLanguageFromLocale(locale: string): string | null {
+    if (!locale || locale.trim().length === 0) {
+      return null;
+    }
+
+    const normalized = this.normalizeLocale(locale);
+    if (this.LOCALE_LANGUAGE_MAP[normalized]) {
+      return this.LOCALE_LANGUAGE_MAP[normalized];
+    }
+
+    const base = normalized.split('-')[0];
+    return this.LOCALE_LANGUAGE_MAP[base] || null;
+  }
+
+  getLanguageInstructionForLanguage(language: string): string {
+    return this.LANGUAGE_INSTRUCTIONS[language] || `Please respond in ${language}.`;
+  }
+
   /**
    * Get language instruction for LLM prompt
    * @param jdContent The job description content
@@ -128,23 +186,16 @@ export class LanguageService {
    */
   getLanguageInstruction(jdContent: string): string {
     const language = this.detectLanguage(jdContent);
-    
-    // Map language names to natural instructions
-    const languageInstructions: Record<string, string> = {
-      Chinese: '请使用中文回复。',
-      Japanese: '日本語で回答してください。',
-      Korean: '한국어로 답변해 주세요.',
-      German: 'Bitte antworten Sie auf Deutsch.',
-      French: 'Veuillez répondre en français.',
-      Spanish: 'Por favor responda en español.',
-      Portuguese: 'Por favor, responda em português.',
-      Russian: 'Пожалуйста, отвечайте на русском языке.',
-      Arabic: 'الرجاء الرد باللغة العربية.',
-      Thai: 'กรุณาตอบเป็นภาษาไทย',
-      English: 'Please respond in English.',
-    };
+    return this.getLanguageInstructionForLanguage(language);
+  }
 
-    return languageInstructions[language] || `Please respond in ${language}.`;
+  getLanguageInstructionFromLocale(locale: string): string | null {
+    const language = this.getLanguageFromLocale(locale);
+    if (!language) {
+      return null;
+    }
+
+    return this.getLanguageInstructionForLanguage(language);
   }
 }
 

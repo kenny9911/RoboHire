@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config';
 
 interface ApiKey {
   id: string;
@@ -40,7 +41,7 @@ function NewKeyModal({ isOpen, onClose, onCreated }: NewKeyModalProps) {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/v1/api-keys', {
+      const response = await fetch(`${API_BASE}/api/v1/api-keys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -260,7 +261,7 @@ export default function APIKeys() {
   const fetchApiKeys = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/v1/api-keys', {
+      const response = await fetch(`${API_BASE}/api/v1/api-keys`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         credentials: 'include',
       });
@@ -292,7 +293,7 @@ export default function APIKeys() {
     setDeletingId(id);
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/v1/api-keys/${id}`, {
+      const response = await fetch(`${API_BASE}/api/v1/api-keys/${id}`, {
         method: 'DELETE',
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         credentials: 'include',
@@ -314,7 +315,7 @@ export default function APIKeys() {
   const handleToggleActive = async (id: string, isActive: boolean) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/v1/api-keys/${id}`, {
+      const response = await fetch(`${API_BASE}/api/v1/api-keys/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

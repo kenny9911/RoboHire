@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# GoHire API 部署脚本
+# RoboHire API 部署脚本
 # =============================================================================
 # 功能: 1) 同步代码到 Lightark Gitlab  2) 远程服务器部署
 # =============================================================================
@@ -27,14 +27,14 @@ NC='\033[0m'
 # Git 配置区
 # =============================================================================
 BRANCH="main"
-GITLAB_REPO="https://gitlab.lightark.cc/lightark-product/gohireapi.git"
+GITLAB_REPO="https://gitlab.lightark.cc/lightark-product/robohire.git"
 
 # =============================================================================
 # 服务器部署配置区
 # =============================================================================
-DEFAULT_PROJECT_PATH="/data/gohire-api/gohireapi"
+DEFAULT_PROJECT_PATH="/data/robohire/robohire"
 HARBOR_URL="harbor.lightark.cc/iagent"
-IMAGE_NAME="gohire-api"
+IMAGE_NAME="robohire-api"
 
 # =============================================================================
 # 参数检查
@@ -69,9 +69,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "${GREEN}📂 项目目录: ${SCRIPT_DIR}${NC}"
 echo ""
 
-# 设置临时目录（当前目录的上一层，名称为 tmp_gohire_api）
+# 设置临时目录（当前目录的上一层，名称为 tmp_robohire_api）
 PARENT_DIR="$(dirname "${SCRIPT_DIR}")"
-TEMP_DIR="${PARENT_DIR}/tmp_gohire_api"
+TEMP_DIR="${PARENT_DIR}/tmp_robohire_api"
 trap "rm -rf ${TEMP_DIR}" EXIT
 
 echo -e "${YELLOW}📦 设置临时目录: ${TEMP_DIR}${NC}"
@@ -85,8 +85,8 @@ fi
 
 # 克隆远程仓库（获取远程最新代码）
 echo -e "${YELLOW}📥 克隆远程仓库...${NC}"
-git clone "${GITLAB_REPO}" "${TEMP_DIR}/gohireapi"
-cd "${TEMP_DIR}/gohireapi"
+git clone "${GITLAB_REPO}" "${TEMP_DIR}/robohire"
+cd "${TEMP_DIR}/robohire"
 
 # 切换到 main 分支
 git checkout ${BRANCH}
@@ -186,7 +186,7 @@ sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no "${SSH_USER}@${SERVER_I
     
     # 显示容器状态
     echo '📊 容器状态:'
-    docker ps --filter 'name=gohire-api' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+    docker ps --filter 'name=robohire-api' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
     
     echo ''
     echo '🌐 访问地址:'

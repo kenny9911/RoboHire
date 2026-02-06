@@ -252,6 +252,23 @@
     "updated": "明白了！我已更新您的要求。准备好开始招聘了吗？输入'是'继续，或继续添加详情。",
     "jdParsed": "我已分析了您的职位描述。以下是我发现的：\n\n",
     "jdConfirm": "您想继续使用这些要求，还是想添加任何特定条件？",
+    "confirmTitle": "确认招聘请求",
+    "confirmSubtitle": "创建请求前，请确认并编辑职位名称。",
+    "titleLabel": "职位名称",
+    "titlePlaceholder": "例如：高级全栈工程师",
+    "titleGenerating": "正在生成职位名称...",
+    "titleError": "无法生成职位名称，请手动编辑。",
+    "jdLabel": "职位描述",
+    "jdMarkdownLabel": "Markdown",
+    "jdPlaceholder": "草稿将显示在这里...",
+    "jdGenerating": "正在生成职位描述...",
+    "jdPreview": "预览",
+    "jdPreviewEmpty": "预览将显示在这里...",
+    "jdAiGenerate": "AI 生成",
+    "jdAiRefine": "AI 优化",
+    "jdError": "无法生成职位描述，请手动编辑。",
+    "createRequest": "创建招聘请求",
+    "defaultTitle": "新的招聘请求",
     "success": "您的招聘请求已创建！🎉\n\n",
     "nextSteps": "**接下来会发生什么：**\n",
     "dashboard": "控制面板",
@@ -291,6 +308,7 @@
     "ctaSubtitle": "加入数千家企业，使用 AI 更快更聪明地招聘。",
     "ctaButton": "立即开始招聘",
     "newRequest": "新建请求",
+    "templateSelected": "我想招聘：{{title}}",
     "quickStartSelected": "我想招聘一名{{role}}",
     "quickStartFromJd": "基于职位描述的候选人",
     "quickRoles": {
@@ -470,7 +488,9 @@
   "dashboard": {
     "nav": {
       "dashboard": "控制面板",
+      "stats": "统计",
       "newHiring": "新招聘",
+      "apiKeys": "API 密钥",
       "apiPlayground": "API 测试"
     },
     "welcome": "欢迎回来",
@@ -481,6 +501,8 @@
     "actions": {
       "newHiring": "开始新招聘",
       "newHiringDesc": "创建新的职位",
+      "apiKeys": "API 密钥",
+      "apiKeysDesc": "管理 API 访问",
       "api": "API 测试",
       "apiDesc": "测试 API 接口",
       "stats": "统计",
@@ -493,8 +515,80 @@
       "emptyDesc": "创建您的第一个招聘请求以开始寻找候选人。",
       "create": "创建招聘请求",
       "candidates": "候选人",
-      "created": "创建于"
+      "created": "创建于",
+      "viewDetail": "查看详情"
+    },
+    "detail": {
+      "back": "返回请求列表",
+      "updated": "更新于",
+      "created": "创建于",
+      "candidatesCount": "{{count}} 位候选人",
+      "matches": "匹配数",
+      "invited": "已发送邀请",
+      "interviewsCompleted": "面试已完成",
+      "requirements": "岗位要求",
+      "jobDescription": "职位描述",
+      "noJobDescription": "暂无职位描述。",
+      "candidates": "候选人",
+      "noCandidates": "暂无候选人。",
+      "candidate": "候选人",
+      "matchScore": "匹配分",
+      "status": "状态",
+      "lastUpdated": "最近更新",
+      "notFound": "未找到该请求",
+      "loadError": "加载请求详情失败"
+    },
+    "candidateStatus": {
+      "pending": "待筛选",
+      "screening": "已邀请",
+      "interviewed": "已面试",
+      "shortlisted": "已入围",
+      "rejected": "已淘汰"
     }
+  },
+  "stats": {
+    "title": "统计",
+    "subtitle": "招聘进度一览",
+    "cards": {
+      "totalRequests": "请求总数",
+      "activeRequests": "{{count}} 个进行中",
+      "totalCandidates": "候选人总数",
+      "invitationsSent": "已发送 {{count}} 份邀请",
+      "interviewsCompleted": "已完成面试",
+      "avgMatchScore": "平均匹配分 {{score}}",
+      "avgMatchScoreEmpty": "平均匹配分 --"
+    },
+    "sections": {
+      "requestStatus": "请求状态",
+      "candidateStatus": "候选人状态",
+      "recentRequests": "近期请求"
+    },
+    "status": {
+      "active": "进行中",
+      "paused": "暂停",
+      "closed": "已关闭",
+      "pending": "待筛选",
+      "screening": "已邀请",
+      "interviewed": "已面试",
+      "shortlisted": "已入围",
+      "rejected": "已淘汰"
+    },
+    "empty": "暂无请求",
+    "requestCandidates": "{{count}} 位候选人"
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "暂无新动态。",
+    "viewAll": "查看全部动态",
+    "match": "新增匹配",
+    "invitation": "已发送面试邀请",
+    "interview": "面试已完成",
+    "subtitle": "{{name}} · {{request}}",
+    "candidate": "候选人",
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}} 分钟前",
+    "hoursAgo": "{{count}} 小时前",
+    "daysAgo": "{{count}} 天前"
   },
   "apiPlayground": {
     "title": "API 测试",

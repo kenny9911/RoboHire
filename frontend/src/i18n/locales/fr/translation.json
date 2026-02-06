@@ -303,6 +303,23 @@
     "specificResponsibilities": "Responsabilités spécifiques",
     "loginRequired": "Pour créer votre demande de recrutement, vous devez d'abord vous connecter.\n\n",
     "loginPrompt": "Cliquez sur le bouton ci-dessous pour vous connecter. Vos exigences seront enregistrées.",
+    "confirmTitle": "Confirmer la demande de recrutement",
+    "confirmSubtitle": "Vérifiez et modifiez l’intitulé du poste avant de créer la demande.",
+    "titleLabel": "Intitulé du poste",
+    "titlePlaceholder": "Ex. : Ingénieur Full Stack Senior",
+    "titleGenerating": "Génération d’un intitulé...",
+    "titleError": "Impossible de générer un intitulé. Veuillez modifier manuellement.",
+    "jdLabel": "Description du poste",
+    "jdMarkdownLabel": "Markdown",
+    "jdPlaceholder": "Le brouillon apparaîtra ici...",
+    "jdGenerating": "Génération de la description du poste...",
+    "jdPreview": "Aperçu",
+    "jdPreviewEmpty": "L’aperçu apparaîtra ici...",
+    "jdAiGenerate": "Générer avec l'IA",
+    "jdAiRefine": "Affiner avec l'IA",
+    "jdError": "Impossible de générer la description du poste. Veuillez modifier manuellement.",
+    "createRequest": "Créer la demande de recrutement",
+    "defaultTitle": "Nouvelle demande de recrutement",
     "success": "Votre demande de recrutement a été créée ! 🎉\n\n",
     "nextSteps": "**Et ensuite :**\n",
     "step1": "Notre IA commencera à présélectionner les candidats entrants",
@@ -498,6 +515,111 @@
         "skills": ["Sourcing technique", "ATS", "Entretiens", "Employer branding", "LinkedIn Recruiter"]
       }
     }
+  },
+  "dashboard": {
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "stats": "Statistiques",
+      "newHiring": "Nouveau recrutement",
+      "apiKeys": "Clés API",
+      "apiPlayground": "API Playground"
+    },
+    "welcome": "Bon retour",
+    "user": "vous",
+    "subtitle": "Gérez vos demandes de recrutement et suivez les candidats.",
+    "logout": "Se déconnecter",
+    "loading": "Chargement...",
+    "actions": {
+      "newHiring": "Démarrer un recrutement",
+      "newHiringDesc": "Créer un nouveau poste",
+      "apiKeys": "Clés API",
+      "apiKeysDesc": "Gérer l'accès API",
+      "api": "API Playground",
+      "apiDesc": "Tester les endpoints API",
+      "stats": "Statistiques",
+      "activeRequests": "demandes actives"
+    },
+    "requests": {
+      "title": "Vos demandes de recrutement",
+      "new": "Nouvelle demande",
+      "empty": "Aucune demande pour le moment",
+      "emptyDesc": "Créez votre première demande pour commencer à trouver des candidats.",
+      "create": "Créer une demande",
+      "candidates": "candidats",
+      "created": "Créé",
+      "viewDetail": "Voir le détail"
+    },
+    "detail": {
+      "back": "Retour aux demandes",
+      "updated": "Mis à jour",
+      "created": "Créé",
+      "candidatesCount": "{{count}} candidats",
+      "matches": "Correspondances",
+      "invited": "Invitations envoyées",
+      "interviewsCompleted": "Entretiens terminés",
+      "requirements": "Exigences",
+      "jobDescription": "Description du poste",
+      "noJobDescription": "Pas encore de description du poste.",
+      "candidates": "Candidats",
+      "noCandidates": "Aucun candidat pour le moment.",
+      "candidate": "Candidat",
+      "matchScore": "Score de matching",
+      "status": "Statut",
+      "lastUpdated": "Dernière mise à jour",
+      "notFound": "Demande introuvable",
+      "loadError": "Impossible de charger les détails"
+    },
+    "candidateStatus": {
+      "pending": "En attente",
+      "screening": "En présélection",
+      "interviewed": "Entretien réalisé",
+      "shortlisted": "Pré-sélectionné",
+      "rejected": "Refusé"
+    }
+  },
+  "stats": {
+    "title": "Statistiques",
+    "subtitle": "Vue d'ensemble de votre pipeline de recrutement",
+    "cards": {
+      "totalRequests": "Demandes totales",
+      "activeRequests": "{{count}} actives",
+      "totalCandidates": "Candidats au total",
+      "invitationsSent": "{{count}} invitations envoyées",
+      "interviewsCompleted": "Entretiens terminés",
+      "avgMatchScore": "Score moyen {{score}}",
+      "avgMatchScoreEmpty": "Score moyen --"
+    },
+    "sections": {
+      "requestStatus": "Statut des demandes",
+      "candidateStatus": "Statut des candidats",
+      "recentRequests": "Demandes récentes"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "En pause",
+      "closed": "Clôturée",
+      "pending": "En attente",
+      "screening": "En présélection",
+      "interviewed": "Entretien réalisé",
+      "shortlisted": "Pré-sélectionné",
+      "rejected": "Refusé"
+    },
+    "empty": "Aucune demande pour le moment",
+    "requestCandidates": "{{count}} candidats"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Vous êtes à jour.",
+    "viewAll": "Voir toute l'activité",
+    "match": "Nouveau match",
+    "invitation": "Invitation envoyée",
+    "interview": "Entretien terminé",
+    "subtitle": "{{name}} · {{request}}",
+    "candidate": "Candidat",
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {{count}} min",
+    "hoursAgo": "il y a {{count}} h",
+    "daysAgo": "il y a {{count}} j"
   },
   "pages": {
     "matchResume": {

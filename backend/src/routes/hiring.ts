@@ -1,10 +1,178 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma.js';
-import { requireAuth } from '../middleware/auth.js';
+import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { llmService } from '../services/llm/LLMService.js';
+import { languageService } from '../services/LanguageService.js';
+import { generateRequestId, logger } from '../services/LoggerService.js';
+import { createJDAgent } from '../agents/CreateJDAgent.js';
 // Import auth types to extend Express
 import '../types/auth.js';
 
 const router = Router();
+
+/**
+ * POST /api/v1/hiring-requests/title-suggestion
+ * Generate a suggested position title using LLM
+ */
+router.post('/title-suggestion', optionalAuth, async (req, res) => {
+  const requestId = generateRequestId();
+  logger.startRequest(requestId, '/api/v1/hiring-requests/title-suggestion', 'POST');
+
+  try {
+    const { role, requirements, jobDescription, language } = req.body || {};
+    const roleText = typeof role === 'string' ? role.trim() : '';
+    const requirementsText = typeof requirements === 'string' ? requirements.trim() : '';
+    const jobDescriptionText = typeof jobDescription === 'string' ? jobDescription.trim() : '';
+    const preferredLocale = typeof language === 'string' ? language.trim() : '';
+
+    if (!roleText && !requirementsText && !jobDescriptionText) {
+      logger.endRequest(requestId, 'error', 400);
+      return res.status(400).json({
+        success: false,
+        error: 'Role, requirements, or job description is required',
+      });
+    }
+
+    const languageSource = jobDescriptionText || requirementsText || roleText;
+    const preferredLanguage = preferredLocale
+      ? languageService.getLanguageFromLocale(preferredLocale)
+      : null;
+    const detectedLanguage = languageService.detectLanguage(languageSource || '');
+    const resolvedLanguage = preferredLanguage || detectedLanguage;
+    const languageInstruction = preferredLanguage
+      ? languageService.getLanguageInstructionForLanguage(preferredLanguage)
+      : languageService.getLanguageInstruction(languageSource || '');
+
+    logger.logLanguageDetection(requestId, resolvedLanguage, preferredLanguage ? 'user-selected' : 'auto');
+
+    const systemPrompt = `${languageInstruction}
+
+User selected language: ${resolvedLanguage}.
+
+You are a senior recruiter. Generate a concise, professional job title for this hiring request.
+Rules:
+- Output ONLY the title.
+- Keep it short (2-6 words or equivalent length), max 60 characters.
+- Use professional wording appropriate to the role.
+- No quotes, bullets, or extra commentary.`;
+
+    const promptParts: string[] = [];
+    if (roleText) promptParts.push(`Role: ${roleText}`);
+    if (requirementsText) {
+      promptParts.push(`Requirements:\n${requirementsText.slice(0, 3000)}`);
+    }
+    if (jobDescriptionText) {
+      promptParts.push(`Job description:\n${jobDescriptionText.slice(0, 3000)}`);
+    }
+
+    const userPrompt = promptParts.join('\n\n');
+
+    const response = await llmService.chat(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      { temperature: 0.2, requestId }
+    );
+
+    let title = response.trim();
+    title = title.split('\n').find((line) => line.trim().length > 0) || '';
+    title = title.replace(/^[-*•\d.\s]+/, '').trim();
+    title = title.replace(/^["'`]+|["'`]+$/g, '').trim();
+    title = title || roleText || 'New Hiring Request';
+
+    logger.info('HIRING_TITLE', 'Generated title suggestion', {
+      titleLength: title.length,
+      language: resolvedLanguage,
+      usedRole: Boolean(roleText),
+      requirementsLength: requirementsText.length,
+      jobDescriptionLength: jobDescriptionText.length,
+    }, requestId);
+
+    logger.endRequest(requestId, 'success', 200);
+
+    return res.json({
+      success: true,
+      data: { title },
+    });
+  } catch (error) {
+    logger.error('HIRING_TITLE', 'Title suggestion failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, requestId);
+    logger.endRequest(requestId, 'error', 500);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to generate title suggestion',
+    });
+  }
+});
+
+/**
+ * POST /api/v1/hiring-requests/jd-draft
+ * Generate a JD draft using LLM
+ */
+router.post('/jd-draft', optionalAuth, async (req, res) => {
+  const requestId = generateRequestId();
+  logger.startRequest(requestId, '/api/v1/hiring-requests/jd-draft', 'POST');
+
+  try {
+    const { title, requirements, jobDescription, language } = req.body || {};
+    const titleText = typeof title === 'string' ? title.trim() : '';
+    const requirementsText = typeof requirements === 'string' ? requirements.trim() : '';
+    const jobDescriptionText = typeof jobDescription === 'string' ? jobDescription.trim() : '';
+    const preferredLocale = typeof language === 'string' ? language.trim() : '';
+
+    if (!titleText && !requirementsText && !jobDescriptionText) {
+      logger.endRequest(requestId, 'error', 400);
+      return res.status(400).json({
+        success: false,
+        error: 'Title, requirements, or job description is required',
+      });
+    }
+
+    const languageSource = jobDescriptionText || requirementsText || titleText;
+    const preferredLanguage = preferredLocale
+      ? languageService.getLanguageFromLocale(preferredLocale)
+      : null;
+    const detectedLanguage = languageService.detectLanguage(languageSource || '');
+    const resolvedLanguage = preferredLanguage || detectedLanguage;
+    logger.logLanguageDetection(requestId, resolvedLanguage, preferredLanguage ? 'user-selected' : 'auto');
+
+    const jobDescriptionDraft = await createJDAgent.generate({
+      title: titleText || undefined,
+      requirements: requirementsText || undefined,
+      jobDescription: jobDescriptionText || undefined,
+      language: preferredLocale || undefined,
+      requestId,
+    });
+
+    logger.info('HIRING_JD', 'Generated JD draft', {
+      draftLength: jobDescriptionDraft.length,
+      language: resolvedLanguage,
+      usedTitle: Boolean(titleText),
+      requirementsLength: requirementsText.length,
+      jobDescriptionLength: jobDescriptionText.length,
+    }, requestId);
+
+    logger.endRequest(requestId, 'success', 200);
+
+    return res.json({
+      success: true,
+      data: {
+        jobDescriptionDraft: jobDescriptionDraft.trim(),
+      },
+    });
+  } catch (error) {
+    logger.error('HIRING_JD', 'JD draft generation failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, requestId);
+    logger.endRequest(requestId, 'error', 500);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to generate JD draft',
+    });
+  }
+});
 
 // All hiring routes require authentication
 router.use(requireAuth);

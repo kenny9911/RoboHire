@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { HiringSession } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { optionalAuth } from '../middleware/auth.js';
 import { recruitmentConsultantAgent } from '../agents/RecruitmentConsultantAgent.js';
@@ -23,6 +24,7 @@ interface ChatRequestBody {
     mustHaves?: string[];
     niceToHaves?: string[];
     jobDescription?: string;
+    language?: string;
   };
 }
 
@@ -62,7 +64,7 @@ router.post('/', optionalAuth, async (req, res) => {
       });
     }
 
-    let session: HiringSessionRecord | null = null;
+    let session: HiringSession | null = null;
     const userId = req.user?.id;
 
     if (sessionId) {

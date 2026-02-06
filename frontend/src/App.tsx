@@ -13,6 +13,7 @@ import APILanding from './pages/APILanding';
 import Dashboard from './pages/Dashboard';
 import APIKeys from './pages/APIKeys';
 import APIPlayground from './layouts/APIPlayground';
+import DashboardStats from './pages/DashboardStats';
 
 // API Playground Pages (existing)
 import MatchResume from './pages/MatchResume';
@@ -69,6 +70,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <APIKeys />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/stats"
+            element={
+              <ProtectedRoute>
+                <DashboardStats />
               </ProtectedRoute>
             }
           />

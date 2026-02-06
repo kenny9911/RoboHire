@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import axios from '../lib/axios';
 import FileUpload from '../components/FileUpload';
 import Button from '../components/Button';
 import ResultViewer from '../components/ResultViewer';

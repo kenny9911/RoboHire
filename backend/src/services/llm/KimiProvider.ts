@@ -1,50 +1,40 @@
 import OpenAI from 'openai';
 import { Message, LLMOptions, LLMProvider, LLMResponse } from '../../types/index.js';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-export class OpenRouterProvider implements LLMProvider {
+export class KimiProvider implements LLMProvider {
   private client: OpenAI;
   private defaultModel: string;
 
   constructor(apiKey: string, defaultModel: string) {
-    const baseURL = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-
     this.client = new OpenAI({
       apiKey,
-      baseURL: process.env.OPENROUTER_API_BASE_URL || 'https://openrouter.ai/api/v1',
-      defaultHeaders: {
-        'HTTP-Referer': process.env.OPENROUTER_HTTP_REFERER || 'https://robohire.io',
-        'X-Title': process.env.OPENROUTER_X_TITLE || 'RoboHire API',
-      },
+      baseURL: 'https://api.moonshot.cn/v1',
     });
     this.defaultModel = defaultModel;
   }
 
   getProviderName(): string {
-    return 'openrouter';
+    return 'kimi';
   }
 
   async chat(messages: Message[], options?: LLMOptions): Promise<LLMResponse> {
     const model = options?.model || this.defaultModel;
-    
+    // Moonshot Kimi currently only allows temperature=1 for this model family.
+    const temperature = 1;
+
     const response = await this.client.chat.completions.create({
       model,
       messages: messages.map((m) => ({
         role: m.role,
         content: m.content,
       })),
-      temperature: options?.temperature ?? 0.7,
+      temperature,
       max_tokens: options?.maxTokens,
     });
 
-    const content = response?.choices?.[0]?.message?.content;
+    const content = response.choices[0]?.message?.content;
     if (!content) {
-      const errorMessage =
-        (response as { error?: { message?: string } })?.error?.message ||
-        'No content in OpenRouter response';
-      throw new Error(errorMessage);
+      throw new Error('No content in Kimi response');
     }
 
     return {

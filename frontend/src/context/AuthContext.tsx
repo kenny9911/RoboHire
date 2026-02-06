@@ -28,8 +28,10 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+import { API_BASE as BASE } from '../config';
+
 // API base URL
-const API_BASE = '/api/auth';
+const API_BASE = `${BASE}/api/auth`;
 
 // Helper to make authenticated requests
 async function authFetch(

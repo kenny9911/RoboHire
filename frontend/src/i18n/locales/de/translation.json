@@ -303,6 +303,23 @@
     "specificResponsibilities": "Konkrete Verantwortlichkeiten",
     "loginRequired": "Um Ihre Einstellungsanfrage zu erstellen, müssen Sie sich zuerst anmelden.\n\n",
     "loginPrompt": "Klicken Sie unten auf den Button, um sich anzumelden. Ihre Anforderungen werden gespeichert.",
+    "confirmTitle": "Einstellungsanfrage bestätigen",
+    "confirmSubtitle": "Bitte den Stellentitel vor dem Erstellen prüfen und bearbeiten.",
+    "titleLabel": "Stellentitel",
+    "titlePlaceholder": "z. B. Senior Full-Stack-Engineer",
+    "titleGenerating": "Titel wird erstellt...",
+    "titleError": "Der Titel konnte nicht erstellt werden. Bitte manuell bearbeiten.",
+    "jdLabel": "Stellenbeschreibung",
+    "jdMarkdownLabel": "Markdown",
+    "jdPlaceholder": "Der Entwurf erscheint hier...",
+    "jdGenerating": "Stellenbeschreibung wird erstellt...",
+    "jdPreview": "Vorschau",
+    "jdPreviewEmpty": "Die Vorschau erscheint hier...",
+    "jdAiGenerate": "Mit KI erstellen",
+    "jdAiRefine": "Mit KI optimieren",
+    "jdError": "Die Stellenbeschreibung konnte nicht erstellt werden. Bitte manuell bearbeiten.",
+    "createRequest": "Einstellungsanfrage erstellen",
+    "defaultTitle": "Neue Einstellungsanfrage",
     "success": "Ihre Einstellungsanfrage wurde erstellt! 🎉\n\n",
     "nextSteps": "**Nächste Schritte:**\n",
     "step1": "Unsere KI beginnt mit der Vorauswahl eingehender Kandidaten",
@@ -498,6 +515,111 @@
         "skills": ["Technical Sourcing", "ATS", "Interviews", "Employer Branding", "LinkedIn Recruiting"]
       }
     }
+  },
+  "dashboard": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "stats": "Statistiken",
+      "newHiring": "Neue Einstellung",
+      "apiKeys": "API-Schlüssel",
+      "apiPlayground": "API Playground"
+    },
+    "welcome": "Willkommen zurück",
+    "user": "da",
+    "subtitle": "Verwalte deine Einstellungsanfragen und verfolge Kandidaten.",
+    "logout": "Abmelden",
+    "loading": "Wird geladen...",
+    "actions": {
+      "newHiring": "Neue Einstellung starten",
+      "newHiringDesc": "Neue Stelle erstellen",
+      "apiKeys": "API-Schlüssel",
+      "apiKeysDesc": "API-Zugriff verwalten",
+      "api": "API Playground",
+      "apiDesc": "API-Endpunkte testen",
+      "stats": "Statistiken",
+      "activeRequests": "aktive Anfragen"
+    },
+    "requests": {
+      "title": "Deine Einstellungsanfragen",
+      "new": "Neue Anfrage",
+      "empty": "Noch keine Anfragen",
+      "emptyDesc": "Erstelle deine erste Anfrage, um Kandidaten zu finden.",
+      "create": "Einstellungsanfrage erstellen",
+      "candidates": "Kandidaten",
+      "created": "Erstellt",
+      "viewDetail": "Details ansehen"
+    },
+    "detail": {
+      "back": "Zurück zu Anfragen",
+      "updated": "Aktualisiert",
+      "created": "Erstellt",
+      "candidatesCount": "{{count}} Kandidaten",
+      "matches": "Matches",
+      "invited": "Einladungen gesendet",
+      "interviewsCompleted": "Interviews abgeschlossen",
+      "requirements": "Anforderungen",
+      "jobDescription": "Stellenbeschreibung",
+      "noJobDescription": "Noch keine Stellenbeschreibung.",
+      "candidates": "Kandidaten",
+      "noCandidates": "Noch keine Kandidaten.",
+      "candidate": "Kandidat",
+      "matchScore": "Match-Score",
+      "status": "Status",
+      "lastUpdated": "Zuletzt aktualisiert",
+      "notFound": "Anfrage nicht gefunden",
+      "loadError": "Details konnten nicht geladen werden"
+    },
+    "candidateStatus": {
+      "pending": "Ausstehend",
+      "screening": "Im Screening",
+      "interviewed": "Interviewt",
+      "shortlisted": "In der engeren Auswahl",
+      "rejected": "Abgelehnt"
+    }
+  },
+  "stats": {
+    "title": "Statistiken",
+    "subtitle": "Überblick über deine Hiring-Pipeline",
+    "cards": {
+      "totalRequests": "Gesamtanfragen",
+      "activeRequests": "{{count}} aktiv",
+      "totalCandidates": "Kandidaten gesamt",
+      "invitationsSent": "{{count}} Einladungen gesendet",
+      "interviewsCompleted": "Interviews abgeschlossen",
+      "avgMatchScore": "Ø Match-Score {{score}}",
+      "avgMatchScoreEmpty": "Ø Match-Score --"
+    },
+    "sections": {
+      "requestStatus": "Status der Anfragen",
+      "candidateStatus": "Status der Kandidaten",
+      "recentRequests": "Neueste Anfragen"
+    },
+    "status": {
+      "active": "Aktiv",
+      "paused": "Pausiert",
+      "closed": "Geschlossen",
+      "pending": "Ausstehend",
+      "screening": "Im Screening",
+      "interviewed": "Interviewt",
+      "shortlisted": "In der engeren Auswahl",
+      "rejected": "Abgelehnt"
+    },
+    "empty": "Noch keine Anfragen",
+    "requestCandidates": "{{count}} Kandidaten"
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "empty": "Keine neuen Updates.",
+    "viewAll": "Alle Aktivitäten anzeigen",
+    "match": "Neuer Match",
+    "invitation": "Einladung gesendet",
+    "interview": "Interview abgeschlossen",
+    "subtitle": "{{name}} · {{request}}",
+    "candidate": "Kandidat",
+    "justNow": "gerade eben",
+    "minutesAgo": "vor {{count}} Min.",
+    "hoursAgo": "vor {{count}} Std.",
+    "daysAgo": "vor {{count}} Tg."
   },
   "pages": {
     "matchResume": {

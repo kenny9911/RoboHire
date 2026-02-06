@@ -303,6 +303,23 @@
     "specificResponsibilities": "Responsabilidades específicas",
     "loginRequired": "Para criar sua solicitação, você precisa entrar primeiro.\n\n",
     "loginPrompt": "Clique no botão abaixo para entrar. Seus requisitos serão salvos.",
+    "confirmTitle": "Confirmar solicitação de contratação",
+    "confirmSubtitle": "Revise e edite o cargo antes de criar a solicitação.",
+    "titleLabel": "Título do cargo",
+    "titlePlaceholder": "Ex.: Engenheiro Full Stack Sênior",
+    "titleGenerating": "Gerando um título...",
+    "titleError": "Não foi possível gerar um título. Edite manualmente.",
+    "jdLabel": "Descrição da vaga",
+    "jdMarkdownLabel": "Markdown",
+    "jdPlaceholder": "O rascunho aparecerá aqui...",
+    "jdGenerating": "Gerando a descrição da vaga...",
+    "jdPreview": "Pré-visualização",
+    "jdPreviewEmpty": "A pré-visualização aparecerá aqui...",
+    "jdAiGenerate": "Gerar com IA",
+    "jdAiRefine": "Aprimorar com IA",
+    "jdError": "Não foi possível gerar a descrição da vaga. Edite manualmente.",
+    "createRequest": "Criar solicitação de contratação",
+    "defaultTitle": "Nova solicitação de contratação",
     "success": "Sua solicitação de contratação foi criada! 🎉\n\n",
     "nextSteps": "**Próximos passos:**\n",
     "step1": "Nossa IA começará a filtrar candidatos recebidos",
@@ -498,6 +515,111 @@
         "skills": ["Sourcing técnico", "ATS", "Entrevistas", "Employer branding", "LinkedIn Recruiter"]
       }
     }
+  },
+  "dashboard": {
+    "nav": {
+      "dashboard": "Painel",
+      "stats": "Estatísticas",
+      "newHiring": "Nova contratação",
+      "apiKeys": "Chaves de API",
+      "apiPlayground": "API Playground"
+    },
+    "welcome": "Bem-vindo de volta",
+    "user": "por aqui",
+    "subtitle": "Gerencie suas vagas e acompanhe candidatos.",
+    "logout": "Sair",
+    "loading": "Carregando...",
+    "actions": {
+      "newHiring": "Iniciar nova contratação",
+      "newHiringDesc": "Criar uma nova vaga",
+      "apiKeys": "Chaves de API",
+      "apiKeysDesc": "Gerenciar acesso à API",
+      "api": "API Playground",
+      "apiDesc": "Testar endpoints da API",
+      "stats": "Estatísticas",
+      "activeRequests": "requisições ativas"
+    },
+    "requests": {
+      "title": "Suas solicitações de contratação",
+      "new": "Nova solicitação",
+      "empty": "Nenhuma solicitação ainda",
+      "emptyDesc": "Crie sua primeira solicitação para começar a buscar candidatos.",
+      "create": "Criar solicitação",
+      "candidates": "candidatos",
+      "created": "Criado em",
+      "viewDetail": "Ver detalhes"
+    },
+    "detail": {
+      "back": "Voltar para solicitações",
+      "updated": "Atualizado",
+      "created": "Criado em",
+      "candidatesCount": "{{count}} candidatos",
+      "matches": "Correspondências",
+      "invited": "Convites enviados",
+      "interviewsCompleted": "Entrevistas concluídas",
+      "requirements": "Requisitos",
+      "jobDescription": "Descrição da vaga",
+      "noJobDescription": "Ainda sem descrição da vaga.",
+      "candidates": "Candidatos",
+      "noCandidates": "Ainda não há candidatos.",
+      "candidate": "Candidato",
+      "matchScore": "Pontuação de match",
+      "status": "Status",
+      "lastUpdated": "Última atualização",
+      "notFound": "Solicitação não encontrada",
+      "loadError": "Não foi possível carregar os detalhes"
+    },
+    "candidateStatus": {
+      "pending": "Pendente",
+      "screening": "Em triagem",
+      "interviewed": "Entrevistado",
+      "shortlisted": "Pré-selecionado",
+      "rejected": "Rejeitado"
+    }
+  },
+  "stats": {
+    "title": "Estatísticas",
+    "subtitle": "Visão geral do seu funil de contratação",
+    "cards": {
+      "totalRequests": "Solicitações totais",
+      "activeRequests": "{{count}} ativas",
+      "totalCandidates": "Total de candidatos",
+      "invitationsSent": "{{count}} convites enviados",
+      "interviewsCompleted": "Entrevistas concluídas",
+      "avgMatchScore": "Pontuação média {{score}}",
+      "avgMatchScoreEmpty": "Pontuação média --"
+    },
+    "sections": {
+      "requestStatus": "Status das solicitações",
+      "candidateStatus": "Status dos candidatos",
+      "recentRequests": "Solicitações recentes"
+    },
+    "status": {
+      "active": "Ativa",
+      "paused": "Pausada",
+      "closed": "Encerrada",
+      "pending": "Pendente",
+      "screening": "Em triagem",
+      "interviewed": "Entrevistado",
+      "shortlisted": "Pré-selecionado",
+      "rejected": "Rejeitado"
+    },
+    "empty": "Nenhuma solicitação ainda",
+    "requestCandidates": "{{count}} candidatos"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "empty": "Você está em dia.",
+    "viewAll": "Ver toda a atividade",
+    "match": "Novo match",
+    "invitation": "Convite enviado",
+    "interview": "Entrevista concluída",
+    "subtitle": "{{name}} · {{request}}",
+    "candidate": "Candidato",
+    "justNow": "agora mesmo",
+    "minutesAgo": "há {{count}} min",
+    "hoursAgo": "há {{count}} h",
+    "daysAgo": "há {{count}} d"
   },
   "pages": {
     "matchResume": {

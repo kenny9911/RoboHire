@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config';
 import SEO from '../components/SEO';
 import LanguageSelector from '../components/LanguageSelector';
 
@@ -60,7 +61,7 @@ export default function Login() {
   };
 
   const handleOAuthLogin = (provider: 'google' | 'github' | 'linkedin') => {
-    window.location.href = `/api/auth/${provider}`;
+    window.location.href = `${API_BASE}/api/auth/${provider}`;
   };
 
   if (authLoading) {

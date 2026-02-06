@@ -1,0 +1,1 @@
+1. enhance consultant agent, by adding a planning phase or a planner agent , the planner agent will research and analyze user's requirements and research the job market for user's job requirements, and prepare a list of key questions that are required for AI Agents to help searching and matching resumes to fulfill this requirements.

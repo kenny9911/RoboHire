@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 
+env_for_github.txt
+
 # Environment variables
 .env
 .env.local

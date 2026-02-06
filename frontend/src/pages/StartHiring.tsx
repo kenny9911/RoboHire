@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config';
 import type { HiringTemplate } from '../data/hiringTemplates';
 import { getLocalizedTemplates } from '../data/hiringTemplates';
 
@@ -22,7 +26,7 @@ interface ChatSession {
 }
 
 export default function StartHiring() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -32,13 +36,20 @@ export default function StartHiring() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [step, setStep] = useState<'initial' | 'requirements' | 'complete'>('initial');
+  const [step, setStep] = useState<'initial' | 'requirements' | 'confirm' | 'complete'>('initial');
   const [hiringData, setHiringData] = useState({
     title: '',
     requirements: '',
     jobDescription: '',
   });
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [isTitleGenerating, setIsTitleGenerating] = useState(false);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [jdDraft, setJdDraft] = useState('');
+  const [isJdGenerating, setIsJdGenerating] = useState(false);
+  const [jdError, setJdError] = useState<string | null>(null);
+  const [showAllTemplates, setShowAllTemplates] = useState(false);
+  const [jdView, setJdView] = useState<'markdown' | 'preview'>('markdown');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -92,7 +103,7 @@ export default function StartHiring() {
 
   const loadSessions = async () => {
     try {
-      const response = await fetch('/api/v1/hiring-sessions', {
+      const response = await fetch(`${API_BASE}/api/v1/hiring-sessions`, {
         headers: getAuthHeaders(),
         credentials: 'include',
       });
@@ -107,7 +118,7 @@ export default function StartHiring() {
 
   const loadSession = async (sessionId: string) => {
     try {
-      const response = await fetch(`/api/v1/hiring-sessions/${sessionId}`, {
+      const response = await fetch(`${API_BASE}/api/v1/hiring-sessions/${sessionId}`, {
         headers: getAuthHeaders(),
         credentials: 'include',
       });
@@ -126,7 +137,7 @@ export default function StartHiring() {
     if (!isAuthenticated) return null;
     
     try {
-      const response = await fetch('/api/v1/hiring-sessions', {
+      const response = await fetch(`${API_BASE}/api/v1/hiring-sessions`, {
         method: 'POST',
         headers: getAuthHeaders(),
         credentials: 'include',
@@ -168,6 +179,7 @@ export default function StartHiring() {
     const context: {
       role?: string;
       jobDescription?: string;
+      language?: string;
     } = {};
 
     if (hiringData.title) {
@@ -178,8 +190,12 @@ export default function StartHiring() {
       context.jobDescription = hiringData.jobDescription;
     }
 
+    if (i18n.language) {
+      context.language = i18n.language;
+    }
+
     return context;
-  }, [hiringData.title, hiringData.jobDescription]);
+  }, [hiringData.title, hiringData.jobDescription, i18n.language]);
 
   const buildHistoryForChat = useCallback(
     (userMessage: string) => {
@@ -214,7 +230,7 @@ export default function StartHiring() {
         context,
       };
 
-      const response = await fetch('/api/v1/hiring-chat', {
+      const response = await fetch(`${API_BASE}/api/v1/hiring-chat`, {
         method: 'POST',
         headers: getAuthHeaders(),
         credentials: 'include',
@@ -240,6 +256,93 @@ export default function StartHiring() {
       isAuthenticated,
     ]
   );
+
+  const fetchTitleSuggestion = useCallback(async () => {
+    const role = hiringData.title.trim();
+    const requirements = hiringData.requirements.trim();
+    const jobDescription = hiringData.jobDescription.trim();
+
+    if (!role && !requirements && !jobDescription) {
+      return '';
+    }
+
+    const response = await fetch(`${API_BASE}/api/v1/hiring-requests/title-suggestion`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({
+        role: role || undefined,
+        requirements: requirements || undefined,
+        jobDescription: jobDescription || undefined,
+        language: i18n.language || undefined,
+      }),
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to generate title');
+    }
+
+    return (data.data?.title || '').trim();
+  }, [getAuthHeaders, hiringData.title, hiringData.requirements, hiringData.jobDescription, i18n.language]);
+
+  const fetchJdDraft = useCallback(async (jobDescriptionOverride?: string) => {
+    const title = hiringData.title.trim();
+    const requirements = hiringData.requirements.trim();
+    const jobDescription =
+      typeof jobDescriptionOverride === 'string'
+        ? jobDescriptionOverride.trim()
+        : hiringData.jobDescription.trim();
+
+    if (!title && !requirements && !jobDescription) {
+      return '';
+    }
+
+    const response = await fetch(`${API_BASE}/api/v1/hiring-requests/jd-draft`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({
+        title: title || undefined,
+        requirements: requirements || undefined,
+        jobDescription: jobDescription || undefined,
+        language: i18n.language || undefined,
+      }),
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to generate job description');
+    }
+
+    return (data.data?.jobDescriptionDraft || '').trim();
+  }, [getAuthHeaders, hiringData.title, hiringData.requirements, hiringData.jobDescription, i18n.language]);
+
+  const handleJdAiAction = useCallback(async () => {
+    if (isJdGenerating) return;
+
+    setIsJdGenerating(true);
+    setJdError(null);
+
+    try {
+      const baseDraft = jdDraft.trim();
+      const generatedDraft = await fetchJdDraft(baseDraft ? baseDraft : undefined);
+      if (generatedDraft) {
+        setJdDraft(generatedDraft);
+      } else {
+        setJdError(
+          t('hiring.jdError', "We couldn't generate a job description. Please edit it manually.")
+        );
+      }
+    } catch (error) {
+      console.error('Failed to generate JD draft:', error);
+      setJdError(
+        t('hiring.jdError', "We couldn't generate a job description. Please edit it manually.")
+      );
+    } finally {
+      setIsJdGenerating(false);
+    }
+  }, [fetchJdDraft, isJdGenerating, jdDraft, t]);
 
   const handleTemplateSelect = async (template: HiringTemplate) => {
     let sessionId = activeSessionId;
@@ -309,7 +412,7 @@ export default function StartHiring() {
       sessionId = await createSession();
     }
 
-    if (step === 'initial') {
+    if (step === 'initial' || step === 'confirm') {
       setStep('requirements');
     }
 
@@ -375,14 +478,15 @@ export default function StartHiring() {
 
   const createHiringRequest = async () => {
     try {
-      const response = await fetch('/api/v1/hiring-requests', {
+      const finalJobDescription = jdDraft.trim();
+      const response = await fetch(`${API_BASE}/api/v1/hiring-requests`, {
         method: 'POST',
         headers: getAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({
-          title: hiringData.title || 'New Hiring Request',
+          title: hiringData.title.trim() || t('hiring.defaultTitle', 'New Hiring Request'),
           requirements: hiringData.requirements,
-          jobDescription: hiringData.jobDescription,
+          jobDescription: finalJobDescription || undefined,
         }),
       });
 
@@ -425,9 +529,49 @@ export default function StartHiring() {
         return;
       }
 
-      await createHiringRequest();
+      setStep('confirm');
+      setTitleError(null);
+      setJdError(null);
+      setIsTitleGenerating(true);
+      setIsJdGenerating(true);
+      setJdDraft(hiringData.jobDescription);
+
+      const [titleResult, jdResult] = await Promise.allSettled([
+        fetchTitleSuggestion(),
+        fetchJdDraft(),
+      ]);
+
+      if (titleResult.status === 'fulfilled') {
+        const suggestedTitle = titleResult.value;
+        if (suggestedTitle) {
+          setHiringData((prev) => ({
+            ...prev,
+            title: suggestedTitle,
+          }));
+        }
+      } else {
+        console.error('Failed to generate title suggestion:', titleResult.reason);
+        setTitleError(
+          t('hiring.titleError', "We couldn't generate a title. Please edit it manually.")
+        );
+      }
+
+      if (jdResult.status === 'fulfilled') {
+        const generatedDraft = jdResult.value;
+        if (generatedDraft) {
+          setJdDraft(generatedDraft);
+        }
+      } else {
+        console.error('Failed to generate JD draft:', jdResult.reason);
+        setJdError(
+          t('hiring.jdError', "We couldn't generate a job description. Please edit it manually.")
+        );
+      }
+
+      setIsTitleGenerating(false);
+      setIsJdGenerating(false);
     },
-    [createHiringRequest, isAuthenticated]
+    [fetchJdDraft, fetchTitleSuggestion, hiringData.jobDescription, isAuthenticated, t]
   );
 
   const inferTitle = (text: string): string => {
@@ -466,6 +610,45 @@ export default function StartHiring() {
   const localizedTemplates = getLocalizedTemplates(t);
   // Featured templates (just show 6)
   const featuredTemplates = localizedTemplates.slice(0, 6);
+  const templatesToShow = showAllTemplates ? localizedTemplates : featuredTemplates;
+  const markdownComponents: Components = {
+    h1: ({ children }) => (
+      <h2 className="text-base font-semibold text-gray-900 mt-2 mb-2">{children}</h2>
+    ),
+    h2: ({ children }) => (
+      <h3 className="text-sm font-semibold text-gray-900 mt-3 mb-1">{children}</h3>
+    ),
+    h3: ({ children }) => (
+      <h4 className="text-sm font-medium text-gray-900 mt-2 mb-1">{children}</h4>
+    ),
+    p: ({ children }) => (
+      <p className="text-sm text-gray-700 leading-6 mb-2">{children}</p>
+    ),
+    ul: ({ children }) => (
+      <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1 mb-2">{children}</ul>
+    ),
+    ol: ({ children }) => (
+      <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-1 mb-2">{children}</ol>
+    ),
+    li: ({ children }) => <li className="leading-6">{children}</li>,
+    a: ({ href, children }) => (
+      <a
+        href={href}
+        className="text-indigo-600 hover:text-indigo-700 underline"
+        target="_blank"
+        rel="noreferrer"
+      >
+        {children}
+      </a>
+    ),
+    strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+    em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
+    code: ({ children }) => (
+      <code className="px-1 py-0.5 rounded bg-gray-100 text-xs text-gray-800">
+        {children}
+      </code>
+    ),
+  };
 
   if (authLoading) {
     return (
@@ -496,6 +679,11 @@ export default function StartHiring() {
                   setMessages([]);
                   setStep('initial');
                   setHiringData({ title: '', requirements: '', jobDescription: '' });
+                  setIsTitleGenerating(false);
+                  setTitleError(null);
+                  setJdDraft('');
+                  setIsJdGenerating(false);
+                  setJdError(null);
                   setSearchParams({});
                   setActiveSessionId(null);
                 }}
@@ -570,6 +758,166 @@ export default function StartHiring() {
                         <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                         <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                         <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {step === 'confirm' && (
+                  <div className="flex justify-start">
+                    <div className="w-full bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-4">
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {t('hiring.confirmTitle', 'Confirm hiring request')}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {t(
+                              'hiring.confirmSubtitle',
+                              'Review and edit the position title before creating the request.'
+                            )}
+                          </p>
+                        </div>
+                        {isTitleGenerating && (
+                          <span className="text-xs text-indigo-600">
+                            {t('hiring.titleGenerating', 'Generating a title...')}
+                          </span>
+                        )}
+                      </div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        {t('hiring.titleLabel', 'Position title')}
+                      </label>
+                      <input
+                        value={hiringData.title}
+                        onChange={(e) => {
+                          setHiringData((prev) => ({
+                            ...prev,
+                            title: e.target.value,
+                          }));
+                          if (titleError) {
+                            setTitleError(null);
+                          }
+                        }}
+                        disabled={isTitleGenerating}
+                        placeholder={t('hiring.titlePlaceholder', 'e.g., Senior Full Stack Engineer')}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-gray-50 disabled:text-gray-400"
+                      />
+                      {titleError && (
+                        <p className="mt-2 text-xs text-rose-600">{titleError}</p>
+                      )}
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-xs font-medium text-gray-700">
+                            {t('hiring.jdLabel', 'Job description')}
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <div className="inline-flex items-center rounded-lg border border-gray-200 bg-white p-0.5">
+                              <button
+                                type="button"
+                                onClick={() => setJdView('markdown')}
+                                className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
+                                  jdView === 'markdown'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'text-gray-600 hover:text-gray-800'
+                                }`}
+                              >
+                                {t('hiring.jdMarkdownLabel', 'Markdown')}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setJdView('preview')}
+                                className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
+                                  jdView === 'preview'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'text-gray-600 hover:text-gray-800'
+                                }`}
+                              >
+                                {t('hiring.jdPreview', 'Preview')}
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleJdAiAction}
+                              disabled={isJdGenerating}
+                              title={
+                                jdDraft.trim()
+                                  ? t('hiring.jdAiRefine', 'Refine with AI')
+                                  : t('hiring.jdAiGenerate', 'Generate with AI')
+                              }
+                              aria-label={
+                                jdDraft.trim()
+                                  ? t('hiring.jdAiRefine', 'Refine with AI')
+                                  : t('hiring.jdAiGenerate', 'Generate with AI')
+                              }
+                              className="px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <svg
+                                className="w-3.5 h-3.5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                                />
+                              </svg>
+                              <span>
+                                {jdDraft.trim()
+                                  ? t('hiring.jdAiRefine', 'Refine with AI')
+                                  : t('hiring.jdAiGenerate', 'Generate with AI')}
+                              </span>
+                            </button>
+                            {isJdGenerating && (
+                              <span className="text-xs text-indigo-600">
+                                {t('hiring.jdGenerating', 'Generating job description...')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {jdView === 'markdown' ? (
+                          <textarea
+                            value={jdDraft}
+                            onChange={(e) => {
+                              setJdDraft(e.target.value);
+                              if (jdError) {
+                                setJdError(null);
+                              }
+                            }}
+                            placeholder={t('hiring.jdPlaceholder', 'Draft will appear here...')}
+                            rows={10}
+                            className="w-full min-h-[220px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                          />
+                        ) : (
+                          <div className="w-full min-h-[220px] max-h-96 overflow-auto rounded-xl border border-gray-200 bg-white px-3 py-2">
+                            {jdDraft.trim() ? (
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={markdownComponents}
+                              >
+                                {jdDraft}
+                              </ReactMarkdown>
+                            ) : (
+                              <p className="text-sm text-gray-400">
+                                {t('hiring.jdPreviewEmpty', 'Preview will appear here...')}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {jdError && (
+                          <p className="mt-2 text-xs text-rose-600">{jdError}</p>
+                        )}
+                      </div>
+                      <div className="mt-4 flex items-center justify-end">
+                        <button
+                          onClick={createHiringRequest}
+                          disabled={isTitleGenerating || isJdGenerating || !hiringData.title.trim()}
+                          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {t('hiring.createRequest', 'Create hiring request')}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -788,7 +1136,7 @@ export default function StartHiring() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuredTemplates.map((template) => (
+            {templatesToShow.map((template) => (
               <button
                 key={template.id}
                 onClick={() => handleTemplateSelect(template)}
@@ -811,14 +1159,17 @@ export default function StartHiring() {
             ))}
           </div>
 
-          <div className="text-center mt-8">
-            <Link
-              to="/templates"
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
-            >
-              {t('hiring.viewAllTemplates', 'View all templates')}
-            </Link>
-          </div>
+          {!showAllTemplates && (
+            <div className="text-center mt-8">
+              <button
+                type="button"
+                onClick={() => setShowAllTemplates(true)}
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+              >
+                {t('hiring.viewAllTemplates', 'View all templates')}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

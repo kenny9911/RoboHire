@@ -15,6 +15,7 @@ export interface RecruitmentChatContext {
   mustHaves?: string[];
   niceToHaves?: string[];
   jobDescription?: string;
+  language?: string;
 }
 
 export interface RecruitmentChatInput {
@@ -32,8 +33,8 @@ export interface RecruitmentChatResult {
 const ACTION_MARKER = '[[ACTION:CREATE_REQUEST]]';
 
 export class RecruitmentConsultantAgent {
-  private buildSystemPrompt(languageInstruction?: string): string {
-    const corePrompt = `You are RoboHire's Recruitment Consultant Agent — a senior recruiter with 15+ years across tech, product, sales, operations, and leadership roles.
+  private buildSystemPrompt(languageInstruction?: string, preferredLanguage?: string): string {
+    const corePrompt = `You are RoboHire's Recruitment Consultant Agent — a senior recruiter with 15+ years across tech, product, sales, operations, AI, and leadership roles.
 
 Your job is to help the user define a clear, complete hiring brief. You must be confident, practical, and concise.
 
@@ -44,22 +45,28 @@ Behavior guidelines:
 - Keep the user aligned by providing a \"Summary so far\" section with bullet points.
 - Separate requirements into: Must-haves, Nice-to-haves, Responsibilities, Tools/Stack, Soft skills, Success metrics.
 - If a job description is provided, extract key requirements and highlight missing or ambiguous items.
+- Always respond in the user's selected language. If a preferred language is provided, use it consistently even if the user's message is in another language.
 
 Response format (keep concise):
 1) Recommendations (short bullets)
 2) Clarifying questions (2–5 questions)
 3) Summary so far (bulleted, only what is confirmed)
 
-If the user explicitly confirms they want to proceed (e.g., \"yes\", \"looks good\", \"create the request\"), append this exact line at the end:
+If the user explicitly confirms they want to proceed (e.g., \"yes\", \"looks good\", \"create the request\", \"that's all\"), append this exact line at the end:
 ${ACTION_MARKER}
 
 Do not explain the marker. Keep it on its own line.`;
 
+    const promptParts: string[] = [];
     if (languageInstruction) {
-      return `${languageInstruction}\n\n${corePrompt}`;
+      promptParts.push(languageInstruction);
+    }
+    if (preferredLanguage) {
+      promptParts.push(`User selected language: ${preferredLanguage}.`);
     }
 
-    return corePrompt;
+    promptParts.push(corePrompt);
+    return promptParts.join('\n\n');
   }
 
   private buildUserMessage(message: string, context?: RecruitmentChatContext): string {
@@ -98,15 +105,20 @@ Do not explain the marker. Keep it on its own line.`;
   }
 
   async chat(input: RecruitmentChatInput): Promise<RecruitmentChatResult> {
+    const preferredLocale = input.context?.language;
     const languageSource = input.context?.jobDescription || input.message;
     const detectedLanguage = languageService.detectLanguage(languageSource);
-    const languageInstruction = languageService.getLanguageInstruction(languageSource);
+    const preferredLanguage = preferredLocale ? languageService.getLanguageFromLocale(preferredLocale) : null;
+    const resolvedLanguage = preferredLanguage || detectedLanguage;
+    const languageInstruction = preferredLanguage
+      ? languageService.getLanguageInstructionForLanguage(preferredLanguage)
+      : languageService.getLanguageInstruction(languageSource);
 
     if (input.requestId) {
-      logger.logLanguageDetection(input.requestId, detectedLanguage, 'auto');
+      logger.logLanguageDetection(input.requestId, resolvedLanguage, preferredLanguage ? 'user-selected' : 'auto');
     }
 
-    const systemPrompt = this.buildSystemPrompt(languageInstruction);
+    const systemPrompt = this.buildSystemPrompt(languageInstruction, preferredLanguage || undefined);
     const userMessage = this.buildUserMessage(input.message, input.context);
 
     const messages: Message[] = [

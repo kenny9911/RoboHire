@@ -20,8 +20,9 @@
     "services:restart": "./scripts/restart.sh"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "esbuild": "^0.27.2",
-    "typescript": "^5.6.2"
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "multer": "^2.0.2"
   }
 }

@@ -2,6 +2,7 @@ import { Message, LLMOptions, LLMProvider, LLMResponse } from '../../types/index
 import { OpenAIProvider } from './OpenAIProvider.js';
 import { OpenRouterProvider } from './OpenRouterProvider.js';
 import { GoogleProvider } from './GoogleProvider.js';
+import { KimiProvider } from './KimiProvider.js';
 import { logger } from '../LoggerService.js';
 
 export class LLMService {
@@ -43,6 +44,12 @@ export class LLMService {
       case 'google':
         return new GoogleProvider(
           process.env.GOOGLE_API_KEY || '',
+          this.model
+        );
+      case 'kimi':
+      case 'moonshot':
+        return new KimiProvider(
+          process.env.KIMI_API_KEY || '',
           this.model
         );
       default:
