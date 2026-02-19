@@ -6,8 +6,11 @@ import { resumeParseAgent } from '../agents/ResumeParseAgent.js';
 import { jdParseAgent } from '../agents/JDParseAgent.js';
 import { evaluationAgent } from '../agents/EvaluationAgent.js';
 import { pdfService } from '../services/PDFService.js';
-import { logger, generateRequestId } from '../services/LoggerService.js';
+import { logger } from '../services/LoggerService.js';
 import { documentStorage } from '../services/DocumentStorageService.js';
+import { requireAuth, requireScopes } from '../middleware/auth.js';
+import { trackUsage } from '../middleware/usageTracker.js';
+import { apiRateLimit } from '../middleware/rateLimiter.js';
 import {
   MatchResumeRequest,
   InviteCandidateRequest,
@@ -36,8 +39,8 @@ const upload = multer({
  * POST /api/v1/match-resume
  * Match a resume against a job description
  */
-router.post('/match-resume', async (req: Request, res: Response) => {
-  const requestId = generateRequestId();
+router.post('/match-resume', requireAuth, requireScopes('write'), apiRateLimit(), trackUsage, async (req: Request, res: Response) => {
+  const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/match-resume', 'POST');
 
   try {
@@ -95,8 +98,8 @@ router.post('/match-resume', async (req: Request, res: Response) => {
  * POST /api/v1/invite-candidate
  * Send interview invitation via RoboHire 一键邀约 API
  */
-router.post('/invite-candidate', async (req: Request, res: Response) => {
-  const requestId = generateRequestId();
+router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLimit(), trackUsage, async (req: Request, res: Response) => {
+  const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/invite-candidate', 'POST');
 
   try {
@@ -152,8 +155,8 @@ router.post('/invite-candidate', async (req: Request, res: Response) => {
  * POST /api/v1/parse-resume
  * Parse a resume PDF and extract structured data
  */
-router.post('/parse-resume', upload.single('file'), async (req: Request, res: Response) => {
-  const requestId = generateRequestId();
+router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit(), trackUsage, upload.single('file'), async (req: Request, res: Response) => {
+  const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/parse-resume', 'POST');
 
   try {
@@ -245,8 +248,8 @@ router.post('/parse-resume', upload.single('file'), async (req: Request, res: Re
  * POST /api/v1/parse-jd
  * Parse a job description PDF and extract structured data
  */
-router.post('/parse-jd', upload.single('file'), async (req: Request, res: Response) => {
-  const requestId = generateRequestId();
+router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), trackUsage, upload.single('file'), async (req: Request, res: Response) => {
+  const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/parse-jd', 'POST');
 
   try {
@@ -340,8 +343,8 @@ router.post('/parse-jd', upload.single('file'), async (req: Request, res: Respon
  * Optional: include_cheating_detection (boolean) - Run cheating detection analysis
  * Optional: user_instructions (string) - Special instructions for evaluation
  */
-router.post('/evaluate-interview', async (req: Request, res: Response) => {
-  const requestId = generateRequestId();
+router.post('/evaluate-interview', requireAuth, requireScopes('write'), apiRateLimit(), trackUsage, async (req: Request, res: Response) => {
+  const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/evaluate-interview', 'POST');
 
   try {

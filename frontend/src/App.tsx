@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard';
 import APIKeys from './pages/APIKeys';
 import APIPlayground from './layouts/APIPlayground';
 import DashboardStats from './pages/DashboardStats';
+import UsageDashboard from './pages/UsageDashboard';
 
 // API Playground Pages (existing)
 import MatchResume from './pages/MatchResume';
@@ -78,6 +79,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardStats />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/usage"
+            element={
+              <ProtectedRoute>
+                <UsageDashboard />
               </ProtectedRoute>
             }
           />

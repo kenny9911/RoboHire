@@ -253,10 +253,34 @@ export default function APIKeys() {
   const [showNewKeyModal, setShowNewKeyModal] = useState(false);
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<(ApiKey & { key: string }) | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [keyUsage, setKeyUsage] = useState<Record<string, { calls: number; totalTokens: number; cost: number }>>({});
 
   useEffect(() => {
     fetchApiKeys();
+    fetchKeyUsage();
   }, []);
+
+  const fetchKeyUsage = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/v1/usage/by-key`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        const map: Record<string, { calls: number; totalTokens: number; cost: number }> = {};
+        for (const entry of data.data) {
+          if (entry.apiKeyId) {
+            map[entry.apiKeyId] = { calls: entry.calls, totalTokens: entry.totalTokens, cost: entry.cost };
+          }
+        }
+        setKeyUsage(map);
+      }
+    } catch {
+      // non-critical
+    }
+  };
 
   const fetchApiKeys = async () => {
     try {
@@ -513,6 +537,22 @@ export default function APIKeys() {
                           {t('apiKeys.scopes', 'Scopes')}: {apiKey.scopes.join(', ')}
                         </span>
                       </div>
+                      {keyUsage[apiKey.id] && (
+                        <div className="flex flex-wrap items-center gap-4 mt-2 text-sm">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md text-xs font-medium">
+                            {keyUsage[apiKey.id].calls} calls
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md text-xs font-medium">
+                            {keyUsage[apiKey.id].totalTokens >= 1000
+                              ? `${(keyUsage[apiKey.id].totalTokens / 1000).toFixed(1)}K`
+                              : keyUsage[apiKey.id].totalTokens}{' '}
+                            tokens
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md text-xs font-medium">
+                            ${keyUsage[apiKey.id].cost.toFixed(4)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 ml-4">
                       <button

@@ -231,6 +231,9 @@ export default function DashboardHeader() {
             <Link to="/dashboard/api-keys" className={getNavLinkClass(location.pathname === '/dashboard/api-keys')}>
               {t('dashboard.nav.apiKeys', 'API Keys')}
             </Link>
+            <Link to="/dashboard/usage" className={getNavLinkClass(location.pathname === '/dashboard/usage')}>
+              {t('dashboard.nav.usage', 'Usage')}
+            </Link>
             <Link to="/api-playground" className={getNavLinkClass(location.pathname.startsWith('/api-playground'))}>
               {t('dashboard.nav.apiPlayground', 'API Playground')}
             </Link>

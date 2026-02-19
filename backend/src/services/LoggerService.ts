@@ -554,6 +554,43 @@ class LoggerService extends EventEmitter {
     }, requestId);
   }
 
+  /**
+   * Return aggregated token/cost data for a request so the usage tracker
+   * middleware can persist it to the database.
+   */
+  getRequestContext(requestId: string): {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    totalCost: number;
+    lastModel: string | null;
+    lastProvider: string | null;
+  } | null {
+    const ctx = this.requestContexts.get(requestId);
+    if (!ctx) return null;
+
+    let promptTokens = 0;
+    let completionTokens = 0;
+    let lastModel: string | null = null;
+    let lastProvider: string | null = null;
+
+    for (const call of ctx.llmCalls) {
+      promptTokens += call.promptTokens;
+      completionTokens += call.completionTokens;
+      lastModel = call.model;
+      lastProvider = call.provider;
+    }
+
+    return {
+      promptTokens,
+      completionTokens,
+      totalTokens: ctx.totalTokens,
+      totalCost: ctx.totalCost,
+      lastModel,
+      lastProvider,
+    };
+  }
+
   // Get global statistics
   getGlobalStats(): typeof this.globalStats {
     return { ...this.globalStats };

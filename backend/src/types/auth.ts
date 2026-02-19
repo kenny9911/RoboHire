@@ -31,6 +31,7 @@ declare global {
       updatedAt: Date;
     }
     interface Request {
+      requestId?: string;
       sessionToken?: string;
       apiKeyId?: string;
       apiKeyScopes?: ApiKeyScope[];
