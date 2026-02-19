@@ -33,6 +33,7 @@ export default function ApiInfoPanel({
   // Generate cURL command
   const generateCurl = () => {
     let curl = `curl -X ${method} '${fullUrl}'`;
+    curl += ` \\\n  -H 'X-API-Key: rh_YOUR_API_KEY'`;
     
     if (method === 'POST' || method === 'PUT') {
       curl += ` \\\n  -H 'Content-Type: application/json'`;
@@ -53,7 +54,11 @@ export default function ApiInfoPanel({
     const bodyJson = requestBody ? JSON.stringify(requestBody, null, 2) : null;
     
     if (method === 'GET') {
-      return `const response = await fetch('${fullUrl}');
+      return `const response = await fetch('${fullUrl}', {
+  headers: {
+    'X-API-Key': 'rh_YOUR_API_KEY',
+  },
+});
 const data = await response.json();
 console.log(data);`;
     }
@@ -62,6 +67,7 @@ console.log(data);`;
   method: '${method}',
   headers: {
     'Content-Type': 'application/json',
+    'X-API-Key': 'rh_YOUR_API_KEY',
   },${bodyJson ? `
   body: JSON.stringify(${bodyJson}),` : ''}
 });
@@ -76,7 +82,11 @@ console.log(data);`;
     if (method === 'GET') {
       return `import requests
 
-response = requests.get('${fullUrl}')
+headers = {
+    'X-API-Key': 'rh_YOUR_API_KEY',
+}
+
+response = requests.get('${fullUrl}', headers=headers)
 data = response.json()
 print(data)`;
     }
@@ -92,10 +102,16 @@ print(data)`;
     
     return `import requests
 
+headers = {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'rh_YOUR_API_KEY',
+}
+
 payload = ${pythonBody || '{}'}
 
 response = requests.${method.toLowerCase()}(
     '${fullUrl}',
+    headers=headers,
     json=payload
 )
 data = response.json()
