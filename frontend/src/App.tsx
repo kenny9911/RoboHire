@@ -8,13 +8,18 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import StartHiring from './pages/StartHiring';
 import APILanding from './pages/APILanding';
+import Pricing from './pages/Pricing';
+import RequestDemo from './pages/RequestDemo';
 
-// Protected Pages
+// Dashboard layout + pages
+import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import APIKeys from './pages/APIKeys';
-import APIPlayground from './layouts/APIPlayground';
 import DashboardStats from './pages/DashboardStats';
 import UsageDashboard from './pages/UsageDashboard';
+
+// API Playground layout
+import APIPlayground from './layouts/APIPlayground';
 
 // API Playground Pages (existing)
 import MatchResume from './pages/MatchResume';
@@ -48,48 +53,24 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/start-hiring" element={<StartHiring />} />
           <Route path="/developers" element={<APILanding />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/request-demo" element={<RequestDemo />} />
 
-          {/* Protected Routes */}
+          {/* Dashboard (protected, shared sidebar layout) */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <DashboardLayout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/dashboard/requests/:id"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/api-keys"
-            element={
-              <ProtectedRoute>
-                <APIKeys />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/stats"
-            element={
-              <ProtectedRoute>
-                <DashboardStats />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/usage"
-            element={
-              <ProtectedRoute>
-                <UsageDashboard />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="requests/:id" element={<Dashboard />} />
+            <Route path="api-keys" element={<APIKeys />} />
+            <Route path="stats" element={<DashboardStats />} />
+            <Route path="usage" element={<UsageDashboard />} />
+          </Route>
 
           {/* API Playground Routes (Public) */}
           <Route path="/api-playground" element={<APIPlayground />}>

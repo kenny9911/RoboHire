@@ -21,6 +21,15 @@ model User {
   providerId    String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Subscription / Stripe
+  stripeCustomerId    String?   @unique
+  subscriptionTier    String    @default("free") // free, startup, business, custom
+  subscriptionStatus  String    @default("active") // active, past_due, canceled
+  subscriptionId      String?
+  currentPeriodEnd    DateTime?
+  interviewsUsed      Int       @default(0)
+  resumeMatchesUsed   Int       @default(0)
   
   hiringRequests  HiringRequest[]
   sessions        Session[]

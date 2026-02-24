@@ -104,14 +104,14 @@ result = response.json()`,
       <EndpointCard
         method="POST"
         path="/v1/invite-candidate"
-        description="Generate an interview invitation email"
+        description={t('docs.inviteCandidate.endpointDesc', 'Generate an interview invitation email')}
       />
 
       {/* Request */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.inviteCandidate.request', 'Request')}
       </h2>
-      <ParamTable title="Body Parameters" params={requestParams} />
+      <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
 
       <CodeBlock
         tabs={[
@@ -125,9 +125,9 @@ result = response.json()`,
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.inviteCandidate.response', 'Response')}
       </h2>
-      <ParamTable title="Response Fields" params={responseParams} />
+      <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
 
-      <CodeBlock code={exampleResponse} language="json" title="Example Response" />
+      <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Email Tones */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
@@ -137,22 +137,22 @@ result = response.json()`,
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Tone</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Description</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.inviteCandidate.tones.toneHeader', 'Tone')}</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.inviteCandidate.tones.descHeader', 'Description')}</th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3"><code className="text-indigo-600">formal</code></td>
-              <td className="px-4 py-3 text-gray-600">Traditional, corporate-style communication</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.inviteCandidate.tones.formal', 'Traditional, corporate-style communication')}</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3"><code className="text-indigo-600">professional</code></td>
-              <td className="px-4 py-3 text-gray-600">Balanced, business-appropriate (default)</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.inviteCandidate.tones.professional', 'Balanced, business-appropriate (default)')}</td>
             </tr>
             <tr>
               <td className="px-4 py-3"><code className="text-indigo-600">friendly</code></td>
-              <td className="px-4 py-3 text-gray-600">Warm, approachable, startup-friendly</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.inviteCandidate.tones.friendly', 'Warm, approachable, startup-friendly')}</td>
             </tr>
           </tbody>
         </table>

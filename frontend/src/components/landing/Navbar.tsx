@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import LanguageSelector from '../LanguageSelector';
@@ -8,13 +8,25 @@ export default function Navbar() {
   const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const navLinks = [
-    { href: '#services', label: t('landing.nav.services', 'Services') },
-    { href: '#how-it-works', label: t('landing.nav.howItWorks', 'How It Works') },
+    { href: '/#services', hash: 'services', label: t('landing.nav.services', 'Services') },
+    { href: '/#how-it-works', hash: 'how-it-works', label: t('landing.nav.howItWorks', 'How It Works') },
+    { href: '/pricing', label: t('landing.nav.pricing', 'Pricing'), isRoute: true },
     { href: '/developers', label: t('landing.nav.api', 'API'), isRoute: true },
     { href: '/docs', label: t('landing.nav.docs', 'Docs'), isRoute: true },
   ];
+
+  const handleHashClick = (e: React.MouseEvent, hash: string) => {
+    e.preventDefault();
+    if (location.pathname === '/') {
+      document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/', { state: { scrollTo: hash } });
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
@@ -45,6 +57,7 @@ export default function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
+                  onClick={(e) => link.hash && handleHashClick(e, link.hash)}
                   className="text-gray-600 hover:text-indigo-600 font-medium transition-colors"
                 >
                   {link.label}
@@ -126,7 +139,7 @@ export default function Navbar() {
                   <a
                     key={link.href}
                     href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={(e) => { setIsMobileMenuOpen(false); link.hash && handleHashClick(e, link.hash); }}
                     className="text-gray-600 hover:text-indigo-600 font-medium transition-colors"
                   >
                     {link.label}

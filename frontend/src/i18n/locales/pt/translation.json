@@ -705,5 +705,127 @@
       "errorMissingFields": "Forneca curriculo, descricao da vaga e transcricao",
       "jsonTitle": "Resultado da avaliacao JSON"
     }
+  },
+  "pricing": {
+    "seo": {
+      "title": "Precos - Planos de recrutamento com IA para cada equipe",
+      "desc": "Escolha o plano RoboHire ideal. Gratis, Startup por $299/mes, Business por $599/mes ou precos empresariais personalizados. Inclui matching de curriculo com IA e entrevistas."
+    },
+    "label": "Tabela de precos",
+    "headline": "Precos que ",
+    "headlineAccent": "crescem com voce",
+    "subheadline": "Comece gratis, escale conforme cresce. Pague apenas pelo que usar.",
+    "monthly": "Mensal",
+    "annual": "Anual",
+    "save": "Economize 8%",
+    "month": "mes",
+    "year": "ano",
+    "popular": "Mais popular",
+    "customBadge": "Personalizado",
+    "customPrice": "Personalizado",
+    "billedAnnually": "Cobrado anualmente por $",
+    "redirecting": "Redirecionando...",
+    "free": {
+      "name": "Gratis",
+      "subtitle": "Para pessoas que estao comecando",
+      "cta": "Comecar gratis",
+      "f1": "2 vagas",
+      "f2": "10 correspondencias de curriculo",
+      "f3": "2 entrevistas",
+      "f4": "Pontuacao e avaliacao de entrevistas",
+      "f5": "Resumos de entrevistas"
+    },
+    "startup": {
+      "name": "Startup",
+      "subtitle": "Para equipes pequenas que contratam rapido",
+      "cta": "Iniciar teste gratis",
+      "f1": "Assentos ilimitados",
+      "f2": "Vagas ilimitadas",
+      "f3": "180 entrevistas / mes",
+      "f4": "180 correspondencias de curriculo / mes",
+      "f5": "Acesso a API RoboHire",
+      "f5s": "Integre com seus sistemas",
+      "f6": "6 idiomas de entrevista",
+      "f7": "Avaliacao de proficiencia linguistica",
+      "f8": "Suporte por email"
+    },
+    "business": {
+      "name": "Business",
+      "subtitle": "Para equipes grandes em rapido crescimento",
+      "cta": "Iniciar teste gratis",
+      "f1": "Assentos ilimitados",
+      "f2": "Vagas ilimitadas",
+      "f3": "400 entrevistas / mes",
+      "f4": "400 correspondencias de curriculo / mes",
+      "f5": "Tudo do Startup",
+      "f6": "Suporte prioritario",
+      "f7": "Analises avancadas",
+      "f8": "Relatorios white-label",
+      "f9": "Reproducao completa de video",
+      "f10": "Deteccao de trapaca"
+    },
+    "custom": {
+      "name": "Enterprise",
+      "subtitle": "Para organizacoes de alto volume",
+      "cta": "Contatar vendas",
+      "f1": "Tudo ilimitado",
+      "f2": "Tudo do Business",
+      "f3": "Workflows personalizados",
+      "f3s": "Adapte seu processo de recrutamento",
+      "f4": "Mais de 45 integracoes ATS",
+      "f4s": "Conecte suas ferramentas existentes",
+      "f5": "Vozes de entrevista personalizadas",
+      "f6": "Gerente dedicado e suporte"
+    },
+    "ppu": {
+      "title": "Precos por uso",
+      "subtitle": "Precisa de mais flexibilidade? Recarregue seu saldo e pague apenas pelo que usar.",
+      "includes": "Inclui",
+      "match": {
+        "title": "Correspondencia de Curriculo",
+        "unit": "por curriculo / vaga",
+        "f1": "Decisao de correspondencia com insights",
+        "f2": "Analise de requisitos obrigatorios",
+        "f3": "Analise de lacunas e recomendacoes",
+        "f4": "Validacao de credenciais e experiencia",
+        "f5": "Perguntas de entrevista sugeridas",
+        "f6": "Areas para aprofundar"
+      },
+      "interview": {
+        "title": "Entrevista",
+        "unit": "por entrevista",
+        "f1": "Reproducao completa de video",
+        "f2": "Convites automaticos por email",
+        "f3": "Pontuacao e avaliacao estruturada",
+        "f4": "Deteccao de trapaca",
+        "f5": "Resumos de entrevistas",
+        "f6": "Avaliacao de proficiencia linguistica"
+      }
+    },
+    "faq": {
+      "title": "Perguntas frequentes",
+      "q1": "Posso experimentar o RoboHire gratuitamente?",
+      "a1": "Sim! O plano Gratis inclui 10 correspondencias de curriculo e 2 entrevistas sem custo. Nao e necessario cartao de credito.",
+      "q2": "Quais metodos de pagamento voces aceitam?",
+      "a2": "Aceitamos os principais cartoes de credito e debito (Visa, Mastercard, American Express) alem de Alipay. Todos os pagamentos sao processados com seguranca via Stripe.",
+      "q3": "Posso mudar de plano a qualquer momento?",
+      "a3": "Claro. Voce pode fazer upgrade ou downgrade a qualquer momento. No upgrade, a diferenca proporcional e cobrada. No downgrade, o credito e aplicado ao proximo ciclo de cobranca.",
+      "q4": "O que acontece quando ultrapasso meus limites mensais?",
+      "a4": "Voce pode usar os precos por uso para continuar. Correspondencias de curriculo custam $0,40 cada e entrevistas $2,00, debitados do seu saldo recarregado.",
+      "q5": "Voces oferecem desconto na cobranca anual?",
+      "a5": "Sim! A cobranca anual economiza aproximadamente 8% comparado a mensal. Voce pode alternar entre ambas a qualquer momento.",
+      "q6": "O que esta incluido no preco por uso?",
+      "a6": "O pagamento por uso permite recarregar saldo e usa-lo para correspondencias de curriculo ($0,40) ou entrevistas ($2,00). Cada uso inclui todas as funcionalidades: pontuacao IA, resumos, deteccao de trapaca e mais.",
+      "q7": "Ha contrato ou compromisso?",
+      "a7": "Sem contratos. Planos mensais podem ser cancelados a qualquer momento. Planos anuais sao cobrados antecipadamente, mas voce pode cancelar a renovacao quando quiser.",
+      "q8": "Voces oferecem planos empresariais personalizados?",
+      "a8": "Sim! O plano Enterprise inclui uso ilimitado, workflows personalizados, integracoes ATS, suporte dedicado e mais. Entre em contato com nossa equipe de vendas para um orcamento sob medida."
+    },
+    "cta": {
+      "title": "Pronto para otimizar seu recrutamento?",
+      "subtitle": "Junte-se a milhares de empresas que usam IA para contratar mais rapido e melhor.",
+      "primary": "Comecar a contratar",
+      "secondary": "Solicitar uma demo"
+    }
   }
 }

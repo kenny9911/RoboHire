@@ -134,14 +134,14 @@ result = response.json()`,
       <EndpointCard
         method="POST"
         path="/v1/parse-resume"
-        description="Parse a resume PDF into structured data"
+        description={t('docs.parseResume.endpointDesc', 'Parse a resume PDF into structured data')}
       />
 
       {/* Request */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.parseResume.request', 'Request')}
       </h2>
-      <ParamTable title="Body Parameters" params={requestParams} />
+      <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
 
       <CodeBlock
         tabs={[
@@ -155,9 +155,9 @@ result = response.json()`,
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.parseResume.response', 'Response')}
       </h2>
-      <ParamTable title="Response Fields" params={responseParams} />
+      <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
 
-      <CodeBlock code={exampleResponse} language="json" title="Example Response" />
+      <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Supported Formats */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">

@@ -72,6 +72,14 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'gpt-4': { input: 30.00, output: 60.00 },
   'gpt-4-turbo': { input: 10.00, output: 30.00 },
   'gpt-3.5-turbo': { input: 0.50, output: 1.50 },
+  // Kimi (Moonshot) direct
+  'kimi-k2.5': { input: 0.60, output: 3.00 },
+  'kimi-k2-0905-preview': { input: 0.60, output: 3.00 },
+  'kimi-k2-turbo-preview': { input: 0.30, output: 1.50 },
+  'kimi-k2-thinking': { input: 0.60, output: 3.00 },
+  'kimi-k2-thinking-turbo': { input: 0.30, output: 1.50 },
+  // OpenRouter Kimi
+  'moonshotai/kimi-k2.5': { input: 0.60, output: 3.00 },
   // Google direct
   'gemini-pro': { input: 0.50, output: 1.50 },
   'gemini-1.5-pro': { input: 3.50, output: 10.50 },

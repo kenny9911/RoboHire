@@ -21,6 +21,8 @@ import hiringSessionsRouter from './routes/hiringSessions.js';
 import hiringChatRouter from './routes/hiringChat.js';
 import apiKeysRouter from './routes/apiKeys.js';
 import usageRouter from './routes/usage.js';
+import demoRouter from './routes/demo.js';
+import checkoutRouter from './routes/checkout.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { logger } from './services/LoggerService.js';
 import { documentStorage } from './services/DocumentStorageService.js';
@@ -40,6 +42,8 @@ app.use(cors({
     : ['http://localhost:3607', 'http://localhost:5173'],
   credentials: true,
 }));
+// Stripe webhook must receive raw body BEFORE express.json() parses it
+app.use('/api/v1/webhooks/stripe', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
@@ -54,6 +58,8 @@ app.use('/api/v1/hiring-sessions', hiringSessionsRouter);
 app.use('/api/v1/hiring-chat', hiringChatRouter);
 app.use('/api/v1/api-keys', apiKeysRouter);
 app.use('/api/v1/usage', usageRouter);
+app.use('/api/v1/request-demo', demoRouter);
+app.use('/api/v1', checkoutRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {

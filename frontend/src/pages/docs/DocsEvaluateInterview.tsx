@@ -139,14 +139,14 @@ result = response.json()`,
       <EndpointCard
         method="POST"
         path="/v1/evaluate-interview"
-        description="Evaluate an interview transcript"
+        description={t('docs.evaluateInterview.endpointDesc', 'Evaluate an interview transcript')}
       />
 
       {/* Request */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.evaluateInterview.request', 'Request')}
       </h2>
-      <ParamTable title="Body Parameters" params={requestParams} />
+      <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
 
       <CodeBlock
         tabs={[
@@ -160,9 +160,9 @@ result = response.json()`,
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.evaluateInterview.response', 'Response')}
       </h2>
-      <ParamTable title="Response Fields" params={responseParams} />
+      <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
 
-      <CodeBlock code={exampleResponse} language="json" title="Example Response" />
+      <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Recommendation Values */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
@@ -172,31 +172,31 @@ result = response.json()`,
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Value</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Score Range</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Meaning</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.evaluateInterview.recommendations.value', 'Value')}</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.evaluateInterview.recommendations.scoreRange', 'Score Range')}</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.evaluateInterview.recommendations.meaning', 'Meaning')}</th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3"><code className="text-emerald-600">STRONG_HIRE</code></td>
               <td className="px-4 py-3 text-emerald-600">80-100</td>
-              <td className="px-4 py-3 text-gray-600">Excellent candidate, highly recommend</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.evaluateInterview.recommendations.strongHire', 'Excellent candidate, highly recommend')}</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3"><code className="text-blue-600">HIRE</code></td>
               <td className="px-4 py-3 text-blue-600">65-79</td>
-              <td className="px-4 py-3 text-gray-600">Good candidate, recommend hiring</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.evaluateInterview.recommendations.hire', 'Good candidate, recommend hiring')}</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3"><code className="text-amber-600">MAYBE</code></td>
               <td className="px-4 py-3 text-amber-600">50-64</td>
-              <td className="px-4 py-3 text-gray-600">Some concerns, needs further evaluation</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.evaluateInterview.recommendations.maybe', 'Some concerns, needs further evaluation')}</td>
             </tr>
             <tr>
               <td className="px-4 py-3"><code className="text-red-600">NO_HIRE</code></td>
               <td className="px-4 py-3 text-red-600">0-49</td>
-              <td className="px-4 py-3 text-gray-600">Does not meet requirements</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.evaluateInterview.recommendations.noHire', 'Does not meet requirements')}</td>
             </tr>
           </tbody>
         </table>
@@ -210,11 +210,11 @@ result = response.json()`,
         {t('docs.evaluateInterview.cheating.desc', 'The API analyzes transcripts for potential cheating indicators:')}
       </p>
       <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
-        <li>Unusually perfect or rehearsed-sounding responses</li>
-        <li>Inconsistencies between different answers</li>
-        <li>Responses that seem to be read verbatim</li>
-        <li>Unusual pauses or typing sounds</li>
-        <li>Copy-paste patterns in technical questions</li>
+        <li>{t('docs.evaluateInterview.cheating.rehearsed', 'Unusually perfect or rehearsed-sounding responses')}</li>
+        <li>{t('docs.evaluateInterview.cheating.inconsistencies', 'Inconsistencies between different answers')}</li>
+        <li>{t('docs.evaluateInterview.cheating.verbatim', 'Responses that seem to be read verbatim')}</li>
+        <li>{t('docs.evaluateInterview.cheating.pauses', 'Unusual pauses or typing sounds')}</li>
+        <li>{t('docs.evaluateInterview.cheating.copyPaste', 'Copy-paste patterns in technical questions')}</li>
       </ul>
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">

@@ -88,15 +88,15 @@ app.post('/webhook', (req, res) => {
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.webhooks.events.title', 'Event Types')}
       </h2>
-      <ParamTable title="Available Events" params={eventTypes} />
+      <ParamTable title={t('docs.webhooks.events.tableTitle', 'Available Events')} params={eventTypes} />
 
       {/* Payload Structure */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.webhooks.payload.title', 'Payload Structure')}
       </h2>
-      <ParamTable title="Payload Fields" params={payloadFields} />
+      <ParamTable title={t('docs.webhooks.payload.tableTitle', 'Payload Fields')} params={payloadFields} />
 
-      <CodeBlock code={examplePayload} language="json" title="Example Webhook Payload" />
+      <CodeBlock code={examplePayload} language="json" title={t('docs.webhooks.payload.exampleTitle', 'Example Webhook Payload')} />
 
       {/* Signature Verification */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
@@ -106,7 +106,7 @@ app.post('/webhook', (req, res) => {
         {t('docs.webhooks.verification.desc', 'All webhook requests include an X-RoboHire-Signature header containing an HMAC-SHA256 signature of the payload. Always verify this signature to ensure the webhook is from RoboHire.')}
       </p>
 
-      <CodeBlock code={verificationCode} language="javascript" title="Verification Example (Node.js)" />
+      <CodeBlock code={verificationCode} language="javascript" title={t('docs.webhooks.verification.exampleTitle', 'Verification Example (Node.js)')} />
 
       {/* Best Practices */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
@@ -118,31 +118,31 @@ app.post('/webhook', (req, res) => {
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span><strong>Respond quickly:</strong> Return a 200 status within 5 seconds to avoid timeouts</span>
+            <span>{t('docs.webhooks.bestPractices.respond', 'Respond quickly: Return a 200 status within 5 seconds to avoid timeouts')}</span>
           </li>
           <li className="flex items-start gap-2">
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span><strong>Process asynchronously:</strong> Queue webhook processing for heavy operations</span>
+            <span>{t('docs.webhooks.bestPractices.async', 'Process asynchronously: Queue webhook processing for heavy operations')}</span>
           </li>
           <li className="flex items-start gap-2">
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span><strong>Handle duplicates:</strong> Use webhookId to detect and handle duplicate deliveries</span>
+            <span>{t('docs.webhooks.bestPractices.duplicates', 'Handle duplicates: Use webhookId to detect and handle duplicate deliveries')}</span>
           </li>
           <li className="flex items-start gap-2">
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span><strong>Always verify:</strong> Check the signature on every request</span>
+            <span>{t('docs.webhooks.bestPractices.verify', 'Always verify: Check the signature on every request')}</span>
           </li>
           <li className="flex items-start gap-2">
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span><strong>Use HTTPS:</strong> Always use HTTPS endpoints for security</span>
+            <span>{t('docs.webhooks.bestPractices.https', 'Use HTTPS: Always use HTTPS endpoints for security')}</span>
           </li>
         </ul>
       </div>
@@ -155,11 +155,11 @@ app.post('/webhook', (req, res) => {
         {t('docs.webhooks.retries.desc', 'If your endpoint returns an error or times out, we will retry the webhook delivery:')}
       </p>
       <ul className="list-disc list-inside text-gray-600 space-y-1">
-        <li>1st retry: After 1 minute</li>
-        <li>2nd retry: After 5 minutes</li>
-        <li>3rd retry: After 30 minutes</li>
-        <li>4th retry: After 2 hours</li>
-        <li>5th retry: After 24 hours</li>
+        <li>{t('docs.webhooks.retries.r1', '1st retry: After 1 minute')}</li>
+        <li>{t('docs.webhooks.retries.r2', '2nd retry: After 5 minutes')}</li>
+        <li>{t('docs.webhooks.retries.r3', '3rd retry: After 30 minutes')}</li>
+        <li>{t('docs.webhooks.retries.r4', '4th retry: After 2 hours')}</li>
+        <li>{t('docs.webhooks.retries.r5', '5th retry: After 24 hours')}</li>
       </ul>
     </div>
   );

@@ -1,9 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 export default function Hero() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   return (
     <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
@@ -47,17 +46,12 @@ export default function Hero() {
             >
               {t('landing.hero.ctaPrimary', 'Start Easy Hiring')}
             </Link>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                navigate('/api-playground');
-              }}
-              type="button"
-              className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 transition-all duration-200 cursor-pointer relative z-20 shadow-[0_4px_14px_0_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_0_rgba(0,0,0,0.15)] hover:-translate-y-1 active:translate-y-0 active:shadow-[0_2px_8px_0_rgba(0,0,0,0.10)]"
+            <Link
+              to="/developers"
+              className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 transition-all duration-200 cursor-pointer relative z-20 shadow-[0_4px_14px_0_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_0_rgba(0,0,0,0.15)] hover:-translate-y-1 active:translate-y-0 active:shadow-[0_2px_8px_0_rgba(0,0,0,0.10)] text-center"
             >
               {t('landing.hero.ctaSecondary', 'Explore API')}
-            </button>
+            </Link>
           </div>
 
           {/* Stats */}

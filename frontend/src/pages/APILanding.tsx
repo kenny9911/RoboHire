@@ -108,6 +108,12 @@ console.log(result.data.matchScore); // 85`;
                 >
                   {t('apiLanding.hero.readDocs', 'Read the docs')}
                 </Link>
+                <Link
+                  to="/api-playground"
+                  className="px-8 py-4 border border-gray-600 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors text-center"
+                >
+                  {t('apiLanding.hero.playground', 'API Playground')}
+                </Link>
               </div>
             </div>
 
@@ -275,6 +281,12 @@ console.log(result.data.matchScore); // 85`;
               className="px-8 py-4 border border-gray-600 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors"
             >
               {t('apiLanding.cta.viewDocs', 'View documentation')}
+            </Link>
+            <Link
+              to="/api-playground"
+              className="px-8 py-4 border border-gray-600 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors"
+            >
+              {t('apiLanding.hero.playground', 'API Playground')}
             </Link>
           </div>
         </div>

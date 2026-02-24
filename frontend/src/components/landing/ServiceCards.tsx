@@ -34,7 +34,7 @@ export default function ServiceCards() {
         t('landing.services.api.feature4', 'RESTful API endpoints'),
       ],
       cta: t('landing.services.api.cta', 'Explore API'),
-      href: '/api-playground',
+      href: '/developers',
       accentColor: 'emerald',
       badge: null,
     },
@@ -100,7 +100,7 @@ export default function ServiceCards() {
                   navigate(service.href);
                 }}
                 type="button"
-                className={`inline-flex items-center gap-2 text-sm font-medium transition-all duration-200 ${
+                className={`inline-flex items-center gap-2 text-lg font-semibold transition-all duration-200 ${
                   service.accentColor === 'indigo'
                     ? 'text-indigo-600 hover:text-indigo-700'
                     : 'text-emerald-600 hover:text-emerald-700'
@@ -108,7 +108,7 @@ export default function ServiceCards() {
               >
                 {service.cta}
                 <svg 
-                  className="w-4 h-4 transition-transform group-hover:translate-x-1" 
+                  className="w-5 h-5 transition-transform group-hover:translate-x-1" 
                   fill="none" 
                   viewBox="0 0 24 24" 
                   stroke="currentColor"

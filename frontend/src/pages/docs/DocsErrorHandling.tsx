@@ -59,56 +59,56 @@ export default function DocsErrorHandling() {
     {
       status: 400,
       code: 'BAD_REQUEST',
-      description: 'The request was malformed or missing required parameters',
-      fix: 'Check the request body and ensure all required fields are provided',
+      description: t('docs.errors.codes.badRequest.desc', 'The request was malformed or missing required parameters'),
+      fix: t('docs.errors.codes.badRequest.fix', 'Check the request body and ensure all required fields are provided'),
     },
     {
       status: 400,
       code: 'VALIDATION_ERROR',
-      description: 'One or more request parameters failed validation',
-      fix: 'Check the details field for specific validation errors',
+      description: t('docs.errors.codes.validation.desc', 'One or more request parameters failed validation'),
+      fix: t('docs.errors.codes.validation.fix', 'Check the details field for specific validation errors'),
     },
     {
       status: 401,
       code: 'AUTH_REQUIRED',
-      description: 'No authentication credentials were provided',
-      fix: 'Include an API key in the Authorization header',
+      description: t('docs.errors.codes.authRequired.desc', 'No authentication credentials were provided'),
+      fix: t('docs.errors.codes.authRequired.fix', 'Include an API key in the Authorization header'),
     },
     {
       status: 401,
       code: 'INVALID_TOKEN',
-      description: 'The provided API key is invalid or expired',
-      fix: 'Check your API key or generate a new one',
+      description: t('docs.errors.codes.invalidToken.desc', 'The provided API key is invalid or expired'),
+      fix: t('docs.errors.codes.invalidToken.fix', 'Check your API key or generate a new one'),
     },
     {
       status: 403,
       code: 'INSUFFICIENT_SCOPES',
-      description: 'The API key lacks required permissions',
-      fix: 'Use an API key with the required scopes',
+      description: t('docs.errors.codes.insufficientScopes.desc', 'The API key lacks required permissions'),
+      fix: t('docs.errors.codes.insufficientScopes.fix', 'Use an API key with the required scopes'),
     },
     {
       status: 404,
       code: 'NOT_FOUND',
-      description: 'The requested resource was not found',
-      fix: 'Check the endpoint URL and resource ID',
+      description: t('docs.errors.codes.notFound.desc', 'The requested resource was not found'),
+      fix: t('docs.errors.codes.notFound.fix', 'Check the endpoint URL and resource ID'),
     },
     {
       status: 429,
       code: 'RATE_LIMITED',
-      description: 'Too many requests in a short period',
-      fix: 'Implement rate limiting and retry with backoff',
+      description: t('docs.errors.codes.rateLimited.desc', 'Too many requests in a short period'),
+      fix: t('docs.errors.codes.rateLimited.fix', 'Implement rate limiting and retry with backoff'),
     },
     {
       status: 500,
       code: 'INTERNAL_ERROR',
-      description: 'An unexpected error occurred on the server',
-      fix: 'Retry the request or contact support if it persists',
+      description: t('docs.errors.codes.internalError.desc', 'An unexpected error occurred on the server'),
+      fix: t('docs.errors.codes.internalError.fix', 'Retry the request or contact support if it persists'),
     },
     {
       status: 503,
       code: 'SERVICE_UNAVAILABLE',
-      description: 'The service is temporarily unavailable',
-      fix: 'Wait and retry the request',
+      description: t('docs.errors.codes.serviceUnavailable.desc', 'The service is temporarily unavailable'),
+      fix: t('docs.errors.codes.serviceUnavailable.fix', 'Wait and retry the request'),
     },
   ];
 
@@ -129,32 +129,32 @@ export default function DocsErrorHandling() {
         {t('docs.errors.format.desc', 'When an error occurs, the API returns a JSON response with the following structure:')}
       </p>
 
-      <CodeBlock code={errorExample} language="json" title="Error Response" />
+      <CodeBlock code={errorExample} language="json" title={t('docs.errors.format.exampleTitle', 'Error Response')} />
 
       <div className="bg-gray-50 rounded-xl overflow-hidden mb-6">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Field</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Description</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.errors.format.field', 'Field')}</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.errors.format.description', 'Description')}</th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3"><code className="text-indigo-600">success</code></td>
-              <td className="px-4 py-3 text-gray-600">Always <code>false</code> for error responses</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.errors.format.successDesc', 'Always false for error responses')}</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3"><code className="text-indigo-600">error</code></td>
-              <td className="px-4 py-3 text-gray-600">Human-readable error message</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.errors.format.errorDesc', 'Human-readable error message')}</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3"><code className="text-indigo-600">code</code></td>
-              <td className="px-4 py-3 text-gray-600">Machine-readable error code</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.errors.format.codeDesc', 'Machine-readable error code')}</td>
             </tr>
             <tr>
               <td className="px-4 py-3"><code className="text-indigo-600">details</code></td>
-              <td className="px-4 py-3 text-gray-600">Additional error details (optional)</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.errors.format.detailsDesc', 'Additional error details (optional)')}</td>
             </tr>
           </tbody>
         </table>
@@ -180,7 +180,7 @@ export default function DocsErrorHandling() {
             </div>
             <p className="text-gray-600 text-sm mb-2">{error.description}</p>
             <p className="text-sm">
-              <span className="font-medium text-gray-700">Fix: </span>
+              <span className="font-medium text-gray-700">{t('docs.errors.codes.fixLabel', 'Fix')}: </span>
               <span className="text-gray-600">{error.fix}</span>
             </p>
           </div>
@@ -195,7 +195,7 @@ export default function DocsErrorHandling() {
         {t('docs.errors.handling.desc', 'Here is an example of robust error handling:')}
       </p>
 
-      <CodeBlock code={errorHandlingCode} language="javascript" title="Error Handling Example" />
+      <CodeBlock code={errorHandlingCode} language="javascript" title={t('docs.errors.handling.exampleTitle', 'Error Handling Example')} />
 
       {/* Rate Limiting */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
@@ -205,9 +205,9 @@ export default function DocsErrorHandling() {
         {t('docs.errors.rateLimiting.desc', 'The API implements rate limiting to ensure fair usage. When you exceed the rate limit:')}
       </p>
       <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
-        <li>You will receive a <code className="bg-gray-100 px-1 rounded">429</code> status code</li>
-        <li>The response includes a <code className="bg-gray-100 px-1 rounded">retryAfter</code> field (seconds until you can retry)</li>
-        <li>Implement exponential backoff for automatic retries</li>
+        <li>{t('docs.errors.rateLimiting.status429', 'You will receive a 429 status code')}</li>
+        <li>{t('docs.errors.rateLimiting.retryAfter', 'The response includes a retryAfter field (seconds until you can retry)')}</li>
+        <li>{t('docs.errors.rateLimiting.backoff', 'Implement exponential backoff for automatic retries')}</li>
       </ul>
 
       {/* Best Practices */}
@@ -220,31 +220,31 @@ export default function DocsErrorHandling() {
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Always check the <code>success</code> field before processing the response
+            {t('docs.errors.bestPractices.checkSuccess', 'Always check the success field before processing the response')}
           </li>
           <li className="flex items-start gap-2">
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Use the <code>code</code> field for programmatic error handling
+            {t('docs.errors.bestPractices.useCode', 'Use the code field for programmatic error handling')}
           </li>
           <li className="flex items-start gap-2">
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Log errors with context for debugging
+            {t('docs.errors.bestPractices.logErrors', 'Log errors with context for debugging')}
           </li>
           <li className="flex items-start gap-2">
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Implement retry logic with exponential backoff for transient errors
+            {t('docs.errors.bestPractices.retryLogic', 'Implement retry logic with exponential backoff for transient errors')}
           </li>
           <li className="flex items-start gap-2">
             <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Show user-friendly messages to end users, not raw error messages
+            {t('docs.errors.bestPractices.userFriendly', 'Show user-friendly messages to end users, not raw error messages')}
           </li>
         </ul>
       </div>

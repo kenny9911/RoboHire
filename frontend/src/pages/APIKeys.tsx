@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
 interface ApiKey {
@@ -32,7 +30,7 @@ function NewKeyModal({ isOpen, onClose, onCreated }: NewKeyModalProps) {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setError('Name is required');
+      setError(t('apiKeys.errors.nameRequired', 'Name is required'));
       return;
     }
 
@@ -66,7 +64,7 @@ function NewKeyModal({ isOpen, onClose, onCreated }: NewKeyModalProps) {
         setError(data.error);
       }
     } catch (err) {
-      setError('Failed to create API key');
+      setError(t('apiKeys.errors.createFailed', 'Failed to create API key'));
     } finally {
       setIsCreating(false);
     }
@@ -244,8 +242,6 @@ function KeyCreatedModal({ apiKey, onClose }: KeyCreatedModalProps) {
 
 export default function APIKeys() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -254,6 +250,8 @@ export default function APIKeys() {
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<(ApiKey & { key: string }) | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [keyUsage, setKeyUsage] = useState<Record<string, { calls: number; totalTokens: number; cost: number }>>({});
+  const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set());
+  const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchApiKeys();
@@ -297,7 +295,7 @@ export default function APIKeys() {
         setError(data.error);
       }
     } catch (err) {
-      setError('Failed to load API keys');
+      setError(t('apiKeys.errors.loadFailed', 'Failed to load API keys'));
     } finally {
       setIsLoading(false);
     }
@@ -327,10 +325,10 @@ export default function APIKeys() {
       if (data.success) {
         setApiKeys(apiKeys.filter(k => k.id !== id));
       } else {
-        alert(data.error);
+        alert(data.error || t('apiKeys.errors.deleteFailed', 'Failed to delete API key'));
       }
     } catch (err) {
-      alert('Failed to delete API key');
+      alert(t('apiKeys.errors.deleteFailed', 'Failed to delete API key'));
     } finally {
       setDeletingId(null);
     }
@@ -358,9 +356,28 @@ export default function APIKeys() {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
+  const toggleRevealKey = (id: string) => {
+    setRevealedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleCopyKey = async (apiKey: ApiKey) => {
+    try {
+      await navigator.clipboard.writeText(apiKey.key);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = apiKey.key;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopiedKeyId(apiKey.id);
+    setTimeout(() => setCopiedKeyId(null), 2000);
   };
 
   const formatDate = (dateString: string | null) => {
@@ -373,63 +390,7 @@ export default function APIKeys() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2 text-xl font-bold text-indigo-600">
-              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span>RoboHire</span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/dashboard" className="text-gray-600 hover:text-indigo-600 font-medium transition-colors">
-                {t('dashboard.nav.dashboard', 'Dashboard')}
-              </Link>
-              <Link to="/dashboard/api-keys" className="text-indigo-600 font-medium">
-                {t('apiKeys.title', 'API Keys')}
-              </Link>
-              <Link to="/api-playground" className="text-gray-600 hover:text-indigo-600 font-medium transition-colors">
-                {t('dashboard.nav.apiPlayground', 'API Playground')}
-              </Link>
-            </nav>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                {user?.avatar ? (
-                  <img src={user.avatar} alt="" className="w-8 h-8 rounded-full" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <span className="text-indigo-600 font-medium text-sm">
-                      {user?.name?.[0] || user?.email?.[0] || 'U'}
-                    </span>
-                  </div>
-                )}
-                <span className="hidden sm:block text-sm text-gray-700 font-medium">
-                  {user?.name || user?.email}
-                </span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="text-gray-500 hover:text-red-600 transition-colors"
-                title={t('dashboard.logout', 'Logout')}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">
@@ -518,8 +479,39 @@ export default function APIKeys() {
                       </div>
                       <div className="flex items-center gap-2 mb-3">
                         <code className="text-sm font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                          {apiKey.key}
+                          {revealedKeys.has(apiKey.id) ? apiKey.key : `${apiKey.key.slice(0, 12)}...${apiKey.key.slice(-4)}`}
                         </code>
+                        <button
+                          onClick={() => toggleRevealKey(apiKey.id)}
+                          className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                          title={revealedKeys.has(apiKey.id) ? t('apiKeys.hide', 'Hide') : t('apiKeys.show', 'Show')}
+                        >
+                          {revealedKeys.has(apiKey.id) ? (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleCopyKey(apiKey)}
+                          className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                          title={t('apiKeys.copy', 'Copy')}
+                        >
+                          {copiedKeyId === apiKey.id ? (
+                            <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          )}
+                        </button>
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                         <span>
@@ -540,13 +532,13 @@ export default function APIKeys() {
                       {keyUsage[apiKey.id] && (
                         <div className="flex flex-wrap items-center gap-4 mt-2 text-sm">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md text-xs font-medium">
-                            {keyUsage[apiKey.id].calls} calls
+                            {keyUsage[apiKey.id].calls} {t('apiKeys.calls', 'calls')}
                           </span>
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md text-xs font-medium">
                             {keyUsage[apiKey.id].totalTokens >= 1000
                               ? `${(keyUsage[apiKey.id].totalTokens / 1000).toFixed(1)}K`
                               : keyUsage[apiKey.id].totalTokens}{' '}
-                            tokens
+                            {t('apiKeys.tokens', 'tokens')}
                           </span>
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md text-xs font-medium">
                             ${keyUsage[apiKey.id].cost.toFixed(4)}
@@ -587,7 +579,6 @@ export default function APIKeys() {
             </div>
           )}
         </div>
-      </main>
 
       {/* Modals */}
       <NewKeyModal

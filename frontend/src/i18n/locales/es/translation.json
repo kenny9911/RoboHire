@@ -705,5 +705,127 @@
       "errorMissingFields": "Proporciona CV, descripcion del puesto y transcripcion de entrevista",
       "jsonTitle": "Resultado de evaluacion JSON"
     }
+  },
+  "pricing": {
+    "seo": {
+      "title": "Precios - Planes de contratación con IA para cada equipo",
+      "desc": "Elige el plan RoboHire adecuado. Gratis, Startup a $299/mes, Business a $599/mes o precios empresariales personalizados. Incluye matching de CV con IA y entrevistas."
+    },
+    "label": "Plan de precios",
+    "headline": "Precios que ",
+    "headlineAccent": "crecen contigo",
+    "subheadline": "Comienza gratis, escala a medida que creces. Solo paga por lo que usas.",
+    "monthly": "Mensual",
+    "annual": "Anual",
+    "save": "Ahorra 8%",
+    "month": "mes",
+    "year": "año",
+    "popular": "Más popular",
+    "customBadge": "Personalizado",
+    "customPrice": "Personalizado",
+    "billedAnnually": "Facturado anualmente a $",
+    "redirecting": "Redirigiendo...",
+    "free": {
+      "name": "Gratis",
+      "subtitle": "Para personas que están empezando",
+      "cta": "Comenzar gratis",
+      "f1": "2 puestos de trabajo",
+      "f2": "10 coincidencias de CV",
+      "f3": "2 entrevistas",
+      "f4": "Puntuación y evaluación de entrevistas",
+      "f5": "Resúmenes de entrevistas"
+    },
+    "startup": {
+      "name": "Startup",
+      "subtitle": "Para equipos pequeños que contratan rápido",
+      "cta": "Iniciar prueba gratuita",
+      "f1": "Asientos ilimitados",
+      "f2": "Puestos ilimitados",
+      "f3": "180 entrevistas / mes",
+      "f4": "180 coincidencias de CV / mes",
+      "f5": "Acceso a la API de RoboHire",
+      "f5s": "Integra con tus sistemas",
+      "f6": "6 idiomas de entrevista",
+      "f7": "Evaluación de competencia lingüística",
+      "f8": "Soporte por email"
+    },
+    "business": {
+      "name": "Business",
+      "subtitle": "Para equipos grandes en rápido crecimiento",
+      "cta": "Iniciar prueba gratuita",
+      "f1": "Asientos ilimitados",
+      "f2": "Puestos ilimitados",
+      "f3": "400 entrevistas / mes",
+      "f4": "400 coincidencias de CV / mes",
+      "f5": "Todo lo de Startup",
+      "f6": "Soporte prioritario",
+      "f7": "Análisis avanzados",
+      "f8": "Informes de marca blanca",
+      "f9": "Reproducción completa de video",
+      "f10": "Detección de trampas"
+    },
+    "custom": {
+      "name": "Enterprise",
+      "subtitle": "Para organizaciones de alto volumen",
+      "cta": "Contactar ventas",
+      "f1": "Todo ilimitado",
+      "f2": "Todo lo de Business",
+      "f3": "Flujos de trabajo personalizados",
+      "f3s": "Adapta tu proceso de contratación",
+      "f4": "Más de 45 integraciones ATS",
+      "f4s": "Conecta tus herramientas existentes",
+      "f5": "Voces de entrevista personalizadas",
+      "f6": "Gerente dedicado y soporte"
+    },
+    "ppu": {
+      "title": "Precios por uso",
+      "subtitle": "¿Necesitas más flexibilidad? Recarga tu saldo y paga solo por lo que uses.",
+      "includes": "Incluye",
+      "match": {
+        "title": "Coincidencia de CV",
+        "unit": "por CV / JD",
+        "f1": "Decisión de coincidencia con insights",
+        "f2": "Análisis de requisitos imprescindibles",
+        "f3": "Análisis de brechas y recomendaciones",
+        "f4": "Validación de credenciales y experiencia",
+        "f5": "Preguntas de entrevista sugeridas",
+        "f6": "Áreas para profundizar"
+      },
+      "interview": {
+        "title": "Entrevista",
+        "unit": "por entrevista",
+        "f1": "Reproducción completa de video",
+        "f2": "Invitaciones automáticas por email",
+        "f3": "Puntuación y evaluación estructurada",
+        "f4": "Detección de trampas",
+        "f5": "Resúmenes de entrevistas",
+        "f6": "Evaluación de competencia lingüística"
+      }
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "q1": "¿Puedo probar RoboHire gratis?",
+      "a1": "¡Sí! El plan Gratis incluye 10 coincidencias de CV y 2 entrevistas sin costo. No se requiere tarjeta de crédito.",
+      "q2": "¿Qué métodos de pago aceptan?",
+      "a2": "Aceptamos las principales tarjetas de crédito y débito (Visa, Mastercard, American Express) así como Alipay. Todos los pagos se procesan de forma segura a través de Stripe.",
+      "q3": "¿Puedo cambiar de plan en cualquier momento?",
+      "a3": "Por supuesto. Puedes mejorar o reducir tu plan en cualquier momento. Al mejorar, se cobra la diferencia prorrateada. Al reducir, el crédito se aplica al siguiente ciclo de facturación.",
+      "q4": "¿Qué pasa cuando supero mis límites mensuales?",
+      "a4": "Puedes usar los precios por uso para continuar. Las coincidencias de CV cuestan $0.40 cada una y las entrevistas $2.00, deducidos de tu saldo recargado.",
+      "q5": "¿Ofrecen descuento por facturación anual?",
+      "a5": "¡Sí! La facturación anual te ahorra aproximadamente un 8% comparado con la mensual. Puedes cambiar entre ambas en cualquier momento.",
+      "q6": "¿Qué incluye el precio por uso?",
+      "a6": "El pago por uso te permite recargar saldo y usarlo para coincidencias de CV ($0.40) o entrevistas ($2.00). Cada uso incluye todas las funciones: puntuación IA, resúmenes, detección de trampas y más.",
+      "q7": "¿Hay contrato o compromiso?",
+      "a7": "Sin contratos. Los planes mensuales se pueden cancelar en cualquier momento. Los anuales se facturan por adelantado pero puedes cancelar la renovación cuando quieras.",
+      "q8": "¿Ofrecen planes empresariales personalizados?",
+      "a8": "¡Sí! El plan Enterprise incluye uso ilimitado, flujos personalizados, integraciones ATS, soporte dedicado y más. Contacta a nuestro equipo de ventas para un presupuesto a medida."
+    },
+    "cta": {
+      "title": "¿Listo para agilizar tu contratación?",
+      "subtitle": "Únete a miles de empresas que usan IA para contratar más rápido e inteligente.",
+      "primary": "Comenzar a contratar",
+      "secondary": "Solicitar una demo"
+    }
   }
 }
