@@ -12,7 +12,7 @@ export default function Footer() {
         { label: t('landing.footer.startHiring', 'Start Hiring'), href: '/start-hiring' },
         { label: t('landing.footer.api', 'API'), href: '/developers' },
         { label: t('landing.footer.playground', 'Playground'), href: '/api-playground' },
-        { label: t('landing.footer.pricing', 'Pricing'), href: '#pricing' },
+        { label: t('landing.footer.pricing', 'Pricing'), href: '/pricing' },
       ],
     },
     developers: {

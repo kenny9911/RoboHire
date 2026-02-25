@@ -142,14 +142,14 @@ result = response.json()`,
       <EndpointCard
         method="POST"
         path="/v1/match-resume"
-        description="Match a resume against a job description"
+        description={t('docs.matchResume.endpointDesc', 'Match a resume against a job description')}
       />
 
       {/* Request */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.matchResume.request', 'Request')}
       </h2>
-      <ParamTable title="Body Parameters" params={requestParams} />
+      <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
 
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
         <p className="text-sm text-blue-800">
@@ -169,9 +169,9 @@ result = response.json()`,
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.matchResume.response', 'Response')}
       </h2>
-      <ParamTable title="Response Fields" params={responseParams} />
+      <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
 
-      <CodeBlock code={exampleResponse} language="json" title="Example Response" />
+      <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Match Scores */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
@@ -184,31 +184,31 @@ result = response.json()`,
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Score Range</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Recommendation</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Meaning</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.matchResume.scoring.scoreRange', 'Score Range')}</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.matchResume.scoring.recommendation', 'Recommendation')}</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.matchResume.scoring.meaning', 'Meaning')}</th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3 text-emerald-600 font-medium">80-100</td>
               <td className="px-4 py-3"><code>STRONG_MATCH</code></td>
-              <td className="px-4 py-3 text-gray-600">Excellent fit, meets or exceeds requirements</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.matchResume.scoring.strong', 'Excellent fit, meets or exceeds requirements')}</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3 text-blue-600 font-medium">60-79</td>
               <td className="px-4 py-3"><code>GOOD_MATCH</code></td>
-              <td className="px-4 py-3 text-gray-600">Good fit, meets most requirements</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.matchResume.scoring.good', 'Good fit, meets most requirements')}</td>
             </tr>
             <tr className="border-b border-gray-100">
               <td className="px-4 py-3 text-amber-600 font-medium">40-59</td>
               <td className="px-4 py-3"><code>PARTIAL_MATCH</code></td>
-              <td className="px-4 py-3 text-gray-600">Some alignment, missing key requirements</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.matchResume.scoring.partial', 'Some alignment, missing key requirements')}</td>
             </tr>
             <tr>
               <td className="px-4 py-3 text-red-600 font-medium">0-39</td>
               <td className="px-4 py-3"><code>WEAK_MATCH</code></td>
-              <td className="px-4 py-3 text-gray-600">Poor fit, significant gaps</td>
+              <td className="px-4 py-3 text-gray-600">{t('docs.matchResume.scoring.weak', 'Poor fit, significant gaps')}</td>
             </tr>
           </tbody>
         </table>

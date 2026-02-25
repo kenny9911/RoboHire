@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
-import DashboardHeader from '../components/dashboard/DashboardHeader';
 
 interface HiringRequest {
   id: string;
@@ -163,11 +162,7 @@ export default function Dashboard() {
   }, [selectedRequest]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <DashboardHeader />
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto">
         {requestId ? (
           <div>
             <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6">
@@ -353,18 +348,18 @@ export default function Dashboard() {
               </Link>
 
               <Link
-                to="/api-playground"
+                to="/dashboard/usage"
                 className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-indigo-200 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900">{t('dashboard.actions.api', 'API Playground')}</h3>
-                    <p className="text-xs text-gray-500">{t('dashboard.actions.apiDesc', 'Test API endpoints')}</p>
+                    <h3 className="text-sm font-semibold text-gray-900">{t('dashboard.actions.usage', 'API Usage')}</h3>
+                    <p className="text-xs text-gray-500">{t('dashboard.actions.usageDesc', 'View usage & costs')}</p>
                   </div>
                 </div>
               </Link>
@@ -488,7 +483,6 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-      </main>
     </div>
   );
 }

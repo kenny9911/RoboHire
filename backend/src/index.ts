@@ -20,6 +20,10 @@ import hiringRouter from './routes/hiring.js';
 import hiringSessionsRouter from './routes/hiringSessions.js';
 import hiringChatRouter from './routes/hiringChat.js';
 import apiKeysRouter from './routes/apiKeys.js';
+import usageRouter from './routes/usage.js';
+import demoRouter from './routes/demo.js';
+import checkoutRouter from './routes/checkout.js';
+import { attachRequestId } from './middleware/requestId.js';
 import { logger } from './services/LoggerService.js';
 import { documentStorage } from './services/DocumentStorageService.js';
 
@@ -38,10 +42,13 @@ app.use(cors({
     : ['http://localhost:3607', 'http://localhost:5173'],
   credentials: true,
 }));
+// Stripe webhook must receive raw body BEFORE express.json() parses it
+app.use('/api/v1/webhooks/stripe', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(passport.initialize());
+app.use(attachRequestId);
 
 // API Routes
 app.use('/api/auth', authRouter);
@@ -50,6 +57,9 @@ app.use('/api/v1/hiring-requests', hiringRouter);
 app.use('/api/v1/hiring-sessions', hiringSessionsRouter);
 app.use('/api/v1/hiring-chat', hiringChatRouter);
 app.use('/api/v1/api-keys', apiKeysRouter);
+app.use('/api/v1/usage', usageRouter);
+app.use('/api/v1/request-demo', demoRouter);
+app.use('/api/v1', checkoutRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {
@@ -98,16 +108,16 @@ app.listen(PORT, () => {
   
   console.log('\n');
   console.log('╔════════════════════════════════════════════════════════════════════════════════╗');
-  console.log('║                           RoboHire API Server                                    ║');
+  console.log('║                           RoboHire API Server                                  ║');
   console.log('╠════════════════════════════════════════════════════════════════════════════════╣');
-  console.log(`║  🚀 Server running on: http://localhost:${PORT}                                    ║`);
-  console.log(`║  🤖 LLM Provider:      ${(process.env.LLM_PROVIDER || 'openrouter').padEnd(54)}║`);
-  console.log(`║  📦 LLM Model:         ${(process.env.LLM_MODEL || 'google/gemini-3-flash-preview').padEnd(54)}║`);
-  console.log(`║  📝 Log Level:         ${(process.env.LOG_LEVEL || 'INFO').padEnd(54)}║`);
-  console.log(`║  📁 File Logging:      ${fileLogging.padEnd(54)}║`);
-  console.log(`║  📂 Log Directory:     ${logDir.padEnd(54)}║`);
-  console.log(`║  📄 Document Storage:  ${docDir.padEnd(54)}║`);
-  console.log(`║  📊 Cached Documents:  ${`${docStats.resumeCount} resumes, ${docStats.jdCount} JDs, ${docStats.matchResultCount} matches`.padEnd(54)}║`);
+  console.log(`║  🚀 Server running on: http://localhost:${PORT}                                   ║`);
+  console.log(`║  🤖 LLM Provider:      ${(process.env.LLM_PROVIDER || 'openrouter').padEnd(56)}║`);
+  console.log(`║  📦 LLM Model:         ${(process.env.LLM_MODEL || 'google/gemini-3-flash-preview').padEnd(56)}║`);
+  console.log(`║  📝 Log Level:         ${(process.env.LOG_LEVEL || 'INFO').padEnd(56)}║`);
+  console.log(`║  📁 File Logging:      ${fileLogging.padEnd(56)}║`);
+  console.log(`║  📂 Log Directory:     ${logDir.padEnd(56)}║`);
+  console.log(`║  📄 Document Storage:  ${docDir.padEnd(56)}║`);
+  console.log(`║  📊 Cached Documents:  ${`${docStats.resumeCount} resumes, ${docStats.jdCount} JDs, ${docStats.matchResultCount} matches`.padEnd(56)}║`);
   console.log('╠════════════════════════════════════════════════════════════════════════════════╣');
   console.log('║  Endpoints:                                                                    ║');
   console.log('║    POST /api/v1/match-resume      - Match resume against JD                    ║');

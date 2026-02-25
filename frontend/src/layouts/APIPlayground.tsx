@@ -139,6 +139,38 @@ export default function APIPlayground() {
 
       {/* Main Content */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        {!user && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="text-sm">
+              <p className="font-medium text-amber-800">
+                {t('apiPlayground.authRequired', 'Authentication Required')}
+              </p>
+              <p className="mt-1 text-amber-700">
+                {t(
+                  'apiPlayground.authRequiredDesc',
+                  'These API endpoints require authentication. Sign in to try them from the browser, or use an API Key (X-API-Key header) for programmatic access.'
+                )}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition-colors"
+                >
+                  {t('apiPlayground.signIn', 'Sign In')}
+                </Link>
+                <Link
+                  to="/dashboard/api-keys"
+                  className="inline-flex items-center rounded-md bg-white px-3 py-1.5 text-xs font-medium text-amber-700 ring-1 ring-amber-300 hover:bg-amber-50 transition-colors"
+                >
+                  {t('apiPlayground.getApiKey', 'Get an API Key')}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
         <Outlet />
       </main>
     </div>

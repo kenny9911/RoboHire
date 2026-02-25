@@ -22,11 +22,21 @@ model User {
   providerId    String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Subscription / Stripe
+  stripeCustomerId    String?   @unique
+  subscriptionTier    String    @default("free") // free, startup, business, custom
+  subscriptionStatus  String    @default("active") // active, past_due, canceled
+  subscriptionId      String?
+  currentPeriodEnd    DateTime?
+  interviewsUsed      Int       @default(0)
+  resumeMatchesUsed   Int       @default(0)
   
   hiringRequests  HiringRequest[]
   sessions        Session[]
   hiringSessions  HiringSession[]
   apiKeys         ApiKey[]
+  usageRecords    ApiUsageRecord[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -110,8 +120,37 @@ model ApiKey {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usageRecords ApiUsageRecord[]
 
   @@index([key])
   @@index([userId])
+}
+
+model ApiUsageRecord {
+  id               String   @id @default(cuid())
+  userId           String
+  apiKeyId         String?
+  requestId        String?
+  endpoint         String
+  method           String
+  statusCode       Int      @default(200)
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  cost             Float    @default(0)
+  model            String?
+  provider         String?
+  durationMs       Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKey ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([apiKeyId])
+  @@index([createdAt])
+  @@index([endpoint])
+  @@index([userId, createdAt])
+  @@index([apiKeyId, createdAt])
 }

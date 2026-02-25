@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
-import DashboardHeader from '../components/dashboard/DashboardHeader';
 
 interface HiringRequest {
   id: string;
@@ -150,10 +149,7 @@ export default function DashboardStats() {
   }, [stats, t]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <DashboardHeader />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-xl font-semibold text-gray-900 mb-2">
             {t('stats.title', 'Statistics')}
@@ -262,7 +258,6 @@ export default function DashboardStats() {
             </div>
           </div>
         ) : null}
-      </main>
     </div>
   );
 }

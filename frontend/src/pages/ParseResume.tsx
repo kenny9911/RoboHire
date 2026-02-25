@@ -66,7 +66,8 @@ export default function ParseResume() {
       <ApiInfoPanel
         endpoint="/api/v1/parse-resume"
         method="POST"
-        requestBody={{ file: file?.name || '<PDF file>' }}
+        isFileUpload
+        fileName={file?.name || 'resume.pdf'}
         responseStatus={responseStatus}
         responseTime={responseTime}
         requestId={result?.requestId}

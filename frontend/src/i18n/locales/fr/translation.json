@@ -705,5 +705,127 @@
       "errorMissingFields": "Veuillez fournir le CV, la JD et la transcription",
       "jsonTitle": "Resultat d'evaluation JSON"
     }
+  },
+  "pricing": {
+    "seo": {
+      "title": "Tarifs - Plans de recrutement IA pour chaque equipe",
+      "desc": "Choisissez le plan RoboHire adapte. Gratuit, Startup a 299$/mois, Business a 599$/mois ou tarifs entreprise personnalises. Matching CV par IA et entretiens inclus."
+    },
+    "label": "Grille tarifaire",
+    "headline": "Des tarifs qui ",
+    "headlineAccent": "evoluent avec vous",
+    "subheadline": "Commencez gratuitement, evoluez au fur et a mesure. Ne payez que ce que vous utilisez.",
+    "monthly": "Mensuel",
+    "annual": "Annuel",
+    "save": "Economisez 8%",
+    "month": "mois",
+    "year": "an",
+    "popular": "Le plus populaire",
+    "customBadge": "Personnalise",
+    "customPrice": "Personnalise",
+    "billedAnnually": "Facture annuellement a ",
+    "redirecting": "Redirection...",
+    "free": {
+      "name": "Gratuit",
+      "subtitle": "Pour les personnes qui debutent",
+      "cta": "Commencer gratuitement",
+      "f1": "2 postes",
+      "f2": "10 correspondances de CV",
+      "f3": "2 entretiens",
+      "f4": "Notation et evaluation d'entretien",
+      "f5": "Resumes d'entretiens"
+    },
+    "startup": {
+      "name": "Startup",
+      "subtitle": "Pour les petites equipes qui recrutent rapidement",
+      "cta": "Demarrer l'essai gratuit",
+      "f1": "Sieges illimites",
+      "f2": "Postes illimites",
+      "f3": "180 entretiens / mois",
+      "f4": "180 correspondances CV / mois",
+      "f5": "Acces API RoboHire",
+      "f5s": "Integrez avec vos systemes",
+      "f6": "6 langues d'entretien",
+      "f7": "Evaluation des competences linguistiques",
+      "f8": "Support par email"
+    },
+    "business": {
+      "name": "Business",
+      "subtitle": "Pour les grandes equipes en forte croissance",
+      "cta": "Demarrer l'essai gratuit",
+      "f1": "Sieges illimites",
+      "f2": "Postes illimites",
+      "f3": "400 entretiens / mois",
+      "f4": "400 correspondances CV / mois",
+      "f5": "Tout de Startup",
+      "f6": "Support prioritaire",
+      "f7": "Analyses avancees",
+      "f8": "Rapports en marque blanche",
+      "f9": "Replay video complet",
+      "f10": "Detection de triche"
+    },
+    "custom": {
+      "name": "Enterprise",
+      "subtitle": "Pour les organisations a fort volume",
+      "cta": "Contacter les ventes",
+      "f1": "Tout illimite",
+      "f2": "Tout de Business",
+      "f3": "Workflows personnalises",
+      "f3s": "Adaptez votre processus de recrutement",
+      "f4": "Plus de 45 integrations ATS",
+      "f4s": "Connectez vos outils existants",
+      "f5": "Voix d'entretien personnalisees",
+      "f6": "Responsable dedie et support"
+    },
+    "ppu": {
+      "title": "Tarification a l'usage",
+      "subtitle": "Besoin de plus de flexibilite ? Rechargez votre solde et payez uniquement ce que vous utilisez.",
+      "includes": "Inclut",
+      "match": {
+        "title": "Correspondance CV",
+        "unit": "par CV / JD",
+        "f1": "Decision de correspondance avec analyses",
+        "f2": "Analyse des criteres indispensables",
+        "f3": "Analyse des ecarts et recommandations",
+        "f4": "Validation des diplomes et experience",
+        "f5": "Questions d'entretien suggerees",
+        "f6": "Points a approfondir"
+      },
+      "interview": {
+        "title": "Entretien",
+        "unit": "par entretien",
+        "f1": "Replay video complet",
+        "f2": "Invitations automatiques par email",
+        "f3": "Notation et evaluation structurees",
+        "f4": "Detection de triche",
+        "f5": "Resumes d'entretiens",
+        "f6": "Evaluation des competences linguistiques"
+      }
+    },
+    "faq": {
+      "title": "Questions frequentes",
+      "q1": "Puis-je essayer RoboHire gratuitement ?",
+      "a1": "Oui ! Le plan Gratuit inclut 10 correspondances CV et 2 entretiens sans frais. Aucune carte de credit requise.",
+      "q2": "Quels moyens de paiement acceptez-vous ?",
+      "a2": "Nous acceptons les principales cartes de credit et debit (Visa, Mastercard, American Express) ainsi qu'Alipay. Tous les paiements sont securises via Stripe.",
+      "q3": "Puis-je changer de plan a tout moment ?",
+      "a3": "Absolument. Vous pouvez passer a un plan superieur ou inferieur quand vous le souhaitez. Le prorata est applique lors du passage a un plan superieur, et le credit est reporte sur le prochain cycle de facturation.",
+      "q4": "Que se passe-t-il quand je depasse mes limites mensuelles ?",
+      "a4": "Vous pouvez utiliser la tarification a l'usage pour continuer. Les correspondances CV coutent 0,40 $ chacune et les entretiens 2,00 $, deduits de votre solde recharge.",
+      "q5": "Proposez-vous une reduction pour la facturation annuelle ?",
+      "a5": "Oui ! La facturation annuelle vous fait economiser environ 8 % par rapport a la mensuelle. Vous pouvez basculer a tout moment.",
+      "q6": "Que comprend la tarification a l'usage ?",
+      "a6": "Le paiement a l'usage vous permet de recharger votre solde et de l'utiliser pour des correspondances CV (0,40 $) ou des entretiens (2,00 $). Chaque utilisation inclut toutes les fonctionnalites : notation IA, resumes, detection de triche et plus.",
+      "q7": "Y a-t-il un contrat ou un engagement ?",
+      "a7": "Aucun contrat. Les plans mensuels peuvent etre annules a tout moment. Les plans annuels sont factures d'avance mais vous pouvez annuler le renouvellement quand vous le souhaitez.",
+      "q8": "Proposez-vous des plans entreprise personnalises ?",
+      "a8": "Oui ! Le plan Enterprise comprend un usage illimite, des workflows personnalises, des integrations ATS, un support dedie et plus. Contactez notre equipe commerciale pour un devis sur mesure."
+    },
+    "cta": {
+      "title": "Pret a optimiser votre recrutement ?",
+      "subtitle": "Rejoignez des milliers d'entreprises qui utilisent l'IA pour recruter plus vite et mieux.",
+      "primary": "Commencer a recruter",
+      "secondary": "Demander une demo"
+    }
   }
 }

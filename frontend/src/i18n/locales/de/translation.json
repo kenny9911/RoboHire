@@ -705,5 +705,127 @@
       "errorMissingFields": "Bitte Lebenslauf, JD und Interview-Transkript angeben",
       "jsonTitle": "Bewertungsergebnis JSON"
     }
+  },
+  "pricing": {
+    "seo": {
+      "title": "Preise - KI-Recruiting-Plaene fuer jedes Team",
+      "desc": "Waehlen Sie den passenden RoboHire-Plan. Kostenlos, Startup ab $299/Monat, Business ab $599/Monat oder individuelle Enterprise-Preise. KI-Lebenslauf-Matching und Interviews inklusive."
+    },
+    "label": "Preisplaene",
+    "headline": "Preise, die ",
+    "headlineAccent": "mit Ihnen wachsen",
+    "subheadline": "Starten Sie kostenlos, skalieren Sie nach Bedarf. Zahlen Sie nur, was Sie nutzen.",
+    "monthly": "Monatlich",
+    "annual": "Jaehrlich",
+    "save": "8% sparen",
+    "month": "Monat",
+    "year": "Jahr",
+    "popular": "Am beliebtesten",
+    "customBadge": "Individuell",
+    "customPrice": "Individuell",
+    "billedAnnually": "Jaehrlich abgerechnet fuer $",
+    "redirecting": "Weiterleitung...",
+    "free": {
+      "name": "Kostenlos",
+      "subtitle": "Fuer Einzelpersonen zum Einstieg",
+      "cta": "Kostenlos starten",
+      "f1": "2 Stellenanzeigen",
+      "f2": "10 Lebenslauf-Matches",
+      "f3": "2 Interviews",
+      "f4": "Interview-Bewertung und Auswertung",
+      "f5": "Interview-Zusammenfassungen"
+    },
+    "startup": {
+      "name": "Startup",
+      "subtitle": "Fuer kleine Teams, die schnell einstellen",
+      "cta": "Kostenlos testen",
+      "f1": "Unbegrenzte Plaetze",
+      "f2": "Unbegrenzte Stellenanzeigen",
+      "f3": "180 Interviews / Monat",
+      "f4": "180 Lebenslauf-Matches / Monat",
+      "f5": "RoboHire API-Zugang",
+      "f5s": "Integration mit Ihren Systemen",
+      "f6": "6 Interview-Sprachen",
+      "f7": "Sprachkompetenz-Bewertung",
+      "f8": "E-Mail-Support"
+    },
+    "business": {
+      "name": "Business",
+      "subtitle": "Fuer grosse Teams mit schnellem Wachstum",
+      "cta": "Kostenlos testen",
+      "f1": "Unbegrenzte Plaetze",
+      "f2": "Unbegrenzte Stellenanzeigen",
+      "f3": "400 Interviews / Monat",
+      "f4": "400 Lebenslauf-Matches / Monat",
+      "f5": "Alles aus Startup",
+      "f6": "Prioritaets-Support",
+      "f7": "Erweiterte Analysen",
+      "f8": "White-Label-Berichte",
+      "f9": "Vollstaendige Video-Wiedergabe",
+      "f10": "Betrugs-Erkennung"
+    },
+    "custom": {
+      "name": "Enterprise",
+      "subtitle": "Fuer Organisationen mit hohem Volumen",
+      "cta": "Vertrieb kontaktieren",
+      "f1": "Alles unbegrenzt",
+      "f2": "Alles aus Business",
+      "f3": "Individuelle Workflows",
+      "f3s": "Passen Sie Ihren Recruiting-Prozess an",
+      "f4": "Ueber 45 ATS-Integrationen",
+      "f4s": "Verbinden Sie Ihre bestehenden Tools",
+      "f5": "Individuelle Interview-Stimmen",
+      "f6": "Dedizierter Manager und Support"
+    },
+    "ppu": {
+      "title": "Nutzungsbasierte Preise",
+      "subtitle": "Brauchen Sie mehr Flexibilitaet? Laden Sie Ihr Guthaben auf und zahlen Sie nur, was Sie nutzen.",
+      "includes": "Inklusive",
+      "match": {
+        "title": "Lebenslauf-Matching",
+        "unit": "pro Lebenslauf / Stelle",
+        "f1": "Match-Entscheidung mit Erkenntnissen",
+        "f2": "Analyse der Muss-Anforderungen",
+        "f3": "Lueckenanalyse und Empfehlungen",
+        "f4": "Qualifikations- und Erfahrungsvalidierung",
+        "f5": "Vorgeschlagene Interview-Fragen",
+        "f6": "Bereiche zur Vertiefung"
+      },
+      "interview": {
+        "title": "Interview",
+        "unit": "pro Interview",
+        "f1": "Vollstaendige Video-Wiedergabe",
+        "f2": "Automatische E-Mail-Einladungen",
+        "f3": "Strukturierte Bewertung und Auswertung",
+        "f4": "Betrugs-Erkennung",
+        "f5": "Interview-Zusammenfassungen",
+        "f6": "Sprachkompetenz-Bewertung"
+      }
+    },
+    "faq": {
+      "title": "Haeufig gestellte Fragen",
+      "q1": "Kann ich RoboHire kostenlos testen?",
+      "a1": "Ja! Der kostenlose Plan umfasst 10 Lebenslauf-Matches und 2 Interviews ohne Kosten. Keine Kreditkarte erforderlich.",
+      "q2": "Welche Zahlungsmethoden akzeptieren Sie?",
+      "a2": "Wir akzeptieren gaengige Kredit- und Debitkarten (Visa, Mastercard, American Express) sowie Alipay. Alle Zahlungen werden sicher ueber Stripe abgewickelt.",
+      "q3": "Kann ich jederzeit den Plan wechseln?",
+      "a3": "Selbstverstaendlich. Sie koennen jederzeit upgraden oder downgraden. Beim Upgrade wird die anteilige Differenz berechnet, beim Downgrade wird das Guthaben auf den naechsten Abrechnungszyklus angerechnet.",
+      "q4": "Was passiert, wenn ich meine monatlichen Limits ueberschreite?",
+      "a4": "Sie koennen die nutzungsbasierte Abrechnung nutzen. Lebenslauf-Matches kosten $0,40 pro Stueck und Interviews $2,00, abgezogen von Ihrem aufgeladenen Guthaben.",
+      "q5": "Bieten Sie einen Rabatt bei jaehrlicher Abrechnung?",
+      "a5": "Ja! Die jaehrliche Abrechnung spart Ihnen etwa 8% gegenueber der monatlichen. Sie koennen jederzeit wechseln.",
+      "q6": "Was ist in den nutzungsbasierten Preisen enthalten?",
+      "a6": "Pay-per-Use ermoeglicht es Ihnen, Guthaben aufzuladen und fuer Lebenslauf-Matches ($0,40) oder Interviews ($2,00) zu nutzen. Jede Nutzung umfasst alle Funktionen: KI-Bewertung, Zusammenfassungen, Betrugserkennung und mehr.",
+      "q7": "Gibt es einen Vertrag oder eine Bindung?",
+      "a7": "Keine Vertraege. Monatsplaene koennen jederzeit gekuendigt werden. Jahresplaene werden im Voraus berechnet, aber Sie koennen die Verlaengerung jederzeit kuendigen.",
+      "q8": "Bieten Sie individuelle Enterprise-Plaene an?",
+      "a8": "Ja! Der Enterprise-Plan umfasst unbegrenzte Nutzung, individuelle Workflows, ATS-Integrationen, dedizierten Support und mehr. Kontaktieren Sie unser Vertriebsteam fuer ein massgeschneidertes Angebot."
+    },
+    "cta": {
+      "title": "Bereit, Ihr Recruiting zu optimieren?",
+      "subtitle": "Schliessen Sie sich Tausenden von Unternehmen an, die KI nutzen, um schneller und intelligenter einzustellen.",
+      "primary": "Mit dem Recruiting starten",
+      "secondary": "Demo anfordern"
+    }
   }
 }

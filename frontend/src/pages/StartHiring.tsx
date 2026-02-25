@@ -968,15 +968,7 @@ export default function StartHiring() {
                     </button>
                   </div>
                 )}
-                <div className="flex items-end gap-3">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                  </button>
+                <div className="flex items-end gap-2">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -984,7 +976,15 @@ export default function StartHiring() {
                     accept=".pdf,.doc,.docx,.txt"
                     onChange={(e) => setAttachedFile(e.target.files?.[0] || null)}
                   />
-                  <div className="flex-1 relative">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                  </button>
+                  <div className="flex-1 min-w-0">
                     <textarea
                       ref={textareaRef}
                       value={input}
@@ -992,14 +992,14 @@ export default function StartHiring() {
                       onKeyDown={handleKeyDown}
                       placeholder={t('hiring.inputPlaceholder', 'Describe your ideal candidate...')}
                       rows={1}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      style={{ minHeight: '48px', maxHeight: '150px' }}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                      style={{ minHeight: '44px', maxHeight: '150px' }}
                     />
                   </div>
                   <button
                     onClick={handleSubmit}
                     disabled={!input.trim() && !attachedFile}
-                    className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

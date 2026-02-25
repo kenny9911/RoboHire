@@ -147,15 +147,9 @@ router.get('/', async (req, res) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Mask the keys before sending
-    const maskedKeys = apiKeys.map(apiKey => ({
-      ...apiKey,
-      key: maskApiKey(apiKey.key),
-    }));
-
     res.json({
       success: true,
-      data: maskedKeys,
+      data: apiKeys,
     });
   } catch (error) {
     console.error('List API keys error:', error);
@@ -327,6 +321,31 @@ router.delete('/:id', async (req, res) => {
       success: false,
       error: 'Failed to delete API key',
     });
+  }
+});
+
+/**
+ * GET /api/v1/api-keys/:id/reveal
+ * Return the full unmasked API key (requires authenticated owner)
+ */
+router.get('/:id/reveal', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    const apiKey = await prisma.apiKey.findFirst({
+      where: { id, userId },
+      select: { key: true },
+    });
+
+    if (!apiKey) {
+      return res.status(404).json({ success: false, error: 'API key not found' });
+    }
+
+    res.json({ success: true, data: { key: apiKey.key } });
+  } catch (error) {
+    console.error('Reveal API key error:', error);
+    res.status(500).json({ success: false, error: 'Failed to reveal API key' });
   }
 });
 

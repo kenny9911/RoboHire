@@ -103,8 +103,8 @@ export default function DocsAuthentication() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Scope</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Description</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.auth.scopes.scopeHeader', 'Scope')}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.auth.scopes.descHeader', 'Description')}</th>
               </tr>
             </thead>
             <tbody>

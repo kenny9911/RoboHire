@@ -66,7 +66,8 @@ export default function ParseJD() {
       <ApiInfoPanel
         endpoint="/api/v1/parse-jd"
         method="POST"
-        requestBody={{ file: file?.name || '<PDF file>' }}
+        isFileUpload
+        fileName={file?.name || 'job_description.pdf'}
         responseStatus={responseStatus}
         responseTime={responseTime}
         requestId={result?.requestId}

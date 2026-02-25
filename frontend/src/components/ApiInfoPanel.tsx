@@ -9,6 +9,8 @@ interface ApiInfoPanelProps {
   responseTime?: number;
   requestId?: string;
   isLoading?: boolean;
+  isFileUpload?: boolean;
+  fileName?: string;
 }
 
 type CodeTab = 'curl' | 'javascript' | 'python';
@@ -21,6 +23,8 @@ export default function ApiInfoPanel({
   responseTime,
   requestId,
   isLoading,
+  isFileUpload,
+  fileName,
 }: ApiInfoPanelProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -30,10 +34,18 @@ export default function ApiInfoPanel({
   const baseUrl = window.location.origin;
   const fullUrl = `${baseUrl}${endpoint}`;
 
+  const sampleFile = fileName || 'document.pdf';
+
   // Generate cURL command
   const generateCurl = () => {
     let curl = `curl -X ${method} '${fullUrl}'`;
+    curl += ` \\\n  -H 'X-API-Key: rh_YOUR_API_KEY'`;
     
+    if (isFileUpload) {
+      curl += ` \\\n  -F 'file=@${sampleFile}'`;
+      return curl;
+    }
+
     if (method === 'POST' || method === 'PUT') {
       curl += ` \\\n  -H 'Content-Type: application/json'`;
       if (requestBody) {
@@ -50,10 +62,29 @@ export default function ApiInfoPanel({
 
   // Generate JavaScript fetch code
   const generateJavaScript = () => {
+    if (isFileUpload) {
+      return `const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+
+const response = await fetch('${fullUrl}', {
+  method: '${method}',
+  headers: {
+    'X-API-Key': 'rh_YOUR_API_KEY',
+  },
+  body: formData,
+});
+const data = await response.json();
+console.log(data);`;
+    }
+
     const bodyJson = requestBody ? JSON.stringify(requestBody, null, 2) : null;
     
     if (method === 'GET') {
-      return `const response = await fetch('${fullUrl}');
+      return `const response = await fetch('${fullUrl}', {
+  headers: {
+    'X-API-Key': 'rh_YOUR_API_KEY',
+  },
+});
 const data = await response.json();
 console.log(data);`;
     }
@@ -62,6 +93,7 @@ console.log(data);`;
   method: '${method}',
   headers: {
     'Content-Type': 'application/json',
+    'X-API-Key': 'rh_YOUR_API_KEY',
   },${bodyJson ? `
   body: JSON.stringify(${bodyJson}),` : ''}
 });
@@ -71,12 +103,35 @@ console.log(data);`;
 
   // Generate Python requests code
   const generatePython = () => {
+    if (isFileUpload) {
+      return `import requests
+
+headers = {
+    'X-API-Key': 'rh_YOUR_API_KEY',
+}
+
+with open('${sampleFile}', 'rb') as f:
+    files = {'file': ('${sampleFile}', f, 'application/pdf')}
+    response = requests.post(
+        '${fullUrl}',
+        headers=headers,
+        files=files,
+    )
+
+data = response.json()
+print(data)`;
+    }
+
     const bodyJson = requestBody ? JSON.stringify(requestBody, null, 2) : null;
     
     if (method === 'GET') {
       return `import requests
 
-response = requests.get('${fullUrl}')
+headers = {
+    'X-API-Key': 'rh_YOUR_API_KEY',
+}
+
+response = requests.get('${fullUrl}', headers=headers)
 data = response.json()
 print(data)`;
     }
@@ -92,10 +147,16 @@ print(data)`;
     
     return `import requests
 
+headers = {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'rh_YOUR_API_KEY',
+}
+
 payload = ${pythonBody || '{}'}
 
 response = requests.${method.toLowerCase()}(
     '${fullUrl}',
+    headers=headers,
     json=payload
 )
 data = response.json()

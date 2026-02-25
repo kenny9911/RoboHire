@@ -127,14 +127,14 @@ result = response.json()`,
       <EndpointCard
         method="POST"
         path="/v1/parse-jd"
-        description="Parse a job description PDF into structured data"
+        description={t('docs.parseJD.endpointDesc', 'Parse a job description PDF into structured data')}
       />
 
       {/* Request */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.parseJD.request', 'Request')}
       </h2>
-      <ParamTable title="Body Parameters" params={requestParams} />
+      <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
 
       <CodeBlock
         tabs={[
@@ -148,9 +148,9 @@ result = response.json()`,
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
         {t('docs.parseJD.response', 'Response')}
       </h2>
-      <ParamTable title="Response Fields" params={responseParams} />
+      <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
 
-      <CodeBlock code={exampleResponse} language="json" title="Example Response" />
+      <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Requirements Structure */}
       <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
@@ -160,9 +160,9 @@ result = response.json()`,
         {t('docs.parseJD.requirements.desc', 'The requirements object contains categorized qualifications:')}
       </p>
       <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
-        <li><code className="text-indigo-600">mustHave</code> - Required qualifications the candidate must possess</li>
-        <li><code className="text-indigo-600">niceToHave</code> - Preferred qualifications that are beneficial but not mandatory</li>
-        <li><code className="text-indigo-600">education</code> - Educational requirements</li>
+        <li><code className="text-indigo-600">mustHave</code> - {t('docs.parseJD.requirements.mustHave', 'Required qualifications the candidate must possess')}</li>
+        <li><code className="text-indigo-600">niceToHave</code> - {t('docs.parseJD.requirements.niceToHave', 'Preferred qualifications that are beneficial but not mandatory')}</li>
+        <li><code className="text-indigo-600">education</code> - {t('docs.parseJD.requirements.education', 'Educational requirements')}</li>
       </ul>
 
       {/* Try It */}

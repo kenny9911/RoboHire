@@ -6,29 +6,29 @@ export default function DocsOverview() {
 
   const endpoints = [
     {
-      name: 'Match Resume',
+      name: t('docs.overview.ep.matchResume', 'Match Resume'),
       href: '/docs/api/match-resume',
-      description: 'Match resumes against job descriptions with AI scoring.',
+      description: t('docs.overview.ep.matchResumeDesc', 'Match resumes against job descriptions with AI scoring.'),
     },
     {
-      name: 'Parse Resume',
+      name: t('docs.overview.ep.parseResume', 'Parse Resume'),
       href: '/docs/api/parse-resume',
-      description: 'Extract structured data from resume PDFs.',
+      description: t('docs.overview.ep.parseResumeDesc', 'Extract structured data from resume PDFs.'),
     },
     {
-      name: 'Parse JD',
+      name: t('docs.overview.ep.parseJd', 'Parse JD'),
       href: '/docs/api/parse-jd',
-      description: 'Extract structured data from job description PDFs.',
+      description: t('docs.overview.ep.parseJdDesc', 'Extract structured data from job description PDFs.'),
     },
     {
-      name: 'Invite Candidate',
+      name: t('docs.overview.ep.inviteCandidate', 'Invite Candidate'),
       href: '/docs/api/invite-candidate',
-      description: 'Generate professional interview invitation emails.',
+      description: t('docs.overview.ep.inviteCandidateDesc', 'Generate professional interview invitation emails.'),
     },
     {
-      name: 'Evaluate Interview',
+      name: t('docs.overview.ep.evaluateInterview', 'Evaluate Interview'),
       href: '/docs/api/evaluate-interview',
-      description: 'Analyze interview transcripts with comprehensive scoring.',
+      description: t('docs.overview.ep.evaluateInterviewDesc', 'Analyze interview transcripts with comprehensive scoring.'),
     },
   ];
 
