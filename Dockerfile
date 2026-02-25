@@ -1,7 +1,9 @@
 # 构建参数
 ARG BUILD_DATE=latest
 
-# 构建阶段 - 构建前端
+# ==========================================
+# 构建阶段 1 - 构建前端
+# ==========================================
 FROM  harbor.lightark.cc/image-base/node:18.20.5-alpine as frontend-build
 
 WORKDIR /app
@@ -30,7 +32,9 @@ COPY frontend/ ./
 # 构建前端
 RUN npm run build
 
-# 构建阶段 - 构建后端
+# ==========================================
+# 构建阶段 2 - 构建后端
+# ==========================================
 FROM harbor.lightark.cc/image-base/node:18.20.5-alpine as backend-build
 
 WORKDIR /app
@@ -62,14 +66,19 @@ COPY backend/ ./
 # 构建后端
 RUN npm run build
 
+# ==========================================
 # 生产阶段 - 同时运行前端和后端
+# ==========================================
 FROM harbor.lightark.cc/image-base/node:18.20.5-alpine
 
 # 元数据
 LABEL build_date="${BUILD_DATE}"
 
-# 安装 nginx（用于前端服务）
+# 安装 nginx 和系统工具
 RUN apk add --no-cache nginx bash curl psmisc
+
+# 🚀 新增：全局安装 PM2（使用国内镜像源加速）
+RUN npm install -g pm2 --registry=https://registry.npmmirror.com/
 
 # 创建必要的目录
 RUN mkdir -p /app/logs /app/backend/logs /run/nginx
