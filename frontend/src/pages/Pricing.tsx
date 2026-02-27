@@ -245,11 +245,21 @@ export default function Pricing() {
     '@type': 'Product',
     name: 'RoboHire AI Hiring Platform',
     description: 'AI-powered hiring platform with automated resume screening, interviews, and evaluation reports.',
+    url: 'https://robohire.io/pricing',
     brand: { '@type': 'Brand', name: 'RoboHire' },
     offers: [
-      { '@type': 'Offer', name: 'Starter', price: String(dynamicPrices.starter), priceCurrency: 'USD', billingIncrement: 'P1M', description: '15 interviews, 30 resume matches' },
-      { '@type': 'Offer', name: 'Growth', price: String(dynamicPrices.growth), priceCurrency: 'USD', billingIncrement: 'P1M', description: '120 interviews, 240 resume matches/month' },
-      { '@type': 'Offer', name: 'Business', price: String(dynamicPrices.business), priceCurrency: 'USD', billingIncrement: 'P1M', description: '280 interviews, 500 resume matches/month' },
+      {
+        '@type': 'Offer', name: 'Starter', priceCurrency: 'USD', description: '15 interviews, 30 resume matches per month',
+        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(dynamicPrices.starter), priceCurrency: 'USD', unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
+      },
+      {
+        '@type': 'Offer', name: 'Growth', priceCurrency: 'USD', description: '120 interviews, 240 resume matches per month',
+        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(dynamicPrices.growth), priceCurrency: 'USD', unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
+      },
+      {
+        '@type': 'Offer', name: 'Business', priceCurrency: 'USD', description: '280 interviews, 500 resume matches per month',
+        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(dynamicPrices.business), priceCurrency: 'USD', unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
+      },
     ],
   };
 

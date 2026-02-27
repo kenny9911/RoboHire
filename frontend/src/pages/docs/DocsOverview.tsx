@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import SEO from '../../components/SEO';
 
@@ -33,9 +34,32 @@ export default function DocsOverview() {
     },
   ];
 
+  const techArticleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: 'RoboHire API Documentation',
+    description: 'Complete documentation for the RoboHire AI hiring API. Integrate resume matching, interview evaluation, and candidate screening into your application.',
+    url: 'https://robohire.io/docs/overview',
+    proficiencyLevel: 'Beginner',
+    about: {
+      '@type': 'WebAPI',
+      name: 'RoboHire API',
+      description: 'RESTful API for AI-powered resume screening, candidate matching, interview evaluation, and hiring automation.',
+      url: 'https://api.robohire.io/v1',
+      provider: { '@type': 'Organization', name: 'RoboHire', url: 'https://robohire.io' },
+    },
+    author: { '@type': 'Organization', name: 'RoboHire', url: 'https://robohire.io' },
+    publisher: { '@type': 'Organization', name: 'RoboHire', url: 'https://robohire.io' },
+    datePublished: '2025-06-01',
+    dateModified: '2026-02-27',
+  };
+
   return (
     <div>
       <SEO title={t('seo.docsOverview.title', 'API Documentation')} description={t('seo.docsOverview.desc', 'Complete documentation for the RoboHire API. Get started with AI-powered hiring in minutes.')} url="https://robohire.io/docs" keywords={t('seo.docsOverview.keywords', 'RoboHire API documentation, AI hiring API, recruitment API docs')} />
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(techArticleSchema)}</script>
+      </Helmet>
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.overview.title', 'RoboHire Documentation')}
       </h1>

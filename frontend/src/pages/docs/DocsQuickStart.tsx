@@ -55,6 +55,20 @@ result = response.json()
 print(result['data']['matchScore'])  # e.g., 85`,
   };
 
+  const techArticleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: 'RoboHire API Quick Start Guide',
+    description: 'Get up and running with the RoboHire AI hiring API in 5 minutes. Step-by-step guide to match resumes against job descriptions.',
+    url: 'https://robohire.io/docs/quick-start',
+    proficiencyLevel: 'Beginner',
+    dependencies: 'An HTTP client (curl, node-fetch, or requests for Python)',
+    author: { '@type': 'Organization', name: 'RoboHire', url: 'https://robohire.io' },
+    publisher: { '@type': 'Organization', name: 'RoboHire', url: 'https://robohire.io' },
+    datePublished: '2025-06-01',
+    dateModified: '2026-02-27',
+  };
+
   const howToSchema = {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
@@ -73,6 +87,7 @@ print(result['data']['matchScore'])  # e.g., 85`,
     <div>
       <SEO title={t('seo.docsQuickStart.title', 'Quick Start Guide')} description={t('seo.docsQuickStart.desc', 'Get up and running with the RoboHire API in 5 minutes. Step-by-step integration guide.')} url="https://robohire.io/docs/quick-start" keywords={t('seo.docsQuickStart.keywords', 'RoboHire API documentation, quick start guide, API integration')} />
       <Helmet>
+        <script type="application/ld+json">{JSON.stringify(techArticleSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
       </Helmet>
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
