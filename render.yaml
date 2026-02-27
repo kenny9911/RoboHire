@@ -50,6 +50,19 @@ services:
         sync: false
       - key: RECRUITER_EMAIL
         sync: false
+      # ── Stripe Payment ──
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_STARTER_MONTHLY_PRICE_ID
+        sync: false
+      - key: STRIPE_GROWTH_MONTHLY_PRICE_ID
+        sync: false
+      - key: STRIPE_BUSINESS_MONTHLY_PRICE_ID
+        sync: false
 
   # ── Frontend (React static site) ───────────────────────────────────
   - type: web
