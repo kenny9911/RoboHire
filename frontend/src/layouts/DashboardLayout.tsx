@@ -147,6 +147,23 @@ const secondaryLinks = [
   { path: '/developers', labelKey: 'dashboard.nav.developers', fallback: 'Developers' },
 ];
 
+const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
+  free: { interviews: 0, matches: 0 },
+  starter: { interviews: 15, matches: 30 },
+  growth: { interviews: 120, matches: 240 },
+  business: { interviews: 280, matches: 500 },
+  custom: { interviews: Infinity, matches: Infinity },
+};
+
+const PLAN_LABELS: Record<string, string> = {
+  free: 'Free',
+  starter: 'Starter',
+  growth: 'Growth',
+  business: 'Business',
+  custom: 'Enterprise',
+  enterprise: 'Enterprise',
+};
+
 function getPageTitle(
   pathname: string,
   t: (key: string, fallback: string) => string,
@@ -172,7 +189,9 @@ export default function DashboardLayout() {
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [notificationsError, setNotificationsError] = useState<string | null>(null);
+  const [usageSummaryOpen, setUsageSummaryOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
+  const usageSummaryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -188,6 +207,17 @@ export default function DashboardLayout() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [notificationsOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!usageSummaryOpen) return;
+      if (usageSummaryRef.current && !usageSummaryRef.current.contains(event.target as Node)) {
+        setUsageSummaryOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [usageSummaryOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -253,6 +283,14 @@ export default function DashboardLayout() {
   };
 
   const hasNotifications = notifications.length > 0;
+  const tier = (user?.subscriptionTier || 'free').toLowerCase();
+  const tierLabel = PLAN_LABELS[tier] || tier.charAt(0).toUpperCase() + tier.slice(1);
+  const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+  const interviewsUsed = user?.interviewsUsed ?? 0;
+  const resumeMatchesUsed = user?.resumeMatchesUsed ?? 0;
+  const interviewRemaining = limits.interviews === Infinity ? '∞' : String(Math.max(0, limits.interviews - interviewsUsed));
+  const resumeMatchRemaining = limits.matches === Infinity ? '∞' : String(Math.max(0, limits.matches - resumeMatchesUsed));
+  const creditBalance = (user?.topUpBalance ?? 0).toFixed(2);
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) {
@@ -339,24 +377,70 @@ export default function DashboardLayout() {
 
       {/* User section */}
       <div className="border-t border-gray-200 px-3 py-4">
-        <Link
-          to="/dashboard/account"
-          className="flex items-center gap-3 px-3 mb-3 rounded-lg py-2 -my-1 hover:bg-gray-100 transition-colors cursor-pointer"
-        >
-          {user?.avatar ? (
-            <img src={user.avatar} alt="" className="w-9 h-9 rounded-full" />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
-              <span className="text-indigo-600 font-medium text-sm">
-                {user?.name?.[0] || user?.email?.[0] || 'U'}
-              </span>
+        <div className="relative mb-3" ref={usageSummaryRef}>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/dashboard/account"
+              onClick={() => setUsageSummaryOpen(false)}
+              className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 -my-1 transition-colors hover:bg-gray-100"
+            >
+              {user?.avatar ? (
+                <img src={user.avatar} alt="" className="h-9 w-9 rounded-full" />
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100">
+                  <span className="text-sm font-medium text-indigo-600">
+                    {user?.name?.[0] || user?.email?.[0] || 'U'}
+                  </span>
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                <p className="truncate text-xs text-gray-500">{user?.email}</p>
+                <p className="mt-1 text-[11px] font-semibold tracking-wide text-indigo-600">
+                  {tierLabel}
+                </p>
+              </div>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setUsageSummaryOpen((prev) => !prev)}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors hover:border-indigo-300 hover:text-indigo-600"
+              aria-label={t('dashboard.accountUsage', 'View usage and credit')}
+              aria-expanded={usageSummaryOpen}
+              title={t('dashboard.accountUsage', 'View usage and credit')}
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 20h16M7 16V8m5 8V4m5 12v-6" />
+              </svg>
+            </button>
+          </div>
+          {usageSummaryOpen && (
+            <div className="absolute bottom-full right-0 z-20 mb-2 w-60 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_18px_36px_-24px_rgba(15,23,42,0.75)]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {t('dashboard.quickUsage', 'Quick Usage')}
+              </p>
+              <div className="mt-2 space-y-2 text-xs text-gray-600">
+                <div className="flex items-center justify-between gap-3">
+                  <span>{t('dashboard.interviews', 'Interviews')}</span>
+                  <span className="font-medium text-gray-900">
+                    {interviewsUsed} {t('dashboard.used', 'used')} / {interviewRemaining} {t('dashboard.unused', 'unused')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>{t('dashboard.resumeMatches', 'Resume Matches')}</span>
+                  <span className="font-medium text-gray-900">
+                    {resumeMatchesUsed} {t('dashboard.used', 'used')} / {resumeMatchRemaining} {t('dashboard.unused', 'unused')}
+                  </span>
+                </div>
+                <div className="my-1 border-t border-gray-100" />
+                <div className="flex items-center justify-between gap-3">
+                  <span>{t('dashboard.creditBalance', 'Credit Balance')}</span>
+                  <span className="font-semibold text-emerald-700">${creditBalance}</span>
+                </div>
+              </div>
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'User'}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-          </div>
-        </Link>
+        </div>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
