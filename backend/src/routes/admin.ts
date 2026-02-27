@@ -16,6 +16,31 @@ const router = Router();
 // All admin routes require auth + admin role
 router.use(requireAuth, requireAdmin);
 
+type UsageBucket = 'hour' | 'day' | 'week';
+
+function startOfDayUTC(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function startOfWeekUTC(date: Date): string {
+  const copy = new Date(date);
+  copy.setUTCHours(0, 0, 0, 0);
+  const day = copy.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day; // Monday week start
+  copy.setUTCDate(copy.getUTCDate() + diff);
+  return startOfDayUTC(copy);
+}
+
+function bucketTimestamp(date: Date, bucket: UsageBucket): string {
+  if (bucket === 'hour') {
+    return `${date.toISOString().slice(0, 13)}:00`;
+  }
+  if (bucket === 'week') {
+    return startOfWeekUTC(date);
+  }
+  return startOfDayUTC(date);
+}
+
 /**
  * GET /api/v1/admin/users
  * List users with pagination and search
@@ -491,16 +516,401 @@ router.get('/stats', async (_req, res) => {
       data: {
         totalUsers,
         byTier,
+        usersByTier: byTier,
         activeSubscriptions,
         newUsersThisMonth,
         totalRevenue: totalRevenue._sum.amountDollars || 0,
         totalInterviews: usageTotals._sum.interviewsUsed || 0,
         totalMatches: usageTotals._sum.resumeMatchesUsed || 0,
+        totalInterviewsUsed: usageTotals._sum.interviewsUsed || 0,
+        totalMatchesUsed: usageTotals._sum.resumeMatchesUsed || 0,
       },
     });
   } catch (error) {
     console.error('Admin stats error:', error);
     res.status(500).json({ success: false, error: 'Failed to load stats' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/usage/analytics
+ * Comprehensive usage analytics across request logs.
+ * Query params:
+ * - from, to (ISO date/datetime)
+ * - userId
+ * - module
+ * - endpoint (contains)
+ * - bucket: hour | day | week
+ */
+router.get('/usage/analytics', async (req, res) => {
+  try {
+    const now = new Date();
+    const to = req.query.to ? new Date(String(req.query.to)) : now;
+    const from = req.query.from
+      ? new Date(String(req.query.from))
+      : new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const bucket = (String(req.query.bucket || 'day') as UsageBucket);
+
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+      res.status(400).json({ success: false, error: 'Invalid from/to date format' });
+      return;
+    }
+    if (!['hour', 'day', 'week'].includes(bucket)) {
+      res.status(400).json({ success: false, error: 'bucket must be one of: hour, day, week' });
+      return;
+    }
+
+    const userId = (req.query.userId as string | undefined)?.trim();
+    const moduleFilter = (req.query.module as string | undefined)?.trim();
+    const endpointFilter = (req.query.endpoint as string | undefined)?.trim();
+
+    const where: Record<string, unknown> = {
+      createdAt: { gte: from, lte: to },
+    };
+
+    if (userId) where.userId = userId;
+    if (moduleFilter) where.module = moduleFilter;
+    if (endpointFilter) where.endpoint = { contains: endpointFilter, mode: 'insensitive' };
+
+    const [
+      totalCalls,
+      aggregates,
+      userGroups,
+      moduleGroups,
+      apiGroups,
+      providerGroups,
+      modelGroups,
+      timelineRecords,
+    ] = await Promise.all([
+      prisma.apiRequestLog.count({ where }),
+      prisma.apiRequestLog.aggregate({
+        where,
+        _sum: {
+          promptTokens: true,
+          completionTokens: true,
+          totalTokens: true,
+          llmCalls: true,
+          cost: true,
+          durationMs: true,
+        },
+        _avg: { durationMs: true },
+      }),
+      prisma.apiRequestLog.groupBy({
+        by: ['userId'],
+        where,
+        _count: { _all: true },
+        _sum: { totalTokens: true, cost: true, llmCalls: true, durationMs: true },
+      }),
+      prisma.apiRequestLog.groupBy({
+        by: ['module'],
+        where,
+        _count: { _all: true },
+        _sum: { totalTokens: true, cost: true, llmCalls: true, durationMs: true },
+      }),
+      prisma.apiRequestLog.groupBy({
+        by: ['apiName', 'endpoint', 'method', 'module'],
+        where,
+        _count: { _all: true },
+        _sum: { totalTokens: true, cost: true, llmCalls: true, durationMs: true },
+      }),
+      prisma.apiRequestLog.groupBy({
+        by: ['provider'],
+        where,
+        _count: { _all: true },
+        _sum: { totalTokens: true, cost: true, llmCalls: true },
+      }),
+      prisma.apiRequestLog.groupBy({
+        by: ['model'],
+        where,
+        _count: { _all: true },
+        _sum: { totalTokens: true, cost: true, llmCalls: true },
+      }),
+      prisma.apiRequestLog.findMany({
+        where,
+        select: {
+          createdAt: true,
+          userId: true,
+          module: true,
+          endpoint: true,
+          method: true,
+          statusCode: true,
+          durationMs: true,
+          totalTokens: true,
+          llmCalls: true,
+          cost: true,
+        },
+        orderBy: { createdAt: 'asc' },
+        take: 50000,
+      }),
+    ]);
+
+    const userIds = userGroups
+      .map((g) => g.userId)
+      .filter((id): id is string => Boolean(id));
+    const users = userIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, email: true, name: true, company: true, role: true },
+        })
+      : [];
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const byUser = userGroups
+      .map((g) => {
+        const profile = g.userId ? userMap.get(g.userId) : null;
+        const calls = g._count._all;
+        return {
+          userId: g.userId,
+          email: profile?.email || 'Anonymous / Unauthenticated',
+          name: profile?.name || null,
+          company: profile?.company || null,
+          role: profile?.role || null,
+          calls,
+          llmCalls: g._sum.llmCalls ?? 0,
+          totalTokens: g._sum.totalTokens ?? 0,
+          cost: g._sum.cost ?? 0,
+          avgLatencyMs: calls > 0 ? Math.round((g._sum.durationMs ?? 0) / calls) : 0,
+        };
+      })
+      .sort((a, b) => b.calls - a.calls);
+
+    const byModule = moduleGroups
+      .map((g) => {
+        const calls = g._count._all;
+        return {
+          module: g.module,
+          calls,
+          llmCalls: g._sum.llmCalls ?? 0,
+          totalTokens: g._sum.totalTokens ?? 0,
+          cost: g._sum.cost ?? 0,
+          avgLatencyMs: calls > 0 ? Math.round((g._sum.durationMs ?? 0) / calls) : 0,
+        };
+      })
+      .sort((a, b) => b.calls - a.calls);
+
+    const byApi = apiGroups
+      .map((g) => {
+        const calls = g._count._all;
+        return {
+          apiName: g.apiName,
+          endpoint: g.endpoint,
+          method: g.method,
+          module: g.module,
+          calls,
+          llmCalls: g._sum.llmCalls ?? 0,
+          totalTokens: g._sum.totalTokens ?? 0,
+          cost: g._sum.cost ?? 0,
+          avgLatencyMs: calls > 0 ? Math.round((g._sum.durationMs ?? 0) / calls) : 0,
+        };
+      })
+      .sort((a, b) => b.calls - a.calls);
+
+    const byProvider = providerGroups
+      .reduce<Array<{
+        provider: string;
+        calls: number;
+        llmCalls: number;
+        totalTokens: number;
+        cost: number;
+      }>>((acc, g) => {
+        if (!g.provider) return acc;
+        acc.push({
+          provider: g.provider,
+          calls: g._count._all,
+          llmCalls: g._sum.llmCalls ?? 0,
+          totalTokens: g._sum.totalTokens ?? 0,
+          cost: g._sum.cost ?? 0,
+        });
+        return acc;
+      }, [])
+      .sort((a, b) => b.llmCalls - a.llmCalls);
+
+    const byModel = modelGroups
+      .reduce<Array<{
+        model: string;
+        calls: number;
+        llmCalls: number;
+        totalTokens: number;
+        cost: number;
+      }>>((acc, g) => {
+        if (!g.model) return acc;
+        acc.push({
+          model: g.model,
+          calls: g._count._all,
+          llmCalls: g._sum.llmCalls ?? 0,
+          totalTokens: g._sum.totalTokens ?? 0,
+          cost: g._sum.cost ?? 0,
+        });
+        return acc;
+      }, [])
+      .sort((a, b) => b.llmCalls - a.llmCalls);
+
+    const byDayMap = new Map<string, {
+      date: string;
+      calls: number;
+      llmCalls: number;
+      totalTokens: number;
+      cost: number;
+      totalLatencyMs: number;
+      errors: number;
+    }>();
+    const byPeriodMap = new Map<string, {
+      period: string;
+      calls: number;
+      llmCalls: number;
+      totalTokens: number;
+      cost: number;
+      totalLatencyMs: number;
+      errors: number;
+    }>();
+
+    const INTERVIEW_MODULES = new Set(['interview_evaluation', 'interview_invite']);
+    let interviewCalls = 0;
+    let interviewTokens = 0;
+    let interviewCost = 0;
+    let interviewLatencyMs = 0;
+    let interviewErrors = 0;
+    let resumeMatchCalls = 0;
+    let resumeMatchTokens = 0;
+    let resumeMatchCost = 0;
+    let resumeMatchLatencyMs = 0;
+    let resumeMatchErrors = 0;
+    let errorCount = 0;
+
+    for (const r of timelineRecords) {
+      const dayKey = startOfDayUTC(r.createdAt);
+      const periodKey = bucketTimestamp(r.createdAt, bucket);
+
+      const dayEntry = byDayMap.get(dayKey) ?? {
+        date: dayKey,
+        calls: 0,
+        llmCalls: 0,
+        totalTokens: 0,
+        cost: 0,
+        totalLatencyMs: 0,
+        errors: 0,
+      };
+      dayEntry.calls += 1;
+      dayEntry.llmCalls += r.llmCalls;
+      dayEntry.totalTokens += r.totalTokens;
+      dayEntry.cost += r.cost;
+      dayEntry.totalLatencyMs += r.durationMs;
+      if (r.statusCode >= 400) dayEntry.errors += 1;
+      byDayMap.set(dayKey, dayEntry);
+
+      const periodEntry = byPeriodMap.get(periodKey) ?? {
+        period: periodKey,
+        calls: 0,
+        llmCalls: 0,
+        totalTokens: 0,
+        cost: 0,
+        totalLatencyMs: 0,
+        errors: 0,
+      };
+      periodEntry.calls += 1;
+      periodEntry.llmCalls += r.llmCalls;
+      periodEntry.totalTokens += r.totalTokens;
+      periodEntry.cost += r.cost;
+      periodEntry.totalLatencyMs += r.durationMs;
+      if (r.statusCode >= 400) periodEntry.errors += 1;
+      byPeriodMap.set(periodKey, periodEntry);
+
+      if (r.statusCode >= 400) errorCount += 1;
+
+      if (r.module === 'resume_match') {
+        resumeMatchCalls += 1;
+        resumeMatchTokens += r.totalTokens;
+        resumeMatchCost += r.cost;
+        resumeMatchLatencyMs += r.durationMs;
+        if (r.statusCode >= 400) resumeMatchErrors += 1;
+      }
+
+      if (INTERVIEW_MODULES.has(r.module)) {
+        interviewCalls += 1;
+        interviewTokens += r.totalTokens;
+        interviewCost += r.cost;
+        interviewLatencyMs += r.durationMs;
+        if (r.statusCode >= 400) interviewErrors += 1;
+      }
+    }
+
+    const byDay = Array.from(byDayMap.values())
+      .map((entry) => ({
+        ...entry,
+        avgLatencyMs: entry.calls > 0 ? Math.round(entry.totalLatencyMs / entry.calls) : 0,
+        errorRate: entry.calls > 0 ? entry.errors / entry.calls : 0,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const byPeriod = Array.from(byPeriodMap.values())
+      .map((entry) => ({
+        ...entry,
+        avgLatencyMs: entry.calls > 0 ? Math.round(entry.totalLatencyMs / entry.calls) : 0,
+        errorRate: entry.calls > 0 ? entry.errors / entry.calls : 0,
+      }))
+      .sort((a, b) => a.period.localeCompare(b.period));
+
+    const byInterview = byApi.filter((entry) => INTERVIEW_MODULES.has(entry.module));
+    const byResumeMatch = byApi.filter((entry) => entry.module === 'resume_match');
+
+    const uniqueUsers = new Set(timelineRecords.map((r) => r.userId).filter(Boolean)).size;
+
+    res.json({
+      success: true,
+      data: {
+        filters: {
+          from: from.toISOString(),
+          to: to.toISOString(),
+          bucket,
+          userId: userId || null,
+          module: moduleFilter || null,
+          endpoint: endpointFilter || null,
+        },
+        totals: {
+          calls: totalCalls,
+          uniqueUsers,
+          llmCalls: aggregates._sum.llmCalls ?? 0,
+          promptTokens: aggregates._sum.promptTokens ?? 0,
+          completionTokens: aggregates._sum.completionTokens ?? 0,
+          totalTokens: aggregates._sum.totalTokens ?? 0,
+          cost: aggregates._sum.cost ?? 0,
+          totalLatencyMs: aggregates._sum.durationMs ?? 0,
+          avgLatencyMs: Math.round(aggregates._avg.durationMs ?? 0),
+          errorCount,
+          errorRate: totalCalls > 0 ? errorCount / totalCalls : 0,
+          interviewCalls,
+          resumeMatchCalls,
+        },
+        workflow: {
+          interview: {
+            calls: interviewCalls,
+            totalTokens: interviewTokens,
+            cost: interviewCost,
+            avgLatencyMs: interviewCalls > 0 ? Math.round(interviewLatencyMs / interviewCalls) : 0,
+            errorRate: interviewCalls > 0 ? interviewErrors / interviewCalls : 0,
+          },
+          resumeMatch: {
+            calls: resumeMatchCalls,
+            totalTokens: resumeMatchTokens,
+            cost: resumeMatchCost,
+            avgLatencyMs: resumeMatchCalls > 0 ? Math.round(resumeMatchLatencyMs / resumeMatchCalls) : 0,
+            errorRate: resumeMatchCalls > 0 ? resumeMatchErrors / resumeMatchCalls : 0,
+          },
+        },
+        byDay,
+        byPeriod,
+        byUser,
+        byModule,
+        byApi,
+        byInterview,
+        byResumeMatch,
+        byProvider,
+        byModel,
+      },
+    });
+  } catch (error) {
+    console.error('Admin usage analytics error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load usage analytics' });
   }
 });
 

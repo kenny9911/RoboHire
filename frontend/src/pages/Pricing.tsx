@@ -480,7 +480,7 @@ export default function Pricing() {
                 {t('pricing.cta.title', 'Ready to streamline your hiring?')}
               </h2>
               <p className="text-indigo-100 mb-8 text-lg">
-                {t('pricing.cta.subtitle', 'Join thousands of companies using AI to hire faster and smarter.')}
+                {t('pricing.cta.subtitle', 'Join 500+ companies using AI to hire faster and smarter.')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link

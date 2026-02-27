@@ -58,6 +58,7 @@ export default function Hero() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-600">
+            {t('landing.hero.definition', 'RoboHire is an AI-powered recruitment platform that automates resume screening, conducts AI-led interviews, and delivers structured evaluation reports for every candidate.')}{' '}
             {t('landing.hero.subheadline', 'Say goodbye to spending long hours going through piles of resumes. Our AI hiring agent vets candidates, conducts interviews, and delivers comprehensive evaluation reports automatically.')}
           </p>
 

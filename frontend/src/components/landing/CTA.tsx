@@ -18,7 +18,7 @@ export default function CTA() {
               {t('landing.cta.title', 'Ready to Hire Smarter?')}
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-300">
-              {t('landing.cta.subtitle', 'Join hundreds of companies using AI to find elite candidates faster. Start your free trial today.')}
+              {t('landing.cta.subtitle', 'Join 500+ companies using AI to find elite candidates faster. Start your free trial today.')}
             </p>
 
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">

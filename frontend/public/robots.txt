@@ -7,9 +7,9 @@ Allow: /start-hiring
 Allow: /quick-invite
 Allow: /request-demo
 Allow: /docs/
-Allow: /login
 
 # Block protected/internal routes
+Disallow: /login
 Disallow: /dashboard
 Disallow: /dashboard/
 Disallow: /api-playground/

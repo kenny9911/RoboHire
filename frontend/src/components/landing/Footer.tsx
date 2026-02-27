@@ -24,22 +24,13 @@ export default function Footer() {
         { label: t('landing.footer.apiKeys', 'API Keys'), href: '/dashboard/api-keys' },
       ],
     },
-    company: {
-      title: t('landing.footer.company', 'Company'),
+    resources: {
+      title: t('landing.footer.resources', 'Resources'),
       links: [
-        { label: t('landing.footer.about', 'About Us'), href: '/about' },
-        { label: t('landing.footer.blog', 'Blog'), href: '/blog' },
-        { label: t('landing.footer.careers', 'Careers'), href: '/careers' },
-        { label: t('landing.footer.contact', 'Contact'), href: '/contact' },
-      ],
-    },
-    legal: {
-      title: t('landing.footer.legal', 'Legal'),
-      links: [
-        { label: t('landing.footer.privacy', 'Privacy Policy'), href: '/privacy' },
-        { label: t('landing.footer.terms', 'Terms of Service'), href: '/terms' },
-        { label: t('landing.footer.cookies', 'Cookie Policy'), href: '/cookies' },
-        { label: t('landing.footer.security', 'Security'), href: '/security' },
+        { label: t('landing.footer.requestDemo', 'Request Demo'), href: '/request-demo' },
+        { label: t('landing.footer.quickInvite', 'Quick Invite'), href: '/quick-invite' },
+        { label: t('landing.footer.startHiringLink', 'Start Hiring'), href: '/start-hiring' },
+        { label: t('landing.footer.login', 'Log In'), href: '/login' },
       ],
     },
   };
@@ -132,14 +123,14 @@ export default function Footer() {
             © {new Date().getFullYear()} RoboHire. {t('landing.footer.rights', 'All rights reserved.')}
           </p>
           <div className="flex items-center gap-6 text-sm text-slate-500">
-            <Link to="/privacy" className="transition-colors hover:text-white">
-              {t('landing.footer.privacy', 'Privacy')}
+            <Link to="/pricing" className="transition-colors hover:text-white">
+              {t('landing.footer.pricing', 'Pricing')}
             </Link>
-            <Link to="/terms" className="transition-colors hover:text-white">
-              {t('landing.footer.terms', 'Terms')}
+            <Link to="/docs" className="transition-colors hover:text-white">
+              {t('landing.footer.docs', 'Docs')}
             </Link>
-            <Link to="/cookies" className="transition-colors hover:text-white">
-              {t('landing.footer.cookies', 'Cookies')}
+            <Link to="/developers" className="transition-colors hover:text-white">
+              {t('landing.footer.api', 'API')}
             </Link>
           </div>
         </div>

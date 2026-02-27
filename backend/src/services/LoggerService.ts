@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getCurrentRequestId } from '../lib/requestContext.js';
 
 // Log levels
 export enum LogLevel {
@@ -43,6 +44,29 @@ export interface RequestContext {
   llmCalls: LLMUsage[];
   totalCost: number;
   totalTokens: number;
+  endTime?: number;
+  duration?: number;
+  status?: 'success' | 'error';
+  statusCode?: number;
+}
+
+export interface RequestUsageSnapshot {
+  requestId: string;
+  endpoint: string;
+  method: string;
+  durationMs: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  totalCost: number;
+  lastModel: string | null;
+  lastProvider: string | null;
+  llmCallsCount: number;
+  llmCalls: LLMUsage[];
+  startedAt: string;
+  endedAt?: string;
+  status?: 'success' | 'error';
+  statusCode?: number;
 }
 
 // Step logging
@@ -90,6 +114,8 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
 class LoggerService extends EventEmitter {
   private logLevel: LogLevel;
   private requestContexts: Map<string, RequestContext> = new Map();
+  private completedRequestContexts: Map<string, { context: RequestContext; completedAt: number }> = new Map();
+  private readonly snapshotTtlMs = 6 * 60 * 60 * 1000; // 6 hours
   private globalStats = {
     totalRequests: 0,
     totalLLMCalls: 0,
@@ -253,6 +279,15 @@ class LoggerService extends EventEmitter {
     }
   }
 
+  private pruneCompletedRequestContexts(): void {
+    const now = Date.now();
+    for (const [requestId, snapshot] of this.completedRequestContexts.entries()) {
+      if (now - snapshot.completedAt > this.snapshotTtlMs) {
+        this.completedRequestContexts.delete(requestId);
+      }
+    }
+  }
+
   private log(level: LogLevel, category: string, message: string, metadata?: Record<string, unknown>, requestId?: string): void {
     if (level < this.logLevel) return;
 
@@ -320,6 +355,16 @@ class LoggerService extends EventEmitter {
 
   // Request tracking
   startRequest(requestId: string, endpoint: string, method: string): RequestContext {
+    const existing = this.requestContexts.get(requestId);
+    if (existing) {
+      return existing;
+    }
+
+    const completed = this.completedRequestContexts.get(requestId);
+    if (completed) {
+      return completed.context;
+    }
+
     const context: RequestContext = {
       requestId,
       startTime: Date.now(),
@@ -342,10 +387,16 @@ class LoggerService extends EventEmitter {
   }
 
   endRequest(requestId: string, status: 'success' | 'error', statusCode?: number): void {
+    this.pruneCompletedRequestContexts();
+
     const context = this.requestContexts.get(requestId);
     if (!context) return;
 
     const duration = Date.now() - context.startTime;
+    context.endTime = Date.now();
+    context.duration = duration;
+    context.status = status;
+    context.statusCode = statusCode;
     this.globalStats.totalDuration += duration;
 
     const symbol = status === 'success' ? '✓' : '✗';
@@ -364,6 +415,10 @@ class LoggerService extends EventEmitter {
     // Log summary
     this.logRequestSummary(context, duration);
 
+    this.completedRequestContexts.set(requestId, {
+      context: { ...context, llmCalls: [...context.llmCalls], steps: [...context.steps] },
+      completedAt: Date.now(),
+    });
     this.requestContexts.delete(requestId);
   }
 
@@ -405,6 +460,8 @@ class LoggerService extends EventEmitter {
       requestId: context.requestId,
       endpoint: context.endpoint,
       method: context.method,
+      status: context.status,
+      statusCode: context.statusCode,
       duration: totalDuration,
       formattedDuration: this.formatDuration(totalDuration),
       stepsCount: context.steps.length,
@@ -574,7 +631,27 @@ class LoggerService extends EventEmitter {
     lastModel: string | null;
     lastProvider: string | null;
   } | null {
-    const ctx = this.requestContexts.get(requestId);
+    const snapshot = this.getRequestSnapshot(requestId);
+    if (!snapshot) return null;
+
+    return {
+      promptTokens: snapshot.promptTokens,
+      completionTokens: snapshot.completionTokens,
+      totalTokens: snapshot.totalTokens,
+      totalCost: snapshot.totalCost,
+      lastModel: snapshot.lastModel,
+      lastProvider: snapshot.lastProvider,
+    };
+  }
+
+  hasActiveRequestContext(requestId: string): boolean {
+    return this.requestContexts.has(requestId);
+  }
+
+  getRequestSnapshot(requestId: string): RequestUsageSnapshot | null {
+    this.pruneCompletedRequestContexts();
+
+    const ctx = this.requestContexts.get(requestId) ?? this.completedRequestContexts.get(requestId)?.context;
     if (!ctx) return null;
 
     let promptTokens = 0;
@@ -589,13 +666,26 @@ class LoggerService extends EventEmitter {
       lastProvider = call.provider;
     }
 
+    const now = Date.now();
+    const durationMs = ctx.duration ?? ((ctx.endTime ?? now) - ctx.startTime);
+
     return {
+      requestId: ctx.requestId,
+      endpoint: ctx.endpoint,
+      method: ctx.method,
+      durationMs,
       promptTokens,
       completionTokens,
       totalTokens: ctx.totalTokens,
       totalCost: ctx.totalCost,
       lastModel,
       lastProvider,
+      llmCallsCount: ctx.llmCalls.length,
+      llmCalls: [...ctx.llmCalls],
+      startedAt: new Date(ctx.startTime).toISOString(),
+      endedAt: ctx.endTime ? new Date(ctx.endTime).toISOString() : undefined,
+      status: ctx.status,
+      statusCode: ctx.statusCode,
     };
   }
 
@@ -626,5 +716,7 @@ export const logger = new LoggerService();
 
 // Request ID generator
 export function generateRequestId(): string {
+  const currentRequestId = getCurrentRequestId();
+  if (currentRequestId) return currentRequestId;
   return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }

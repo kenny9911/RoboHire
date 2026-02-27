@@ -124,18 +124,32 @@ export default function SEO({
           '@context': 'https://schema.org',
           '@type': 'SoftwareApplication',
           name: 'RoboHire',
+          url: SITE_URL,
           applicationCategory: 'BusinessApplication',
           operatingSystem: 'Web',
+          featureList: 'AI Resume Screening, Automated Interviews, Candidate Evaluation Reports, ATS Integration, Multi-language Support',
           offers: {
             '@type': 'Offer',
             price: '0',
             priceCurrency: 'USD',
             description: 'Free trial available',
           },
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: '4.8',
-            ratingCount: '150',
+        })}
+      </script>
+
+      {/* Structured Data - WebSite with SearchAction */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'RoboHire',
+          url: SITE_URL,
+          description: defaultDesc,
+          inLanguage: SUPPORTED_LANGS,
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: `${SITE_URL}/docs?q={search_term_string}`,
+            'query-input': 'required name=search_term_string',
           },
         })}
       </script>
@@ -143,7 +157,7 @@ export default function SEO({
       {/* Page-specific Structured Data */}
       {structuredData && (
         <script type="application/ld+json">
-          {JSON.stringify({ '@context': 'https://schema.org', ...structuredData })}
+          {JSON.stringify(structuredData['@context'] ? structuredData : { '@context': 'https://schema.org', ...structuredData })}
         </script>
       )}
     </Helmet>

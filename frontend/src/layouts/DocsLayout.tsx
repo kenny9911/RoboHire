@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 
 interface NavItem {
@@ -50,8 +51,31 @@ export default function DocsLayout() {
     section.items.some(item => location.pathname === item.href)
   );
 
+  const currentPage = currentSection?.items.find(item => location.pathname === item.href);
+
+  const breadcrumbSchema = useMemo(() => {
+    if (!currentSection || !currentPage) return null;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://robohire.io' },
+        { '@type': 'ListItem', position: 2, name: 'Docs', item: 'https://robohire.io/docs/overview' },
+        { '@type': 'ListItem', position: 3, name: currentSection.title, item: `https://robohire.io${currentSection.items[0].href}` },
+        ...(currentPage.href !== currentSection.items[0].href
+          ? [{ '@type': 'ListItem', position: 4, name: currentPage.title, item: `https://robohire.io${currentPage.href}` }]
+          : []),
+      ],
+    };
+  }, [currentSection, currentPage]);
+
   return (
     <div className="min-h-screen bg-white">
+      {breadcrumbSchema && (
+        <Helmet>
+          <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+        </Helmet>
+      )}
       {/* Top Navigation */}
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
         <div className="landing-glass mx-auto flex h-16 max-w-7xl items-center justify-between rounded-2xl border border-slate-200/80 px-4 shadow-[0_24px_48px_-36px_rgba(15,23,42,0.5)] sm:h-[74px] sm:px-6 lg:px-8">

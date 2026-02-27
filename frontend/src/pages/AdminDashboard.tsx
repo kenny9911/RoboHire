@@ -1,4 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
@@ -34,12 +45,93 @@ interface AdjustmentRecord {
 
 interface SystemStats {
   totalUsers: number;
-  usersByTier: Record<string, number>;
+  usersByTier?: Record<string, number>;
+  byTier?: Record<string, number>;
   activeSubscriptions: number;
   totalRevenue: number;
   newUsersThisMonth: number;
-  totalInterviewsUsed: number;
-  totalMatchesUsed: number;
+  totalInterviewsUsed?: number;
+  totalMatchesUsed?: number;
+  totalInterviews?: number;
+  totalMatches?: number;
+}
+
+type AnalyticsBucket = 'hour' | 'day' | 'week';
+
+interface UsageTimeRow {
+  date?: string;
+  period?: string;
+  calls: number;
+  llmCalls: number;
+  totalTokens: number;
+  cost: number;
+  avgLatencyMs: number;
+  errorRate: number;
+}
+
+interface UsageTopRow {
+  module?: string;
+  apiName?: string;
+  endpoint?: string;
+  method?: string;
+  email?: string;
+  userId?: string | null;
+  calls: number;
+  llmCalls: number;
+  totalTokens: number;
+  cost: number;
+  avgLatencyMs: number;
+}
+
+interface UsageAnalytics {
+  filters: {
+    from: string;
+    to: string;
+    bucket: AnalyticsBucket;
+    userId: string | null;
+    module: string | null;
+    endpoint: string | null;
+  };
+  totals: {
+    calls: number;
+    uniqueUsers: number;
+    llmCalls: number;
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    cost: number;
+    totalLatencyMs: number;
+    avgLatencyMs: number;
+    errorCount: number;
+    errorRate: number;
+    interviewCalls: number;
+    resumeMatchCalls: number;
+  };
+  workflow: {
+    interview: {
+      calls: number;
+      totalTokens: number;
+      cost: number;
+      avgLatencyMs: number;
+      errorRate: number;
+    };
+    resumeMatch: {
+      calls: number;
+      totalTokens: number;
+      cost: number;
+      avgLatencyMs: number;
+      errorRate: number;
+    };
+  };
+  byDay: UsageTimeRow[];
+  byPeriod: UsageTimeRow[];
+  byUser: UsageTopRow[];
+  byModule: UsageTopRow[];
+  byApi: UsageTopRow[];
+  byInterview: UsageTopRow[];
+  byResumeMatch: UsageTopRow[];
+  byProvider: Array<{ provider: string; calls: number; llmCalls: number; totalTokens: number; cost: number }>;
+  byModel: Array<{ model: string; calls: number; llmCalls: number; totalTokens: number; cost: number }>;
 }
 
 // --- Helpers ---
@@ -87,7 +179,7 @@ const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
   custom: { interviews: Infinity, matches: Infinity },
 };
 
-const TABS = ['Overview', 'Users', 'Pricing', 'Settings'] as const;
+const TABS = ['Overview', 'Analytics', 'Users', 'Pricing', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 
 // --- Badge helpers ---
@@ -120,6 +212,24 @@ function statusBadge(status: string) {
   );
 }
 
+function formatTokens(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(value);
+}
+
+function formatMoney(value: number): string {
+  return `$${value.toFixed(4)}`;
+}
+
+function formatPercent(value: number): string {
+  return `${(value * 100).toFixed(2)}%`;
+}
+
+function toDateInputValue(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
 // ========== TAB COMPONENTS ==========
 
 function OverviewTab() {
@@ -138,13 +248,17 @@ function OverviewTab() {
   if (error) return <p className="text-sm text-red-600 p-6">{error}</p>;
   if (!stats) return null;
 
+  const usersByTier = stats.usersByTier || stats.byTier || {};
+  const interviewsUsed = stats.totalInterviewsUsed ?? stats.totalInterviews ?? 0;
+  const matchesUsed = stats.totalMatchesUsed ?? stats.totalMatches ?? 0;
+
   const cards = [
     { label: 'Total Users', value: stats.totalUsers, color: 'bg-indigo-50 text-indigo-700' },
     { label: 'Active Subscriptions', value: stats.activeSubscriptions, color: 'bg-green-50 text-green-700' },
     { label: 'New This Month', value: stats.newUsersThisMonth, color: 'bg-blue-50 text-blue-700' },
     { label: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, color: 'bg-emerald-50 text-emerald-700' },
-    { label: 'Interviews Used', value: stats.totalInterviewsUsed, color: 'bg-purple-50 text-purple-700' },
-    { label: 'Matches Used', value: stats.totalMatchesUsed, color: 'bg-amber-50 text-amber-700' },
+    { label: 'Interviews Used', value: interviewsUsed, color: 'bg-purple-50 text-purple-700' },
+    { label: 'Matches Used', value: matchesUsed, color: 'bg-amber-50 text-amber-700' },
   ];
 
   return (
@@ -162,7 +276,7 @@ function OverviewTab() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Users by Plan</h3>
         <div className="space-y-2">
-          {Object.entries(stats.usersByTier).map(([tier, count]) => (
+          {Object.entries(usersByTier).map(([tier, count]) => (
             <div key={tier} className="flex items-center gap-3">
               <div className="w-20">{tierBadge(tier)}</div>
               <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
@@ -175,6 +289,446 @@ function OverviewTab() {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function UsageAnalyticsTab() {
+  const [analytics, setAnalytics] = useState<UsageAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const [filters, setFilters] = useState<{
+    fromDate: string;
+    toDate: string;
+    bucket: AnalyticsBucket;
+    userId: string;
+    module: string;
+    endpoint: string;
+  }>(() => {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - 30);
+    return {
+      fromDate: toDateInputValue(from),
+      toDate: toDateInputValue(to),
+      bucket: 'day',
+      userId: '',
+      module: '',
+      endpoint: '',
+    };
+  });
+
+  const [appliedFilters, setAppliedFilters] = useState(filters);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAnalytics = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const params = new URLSearchParams();
+        params.set('bucket', appliedFilters.bucket);
+        if (appliedFilters.fromDate) {
+          params.set('from', new Date(`${appliedFilters.fromDate}T00:00:00.000Z`).toISOString());
+        }
+        if (appliedFilters.toDate) {
+          params.set('to', new Date(`${appliedFilters.toDate}T23:59:59.999Z`).toISOString());
+        }
+        if (appliedFilters.userId) params.set('userId', appliedFilters.userId);
+        if (appliedFilters.module.trim()) params.set('module', appliedFilters.module.trim());
+        if (appliedFilters.endpoint.trim()) params.set('endpoint', appliedFilters.endpoint.trim());
+
+        const data = await adminFetch(`/usage/analytics?${params.toString()}`);
+        if (!cancelled) {
+          setAnalytics(data.data as UsageAnalytics);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load usage analytics');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadAnalytics();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    appliedFilters.bucket,
+    appliedFilters.endpoint,
+    appliedFilters.fromDate,
+    appliedFilters.module,
+    appliedFilters.toDate,
+    appliedFilters.userId,
+  ]);
+
+  const moduleOptions = analytics?.byModule.map((row) => row.module || '').filter(Boolean) || [];
+  const userOptions =
+    analytics?.byUser.filter((row) => Boolean(row.userId)).slice(0, 200).map((row) => ({
+      id: row.userId as string,
+      label: row.email || row.userId || 'Unknown user',
+    })) || [];
+  const chartRows = (analytics?.byPeriod || []).map((row) => ({
+    label: row.period || row.date || '',
+    calls: row.calls,
+    llmCalls: row.llmCalls,
+    totalTokens: row.totalTokens,
+    cost: row.cost,
+  }));
+  const topApis = (analytics?.byApi || []).slice(0, 8);
+  const topUsers = (analytics?.byUser || []).slice(0, 8);
+  const topModules = (analytics?.byModule || []).slice(0, 8);
+  const topProviders = (analytics?.byProvider || []).slice(0, 8);
+  const topModels = (analytics?.byModel || []).slice(0, 8);
+  const topInterviewApis = (analytics?.byInterview || []).slice(0, 6);
+  const topResumeMatchApis = (analytics?.byResumeMatch || []).slice(0, 6);
+
+  return (
+    <div className="space-y-6">
+      <div className="landing-gradient-stroke rounded-3xl bg-white/90 p-6 shadow-[0_30px_56px_-42px_rgba(15,23,42,0.7)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="landing-display text-2xl font-semibold text-slate-900">Usage Analytics</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Unified logs for API calls, tokens, model/provider usage, latency, and cost.
+            </p>
+          </div>
+          <button
+            onClick={() => setAppliedFilters(filters)}
+            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_20px_36px_-24px_rgba(37,99,235,0.95)] hover:-translate-y-0.5 transition-transform"
+          >
+            Apply Filters
+          </button>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          <label className="text-xs font-medium text-slate-500">
+            From
+            <input
+              type="date"
+              value={filters.fromDate}
+              onChange={(e) => setFilters((prev) => ({ ...prev, fromDate: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"
+            />
+          </label>
+
+          <label className="text-xs font-medium text-slate-500">
+            To
+            <input
+              type="date"
+              value={filters.toDate}
+              onChange={(e) => setFilters((prev) => ({ ...prev, toDate: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"
+            />
+          </label>
+
+          <label className="text-xs font-medium text-slate-500">
+            Bucket
+            <select
+              value={filters.bucket}
+              onChange={(e) => setFilters((prev) => ({ ...prev, bucket: e.target.value as AnalyticsBucket }))}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"
+            >
+              <option value="hour">Hour</option>
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+            </select>
+          </label>
+
+          <label className="text-xs font-medium text-slate-500">
+            Module
+            <input
+              list="admin-analytics-modules"
+              value={filters.module}
+              onChange={(e) => setFilters((prev) => ({ ...prev, module: e.target.value }))}
+              placeholder="e.g. resume_match"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"
+            />
+            <datalist id="admin-analytics-modules">
+              {moduleOptions.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
+          </label>
+
+          <label className="text-xs font-medium text-slate-500">
+            User
+            <select
+              value={filters.userId}
+              onChange={(e) => setFilters((prev) => ({ ...prev, userId: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"
+            >
+              <option value="">All users</option>
+              {userOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-xs font-medium text-slate-500">
+            Endpoint Search
+            <input
+              type="text"
+              value={filters.endpoint}
+              onChange={(e) => setFilters((prev) => ({ ...prev, endpoint: e.target.value }))}
+              placeholder="/api/v1/..."
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"
+            />
+          </label>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center text-sm text-slate-500">
+          Loading usage analytics...
+        </div>
+      ) : error ? (
+        <div className="rounded-3xl border border-rose-200 bg-rose-50 px-6 py-4 text-sm text-rose-700">{error}</div>
+      ) : !analytics ? (
+        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500">
+          No analytics data available.
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="API Calls" value={String(analytics.totals.calls)} />
+            <StatCard label="LLM Calls" value={String(analytics.totals.llmCalls)} />
+            <StatCard label="Total Tokens" value={formatTokens(analytics.totals.totalTokens)} />
+            <StatCard label="LLM Cost" value={formatMoney(analytics.totals.cost)} />
+            <StatCard label="Unique Users" value={String(analytics.totals.uniqueUsers)} />
+            <StatCard label="Avg Latency" value={`${analytics.totals.avgLatencyMs} ms`} />
+            <StatCard label="Error Rate" value={formatPercent(analytics.totals.errorRate)} />
+            <StatCard label="Interview / Match" value={`${analytics.totals.interviewCalls} / ${analytics.totals.resumeMatchCalls}`} />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <WorkflowCard
+              title="Interview Workflows"
+              calls={analytics.workflow.interview.calls}
+              tokens={analytics.workflow.interview.totalTokens}
+              cost={analytics.workflow.interview.cost}
+              latency={analytics.workflow.interview.avgLatencyMs}
+              errorRate={analytics.workflow.interview.errorRate}
+            />
+            <WorkflowCard
+              title="Resume Match Workflows"
+              calls={analytics.workflow.resumeMatch.calls}
+              tokens={analytics.workflow.resumeMatch.totalTokens}
+              cost={analytics.workflow.resumeMatch.cost}
+              latency={analytics.workflow.resumeMatch.avgLatencyMs}
+              errorRate={analytics.workflow.resumeMatch.errorRate}
+            />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <div className="landing-gradient-stroke rounded-3xl bg-white p-5">
+              <p className="text-sm font-semibold text-slate-700">Calls and LLM Calls by Period</p>
+              <div className="mt-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartRows}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip />
+                    <Area yAxisId="left" type="monotone" dataKey="calls" name="API Calls" stroke="#2563eb" fill="#bfdbfe" />
+                    <Area yAxisId="right" type="monotone" dataKey="llmCalls" name="LLM Calls" stroke="#0ea5e9" fill="#bae6fd" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="landing-gradient-stroke rounded-3xl bg-white p-5">
+              <p className="text-sm font-semibold text-slate-700">Tokens and Cost by Period</p>
+              <div className="mt-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartRows}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+                    <Tooltip
+                      formatter={(value, name) => {
+                        if (name === 'Cost (USD)') return formatMoney(Number(value));
+                        return formatTokens(Number(value));
+                      }}
+                    />
+                    <Bar yAxisId="left" dataKey="totalTokens" name="Tokens" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="cost" name="Cost (USD)" fill="#06b6d4" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <SimpleTable
+              title="Top Modules"
+              columns={['Module', 'Calls', 'Tokens', 'Cost']}
+              rows={topModules.map((row) => [
+                row.module || '-',
+                String(row.calls),
+                formatTokens(row.totalTokens),
+                formatMoney(row.cost),
+              ])}
+            />
+            <SimpleTable
+              title="Top APIs"
+              columns={['API', 'Method', 'Calls', 'Cost']}
+              rows={topApis.map((row) => [
+                row.apiName || row.endpoint || '-',
+                row.method || '-',
+                String(row.calls),
+                formatMoney(row.cost),
+              ])}
+            />
+            <SimpleTable
+              title="Top Users"
+              columns={['User', 'Calls', 'Tokens', 'Avg Latency']}
+              rows={topUsers.map((row) => [
+                row.email || row.userId || 'Anonymous',
+                String(row.calls),
+                formatTokens(row.totalTokens),
+                `${row.avgLatencyMs} ms`,
+              ])}
+            />
+            <SimpleTable
+              title="Providers / Models"
+              columns={['Type', 'Name', 'LLM Calls', 'Cost']}
+              rows={[
+                ...topProviders.map((row) => ['Provider', row.provider, String(row.llmCalls), formatMoney(row.cost)]),
+                ...topModels.map((row) => ['Model', row.model, String(row.llmCalls), formatMoney(row.cost)]),
+              ]}
+            />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <SimpleTable
+              title="Interview APIs"
+              columns={['API', 'Method', 'Calls', 'Cost']}
+              rows={topInterviewApis.map((row) => [
+                row.apiName || row.endpoint || '-',
+                row.method || '-',
+                String(row.calls),
+                formatMoney(row.cost),
+              ])}
+            />
+            <SimpleTable
+              title="Resume Match APIs"
+              columns={['API', 'Method', 'Calls', 'Cost']}
+              rows={topResumeMatchApis.map((row) => [
+                row.apiName || row.endpoint || '-',
+                row.method || '-',
+                String(row.calls),
+                formatMoney(row.cost),
+              ])}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="landing-gradient-stroke rounded-2xl bg-white p-4 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.6)]">
+      <p className="text-xs font-medium uppercase tracking-[0.11em] text-slate-500">{label}</p>
+      <p className="landing-display mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function WorkflowCard({
+  title,
+  calls,
+  tokens,
+  cost,
+  latency,
+  errorRate,
+}: {
+  title: string;
+  calls: number;
+  tokens: number;
+  cost: number;
+  latency: number;
+  errorRate: number;
+}) {
+  return (
+    <div className="landing-gradient-stroke rounded-3xl bg-white p-5">
+      <p className="text-sm font-semibold text-slate-700">{title}</p>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <MetricLine label="Calls" value={String(calls)} />
+        <MetricLine label="Tokens" value={formatTokens(tokens)} />
+        <MetricLine label="Cost" value={formatMoney(cost)} />
+        <MetricLine label="Latency" value={`${latency} ms`} />
+      </div>
+      <p className="mt-4 text-xs text-slate-500">Error rate: {formatPercent(errorRate)}</p>
+    </div>
+  );
+}
+
+function MetricLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+      <p className="text-[11px] uppercase tracking-[0.09em] text-slate-500">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
+    </div>
+  );
+}
+
+function SimpleTable({
+  title,
+  columns,
+  rows,
+}: {
+  title: string;
+  columns: string[];
+  rows: string[][];
+}) {
+  return (
+    <div className="landing-gradient-stroke rounded-3xl bg-white p-5">
+      <p className="text-sm font-semibold text-slate-700">{title}</p>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 text-left text-slate-500">
+              {columns.map((column) => (
+                <th key={column} className="pb-2 pr-4 font-medium">
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length > 0 ? (
+              rows.map((row, idx) => (
+                <tr key={`${title}-${idx}`} className="border-b border-slate-100 last:border-b-0">
+                  {row.map((value, cellIdx) => (
+                    <td key={`${title}-${idx}-${cellIdx}`} className="py-2 pr-4 text-slate-700">
+                      {value}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="py-6 text-center text-slate-400">
+                  No data
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -702,7 +1256,7 @@ function PricingTab() {
   useEffect(() => {
     adminFetch('/config')
       .then((data) => {
-        const configs: { key: string; value: string }[] = data.data || [];
+        const configs: { key: string; value: string }[] = data.data?.configs || [];
         const p = { starter: '29', growth: '199', business: '399' };
         for (const c of configs) {
           if (c.key === 'price_starter_monthly') p.starter = c.value;
@@ -901,19 +1455,19 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       <SEO title="Admin" noIndex />
       {/* Tab bar */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-1">
+      <div className="landing-gradient-stroke rounded-3xl bg-white/90 p-2 shadow-[0_22px_44px_-36px_rgba(15,23,42,0.62)]">
+        <nav className="flex flex-wrap gap-2">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              className={`rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-[0_14px_26px_-18px_rgba(37,99,235,0.95)]'
+                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
               }`}
             >
               {tab}
@@ -924,6 +1478,7 @@ export default function AdminDashboard() {
 
       {/* Tab content */}
       {activeTab === 'Overview' && <OverviewTab />}
+      {activeTab === 'Analytics' && <UsageAnalyticsTab />}
       {activeTab === 'Users' && <UsersTab />}
       {activeTab === 'Pricing' && <PricingTab />}
       {activeTab === 'Settings' && <SettingsTab />}

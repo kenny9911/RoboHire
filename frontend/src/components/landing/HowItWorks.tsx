@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 
 export default function HowItWorks() {
@@ -26,8 +27,24 @@ export default function HowItWorks() {
     },
   ];
 
+  const howToSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: t('landing.howItWorks.title', 'Simple 4-Step Process'),
+    description: t('landing.howItWorks.subtitle', 'AI acts as your hiring agent - screening resumes, interviewing candidates, and delivering evaluation reports.'),
+    step: steps.map((step, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: step.title,
+      text: step.description,
+    })),
+  };
+
   return (
     <section id="how-it-works" className="py-24 lg:py-32">
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
+      </Helmet>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto mb-14 max-w-3xl text-center">
           <p className="inline-flex rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">

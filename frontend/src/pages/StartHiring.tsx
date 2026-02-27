@@ -816,9 +816,11 @@ export default function StartHiring() {
                         {/* Left: Requirements summary */}
                         {hiringData.requirements.trim() && (
                           <div style={{ width: `${splitPercent}%` }} className="flex-shrink-0 md:pr-0">
-                            <label className="mb-2 block text-xs font-medium uppercase tracking-[0.08em] text-slate-600">
-                              {t('hiring.requirementsLabel', 'Requirements')}
-                            </label>
+                            <div className="mb-2 flex min-h-[40px] items-end">
+                              <label className="block text-xs font-medium uppercase tracking-[0.08em] text-slate-600">
+                                {t('hiring.requirementsLabel', 'Requirements')}
+                              </label>
+                            </div>
                             <div className="h-[360px] w-full overflow-auto rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-inner shadow-slate-100/70 lg:h-[420px]">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
@@ -862,7 +864,7 @@ export default function StartHiring() {
                         )}
                         {/* Right: JD editor */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="mb-2 flex min-h-[40px] items-end justify-between">
                             <label className="block text-xs font-medium uppercase tracking-[0.08em] text-slate-600">
                               {t('hiring.jdLabel', 'Job description')}
                             </label>

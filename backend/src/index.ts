@@ -25,6 +25,7 @@ import demoRouter from './routes/demo.js';
 import checkoutRouter from './routes/checkout.js';
 import adminRouter from './routes/admin.js';
 import { attachRequestId } from './middleware/requestId.js';
+import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
 import { logger } from './services/LoggerService.js';
 import { documentStorage } from './services/DocumentStorageService.js';
 
@@ -50,6 +51,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(passport.initialize());
 app.use(attachRequestId);
+app.use(beginRequestLogging);
+app.use(persistRequestAudit);
 
 // API Routes
 app.use('/api/auth', authRouter);
