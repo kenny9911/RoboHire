@@ -7,6 +7,7 @@ import JsonViewer from '../components/JsonViewer';
 import ApiInfoPanel from '../components/ApiInfoPanel';
 import { useFormData } from '../context/FormDataContext';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO';
 
 interface MatchResponse {
   success: boolean;
@@ -82,6 +83,7 @@ export default function MatchResume() {
   if (!showForm && result?.success && result.data) {
     return (
       <div className="pb-8">
+        <SEO title="Match Resume - API Playground" noIndex />
         {/* Header with back button and view toggle */}
         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -139,6 +141,7 @@ export default function MatchResume() {
 
   return (
     <div>
+      <SEO title="Match Resume - API Playground" noIndex />
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-800">{t('pages.matchResume.title')}</h2>
         <p className="text-gray-500 mt-1">{t('pages.matchResume.subtitle')}</p>

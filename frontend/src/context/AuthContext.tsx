@@ -7,9 +7,18 @@ export interface User {
   name?: string;
   company?: string;
   avatar?: string;
+  role?: string;
   provider?: string;
   createdAt: string;
   updatedAt: string;
+  // Subscription
+  subscriptionTier?: string;
+  subscriptionStatus?: string;
+  currentPeriodEnd?: string;
+  trialEnd?: string;
+  interviewsUsed?: number;
+  resumeMatchesUsed?: number;
+  topUpBalance?: number;
 }
 
 interface AuthState {

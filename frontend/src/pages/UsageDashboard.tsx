@@ -5,6 +5,7 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { API_BASE } from '../config';
+import SEO from '../components/SEO';
 
 interface DailyData {
   date: string;
@@ -108,6 +109,7 @@ export default function UsageDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto">
+        <SEO title="Usage" noIndex />
         {/* Title + Range selector */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">{t('usage.title', 'API Usage')}</h1>

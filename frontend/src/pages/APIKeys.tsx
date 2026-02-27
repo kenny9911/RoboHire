@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
+import SEO from '../components/SEO';
 
 interface ApiKey {
   id: string;
@@ -391,6 +392,7 @@ export default function APIKeys() {
 
   return (
     <div className="max-w-4xl mx-auto">
+        <SEO title="API Keys" noIndex />
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">
@@ -447,7 +449,7 @@ export default function APIKeys() {
                 {t('apiKeys.noKeys', 'No API Keys')}
               </h3>
               <p className="text-gray-500 mb-4">
-                {t('apiKeys.noKeysDesc', 'Create your first API key to start using the RoboHire API.')}
+                {t('apiKeys.noKeysDesc', 'Create your first API key to start using the RoboHire.')}
               </p>
               <button
                 onClick={() => setShowNewKeyModal(true)}

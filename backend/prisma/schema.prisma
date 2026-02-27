@@ -17,6 +17,7 @@ model User {
   name          String?
   company       String?
   avatar        String?
+  role          String    @default("user") // 'user' or 'admin'
   provider      String?   // 'email', 'google', 'github', 'linkedin'
   providerId    String?
   createdAt     DateTime  @default(now())
@@ -28,14 +29,19 @@ model User {
   subscriptionStatus  String    @default("active") // active, past_due, canceled
   subscriptionId      String?
   currentPeriodEnd    DateTime?
+  trialEnd            DateTime?
   interviewsUsed      Int       @default(0)
   resumeMatchesUsed   Int       @default(0)
+  topUpBalance        Float     @default(0)
   
   hiringRequests  HiringRequest[]
   sessions        Session[]
   hiringSessions  HiringSession[]
   apiKeys         ApiKey[]
   usageRecords    ApiUsageRecord[]
+  topUpRecords    TopUpRecord[]
+  adminAdjustmentsReceived  AdminAdjustment[] @relation("AdminAdjustmentsReceived")
+  adminAdjustmentsMade      AdminAdjustment[] @relation("AdminAdjustmentsMade")
 
   @@index([email])
   @@index([provider, providerId])
@@ -152,4 +158,51 @@ model ApiUsageRecord {
   @@index([endpoint])
   @@index([userId, createdAt])
   @@index([apiKeyId, createdAt])
+}
+
+model TopUpRecord {
+  id                  String   @id @default(cuid())
+  userId              String
+  stripeSessionId     String   @unique  // Stripe Checkout Session ID for idempotency
+  stripePaymentIntent String?  @unique  // Stripe PaymentIntent ID
+  amountCents         Int
+  amountDollars       Float
+  status              String   @default("pending") // pending, completed, failed
+  creditedAt          DateTime?
+  createdAt           DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stripeSessionId])
+  @@index([stripePaymentIntent])
+}
+
+model AdminAdjustment {
+  id          String   @id @default(cuid())
+  userId      String
+  adminId     String
+  type        String   // "balance", "usage_interview", "usage_match", "subscription"
+  amount      Float?
+  oldValue    String?
+  newValue    String?
+  reason      String
+  createdAt   DateTime @default(now())
+
+  user  User @relation("AdminAdjustmentsReceived", fields: [userId], references: [id], onDelete: Cascade)
+  admin User @relation("AdminAdjustmentsMade", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model AppConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@index([key])
 }

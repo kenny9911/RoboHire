@@ -11,10 +11,21 @@ export interface User {
   name: string | null;
   company: string | null;
   avatar: string | null;
+  role: string;
   provider: string | null;
   providerId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  // Subscription
+  stripeCustomerId: string | null;
+  subscriptionTier: string;
+  subscriptionStatus: string;
+  subscriptionId: string | null;
+  currentPeriodEnd: Date | null;
+  trialEnd: Date | null;
+  interviewsUsed: number;
+  resumeMatchesUsed: number;
+  topUpBalance: number;
 }
 
 export interface Session {
@@ -75,10 +86,20 @@ const DEMO_USER: PublicUser = {
   name: 'Demo User',
   company: 'RoboHire Demo',
   avatar: null,
+  role: 'user',
   provider: 'email',
   providerId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
+  stripeCustomerId: null,
+  subscriptionTier: 'free',
+  subscriptionStatus: 'active',
+  subscriptionId: null,
+  currentPeriodEnd: null,
+  trialEnd: null,
+  interviewsUsed: 0,
+  resumeMatchesUsed: 0,
+  topUpBalance: 0,
 };
 const DEMO_PASSWORD = 'demo1234';
 
@@ -250,18 +271,6 @@ class AuthService {
   async login(data: LoginData): Promise<AuthResult> {
     const { email, password } = data;
 
-    // Check for demo user (works without database)
-    if (email.toLowerCase() === DEMO_USER.email && password === DEMO_PASSWORD) {
-      const token = this.generateToken({ ...DEMO_USER, passwordHash: null } as any);
-      const sessionToken = this.generateSessionToken();
-      
-      return {
-        user: DEMO_USER,
-        token,
-        sessionToken,
-      };
-    }
-
     // Find user in database
     let user;
     try {
@@ -269,7 +278,12 @@ class AuthService {
         where: { email: email.toLowerCase() },
       });
     } catch (dbError) {
-      // Database not available, only demo user can login
+      // Database not available, allow demo user fallback
+      if (email.toLowerCase() === DEMO_USER.email && password === DEMO_PASSWORD) {
+        const token = this.generateToken({ ...DEMO_USER, passwordHash: null } as any);
+        const sessionToken = this.generateSessionToken();
+        return { user: DEMO_USER, token, sessionToken };
+      }
       throw new Error('Invalid email or password');
     }
 
@@ -371,24 +385,22 @@ class AuthService {
    * Get user by ID
    */
   async getUserById(id: string): Promise<PublicUser | null> {
-    // Check for demo user
-    if (id === DEMO_USER.id) {
-      return DEMO_USER;
-    }
-
     try {
       const user = await prisma.user.findUnique({
         where: { id },
       });
 
       if (!user) {
+        // Fallback to demo user if DB has no match
+        if (id === DEMO_USER.id) return DEMO_USER;
         return null;
       }
 
       const { passwordHash: _, ...userWithoutPassword } = user;
       return userWithoutPassword as PublicUser;
     } catch {
-      // Database not available
+      // Database not available, fallback to demo user
+      if (id === DEMO_USER.id) return DEMO_USER;
       return null;
     }
   }

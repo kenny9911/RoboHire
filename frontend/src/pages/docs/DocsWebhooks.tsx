@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { CodeBlock, ParamTable } from '../../components/docs';
+import SEO from '../../components/SEO';
 
 export default function DocsWebhooks() {
   const { t } = useTranslation();
@@ -66,6 +67,7 @@ app.post('/webhook', (req, res) => {
 
   return (
     <div>
+      <SEO title={t('seo.docsWebhooks.title', 'Webhooks')} description={t('seo.docsWebhooks.desc', 'Configure webhooks to receive real-time notifications about hiring events and interview completions.')} url="https://robohire.io/docs/webhooks" keywords={t('seo.docsWebhooks.keywords', 'RoboHire API documentation, webhooks, real-time notifications, hiring events')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.webhooks.title', 'Webhooks')}
       </h1>

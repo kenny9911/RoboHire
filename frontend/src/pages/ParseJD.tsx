@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import ResultViewer from '../components/ResultViewer';
 import ApiInfoPanel from '../components/ApiInfoPanel';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO';
 
 interface ApiResponse {
   requestId?: string;
@@ -58,6 +59,7 @@ export default function ParseJD() {
 
   return (
     <div>
+      <SEO title="Parse JD - API Playground" noIndex />
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-800">{t('pages.parseJd.title')}</h2>
         <p className="text-gray-500 mt-1">{t('pages.parseJd.subtitle')}</p>

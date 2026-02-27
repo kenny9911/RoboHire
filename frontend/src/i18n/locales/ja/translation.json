@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "RoboHire API",
+    "title": "RoboHire",
     "subtitle": "管理ダッシュボード"
   },
   "language": {
@@ -82,15 +82,15 @@
       "headline": "優秀な人材を",
       "headlineHighlight": "誰より早く",
       "subheadline": "大量の履歴書チェックに時間を奪われるのは終わり。RoboHireのAIが候補者をスクリーニングし、面接し、評価レポートまで自動で届けます。",
-      "ctaPrimary": "かんたん採用を始める",
-      "ctaSecondary": "APIを見る",
+      "ctaPrimary": "無料トライアル開始",
+      "ctaSecondary": "採用を始める",
       "stat1": "時間削減",
       "stat2": "選考スピード",
       "stat3": "導入企業",
       "stat4": "24時間稼働"
     },
     "services": {
-      "title": "採用の選択肢は2つ",
+      "title": "3つの強力な採用方法",
       "subtitle": "ニーズに合わせて選ぶか、両方使って最大効率へ。",
       "hiring": {
         "title": "採用を始める",
@@ -103,8 +103,19 @@
         "cta": "今すぐ始める",
         "badge": "一番人気"
       },
+      "quickInvite": {
+        "title": "かんたん面接招待",
+        "subtitle": "ワンクリック一括招待",
+        "description": "履歴書と職務記述をアップロードし、QRコードとリンク付きの面接招待を全候補者にワンクリックで送信。",
+        "feature1": "履歴書の一括アップロード（PDF）",
+        "feature2": "AI履歴書解析",
+        "feature3": "QRコード面接リンク",
+        "feature4": "ワンクリックメール招待",
+        "cta": "招待を始める",
+        "badge": "新機能"
+      },
       "api": {
-        "title": "RoboHire API",
+        "title": "RoboHire",
         "subtitle": "開発者向け",
         "description": "既存システムにAI採用機能を統合。履歴書解析、候補者マッチング、面接評価までAPIで。",
         "feature1": "履歴書＆JD解析",
@@ -175,7 +186,7 @@
     "cta": {
       "title": "スマート採用を始めませんか？",
       "subtitle": "AIで採用を加速する企業が続々参加中。無料トライアルは今すぐ。",
-      "primary": "かんたん採用を始める",
+      "primary": "無料トライアル開始",
       "secondary": "相談する",
       "benefit1": "クレジットカード不要",
       "benefit2": "14日間の無料トライアル",
@@ -214,7 +225,7 @@
   },
   "apiLanding": {
     "hero": {
-      "badge": "RoboHire API",
+      "badge": "RoboHire",
       "headline": "数分でAI採用機能を構築",
       "subheadline": "わずか数行のコードで、インテリジェントな履歴書マッチング、面接評価、候補者スクリーニングをアプリケーションに統合できます。",
       "getKey": "APIキーを取得",
@@ -223,7 +234,7 @@
     "what": {
       "badge": "これは何ですか？",
       "title": "強力なAI採用API",
-      "description": "RoboHire APIは、AI採用ツールの完全なスイートを提供します。シンプルなREST APIエンドポイントで、履歴書と職務記述のマッチング、ドキュメント解析、面接評価、候補者コミュニケーションの自動化を実現します。",
+      "description": "RoboHireは、AI採用ツールの完全なスイートを提供します。シンプルなREST APIエンドポイントで、履歴書と職務記述のマッチング、ドキュメント解析、面接評価、候補者コミュニケーションの自動化を実現します。",
       "exploreDocs": "ドキュメントを探索"
     },
     "howItWorks": {
@@ -233,7 +244,7 @@
     "steps": {
       "signup": {
         "title": "サインアップまたはログイン",
-        "desc": "無料アカウントを作成するか、ログインしてRoboHire APIダッシュボードにアクセスしてください。"
+        "desc": "無料アカウントを作成するか、ログインしてRoboHireダッシュボードにアクセスしてください。"
       },
       "apikey": {
         "title": "APIキーを取得",
@@ -309,6 +320,7 @@
     "titlePlaceholder": "例：シニア フルスタックエンジニア",
     "titleGenerating": "職種名を生成しています...",
     "titleError": "職種名を生成できませんでした。手動で編集してください。",
+    "requirementsLabel": "要件",
     "jdLabel": "職務内容",
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "ドラフトがここに表示されます...",
@@ -326,6 +338,7 @@
     "step2": "一致した候補者は自動的に面接されます",
     "step3": "上位候補の評価レポートが届きます",
     "visitDashboard": "ダッシュボードで進捗を確認し、候補者を管理できます。",
+    "chatError": "申し訳ありません、処理中に問題が発生しました。もう一度お試しください。",
     "errorCreating": "リクエスト作成中に問題が発生しました: ",
     "tryAgain": "もう一度お試しください。問題が続く場合はサポートへお問い合わせください。",
     "errorGeneric": "リクエスト作成中に問題が発生しました。もう一度お試しください。",
@@ -522,7 +535,9 @@
       "stats": "統計",
       "newHiring": "新規採用",
       "apiKeys": "APIキー",
-      "apiPlayground": "API テスト"
+      "apiPlayground": "API テスト",
+      "account": "アカウント",
+      "usage": "使用状況"
     },
     "welcome": "おかえりなさい",
     "user": "ユーザー",
@@ -636,7 +651,7 @@
     "inviteCandidate": {
       "title": "候補者を面接に招待",
       "subtitle": "RoboHire 一键邀约 API で面接招待を送信",
-      "toggleExternal": "外部 RoboHire API リクエストを表示",
+      "toggleExternal": "外部 RoboHire リクエストを表示",
       "externalHint": "RoboHire 一键邀约 API に送信された実際のリクエストを確認",
       "recruiterEmail": "採用担当メール",
       "interviewerRequirement": "面接要件",
@@ -664,7 +679,7 @@
       "errorMissingRecruiter": "採用担当メールを入力してください",
       "externalApiTitle": "RoboHire 外部 API",
       "copyCode": "コードをコピー",
-      "tip": "ヒント：このコードをコピーしてターミナル/コンソールで実行し、RoboHire API を直接テストできます"
+      "tip": "ヒント：このコードをコピーしてターミナル/コンソールで実行し、RoboHire を直接テストできます"
     },
     "parseResume": {
       "title": "レジュメ解析",
@@ -701,53 +716,137 @@
       "resultTitle": "評価結果",
       "loadingDefault": "面接を評価中...",
       "loadingWithCheating": "面接を評価し不正検知を実行中...",
+      "stepResume": "レジュメを読み込み中...",
+      "stepResumeDone": "レジュメ読み込み完了",
+      "stepJd": "職務記述を読み込み中...",
+      "stepJdDone": "職務記述読み込み完了",
+      "stepAnalyze": "面接を分析・評価中...",
+      "stepAnalyzeDone": "評価完了",
       "cheatingIncluded": "結果に不正検知分析が含まれています",
       "errorMissingFields": "レジュメ、職務記述、面接記録を入力してください",
       "jsonTitle": "評価結果 JSON"
+    },
+    "quickInvite": {
+      "title": "かんたん面接招待",
+      "subtitle": "履歴書をアップロードし、職務記述を入力して、全候補者に一括で面接招待を送信します。",
+      "stepSetup": "設定",
+      "stepReview": "確認",
+      "stepResults": "結果",
+      "jdTitle": "職務記述",
+      "jdDesc": "募集中のポジションの職務記述を貼り付けまたは入力してください。",
+      "jdPlaceholder": "職務記述を貼り付け...",
+      "resumesTitle": "候補者の履歴書",
+      "resumesDesc": "PDF履歴書をアップロードするか、履歴書テキストを貼り付けてください。複数追加できます。",
+      "uploading": "PDFからテキストを抽出中...",
+      "dropResumes": "クリックまたはドラッグで履歴書を追加",
+      "supportedFormats": "PDF、DOCX、XLSX、TXTファイル対応。複数ファイル可。",
+      "hideTextInput": "テキスト入力を隠す",
+      "pasteInstead": "またはテキストを貼り付け",
+      "pastePlaceholder": "履歴書テキストを貼り付け...",
+      "addResume": "履歴書を追加",
+      "pastedResume": "貼り付けた履歴書 #{{num}}",
+      "resumeCount": "{{count}} 件の履歴書を読み込み済み",
+      "pdfOnlyError": "対応していないファイル形式です。PDFまたはTXTファイルをアップロードしてください。",
+      "settingsTitle": "招待設定",
+      "recruiterEmail": "採用担当メール",
+      "interviewerReq": "面接官の要件",
+      "interviewerPlaceholder": "例：該当分野で5年以上の経験",
+      "optional": "任意",
+      "reviewAndSend": "確認して送信",
+      "reviewTitle": "送信前の確認",
+      "candidatesReady": "送信対象の候補者",
+      "from": "送信元",
+      "jdPreview": "職務記述",
+      "back": "戻る",
+      "sending": "招待を送信中...",
+      "sendInvitations": "招待を送信",
+      "sentSuccess": "送信完了",
+      "sentFailed": "失敗",
+      "totalProcessed": "処理件数",
+      "name": "氏名",
+      "email": "メール",
+      "position": "職位",
+      "scanQr": "QRコードをスキャン",
+      "qrHint": "スキャンして面接を開始",
+      "qrAlt": "面接QRコード",
+      "statusSent": "送信済み",
+      "statusFailed": "失敗",
+      "statusPending": "保留中",
+      "startNew": "新しいバッチを開始",
+      "goToDashboard": "ダッシュボードへ",
+      "authRequired": "サインインが必要です",
+      "authRequiredDesc": "面接招待を送信するにはサインインが必要です。",
+      "errorNoJd": "職務記述を入力してください。",
+      "errorNoResumes": "少なくとも1件の履歴書を追加してください。",
+      "uploadJd": "ファイルをアップロード",
+      "jdFormats": "PDF、DOCX、XLSX、TXT対応",
+      "viewResume": "履歴書全文を表示",
+      "extractFailed": "ファイルからテキストを抽出できませんでした。",
+      "resumePreviewChars": "{{count}} 文字",
+      "formattingResume": "AIでフォーマット中...",
+      "resumeSections": {
+        "summary": "概要",
+        "experience": "職歴",
+        "education": "学歴",
+        "skills": "スキル",
+        "projects": "プロジェクト",
+        "certifications": "資格",
+        "languages": "言語",
+        "awards": "受賞歴"
+      },
+      "viewJd": "フォーマット済みJDを表示",
+      "formattingJd": "AIでフォーマット中...",
+      "jdPreviewChars": "{{count}} 文字",
+      "jdSections": {
+        "overview": "概要",
+        "responsibilities": "職務内容",
+        "requirements": "応募要件",
+        "preferred": "歓迎条件",
+        "skills": "必要スキル",
+        "benefits": "福利厚生",
+        "about": "会社について"
+      }
     }
   },
   "pricing": {
     "seo": {
       "title": "料金プラン - あらゆるチームに対応するAI採用プラン",
-      "desc": "RoboHireの最適なプランを選択。無料プラン、スタートアップ $299/月、ビジネス $599/月、またはカスタムエンタープライズ。AI履歴書マッチングと面接機能を搭載。"
+      "desc": "RoboHireの最適なプランをお選びください。スターター $29/月、グロース $199/月、ビジネス $399/月、またはカスタム料金プラン。"
     },
     "label": "料金プラン",
     "headline": "あなたと共に",
     "headlineAccent": "成長する料金体系",
-    "subheadline": "無料で始めて、成長に合わせてスケール。使った分だけお支払い。",
-    "monthly": "月払い",
-    "annual": "年払い",
-    "save": "8%お得",
+    "subheadline": "シンプルで透明な料金体系。成長に合わせてスケール。",
     "month": "月",
-    "year": "年",
     "popular": "一番人気",
     "customBadge": "カスタム",
     "customPrice": "カスタム",
-    "billedAnnually": "年一括 $",
     "redirecting": "リダイレクト中...",
-    "free": {
-      "name": "無料",
+    "starter": {
+      "name": "スターター",
       "subtitle": "個人で始める方向け",
-      "cta": "無料で始める",
-      "f1": "2つの求人枠",
-      "f2": "10回の履歴書マッチング",
-      "f3": "2回の面接",
-      "f4": "面接スコアリング＆評価",
-      "f5": "面接サマリー"
+      "cta": "無料トライアルを開始",
+      "f1": "1シート",
+      "f2": "3つの職種",
+      "f3": "15回の面接",
+      "f4": "30回の履歴書マッチング",
+      "f5": "面接スコアリングと評価",
+      "f6": "面接サマリー"
     },
-    "startup": {
-      "name": "スタートアップ",
-      "subtitle": "急成長する小規模チーム向け",
-      "cta": "無料トライアル開始",
+    "growth": {
+      "name": "グロース",
+      "subtitle": "成長中のチーム向け",
+      "cta": "無料トライアルを開始",
       "f1": "無制限シート",
-      "f2": "無制限求人枠",
-      "f3": "180回の面接 / 月",
-      "f4": "180回の履歴書マッチング / 月",
-      "f5": "RoboHire APIアクセス",
-      "f5s": "既存システムと連携",
-      "f6": "6つの面接言語",
-      "f7": "言語能力評価",
-      "f8": "メールサポート"
+      "f2": "無制限の職種",
+      "f3": "月120回の面接",
+      "f4": "月240回の履歴書マッチング",
+      "f5": "スターターの全機能を含む",
+      "f6": "RoboHireアクセス",
+      "f6s": "システムと統合",
+      "f7": "6つの面接言語",
+      "f8": "言語能力評価",
+      "f9": "メールサポート"
     },
     "business": {
       "name": "ビジネス",
@@ -755,19 +854,21 @@
       "cta": "無料トライアル開始",
       "f1": "無制限シート",
       "f2": "無制限求人枠",
-      "f3": "400回の面接 / 月",
-      "f4": "400回の履歴書マッチング / 月",
-      "f5": "スタートアップの全機能",
+      "f3": "月280回の面接",
+      "f4": "月500回の履歴書マッチング",
+      "f5": "グロースの全機能を含む",
       "f6": "優先サポート",
+      "f6s": "より速い応答時間",
       "f7": "高度な分析",
-      "f8": "ホワイトラベルレポート",
-      "f9": "フル動画再生",
+      "f7s": "詳細な採用ファネルインサイト",
+      "f8": "ホワイトラベル面接レポート",
+      "f9": "面接動画の完全再生",
       "f10": "不正検知"
     },
     "custom": {
-      "name": "エンタープライズ",
+      "name": "カスタム",
       "subtitle": "大規模組織向け",
-      "cta": "営業に相談",
+      "cta": "お問い合わせ",
       "f1": "すべて無制限",
       "f2": "ビジネスの全機能",
       "f3": "カスタムワークフロー",
@@ -805,27 +906,122 @@
     "faq": {
       "title": "よくある質問",
       "q1": "RoboHireを無料で試せますか？",
-      "a1": "はい！無料プランには10回の履歴書マッチングと2回の面接が含まれます。クレジットカード不要で始められます。",
+      "a1": "はい！すべての有料プランには14日間の無料トライアルが含まれます。クレジットカード不要で始められます。",
       "q2": "どの支払い方法に対応していますか？",
       "a2": "主要なクレジットカード・デビットカード（Visa、Mastercard、American Express）およびAlipayに対応しています。すべての決済はStripeを通じて安全に処理されます。",
       "q3": "プランはいつでも変更できますか？",
       "a3": "もちろんです。いつでもアップグレード・ダウングレードが可能です。アップグレード時は日割り差額が請求され、ダウングレード時は残額が次の請求期間に適用されます。",
       "q4": "月間上限を超えるとどうなりますか？",
       "a4": "従量課金で引き続きご利用いただけます。履歴書マッチング $0.40/回、面接 $2.00/回で、チャージ残高から差し引かれます。",
-      "q5": "年払い割引はありますか？",
-      "a5": "あります！年払いなら月払いに比べて約8%お得です。月払いと年払いはいつでも切り替え可能です。",
-      "q6": "従量課金には何が含まれますか？",
-      "a6": "残高をチャージし、履歴書マッチング（$0.40）や面接（$2.00）を都度利用できます。AIスコアリング、サマリー、不正検知などすべての機能が含まれます。",
-      "q7": "契約や縛りはありますか？",
-      "a7": "契約はありません。月払いプランはいつでもキャンセル可能です。年払いプランは年額一括ですが、更新はいつでもキャンセルできます。",
-      "q8": "カスタムエンタープライズプランはありますか？",
-      "a8": "はい！エンタープライズプランには無制限利用、カスタムワークフロー、ATS連携、専任サポートなどが含まれます。営業チームにお問い合わせください。"
+      "q5": "従量課金には何が含まれますか？",
+      "a5": "残高をチャージし、履歴書マッチング（$0.40）や面接（$2.00）を都度利用できます。AIスコアリング、サマリー、不正検知などすべての機能が含まれます。",
+      "q6": "契約や縛りはありますか？",
+      "a6": "契約はありません。月払いプランはいつでもキャンセル可能です。",
+      "q7": "カスタムプランはありますか？",
+      "a7": "はい！カスタムプランには無制限利用、カスタムワークフロー、ATS連携、専任サポートなどが含まれます。お問い合わせください。"
     },
     "cta": {
       "title": "採用を効率化しませんか？",
       "subtitle": "AIでより速く賢く採用する企業が続々参加中。",
       "primary": "今すぐ採用を始める",
       "secondary": "デモをリクエスト"
+    }
+  },
+  "account": {
+    "profile": {
+      "title": "プロフィール",
+      "name": "名前",
+      "company": "会社",
+      "avatar": "アバター URL",
+      "save": "変更を保存",
+      "saving": "保存中...",
+      "saved": "プロフィールが更新されました"
+    },
+    "security": {
+      "title": "セキュリティ",
+      "currentPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード",
+      "confirmPassword": "新しいパスワードの確認",
+      "change": "パスワードを変更",
+      "changing": "変更中...",
+      "changed": "パスワードが変更されました",
+      "mismatch": "パスワードが一致しません",
+      "oauthNote": "ソーシャルログインアカウントではパスワード変更はできません。"
+    },
+    "subscription": {
+      "title": "サブスクリプション",
+      "currentPlan": "現在のプラン",
+      "status": "ステータス",
+      "renewsOn": "更新日",
+      "trialEnds": "無料トライアル終了日",
+      "usage": "使用状況",
+      "interviews": "面接",
+      "matches": "履歴書マッチング",
+      "changePlan": "プランを変更",
+      "of": "/"
+    },
+    "topup": {
+      "title": "残高チャージ",
+      "currentBalance": "現在の残高",
+      "selectAmount": "チャージする金額を選択してください：",
+      "processing": "処理中...",
+      "success": "チャージ成功！残高が更新されました。"
+    },
+    "billing": {
+      "title": "請求履歴",
+      "date": "日付",
+      "description": "説明",
+      "amount": "金額",
+      "status": "ステータス",
+      "action": "領収書",
+      "empty": "請求履歴はまだありません。",
+      "loading": "請求履歴を読み込み中...",
+      "viewInvoice": "表示",
+      "viewReceipt": "領収書"
+    }
+  },
+  "seo": {
+    "defaultTitle": "RoboHire - AI採用プラットフォーム",
+    "defaultDescription": "他社に先駆けて優秀な人材を採用。AIが自動で履歴書をスクリーニング、面接を実施し、包括的な評価レポートを提供します。",
+    "defaultKeywords": "AI採用, 採用自動化, 履歴書スクリーニング, 面接評価, 候補者マッチング, 採用プラットフォーム, AI面接, 自動採用, 人材獲得",
+    "startHiring": {
+      "title": "AI採用エージェント",
+      "desc": "AIに任せましょう。採用エージェントが履歴書のスクリーニング、面接の実施、評価レポートの作成を自動で行います。",
+      "keywords": "AI採用エージェント, 自動採用, 履歴書スクリーニング, AI面接, 採用自動化"
+    },
+    "developers": {
+      "title": "開発者API",
+      "desc": "強力なAI採用機能を既存システムに統合。RESTful APIで履歴書の解析、候補者のマッチング、面接の評価が可能。",
+      "keywords": "採用API, AI採用API, 履歴書解析API, 候補者マッチングAPI, 面接評価API, 開発者ツール"
+    },
+    "quickInvite": {
+      "title": "ワンクリック面接招待",
+      "desc": "履歴書と求人情報をアップロードし、QRコードとリンク付きの面接招待をワンクリックで全候補者に送信。",
+      "keywords": "一括面接招待, QRコード面接, ワンクリック採用, 候補者招待, 一括履歴書アップロード"
+    },
+    "requestDemo": {
+      "title": "デモをリクエスト",
+      "desc": "RoboHireのパーソナライズされたデモを予約。AI採用があなたの採用プロセスをどう変えるかご覧ください。"
+    },
+    "login": {
+      "title": "ログイン",
+      "desc": "RoboHireアカウントにログイン。AI採用ダッシュボードへのアクセス、候補者の管理、採用進捗の追跡。"
+    },
+    "pricing": {
+      "title": "料金プラン",
+      "desc": "チームに最適なRoboHireプランを選択。無料トライアルからAI採用無制限のエンタープライズまで。"
+    },
+    "docs": {
+      "overview": { "title": "APIドキュメント", "desc": "RoboHire APIの完全なドキュメント。数分でAI採用を開始。" },
+      "quickStart": { "title": "クイックスタート", "desc": "5分でRoboHire APIを使い始める。ステップバイステップの統合ガイド。" },
+      "auth": { "title": "API認証", "desc": "APIキーとJWTトークンを使用したRoboHire APIの認証方法。" },
+      "matchResume": { "title": "履歴書マッチングAPI", "desc": "AI履歴書マッチングエンドポイントのAPIリファレンス。" },
+      "parseResume": { "title": "履歴書解析API", "desc": "AIを使用して履歴書から構造化データを抽出するAPIリファレンス。" },
+      "parseJd": { "title": "求人解析API", "desc": "求人情報解析のAPIリファレンス。" },
+      "invite": { "title": "候補者招待API", "desc": "候補者にAI面接招待を送信するAPIリファレンス。" },
+      "evaluate": { "title": "面接評価API", "desc": "AI面接評価のAPIリファレンス。" },
+      "webhooks": { "title": "Webhooks", "desc": "採用イベントのリアルタイム通知を受け取るWebhookの設定。" },
+      "errors": { "title": "エラーハンドリング", "desc": "RoboHire APIのエラーコード、レスポンスフォーマット、トラブルシューティングガイド。" }
     }
   }
 }

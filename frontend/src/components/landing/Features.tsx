@@ -39,36 +39,38 @@ export default function Features() {
   ];
 
   return (
-    <section id="features" className="py-24 lg:py-32 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-3">
+    <section id="features" className="relative py-24 lg:py-32">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-blue-50/50 to-transparent" />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mb-14 max-w-3xl text-center">
+          <p className="inline-flex rounded-full border border-cyan-100 bg-cyan-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">
             {t('landing.features.badge', 'Features')}
           </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="landing-display mt-5 text-3xl font-semibold text-slate-900 sm:text-4xl lg:text-5xl">
             {t('landing.features.title', 'Everything You Need to Hire Smarter')}
           </h2>
-          <p className="text-lg text-gray-500">
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
             {t('landing.features.subtitle', 'From AI screening to automated interviews, we provide all the tools to transform your hiring process.')}
           </p>
         </div>
 
-        {/* Features Grid - Minimalist */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {features.map((feature, index) => (
-            <div key={index} className="group">
-              {/* Accent dot */}
-              <div className="w-2 h-2 rounded-full bg-indigo-500 mb-4 group-hover:scale-150 transition-transform" />
-              
-              {/* Content */}
-              <h3 className="text-base font-semibold text-gray-900 mb-2">
+            <article
+              key={feature.title}
+              className="group landing-gradient-stroke rounded-3xl bg-white p-6 shadow-[0_26px_52px_-44px_rgba(15,23,42,0.72)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_34px_66px_-38px_rgba(15,23,42,0.6)]"
+            >
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white transition-colors duration-300 group-hover:bg-blue-600">
+                {(index + 1).toString().padStart(2, '0')}
+              </div>
+              <h3 className="landing-display mt-5 text-lg font-semibold text-slate-900">
                 {feature.title}
               </h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
                 {feature.description}
               </p>
-            </div>
+            </article>
           ))}
         </div>
       </div>

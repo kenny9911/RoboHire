@@ -4,71 +4,135 @@ import { useTranslation } from 'react-i18next';
 export default function Hero() {
   const { t } = useTranslation();
 
-  return (
-    <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50 -z-10" />
-      
-      {/* Decorative Elements - pointer-events-none to not block clicks */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse pointer-events-none" />
-      <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse delay-1000 pointer-events-none" />
-      <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse delay-500 pointer-events-none" />
+  const stats = [
+    { value: '90%', label: t('landing.hero.stat1', 'Time Saved') },
+    { value: '10x', label: t('landing.hero.stat2', 'Faster Screening') },
+    { value: '500+', label: t('landing.hero.stat3', 'Companies') },
+    { value: '24/7', label: t('landing.hero.stat4', 'Always Available') },
+  ];
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center max-w-4xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 rounded-full text-indigo-700 text-sm font-medium mb-8">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
-            </span>
+  const showcaseItems = [
+    {
+      title: t('landing.services.hiring.title', 'Start Hiring'),
+      detail: t('landing.services.hiring.feature1', 'Automated resume screening'),
+      tone: 'from-blue-600 to-cyan-500',
+      href: '/start-hiring',
+      cta: t('landing.services.hiring.cta', 'Start Hiring Now'),
+    },
+    {
+      title: t('landing.services.quickInvite.title', 'Quick Interview Invite'),
+      detail: t('landing.services.quickInvite.feature4', 'One-click email invitations'),
+      tone: 'from-cyan-600 to-teal-500',
+      href: '/quick-invite',
+      cta: t('landing.services.quickInvite.cta', 'Start Inviting'),
+    },
+    {
+      title: t('landing.services.api.subtitle', 'For Developers'),
+      detail: t('landing.services.api.feature4', 'RESTful API endpoints'),
+      tone: 'from-slate-700 to-blue-700',
+      href: '/developers',
+      cta: t('landing.services.api.cta', 'Explore API'),
+    },
+  ];
+
+  return (
+    <section className="relative overflow-hidden pb-24 pt-36 lg:pb-32 lg:pt-44">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute left-[-8%] top-[18%] h-72 w-72 rounded-full bg-blue-200/45 blur-3xl" />
+        <div className="absolute right-[-10%] top-[-6%] h-80 w-80 rounded-full bg-cyan-200/45 blur-3xl" />
+        <div className="absolute bottom-[-20%] left-[35%] h-96 w-96 rounded-full bg-slate-200/40 blur-3xl" />
+      </div>
+
+      <div className="mx-auto grid max-w-7xl gap-14 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:px-8">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+            <span className="h-2 w-2 rounded-full bg-blue-600" />
             {t('landing.hero.badge', 'AI-Powered Hiring Platform')}
           </div>
 
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="landing-display mt-6 text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
             {t('landing.hero.headline', 'Hire Elite Candidates')}{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+            <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent">
               {t('landing.hero.headlineHighlight', 'Before Others')}
             </span>
           </h1>
 
-          {/* Subheadline */}
-          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-600">
             {t('landing.hero.subheadline', 'Say goodbye to spending long hours going through piles of resumes. Our AI hiring agent vets candidates, conducts interviews, and delivers comprehensive evaluation reports automatically.')}
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 relative z-20">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
-              to="/start-hiring"
-              className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-[0_4px_14px_0_rgba(79,70,229,0.4)] hover:shadow-[0_6px_20px_0_rgba(79,70,229,0.5)] hover:-translate-y-1 active:translate-y-0 active:shadow-[0_2px_8px_0_rgba(79,70,229,0.4)]"
+              to="/pricing"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 text-base font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(37,99,235,0.95)]"
             >
-              {t('landing.hero.ctaPrimary', 'Start Easy Hiring')}
+              {t('landing.hero.ctaPrimary', 'Start Free Trial')}
             </Link>
             <Link
-              to="/developers"
-              className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 transition-all duration-200 cursor-pointer relative z-20 shadow-[0_4px_14px_0_rgba(0,0,0,0.10)] hover:shadow-[0_6px_20px_0_rgba(0,0,0,0.15)] hover:-translate-y-1 active:translate-y-0 active:shadow-[0_2px_8px_0_rgba(0,0,0,0.10)] text-center"
+              to="/start-hiring"
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-8 py-3.5 text-base font-semibold text-slate-700 shadow-[0_16px_30px_-26px_rgba(15,23,42,0.7)] transition-all hover:border-blue-300 hover:text-blue-700"
             >
-              {t('landing.hero.ctaSecondary', 'Explore API')}
+              {t('landing.hero.ctaSecondary', 'Start Easy Hiring')}
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
-            {[
-              { value: '90%', label: t('landing.hero.stat1', 'Time Saved') },
-              { value: '10x', label: t('landing.hero.stat2', 'Faster Screening') },
-              { value: '500+', label: t('landing.hero.stat3', 'Companies') },
-              { value: '24/7', label: t('landing.hero.stat4', 'Always Available') },
-            ].map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl lg:text-4xl font-bold text-indigo-600 mb-1">
-                  {stat.value}
-                </div>
-                <div className="text-gray-500 text-sm">{stat.label}</div>
+          <div className="mt-10 grid max-w-xl grid-cols-2 gap-3 sm:gap-4">
+            {stats.map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur">
+                <p className="landing-display text-2xl font-semibold text-slate-900 sm:text-3xl">{stat.value}</p>
+                <p className="mt-1 text-sm font-medium text-slate-500">{stat.label}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="relative mx-auto w-full max-w-[560px]">
+          <div className="landing-gradient-stroke relative overflow-hidden rounded-[32px] bg-white p-5 shadow-[0_40px_72px_-48px_rgba(15,23,42,0.8)] sm:p-7">
+            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-blue-50 via-cyan-50 to-transparent" />
+
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+                <span className="h-2.5 w-2.5 rounded-full bg-cyan-500" />
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+              </div>
+              <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                {t('landing.hero.badge', 'AI-Powered Hiring Platform')}
+              </div>
+            </div>
+
+            <div className="relative mt-6 space-y-3">
+              {showcaseItems.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  className="group/item flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 transition-all hover:border-blue-300 hover:bg-blue-50/40"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
+                    <p className="truncate text-sm text-slate-500">{item.detail}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <div className={`h-2.5 w-20 rounded-full bg-gradient-to-r ${item.tone}`} />
+                    <span className="inline-flex items-center gap-1 text-right text-[11px] font-semibold leading-4 text-blue-700 transition-colors group-hover/item:text-blue-800">
+                      {item.cta}
+                      <svg className="h-3.5 w-3.5 transition-transform group-hover/item:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <div className="relative mt-5 grid grid-cols-2 gap-3">
+              {stats.slice(0, 2).map((stat) => (
+                <div key={stat.label} className="rounded-2xl bg-slate-900 px-4 py-3 text-white">
+                  <p className="landing-display text-xl font-semibold">{stat.value}</p>
+                  <p className="text-xs text-slate-300">{stat.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

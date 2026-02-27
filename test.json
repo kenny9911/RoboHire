@@ -1,2 +1,272 @@
-{"success":true,"data":{"name":"陈 洋","email":"garychenyang@163.com","phone":"18010120783","address":"","linkedin":"","github":"","portfolio":"","skills":{"technical":["深度学习算法","NLP算法","Transformer/GPT/LLama大模型结构","预训练和微调","分布式并行训练","DeepSpeed","Lora微调","KV Cache","Python","Java","PyTorch","意图识别","槽位填充","随机森林","SVM","Adaboost","Gradient Boosting","Docker","AWS EC2","Batch","CloudWatch","REST API","SLA产品开发","架构设计"],"soft":["团队管理","全英文工作环境适应能力","需求沟通","售前沟通","项目管理"],"languages":["中文 (Chinese)","英文 (English)"],"tools":["DeepSpeed","HuggingFace","Docker","AWS S3","AWS EC2","Batch","CloudWatch","Jira","Bugzilla","GitHub"],"frameworks":["PyTorch","Llama2","GPT","REST API"],"other":["数据采集、清理、入库平台开发","Devops自动化","云计算管理平台"]},"experience":[{"company":"北京探境科技有限公司","role":"资深NLP算法工程师","location":"北京","startDate":"2019.08","endDate":"Present","duration":"","description":"⚫ 团队下属6人，汇报对象为公司算法VP；\n⚫ 负责公司NLP算法整体设计、实现、落地，在语音芯片业界率先实现真正的NLP方案量产上市；\n⚫ 研究NLP算法，特别是意图识别和槽位填充等，训练模型，分析bad case，根据客户反馈优化算法，有效提高产品抗噪性、鲁棒性，积累了丰富的算法优化经验；\n⚫ 紧跟大模型前沿算法，研究Llama2、GPT等大模型的预训练、微调、对齐方法，微调LLama大模型满足公司业务需求；\n⚫ 带领团队创建公司数据平台和模型交付平台。其中数据平台包括音频和文本数据采集、自动核对、入库、支付全流程自动化，客户端包括小程序、PC和移动端，支持国内外多渠道采集。模型交付平台支持客户自助设置需求、自动训练、下载、体验模型。","achievements":["在语音芯片业界率先实现真正的NLP方案量产上市","带领团队创建公司数据平台和模型交付平台"],"technologies":["Llama2","GPT","NLP","意图识别","槽位填充"]},{"company":"Veracode","role":"高级机器学习工程师","location":"新加坡","startDate":"2018.07","endDate":"2019.07","duration":"1 year","description":"⚫ 研究和实现机器学习算法，从海量开源软件项目中识别软件安全漏洞，落地到公司商用软件。算法包括随机森林、SVM、Adaboost等。相关论文获得2020年ACM SIGSOFT Distinguished Paper Award；\n⚫ 设计并实现灵活的机器学习平台，平台支持多种数据源，包括数据库、REST API、AWS S3，同时支持传统经典机器学习算法和深度学习算法；\n⚫ 创建端到端的机器学习流程，包括从数据收集、清理、特征选取、模型算法设计、训练调优到生产环境部署全过程。部署主要使用Docker, AWS EC2, Batch, CloudWatch。","achievements":["相关论文获得2020年ACM SIGSOFT Distinguished Paper Award"],"technologies":["随机森林","SVM","Adaboost","Docker","AWS EC2","Batch","CloudWatch","REST API","AWS S3"]},{"company":"CA Technologies","role":"高级软件服务工程师","location":"新加坡","startDate":"2014.12","endDate":"2018.06","duration":"3.5 years","description":"⚫ 为新加坡DBS银行、OCBC银行、StarHub电信、新加坡公积金管理局，澳大利亚Optus电信设计和实现IT管理解决方案，按时交付，有效提升系统效率；\n⚫ 为新加坡StarHub设计并实现Devops自动化系统，极大提升软件交付自动化水平；\n⚫ 在项目中使用机器学习方法分析软件业务日志，比传统方法更有效预测软件问题。","achievements":["设计并实现Devops自动化系统，极大提升软件交付自动化水平","使用机器学习方法比传统方法更有效预测软件问题"],"technologies":["Devops","机器学习"]},{"company":"CA Technologies","role":"资深软件工程师","location":"北京","startDate":"2011.01","endDate":"2014.11","duration":"3 years 10 months","description":"⚫ 作为Team Lead负责云计算SLA产品开发工作；\n⚫ 设计并开发公司标准REST API，简化解决方案整合，为客户提供灵活的企业管理解决方案；\n⚫ 作为技术Lead带领团队解决和华为等合作伙伴合作项目中的产品技术问题；\n⚫ 负责多个国内电信和银行客户云计算管理平台项目，包括需求分析、架构设计、定制开发、合作伙伴指导和部分项目管理。","achievements":["作为Team Lead负责云计算SLA产品开发工作","设计并开发公司标准REST API"],"technologies":["REST API","云计算","SLA"]},{"company":"IBM","role":"Team Lead / Build & Release Engineer","location":"北京","startDate":"Not explicitly stated","endDate":"Not explicitly stated","duration":"","description":"⚫ 组建IBM Lotus部门北京Build &Release团队，全面负责IBM Lotus Quick的构建和发布工作, 和来自多个国家的90多个开发工程师一起解决构建问题。通过优化使构建时间减少40%；\n⚫ 作为Team Lead负责IBM Lotus四个产品的构建；\n⚫ 带领团队开发自动测试框架, 节省了50%的自动测试时间。同时此框架入选IBM 2009 亚洲QSE大会，作为演讲者介绍该框架。","achievements":["构建时间减少40%","节省了50%的自动测试时间","入选IBM 2009 亚洲QSE大会作为演讲者"],"technologies":["Build & Release","自动测试框架"]}],"projects":[{"name":"自然语言理解算法在芯片上的商业落地","role":"负责NLP算法设计、实现与优化","date":"2019.08- 至今","description":"项目描述: 研究NLP前沿技术，在公司自研芯片上实现自然语言理解的商业化落地，满足智能家居的场景应用。\n项目职责:\n⚫ 从零开始设计NLP算法，特别是意图识别和槽位填充，整合ASR全流程方案；\n⚫ 模型训练迭代，bad case分析，优化模型结构和算法，满足量产上市需求；\n⚫ 和量化组、软件组实现算法落地；\n⚫ 紧跟NLP前沿算法，研究Llama2、GPT等大模型的预训练、微调方法，满足NLP自动数据生成。","technologies":["NLP","意图识别","槽位填充","ASR","Llama2","GPT"],"link":""},{"name":"Llama2大模型微调生成意图识别模型需要数据","role":"负责大模型调研、微调与数据生成","date":"2023.07 - 2023.12","description":"项目描述: 公司需要训练智能家居领域英文意图识别模型，以满足海外市场需求，但市面上缺少这个专业领域的英文数据，公司已有大量相关中文数据，目前现成大模型对专业领域数据翻译效果不好，需要微调用于英文数据生成。\n项目职责:\n⚫ 调研业界的开源大模型结构，选择Llama2 7B进行微调；\n⚫ 准备优质的智能家居专业领域中文数据，使用huggingface接口，结合DeepSpeed进行模型微调；\n⚫ 使用已微调的模型生成部分数据，和数据组合作，对数据打分，使用分数高的数据迭代微调模型；","technologies":["Llama2 7B","Huggingface","DeepSpeed","模型微调"],"link":""},{"name":"使用机器学习算法识别开源软件漏洞","role":"独立设计和实现整套机器算法","date":"2018.07 - 2019.07","description":"项目描述: 使用机器学习算法，从海量开源软件里识别软件漏洞。识别出的软件漏洞数据，作为公司核心安全软件产品的重要数据支撑。\n项目职责: 独立设计和实现整套机器算法，把算法输出到机器学习平台，作为可自动化持续输出软件漏洞的工具。","technologies":["随机森林","SVM","Gradient Boosting","Adaboost","GitHub","Jira","Bugzilla"],"link":""},{"name":"新加坡StarHub电信Devops自动化方案实现","role":"设计和实现Devops自动化流程方案","date":"2017.05 - 2018.06","description":"项目描述: 客户有20多个应用需要自动化发布方案，统一发布流程，提高整个Devops流程效率。方案实施后，需要有故障预测能力，提前预测潜在故障。\n项目职责:\n⚫ 设计和实现整个Devops自动化流程方案。\n⚫ 用机器学习从发布日志中预测潜在故障。\n⚫ 指导客户实现新应用发布。","technologies":["Devops","机器学习","日志分析"],"link":""}],"education":[{"institution":"北京交通大学计算机学院","degree":"硕士","field":"计算机应用技术","startDate":"2004.09","endDate":"2007.07","gpa":"","achievements":[],"coursework":[]}],"certifications":[],"awards":[{"name":"ACM SIGSOFT Distinguished Paper Award","issuer":"ACM","date":"2020","description":"论文第一作者"}],"languages":[{"language":"英语","proficiency":"适应全英文工作环境 (5年新加坡工作经验)"}],"volunteerWork":[],"publications":["2020 ACM杰出论文奖（ACM SIGSOFT Distinguished Paper Award），论文第一作者"],"patents":[],"summary":"⚫ 2020 ACM杰出论文奖（ACM SIGSOFT Distinguished Paper Award），论文第一作者；\n⚫ 6年深度学习算法经验，精通NLP算法，深入理解Transformer/GPT/LLama等大模型结构、预训练和微调方法；\n⚫ 熟悉大模型高效处理方案：分布式并行训练、DeepSpeed工具、Lora微调、KV Cache等；\n⚫ 熟练掌握Python、Java语言编程、PyTorch深度学习框架；\n⚫ 丰富的软件开发和落地经验，带领团队开发上线了多个机器学习平台、数据采集、清理、入库平台，有和需求、售前多方沟通经验确保项目上线；\n⚫ 数学学士、计算机硕士，扎实的数学和计算机基础；\n⚫ 经实践检验的团队管理经验；\n⚫ 5年新加坡工作经验，适应全英文工作环境。","otherSections":{"Basic Information":"男，18010120783，garychenyang@163.com","Additional Background":"数学学士 (Mentioned in summary)"},"rawText":"陈 洋\n男，18010120783，garychenyang@163.com\n自我评价\n⚫ 2020 ACM杰出论文奖（ACM SIGSOFT Distinguished Paper Award），论文第一作者；\n⚫ 6年深度学习算法经验，精通NLP算法，深入理解Transformer/GPT/LLama等大模型结构、预训练和微调方\n法；\n⚫ 熟悉大模型高效处理方案：分布式并行训练、DeepSpeed工具、Lora微调、KV Cache等；\n⚫ 熟练掌握Python、Java语言编程、PyTorch深度学习框架；\n⚫ 丰富的软件开发和落地经验，带领团队开发上线了多个机器学习平台、数据采集、清理、入库平台，有和需求、售\n前多方沟通经验确保项目上线；\n⚫ 数学学士、计算机硕士，扎实的数学和计算机基础；\n⚫ 经实践检验的团队管理经验；\n⚫ 5年新加坡工作经验，适应全英文工作环境。\n工作经历\n2019.08-至今 北京探境科技有限公司 工作地点：北京 资深NLP算法工程师\n⚫ 团队下属6人，汇报对象为公司算法VP；\n⚫ 负责公司NLP算法整体设计、实现、落地，在语音芯片业界率先实现真正的NLP方案量产上市；\n⚫ 研究NLP算法，特别是意图识别和槽位填充等，训练模型，分析bad case，根据客户反馈优化算法，有效\n提高产品抗噪性、鲁棒性，积累了丰富的算法优化经验；\n⚫ 紧跟大模型前沿算法，研究Llama2、GPT等大模型的预训练、微调、对齐方法，微调LLama大模型满足公\n司业务需求；\n⚫ 带领团队创建公司数据平台和模型交付平台。其中数据平台包括音频和文本数据采集、自动核对、入库、支\n付全流程自动化，客户端包括小程序、PC和移动端，支持国内外多渠道采集。模型交付平台支持客户自助设\n置需求、自动训练、下载、体验模型。\n2018.07-2019.07 Veracode 工作地点：新加坡 高级机器学习工程师\n⚫ 研究和实现机器学习算法，从海量开源软件项目中识别软件安全漏洞，落地到公司商用软件。算法包括随机森林、\nSVM、Adaboost等。相关论文获得2020年ACM SIGSOFT Distinguished Paper Award；\n⚫ 设计并实现灵活的机器学习平台，平台支持多种数据源，包括数据库、REST API、AWS S3，同时支持传统经典机\n器学习算法和深度学习算法；\n⚫ 创建端到端的机器学习流程，包括从数据收集、清理、特征选取、模型算法设计、训练调优到生产环境部署全过\n程。部署主要使用Docker, AWS EC2, Batch, CloudWatch。\n2014.12-2018.06 CA Technologies 工作地点：新加坡 高级软件服务工程师\n⚫ 为新加坡DBS银行、OCBC银行、StarHub电信、新加坡公积金管理局，澳大利亚Optus电信设计和实现IT管\n理解决方案，按时交付，有效提升系统效率；\n~\n~⚫ 为新加坡StarHub设计并实现Devops自动化系统，极大提升软件交付自动化水平；\n⚫ 在项目中使用机器学习方法分析软件业务日志，比传统方法更有效预测软件问题。\n2011.01-2014.11 CA Technologies 工作地点：北京 资深软件工程师\n⚫ 作为Team Lead负责云计算SLA产品开发工作；\n⚫ 设计并开发公司标准REST API，简化解决方案整合，为客户提供灵活的企业管理解决方案；\n⚫ 作为技术Lead带领团队解决和华为等合作伙伴合作项目中的产品技术问题；\n⚫ 负责多个国内电信和银行客户云计算管理平台项目，包括需求分析、架构设计、定制开发、合作伙伴指导和\n部分项目管理。⚫ 组建IBM Lotus部门北京Build &Release团队，全面负责IBM Lotus Quick的构建和发布工作, 和来自多个国家\n的90多个开发工程师一起解决构建问题。通过优化使构建时间减少40%；\n⚫ 作为Team Lead负责IBM Lotus四个产品的构建；\n⚫ 带领团队开发自动测试框架, 节省了50%的自动测试时间。同时此框架入选IBM 2009 亚洲QSE大会，作为演讲\n者介绍该框架。\n项目经历\n2019.08- 至今 北京探境科技有限公司 自然语言理解算法在芯片上的商业落地\n项目描述: 研究NLP前沿技术，在公司自研芯片上实现自然语言理解的商业化落地，满足智能家居的场景应用。\n项目职责:\n⚫ 从零开始设计NLP算法，特别是意图识别和槽位填充，整合ASR全流程方案；\n⚫ 模型训练迭代，bad case分析，优化模型结构和算法，满足量产上市需求；\n⚫ 和量化组、软件组实现算法落地；\n⚫ 紧跟NLP前沿算法，研究Llama2、GPT等大模型的预训练、微调方法，满足NLP自动数据生成。\n项目业绩: 率先在语音芯片业界实现NLP方案落地，奥克斯、欧普等知名品牌大规模使用该方案成功量产上市。\n2023.07 - 2023.12 北京探境科技有限公司 Llama2大模型微调生成意图识别模型需要数据\n项目描述: 公司需要训练智能家居领域英文意图识别模型，以满足海外市场需求，但市面上缺少这个专业领域的英文数\n据，公司已有大量相关中文数据，目前现成大模型对专业领域数据翻译效果不好，需要微调用于英文数据生成。\n项目职责:\n⚫ 调研业界的开源大模型结构，选择Llama2 7B进行微调；\n⚫ 准备优质的智能家居专业领域中文数据，使用huggingface接口，结合DeepSpeed进行模型微调；\n⚫ 使用已微调的模型生成部分数据，和数据组合作，对数据打分，使用分数高的数据迭代微调模型；\n项目业绩: 结合优质数据微调好Llama2 7B模型，生成了数千万条英文数据，满足英文意图识别模型需要。\n2018.07 - 2019.07 新加坡Veracode 使用机器学习算法识别开源软件漏洞\n项目描述: 使用机器学习算法，从海量开源软件里识别软件漏洞。识别出的软件漏洞数据，作为公司核心安全软件产品\n的重要数据支撑。\n项目职责: 独立设计和实现整套机器算法，把算法输出到机器学习平台，作为可自动化持续输出软件漏洞的工具。\n~项目业绩:\n⚫ 从头开始研究机器学习算法，实现了一套完整的从github、Jira、Bugzilla等数据源识别软件漏洞的算法，开源项\n目涉及6000多个，算法包括随机森林、SVM、Gradient Boosting、Adaboost等的综合使用；\n⚫ 完整设计和实现整个机器学习平台，部署到生产环境使用；\n⚫ 从数据搜集、数据清理、模型训练到预测全部实现自动化；\n⚫ 设计了一套模型的测试框架，自动报告新模型性能以及和旧模型的比较。\n2017.05 - 2018.06 新加坡CA Technologies 新加坡StarHub电信Devops自动化方案实现\n项目描述: 客户有20多个应用需要自动化发布方案，统一发布流程，提高整个Devops流程效率。方案实施后，需要\n有故障预测能力，提前预测潜在故障。\n项目职责:\n⚫ 设计和实现整个Devops自动化流程方案。\n⚫ 用机器学习从发布日志中预测潜在故障。\n⚫ 指导客户实现新应用发布。\n项目业绩:\n⚫ 客户整个应用发布效率提高40%。\n⚫ 核心系统全部实现自动化发布。\n⚫ 所有发布状态可在同一个页面监控和跟踪。\n⚫ 能用机器学习有效预测报告潜在故障，提前干预。\n教育背景\n2004.09-2007.07 北京交通大学计算机学院 计算机应用技术 | 研究生（硕士）\n~"},"cached":false,"documentId":"resume_1771482039020_1f6gzl","savedAs":"陈洋_resume.json","requestId":"req_1771482018140_pyiowiq"}
-           
+{
+    "success": true,
+    "data": {
+        "name": "陈 洋",
+        "email": "garychenyang@163.com",
+        "phone": "18010120783",
+        "address": "",
+        "linkedin": "",
+        "github": "",
+        "portfolio": "",
+        "skills": {
+            "technical": [
+                "深度学习算法",
+                "NLP算法",
+                "Transformer/GPT/LLama大模型结构",
+                "预训练和微调",
+                "分布式并行训练",
+                "DeepSpeed",
+                "Lora微调",
+                "KV Cache",
+                "Python",
+                "Java",
+                "PyTorch",
+                "意图识别",
+                "槽位填充",
+                "随机森林",
+                "SVM",
+                "Adaboost",
+                "Gradient Boosting",
+                "Docker",
+                "AWS EC2",
+                "Batch",
+                "CloudWatch",
+                "REST API",
+                "SLA产品开发",
+                "架构设计"
+            ],
+            "soft": [
+                "团队管理",
+                "全英文工作环境适应能力",
+                "需求沟通",
+                "售前沟通",
+                "项目管理"
+            ],
+            "languages": [
+                "中文 (Chinese)",
+                "英文 (English)"
+            ],
+            "tools": [
+                "DeepSpeed",
+                "HuggingFace",
+                "Docker",
+                "AWS S3",
+                "AWS EC2",
+                "Batch",
+                "CloudWatch",
+                "Jira",
+                "Bugzilla",
+                "GitHub"
+            ],
+            "frameworks": [
+                "PyTorch",
+                "Llama2",
+                "GPT",
+                "REST API"
+            ],
+            "other": [
+                "数据采集、清理、入库平台开发",
+                "Devops自动化",
+                "云计算管理平台"
+            ]
+        },
+        "experience": [
+            {
+                "company": "北京探境科技有限公司",
+                "role": "资深NLP算法工程师",
+                "location": "北京",
+                "startDate": "2019.08",
+                "endDate": "Present",
+                "duration": "",
+                "description": "⚫ 团队下属6人，汇报对象为公司算法VP；\n⚫ 负责公司NLP算法整体设计、实现、落地，在语音芯片业界率先实现真正的NLP方案量产上市；\n⚫ 研究NLP算法，特别是意图识别和槽位填充等，训练模型，分析bad case，根据客户反馈优化算法，有效提高产品抗噪性、鲁棒性，积累了丰富的算法优化经验；\n⚫ 紧跟大模型前沿算法，研究Llama2、GPT等大模型的预训练、微调、对齐方法，微调LLama大模型满足公司业务需求；\n⚫ 带领团队创建公司数据平台和模型交付平台。其中数据平台包括音频和文本数据采集、自动核对、入库、支付全流程自动化，客户端包括小程序、PC和移动端，支持国内外多渠道采集。模型交付平台支持客户自助设置需求、自动训练、下载、体验模型。",
+                "achievements": [
+                    "在语音芯片业界率先实现真正的NLP方案量产上市",
+                    "带领团队创建公司数据平台和模型交付平台"
+                ],
+                "technologies": [
+                    "Llama2",
+                    "GPT",
+                    "NLP",
+                    "意图识别",
+                    "槽位填充"
+                ]
+            },
+            {
+                "company": "Veracode",
+                "role": "高级机器学习工程师",
+                "location": "新加坡",
+                "startDate": "2018.07",
+                "endDate": "2019.07",
+                "duration": "1 year",
+                "description": "⚫ 研究和实现机器学习算法，从海量开源软件项目中识别软件安全漏洞，落地到公司商用软件。算法包括随机森林、SVM、Adaboost等。相关论文获得2020年ACM SIGSOFT Distinguished Paper Award；\n⚫ 设计并实现灵活的机器学习平台，平台支持多种数据源，包括数据库、REST API、AWS S3，同时支持传统经典机器学习算法和深度学习算法；\n⚫ 创建端到端的机器学习流程，包括从数据收集、清理、特征选取、模型算法设计、训练调优到生产环境部署全过程。部署主要使用Docker, AWS EC2, Batch, CloudWatch。",
+                "achievements": [
+                    "相关论文获得2020年ACM SIGSOFT Distinguished Paper Award"
+                ],
+                "technologies": [
+                    "随机森林",
+                    "SVM",
+                    "Adaboost",
+                    "Docker",
+                    "AWS EC2",
+                    "Batch",
+                    "CloudWatch",
+                    "REST API",
+                    "AWS S3"
+                ]
+            },
+            {
+                "company": "CA Technologies",
+                "role": "高级软件服务工程师",
+                "location": "新加坡",
+                "startDate": "2014.12",
+                "endDate": "2018.06",
+                "duration": "3.5 years",
+                "description": "⚫ 为新加坡DBS银行、OCBC银行、StarHub电信、新加坡公积金管理局，澳大利亚Optus电信设计和实现IT管理解决方案，按时交付，有效提升系统效率；\n⚫ 为新加坡StarHub设计并实现Devops自动化系统，极大提升软件交付自动化水平；\n⚫ 在项目中使用机器学习方法分析软件业务日志，比传统方法更有效预测软件问题。",
+                "achievements": [
+                    "设计并实现Devops自动化系统，极大提升软件交付自动化水平",
+                    "使用机器学习方法比传统方法更有效预测软件问题"
+                ],
+                "technologies": [
+                    "Devops",
+                    "机器学习"
+                ]
+            },
+            {
+                "company": "CA Technologies",
+                "role": "资深软件工程师",
+                "location": "北京",
+                "startDate": "2011.01",
+                "endDate": "2014.11",
+                "duration": "3 years 10 months",
+                "description": "⚫ 作为Team Lead负责云计算SLA产品开发工作；\n⚫ 设计并开发公司标准REST API，简化解决方案整合，为客户提供灵活的企业管理解决方案；\n⚫ 作为技术Lead带领团队解决和华为等合作伙伴合作项目中的产品技术问题；\n⚫ 负责多个国内电信和银行客户云计算管理平台项目，包括需求分析、架构设计、定制开发、合作伙伴指导和部分项目管理。",
+                "achievements": [
+                    "作为Team Lead负责云计算SLA产品开发工作",
+                    "设计并开发公司标准REST API"
+                ],
+                "technologies": [
+                    "REST API",
+                    "云计算",
+                    "SLA"
+                ]
+            },
+            {
+                "company": "IBM",
+                "role": "Team Lead / Build & Release Engineer",
+                "location": "北京",
+                "startDate": "Not explicitly stated",
+                "endDate": "Not explicitly stated",
+                "duration": "",
+                "description": "⚫ 组建IBM Lotus部门北京Build &Release团队，全面负责IBM Lotus Quick的构建和发布工作, 和来自多个国家的90多个开发工程师一起解决构建问题。通过优化使构建时间减少40%；\n⚫ 作为Team Lead负责IBM Lotus四个产品的构建；\n⚫ 带领团队开发自动测试框架, 节省了50%的自动测试时间。同时此框架入选IBM 2009 亚洲QSE大会，作为演讲者介绍该框架。",
+                "achievements": [
+                    "构建时间减少40%",
+                    "节省了50%的自动测试时间",
+                    "入选IBM 2009 亚洲QSE大会作为演讲者"
+                ],
+                "technologies": [
+                    "Build & Release",
+                    "自动测试框架"
+                ]
+            }
+        ],
+        "projects": [
+            {
+                "name": "自然语言理解算法在芯片上的商业落地",
+                "role": "负责NLP算法设计、实现与优化",
+                "date": "2019.08- 至今",
+                "description": "项目描述: 研究NLP前沿技术，在公司自研芯片上实现自然语言理解的商业化落地，满足智能家居的场景应用。\n项目职责:\n⚫ 从零开始设计NLP算法，特别是意图识别和槽位填充，整合ASR全流程方案；\n⚫ 模型训练迭代，bad case分析，优化模型结构和算法，满足量产上市需求；\n⚫ 和量化组、软件组实现算法落地；\n⚫ 紧跟NLP前沿算法，研究Llama2、GPT等大模型的预训练、微调方法，满足NLP自动数据生成。",
+                "technologies": [
+                    "NLP",
+                    "意图识别",
+                    "槽位填充",
+                    "ASR",
+                    "Llama2",
+                    "GPT"
+                ],
+                "link": ""
+            },
+            {
+                "name": "Llama2大模型微调生成意图识别模型需要数据",
+                "role": "负责大模型调研、微调与数据生成",
+                "date": "2023.07 - 2023.12",
+                "description": "项目描述: 公司需要训练智能家居领域英文意图识别模型，以满足海外市场需求，但市面上缺少这个专业领域的英文数据，公司已有大量相关中文数据，目前现成大模型对专业领域数据翻译效果不好，需要微调用于英文数据生成。\n项目职责:\n⚫ 调研业界的开源大模型结构，选择Llama2 7B进行微调；\n⚫ 准备优质的智能家居专业领域中文数据，使用huggingface接口，结合DeepSpeed进行模型微调；\n⚫ 使用已微调的模型生成部分数据，和数据组合作，对数据打分，使用分数高的数据迭代微调模型；",
+                "technologies": [
+                    "Llama2 7B",
+                    "Huggingface",
+                    "DeepSpeed",
+                    "模型微调"
+                ],
+                "link": ""
+            },
+            {
+                "name": "使用机器学习算法识别开源软件漏洞",
+                "role": "独立设计和实现整套机器算法",
+                "date": "2018.07 - 2019.07",
+                "description": "项目描述: 使用机器学习算法，从海量开源软件里识别软件漏洞。识别出的软件漏洞数据，作为公司核心安全软件产品的重要数据支撑。\n项目职责: 独立设计和实现整套机器算法，把算法输出到机器学习平台，作为可自动化持续输出软件漏洞的工具。",
+                "technologies": [
+                    "随机森林",
+                    "SVM",
+                    "Gradient Boosting",
+                    "Adaboost",
+                    "GitHub",
+                    "Jira",
+                    "Bugzilla"
+                ],
+                "link": ""
+            },
+            {
+                "name": "新加坡StarHub电信Devops自动化方案实现",
+                "role": "设计和实现Devops自动化流程方案",
+                "date": "2017.05 - 2018.06",
+                "description": "项目描述: 客户有20多个应用需要自动化发布方案，统一发布流程，提高整个Devops流程效率。方案实施后，需要有故障预测能力，提前预测潜在故障。\n项目职责:\n⚫ 设计和实现整个Devops自动化流程方案。\n⚫ 用机器学习从发布日志中预测潜在故障。\n⚫ 指导客户实现新应用发布。",
+                "technologies": [
+                    "Devops",
+                    "机器学习",
+                    "日志分析"
+                ],
+                "link": ""
+            }
+        ],
+        "education": [
+            {
+                "institution": "北京交通大学计算机学院",
+                "degree": "硕士",
+                "field": "计算机应用技术",
+                "startDate": "2004.09",
+                "endDate": "2007.07",
+                "gpa": "",
+                "achievements": [],
+                "coursework": []
+            }
+        ],
+        "certifications": [],
+        "awards": [
+            {
+                "name": "ACM SIGSOFT Distinguished Paper Award",
+                "issuer": "ACM",
+                "date": "2020",
+                "description": "论文第一作者"
+            }
+        ],
+        "languages": [
+            {
+                "language": "英语",
+                "proficiency": "适应全英文工作环境 (5年新加坡工作经验)"
+            }
+        ],
+        "volunteerWork": [],
+        "publications": [
+            "2020 ACM杰出论文奖（ACM SIGSOFT Distinguished Paper Award），论文第一作者"
+        ],
+        "patents": [],
+        "summary": "⚫ 2020 ACM杰出论文奖（ACM SIGSOFT Distinguished Paper Award），论文第一作者；\n⚫ 6年深度学习算法经验，精通NLP算法，深入理解Transformer/GPT/LLama等大模型结构、预训练和微调方法；\n⚫ 熟悉大模型高效处理方案：分布式并行训练、DeepSpeed工具、Lora微调、KV Cache等；\n⚫ 熟练掌握Python、Java语言编程、PyTorch深度学习框架；\n⚫ 丰富的软件开发和落地经验，带领团队开发上线了多个机器学习平台、数据采集、清理、入库平台，有和需求、售前多方沟通经验确保项目上线；\n⚫ 数学学士、计算机硕士，扎实的数学和计算机基础；\n⚫ 经实践检验的团队管理经验；\n⚫ 5年新加坡工作经验，适应全英文工作环境。",
+        "otherSections": {
+            "Basic Information": "男，18010120783，garychenyang@163.com",
+            "Additional Background": "数学学士 (Mentioned in summary)"
+        },
+        "rawText": "陈 洋\n男，18010120783，garychenyang@163.com\n自我评价\n⚫ 2020 ACM杰出论文奖（ACM SIGSOFT Distinguished Paper Award），论文第一作者；\n⚫ 6年深度学习算法经验，精通NLP算法，深入理解Transformer/GPT/LLama等大模型结构、预训练和微调方\n法；\n⚫ 熟悉大模型高效处理方案：分布式并行训练、DeepSpeed工具、Lora微调、KV Cache等；\n⚫ 熟练掌握Python、Java语言编程、PyTorch深度学习框架；\n⚫ 丰富的软件开发和落地经验，带领团队开发上线了多个机器学习平台、数据采集、清理、入库平台，有和需求、售\n前多方沟通经验确保项目上线；\n⚫ 数学学士、计算机硕士，扎实的数学和计算机基础；\n⚫ 经实践检验的团队管理经验；\n⚫ 5年新加坡工作经验，适应全英文工作环境。\n工作经历\n2019.08-至今 北京探境科技有限公司 工作地点：北京 资深NLP算法工程师\n⚫ 团队下属6人，汇报对象为公司算法VP；\n⚫ 负责公司NLP算法整体设计、实现、落地，在语音芯片业界率先实现真正的NLP方案量产上市；\n⚫ 研究NLP算法，特别是意图识别和槽位填充等，训练模型，分析bad case，根据客户反馈优化算法，有效\n提高产品抗噪性、鲁棒性，积累了丰富的算法优化经验；\n⚫ 紧跟大模型前沿算法，研究Llama2、GPT等大模型的预训练、微调、对齐方法，微调LLama大模型满足公\n司业务需求；\n⚫ 带领团队创建公司数据平台和模型交付平台。其中数据平台包括音频和文本数据采集、自动核对、入库、支\n付全流程自动化，客户端包括小程序、PC和移动端，支持国内外多渠道采集。模型交付平台支持客户自助设\n置需求、自动训练、下载、体验模型。\n2018.07-2019.07 Veracode 工作地点：新加坡 高级机器学习工程师\n⚫ 研究和实现机器学习算法，从海量开源软件项目中识别软件安全漏洞，落地到公司商用软件。算法包括随机森林、\nSVM、Adaboost等。相关论文获得2020年ACM SIGSOFT Distinguished Paper Award；\n⚫ 设计并实现灵活的机器学习平台，平台支持多种数据源，包括数据库、REST API、AWS S3，同时支持传统经典机\n器学习算法和深度学习算法；\n⚫ 创建端到端的机器学习流程，包括从数据收集、清理、特征选取、模型算法设计、训练调优到生产环境部署全过\n程。部署主要使用Docker, AWS EC2, Batch, CloudWatch。\n2014.12-2018.06 CA Technologies 工作地点：新加坡 高级软件服务工程师\n⚫ 为新加坡DBS银行、OCBC银行、StarHub电信、新加坡公积金管理局，澳大利亚Optus电信设计和实现IT管\n理解决方案，按时交付，有效提升系统效率；\n~\n~⚫ 为新加坡StarHub设计并实现Devops自动化系统，极大提升软件交付自动化水平；\n⚫ 在项目中使用机器学习方法分析软件业务日志，比传统方法更有效预测软件问题。\n2011.01-2014.11 CA Technologies 工作地点：北京 资深软件工程师\n⚫ 作为Team Lead负责云计算SLA产品开发工作；\n⚫ 设计并开发公司标准REST API，简化解决方案整合，为客户提供灵活的企业管理解决方案；\n⚫ 作为技术Lead带领团队解决和华为等合作伙伴合作项目中的产品技术问题；\n⚫ 负责多个国内电信和银行客户云计算管理平台项目，包括需求分析、架构设计、定制开发、合作伙伴指导和\n部分项目管理。⚫ 组建IBM Lotus部门北京Build &Release团队，全面负责IBM Lotus Quick的构建和发布工作, 和来自多个国家\n的90多个开发工程师一起解决构建问题。通过优化使构建时间减少40%；\n⚫ 作为Team Lead负责IBM Lotus四个产品的构建；\n⚫ 带领团队开发自动测试框架, 节省了50%的自动测试时间。同时此框架入选IBM 2009 亚洲QSE大会，作为演讲\n者介绍该框架。\n项目经历\n2019.08- 至今 北京探境科技有限公司 自然语言理解算法在芯片上的商业落地\n项目描述: 研究NLP前沿技术，在公司自研芯片上实现自然语言理解的商业化落地，满足智能家居的场景应用。\n项目职责:\n⚫ 从零开始设计NLP算法，特别是意图识别和槽位填充，整合ASR全流程方案；\n⚫ 模型训练迭代，bad case分析，优化模型结构和算法，满足量产上市需求；\n⚫ 和量化组、软件组实现算法落地；\n⚫ 紧跟NLP前沿算法，研究Llama2、GPT等大模型的预训练、微调方法，满足NLP自动数据生成。\n项目业绩: 率先在语音芯片业界实现NLP方案落地，奥克斯、欧普等知名品牌大规模使用该方案成功量产上市。\n2023.07 - 2023.12 北京探境科技有限公司 Llama2大模型微调生成意图识别模型需要数据\n项目描述: 公司需要训练智能家居领域英文意图识别模型，以满足海外市场需求，但市面上缺少这个专业领域的英文数\n据，公司已有大量相关中文数据，目前现成大模型对专业领域数据翻译效果不好，需要微调用于英文数据生成。\n项目职责:\n⚫ 调研业界的开源大模型结构，选择Llama2 7B进行微调；\n⚫ 准备优质的智能家居专业领域中文数据，使用huggingface接口，结合DeepSpeed进行模型微调；\n⚫ 使用已微调的模型生成部分数据，和数据组合作，对数据打分，使用分数高的数据迭代微调模型；\n项目业绩: 结合优质数据微调好Llama2 7B模型，生成了数千万条英文数据，满足英文意图识别模型需要。\n2018.07 - 2019.07 新加坡Veracode 使用机器学习算法识别开源软件漏洞\n项目描述: 使用机器学习算法，从海量开源软件里识别软件漏洞。识别出的软件漏洞数据，作为公司核心安全软件产品\n的重要数据支撑。\n项目职责: 独立设计和实现整套机器算法，把算法输出到机器学习平台，作为可自动化持续输出软件漏洞的工具。\n~项目业绩:\n⚫ 从头开始研究机器学习算法，实现了一套完整的从github、Jira、Bugzilla等数据源识别软件漏洞的算法，开源项\n目涉及6000多个，算法包括随机森林、SVM、Gradient Boosting、Adaboost等的综合使用；\n⚫ 完整设计和实现整个机器学习平台，部署到生产环境使用；\n⚫ 从数据搜集、数据清理、模型训练到预测全部实现自动化；\n⚫ 设计了一套模型的测试框架，自动报告新模型性能以及和旧模型的比较。\n2017.05 - 2018.06 新加坡CA Technologies 新加坡StarHub电信Devops自动化方案实现\n项目描述: 客户有20多个应用需要自动化发布方案，统一发布流程，提高整个Devops流程效率。方案实施后，需要\n有故障预测能力，提前预测潜在故障。\n项目职责:\n⚫ 设计和实现整个Devops自动化流程方案。\n⚫ 用机器学习从发布日志中预测潜在故障。\n⚫ 指导客户实现新应用发布。\n项目业绩:\n⚫ 客户整个应用发布效率提高40%。\n⚫ 核心系统全部实现自动化发布。\n⚫ 所有发布状态可在同一个页面监控和跟踪。\n⚫ 能用机器学习有效预测报告潜在故障，提前干预。\n教育背景\n2004.09-2007.07 北京交通大学计算机学院 计算机应用技术 | 研究生（硕士）\n~"
+    },
+    "cached": false,
+    "documentId": "resume_1771482039020_1f6gzl",
+    "savedAs": "陈洋_resume.json",
+    "requestId": "req_1771482018140_pyiowiq"
+}

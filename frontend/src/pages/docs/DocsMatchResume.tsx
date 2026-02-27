@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CodeBlock, EndpointCard, ParamTable } from '../../components/docs';
+import SEO from '../../components/SEO';
 
 export default function DocsMatchResume() {
   const { t } = useTranslation();
@@ -132,6 +133,7 @@ result = response.json()`,
 
   return (
     <div>
+      <SEO title={t('seo.docsMatchResume.title', 'Match Resume API')} description={t('seo.docsMatchResume.desc', 'API reference for the AI-powered resume matching endpoint. Match candidates to job descriptions automatically.')} url="https://robohire.io/docs/api/match-resume" keywords={t('seo.docsMatchResume.keywords', 'RoboHire API documentation, resume matching API, candidate matching, AI recruitment')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.matchResume.title', 'Match Resume')}
       </h1>

@@ -81,11 +81,61 @@ Benefits:
     });
   }
 
+  // Admin user
+  const adminEmail = 'admin@robohire.io';
+  const adminPassword = 'Lightark@1';
+
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail },
+  });
+
+  if (existingAdmin) {
+    // Ensure role is admin
+    if (existingAdmin.role !== 'admin') {
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: 'admin' },
+      });
+      console.log('Updated existing user to admin:', adminEmail);
+    } else {
+      console.log('Admin user already exists:', adminEmail);
+    }
+  } else {
+    const adminHash = await bcrypt.hash(adminPassword, 12);
+    const adminUser = await prisma.user.create({
+      data: {
+        email: adminEmail,
+        passwordHash: adminHash,
+        name: 'Admin',
+        company: 'RoboHire',
+        provider: 'email',
+        role: 'admin',
+      },
+    });
+    console.log('Created admin user:', { id: adminUser.id, email: adminUser.email });
+  }
+
+  // Seed default pricing config
+  const defaultPricing: Record<string, string> = {
+    price_starter_monthly: '29',
+    price_growth_monthly: '199',
+    price_business_monthly: '399',
+  };
+
+  for (const [key, value] of Object.entries(defaultPricing)) {
+    await prisma.appConfig.upsert({
+      where: { key },
+      update: {},  // Don't overwrite if already set
+      create: { key, value },
+    });
+  }
+  console.log('Pricing config seeded (defaults preserved if already set)');
+
   console.log('\n========================================');
-  console.log('Demo Account Credentials:');
+  console.log('Account Credentials:');
   console.log('========================================');
-  console.log(`Email:    ${demoEmail}`);
-  console.log(`Password: ${demoPassword}`);
+  console.log(`Demo:  ${demoEmail} / ${demoPassword}`);
+  console.log(`Admin: ${adminEmail} / ${adminPassword}`);
   console.log('========================================\n');
 
   await prisma.$disconnect();

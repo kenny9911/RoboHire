@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import type { HiringTemplate } from '../data/hiringTemplates';
 import { getLocalizedTemplates } from '../data/hiringTemplates';
+import SEO from '../components/SEO';
 
 interface Message {
   id: string;
@@ -50,10 +51,12 @@ export default function StartHiring() {
   const [jdError, setJdError] = useState<string | null>(null);
   const [showAllTemplates, setShowAllTemplates] = useState(false);
   const [jdView, setJdView] = useState<'markdown' | 'preview'>('markdown');
+  const [splitPercent, setSplitPercent] = useState(50);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
   const skipLoadSessionId = useRef<string | null>(null);
   const MAX_CHAT_HISTORY = 12;
   const CHAT_ERROR_FALLBACK = t(
@@ -613,38 +616,38 @@ export default function StartHiring() {
   const templatesToShow = showAllTemplates ? localizedTemplates : featuredTemplates;
   const markdownComponents: Components = {
     h1: ({ children }) => (
-      <h2 className="text-base font-semibold text-gray-900 mt-2 mb-2">{children}</h2>
+      <h2 className="mt-2 mb-2 text-base font-semibold text-slate-900">{children}</h2>
     ),
     h2: ({ children }) => (
-      <h3 className="text-sm font-semibold text-gray-900 mt-3 mb-1">{children}</h3>
+      <h3 className="mt-3 mb-1 text-sm font-semibold text-slate-900">{children}</h3>
     ),
     h3: ({ children }) => (
-      <h4 className="text-sm font-medium text-gray-900 mt-2 mb-1">{children}</h4>
+      <h4 className="mt-2 mb-1 text-sm font-medium text-slate-900">{children}</h4>
     ),
     p: ({ children }) => (
-      <p className="text-sm text-gray-700 leading-6 mb-2">{children}</p>
+      <p className="mb-2 text-sm leading-6 text-slate-700">{children}</p>
     ),
     ul: ({ children }) => (
-      <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1 mb-2">{children}</ul>
+      <ul className="mb-2 list-disc space-y-1 pl-5 text-sm text-slate-700">{children}</ul>
     ),
     ol: ({ children }) => (
-      <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-1 mb-2">{children}</ol>
+      <ol className="mb-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">{children}</ol>
     ),
     li: ({ children }) => <li className="leading-6">{children}</li>,
     a: ({ href, children }) => (
       <a
         href={href}
-        className="text-indigo-600 hover:text-indigo-700 underline"
+        className="text-blue-600 underline hover:text-blue-700"
         target="_blank"
         rel="noreferrer"
       >
         {children}
       </a>
     ),
-    strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
-    em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
+    strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
+    em: ({ children }) => <em className="italic text-slate-700">{children}</em>,
     code: ({ children }) => (
-      <code className="px-1 py-0.5 rounded bg-gray-100 text-xs text-gray-800">
+      <code className="rounded bg-slate-100 px-1 py-0.5 text-xs text-slate-800">
         {children}
       </code>
     ),
@@ -652,8 +655,8 @@ export default function StartHiring() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/40">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
       </div>
     );
   }
@@ -661,19 +664,23 @@ export default function StartHiring() {
   // Chat view (when conversation started)
   if (step !== 'initial' || messages.length > 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/35 to-cyan-50/45">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -left-20 top-[-12%] h-80 w-80 rounded-full bg-blue-200/35 blur-3xl" />
+          <div className="absolute -right-24 top-[12%] h-80 w-80 rounded-full bg-cyan-200/35 blur-3xl" />
+        </div>
         {/* Header */}
-        <header className="bg-white border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2 text-xl font-bold text-indigo-600">
-              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
+          <div className="landing-glass mx-auto flex h-16 w-full max-w-7xl items-center justify-between rounded-2xl border border-slate-200/80 px-4 shadow-[0_24px_48px_-36px_rgba(15,23,42,0.5)] sm:h-[74px] sm:px-6 lg:px-8">
+            <Link to="/" className="flex items-center gap-2 text-xl font-bold text-blue-700 transition-colors hover:text-blue-600">
+              <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>RoboHire</span>
+              <span className="landing-display">RoboHire</span>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={() => {
                   setMessages([]);
@@ -687,16 +694,16 @@ export default function StartHiring() {
                   setSearchParams({});
                   setActiveSessionId(null);
                 }}
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
               >
                 {t('hiring.newRequest', 'New Request')}
               </button>
               {isAuthenticated ? (
-                <Link to="/dashboard" className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                <Link to="/dashboard" className="rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
                   {t('landing.nav.dashboard', 'Dashboard')}
                 </Link>
               ) : (
-                <Link to="/login" className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                <Link to="/login" className="rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
                   {t('landing.nav.signIn', 'Sign In')}
                 </Link>
               )}
@@ -705,27 +712,27 @@ export default function StartHiring() {
         </header>
 
         {/* Chat */}
-        <main className="flex-1 overflow-hidden flex flex-col">
+        <main className="flex flex-1 flex-col overflow-hidden pt-[88px] sm:pt-[104px]">
           <div className="flex-1 overflow-y-auto">
-            <div className="max-w-3xl mx-auto px-6 py-8">
-              <div className="space-y-6">
+            <div className={`mx-auto px-5 py-8 sm:px-6 ${step === 'confirm' ? 'max-w-5xl' : 'max-w-3xl'}`}>
+              <div className="space-y-7">
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] ${message.role === 'user' ? 'order-2' : ''}`}>
+                    <div className={`max-w-[88%] sm:max-w-[80%] ${message.role === 'user' ? 'order-2' : ''}`}>
                       {message.role === 'assistant' && (
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-cyan-500">
                             <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                           </div>
-                          <span className="text-sm font-medium text-gray-700">RoboHire</span>
+                          <span className="text-sm font-medium text-slate-700">RoboHire</span>
                         </div>
                       )}
-                      <div className={`rounded-2xl px-4 py-3 ${
+                      <div className={`rounded-2xl px-4 py-3 shadow-[0_20px_32px_-28px_rgba(15,23,42,0.58)] ${
                         message.role === 'user'
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white border border-gray-200 text-gray-800'
+                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                          : 'border border-slate-200 bg-white/95 text-slate-800 backdrop-blur'
                       }`}>
                         <div className="text-sm leading-relaxed whitespace-pre-wrap">
                           {message.content.split('\n').map((line, i) => {
@@ -747,17 +754,17 @@ export default function StartHiring() {
                 {isProcessing && (
                   <div className="flex justify-start">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-cyan-500">
                         <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                       </div>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 ml-8">
+                    <div className="ml-8 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-[0_20px_32px_-28px_rgba(15,23,42,0.58)]">
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: '0ms' }} />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: '150ms' }} />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: '300ms' }} />
                       </div>
                     </div>
                   </div>
@@ -765,13 +772,13 @@ export default function StartHiring() {
 
                 {step === 'confirm' && (
                   <div className="flex justify-start">
-                    <div className="w-full bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-4">
+                    <div className="w-full rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/85 via-white to-cyan-50/45 px-4 py-4 shadow-[0_24px_40px_-28px_rgba(37,99,235,0.52)]">
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-sm font-semibold text-slate-900">
                             {t('hiring.confirmTitle', 'Confirm hiring request')}
                           </p>
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-slate-600">
                             {t(
                               'hiring.confirmSubtitle',
                               'Review and edit the position title before creating the request.'
@@ -779,12 +786,12 @@ export default function StartHiring() {
                           </p>
                         </div>
                         {isTitleGenerating && (
-                          <span className="text-xs text-indigo-600">
+                          <span className="text-xs text-blue-600">
                             {t('hiring.titleGenerating', 'Generating a title...')}
                           </span>
                         )}
                       </div>
-                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                      <label className="mb-2 block text-xs font-medium uppercase tracking-[0.08em] text-slate-600">
                         {t('hiring.titleLabel', 'Position title')}
                       </label>
                       <input
@@ -800,121 +807,171 @@ export default function StartHiring() {
                         }}
                         disabled={isTitleGenerating}
                         placeholder={t('hiring.titlePlaceholder', 'e.g., Senior Full Stack Engineer')}
-                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-gray-50 disabled:text-gray-400"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-400"
                       />
                       {titleError && (
                         <p className="mt-2 text-xs text-rose-600">{titleError}</p>
                       )}
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="block text-xs font-medium text-gray-700">
-                            {t('hiring.jdLabel', 'Job description')}
-                          </label>
-                          <div className="flex items-center gap-2">
-                            <div className="inline-flex items-center rounded-lg border border-gray-200 bg-white p-0.5">
-                              <button
-                                type="button"
-                                onClick={() => setJdView('markdown')}
-                                className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
-                                  jdView === 'markdown'
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'text-gray-600 hover:text-gray-800'
-                                }`}
-                              >
-                                {t('hiring.jdMarkdownLabel', 'Markdown')}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setJdView('preview')}
-                                className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
-                                  jdView === 'preview'
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'text-gray-600 hover:text-gray-800'
-                                }`}
-                              >
-                                {t('hiring.jdPreview', 'Preview')}
-                              </button>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleJdAiAction}
-                              disabled={isJdGenerating}
-                              title={
-                                jdDraft.trim()
-                                  ? t('hiring.jdAiRefine', 'Refine with AI')
-                                  : t('hiring.jdAiGenerate', 'Generate with AI')
-                              }
-                              aria-label={
-                                jdDraft.trim()
-                                  ? t('hiring.jdAiRefine', 'Refine with AI')
-                                  : t('hiring.jdAiGenerate', 'Generate with AI')
-                              }
-                              className="px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <svg
-                                className="w-3.5 h-3.5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                                />
-                              </svg>
-                              <span>
-                                {jdDraft.trim()
-                                  ? t('hiring.jdAiRefine', 'Refine with AI')
-                                  : t('hiring.jdAiGenerate', 'Generate with AI')}
-                              </span>
-                            </button>
-                            {isJdGenerating && (
-                              <span className="text-xs text-indigo-600">
-                                {t('hiring.jdGenerating', 'Generating job description...')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {jdView === 'markdown' ? (
-                          <textarea
-                            value={jdDraft}
-                            onChange={(e) => {
-                              setJdDraft(e.target.value);
-                              if (jdError) {
-                                setJdError(null);
-                              }
-                            }}
-                            placeholder={t('hiring.jdPlaceholder', 'Draft will appear here...')}
-                            rows={10}
-                            className="w-full min-h-[220px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                          />
-                        ) : (
-                          <div className="w-full min-h-[220px] max-h-96 overflow-auto rounded-xl border border-gray-200 bg-white px-3 py-2">
-                            {jdDraft.trim() ? (
+                      <div className="mt-4 flex flex-col md:flex-row" ref={splitContainerRef}>
+                        {/* Left: Requirements summary */}
+                        {hiringData.requirements.trim() && (
+                          <div style={{ width: `${splitPercent}%` }} className="flex-shrink-0 md:pr-0">
+                            <label className="mb-2 block text-xs font-medium uppercase tracking-[0.08em] text-slate-600">
+                              {t('hiring.requirementsLabel', 'Requirements')}
+                            </label>
+                            <div className="h-[360px] w-full overflow-auto rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-inner shadow-slate-100/70 lg:h-[420px]">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={markdownComponents}
                               >
-                                {jdDraft}
+                                {hiringData.requirements}
                               </ReactMarkdown>
-                            ) : (
-                              <p className="text-sm text-gray-400">
-                                {t('hiring.jdPreviewEmpty', 'Preview will appear here...')}
-                              </p>
-                            )}
+                            </div>
                           </div>
                         )}
-                        {jdError && (
-                          <p className="mt-2 text-xs text-rose-600">{jdError}</p>
+                        {/* Draggable divider */}
+                        {hiringData.requirements.trim() && (
+                          <div
+                            className="group hidden w-3 flex-shrink-0 cursor-col-resize select-none items-center justify-center md:flex"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              const container = splitContainerRef.current;
+                              if (!container) return;
+                              const startX = e.clientX;
+                              const startPercent = splitPercent;
+                              const containerWidth = container.getBoundingClientRect().width;
+                              const onMouseMove = (ev: MouseEvent) => {
+                                const delta = ev.clientX - startX;
+                                const newPercent = startPercent + (delta / containerWidth) * 100;
+                                setSplitPercent(Math.min(70, Math.max(30, newPercent)));
+                              };
+                              const onMouseUp = () => {
+                                document.removeEventListener('mousemove', onMouseMove);
+                                document.removeEventListener('mouseup', onMouseUp);
+                                document.body.style.cursor = '';
+                                document.body.style.userSelect = '';
+                              };
+                              document.body.style.cursor = 'col-resize';
+                              document.body.style.userSelect = 'none';
+                              document.addEventListener('mousemove', onMouseMove);
+                              document.addEventListener('mouseup', onMouseUp);
+                            }}
+                          >
+                            <div className="h-8 w-1 rounded-full bg-slate-300 transition-colors group-hover:bg-blue-400" />
+                          </div>
                         )}
+                        {/* Right: JD editor */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-medium uppercase tracking-[0.08em] text-slate-600">
+                              {t('hiring.jdLabel', 'Job description')}
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setJdView('markdown')}
+                                  className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
+                                    jdView === 'markdown'
+                                      ? 'bg-blue-600 text-white'
+                                      : 'text-slate-600 hover:text-slate-800'
+                                  }`}
+                                >
+                                  {t('hiring.jdMarkdownLabel', 'Markdown')}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setJdView('preview')}
+                                  className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
+                                    jdView === 'preview'
+                                      ? 'bg-blue-600 text-white'
+                                      : 'text-slate-600 hover:text-slate-800'
+                                  }`}
+                                >
+                                  {t('hiring.jdPreview', 'Preview')}
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleJdAiAction}
+                                disabled={isJdGenerating}
+                                title={
+                                  jdDraft.trim()
+                                    ? t('hiring.jdAiRefine', 'Refine with AI')
+                                    : t('hiring.jdAiGenerate', 'Generate with AI')
+                                }
+                                aria-label={
+                                  jdDraft.trim()
+                                    ? t('hiring.jdAiRefine', 'Refine with AI')
+                                    : t('hiring.jdAiGenerate', 'Generate with AI')
+                                }
+                                className="flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                <svg
+                                  className="w-3.5 h-3.5"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                                  />
+                                </svg>
+                                <span>
+                                  {jdDraft.trim()
+                                    ? t('hiring.jdAiRefine', 'Refine with AI')
+                                    : t('hiring.jdAiGenerate', 'Generate with AI')}
+                                </span>
+                              </button>
+                              {isJdGenerating && (
+                                <span className="text-xs text-blue-600">
+                                  {t('hiring.jdGenerating', 'Generating job description...')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {jdView === 'markdown' ? (
+                            <textarea
+                              value={jdDraft}
+                              onChange={(e) => {
+                                setJdDraft(e.target.value);
+                                if (jdError) {
+                                  setJdError(null);
+                                }
+                              }}
+                              placeholder={t('hiring.jdPlaceholder', 'Draft will appear here...')}
+                              rows={10}
+                              className="h-[360px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 lg:h-[420px]"
+                            />
+                          ) : (
+                            <div className="h-[360px] w-full overflow-auto rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-inner shadow-slate-100/70 lg:h-[420px]">
+                              {jdDraft.trim() ? (
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  components={markdownComponents}
+                                >
+                                  {jdDraft}
+                                </ReactMarkdown>
+                              ) : (
+                                <p className="text-sm text-slate-400">
+                                  {t('hiring.jdPreviewEmpty', 'Preview will appear here...')}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {jdError && (
+                            <p className="mt-2 text-xs text-rose-600">{jdError}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="mt-4 flex items-center justify-end">
                         <button
                           onClick={createHiringRequest}
                           disabled={isTitleGenerating || isJdGenerating || !hiringData.title.trim()}
-                          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_-16px_rgba(37,99,235,0.85)] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {t('hiring.createRequest', 'Create hiring request')}
                         </button>
@@ -928,7 +985,7 @@ export default function StartHiring() {
                     <Link
                       to="/login"
                       state={{ from: { pathname: '/start-hiring' } }}
-                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                      className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_-16px_rgba(37,99,235,0.85)]"
                     >
                       {t('hiring.signInToContinue', 'Sign In to Continue')}
                     </Link>
@@ -939,7 +996,7 @@ export default function StartHiring() {
                   <div className="flex justify-center pt-4">
                     <Link
                       to="/dashboard"
-                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                      className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_-16px_rgba(37,99,235,0.85)]"
                     >
                       {t('hiring.goToDashboard', 'Go to Dashboard')}
                     </Link>
@@ -953,22 +1010,22 @@ export default function StartHiring() {
 
           {/* Input */}
           {step !== 'complete' && (
-            <div className="border-t border-gray-200 bg-white px-6 py-4">
-              <div className="max-w-3xl mx-auto">
+            <div className="border-t border-slate-200/80 bg-white/80 px-5 py-4 backdrop-blur sm:px-6">
+              <div className="mx-auto max-w-3xl">
                 {attachedFile && (
-                  <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
+                  <div className="mb-3 flex items-center gap-2 text-sm text-slate-600">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
                     <span>{attachedFile.name}</span>
-                    <button onClick={() => setAttachedFile(null)} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={() => setAttachedFile(null)} className="text-slate-400 transition-colors hover:text-slate-600">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                 )}
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_20px_36px_-30px_rgba(15,23,42,0.55)]">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -978,7 +1035,7 @@ export default function StartHiring() {
                   />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                    className="flex h-[44px] w-[44px] flex-shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -992,14 +1049,14 @@ export default function StartHiring() {
                       onKeyDown={handleKeyDown}
                       placeholder={t('hiring.inputPlaceholder', 'Describe your ideal candidate...')}
                       rows={1}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                      className="w-full resize-none rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                       style={{ minHeight: '44px', maxHeight: '150px' }}
                     />
                   </div>
                   <button
                     onClick={handleSubmit}
                     disabled={!input.trim() && !attachedFile}
-                    className="flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex h-[44px] w-[44px] flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -1016,31 +1073,36 @@ export default function StartHiring() {
 
   // Initial landing view
   return (
-    <div className="min-h-screen bg-white">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/35 to-cyan-50/45">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -left-20 top-[-10%] h-96 w-96 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="absolute -right-20 top-[20%] h-80 w-80 rounded-full bg-cyan-200/30 blur-3xl" />
+      </div>
+      <SEO title={t('seo.startHiring.title', 'AI Hiring Agent')} description={t('seo.startHiring.desc', 'Let AI handle the heavy lifting. Our hiring agent screens resumes, conducts interviews, and delivers evaluation reports automatically.')} url="https://robohire.io/start-hiring" keywords={t('seo.startHiring.keywords', 'AI hiring agent, automated recruitment, resume screening, AI interview, hiring automation')} />
       {/* Header */}
-      <header className="border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-indigo-600">
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
+        <div className="landing-glass mx-auto flex h-16 w-full max-w-7xl items-center justify-between rounded-2xl border border-slate-200/80 px-4 shadow-[0_24px_48px_-36px_rgba(15,23,42,0.5)] sm:h-[74px] sm:px-6 lg:px-8">
+          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-blue-700 transition-colors hover:text-blue-600">
+            <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span>RoboHire</span>
+            <span className="landing-display">RoboHire</span>
           </Link>
-          <div className="flex items-center gap-6">
-            <Link to="/developers" className="text-sm text-gray-600 hover:text-gray-900">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Link to="/developers" className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
               {t('landing.nav.api', 'API')}
             </Link>
-            <Link to="/docs" className="text-sm text-gray-600 hover:text-gray-900">
+            <Link to="/docs" className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
               {t('landing.nav.docs', 'Docs')}
             </Link>
             {isAuthenticated ? (
-              <Link to="/dashboard" className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+              <Link to="/dashboard" className="rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
                 {t('landing.nav.dashboard', 'Dashboard')}
               </Link>
             ) : (
-              <Link to="/login" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
+              <Link to="/login" className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-18px_rgba(37,99,235,0.9)]">
                 {t('landing.nav.signIn', 'Sign In')}
               </Link>
             )}
@@ -1048,13 +1110,14 @@ export default function StartHiring() {
         </div>
       </header>
 
+      <div className="pt-[88px] sm:pt-[104px]">
       {/* Hero Section */}
-      <section className="pt-20 pb-16 px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight mb-6">
+      <section className="px-5 pb-16 pt-16 sm:px-6">
+        <div className="mx-auto max-w-4xl text-center">
+          <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
             {t('hiring.heroTitle', 'Start hiring with AI')}
           </h1>
-          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+          <p className="mx-auto mb-12 max-w-2xl text-xl text-slate-600">
             {t(
               'hiring.heroSubtitle',
               "Tell us who you're looking for. Our AI will help you find, screen, and evaluate candidates automatically."
@@ -1062,11 +1125,11 @@ export default function StartHiring() {
           </p>
 
           {/* Main Input */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-2 mb-8">
-            <div className="flex items-end gap-2">
+          <div className="mb-8 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-[0_32px_64px_-42px_rgba(15,23,42,0.65)]">
+            <div className="flex items-end gap-2 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/70 p-1.5">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
+                className="rounded-xl p-3 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 title={t('hiring.uploadJd', 'Upload Job Description')}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1093,13 +1156,13 @@ export default function StartHiring() {
                 onKeyDown={handleKeyDown}
                 placeholder={t('hiring.inputPlaceholder', 'Describe your ideal candidate...')}
                 rows={1}
-                className="flex-1 px-2 py-3 text-gray-900 placeholder-gray-400 bg-transparent resize-none focus:outline-none"
+                className="flex-1 resize-none bg-transparent px-2 py-3 text-slate-900 placeholder-slate-400 focus:outline-none"
                 style={{ minHeight: '48px', maxHeight: '120px' }}
               />
               <button
                 onClick={handleSubmit}
                 disabled={!input.trim()}
-                className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -1114,7 +1177,7 @@ export default function StartHiring() {
               <button
                 key={role.id}
                 onClick={() => handleQuickStart(role.label)}
-                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
               >
                 {role.label}
               </button>
@@ -1124,33 +1187,33 @@ export default function StartHiring() {
       </section>
 
       {/* Templates Section */}
-      <section className="py-16 px-6 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+      <section className="px-5 py-16 sm:px-6">
+        <div className="mx-auto max-w-5xl rounded-[28px] border border-slate-200 bg-white/80 px-5 py-10 shadow-[0_30px_62px_-44px_rgba(15,23,42,0.65)] backdrop-blur sm:px-8">
+          <div className="mb-10 text-center">
+            <h2 className="mb-2 text-2xl font-semibold text-slate-900">
               {t('hiring.templatesTitle', 'Popular role templates')}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-slate-600">
               {t('hiring.templatesSubtitle', 'Start with a pre-built template or describe your own requirements')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {templatesToShow.map((template) => (
               <button
                 key={template.id}
                 onClick={() => handleTemplateSelect(template)}
-                className="group text-left p-5 bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all"
+                className="group rounded-2xl border border-slate-200 bg-white p-5 text-left transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_18px_34px_-24px_rgba(37,99,235,0.55)]"
               >
-                <h3 className="font-medium text-gray-900 group-hover:text-indigo-600 mb-1">
+                <h3 className="mb-1 font-medium text-slate-900 group-hover:text-blue-600">
                   {template.title}
                 </h3>
-                <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                <p className="mb-3 line-clamp-2 text-sm text-slate-500">
                   {template.requirements.substring(0, 80)}...
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {template.skills.slice(0, 3).map((skill) => (
-                    <span key={skill} className="px-2 py-0.5 text-xs text-gray-600 bg-gray-100 rounded">
+                    <span key={skill} className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
                       {skill}
                     </span>
                   ))}
@@ -1160,11 +1223,11 @@ export default function StartHiring() {
           </div>
 
           {!showAllTemplates && (
-            <div className="text-center mt-8">
+            <div className="mt-8 text-center">
               <button
                 type="button"
                 onClick={() => setShowAllTemplates(true)}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 {t('hiring.viewAllTemplates', 'View all templates')}
               </button>
@@ -1174,51 +1237,51 @@ export default function StartHiring() {
       </section>
 
       {/* How it Works */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+      <section className="px-5 py-20 sm:px-6">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-12 text-center">
+            <h2 className="mb-2 text-2xl font-semibold text-slate-900">
               {t('hiring.howItWorksTitle', 'How it works')}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 bg-indigo-100 rounded-full flex items-center justify-center">
-                <span className="text-lg font-semibold text-indigo-600">1</span>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 text-center shadow-[0_22px_40px_-32px_rgba(15,23,42,0.52)] backdrop-blur">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                <span className="text-lg font-semibold text-blue-600">1</span>
               </div>
-              <h3 className="font-medium text-gray-900 mb-2">
+              <h3 className="mb-2 font-medium text-slate-900">
                 {t('hiring.howItWorks.step1.title', 'Describe your role')}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 {t(
                   'hiring.howItWorks.step1.desc',
                   "Tell us about the skills, experience, and qualities you're looking for."
                 )}
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 bg-indigo-100 rounded-full flex items-center justify-center">
-                <span className="text-lg font-semibold text-indigo-600">2</span>
+            <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 text-center shadow-[0_22px_40px_-32px_rgba(15,23,42,0.52)] backdrop-blur">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                <span className="text-lg font-semibold text-blue-600">2</span>
               </div>
-              <h3 className="font-medium text-gray-900 mb-2">
+              <h3 className="mb-2 font-medium text-slate-900">
                 {t('hiring.howItWorks.step2.title', 'AI screens candidates')}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 {t(
                   'hiring.howItWorks.step2.desc',
                   'Our AI reviews resumes, conducts initial interviews, and evaluates fit.'
                 )}
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 bg-indigo-100 rounded-full flex items-center justify-center">
-                <span className="text-lg font-semibold text-indigo-600">3</span>
+            <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 text-center shadow-[0_22px_40px_-32px_rgba(15,23,42,0.52)] backdrop-blur">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                <span className="text-lg font-semibold text-blue-600">3</span>
               </div>
-              <h3 className="font-medium text-gray-900 mb-2">
+              <h3 className="mb-2 font-medium text-slate-900">
                 {t('hiring.howItWorks.step3.title', 'Review top matches')}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 {t(
                   'hiring.howItWorks.step3.desc',
                   'Get detailed reports on your best candidates and make faster hiring decisions.'
@@ -1230,17 +1293,17 @@ export default function StartHiring() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 px-6 bg-indigo-600">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-semibold text-white mb-4">
+      <section className="px-5 py-16 sm:px-6">
+        <div className="mx-auto max-w-4xl rounded-[28px] bg-slate-950 px-6 py-14 text-center shadow-[0_40px_70px_-44px_rgba(2,6,23,0.92)] sm:px-10">
+          <h2 className="mb-4 text-2xl font-semibold text-white">
             {t('hiring.ctaTitle', 'Ready to streamline your hiring?')}
           </h2>
-          <p className="text-indigo-100 mb-8">
+          <p className="mb-8 text-slate-300">
             {t('hiring.ctaSubtitle', 'Join thousands of companies using AI to hire faster and smarter.')}
           </p>
           <button
             onClick={() => textareaRef.current?.focus()}
-            className="px-6 py-3 bg-white text-indigo-600 font-medium rounded-lg hover:bg-indigo-50 transition-colors"
+            className="rounded-full bg-white px-6 py-3 font-medium text-slate-900 transition-colors hover:bg-slate-100"
           >
             {t('hiring.ctaButton', 'Start hiring now')}
           </button>
@@ -1248,27 +1311,28 @@ export default function StartHiring() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-gray-100">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">
+      <footer className="border-t border-slate-200/80 px-5 py-8 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
+          <p className="text-sm text-slate-500">
             © 2026 RoboHire. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link to="/developers" className="text-sm text-gray-500 hover:text-gray-700">
+            <Link to="/developers" className="text-sm text-slate-500 hover:text-slate-700">
               {t('landing.nav.api', 'API')}
             </Link>
-            <Link to="/docs" className="text-sm text-gray-500 hover:text-gray-700">
+            <Link to="/docs" className="text-sm text-slate-500 hover:text-slate-700">
               {t('landing.nav.docs', 'Docs')}
             </Link>
-            <Link to="/privacy" className="text-sm text-gray-500 hover:text-gray-700">
+            <Link to="/privacy" className="text-sm text-slate-500 hover:text-slate-700">
               {t('landing.footer.privacy', 'Privacy')}
             </Link>
-            <Link to="/terms" className="text-sm text-gray-500 hover:text-gray-700">
+            <Link to="/terms" className="text-sm text-slate-500 hover:text-slate-700">
               {t('landing.footer.terms', 'Terms')}
             </Link>
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 }

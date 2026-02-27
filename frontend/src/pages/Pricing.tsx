@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +18,6 @@ interface Plan {
   name: string;
   subtitle: string;
   monthlyPrice: number | null;
-  annualPrice: number | null;
   features: PlanFeature[];
   cta: string;
   popular?: boolean;
@@ -35,71 +34,87 @@ export default function Pricing() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [annual, setAnnual] = useState(false);
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [dynamicPrices, setDynamicPrices] = useState<{ starter: number; growth: number; business: number }>({
+    starter: 29, growth: 199, business: 399,
+  });
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/v1/config/pricing`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setDynamicPrices({
+            starter: data.data.starter ?? 29,
+            growth: data.data.growth ?? 199,
+            business: data.data.business ?? 399,
+          });
+        }
+      })
+      .catch(() => { /* keep defaults */ });
+  }, []);
 
   const plans: Plan[] = [
     {
-      id: 'free',
-      name: t('pricing.free.name', 'Free'),
-      subtitle: t('pricing.free.subtitle', 'For individuals getting started'),
-      monthlyPrice: 0,
-      annualPrice: 0,
-      cta: t('pricing.free.cta', 'Get started free'),
+      id: 'starter',
+      name: t('pricing.starter.name', 'Starter'),
+      subtitle: t('pricing.starter.subtitle', 'For individuals getting started'),
+      monthlyPrice: dynamicPrices.starter,
+      cta: t('pricing.starter.cta', 'Start free trial'),
       features: [
-        { text: t('pricing.free.f1', '2 job roles') },
-        { text: t('pricing.free.f2', '10 resume matches') },
-        { text: t('pricing.free.f3', '2 interviews') },
-        { text: t('pricing.free.f4', 'Interview scoring & assessment') },
-        { text: t('pricing.free.f5', 'Interview summaries') },
+        { text: t('pricing.starter.f1', '1 seat') },
+        { text: t('pricing.starter.f2', '3 job roles') },
+        { text: t('pricing.starter.f3', '15 interviews') },
+        { text: t('pricing.starter.f4', '30 resume matches') },
+        { text: t('pricing.starter.f5', 'Interview scoring & assessment') },
+        { text: t('pricing.starter.f6', 'Interview summaries') },
       ],
     },
     {
-      id: 'startup',
-      name: t('pricing.startup.name', 'Startup'),
-      subtitle: t('pricing.startup.subtitle', 'For small teams hiring fast'),
-      monthlyPrice: 299,
-      annualPrice: 3289,
-      cta: t('pricing.startup.cta', 'Start free trial'),
+      id: 'growth',
+      name: t('pricing.growth.name', 'Growth'),
+      subtitle: t('pricing.growth.subtitle', 'For growing teams'),
+      monthlyPrice: dynamicPrices.growth,
+      cta: t('pricing.growth.cta', 'Start free trial'),
       features: [
-        { text: t('pricing.startup.f1', 'Unlimited seats') },
-        { text: t('pricing.startup.f2', 'Unlimited job roles') },
-        { text: t('pricing.startup.f3', '180 interviews / month') },
-        { text: t('pricing.startup.f4', '180 resume matches / month') },
-        { text: t('pricing.startup.f5', 'RoboHire API access'), subtext: t('pricing.startup.f5s', 'Integrate with your systems') },
-        { text: t('pricing.startup.f6', '6 interview languages') },
-        { text: t('pricing.startup.f7', 'Language proficiency assessment') },
-        { text: t('pricing.startup.f8', 'Email support') },
+        { text: t('pricing.growth.f1', 'Unlimited seats') },
+        { text: t('pricing.growth.f2', 'Unlimited job roles') },
+        { text: t('pricing.growth.f3', '120 interviews / month') },
+        { text: t('pricing.growth.f4', '240 resume matches / month') },
+        { text: t('pricing.growth.f5', 'Everything in Starter') },
+        { text: t('pricing.growth.f6', 'RoboHire access'), subtext: t('pricing.growth.f6s', 'Integrate with your systems') },
+        { text: t('pricing.growth.f7', '6 interview languages') },
+        { text: t('pricing.growth.f8', 'Language proficiency assessment') },
+        { text: t('pricing.growth.f9', 'Email support') },
       ],
     },
     {
       id: 'business',
       name: t('pricing.business.name', 'Business'),
       subtitle: t('pricing.business.subtitle', 'For large teams scaling fast'),
-      monthlyPrice: 599,
-      annualPrice: 6589,
+      monthlyPrice: dynamicPrices.business,
       cta: t('pricing.business.cta', 'Start free trial'),
       popular: true,
       features: [
         { text: t('pricing.business.f1', 'Unlimited seats') },
         { text: t('pricing.business.f2', 'Unlimited job roles') },
-        { text: t('pricing.business.f3', '400 interviews / month') },
-        { text: t('pricing.business.f4', '400 resume matches / month') },
-        { text: t('pricing.business.f5', 'Everything in Startup') },
-        { text: t('pricing.business.f6', 'Priority support') },
-        { text: t('pricing.business.f7', 'Advanced analytics') },
-        { text: t('pricing.business.f8', 'White-label reports') },
-        { text: t('pricing.business.f9', 'Full video playback') },
+        { text: t('pricing.business.f3', '280 interviews / month') },
+        { text: t('pricing.business.f4', '500 resume matches / month') },
+        { text: t('pricing.business.f5', 'Everything in Growth') },
+        { text: t('pricing.business.f6', 'Priority support'), subtext: t('pricing.business.f6s', 'Faster response times') },
+        { text: t('pricing.business.f7', 'Advanced analytics'), subtext: t('pricing.business.f7s', 'Detailed hiring funnel insights') },
+        { text: t('pricing.business.f8', 'White-label interview reports') },
+        { text: t('pricing.business.f9', 'Full interview video playback') },
         { text: t('pricing.business.f10', 'Cheating analysis') },
       ],
     },
     {
       id: 'custom',
-      name: t('pricing.custom.name', 'Enterprise'),
+      name: t('pricing.custom.name', 'Custom'),
       subtitle: t('pricing.custom.subtitle', 'For high-volume organizations'),
       monthlyPrice: null,
-      annualPrice: null,
-      cta: t('pricing.custom.cta', 'Contact sales'),
+      cta: t('pricing.custom.cta', 'Contact us'),
       custom: true,
       features: [
         { text: t('pricing.custom.f1', 'Unlimited everything') },
@@ -115,7 +130,7 @@ export default function Pricing() {
   const faqs = [
     {
       q: t('pricing.faq.q1', 'Can I try RoboHire for free?'),
-      a: t('pricing.faq.a1', 'Yes! Our Free plan includes 10 resume matches and 2 interviews at no cost. No credit card required to get started.'),
+      a: t('pricing.faq.a1', 'Yes! All paid plans include a 14-day free trial. No credit card required to get started.'),
     },
     {
       q: t('pricing.faq.q2', 'What payment methods do you accept?'),
@@ -130,20 +145,16 @@ export default function Pricing() {
       a: t('pricing.faq.a4', 'You can use our pay-per-use pricing to continue beyond your plan limits. Resume matches are $0.40 each and interviews are $2.00 each, deducted from your top-up balance.'),
     },
     {
-      q: t('pricing.faq.q5', 'Do you offer annual billing discounts?'),
-      a: t('pricing.faq.a5', 'Yes! Annual billing saves you approximately 8% compared to monthly billing. You can switch between monthly and annual billing at any time.'),
+      q: t('pricing.faq.q5', 'What is included in the pay-per-use pricing?'),
+      a: t('pricing.faq.a5', 'Pay-per-use lets you top up a balance and use it for individual resume matches ($0.40) or interviews ($2.00). Each includes the full suite of features: AI scoring, summaries, cheating analysis, and more.'),
     },
     {
-      q: t('pricing.faq.q6', 'What is included in the pay-per-use pricing?'),
-      a: t('pricing.faq.a6', 'Pay-per-use lets you top up a balance and use it for individual resume matches ($0.40) or interviews ($2.00). Each includes the full suite of features: AI scoring, summaries, cheating analysis, and more.'),
+      q: t('pricing.faq.q6', 'Is there a contract or commitment?'),
+      a: t('pricing.faq.a6', 'No contracts. Monthly plans can be canceled anytime with no early termination fees.'),
     },
     {
-      q: t('pricing.faq.q7', 'Is there a contract or commitment?'),
-      a: t('pricing.faq.a7', 'No contracts. Monthly plans can be canceled anytime. Annual plans are billed upfront for the year but you can cancel renewal at any time.'),
-    },
-    {
-      q: t('pricing.faq.q8', 'Do you offer custom enterprise plans?'),
-      a: t('pricing.faq.a8', 'Yes! Our Enterprise plan includes unlimited usage, custom workflows, ATS integrations, dedicated support, and more. Contact our sales team for a tailored quote.'),
+      q: t('pricing.faq.q7', 'Do you offer custom plans?'),
+      a: t('pricing.faq.a7', 'Yes! Our Custom plan includes unlimited usage, custom workflows, ATS integrations, dedicated support, and more. Contact our sales team for a tailored quote.'),
     },
   ];
 
@@ -178,39 +189,47 @@ export default function Pricing() {
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const handlePlanCta = async (plan: Plan) => {
+  const handlePlanCta = async (plan: Plan, startTrial = false) => {
     if (plan.custom) {
       navigate('/request-demo');
       return;
     }
-    if (plan.id === 'free') {
-      navigate(isAuthenticated ? '/dashboard' : '/login');
-      return;
-    }
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: { pathname: '/pricing' } } });
+      navigate('/login', { state: { from: { pathname: '/pricing' }, trial: startTrial, tier: plan.id } });
       return;
     }
     setLoadingTier(plan.id);
+    setCheckoutError(null);
     try {
       const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       const response = await fetch(`${API_BASE}/api/v1/checkout`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
           tier: plan.id,
-          interval: annual ? 'annual' : 'monthly',
+          trial: startTrial,
         }),
       });
+      if (response.status === 401) {
+        navigate('/login', { state: { from: { pathname: '/pricing' }, trial: startTrial, tier: plan.id } });
+        return;
+      }
       const data = await response.json();
       if (data.success && data.data?.url) {
         window.location.href = data.data.url;
+      } else {
+        setCheckoutError(data.error || t('pricing.checkoutError', 'Failed to start checkout. Please try again.'));
       }
     } catch (err) {
       console.error('Checkout error:', err);
+      setCheckoutError(t('pricing.checkoutError', 'Failed to start checkout. Please try again.'));
     } finally {
       setLoadingTier(null);
     }
@@ -218,13 +237,7 @@ export default function Pricing() {
 
   const formatPrice = (plan: Plan) => {
     if (plan.custom) return null;
-    const price = annual ? plan.annualPrice : plan.monthlyPrice;
-    if (price === 0) return { amount: '$0', period: '' };
-    if (annual) {
-      const monthlyEquiv = Math.round((price ?? 0) / 12);
-      return { amount: `$${monthlyEquiv}`, period: `/ ${t('pricing.month', 'mo')}` };
-    }
-    return { amount: `$${price}`, period: `/ ${t('pricing.month', 'mo')}` };
+    return { amount: `$${plan.monthlyPrice}`, period: `/ ${t('pricing.month', 'mo')}` };
   };
 
   const productSchema = {
@@ -234,9 +247,9 @@ export default function Pricing() {
     description: 'AI-powered hiring platform with automated resume screening, interviews, and evaluation reports.',
     brand: { '@type': 'Brand', name: 'RoboHire' },
     offers: [
-      { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD', description: '10 resume matches, 2 interviews' },
-      { '@type': 'Offer', name: 'Startup', price: '299', priceCurrency: 'USD', billingIncrement: 'P1M', description: '180 interviews & resume matches/month' },
-      { '@type': 'Offer', name: 'Business', price: '599', priceCurrency: 'USD', billingIncrement: 'P1M', description: '400 interviews & resume matches/month' },
+      { '@type': 'Offer', name: 'Starter', price: String(dynamicPrices.starter), priceCurrency: 'USD', billingIncrement: 'P1M', description: '15 interviews, 30 resume matches' },
+      { '@type': 'Offer', name: 'Growth', price: String(dynamicPrices.growth), priceCurrency: 'USD', billingIncrement: 'P1M', description: '120 interviews, 240 resume matches/month' },
+      { '@type': 'Offer', name: 'Business', price: String(dynamicPrices.business), priceCurrency: 'USD', billingIncrement: 'P1M', description: '280 interviews, 500 resume matches/month' },
     ],
   };
 
@@ -254,7 +267,7 @@ export default function Pricing() {
     <>
       <SEO
         title={t('pricing.seo.title', 'Pricing - AI Hiring Plans for Every Team')}
-        description={t('pricing.seo.desc', 'Choose the right RoboHire plan. Free tier, Startup at $299/mo, Business at $599/mo, or custom enterprise pricing. AI resume matching and interviews included.')}
+        description={t('pricing.seo.desc', 'Choose the right RoboHire plan. Starter at $29/mo, Growth at $199/mo, Business at $399/mo, or custom pricing. AI resume matching and interviews included.')}
         url="https://robohire.io/pricing"
       />
       <Helmet>
@@ -274,33 +287,22 @@ export default function Pricing() {
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight mb-4">
               {t('pricing.headline', 'Pricing that ')}<span className="text-indigo-600">{t('pricing.headlineAccent', 'grows with you')}</span>.
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-10">
-              {t('pricing.subheadline', 'Start free, scale as you grow. Only pay for what you use.')}
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              {t('pricing.subheadline', 'Simple, transparent pricing. Scale as you grow.')}
             </p>
-
-            {/* Billing Toggle */}
-            <div className="inline-flex items-center gap-3 bg-gray-100 rounded-full p-1">
-              <button
-                onClick={() => setAnnual(false)}
-                className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
-                  !annual ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {t('pricing.monthly', 'Monthly')}
-              </button>
-              <button
-                onClick={() => setAnnual(true)}
-                className={`px-5 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-2 ${
-                  annual ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {t('pricing.annual', 'Annual')}
-                <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-full">
-                  {t('pricing.save', 'Save 8%')}
-                </span>
-              </button>
-            </div>
           </section>
+
+          {/* Checkout Error */}
+          {checkoutError && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+              <div className="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                {checkoutError}
+              </div>
+            </div>
+          )}
 
           {/* Plan Cards */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
@@ -351,24 +353,17 @@ export default function Pricing() {
                           )}
                         </div>
                       )}
-                      {annual && !plan.custom && plan.monthlyPrice !== 0 && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {t('pricing.billedAnnually', 'Billed annually at ')}${plan.annualPrice?.toLocaleString()}/{t('pricing.year', 'yr')}
-                        </p>
-                      )}
                     </div>
 
                     <button
-                      onClick={() => handlePlanCta(plan)}
+                      onClick={() => handlePlanCta(plan, !plan.custom)}
                       disabled={loadingTier === plan.id}
                       className={`w-full py-3 px-4 rounded-xl text-sm font-semibold transition-colors mb-6 ${
                         plan.popular
                           ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                           : plan.custom
                             ? 'bg-gray-900 text-white hover:bg-gray-800'
-                            : plan.id === 'free'
-                              ? 'border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
-                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
                       } disabled:opacity-60 disabled:cursor-not-allowed`}
                     >
                       {loadingTier === plan.id ? (

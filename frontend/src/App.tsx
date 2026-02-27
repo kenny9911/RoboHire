@@ -10,6 +10,7 @@ import StartHiring from './pages/StartHiring';
 import APILanding from './pages/APILanding';
 import Pricing from './pages/Pricing';
 import RequestDemo from './pages/RequestDemo';
+import QuickInvite from './pages/QuickInvite';
 
 // Dashboard layout + pages
 import DashboardLayout from './layouts/DashboardLayout';
@@ -17,6 +18,8 @@ import Dashboard from './pages/Dashboard';
 import APIKeys from './pages/APIKeys';
 import DashboardStats from './pages/DashboardStats';
 import UsageDashboard from './pages/UsageDashboard';
+import Account from './pages/Account';
+import AdminDashboard from './pages/AdminDashboard';
 
 // API Playground layout
 import APIPlayground from './layouts/APIPlayground';
@@ -55,6 +58,7 @@ function App() {
           <Route path="/developers" element={<APILanding />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/request-demo" element={<RequestDemo />} />
+          <Route path="/quick-invite" element={<QuickInvite />} />
 
           {/* Dashboard (protected, shared sidebar layout) */}
           <Route
@@ -70,6 +74,8 @@ function App() {
             <Route path="api-keys" element={<APIKeys />} />
             <Route path="stats" element={<DashboardStats />} />
             <Route path="usage" element={<UsageDashboard />} />
+            <Route path="account" element={<Account />} />
+            <Route path="admin" element={<AdminDashboard />} />
           </Route>
 
           {/* API Playground Routes (Public) */}

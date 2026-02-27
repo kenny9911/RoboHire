@@ -53,19 +53,19 @@ export default function DocsLayout() {
   return (
     <div className="min-h-screen bg-white">
       {/* Top Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
+        <div className="landing-glass mx-auto flex h-16 max-w-7xl items-center justify-between rounded-2xl border border-slate-200/80 px-4 shadow-[0_24px_48px_-36px_rgba(15,23,42,0.5)] sm:h-[74px] sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-2 text-xl font-bold text-indigo-600">
-              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <Link to="/" className="flex items-center gap-2 text-xl font-bold text-blue-700 transition-colors hover:text-blue-600">
+              <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>RoboHire</span>
+              <span className="landing-display">RoboHire</span>
             </Link>
-            <span className="text-gray-300">|</span>
-            <span className="text-gray-600 font-medium">{t('docs.title', 'Documentation')}</span>
+            <span className="text-slate-300">|</span>
+            <span className="font-medium text-slate-600">{t('docs.title', 'Documentation')}</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -77,9 +77,9 @@ export default function DocsLayout() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('docs.search', 'Search docs...')}
-                  className="w-64 px-4 py-2 pl-10 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-64 rounded-lg border border-slate-200 bg-white px-4 py-2 pl-10 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 />
-                <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
@@ -87,13 +87,13 @@ export default function DocsLayout() {
 
             <Link
               to="/api-playground"
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              className="hidden rounded-full px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 sm:inline-flex"
             >
               {t('docs.playground', 'Playground')}
             </Link>
             <Link
               to="/dashboard/api-keys"
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+              className="hidden rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white transition-all hover:-translate-y-0.5 sm:inline-flex"
             >
               {t('docs.getApiKey', 'Get API Key')}
             </Link>
@@ -101,7 +101,7 @@ export default function DocsLayout() {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isMobileMenuOpen ? (
@@ -115,13 +115,13 @@ export default function DocsLayout() {
         </div>
       </header>
 
-      <div className="flex pt-16">
+      <div className="flex pt-[88px] sm:pt-[104px]">
         {/* Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-40 w-72 bg-gray-50 border-r border-gray-200 pt-16 
+          fixed inset-y-0 left-0 z-40 w-72 bg-gray-50 border-r border-gray-200 pt-[88px] sm:pt-[104px]
           transform transition-transform duration-200 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:static lg:inset-auto
+          lg:translate-x-0 lg:static lg:inset-auto lg:pt-0
         `}>
           <div className="h-full overflow-y-auto p-6">
             <nav className="space-y-8">

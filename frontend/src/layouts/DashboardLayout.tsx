@@ -128,6 +128,16 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    path: '/dashboard/account',
+    labelKey: 'dashboard.nav.account',
+    fallback: 'Account',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+  },
 ];
 
 const secondaryLinks = [
@@ -145,6 +155,8 @@ function getPageTitle(
   if (pathname === '/dashboard/api-keys') return t('apiKeys.title', 'API Keys');
   if (pathname === '/dashboard/usage') return t('dashboard.nav.usage', 'Usage');
   if (pathname === '/dashboard/stats') return t('dashboard.nav.stats', 'Statistics');
+  if (pathname === '/dashboard/account') return t('dashboard.nav.account', 'Account');
+  if (pathname === '/dashboard/admin') return 'Admin';
   return t('dashboard.nav.dashboard', 'Overview');
 }
 
@@ -266,7 +278,7 @@ export default function DashboardLayout() {
       </div>
 
       {/* Primary Nav */}
-      <nav className="flex-1 px-3 mt-2">
+      <nav className="flex-1 px-3 mt-2 overflow-y-auto">
         <div className="space-y-1">
           {navItems.map((item) => {
             const active = isActive(item.path, item.exact);
@@ -285,6 +297,24 @@ export default function DashboardLayout() {
               </Link>
             );
           })}
+          {user?.role === 'admin' && (
+            <Link
+              to="/dashboard/admin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/dashboard/admin')
+                  ? 'bg-indigo-50 text-indigo-700'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <span className={isActive('/dashboard/admin') ? 'text-indigo-600' : 'text-gray-400'}>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </span>
+              Admin
+            </Link>
+          )}
         </div>
 
         {/* Separator */}
@@ -309,7 +339,10 @@ export default function DashboardLayout() {
 
       {/* User section */}
       <div className="border-t border-gray-200 px-3 py-4">
-        <div className="flex items-center gap-3 px-3 mb-3">
+        <Link
+          to="/dashboard/account"
+          className="flex items-center gap-3 px-3 mb-3 rounded-lg py-2 -my-1 hover:bg-gray-100 transition-colors cursor-pointer"
+        >
           {user?.avatar ? (
             <img src={user.avatar} alt="" className="w-9 h-9 rounded-full" />
           ) : (
@@ -323,7 +356,7 @@ export default function DashboardLayout() {
             <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'User'}</p>
             <p className="text-xs text-gray-500 truncate">{user?.email}</p>
           </div>
-        </div>
+        </Link>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
@@ -349,7 +382,7 @@ export default function DashboardLayout() {
 
       {/* Sidebar -- mobile: slide-over, desktop: static */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:sticky lg:top-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
+import SEO from '../components/SEO';
 
 interface HiringRequest {
   id: string;
@@ -150,6 +151,7 @@ export default function DashboardStats() {
 
   return (
     <div className="max-w-7xl mx-auto">
+        <SEO title="Statistics" noIndex />
         <div className="mb-8">
           <h1 className="text-xl font-semibold text-gray-900 mb-2">
             {t('stats.title', 'Statistics')}

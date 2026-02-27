@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "RoboHire API",
+    "title": "RoboHire",
     "subtitle": "Admin-Dashboard"
   },
   "language": {
@@ -82,15 +82,15 @@
       "headline": "Top-Talente einstellen",
       "headlineHighlight": "vor der Konkurrenz",
       "subheadline": "Schluss mit stundenlangem CV-Sichten. Unser KI‑Recruiter filtert, interviewt und liefert vollständige Reports – automatisch.",
-      "ctaPrimary": "Einfach einstellen",
-      "ctaSecondary": "API entdecken",
+      "ctaPrimary": "Kostenlos testen",
+      "ctaSecondary": "Jetzt einstellen",
       "stat1": "Zeit gespart",
       "stat2": "Schnelleres Screening",
       "stat3": "Unternehmen",
       "stat4": "Rund um die Uhr"
     },
     "services": {
-      "title": "Zwei starke Wege, um zu rekrutieren",
+      "title": "Drei leistungsstarke Wege zur Einstellung",
       "subtitle": "Wählen Sie die Lösung, die zu Ihnen passt – oder kombinieren Sie beide für maximale Effizienz.",
       "hiring": {
         "title": "Jetzt einstellen",
@@ -103,8 +103,19 @@
         "cta": "Jetzt starten",
         "badge": "Beliebt"
       },
+      "quickInvite": {
+        "title": "Schnelle Interview-Einladung",
+        "subtitle": "Masseneinladung mit einem Klick",
+        "description": "Laden Sie Lebensläufe und Stellenbeschreibungen hoch und senden Sie Interview-Einladungen mit QR-Codes und Links an alle Kandidaten mit einem Klick.",
+        "feature1": "Massen-Upload von Lebensläufen (PDF)",
+        "feature2": "KI-gestützte Lebenslaufanalyse",
+        "feature3": "QR-Code-Interview-Links",
+        "feature4": "E-Mail-Einladungen mit einem Klick",
+        "cta": "Einladungen starten",
+        "badge": "Neu"
+      },
       "api": {
-        "title": "RoboHire API",
+        "title": "RoboHire",
         "subtitle": "Für Entwickler",
         "description": "Integrieren Sie KI‑Recruiting in Ihre Systeme: Parsing, Matching, Interview‑Bewertung und mehr.",
         "feature1": "Lebenslauf- & JD‑Parsing",
@@ -175,7 +186,7 @@
     "cta": {
       "title": "Bereit für smarteres Recruiting?",
       "subtitle": "Schließen Sie sich hunderten Unternehmen an, die schneller mit KI einstellen. Kostenlos starten – ohne Kreditkarte.",
-      "primary": "Einfach einstellen",
+      "primary": "Kostenlos testen",
       "secondary": "Mit Sales sprechen",
       "benefit1": "Keine Kreditkarte nötig",
       "benefit2": "14 Tage kostenlos",
@@ -214,7 +225,7 @@
   },
   "apiLanding": {
     "hero": {
-      "badge": "RoboHire API",
+      "badge": "RoboHire",
       "headline": "Bauen Sie KI-gestützte Einstellung in Minuten",
       "subheadline": "Integrieren Sie intelligente Lebenslauf-Matching, Interview-Bewertung und Kandidaten-Screening in Ihre Anwendung mit nur wenigen Codezeilen.",
       "getKey": "API-Schlüssel erhalten",
@@ -223,7 +234,7 @@
     "what": {
       "badge": "Was ist das?",
       "title": "Leistungsstarke KI-Recruiting-APIs",
-      "description": "RoboHire API bietet eine vollständige Suite von KI-gestützten Recruiting-Tools. Gleichen Sie Lebensläufe mit Stellenbeschreibungen ab, analysieren Sie Dokumente, bewerten Sie Interviews und automatisieren Sie die Kandidatenkommunikation - alles über einfache REST-API-Endpunkte.",
+      "description": "RoboHire bietet eine vollständige Suite von KI-gestützten Recruiting-Tools. Gleichen Sie Lebensläufe mit Stellenbeschreibungen ab, analysieren Sie Dokumente, bewerten Sie Interviews und automatisieren Sie die Kandidatenkommunikation - alles über einfache REST-API-Endpunkte.",
       "exploreDocs": "Dokumentation erkunden"
     },
     "howItWorks": {
@@ -233,7 +244,7 @@
     "steps": {
       "signup": {
         "title": "Registrieren oder anmelden",
-        "desc": "Erstellen Sie ein kostenloses Konto oder melden Sie sich an, um auf Ihr RoboHire API Dashboard zuzugreifen."
+        "desc": "Erstellen Sie ein kostenloses Konto oder melden Sie sich an, um auf Ihr RoboHire Dashboard zuzugreifen."
       },
       "apikey": {
         "title": "API-Schlüssel erhalten",
@@ -309,6 +320,7 @@
     "titlePlaceholder": "z. B. Senior Full-Stack-Engineer",
     "titleGenerating": "Titel wird erstellt...",
     "titleError": "Der Titel konnte nicht erstellt werden. Bitte manuell bearbeiten.",
+    "requirementsLabel": "Anforderungen",
     "jdLabel": "Stellenbeschreibung",
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "Der Entwurf erscheint hier...",
@@ -326,6 +338,7 @@
     "step2": "Passende Kandidaten werden automatisch interviewt",
     "step3": "Sie erhalten Bewertungsberichte für die besten Kandidaten",
     "visitDashboard": "Besuchen Sie Ihr Dashboard, um den Fortschritt zu verfolgen und Kandidaten zu verwalten.",
+    "chatError": "Entschuldigung, bei der Verarbeitung ist ein Problem aufgetreten. Bitte versuchen Sie es erneut.",
     "errorCreating": "Beim Erstellen Ihrer Anfrage ist ein Problem aufgetreten: ",
     "tryAgain": "Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
     "errorGeneric": "Beim Erstellen Ihrer Anfrage ist ein Problem aufgetreten. Bitte versuchen Sie es erneut.",
@@ -522,7 +535,9 @@
       "stats": "Statistiken",
       "newHiring": "Neue Einstellung",
       "apiKeys": "API-Schlüssel",
-      "apiPlayground": "API Playground"
+      "apiPlayground": "API Playground",
+      "account": "Konto",
+      "usage": "Nutzung"
     },
     "welcome": "Willkommen zurück",
     "user": "da",
@@ -664,7 +679,7 @@
       "errorMissingRecruiter": "Bitte Recruiter-E-Mail angeben",
       "externalApiTitle": "RoboHire externe API",
       "copyCode": "Code kopieren",
-      "tip": "Tipp: Code kopieren und im Terminal ausfuhren, um die RoboHire API zu testen"
+      "tip": "Tipp: Code kopieren und im Terminal ausfuhren, um die RoboHire zu testen"
     },
     "parseResume": {
       "title": "Lebenslauf parsen",
@@ -701,73 +716,158 @@
       "resultTitle": "Bewertungsergebnis",
       "loadingDefault": "Interview wird bewertet...",
       "loadingWithCheating": "Interview wird bewertet und Betrugserkennung lauft...",
+      "stepResume": "Lebenslauf wird geladen...",
+      "stepResumeDone": "Lebenslauf geladen",
+      "stepJd": "Stellenbeschreibung wird geladen...",
+      "stepJdDone": "Stellenbeschreibung geladen",
+      "stepAnalyze": "Interview wird analysiert und bewertet...",
+      "stepAnalyzeDone": "Bewertung abgeschlossen",
       "cheatingIncluded": "Betrugserkennung in den Ergebnissen enthalten",
       "errorMissingFields": "Bitte Lebenslauf, JD und Interview-Transkript angeben",
       "jsonTitle": "Bewertungsergebnis JSON"
+    },
+    "quickInvite": {
+      "title": "Schnelle Interview-Einladung",
+      "subtitle": "Laden Sie Lebensläufe hoch, geben Sie eine Stellenbeschreibung ein und senden Sie Interview-Einladungen an alle Kandidaten auf einmal.",
+      "stepSetup": "Einrichtung",
+      "stepReview": "Überprüfung",
+      "stepResults": "Ergebnisse",
+      "jdTitle": "Stellenbeschreibung",
+      "jdDesc": "Fügen Sie die Stellenbeschreibung für die zu besetzende Position ein oder geben Sie sie ein.",
+      "jdPlaceholder": "Stellenbeschreibung hier einfügen...",
+      "resumesTitle": "Lebensläufe der Kandidaten",
+      "resumesDesc": "Laden Sie PDF-Lebensläufe hoch oder fügen Sie den Text ein. Sie können mehrere hinzufügen.",
+      "uploading": "Text wird aus PDF extrahiert...",
+      "dropResumes": "Klicken oder Lebensläufe hierher ziehen",
+      "supportedFormats": "PDF, DOCX, XLSX und TXT Dateien unterstützt. Mehrere Dateien erlaubt.",
+      "hideTextInput": "Texteingabe ausblenden",
+      "pasteInstead": "Oder Lebenslauftext einfügen",
+      "pastePlaceholder": "Lebenslauftext hier einfügen...",
+      "addResume": "Lebenslauf hinzufügen",
+      "pastedResume": "Eingefügter Lebenslauf #{{num}}",
+      "resumeCount": "{{count}} Lebenslauf/Lebensläufe geladen",
+      "pdfOnlyError": "Nicht unterstütztes Dateiformat. Bitte laden Sie eine PDF- oder TXT-Datei hoch.",
+      "settingsTitle": "Einladungseinstellungen",
+      "recruiterEmail": "Recruiter-E-Mail",
+      "interviewerReq": "Anforderung an den Interviewer",
+      "interviewerPlaceholder": "z.B. 5+ Jahre Erfahrung im Fachgebiet",
+      "optional": "optional",
+      "reviewAndSend": "Überprüfen und senden",
+      "reviewTitle": "Vor dem Senden überprüfen",
+      "candidatesReady": "Kandidaten bereit",
+      "from": "Von",
+      "jdPreview": "Stellenbeschreibung",
+      "back": "Zurück",
+      "sending": "Einladungen werden gesendet...",
+      "sendInvitations": "Einladungen senden",
+      "sentSuccess": "Erfolgreich gesendet",
+      "sentFailed": "Fehlgeschlagen",
+      "totalProcessed": "Insgesamt verarbeitet",
+      "name": "Name",
+      "email": "E-Mail",
+      "position": "Position",
+      "scanQr": "QR-Code scannen",
+      "qrHint": "Scannen, um das Interview zu starten",
+      "qrAlt": "Interview-QR-Code",
+      "statusSent": "Gesendet",
+      "statusFailed": "Fehlgeschlagen",
+      "statusPending": "Ausstehend",
+      "startNew": "Neuen Batch starten",
+      "goToDashboard": "Zum Dashboard",
+      "authRequired": "Anmeldung erforderlich",
+      "authRequiredDesc": "Sie müssen sich anmelden, um Interview-Einladungen zu senden.",
+      "errorNoJd": "Bitte geben Sie eine Stellenbeschreibung ein.",
+      "errorNoResumes": "Bitte fügen Sie mindestens einen Lebenslauf hinzu.",
+      "uploadJd": "Datei hochladen",
+      "jdFormats": "PDF, DOCX, XLSX, TXT unterstützt",
+      "viewResume": "Vollständigen Lebenslauf anzeigen",
+      "extractFailed": "Text konnte nicht aus der Datei extrahiert werden.",
+      "resumePreviewChars": "{{count}} Zeichen",
+      "formattingResume": "KI-Formatierung...",
+      "resumeSections": {
+        "summary": "Zusammenfassung",
+        "experience": "Berufserfahrung",
+        "education": "Ausbildung",
+        "skills": "Fähigkeiten",
+        "projects": "Projekte",
+        "certifications": "Zertifizierungen",
+        "languages": "Sprachen",
+        "awards": "Auszeichnungen"
+      },
+      "viewJd": "Formatierte JD anzeigen",
+      "formattingJd": "KI-Formatierung...",
+      "jdPreviewChars": "{{count}} Zeichen",
+      "jdSections": {
+        "overview": "Übersicht",
+        "responsibilities": "Aufgaben",
+        "requirements": "Anforderungen",
+        "preferred": "Wünschenswerte Qualifikationen",
+        "skills": "Fähigkeiten",
+        "benefits": "Vorteile",
+        "about": "Über das Unternehmen"
+      }
     }
   },
   "pricing": {
     "seo": {
       "title": "Preise - KI-Recruiting-Plaene fuer jedes Team",
-      "desc": "Waehlen Sie den passenden RoboHire-Plan. Kostenlos, Startup ab $299/Monat, Business ab $599/Monat oder individuelle Enterprise-Preise. KI-Lebenslauf-Matching und Interviews inklusive."
+      "desc": "Waehlen Sie den passenden RoboHire-Plan. Starter ab $29/Monat, Growth ab $199/Monat, Business ab $399/Monat oder individuelle Preise. KI-Lebenslauf-Matching und Interviews inklusive."
     },
     "label": "Preisplaene",
     "headline": "Preise, die ",
     "headlineAccent": "mit Ihnen wachsen",
-    "subheadline": "Starten Sie kostenlos, skalieren Sie nach Bedarf. Zahlen Sie nur, was Sie nutzen.",
-    "monthly": "Monatlich",
-    "annual": "Jaehrlich",
-    "save": "8% sparen",
+    "subheadline": "Einfache, transparente Preise. Wachsen Sie nach Bedarf.",
     "month": "Monat",
-    "year": "Jahr",
     "popular": "Am beliebtesten",
     "customBadge": "Individuell",
     "customPrice": "Individuell",
-    "billedAnnually": "Jaehrlich abgerechnet fuer $",
     "redirecting": "Weiterleitung...",
-    "free": {
-      "name": "Kostenlos",
+    "starter": {
+      "name": "Starter",
       "subtitle": "Fuer Einzelpersonen zum Einstieg",
-      "cta": "Kostenlos starten",
-      "f1": "2 Stellenanzeigen",
-      "f2": "10 Lebenslauf-Matches",
-      "f3": "2 Interviews",
-      "f4": "Interview-Bewertung und Auswertung",
-      "f5": "Interview-Zusammenfassungen"
+      "cta": "Kostenlose Testversion starten",
+      "f1": "1 Platz",
+      "f2": "3 Stellenprofile",
+      "f3": "15 Interviews",
+      "f4": "30 Lebenslauf-Abgleiche",
+      "f5": "Interview-Bewertung und Beurteilung",
+      "f6": "Interview-Zusammenfassungen"
     },
-    "startup": {
-      "name": "Startup",
-      "subtitle": "Fuer kleine Teams, die schnell einstellen",
-      "cta": "Kostenlos testen",
+    "growth": {
+      "name": "Growth",
+      "subtitle": "Fuer wachsende Teams",
+      "cta": "Kostenlose Testversion starten",
       "f1": "Unbegrenzte Plaetze",
-      "f2": "Unbegrenzte Stellenanzeigen",
-      "f3": "180 Interviews / Monat",
-      "f4": "180 Lebenslauf-Matches / Monat",
-      "f5": "RoboHire API-Zugang",
-      "f5s": "Integration mit Ihren Systemen",
-      "f6": "6 Interview-Sprachen",
-      "f7": "Sprachkompetenz-Bewertung",
-      "f8": "E-Mail-Support"
+      "f2": "Unbegrenzte Stellenprofile",
+      "f3": "120 Interviews / Monat",
+      "f4": "240 Lebenslauf-Abgleiche / Monat",
+      "f5": "Alles in Starter enthalten",
+      "f6": "RoboHire-Zugang",
+      "f6s": "Integration mit Ihren Systemen",
+      "f7": "6 Interview-Sprachen",
+      "f8": "Sprachkompetenz-Bewertung",
+      "f9": "E-Mail-Support"
     },
     "business": {
       "name": "Business",
       "subtitle": "Fuer grosse Teams mit schnellem Wachstum",
       "cta": "Kostenlos testen",
       "f1": "Unbegrenzte Plaetze",
-      "f2": "Unbegrenzte Stellenanzeigen",
-      "f3": "400 Interviews / Monat",
-      "f4": "400 Lebenslauf-Matches / Monat",
-      "f5": "Alles aus Startup",
+      "f2": "Unbegrenzte Stellenprofile",
+      "f3": "280 Interviews / Monat",
+      "f4": "500 Lebenslauf-Abgleiche / Monat",
+      "f5": "Alles in Growth enthalten",
       "f6": "Prioritaets-Support",
+      "f6s": "Schnellere Antwortzeiten",
       "f7": "Erweiterte Analysen",
-      "f8": "White-Label-Berichte",
-      "f9": "Vollstaendige Video-Wiedergabe",
-      "f10": "Betrugs-Erkennung"
+      "f7s": "Detaillierte Einstellungstrichter-Einblicke",
+      "f8": "White-Label-Interview-Berichte",
+      "f9": "Vollstaendige Interview-Videowiedergabe"
     },
     "custom": {
-      "name": "Enterprise",
+      "name": "Individuell",
       "subtitle": "Fuer Organisationen mit hohem Volumen",
-      "cta": "Vertrieb kontaktieren",
+      "cta": "Kontaktieren Sie uns",
       "f1": "Alles unbegrenzt",
       "f2": "Alles aus Business",
       "f3": "Individuelle Workflows",
@@ -805,27 +905,122 @@
     "faq": {
       "title": "Haeufig gestellte Fragen",
       "q1": "Kann ich RoboHire kostenlos testen?",
-      "a1": "Ja! Der kostenlose Plan umfasst 10 Lebenslauf-Matches und 2 Interviews ohne Kosten. Keine Kreditkarte erforderlich.",
+      "a1": "Ja! Alle kostenpflichtigen Plaene beinhalten eine 14-taegige kostenlose Testphase. Keine Kreditkarte erforderlich.",
       "q2": "Welche Zahlungsmethoden akzeptieren Sie?",
       "a2": "Wir akzeptieren gaengige Kredit- und Debitkarten (Visa, Mastercard, American Express) sowie Alipay. Alle Zahlungen werden sicher ueber Stripe abgewickelt.",
       "q3": "Kann ich jederzeit den Plan wechseln?",
       "a3": "Selbstverstaendlich. Sie koennen jederzeit upgraden oder downgraden. Beim Upgrade wird die anteilige Differenz berechnet, beim Downgrade wird das Guthaben auf den naechsten Abrechnungszyklus angerechnet.",
       "q4": "Was passiert, wenn ich meine monatlichen Limits ueberschreite?",
       "a4": "Sie koennen die nutzungsbasierte Abrechnung nutzen. Lebenslauf-Matches kosten $0,40 pro Stueck und Interviews $2,00, abgezogen von Ihrem aufgeladenen Guthaben.",
-      "q5": "Bieten Sie einen Rabatt bei jaehrlicher Abrechnung?",
-      "a5": "Ja! Die jaehrliche Abrechnung spart Ihnen etwa 8% gegenueber der monatlichen. Sie koennen jederzeit wechseln.",
-      "q6": "Was ist in den nutzungsbasierten Preisen enthalten?",
-      "a6": "Pay-per-Use ermoeglicht es Ihnen, Guthaben aufzuladen und fuer Lebenslauf-Matches ($0,40) oder Interviews ($2,00) zu nutzen. Jede Nutzung umfasst alle Funktionen: KI-Bewertung, Zusammenfassungen, Betrugserkennung und mehr.",
-      "q7": "Gibt es einen Vertrag oder eine Bindung?",
-      "a7": "Keine Vertraege. Monatsplaene koennen jederzeit gekuendigt werden. Jahresplaene werden im Voraus berechnet, aber Sie koennen die Verlaengerung jederzeit kuendigen.",
-      "q8": "Bieten Sie individuelle Enterprise-Plaene an?",
-      "a8": "Ja! Der Enterprise-Plan umfasst unbegrenzte Nutzung, individuelle Workflows, ATS-Integrationen, dedizierten Support und mehr. Kontaktieren Sie unser Vertriebsteam fuer ein massgeschneidertes Angebot."
+      "q5": "Was ist in den nutzungsbasierten Preisen enthalten?",
+      "a5": "Pay-per-Use ermoeglicht es Ihnen, Guthaben aufzuladen und fuer Lebenslauf-Matches ($0,40) oder Interviews ($2,00) zu nutzen. Jede Nutzung umfasst alle Funktionen: KI-Bewertung, Zusammenfassungen, Betrugserkennung und mehr.",
+      "q6": "Gibt es einen Vertrag oder eine Bindung?",
+      "a6": "Keine Vertraege. Monatsplaene koennen jederzeit gekuendigt werden.",
+      "q7": "Bieten Sie individuelle Plaene an?",
+      "a7": "Ja! Der individuelle Plan umfasst unbegrenzte Nutzung, individuelle Workflows, ATS-Integrationen, dedizierten Support und mehr. Kontaktieren Sie unser Team fuer ein massgeschneidertes Angebot."
     },
     "cta": {
       "title": "Bereit, Ihr Recruiting zu optimieren?",
       "subtitle": "Schliessen Sie sich Tausenden von Unternehmen an, die KI nutzen, um schneller und intelligenter einzustellen.",
       "primary": "Mit dem Recruiting starten",
       "secondary": "Demo anfordern"
+    }
+  },
+  "account": {
+    "profile": {
+      "title": "Profil",
+      "name": "Name",
+      "company": "Unternehmen",
+      "avatar": "Avatar-URL",
+      "save": "Änderungen speichern",
+      "saving": "Speichern...",
+      "saved": "Profil erfolgreich aktualisiert"
+    },
+    "security": {
+      "title": "Sicherheit",
+      "currentPassword": "Aktuelles Passwort",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Neues Passwort bestätigen",
+      "change": "Passwort ändern",
+      "changing": "Wird geändert...",
+      "changed": "Passwort erfolgreich geändert",
+      "mismatch": "Passwörter stimmen nicht überein",
+      "oauthNote": "Die Passwortänderung ist für Social-Login-Konten nicht verfügbar."
+    },
+    "subscription": {
+      "title": "Abonnement",
+      "currentPlan": "Aktueller Plan",
+      "status": "Status",
+      "renewsOn": "Verlängerung am",
+      "trialEnds": "Kostenlose Testphase endet am",
+      "usage": "Nutzung",
+      "interviews": "Interviews",
+      "matches": "Lebenslauf-Übereinstimmungen",
+      "changePlan": "Plan ändern",
+      "of": "von"
+    },
+    "topup": {
+      "title": "Guthaben aufladen",
+      "currentBalance": "Aktuelles Guthaben",
+      "selectAmount": "Wählen Sie einen Betrag zum Aufladen:",
+      "processing": "Wird verarbeitet...",
+      "success": "Aufladung erfolgreich! Ihr Guthaben wurde aktualisiert."
+    },
+    "billing": {
+      "title": "Rechnungshistorie",
+      "date": "Datum",
+      "description": "Beschreibung",
+      "amount": "Betrag",
+      "status": "Status",
+      "action": "Beleg",
+      "empty": "Noch keine Rechnungshistorie.",
+      "loading": "Rechnungshistorie wird geladen...",
+      "viewInvoice": "Anzeigen",
+      "viewReceipt": "Beleg"
+    }
+  },
+  "seo": {
+    "defaultTitle": "RoboHire - KI-gestützte Recruiting-Plattform",
+    "defaultDescription": "Stellen Sie Spitzenkandidaten vor anderen ein. Unser KI-Recruiting-Agent filtert Lebensläufe, führt Interviews und liefert umfassende Bewertungsberichte.",
+    "defaultKeywords": "KI Recruiting, Automatisierung Personalbeschaffung, Lebenslauf-Screening, Interview-Bewertung, Kandidaten-Matching, Recruiting-Plattform, automatisierte Einstellung, Talentakquise",
+    "startHiring": {
+      "title": "KI-Recruiting-Agent",
+      "desc": "Lassen Sie die KI die schwere Arbeit erledigen. Unser Agent filtert Lebensläufe, führt Interviews und erstellt Bewertungsberichte automatisch.",
+      "keywords": "KI Recruiting Agent, automatisierte Einstellung, Lebenslauf-Screening, KI-Interview, Recruiting-Automatisierung"
+    },
+    "developers": {
+      "title": "Entwickler-API",
+      "desc": "Integrieren Sie leistungsstarke KI-Recruiting-Funktionen über RESTful API in Ihre bestehenden Systeme.",
+      "keywords": "Recruiting API, KI Recruiting API, Lebenslauf-Analyse API, Kandidaten-Matching API, Entwickler-Tools"
+    },
+    "quickInvite": {
+      "title": "Schnelle Interview-Einladung",
+      "desc": "Laden Sie Lebensläufe und Stellenbeschreibungen hoch und senden Sie Interview-Einladungen mit QR-Codes an alle Kandidaten mit einem Klick.",
+      "keywords": "Massen-Interview-Einladung, QR-Code Interview, Ein-Klick Recruiting, Kandidaten-Einladung"
+    },
+    "requestDemo": {
+      "title": "Demo Anfordern",
+      "desc": "Vereinbaren Sie eine personalisierte Demo von RoboHire. Erfahren Sie, wie KI-Recruiting Ihren Einstellungsprozess transformieren kann."
+    },
+    "login": {
+      "title": "Anmelden",
+      "desc": "Melden Sie sich bei Ihrem RoboHire-Konto an. Zugang zum KI-Recruiting-Dashboard und Kandidatenverwaltung."
+    },
+    "pricing": {
+      "title": "Preispläne",
+      "desc": "Wählen Sie den richtigen RoboHire-Plan für Ihr Team. Von kostenlosen Tests bis zu Enterprise-Lösungen."
+    },
+    "docs": {
+      "overview": { "title": "API-Dokumentation", "desc": "Vollständige Dokumentation der RoboHire API." },
+      "quickStart": { "title": "Schnellstart-Anleitung", "desc": "Starten Sie mit der RoboHire API in 5 Minuten." },
+      "auth": { "title": "API-Authentifizierung", "desc": "Erfahren Sie, wie Sie sich bei der RoboHire API authentifizieren." },
+      "matchResume": { "title": "Lebenslauf-Matching API", "desc": "API-Referenz für das KI-gestützte Lebenslauf-Matching." },
+      "parseResume": { "title": "Lebenslauf-Analyse API", "desc": "API-Referenz für die Lebenslauf-Analyse." },
+      "parseJd": { "title": "Stellenbeschreibung-Analyse API", "desc": "API-Referenz für die Analyse von Stellenbeschreibungen." },
+      "invite": { "title": "Kandidaten-Einladung API", "desc": "API-Referenz für KI-Interview-Einladungen." },
+      "evaluate": { "title": "Interview-Bewertung API", "desc": "API-Referenz für die KI-gestützte Interview-Bewertung." },
+      "webhooks": { "title": "Webhooks", "desc": "Webhooks für Echtzeit-Benachrichtigungen konfigurieren." },
+      "errors": { "title": "Fehlerbehandlung", "desc": "Fehlercodes, Antwortformate und Fehlerbehebungsanleitung." }
     }
   }
 }

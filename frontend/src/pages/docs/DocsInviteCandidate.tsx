@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CodeBlock, EndpointCard, ParamTable } from '../../components/docs';
+import SEO from '../../components/SEO';
 
 export default function DocsInviteCandidate() {
   const { t } = useTranslation();
@@ -94,6 +95,7 @@ result = response.json()`,
 
   return (
     <div>
+      <SEO title={t('seo.docsInviteCandidate.title', 'Invite Candidate API')} description={t('seo.docsInviteCandidate.desc', 'API reference for sending AI interview invitations to candidates with QR codes and links.')} url="https://robohire.io/docs/api/invite-candidate" keywords={t('seo.docsInviteCandidate.keywords', 'RoboHire API documentation, candidate invitation API, interview invitation, AI hiring')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.inviteCandidate.title', 'Invite Candidate')}
       </h1>

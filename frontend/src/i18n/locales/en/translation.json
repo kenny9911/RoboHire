@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "RoboHire API",
+    "title": "RoboHire",
     "subtitle": "Admin Dashboard"
   },
   "language": {
@@ -111,15 +111,15 @@
       "headline": "Hire Elite Candidates",
       "headlineHighlight": "Before Others",
       "subheadline": "Say goodbye to spending long hours going through piles of resumes. Our AI hiring agent vets candidates, conducts interviews, and delivers comprehensive evaluation reports automatically.",
-      "ctaPrimary": "Start Easy Hiring",
-      "ctaSecondary": "Explore API",
+      "ctaPrimary": "Start Free Trial",
+      "ctaSecondary": "Start Easy Hiring",
       "stat1": "Time Saved",
       "stat2": "Faster Screening",
       "stat3": "Companies",
       "stat4": "Always Available"
     },
     "services": {
-      "title": "Two Powerful Ways to Hire",
+      "title": "Three Powerful Ways to Hire",
       "subtitle": "Choose the solution that fits your needs - or use both for maximum efficiency.",
       "hiring": {
         "title": "Start Hiring",
@@ -132,8 +132,19 @@
         "cta": "Start Hiring Now",
         "badge": "Most Popular"
       },
+      "quickInvite": {
+        "title": "Quick Interview Invite",
+        "subtitle": "One-Click Batch Invite",
+        "description": "Upload resumes and job descriptions, then send interview invitations with QR codes and links to all candidates in one click.",
+        "feature1": "Batch resume upload (PDF)",
+        "feature2": "AI-powered resume parsing",
+        "feature3": "QR code interview links",
+        "feature4": "One-click email invitations",
+        "cta": "Start Inviting",
+        "badge": "New"
+      },
       "api": {
-        "title": "RoboHire API",
+        "title": "RoboHire",
         "subtitle": "For Developers",
         "description": "Integrate powerful AI recruitment capabilities into your existing systems. Parse resumes, match candidates, evaluate interviews, and more with our comprehensive API suite.",
         "feature1": "Resume & JD parsing",
@@ -204,7 +215,7 @@
     "cta": {
       "title": "Ready to Hire Smarter?",
       "subtitle": "Join hundreds of companies using AI to find elite candidates faster. Start your free trial today - no credit card required.",
-      "primary": "Start Easy Hiring",
+      "primary": "Start Free Trial",
       "secondary": "Talk to Sales",
       "benefit1": "No credit card required",
       "benefit2": "14-day free trial",
@@ -258,6 +269,7 @@
     "titlePlaceholder": "e.g., Senior Full Stack Engineer",
     "titleGenerating": "Generating a title...",
     "titleError": "We couldn't generate a title. Please edit it manually.",
+    "requirementsLabel": "Requirements",
     "jdLabel": "Job description",
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "Draft will appear here...",
@@ -271,6 +283,11 @@
     "defaultTitle": "New Hiring Request",
     "success": "Your hiring request has been created! 🎉\n\n",
     "nextSteps": "**What happens next:**\n",
+    "step1": "Our AI will start screening incoming candidates",
+    "step2": "Matched candidates will be interviewed automatically",
+    "step3": "You'll receive evaluation reports for top matches",
+    "visitDashboard": "Visit your dashboard to track progress and manage candidates.",
+    "chatError": "Sorry, I ran into an issue while processing that. Please try again.",
     "dashboard": "Dashboard",
     "error": "There was an issue creating your request: ",
     "tryAgain": "Please try again or contact support if the issue persists.",
@@ -490,7 +507,9 @@
       "stats": "Statistics",
       "newHiring": "New Hiring",
       "apiKeys": "API Keys",
-      "apiPlayground": "API Playground"
+      "apiPlayground": "API Playground",
+      "account": "Account",
+      "usage": "Usage"
     },
     "welcome": "Welcome back",
     "user": "there",
@@ -598,7 +617,7 @@
   },
   "apiLanding": {
     "hero": {
-      "badge": "RoboHire API",
+      "badge": "RoboHire",
       "headline": "Build AI-powered hiring in minutes",
       "subheadline": "Integrate intelligent resume matching, interview evaluation, and candidate screening into your application with just a few lines of code.",
       "getKey": "Get your API key",
@@ -607,7 +626,7 @@
     "what": {
       "badge": "What is it?",
       "title": "Powerful AI recruitment APIs",
-      "description": "RoboHire API provides a complete suite of AI-powered recruitment tools. Match resumes to job descriptions, parse documents, evaluate interviews, and automate candidate communication - all through simple REST API endpoints.",
+      "description": "RoboHire provides a complete suite of AI-powered recruitment tools. Match resumes to job descriptions, parse documents, evaluate interviews, and automate candidate communication - all through simple REST API endpoints.",
       "exploreDocs": "Explore documentation"
     },
     "howItWorks": {
@@ -617,7 +636,7 @@
     "steps": {
       "signup": {
         "title": "Sign up or log in",
-        "desc": "Create a free account or log in to access your RoboHire API dashboard."
+        "desc": "Create a free account or log in to access your RoboHire dashboard."
       },
       "apikey": {
         "title": "Get your API key",
@@ -683,9 +702,9 @@
     },
     "inviteCandidate": {
       "title": "Invite Candidate to Interview",
-      "subtitle": "Send interview invitation via RoboHire API",
-      "toggleExternal": "Show External RoboHire API Request",
-      "externalHint": "View the actual request sent to RoboHire API for testing",
+      "subtitle": "Send interview invitation via RoboHire",
+      "toggleExternal": "Show External RoboHire Request",
+      "externalHint": "View the actual request sent to RoboHire for testing",
       "recruiterEmail": "Recruiter Email",
       "interviewerRequirement": "Interviewer Requirement",
       "optional": "(optional)",
@@ -712,7 +731,7 @@
       "errorMissingRecruiter": "Please provide recruiter email",
       "externalApiTitle": "RoboHire External API",
       "copyCode": "Copy Code",
-      "tip": "Tip: Copy and run this code in your terminal/console to test the RoboHire API directly"
+      "tip": "Tip: Copy and run this code in your terminal/console to test the RoboHire directly"
     },
     "parseResume": {
       "title": "Parse Resume",
@@ -749,9 +768,193 @@
       "resultTitle": "Evaluation Result",
       "loadingDefault": "Evaluating interview...",
       "loadingWithCheating": "Evaluating interview and running cheating detection...",
+      "stepResume": "Loading resume...",
+      "stepResumeDone": "Resume loaded",
+      "stepJd": "Loading job description...",
+      "stepJdDone": "Job description loaded",
+      "stepAnalyze": "Analyzing and evaluating interview...",
+      "stepAnalyzeDone": "Evaluation complete",
       "cheatingIncluded": "Cheating detection analysis included in results",
       "errorMissingFields": "Please provide resume, job description, and interview transcript",
       "jsonTitle": "Evaluation Result JSON"
+    },
+    "quickInvite": {
+      "title": "Quick Interview Invite",
+      "subtitle": "Upload resumes, enter a job description, and send interview invitations to all candidates at once.",
+      "stepSetup": "Setup",
+      "stepReview": "Review",
+      "stepResults": "Results",
+      "jdTitle": "Job Description",
+      "jdDesc": "Paste or type the job description for the position you're hiring for.",
+      "jdPlaceholder": "Paste job description here...",
+      "resumesTitle": "Candidate Resumes",
+      "resumesDesc": "Upload PDF resumes or paste resume text. You can add multiple resumes.",
+      "uploading": "Extracting text from PDF...",
+      "dropResumes": "Click or drag resumes here",
+      "supportedFormats": "PDF, DOCX, XLSX, and TXT files supported. Multiple files allowed.",
+      "hideTextInput": "Hide text input",
+      "pasteInstead": "Or paste resume text",
+      "pastePlaceholder": "Paste resume text here...",
+      "addResume": "Add Resume",
+      "pastedResume": "Pasted Resume #{{num}}",
+      "resumeCount": "{{count}} resume(s) loaded",
+      "pdfOnlyError": "Unsupported file format. Please upload a PDF or TXT file.",
+      "settingsTitle": "Invitation Settings",
+      "recruiterEmail": "Recruiter Email",
+      "interviewerReq": "Interviewer Requirement",
+      "interviewerPlaceholder": "e.g., 5+ years experience in the field",
+      "optional": "optional",
+      "reviewAndSend": "Review & Send",
+      "reviewTitle": "Review Before Sending",
+      "candidatesReady": "Candidates Ready",
+      "from": "From",
+      "jdPreview": "Job Description",
+      "back": "Back",
+      "sending": "Sending invitations...",
+      "sendInvitations": "Send Invitations",
+      "sentSuccess": "Sent Successfully",
+      "sentFailed": "Failed",
+      "totalProcessed": "Total Processed",
+      "name": "Name",
+      "email": "Email",
+      "position": "Position",
+      "scanQr": "Scan QR Code",
+      "qrHint": "Scan to start the interview",
+      "qrAlt": "Interview QR Code",
+      "statusSent": "Sent",
+      "statusFailed": "Failed",
+      "statusPending": "Pending",
+      "startNew": "Start New Batch",
+      "goToDashboard": "Go to Dashboard",
+      "authRequired": "Sign In Required",
+      "authRequiredDesc": "You need to sign in to send interview invitations.",
+      "errorNoJd": "Please enter a job description.",
+      "errorNoResumes": "Please add at least one resume.",
+      "uploadJd": "Upload File",
+      "jdFormats": "PDF, DOCX, XLSX, TXT supported",
+      "viewResume": "View full resume",
+      "extractFailed": "Could not extract text from file.",
+      "resumePreviewChars": "{{count}} characters",
+      "formattingResume": "Formatting with AI...",
+      "resumeSections": {
+        "summary": "Summary",
+        "experience": "Experience",
+        "education": "Education",
+        "skills": "Skills",
+        "projects": "Projects",
+        "certifications": "Certifications",
+        "languages": "Languages",
+        "awards": "Awards"
+      },
+      "viewJd": "View formatted JD",
+      "formattingJd": "Formatting with AI...",
+      "jdPreviewChars": "{{count}} characters",
+      "jdSections": {
+        "overview": "Overview",
+        "responsibilities": "Responsibilities",
+        "requirements": "Requirements",
+        "preferred": "Preferred Qualifications",
+        "skills": "Skills",
+        "benefits": "Benefits",
+        "about": "About the Company"
+      }
+    }
+  },
+  "account": {
+    "profile": {
+      "title": "Profile",
+      "name": "Name",
+      "company": "Company",
+      "avatar": "Avatar URL",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "saved": "Profile updated successfully"
+    },
+    "security": {
+      "title": "Security",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "change": "Change Password",
+      "changing": "Changing...",
+      "changed": "Password changed successfully",
+      "mismatch": "Passwords do not match",
+      "oauthNote": "Password change is not available for social login accounts."
+    },
+    "subscription": {
+      "title": "Subscription",
+      "currentPlan": "Current Plan",
+      "status": "Status",
+      "renewsOn": "Renews on",
+      "trialEnds": "Free trial ends on",
+      "usage": "Usage",
+      "interviews": "Interviews",
+      "matches": "Resume Matches",
+      "changePlan": "Change Plan",
+      "of": "of"
+    },
+    "topup": {
+      "title": "Top-Up Balance",
+      "currentBalance": "Current Balance",
+      "selectAmount": "Select an amount to add to your balance:",
+      "processing": "Processing...",
+      "success": "Top-up successful! Your balance has been updated."
+    },
+    "billing": {
+      "title": "Billing History",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount",
+      "status": "Status",
+      "action": "Receipt",
+      "empty": "No billing history yet.",
+      "loading": "Loading billing history...",
+      "viewInvoice": "View",
+      "viewReceipt": "Receipt"
+    }
+  },
+  "seo": {
+    "defaultTitle": "RoboHire - AI-Powered Hiring Platform",
+    "defaultDescription": "Hire elite candidates before others. Our AI hiring agent automatically screens resumes, conducts interviews, and delivers comprehensive evaluation reports.",
+    "defaultKeywords": "AI hiring, recruitment automation, resume screening, interview evaluation, candidate matching, hiring platform, AI recruitment, automated hiring, talent acquisition",
+    "startHiring": {
+      "title": "AI Hiring Agent",
+      "desc": "Let AI handle the heavy lifting. Our hiring agent screens resumes, conducts interviews, and delivers evaluation reports automatically.",
+      "keywords": "AI hiring agent, automated recruitment, resume screening, AI interview, hiring automation"
+    },
+    "developers": {
+      "title": "Developer API",
+      "desc": "Integrate powerful AI recruitment capabilities into your existing systems. Parse resumes, match candidates, and evaluate interviews via RESTful API.",
+      "keywords": "recruitment API, AI hiring API, resume parsing API, candidate matching API, interview evaluation API, developer tools"
+    },
+    "quickInvite": {
+      "title": "Quick Interview Invite",
+      "desc": "Upload resumes and job descriptions, then send interview invitations with QR codes and links to all candidates in one click.",
+      "keywords": "batch interview invite, QR code interview, one-click hiring, candidate invitation, bulk resume upload"
+    },
+    "requestDemo": {
+      "title": "Request a Demo",
+      "desc": "Schedule a personalized demo of RoboHire. See how AI-powered hiring can transform your recruitment process."
+    },
+    "login": {
+      "title": "Sign In",
+      "desc": "Sign in to your RoboHire account. Access your AI hiring dashboard, manage candidates, and track recruitment progress."
+    },
+    "pricing": {
+      "title": "Pricing Plans",
+      "desc": "Choose the right RoboHire plan for your team. From free trials to enterprise solutions with unlimited AI hiring capabilities."
+    },
+    "docs": {
+      "overview": { "title": "API Documentation", "desc": "Complete documentation for the RoboHire API. Get started with AI-powered hiring in minutes." },
+      "quickStart": { "title": "Quick Start Guide", "desc": "Get up and running with the RoboHire API in 5 minutes. Step-by-step integration guide." },
+      "auth": { "title": "API Authentication", "desc": "Learn how to authenticate with the RoboHire API using API keys and JWT tokens." },
+      "matchResume": { "title": "Match Resume API", "desc": "API reference for the AI-powered resume matching endpoint." },
+      "parseResume": { "title": "Parse Resume API", "desc": "API reference for resume parsing. Extract structured data from resumes using AI." },
+      "parseJd": { "title": "Parse Job Description API", "desc": "API reference for job description parsing." },
+      "invite": { "title": "Invite Candidate API", "desc": "API reference for sending AI interview invitations to candidates." },
+      "evaluate": { "title": "Evaluate Interview API", "desc": "API reference for AI-powered interview evaluation." },
+      "webhooks": { "title": "Webhooks", "desc": "Configure webhooks to receive real-time notifications about hiring events." },
+      "errors": { "title": "Error Handling", "desc": "RoboHire API error codes, response formats, and troubleshooting guide." }
     }
   }
 }

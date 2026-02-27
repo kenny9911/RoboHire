@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import SEO from '../../components/SEO';
 
 export default function DocsOverview() {
   const { t } = useTranslation();
@@ -34,11 +35,12 @@ export default function DocsOverview() {
 
   return (
     <div>
+      <SEO title={t('seo.docsOverview.title', 'API Documentation')} description={t('seo.docsOverview.desc', 'Complete documentation for the RoboHire API. Get started with AI-powered hiring in minutes.')} url="https://robohire.io/docs" keywords={t('seo.docsOverview.keywords', 'RoboHire API documentation, AI hiring API, recruitment API docs')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
-        {t('docs.overview.title', 'RoboHire API Documentation')}
+        {t('docs.overview.title', 'RoboHire Documentation')}
       </h1>
       <p className="text-lg text-gray-600 mb-8">
-        {t('docs.overview.intro', 'Welcome to the RoboHire API documentation. Learn how to integrate AI-powered recruitment features into your application.')}
+        {t('docs.overview.intro', 'Welcome to the RoboHire documentation. Learn how to integrate AI-powered recruitment features into your application.')}
       </p>
 
       {/* Quick Start Card */}

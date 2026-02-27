@@ -1,7 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: light;
+  --landing-ink: #0f172a;
+  --landing-muted: #64748b;
+  --landing-primary: #2563eb;
+  --landing-primary-soft: #dbeafe;
+  --landing-bg-top: #f5f8ff;
+  --landing-bg-bottom: #f8fafc;
+}
+
 body {
-  @apply bg-gray-50 text-gray-900;
+  @apply antialiased;
+  background: #f8fafc;
+  color: var(--landing-ink);
+  font-family: 'Manrope', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.landing-page {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(180deg, var(--landing-bg-top) 0%, var(--landing-bg-bottom) 100%);
+}
+
+.landing-page::before {
+  content: '';
+  position: fixed;
+  inset: -20% -10% auto;
+  height: 72vh;
+  z-index: -2;
+  background:
+    radial-gradient(40% 55% at 12% 8%, rgba(37, 99, 235, 0.16) 0%, rgba(37, 99, 235, 0) 70%),
+    radial-gradient(42% 58% at 88% 0%, rgba(14, 165, 233, 0.13) 0%, rgba(14, 165, 233, 0) 72%),
+    radial-gradient(30% 46% at 48% 18%, rgba(148, 163, 184, 0.14) 0%, rgba(148, 163, 184, 0) 74%);
+  pointer-events: none;
+}
+
+.landing-display {
+  font-family: 'Sora', 'Manrope', 'Noto Sans SC', 'PingFang SC', sans-serif;
+  letter-spacing: -0.028em;
+}
+
+.landing-glass {
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.landing-gradient-stroke {
+  position: relative;
+}
+
+.landing-gradient-stroke::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.4), rgba(14, 165, 233, 0.12) 46%, rgba(148, 163, 184, 0.22));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -7,10 +7,21 @@ export interface AuthUser {
   name?: string | null;
   company?: string | null;
   avatar?: string | null;
+  role?: string;
   provider?: string | null;
   providerId?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  // Subscription
+  stripeCustomerId?: string | null;
+  subscriptionTier?: string;
+  subscriptionStatus?: string;
+  subscriptionId?: string | null;
+  currentPeriodEnd?: Date | null;
+  trialEnd?: Date | null;
+  interviewsUsed?: number;
+  resumeMatchesUsed?: number;
+  topUpBalance?: number;
 }
 
 // API Key scope type
@@ -25,10 +36,21 @@ declare global {
       name?: string | null;
       company?: string | null;
       avatar?: string | null;
+      role?: string;
       provider?: string | null;
       providerId?: string | null;
       createdAt: Date;
       updatedAt: Date;
+      // Subscription
+      stripeCustomerId?: string | null;
+      subscriptionTier?: string;
+      subscriptionStatus?: string;
+      subscriptionId?: string | null;
+      currentPeriodEnd?: Date | null;
+      trialEnd?: Date | null;
+      interviewsUsed?: number;
+      resumeMatchesUsed?: number;
+      topUpBalance?: number;
     }
     interface Request {
       requestId?: string;

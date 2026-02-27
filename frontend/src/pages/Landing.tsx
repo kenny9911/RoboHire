@@ -24,8 +24,8 @@ export default function Landing() {
 
   return (
     <>
-      <SEO />
-      <div className="min-h-screen">
+      <SEO url="https://robohire.io/" />
+      <div className="landing-page min-h-screen">
         <Navbar />
         <main>
           <Hero />

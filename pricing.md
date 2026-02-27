@@ -2,19 +2,20 @@
 
 ## Subscription Plans
 
-### Free
-- 10 resume matches
-- 2 interviews
-- 2 job roles
+### Starter — $29/month
+- 1 seat
+- 3 job roles
+- 15 interviews
+- 30 job roles
 - Interview scoring and assessment
 - Interview summaries
 
-### Startup — $299/month (or $3,289/year, save 8%)
+### Growth — $199/month 
 - Unlimited seats
 - Unlimited job roles
-- 180 interviews per month
-- 180 resume matches per month
-- Everything in Free, plus:
+- 120 interviews per month
+- 240 resume matches per month
+- Everything in Starter, plus:
     - Create interview via RoboHire API
         - Seamless integration with your existing systems
     - 6 languages
@@ -23,12 +24,12 @@
         - Measure candidate language skills accurately
     - Email support
 
-### Business — $599/month (or $6,589/year, save 8%) ⭐ Most Popular
+### Business — $399/month  ⭐ Most Popular
 - Unlimited seats
 - Unlimited job roles
-- 400 interviews per month
-- 400 resume matches per month
-- Everything in Startup, plus:
+- 280 interviews per month
+- 500 resume matches per month
+- Everything in Growth, plus:
     - Priority support
         - Faster response times and dedicated queue
     - Advanced analytics

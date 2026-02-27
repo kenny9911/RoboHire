@@ -6,6 +6,7 @@ import ResultViewer from '../components/ResultViewer';
 import ApiInfoPanel from '../components/ApiInfoPanel';
 import { useFormData } from '../context/FormDataContext';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO';
 
 interface ApiResponse {
   requestId?: string;
@@ -92,6 +93,7 @@ export default function InviteCandidate() {
 
   return (
     <div>
+      <SEO title="Invite Candidate - API Playground" noIndex />
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-800">{t('pages.inviteCandidate.title')}</h2>
         <p className="text-gray-500 mt-1">{t('pages.inviteCandidate.subtitle')}</p>

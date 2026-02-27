@@ -84,8 +84,8 @@ export default function RequestDemo() {
   return (
     <>
       <SEO
-        title={t('demo.seo.title', 'Request a Demo - AI-Powered Hiring Platform')}
-        description={t('demo.seo.desc', 'Schedule a demo with RoboHire. See how AI can automate resume screening, conduct interviews, and evaluate candidates for your team.')}
+        title={t('seo.requestDemo.title', 'Request a Demo')}
+        description={t('seo.requestDemo.desc', 'Schedule a personalized demo of RoboHire. See how AI-powered hiring can transform your recruitment process.')}
         url="https://robohire.io/request-demo"
       />
 

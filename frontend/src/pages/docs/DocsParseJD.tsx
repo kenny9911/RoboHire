@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CodeBlock, EndpointCard, ParamTable } from '../../components/docs';
+import SEO from '../../components/SEO';
 
 export default function DocsParseJD() {
   const { t } = useTranslation();
@@ -117,6 +118,7 @@ result = response.json()`,
 
   return (
     <div>
+      <SEO title={t('seo.docsParseJD.title', 'Parse Job Description API')} description={t('seo.docsParseJD.desc', 'API reference for job description parsing. Extract structured requirements from JDs.')} url="https://robohire.io/docs/api/parse-jd" keywords={t('seo.docsParseJD.keywords', 'RoboHire API documentation, job description parsing API, JD parser, AI recruitment')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.parseJD.title', 'Parse Job Description')}
       </h1>

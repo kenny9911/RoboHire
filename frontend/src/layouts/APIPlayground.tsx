@@ -3,9 +3,19 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
-const navItems = [
-  { path: '/api-playground/match-resume', labelKey: 'nav.matchResume' },
-  { path: '/api-playground/invite', labelKey: 'nav.inviteCandidate' },
+const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
+  free: { interviews: 0, matches: 0 },
+  starter: { interviews: 15, matches: 30 },
+  growth: { interviews: 120, matches: 240 },
+  business: { interviews: 280, matches: 500 },
+  custom: { interviews: Infinity, matches: Infinity },
+};
+
+type UsageKey = 'matches' | 'interviews';
+
+const navItems: Array<{ path: string; labelKey: string; usageKey?: UsageKey }> = [
+  { path: '/api-playground/match-resume', labelKey: 'nav.matchResume', usageKey: 'matches' },
+  { path: '/api-playground/invite', labelKey: 'nav.inviteCandidate', usageKey: 'interviews' },
   { path: '/api-playground/evaluate', labelKey: 'nav.evaluateInterview' },
   { path: '/api-playground/parse-resume', labelKey: 'nav.parseResume' },
   { path: '/api-playground/parse-jd', labelKey: 'nav.parseJd' },
@@ -38,43 +48,6 @@ export default function APIPlayground() {
           <p className="text-xs sm:text-sm text-gray-500 mt-1">{t('apiPlayground.title', 'API Playground')}</p>
         </div>
 
-        {/* User Info */}
-        {user ? (
-          <div className="px-4 sm:px-6 py-4 border-b bg-gray-50">
-            <div className="flex items-center gap-3">
-              {user.avatar ? (
-                <img src={user.avatar} alt="" className="w-10 h-10 rounded-full" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <span className="text-indigo-600 font-medium">
-                    {user.name?.[0] || user.email?.[0] || 'U'}
-                  </span>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user.name || 'User'}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {user.email}
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="px-4 sm:px-6 py-4 border-b bg-gray-50">
-            <Link
-              to="/login"
-              className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-              </svg>
-              {t('apiPlayground.signIn', 'Sign In')}
-            </Link>
-          </div>
-        )}
-
         {/* Quick Links */}
         <div className="px-4 sm:px-6 py-3 border-b">
           <div className="flex gap-2">
@@ -99,42 +72,101 @@ export default function APIPlayground() {
             {t('apiPlayground.endpoints', 'API Endpoints')}
           </p>
           <ul className="flex flex-row md:flex-col gap-2 md:gap-0 md:space-y-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
-            {navItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`block px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg transition-colors whitespace-nowrap text-sm font-medium ${
-                    location.pathname === item.path
-                      ? 'bg-indigo-50 text-indigo-600'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {t(item.labelKey)}
-                </Link>
-              </li>
-            ))}
+            {navItems.map((item) => {
+              const tier = user?.subscriptionTier || 'free';
+              const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+              let usageBadge: React.ReactNode = null;
+
+              if (user && item.usageKey && tier !== 'free') {
+                const limit = limits[item.usageKey];
+                const used = item.usageKey === 'matches'
+                  ? (user.resumeMatchesUsed ?? 0)
+                  : (user.interviewsUsed ?? 0);
+                const remaining = Math.max(0, limit - used);
+
+                if (limit !== Infinity) {
+                  usageBadge = (
+                    <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full ${
+                      remaining === 0
+                        ? 'bg-red-100 text-red-600'
+                        : remaining <= Math.ceil(limit * 0.2)
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-green-100 text-green-700'
+                    }`}>
+                      {remaining}/{limit}
+                    </span>
+                  );
+                }
+              }
+
+              return (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg transition-colors whitespace-nowrap text-sm font-medium ${
+                      location.pathname === item.path
+                        ? 'bg-indigo-50 text-indigo-600'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {t(item.labelKey)}
+                    {usageBadge}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
         {/* Language Switcher */}
         <div className="border-t">
-          <LanguageSwitcher />
+          <LanguageSwitcher className="px-4 sm:px-6 py-4" />
         </div>
 
-        {/* Logout - only show if logged in */}
-        {user && (
-          <div className="p-4 border-t">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        {/* User section */}
+        <div className="border-t border-gray-200 px-3 py-4">
+          {user ? (
+            <>
+              <Link
+                to="/dashboard/account"
+                className="flex items-center gap-3 px-3 mb-3 rounded-lg py-2 -my-1 hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                {user.avatar ? (
+                  <img src={user.avatar} alt="" className="w-9 h-9 rounded-full" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <span className="text-indigo-600 font-medium text-sm">
+                      {user.name?.[0] || user.email?.[0] || 'U'}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{user.name || 'User'}</p>
+                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                </div>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                {t('apiPlayground.logout', 'Logout')}
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
               </svg>
-              {t('apiPlayground.logout', 'Logout')}
-            </button>
-          </div>
-        )}
+              {t('apiPlayground.signIn', 'Sign In')}
+            </Link>
+          )}
+        </div>
       </aside>
 
       {/* Main Content */}

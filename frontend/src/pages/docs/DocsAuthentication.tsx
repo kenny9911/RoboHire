@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CodeBlock } from '../../components/docs';
+import SEO from '../../components/SEO';
 
 export default function DocsAuthentication() {
   const { t } = useTranslation();
 
   return (
     <div>
+      <SEO title={t('seo.docsAuth.title', 'API Authentication')} description={t('seo.docsAuth.desc', 'Learn how to authenticate with the RoboHire API using API keys and JWT tokens.')} url="https://robohire.io/docs/authentication" keywords={t('seo.docsAuth.keywords', 'RoboHire API documentation, API authentication, API keys, JWT tokens')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.auth.title', 'Authentication')}
       </h1>
@@ -20,7 +22,7 @@ export default function DocsAuthentication() {
           {t('docs.auth.apiKeys.title', 'API Keys')}
         </h2>
         <p className="text-gray-600 mb-4">
-          {t('docs.auth.apiKeys.desc', 'API keys are the primary way to authenticate with the RoboHire API. Each key is prefixed with "rh_" and provides full access to the API on behalf of your account.')}
+          {t('docs.auth.apiKeys.desc', 'API keys are the primary way to authenticate with the RoboHire. Each key is prefixed with "rh_" and provides full access to the API on behalf of your account.')}
         </p>
 
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">

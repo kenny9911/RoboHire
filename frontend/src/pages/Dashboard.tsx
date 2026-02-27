@@ -1,8 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
+import SEO from '../components/SEO';
 
 interface HiringRequest {
   id: string;
@@ -43,6 +46,8 @@ export default function Dashboard() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<HiringRequestDetail | null>(null);
+  const [splitPercent, setSplitPercent] = useState(50);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchHiringRequests();
@@ -163,6 +168,7 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto">
+        <SEO title="Dashboard" noIndex />
         {requestId ? (
           <div>
             <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6">
@@ -224,22 +230,59 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6">
+                <div className="flex flex-col lg:flex-row" ref={splitContainerRef}>
+                  <div style={{ width: `${splitPercent}%` }} className="flex-shrink-0 lg:pr-0 bg-white border border-gray-100 rounded-2xl p-6">
                     <h2 className="text-sm font-semibold text-gray-900 mb-3">
                       {t('dashboard.detail.requirements', 'Requirements')}
                     </h2>
-                    <p className="text-sm text-gray-600 whitespace-pre-line">
-                      {selectedRequest.requirements}
-                    </p>
+                    <div className="text-sm text-gray-600 max-h-[600px] overflow-auto prose prose-sm prose-gray">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {selectedRequest.requirements}
+                      </ReactMarkdown>
+                    </div>
                   </div>
-                  <div className="bg-white border border-gray-100 rounded-2xl p-6">
+                  {/* Draggable divider */}
+                  <div
+                    className="hidden lg:flex items-center justify-center w-3 cursor-col-resize group flex-shrink-0 select-none"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      const container = splitContainerRef.current;
+                      if (!container) return;
+                      const startX = e.clientX;
+                      const startPercent = splitPercent;
+                      const containerWidth = container.getBoundingClientRect().width;
+                      const onMouseMove = (ev: MouseEvent) => {
+                        const delta = ev.clientX - startX;
+                        const newPercent = startPercent + (delta / containerWidth) * 100;
+                        setSplitPercent(Math.min(70, Math.max(30, newPercent)));
+                      };
+                      const onMouseUp = () => {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                      };
+                      document.body.style.cursor = 'col-resize';
+                      document.body.style.userSelect = 'none';
+                      document.addEventListener('mousemove', onMouseMove);
+                      document.addEventListener('mouseup', onMouseUp);
+                    }}
+                  >
+                    <div className="w-1 h-8 rounded-full bg-gray-300 group-hover:bg-indigo-400 transition-colors" />
+                  </div>
+                  <div className="flex-1 min-w-0 bg-white border border-gray-100 rounded-2xl p-6 mt-4 lg:mt-0">
                     <h2 className="text-sm font-semibold text-gray-900 mb-3">
                       {t('dashboard.detail.jobDescription', 'Job description')}
                     </h2>
-                    <p className="text-sm text-gray-600 whitespace-pre-line">
-                      {selectedRequest.jobDescription || t('dashboard.detail.noJobDescription', 'No job description yet.')}
-                    </p>
+                    <div className="text-sm text-gray-600 max-h-[600px] overflow-auto prose prose-sm prose-gray">
+                      {selectedRequest.jobDescription ? (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {selectedRequest.jobDescription}
+                        </ReactMarkdown>
+                      ) : (
+                        <p>{t('dashboard.detail.noJobDescription', 'No job description yet.')}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 

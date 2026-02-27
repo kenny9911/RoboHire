@@ -1,0 +1,24 @@
+# RoboHire - robots.txt
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /developers
+Allow: /start-hiring
+Allow: /quick-invite
+Allow: /request-demo
+Allow: /docs/
+Allow: /login
+
+# Block protected/internal routes
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /api-playground/
+
+# Block API endpoints
+Disallow: /api/
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://robohire.io/sitemap.xml

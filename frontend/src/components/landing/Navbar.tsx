@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -19,7 +19,7 @@ export default function Navbar() {
     { href: '/docs', label: t('landing.nav.docs', 'Docs'), isRoute: true },
   ];
 
-  const handleHashClick = (e: React.MouseEvent, hash: string) => {
+  const handleHashClick = (e: MouseEvent, hash: string) => {
     e.preventDefault();
     if (location.pathname === '/') {
       document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
@@ -29,27 +29,101 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-indigo-600">
-            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span>RoboHire</span>
-          </Link>
+    <nav className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
+      <div className="landing-glass mx-auto flex h-16 max-w-7xl items-center justify-between rounded-2xl border border-slate-200/80 px-4 shadow-[0_24px_48px_-36px_rgba(15,23,42,0.5)] sm:h-[74px] sm:px-6 lg:px-8">
+        <Link to="/" className="flex items-center gap-2 text-xl font-bold text-blue-700 transition-colors hover:text-blue-600">
+          <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="landing-display">RoboHire</span>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
+        <div className="hidden items-center gap-2 lg:flex">
+          {navLinks.map((link) => (
+            link.isRoute ? (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => link.hash && handleHashClick(e, link.hash)}
+                className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
+              >
+                {link.label}
+              </a>
+            )
+          ))}
+        </div>
+
+        <div className="hidden items-center gap-3 lg:flex">
+          <LanguageSelector variant="compact" className="rounded-full border border-slate-200 bg-white/90 px-1" />
+          {isAuthenticated ? (
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all hover:border-blue-300 hover:text-blue-700"
+            >
+              {user?.avatar ? (
+                <img src={user.avatar} alt="" className="h-7 w-7 rounded-full" />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100">
+                  <span className="text-xs font-bold text-blue-700">
+                    {user?.name?.[0] || user?.email?.[0] || 'U'}
+                  </span>
+                </div>
+              )}
+              <span>{t('landing.nav.dashboard', 'Dashboard')}</span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 transition-all hover:border-blue-300 hover:text-blue-700"
+              >
+                {t('landing.nav.signIn', 'Sign In')}
+              </Link>
+              <Link
+                to="/start-hiring"
+                className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-16px_rgba(37,99,235,0.9)]"
+              >
+                {t('landing.nav.getStarted', 'Get Started')}
+              </Link>
+            </>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-700 lg:hidden"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {isMobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+      </div>
+
+      {isMobileMenuOpen && (
+        <div className="mx-auto mt-2 max-w-7xl rounded-2xl border border-slate-200/90 bg-white/95 px-5 py-5 shadow-[0_28px_52px_-34px_rgba(15,23,42,0.6)] backdrop-blur-xl lg:hidden">
+          <div className="flex flex-col gap-2">
             {navLinks.map((link) => (
               link.isRoute ? (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="text-gray-600 hover:text-indigo-600 font-medium transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700"
                 >
                   {link.label}
                 </Link>
@@ -57,8 +131,11 @@ export default function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={(e) => link.hash && handleHashClick(e, link.hash)}
-                  className="text-gray-600 hover:text-indigo-600 font-medium transition-colors"
+                  onClick={(e) => {
+                    setIsMobileMenuOpen(false);
+                    if (link.hash) handleHashClick(e, link.hash);
+                  }}
+                  className="rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700"
                 >
                   {link.label}
                 </a>
@@ -66,124 +143,40 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Desktop Auth Buttons */}
-          <div className="hidden lg:flex items-center gap-4">
-            <LanguageSelector variant="compact" />
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            <LanguageSelector />
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4">
             {isAuthenticated ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-                >
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt="" className="w-8 h-8 rounded-full" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <span className="text-indigo-600 font-medium text-sm">
-                        {user?.name?.[0] || user?.email?.[0] || 'U'}
-                      </span>
-                    </div>
-                  )}
-                  <span>{t('landing.nav.dashboard', 'Dashboard')}</span>
-                </Link>
-              </>
+              <Link
+                to="/dashboard"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
+              >
+                {t('landing.nav.dashboard', 'Dashboard')}
+              </Link>
             ) : (
               <>
                 <Link
                   to="/login"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-700"
                 >
                   {t('landing.nav.signIn', 'Sign In')}
                 </Link>
                 <Link
                   to="/start-hiring"
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
                 >
                   {t('landing.nav.getStarted', 'Get Started')}
                 </Link>
               </>
             )}
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {isMobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-100">
-            <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                link.isRoute ? (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-gray-600 hover:text-indigo-600 font-medium transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={(e) => { setIsMobileMenuOpen(false); link.hash && handleHashClick(e, link.hash); }}
-                    className="text-gray-600 hover:text-indigo-600 font-medium transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                )
-              ))}
-              
-              {/* Mobile Language Selector */}
-              <div className="pt-4 border-t border-gray-100">
-                <LanguageSelector />
-              </div>
-
-              <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
-                {isAuthenticated ? (
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
-                  >
-                    {t('landing.nav.dashboard', 'Dashboard')}
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      to="/login"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-center text-gray-700 hover:text-indigo-600 font-medium transition-colors py-2"
-                    >
-                      {t('landing.nav.signIn', 'Sign In')}
-                    </Link>
-                    <Link
-                      to="/start-hiring"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
-                    >
-                      {t('landing.nav.getStarted', 'Get Started')}
-                    </Link>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </nav>
   );
 }

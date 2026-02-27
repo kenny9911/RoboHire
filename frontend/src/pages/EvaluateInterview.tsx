@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from '../lib/axios';
 import TextArea from '../components/TextArea';
 import Button from '../components/Button';
@@ -8,6 +8,7 @@ import EvaluationResultDisplay from '../components/EvaluationResultDisplay';
 import ApiInfoPanel from '../components/ApiInfoPanel';
 import { useFormData } from '../context/FormDataContext';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO';
 
 interface EvaluationData {
   score: number;
@@ -125,6 +126,24 @@ export default function EvaluateInterview() {
   // View mode toggle
   const [viewMode, setViewMode] = useState<'formatted' | 'json'>('formatted');
 
+  // Multi-step loading progress
+  const [loadingStep, setLoadingStep] = useState(0);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (loading) {
+      setLoadingStep(1);
+      loadingTimerRef.current = setTimeout(() => setLoadingStep(2), 1500);
+      const t2 = setTimeout(() => setLoadingStep(3), 3000);
+      return () => {
+        if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
+        clearTimeout(t2);
+      };
+    } else {
+      setLoadingStep(0);
+    }
+  }, [loading]);
+
   const handleSubmit = async () => {
     if (!resume.trim() || !jd.trim() || !interviewScript.trim()) {
       setError(t('pages.evaluateInterview.errorMissingFields'));
@@ -165,6 +184,7 @@ export default function EvaluateInterview() {
 
   return (
     <div>
+      <SEO title="Evaluate Interview - API Playground" noIndex />
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-800">{t('pages.evaluateInterview.title')}</h2>
         <p className="text-gray-500 mt-1">{t('pages.evaluateInterview.subtitle')}</p>
@@ -287,14 +307,34 @@ export default function EvaluateInterview() {
         </div>
 
         {loading && (
-          <div className="flex items-center justify-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="text-gray-600">
-                {includeCheatingDetection 
-                  ? t('pages.evaluateInterview.loadingWithCheating') 
-                  : t('pages.evaluateInterview.loadingDefault')}
-              </span>
+          <div className="py-10 px-6 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="max-w-md mx-auto space-y-4">
+              {[
+                { step: 1, label: t('pages.evaluateInterview.stepResume', 'Loading resume...'), done: t('pages.evaluateInterview.stepResumeDone', 'Resume loaded') },
+                { step: 2, label: t('pages.evaluateInterview.stepJd', 'Loading job description...'), done: t('pages.evaluateInterview.stepJdDone', 'Job description loaded') },
+                { step: 3, label: t('pages.evaluateInterview.stepAnalyze', 'Analyzing and evaluating interview...'), done: t('pages.evaluateInterview.stepAnalyzeDone', 'Evaluation complete') },
+              ].map((s) => {
+                const isActive = loadingStep === s.step;
+                const isDone = loadingStep > s.step;
+                return (
+                  <div key={s.step} className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center">
+                      {isDone ? (
+                        <svg className="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      ) : isActive ? (
+                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
+                      )}
+                    </div>
+                    <span className={`text-sm ${isDone ? 'text-green-700 font-medium' : isActive ? 'text-blue-700 font-medium' : 'text-gray-400'}`}>
+                      {isDone ? s.done : s.label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "RoboHire API",
+    "title": "RoboHire",
     "subtitle": "管理面板"
   },
   "language": {
@@ -111,15 +111,15 @@
       "headline": "比别人更快地",
       "headlineHighlight": "招到精英人才",
       "subheadline": "告别花费大量时间翻阅简历堆。我们的 AI 招聘助手自动筛选候选人、进行面试，并提供全面的评估报告。",
-      "ctaPrimary": "轻松开始招聘",
-      "ctaSecondary": "探索 API",
+      "ctaPrimary": "开始免费试用",
+      "ctaSecondary": "立即开始招聘",
       "stat1": "节省时间",
       "stat2": "筛选更快",
       "stat3": "合作企业",
       "stat4": "全天候服务"
     },
     "services": {
-      "title": "两种强大的招聘方式",
+      "title": "三种高效招聘方式",
       "subtitle": "选择适合您需求的方案 - 或同时使用两者以获得最大效率。",
       "hiring": {
         "title": "开始招聘",
@@ -132,8 +132,19 @@
         "cta": "立即开始招聘",
         "badge": "最受欢迎"
       },
+      "quickInvite": {
+        "title": "一键邀约面试",
+        "subtitle": "批量一键邀约",
+        "description": "上传简历和职位描述，一键向所有候选人发送带有二维码和链接的面试邀请。",
+        "feature1": "批量上传简历（PDF）",
+        "feature2": "AI 智能简历解析",
+        "feature3": "二维码面试链接",
+        "feature4": "一键发送邮件邀请",
+        "cta": "开始邀约",
+        "badge": "新功能"
+      },
       "api": {
-        "title": "RoboHire API",
+        "title": "RoboHire",
         "subtitle": "面向开发者",
         "description": "将强大的 AI 招聘能力集成到您现有的系统中。通过我们全面的 API 套件解析简历、匹配候选人、评估面试等。",
         "feature1": "简历与 JD 解析",
@@ -204,7 +215,7 @@
     "cta": {
       "title": "准备好智能招聘了吗？",
       "subtitle": "加入数百家使用 AI 更快找到精英人才的公司。立即开始免费试用 - 无需信用卡。",
-      "primary": "轻松开始招聘",
+      "primary": "开始免费试用",
       "secondary": "联系销售",
       "benefit1": "无需信用卡",
       "benefit2": "14 天免费试用",
@@ -258,6 +269,7 @@
     "titlePlaceholder": "例如：高级全栈工程师",
     "titleGenerating": "正在生成职位名称...",
     "titleError": "无法生成职位名称，请手动编辑。",
+    "requirementsLabel": "岗位要求",
     "jdLabel": "职位描述",
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "草稿将显示在这里...",
@@ -271,6 +283,11 @@
     "defaultTitle": "新的招聘请求",
     "success": "您的招聘请求已创建！🎉\n\n",
     "nextSteps": "**接下来会发生什么：**\n",
+    "step1": "我们的 AI 将开始筛选收到的候选人",
+    "step2": "匹配的候选人将自动安排面试",
+    "step3": "您将收到最佳匹配候选人的评估报告",
+    "visitDashboard": "访问您的控制面板以跟踪进度并管理候选人。",
+    "chatError": "抱歉，处理过程中遇到了问题。请重试。",
     "dashboard": "控制面板",
     "error": "创建请求时出现问题：",
     "tryAgain": "请重试或联系支持团队。",
@@ -491,7 +508,9 @@
       "stats": "统计",
       "newHiring": "新招聘",
       "apiKeys": "API 密钥",
-      "apiPlayground": "API 测试"
+      "apiPlayground": "API 测试",
+      "account": "账户",
+      "usage": "使用量"
     },
     "welcome": "欢迎回来",
     "user": "用户",
@@ -599,7 +618,7 @@
   },
   "apiLanding": {
     "hero": {
-      "badge": "RoboHire API",
+      "badge": "RoboHire",
       "headline": "几分钟内构建AI招聘功能",
       "subheadline": "只需几行代码，即可将智能简历匹配、面试评估和候选人筛选集成到您的应用程序中。",
       "getKey": "获取 API 密钥",
@@ -608,7 +627,7 @@
     "what": {
       "badge": "这是什么？",
       "title": "强大的AI招聘API",
-      "description": "RoboHire API 提供完整的 AI 招聘工具套件。通过简单的 REST API 端点，实现简历与职位描述匹配、文档解析、面试评估和候选人沟通自动化。",
+      "description": "RoboHire 提供完整的 AI 招聘工具套件。通过简单的 REST API 端点，实现简历与职位描述匹配、文档解析、面试评估和候选人沟通自动化。",
       "exploreDocs": "浏览文档"
     },
     "howItWorks": {
@@ -618,7 +637,7 @@
     "steps": {
       "signup": {
         "title": "注册或登录",
-        "desc": "创建免费账户或登录以访问您的 RoboHire API 控制面板。"
+        "desc": "创建免费账户或登录以访问您的 RoboHire 控制面板。"
       },
       "apikey": {
         "title": "获取 API 密钥",
@@ -684,9 +703,9 @@
     },
     "inviteCandidate": {
       "title": "邀请候选人面试",
-      "subtitle": "通过 RoboHire API 发送面试邀请",
-      "toggleExternal": "显示外部 RoboHire API 请求",
-      "externalHint": "查看发送到 RoboHire API 的实际请求以便测试",
+      "subtitle": "通过 RoboHire 发送面试邀请",
+      "toggleExternal": "显示外部 RoboHire 请求",
+      "externalHint": "查看发送到 RoboHire 的实际请求以便测试",
       "recruiterEmail": "招聘邮箱",
       "interviewerRequirement": "面试要求",
       "optional": "（可选）",
@@ -713,7 +732,7 @@
       "errorMissingRecruiter": "请提供招聘邮箱",
       "externalApiTitle": "RoboHire 外部 API",
       "copyCode": "复制代码",
-      "tip": "提示：复制并在终端/控制台运行此代码，可直接测试 RoboHire API"
+      "tip": "提示：复制并在终端/控制台运行此代码，可直接测试 RoboHire"
     },
     "parseResume": {
       "title": "解析简历",
@@ -750,53 +769,137 @@
       "resultTitle": "评估结果",
       "loadingDefault": "正在评估面试...",
       "loadingWithCheating": "正在评估面试并进行作弊检测...",
+      "stepResume": "正在加载简历...",
+      "stepResumeDone": "简历已加载",
+      "stepJd": "正在加载职位描述...",
+      "stepJdDone": "职位描述已加载",
+      "stepAnalyze": "正在分析和评估面试...",
+      "stepAnalyzeDone": "评估完成",
       "cheatingIncluded": "结果中包含作弊检测分析",
       "errorMissingFields": "请提供简历、职位描述和面试记录",
       "jsonTitle": "评估结果 JSON"
+    },
+    "quickInvite": {
+      "title": "一键邀约面试",
+      "subtitle": "上传简历，输入职位描述，一次性向所有候选人发送面试邀请。",
+      "stepSetup": "设置",
+      "stepReview": "审核",
+      "stepResults": "结果",
+      "jdTitle": "职位描述",
+      "jdDesc": "粘贴或输入您招聘岗位的职位描述。",
+      "jdPlaceholder": "在此粘贴职位描述...",
+      "resumesTitle": "候选人简历",
+      "resumesDesc": "上传 PDF 简历或粘贴简历文本。支持添加多份简历。",
+      "uploading": "正在从 PDF 中提取文本...",
+      "dropResumes": "点击或拖拽简历到此处",
+      "supportedFormats": "支持 PDF、DOCX、XLSX、TXT 格式，可上传多个文件。",
+      "hideTextInput": "隐藏文本输入",
+      "pasteInstead": "或粘贴简历文本",
+      "pastePlaceholder": "在此粘贴简历文本...",
+      "addResume": "添加简历",
+      "pastedResume": "粘贴的简历 #{{num}}",
+      "resumeCount": "已加载 {{count}} 份简历",
+      "pdfOnlyError": "不支持的文件格式，请上传 PDF 或 TXT 文件。",
+      "settingsTitle": "邀请设置",
+      "recruiterEmail": "招聘人员邮箱",
+      "interviewerReq": "面试官要求",
+      "interviewerPlaceholder": "例如：5 年以上相关领域经验",
+      "optional": "可选",
+      "reviewAndSend": "审核并发送",
+      "reviewTitle": "发送前确认",
+      "candidatesReady": "待发送候选人",
+      "from": "发件人",
+      "jdPreview": "职位描述",
+      "back": "返回",
+      "sending": "正在发送邀请...",
+      "sendInvitations": "发送邀请",
+      "sentSuccess": "发送成功",
+      "sentFailed": "发送失败",
+      "totalProcessed": "处理总数",
+      "name": "姓名",
+      "email": "邮箱",
+      "position": "职位",
+      "scanQr": "扫描二维码",
+      "qrHint": "扫码开始面试",
+      "qrAlt": "面试二维码",
+      "statusSent": "已发送",
+      "statusFailed": "失败",
+      "statusPending": "待处理",
+      "startNew": "开始新一批",
+      "goToDashboard": "前往控制面板",
+      "authRequired": "需要登录",
+      "authRequiredDesc": "您需要登录才能发送面试邀请。",
+      "errorNoJd": "请输入职位描述。",
+      "errorNoResumes": "请至少添加一份简历。",
+      "uploadJd": "上传文件",
+      "jdFormats": "支持 PDF、DOCX、XLSX、TXT 格式",
+      "viewResume": "查看完整简历",
+      "extractFailed": "无法从文件中提取文本。",
+      "resumePreviewChars": "{{count}} 个字符",
+      "formattingResume": "AI 排版中...",
+      "resumeSections": {
+        "summary": "个人简介",
+        "experience": "工作经历",
+        "education": "教育背景",
+        "skills": "专业技能",
+        "projects": "项目经历",
+        "certifications": "证书资质",
+        "languages": "语言能力",
+        "awards": "荣誉奖项"
+      },
+      "viewJd": "查看格式化JD",
+      "formattingJd": "AI 排版中...",
+      "jdPreviewChars": "{{count}} 个字符",
+      "jdSections": {
+        "overview": "职位概述",
+        "responsibilities": "岗位职责",
+        "requirements": "任职要求",
+        "preferred": "优先条件",
+        "skills": "技能要求",
+        "benefits": "福利待遇",
+        "about": "公司介绍"
+      }
     }
   },
   "pricing": {
     "seo": {
       "title": "定价 - 适合每个团队的 AI 招聘方案",
-      "desc": "选择适合您的 RoboHire 方案。免费版、创业版 $299/月、商务版 $599/月，或定制企业版。包含 AI 简历匹配和面试功能。"
+      "desc": "选择适合您的 RoboHire 方案。入门版 $29/月、成长版 $199/月、商务版 $399/月，或定制方案。包含 AI 简历匹配和面试功能。"
     },
     "label": "定价方案",
     "headline": "与您一起",
     "headlineAccent": "成长的定价",
-    "subheadline": "免费起步，按需扩展。只为使用的部分付费。",
-    "monthly": "月付",
-    "annual": "年付",
-    "save": "省 8%",
+    "subheadline": "简单透明的定价。按需扩展。",
     "month": "月",
-    "year": "年",
     "popular": "最受欢迎",
     "customBadge": "定制",
     "customPrice": "定制",
-    "billedAnnually": "按年计费 $",
     "redirecting": "跳转中...",
-    "free": {
-      "name": "免费版",
+    "starter": {
+      "name": "入门版",
       "subtitle": "适合个人起步",
-      "cta": "免费开始",
-      "f1": "2 个职位",
-      "f2": "10 次简历匹配",
-      "f3": "2 次面试",
-      "f4": "面试评分与评估",
-      "f5": "面试总结"
+      "cta": "开始免费试用",
+      "f1": "1 个席位",
+      "f2": "3 个职位",
+      "f3": "15 次面试",
+      "f4": "30 次简历匹配",
+      "f5": "面试评分与评估",
+      "f6": "面试总结"
     },
-    "startup": {
-      "name": "创业版",
-      "subtitle": "适合快速招聘的小团队",
+    "growth": {
+      "name": "成长版",
+      "subtitle": "适合成长中的团队",
       "cta": "开始免费试用",
       "f1": "无限席位",
       "f2": "无限职位",
-      "f3": "180 次面试 / 月",
-      "f4": "180 次简历匹配 / 月",
-      "f5": "RoboHire API 接入",
-      "f5s": "与您的系统集成",
-      "f6": "6 种面试语言",
-      "f7": "语言能力评估",
-      "f8": "邮件支持"
+      "f3": "120 次面试 / 月",
+      "f4": "240 次简历匹配 / 月",
+      "f5": "包含入门版全部功能",
+      "f6": "RoboHire 接入",
+      "f6s": "与您的系统集成",
+      "f7": "6 种面试语言",
+      "f8": "语言能力评估",
+      "f9": "邮件支持"
     },
     "business": {
       "name": "商务版",
@@ -804,19 +907,21 @@
       "cta": "开始免费试用",
       "f1": "无限席位",
       "f2": "无限职位",
-      "f3": "400 次面试 / 月",
-      "f4": "400 次简历匹配 / 月",
-      "f5": "包含创业版全部功能",
+      "f3": "280 次面试 / 月",
+      "f4": "500 次简历匹配 / 月",
+      "f5": "包含成长版全部功能",
       "f6": "优先支持",
+      "f6s": "更快的响应时间",
       "f7": "高级分析",
-      "f8": "白标报告",
-      "f9": "完整视频回放",
+      "f7s": "详细的招聘漏斗洞察",
+      "f8": "白标面试报告",
+      "f9": "完整面试视频回放",
       "f10": "作弊检测"
     },
     "custom": {
-      "name": "企业版",
+      "name": "定制版",
       "subtitle": "适合大规模组织",
-      "cta": "联系销售",
+      "cta": "联系我们",
       "f1": "一切无限制",
       "f2": "包含商务版全部功能",
       "f3": "自定义工作流",
@@ -854,27 +959,122 @@
     "faq": {
       "title": "常见问题",
       "q1": "可以免费试用 RoboHire 吗？",
-      "a1": "可以！免费版包含 10 次简历匹配和 2 次面试，无需信用卡即可开始。",
+      "a1": "可以！所有付费方案均包含 14 天免费试用，无需信用卡即可开始。",
       "q2": "支持哪些支付方式？",
       "a2": "我们支持所有主流信用卡和借记卡（Visa、Mastercard、American Express）以及支付宝。所有付款通过 Stripe 安全处理。",
       "q3": "可以随时切换方案吗？",
       "a3": "当然可以。您可以随时升级或降级。升级时按比例补差价，降级时余额将用于下一个计费周期。",
       "q4": "超出月度额度后会怎样？",
       "a4": "您可以使用按次计费继续使用。简历匹配 $0.40/次，面试 $2.00/次，从充值余额中扣除。",
-      "q5": "年付有优惠吗？",
-      "a5": "有！年付比月付节省约 8%。您可以随时切换月付和年付。",
-      "q6": "按次计费包含什么？",
-      "a6": "按次计费让您充值余额，按需使用简历匹配（$0.40）或面试（$2.00）。每次使用包含全部功能：AI 评分、总结、作弊检测等。",
-      "q7": "需要签合同吗？",
-      "a7": "不需要。月付方案可随时取消。年付方案按年预付，但您可以随时取消续订。",
-      "q8": "提供企业定制方案吗？",
-      "a8": "是的！企业版包含无限使用量、自定义工作流、ATS 集成、专属支持等。联系销售团队获取定制报价。"
+      "q5": "按次计费包含什么？",
+      "a5": "按次计费让您充值余额，按需使用简历匹配（$0.40）或面试（$2.00）。每次使用包含全部功能：AI 评分、总结、作弊检测等。",
+      "q6": "需要签合同吗？",
+      "a6": "不需要。月付方案可随时取消，没有提前终止费用。",
+      "q7": "提供定制方案吗？",
+      "a7": "是的！定制版包含无限使用量、自定义工作流、ATS 集成、专属支持等。联系销售团队获取定制报价。"
     },
     "cta": {
       "title": "准备好简化招聘了吗？",
       "subtitle": "加入数千家使用 AI 更快更聪明地招聘的公司。",
       "primary": "立即开始招聘",
       "secondary": "申请演示"
+    }
+  },
+  "account": {
+    "profile": {
+      "title": "个人资料",
+      "name": "姓名",
+      "company": "公司",
+      "avatar": "头像 URL",
+      "save": "保存更改",
+      "saving": "保存中...",
+      "saved": "个人资料更新成功"
+    },
+    "security": {
+      "title": "安全",
+      "currentPassword": "当前密码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认新密码",
+      "change": "修改密码",
+      "changing": "修改中...",
+      "changed": "密码修改成功",
+      "mismatch": "密码不匹配",
+      "oauthNote": "社交登录账户无法修改密码。"
+    },
+    "subscription": {
+      "title": "订阅",
+      "currentPlan": "当前方案",
+      "status": "状态",
+      "renewsOn": "续订日期",
+      "trialEnds": "免费试用结束日期",
+      "usage": "使用量",
+      "interviews": "面试",
+      "matches": "简历匹配",
+      "changePlan": "更改方案",
+      "of": "/"
+    },
+    "topup": {
+      "title": "充值余额",
+      "currentBalance": "当前余额",
+      "selectAmount": "选择充值金额：",
+      "processing": "处理中...",
+      "success": "充值成功！余额已更新。"
+    },
+    "billing": {
+      "title": "账单历史",
+      "date": "日期",
+      "description": "描述",
+      "amount": "金额",
+      "status": "状态",
+      "action": "收据",
+      "empty": "暂无账单记录。",
+      "loading": "加载账单历史...",
+      "viewInvoice": "查看",
+      "viewReceipt": "收据"
+    }
+  },
+  "seo": {
+    "defaultTitle": "RoboHire - AI智能招聘平台",
+    "defaultDescription": "比其他人更快招到精英人才。我们的AI招聘助手自动筛选简历、进行面试并提供综合评估报告。",
+    "defaultKeywords": "AI招聘, 智能招聘, 简历筛选, 面试评估, 候选人匹配, 招聘平台, 自动化招聘, 人才获取, 人工智能面试",
+    "startHiring": {
+      "title": "AI招聘助手",
+      "desc": "让AI来处理繁重的工作。我们的招聘助手自动筛选简历、进行面试并提供评估报告。",
+      "keywords": "AI招聘助手, 自动化招聘, 简历筛选, AI面试, 招聘自动化"
+    },
+    "developers": {
+      "title": "开发者API",
+      "desc": "将强大的AI招聘能力集成到您的系统中。通过RESTful API解析简历、匹配候选人、评估面试。",
+      "keywords": "招聘API, AI招聘API, 简历解析API, 候选人匹配API, 面试评估API, 开发者工具"
+    },
+    "quickInvite": {
+      "title": "一键邀约面试",
+      "desc": "上传简历和职位描述，一键向所有候选人发送带二维码和链接的面试邀请。",
+      "keywords": "批量面试邀请, 二维码面试, 一键招聘, 候选人邀约, 批量简历上传"
+    },
+    "requestDemo": {
+      "title": "申请演示",
+      "desc": "预约RoboHire个性化演示。了解AI智能招聘如何变革您的招聘流程。"
+    },
+    "login": {
+      "title": "登录",
+      "desc": "登录您的RoboHire账户。访问AI招聘看板，管理候选人，追踪招聘进度。"
+    },
+    "pricing": {
+      "title": "定价方案",
+      "desc": "选择适合您团队的RoboHire方案。从免费试用到无限AI招聘的企业解决方案。"
+    },
+    "docs": {
+      "overview": { "title": "API文档", "desc": "RoboHire API完整文档。几分钟内开始使用AI招聘。" },
+      "quickStart": { "title": "快速入门", "desc": "5分钟内开始使用RoboHire API。分步集成指南。" },
+      "auth": { "title": "API认证", "desc": "了解如何使用API密钥和JWT令牌进行RoboHire API认证。" },
+      "matchResume": { "title": "简历匹配API", "desc": "AI简历匹配接口参考文档。" },
+      "parseResume": { "title": "简历解析API", "desc": "简历解析接口参考。使用AI从简历中提取结构化数据。" },
+      "parseJd": { "title": "职位描述解析API", "desc": "职位描述解析接口参考。" },
+      "invite": { "title": "邀请候选人API", "desc": "向候选人发送AI面试邀请的接口参考。" },
+      "evaluate": { "title": "面试评估API", "desc": "AI面试评估接口参考。" },
+      "webhooks": { "title": "Webhooks", "desc": "配置Webhooks接收招聘事件的实时通知。" },
+      "errors": { "title": "错误处理", "desc": "RoboHire API错误代码、响应格式和故障排除指南。" }
     }
   }
 }

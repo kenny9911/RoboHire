@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "RoboHire API",
+    "title": "RoboHire",
     "subtitle": "Painel Administrativo"
   },
   "language": {
@@ -82,15 +82,15 @@
       "headline": "Contrate talentos de elite",
       "headlineHighlight": "antes dos outros",
       "subheadline": "Chega de horas analisando pilhas de currículos. Nosso agente de IA filtra, entrevista e entrega relatórios completos automaticamente.",
-      "ctaPrimary": "Comece a contratar sem complicação",
-      "ctaSecondary": "Explorar API",
+      "ctaPrimary": "Teste gratuito",
+      "ctaSecondary": "Começar a contratar",
       "stat1": "Tempo economizado",
       "stat2": "Triagem mais rápida",
       "stat3": "Empresas",
       "stat4": "Disponível 24/7"
     },
     "services": {
-      "title": "Duas formas poderosas de contratar",
+      "title": "Três formas poderosas de contratar",
       "subtitle": "Escolha a solução que faz sentido para você — ou combine as duas para máxima eficiência.",
       "hiring": {
         "title": "Começar a contratar",
@@ -103,8 +103,19 @@
         "cta": "Começar agora",
         "badge": "Mais popular"
       },
+      "quickInvite": {
+        "title": "Convite rápido para entrevista",
+        "subtitle": "Convite em lote com um clique",
+        "description": "Faça upload de currículos e descrições de vagas, e envie convites para entrevistas com códigos QR e links para todos os candidatos com um clique.",
+        "feature1": "Upload em lote de currículos (PDF)",
+        "feature2": "Análise de currículos com IA",
+        "feature3": "Links de entrevista com código QR",
+        "feature4": "Convites por email com um clique",
+        "cta": "Começar a convidar",
+        "badge": "Novo"
+      },
       "api": {
-        "title": "RoboHire API",
+        "title": "RoboHire",
         "subtitle": "Para desenvolvedores",
         "description": "Integre recursos de recrutamento com IA aos seus sistemas: parsing, matching, avaliação de entrevistas e mais.",
         "feature1": "Parsing de CV e JD",
@@ -175,7 +186,7 @@
     "cta": {
       "title": "Pronto para contratar de forma mais inteligente?",
       "subtitle": "Junte-se a centenas de empresas que usam IA para contratar mais rápido. Comece hoje — sem cartão.",
-      "primary": "Comece a contratar sem complicação",
+      "primary": "Teste gratuito",
       "secondary": "Falar com vendas",
       "benefit1": "Sem cartão de crédito",
       "benefit2": "Teste grátis de 14 dias",
@@ -214,7 +225,7 @@
   },
   "apiLanding": {
     "hero": {
-      "badge": "RoboHire API",
+      "badge": "RoboHire",
       "headline": "Construa contratação com IA em minutos",
       "subheadline": "Integre correspondência inteligente de currículos, avaliação de entrevistas e triagem de candidatos em sua aplicação com apenas algumas linhas de código.",
       "getKey": "Obtenha sua chave API",
@@ -223,7 +234,7 @@
     "what": {
       "badge": "O que é?",
       "title": "APIs de recrutamento com IA poderosas",
-      "description": "A RoboHire API fornece um conjunto completo de ferramentas de recrutamento com IA. Combine currículos com descrições de vagas, analise documentos, avalie entrevistas e automatize a comunicação com candidatos - tudo através de endpoints REST API simples.",
+      "description": "A RoboHire fornece um conjunto completo de ferramentas de recrutamento com IA. Combine currículos com descrições de vagas, analise documentos, avalie entrevistas e automatize a comunicação com candidatos - tudo através de endpoints REST API simples.",
       "exploreDocs": "Explorar documentação"
     },
     "howItWorks": {
@@ -233,7 +244,7 @@
     "steps": {
       "signup": {
         "title": "Cadastre-se ou faça login",
-        "desc": "Crie uma conta gratuita ou faça login para acessar seu painel RoboHire API."
+        "desc": "Crie uma conta gratuita ou faça login para acessar seu painel RoboHire."
       },
       "apikey": {
         "title": "Obtenha sua chave API",
@@ -309,6 +320,7 @@
     "titlePlaceholder": "Ex.: Engenheiro Full Stack Sênior",
     "titleGenerating": "Gerando um título...",
     "titleError": "Não foi possível gerar um título. Edite manualmente.",
+    "requirementsLabel": "Requisitos",
     "jdLabel": "Descrição da vaga",
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "O rascunho aparecerá aqui...",
@@ -326,6 +338,7 @@
     "step2": "Candidatos compatíveis serão entrevistados automaticamente",
     "step3": "Você receberá relatórios de avaliação dos melhores candidatos",
     "visitDashboard": "Visite seu painel para acompanhar o progresso e gerenciar candidatos.",
+    "chatError": "Desculpe, tive um problema ao processar isso. Por favor, tente novamente.",
     "errorCreating": "Houve um problema ao criar sua solicitação: ",
     "tryAgain": "Tente novamente ou entre em contato com o suporte se o problema persistir.",
     "errorGeneric": "Houve um problema ao criar sua solicitação. Tente novamente.",
@@ -522,7 +535,9 @@
       "stats": "Estatísticas",
       "newHiring": "Nova contratação",
       "apiKeys": "Chaves de API",
-      "apiPlayground": "API Playground"
+      "apiPlayground": "API Playground",
+      "account": "Conta",
+      "usage": "Uso"
     },
     "welcome": "Bem-vindo de volta",
     "user": "por aqui",
@@ -636,7 +651,7 @@
     "inviteCandidate": {
       "title": "Convidar candidato para entrevista",
       "subtitle": "Enviar convite via RoboHire 一键邀约 API",
-      "toggleExternal": "Mostrar solicitacao externa da RoboHire API",
+      "toggleExternal": "Mostrar solicitacao externa da RoboHire",
       "externalHint": "Veja a solicitacao real enviada para RoboHire 一键邀约 API",
       "recruiterEmail": "Email do recrutador",
       "interviewerRequirement": "Requisitos do entrevistador",
@@ -662,9 +677,9 @@
       "apiResponse": "Resposta da API",
       "errorMissingResumeJd": "Forneca o curriculo e a descricao da vaga",
       "errorMissingRecruiter": "Forneca o email do recrutador",
-      "externalApiTitle": "RoboHire API externa",
+      "externalApiTitle": "RoboHire externa",
       "copyCode": "Copiar codigo",
-      "tip": "Dica: copie e execute este codigo para testar a RoboHire API diretamente"
+      "tip": "Dica: copie e execute este codigo para testar a RoboHire diretamente"
     },
     "parseResume": {
       "title": "Analisar curriculo",
@@ -701,53 +716,137 @@
       "resultTitle": "Resultado da avaliacao",
       "loadingDefault": "Avaliando entrevista...",
       "loadingWithCheating": "Avaliando entrevista e deteccao de trapaça...",
+      "stepResume": "Carregando currículo...",
+      "stepResumeDone": "Currículo carregado",
+      "stepJd": "Carregando descrição da vaga...",
+      "stepJdDone": "Descrição da vaga carregada",
+      "stepAnalyze": "Analisando e avaliando entrevista...",
+      "stepAnalyzeDone": "Avaliação concluída",
       "cheatingIncluded": "Analise de deteccao de trapaça incluida",
       "errorMissingFields": "Forneca curriculo, descricao da vaga e transcricao",
       "jsonTitle": "Resultado da avaliacao JSON"
+    },
+    "quickInvite": {
+      "title": "Convite rápido para entrevista",
+      "subtitle": "Faça upload de currículos, insira uma descrição da vaga e envie convites para entrevistas a todos os candidatos de uma vez.",
+      "stepSetup": "Configuração",
+      "stepReview": "Revisão",
+      "stepResults": "Resultados",
+      "jdTitle": "Descrição da vaga",
+      "jdDesc": "Cole ou digite a descrição da vaga para a posição que está contratando.",
+      "jdPlaceholder": "Cole a descrição da vaga aqui...",
+      "resumesTitle": "Currículos dos candidatos",
+      "resumesDesc": "Faça upload de currículos em PDF ou cole o texto. Você pode adicionar vários.",
+      "uploading": "Extraindo texto do PDF...",
+      "dropResumes": "Clique ou arraste currículos aqui",
+      "supportedFormats": "Arquivos PDF, DOCX, XLSX e TXT suportados. Múltiplos arquivos permitidos.",
+      "hideTextInput": "Ocultar entrada de texto",
+      "pasteInstead": "Ou cole o texto do currículo",
+      "pastePlaceholder": "Cole o texto do currículo aqui...",
+      "addResume": "Adicionar currículo",
+      "pastedResume": "Currículo colado #{{num}}",
+      "resumeCount": "{{count}} currículo(s) carregado(s)",
+      "pdfOnlyError": "Formato de arquivo não suportado. Faça upload de um arquivo PDF ou TXT.",
+      "settingsTitle": "Configurações do convite",
+      "recruiterEmail": "Email do recrutador",
+      "interviewerReq": "Requisito do entrevistador",
+      "interviewerPlaceholder": "ex., 5+ anos de experiência na área",
+      "optional": "opcional",
+      "reviewAndSend": "Revisar e enviar",
+      "reviewTitle": "Revisar antes de enviar",
+      "candidatesReady": "Candidatos prontos",
+      "from": "De",
+      "jdPreview": "Descrição da vaga",
+      "back": "Voltar",
+      "sending": "Enviando convites...",
+      "sendInvitations": "Enviar convites",
+      "sentSuccess": "Enviado com sucesso",
+      "sentFailed": "Falhou",
+      "totalProcessed": "Total processado",
+      "name": "Nome",
+      "email": "Email",
+      "position": "Cargo",
+      "scanQr": "Escanear código QR",
+      "qrHint": "Escaneie para iniciar a entrevista",
+      "qrAlt": "Código QR da entrevista",
+      "statusSent": "Enviado",
+      "statusFailed": "Falhou",
+      "statusPending": "Pendente",
+      "startNew": "Iniciar novo lote",
+      "goToDashboard": "Ir para o painel",
+      "authRequired": "Login necessário",
+      "authRequiredDesc": "Você precisa fazer login para enviar convites para entrevistas.",
+      "errorNoJd": "Por favor, insira uma descrição da vaga.",
+      "errorNoResumes": "Por favor, adicione pelo menos um currículo.",
+      "uploadJd": "Enviar arquivo",
+      "jdFormats": "PDF, DOCX, XLSX, TXT suportados",
+      "viewResume": "Ver currículo completo",
+      "extractFailed": "Não foi possível extrair texto do arquivo.",
+      "resumePreviewChars": "{{count}} caracteres",
+      "formattingResume": "Formatando com IA...",
+      "resumeSections": {
+        "summary": "Resumo",
+        "experience": "Experiência",
+        "education": "Formação",
+        "skills": "Habilidades",
+        "projects": "Projetos",
+        "certifications": "Certificações",
+        "languages": "Idiomas",
+        "awards": "Prêmios"
+      },
+      "viewJd": "Ver JD formatada",
+      "formattingJd": "Formatando com IA...",
+      "jdPreviewChars": "{{count}} caracteres",
+      "jdSections": {
+        "overview": "Visão geral",
+        "responsibilities": "Responsabilidades",
+        "requirements": "Requisitos",
+        "preferred": "Qualificações desejáveis",
+        "skills": "Habilidades",
+        "benefits": "Benefícios",
+        "about": "Sobre a empresa"
+      }
     }
   },
   "pricing": {
     "seo": {
       "title": "Precos - Planos de recrutamento com IA para cada equipe",
-      "desc": "Escolha o plano RoboHire ideal. Gratis, Startup por $299/mes, Business por $599/mes ou precos empresariais personalizados. Inclui matching de curriculo com IA e entrevistas."
+      "desc": "Escolha o plano RoboHire ideal. Starter por $29/mes, Growth por $199/mes, Business por $399/mes ou precos personalizados. Inclui matching de curriculo com IA e entrevistas."
     },
     "label": "Tabela de precos",
     "headline": "Precos que ",
     "headlineAccent": "crescem com voce",
-    "subheadline": "Comece gratis, escale conforme cresce. Pague apenas pelo que usar.",
-    "monthly": "Mensal",
-    "annual": "Anual",
-    "save": "Economize 8%",
+    "subheadline": "Preços simples e transparentes. Escale conforme você cresce.",
     "month": "mes",
-    "year": "ano",
     "popular": "Mais popular",
     "customBadge": "Personalizado",
     "customPrice": "Personalizado",
-    "billedAnnually": "Cobrado anualmente por $",
     "redirecting": "Redirecionando...",
-    "free": {
-      "name": "Gratis",
-      "subtitle": "Para pessoas que estao comecando",
-      "cta": "Comecar gratis",
-      "f1": "2 vagas",
-      "f2": "10 correspondencias de curriculo",
-      "f3": "2 entrevistas",
-      "f4": "Pontuacao e avaliacao de entrevistas",
-      "f5": "Resumos de entrevistas"
+    "starter": {
+      "name": "Starter",
+      "subtitle": "Para indivíduos começando",
+      "cta": "Iniciar teste gratuito",
+      "f1": "1 vaga",
+      "f2": "3 cargos",
+      "f3": "15 entrevistas",
+      "f4": "30 correspondências de currículo",
+      "f5": "Pontuação e avaliação de entrevistas",
+      "f6": "Resumos de entrevistas"
     },
-    "startup": {
-      "name": "Startup",
-      "subtitle": "Para equipes pequenas que contratam rapido",
-      "cta": "Iniciar teste gratis",
-      "f1": "Assentos ilimitados",
-      "f2": "Vagas ilimitadas",
-      "f3": "180 entrevistas / mes",
-      "f4": "180 correspondencias de curriculo / mes",
-      "f5": "Acesso a API RoboHire",
-      "f5s": "Integre com seus sistemas",
-      "f6": "6 idiomas de entrevista",
-      "f7": "Avaliacao de proficiencia linguistica",
-      "f8": "Suporte por email"
+    "growth": {
+      "name": "Growth",
+      "subtitle": "Para equipes em crescimento",
+      "cta": "Iniciar teste gratuito",
+      "f1": "Vagas ilimitadas",
+      "f2": "Cargos ilimitados",
+      "f3": "120 entrevistas / mês",
+      "f4": "240 correspondências de currículo / mês",
+      "f5": "Tudo no Starter",
+      "f6": "Acesso à API RoboHire",
+      "f6s": "Integre com seus sistemas",
+      "f7": "6 idiomas de entrevista",
+      "f8": "Avaliação de proficiência linguística",
+      "f9": "Suporte por email"
     },
     "business": {
       "name": "Business",
@@ -755,19 +854,20 @@
       "cta": "Iniciar teste gratis",
       "f1": "Assentos ilimitados",
       "f2": "Vagas ilimitadas",
-      "f3": "400 entrevistas / mes",
-      "f4": "400 correspondencias de curriculo / mes",
-      "f5": "Tudo do Startup",
+      "f3": "280 entrevistas / mês",
+      "f4": "500 correspondências de currículo / mês",
+      "f5": "Tudo no Growth",
       "f6": "Suporte prioritario",
+      "f6s": "Tempos de resposta mais rápidos",
       "f7": "Analises avancadas",
-      "f8": "Relatorios white-label",
-      "f9": "Reproducao completa de video",
-      "f10": "Deteccao de trapaca"
+      "f7s": "Insights detalhados do funil de contratação",
+      "f8": "Relatórios de entrevista com marca branca",
+      "f9": "Reprodução completa de vídeo de entrevistas"
     },
     "custom": {
-      "name": "Enterprise",
+      "name": "Personalizado",
       "subtitle": "Para organizacoes de alto volume",
-      "cta": "Contatar vendas",
+      "cta": "Fale conosco",
       "f1": "Tudo ilimitado",
       "f2": "Tudo do Business",
       "f3": "Workflows personalizados",
@@ -805,27 +905,122 @@
     "faq": {
       "title": "Perguntas frequentes",
       "q1": "Posso experimentar o RoboHire gratuitamente?",
-      "a1": "Sim! O plano Gratis inclui 10 correspondencias de curriculo e 2 entrevistas sem custo. Nao e necessario cartao de credito.",
+      "a1": "Sim! Todos os planos pagos incluem um teste gratuito de 14 dias. Nao e necessario cartao de credito.",
       "q2": "Quais metodos de pagamento voces aceitam?",
       "a2": "Aceitamos os principais cartoes de credito e debito (Visa, Mastercard, American Express) alem de Alipay. Todos os pagamentos sao processados com seguranca via Stripe.",
       "q3": "Posso mudar de plano a qualquer momento?",
       "a3": "Claro. Voce pode fazer upgrade ou downgrade a qualquer momento. No upgrade, a diferenca proporcional e cobrada. No downgrade, o credito e aplicado ao proximo ciclo de cobranca.",
       "q4": "O que acontece quando ultrapasso meus limites mensais?",
       "a4": "Voce pode usar os precos por uso para continuar. Correspondencias de curriculo custam $0,40 cada e entrevistas $2,00, debitados do seu saldo recarregado.",
-      "q5": "Voces oferecem desconto na cobranca anual?",
-      "a5": "Sim! A cobranca anual economiza aproximadamente 8% comparado a mensal. Voce pode alternar entre ambas a qualquer momento.",
-      "q6": "O que esta incluido no preco por uso?",
-      "a6": "O pagamento por uso permite recarregar saldo e usa-lo para correspondencias de curriculo ($0,40) ou entrevistas ($2,00). Cada uso inclui todas as funcionalidades: pontuacao IA, resumos, deteccao de trapaca e mais.",
-      "q7": "Ha contrato ou compromisso?",
-      "a7": "Sem contratos. Planos mensais podem ser cancelados a qualquer momento. Planos anuais sao cobrados antecipadamente, mas voce pode cancelar a renovacao quando quiser.",
-      "q8": "Voces oferecem planos empresariais personalizados?",
-      "a8": "Sim! O plano Enterprise inclui uso ilimitado, workflows personalizados, integracoes ATS, suporte dedicado e mais. Entre em contato com nossa equipe de vendas para um orcamento sob medida."
+      "q5": "O que esta incluido no preco por uso?",
+      "a5": "O pagamento por uso permite recarregar saldo e usa-lo para correspondencias de curriculo ($0,40) ou entrevistas ($2,00). Cada uso inclui todas as funcionalidades: pontuacao IA, resumos, deteccao de trapaca e mais.",
+      "q6": "Ha contrato ou compromisso?",
+      "a6": "Sem contratos. Planos mensais podem ser cancelados a qualquer momento.",
+      "q7": "Voces oferecem planos personalizados?",
+      "a7": "Sim! O plano personalizado inclui uso ilimitado, workflows personalizados, integracoes ATS, suporte dedicado e mais. Entre em contato com nossa equipe para um orcamento sob medida."
     },
     "cta": {
       "title": "Pronto para otimizar seu recrutamento?",
       "subtitle": "Junte-se a milhares de empresas que usam IA para contratar mais rapido e melhor.",
       "primary": "Comecar a contratar",
       "secondary": "Solicitar uma demo"
+    }
+  },
+  "account": {
+    "profile": {
+      "title": "Perfil",
+      "name": "Nome",
+      "company": "Empresa",
+      "avatar": "URL do avatar",
+      "save": "Salvar alterações",
+      "saving": "Salvando...",
+      "saved": "Perfil atualizado com sucesso"
+    },
+    "security": {
+      "title": "Segurança",
+      "currentPassword": "Senha atual",
+      "newPassword": "Nova senha",
+      "confirmPassword": "Confirmar nova senha",
+      "change": "Alterar senha",
+      "changing": "Alterando...",
+      "changed": "Senha alterada com sucesso",
+      "mismatch": "As senhas não correspondem",
+      "oauthNote": "A alteração de senha não está disponível para contas de login social."
+    },
+    "subscription": {
+      "title": "Assinatura",
+      "currentPlan": "Plano atual",
+      "status": "Status",
+      "renewsOn": "Renova em",
+      "trialEnds": "O teste gratuito termina em",
+      "usage": "Uso",
+      "interviews": "Entrevistas",
+      "matches": "Correspondências de CV",
+      "changePlan": "Alterar plano",
+      "of": "de"
+    },
+    "topup": {
+      "title": "Recarregar saldo",
+      "currentBalance": "Saldo atual",
+      "selectAmount": "Selecione um valor para adicionar ao seu saldo:",
+      "processing": "Processando...",
+      "success": "Recarga realizada com sucesso! Seu saldo foi atualizado."
+    },
+    "billing": {
+      "title": "Histórico de cobrança",
+      "date": "Data",
+      "description": "Descrição",
+      "amount": "Valor",
+      "status": "Status",
+      "action": "Recibo",
+      "empty": "Nenhum histórico de cobrança ainda.",
+      "loading": "Carregando histórico de cobrança...",
+      "viewInvoice": "Ver",
+      "viewReceipt": "Recibo"
+    }
+  },
+  "seo": {
+    "defaultTitle": "RoboHire - Plataforma de Recrutamento com IA",
+    "defaultDescription": "Contrate candidatos de elite antes dos outros. Nosso agente de recrutamento com IA filtra currículos, realiza entrevistas e gera relatórios de avaliação completos.",
+    "defaultKeywords": "recrutamento IA, automação recrutamento, triagem currículos, avaliação entrevistas, matching candidatos, plataforma recrutamento, recrutamento automatizado, aquisição talentos",
+    "startHiring": {
+      "title": "Agente de Recrutamento IA",
+      "desc": "Deixe a IA fazer o trabalho pesado. Nosso agente filtra currículos, realiza entrevistas e gera relatórios automaticamente.",
+      "keywords": "agente recrutamento IA, recrutamento automatizado, triagem currículos, entrevista IA, automação recrutamento"
+    },
+    "developers": {
+      "title": "API para Desenvolvedores",
+      "desc": "Integre poderosas capacidades de recrutamento com IA nos seus sistemas existentes via API RESTful.",
+      "keywords": "API recrutamento, API recrutamento IA, API análise currículos, API matching candidatos, ferramentas desenvolvedores"
+    },
+    "quickInvite": {
+      "title": "Convite Rápido para Entrevista",
+      "desc": "Faça upload de currículos e descrições de vagas, envie convites para entrevistas com códigos QR em um clique.",
+      "keywords": "convite entrevista em massa, código QR entrevista, recrutamento um clique, convite candidatos"
+    },
+    "requestDemo": {
+      "title": "Solicitar Demo",
+      "desc": "Agende uma demo personalizada do RoboHire. Veja como o recrutamento com IA pode transformar seu processo."
+    },
+    "login": {
+      "title": "Entrar",
+      "desc": "Entre na sua conta RoboHire. Acesse o painel de recrutamento IA e gerencie candidatos."
+    },
+    "pricing": {
+      "title": "Planos e Preços",
+      "desc": "Escolha o plano RoboHire ideal para sua equipe. De testes gratuitos a soluções empresariais."
+    },
+    "docs": {
+      "overview": { "title": "Documentação API", "desc": "Documentação completa da API RoboHire." },
+      "quickStart": { "title": "Guia de Início Rápido", "desc": "Comece com a API RoboHire em 5 minutos." },
+      "auth": { "title": "Autenticação API", "desc": "Aprenda a autenticar com a API RoboHire." },
+      "matchResume": { "title": "API Matching Currículo", "desc": "Referência do endpoint de matching de currículos com IA." },
+      "parseResume": { "title": "API Análise Currículo", "desc": "Referência para análise de currículos." },
+      "parseJd": { "title": "API Análise Descrição Vaga", "desc": "Referência para análise de descrições de vagas." },
+      "invite": { "title": "API Convidar Candidato", "desc": "Referência para enviar convites de entrevista IA." },
+      "evaluate": { "title": "API Avaliar Entrevista", "desc": "Referência para avaliação de entrevistas com IA." },
+      "webhooks": { "title": "Webhooks", "desc": "Configure webhooks para notificações em tempo real." },
+      "errors": { "title": "Tratamento de Erros", "desc": "Códigos de erro, formatos de resposta e guia de solução de problemas." }
     }
   }
 }

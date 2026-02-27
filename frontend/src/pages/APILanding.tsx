@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
+import SEO from '../components/SEO';
 
 export default function APILanding() {
   const { t } = useTranslation();
@@ -56,7 +57,7 @@ console.log(result.data.matchScore); // 85`;
     {
       number: '01',
       title: t('apiLanding.steps.signup.title', 'Sign up or log in'),
-      description: t('apiLanding.steps.signup.desc', 'Create a free account or log in to access your RoboHire API dashboard.'),
+      description: t('apiLanding.steps.signup.desc', 'Create a free account or log in to access your RoboHire dashboard.'),
     },
     {
       number: '02',
@@ -72,6 +73,7 @@ console.log(result.data.matchScore); // 85`;
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title={t('seo.developers.title', 'Developer API')} description={t('seo.developers.desc', 'Integrate powerful AI recruitment capabilities into your existing systems. Parse resumes, match candidates, and evaluate interviews via RESTful API.')} url="https://robohire.io/developers" keywords={t('seo.developers.keywords', 'recruitment API, AI hiring API, resume parsing API, candidate matching API, interview evaluation API, developer tools')} />
       <Navbar />
 
       {/* Hero Section */}
@@ -87,7 +89,7 @@ console.log(result.data.matchScore); // 85`;
             {/* Left Content */}
             <div>
               <p className="text-indigo-400 font-medium mb-4 uppercase tracking-wide text-sm">
-                {t('apiLanding.hero.badge', 'RoboHire API')}
+                {t('apiLanding.hero.badge', 'RoboHire')}
               </p>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
                 {t('apiLanding.hero.headline', 'Build AI-powered hiring in minutes')}
@@ -166,7 +168,7 @@ console.log(result.data.matchScore); // 85`;
               {t('apiLanding.what.title', 'Powerful AI recruitment APIs')}
             </h2>
             <p className="text-lg text-gray-600 leading-relaxed">
-              {t('apiLanding.what.description', 'RoboHire API provides a complete suite of AI-powered recruitment tools. Match resumes to job descriptions, parse documents, evaluate interviews, and automate candidate communication - all through simple REST API endpoints.')}
+              {t('apiLanding.what.description', 'RoboHire provides a complete suite of AI-powered recruitment tools. Match resumes to job descriptions, parse documents, evaluate interviews, and automate candidate communication - all through simple REST API endpoints.')}
             </p>
           </div>
 

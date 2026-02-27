@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { CodeBlock } from '../../components/docs';
+import SEO from '../../components/SEO';
 
 export default function DocsErrorHandling() {
   const { t } = useTranslation();
@@ -114,11 +115,12 @@ export default function DocsErrorHandling() {
 
   return (
     <div>
+      <SEO title={t('seo.docsErrorHandling.title', 'Error Handling')} description={t('seo.docsErrorHandling.desc', 'RoboHire API error codes, response formats, and troubleshooting guide.')} url="https://robohire.io/docs/error-handling" keywords={t('seo.docsErrorHandling.keywords', 'RoboHire API documentation, error handling, API error codes, troubleshooting')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.errors.title', 'Error Handling')}
       </h1>
       <p className="text-lg text-gray-600 mb-8">
-        {t('docs.errors.intro', 'Learn how to handle errors returned by the RoboHire API and implement robust error handling in your application.')}
+        {t('docs.errors.intro', 'Learn how to handle errors returned by the RoboHire and implement robust error handling in your application.')}
       </p>
 
       {/* Error Response Format */}

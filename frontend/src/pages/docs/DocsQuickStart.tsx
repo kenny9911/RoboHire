@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CodeBlock } from '../../components/docs';
+import SEO from '../../components/SEO';
 
 export default function DocsQuickStart() {
   const { t } = useTranslation();
@@ -55,11 +56,12 @@ print(result['data']['matchScore'])  # e.g., 85`,
 
   return (
     <div>
+      <SEO title={t('seo.docsQuickStart.title', 'Quick Start Guide')} description={t('seo.docsQuickStart.desc', 'Get up and running with the RoboHire API in 5 minutes. Step-by-step integration guide.')} url="https://robohire.io/docs/quick-start" keywords={t('seo.docsQuickStart.keywords', 'RoboHire API documentation, quick start guide, API integration')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.quickStart.title', 'Quick Start')}
       </h1>
       <p className="text-lg text-gray-600 mb-8">
-        {t('docs.quickStart.intro', 'Get up and running with the RoboHire API in just a few minutes.')}
+        {t('docs.quickStart.intro', 'Get up and running with the RoboHire in just a few minutes.')}
       </p>
 
       {/* Step 1 */}

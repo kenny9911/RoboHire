@@ -75,8 +75,8 @@ export default function Login() {
   return (
     <>
       <SEO
-        title="Sign In"
-        description="Sign in to RoboHire to access your AI-powered hiring dashboard. Manage hiring requests, track candidates, and streamline your recruitment process."
+        title={t('seo.login.title', 'Sign In')}
+        description={t('seo.login.desc', 'Sign in to your RoboHire account. Access your AI hiring dashboard, manage candidates, and track recruitment progress.')}
       />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8 relative">
         {/* Language Selector - Top Right */}

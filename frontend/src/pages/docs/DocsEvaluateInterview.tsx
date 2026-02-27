@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CodeBlock, EndpointCard, ParamTable } from '../../components/docs';
+import SEO from '../../components/SEO';
 
 export default function DocsEvaluateInterview() {
   const { t } = useTranslation();
@@ -129,6 +130,7 @@ result = response.json()`,
 
   return (
     <div>
+      <SEO title={t('seo.docsEvaluateInterview.title', 'Evaluate Interview API')} description={t('seo.docsEvaluateInterview.desc', 'API reference for AI-powered interview evaluation. Get comprehensive candidate assessment reports.')} url="https://robohire.io/docs/api/evaluate-interview" keywords={t('seo.docsEvaluateInterview.keywords', 'RoboHire API documentation, interview evaluation API, AI candidate assessment, hiring automation')} />
       <h1 className="text-3xl font-bold text-gray-900 mb-4">
         {t('docs.evaluateInterview.title', 'Evaluate Interview')}
       </h1>

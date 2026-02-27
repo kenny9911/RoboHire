@@ -27,47 +27,44 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 lg:py-32 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-3">
+    <section id="how-it-works" className="py-24 lg:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mb-14 max-w-3xl text-center">
+          <p className="inline-flex rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
             {t('landing.howItWorks.badge', 'How It Works')}
           </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="landing-display mt-5 text-3xl font-semibold text-slate-900 sm:text-4xl lg:text-5xl">
             {t('landing.howItWorks.title', 'Simple 4-Step Process')}
           </h2>
-          <p className="text-lg text-gray-500">
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
             {t('landing.howItWorks.subtitle', 'AI acts as your hiring agent - screening resumes, interviewing candidates, and delivering evaluation reports.')}
           </p>
         </div>
 
-        {/* Steps - Minimalist horizontal layout */}
-        <div className="grid md:grid-cols-4 gap-8 lg:gap-12">
-          {steps.map((step, index) => (
-            <div key={index} className="relative">
-              {/* Connection line */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-4 left-full w-full h-px bg-gray-200" />
-              )}
+        <div className="relative">
+          <div className="pointer-events-none absolute left-[12%] right-[12%] top-9 hidden h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent xl:block" />
 
-              {/* Step */}
-              <div className="group">
-                {/* Number */}
-                <div className="text-4xl font-bold text-gray-200 group-hover:text-indigo-200 transition-colors mb-4">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {steps.map((step) => (
+              <article
+                key={step.number}
+                className="landing-gradient-stroke relative overflow-hidden rounded-3xl bg-white p-6 shadow-[0_28px_52px_-40px_rgba(15,23,42,0.62)]"
+              >
+                <div className="pointer-events-none absolute right-4 top-3 text-5xl font-bold text-slate-100">
                   {step.number}
                 </div>
-
-                {/* Content */}
-                <h3 className="text-base font-semibold text-gray-900 mb-2">
+                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
+                  {step.number}
+                </span>
+                <h3 className="landing-display relative mt-5 text-xl font-semibold text-slate-900">
                   {step.title}
                 </h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
+                <p className="relative mt-3 text-sm leading-relaxed text-slate-600">
                   {step.description}
                 </p>
-              </div>
-            </div>
-          ))}
+              </article>
+            ))}
+          </div>
         </div>
       </div>
     </section>
