@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
@@ -32,6 +30,205 @@ interface Candidate {
 
 interface HiringRequestDetail extends HiringRequest {
   candidates: Candidate[];
+}
+
+interface ParsedSection {
+  title: string;
+  items: string[];
+}
+
+interface ParsedJobContent {
+  intro: string[];
+  sections: ParsedSection[];
+  trailing: string[];
+}
+
+const SECTION_PATTERNS: Array<{ pattern: RegExp; title: string }> = [
+  { pattern: /^(职责|岗位职责|工作职责|核心职责|主要职责|你将负责|job responsibilities|responsibilities)$/i, title: '职责' },
+  { pattern: /^(要求|任职要求|任职资格|职位要求|我们希望你具备|岗位要求|基本要求|requirements?|qualifications?)$/i, title: '要求' },
+  { pattern: /^(加分项|优先条件|加分条件|附加优势|bonus|nice to have|preferred|plus)$/i, title: '加分项' },
+  { pattern: /^(职位概述|岗位概述|职位简介|岗位描述|职位描述|overview|summary|about the role)$/i, title: '职位概述' },
+  { pattern: /^(职位福利|福利待遇|薪资福利|benefits?|perks|compensation)$/i, title: '福利待遇' },
+  { pattern: /^(技术栈|技术要求|tech stack|technologies)$/i, title: '技术栈' },
+  { pattern: /^(团队介绍|关于团队|about the team|team)$/i, title: '团队介绍' },
+  { pattern: /^(公司介绍|关于公司|关于我们|about us|about the company|company)$/i, title: '公司介绍' },
+  { pattern: /^(工作地点|工作方式|location|work location|work mode)$/i, title: '工作地点' },
+];
+
+function cleanContentLine(rawLine: string): string {
+  return rawLine
+    .trim()
+    .replace(/^[-*+•●▪·]\s+/, '')
+    .replace(/^#+\s*/, '')
+    .replace(/^\*\*(.+)\*\*$/, '$1')
+    .trim();
+}
+
+function normalizeSectionTitle(rawTitle: string): string | null {
+  const title = rawTitle
+    .trim()
+    .replace(/[*_`#]/g, '')
+    .replace(/[：:]+$/, '')
+    .trim();
+
+  if (!title) return null;
+
+  for (const { pattern, title: normalized } of SECTION_PATTERNS) {
+    if (pattern.test(title)) return normalized;
+  }
+
+  return title.length <= 14 ? title : null;
+}
+
+function isKnownSectionPattern(line: string): boolean {
+  const cleaned = line.replace(/[*_`#：:]/g, '').trim();
+  return SECTION_PATTERNS.some(({ pattern }) => pattern.test(cleaned));
+}
+
+function parseJobContent(content: string): ParsedJobContent {
+  const lines = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  const intro: string[] = [];
+  const sections: ParsedSection[] = [];
+  const trailing: string[] = [];
+  let currentSection: ParsedSection | null = null;
+  let hasSection = false;
+
+  const pushCurrentSection = () => {
+    if (currentSection && currentSection.items.length > 0) {
+      sections.push(currentSection);
+    }
+    currentSection = null;
+  };
+
+  for (const rawLine of lines) {
+    const line = cleanContentLine(rawLine);
+    if (!line) continue;
+
+    const headingWithBody = line.match(/^(.{1,22}?)[：:]\s*(.+)$/);
+    if (headingWithBody) {
+      const normalizedTitle = normalizeSectionTitle(headingWithBody[1]);
+      if (normalizedTitle) {
+        pushCurrentSection();
+        currentSection = { title: normalizedTitle, items: [cleanContentLine(headingWithBody[2])] };
+        hasSection = true;
+        continue;
+      }
+    }
+
+    const headingOnly = normalizeSectionTitle(line);
+    if (headingOnly && (/[：:]$/.test(rawLine.trim()) || isKnownSectionPattern(line))) {
+      pushCurrentSection();
+      currentSection = { title: headingOnly, items: [] };
+      hasSection = true;
+      continue;
+    }
+
+    if (currentSection) {
+      currentSection.items.push(line);
+      continue;
+    }
+
+    if (!hasSection) {
+      intro.push(line);
+    } else {
+      trailing.push(line);
+    }
+  }
+
+  pushCurrentSection();
+
+  if (sections.length === 0 && intro.length > 1) {
+    sections.push({ title: '内容', items: intro });
+    return { intro: [], sections, trailing };
+  }
+
+  return { intro, sections, trailing };
+}
+
+function RichTextPanel({
+  title,
+  content,
+  emptyText,
+  accent,
+}: {
+  title: string;
+  content?: string;
+  emptyText: string;
+  accent: 'indigo' | 'cyan';
+}) {
+  const parsed = useMemo(() => parseJobContent(content || ''), [content]);
+  const colorClass =
+    accent === 'indigo'
+      ? {
+          border: 'border-indigo-100',
+          bg: 'bg-indigo-50',
+          text: 'text-indigo-700',
+          dot: 'bg-indigo-500',
+          strip: 'from-indigo-500 to-violet-500',
+        }
+      : {
+          border: 'border-cyan-100',
+          bg: 'bg-cyan-50',
+          text: 'text-cyan-700',
+          dot: 'bg-cyan-500',
+          strip: 'from-cyan-500 to-emerald-500',
+        };
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${colorClass.strip}`} />
+      <div className="border-b border-slate-100 px-5 py-4">
+        <h2 className="text-sm font-semibold tracking-wide text-slate-900">{title}</h2>
+      </div>
+      <div className="max-h-[620px] space-y-4 overflow-auto px-5 py-4 text-sm text-slate-700">
+        {!content?.trim() ? (
+          <p className="text-sm text-slate-500">{emptyText}</p>
+        ) : (
+          <>
+            {parsed.intro.length > 0 && (
+              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                {parsed.intro.map((paragraph, index) => (
+                  <p key={`intro-${index}`} className="leading-6 text-slate-700">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {parsed.sections.map((section, sectionIndex) => (
+              <section key={`${section.title}-${sectionIndex}`} className="space-y-2">
+                <div className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${colorClass.border} ${colorClass.bg} ${colorClass.text}`}>
+                  {section.title}
+                </div>
+                <ul className="space-y-2">
+                  {section.items.map((item, itemIndex) => (
+                    <li key={`${section.title}-${itemIndex}`} className="flex items-start gap-2.5 leading-6 text-slate-700">
+                      <span className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${colorClass.dot}`} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+
+            {parsed.trailing.length > 0 && (
+              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                {parsed.trailing.map((paragraph, index) => (
+                  <p key={`trailing-${index}`} className="leading-6 text-slate-700">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -231,15 +428,13 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex flex-col lg:flex-row" ref={splitContainerRef}>
-                  <div style={{ width: `${splitPercent}%` }} className="flex-shrink-0 lg:pr-0 bg-white border border-gray-100 rounded-2xl p-6">
-                    <h2 className="text-sm font-semibold text-gray-900 mb-3">
-                      {t('dashboard.detail.requirements', 'Requirements')}
-                    </h2>
-                    <div className="text-sm text-gray-600 max-h-[600px] overflow-auto prose prose-sm prose-gray">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {selectedRequest.requirements}
-                      </ReactMarkdown>
-                    </div>
+                  <div style={{ width: `${splitPercent}%` }} className="flex-shrink-0 lg:pr-0">
+                    <RichTextPanel
+                      title={t('dashboard.detail.requirements', 'Requirements')}
+                      content={selectedRequest.requirements}
+                      emptyText={t('dashboard.detail.noRequirements', 'No requirements yet.')}
+                      accent="indigo"
+                    />
                   </div>
                   {/* Draggable divider */}
                   <div
@@ -270,19 +465,13 @@ export default function Dashboard() {
                   >
                     <div className="w-1 h-8 rounded-full bg-gray-300 group-hover:bg-indigo-400 transition-colors" />
                   </div>
-                  <div className="flex-1 min-w-0 bg-white border border-gray-100 rounded-2xl p-6 mt-4 lg:mt-0">
-                    <h2 className="text-sm font-semibold text-gray-900 mb-3">
-                      {t('dashboard.detail.jobDescription', 'Job description')}
-                    </h2>
-                    <div className="text-sm text-gray-600 max-h-[600px] overflow-auto prose prose-sm prose-gray">
-                      {selectedRequest.jobDescription ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {selectedRequest.jobDescription}
-                        </ReactMarkdown>
-                      ) : (
-                        <p>{t('dashboard.detail.noJobDescription', 'No job description yet.')}</p>
-                      )}
-                    </div>
+                  <div className="mt-4 min-w-0 flex-1 lg:mt-0">
+                    <RichTextPanel
+                      title={t('dashboard.detail.jobDescription', 'Job description')}
+                      content={selectedRequest.jobDescription}
+                      emptyText={t('dashboard.detail.noJobDescription', 'No job description yet.')}
+                      accent="cyan"
+                    />
                   </div>
                 </div>
 

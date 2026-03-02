@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, type FormEvent, type ReactNode } from 'react';
 import {
   Area,
   AreaChart,
@@ -228,6 +228,35 @@ function formatPercent(value: number): string {
 
 function toDateInputValue(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+function StableChartContainer({ className, children }: { className: string; children: ReactNode }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+
+    const updateReadyState = () => {
+      const rect = node.getBoundingClientRect();
+      const next = rect.width > 0 && rect.height > 0;
+      setIsReady((prev) => (prev === next ? prev : next));
+    };
+
+    updateReadyState();
+
+    const observer = new ResizeObserver(updateReadyState);
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className={className}>
+      {isReady ? children : null}
+    </div>
+  );
 }
 
 // ========== TAB COMPONENTS ==========
@@ -532,8 +561,8 @@ function UsageAnalyticsTab() {
           <div className="grid gap-4 xl:grid-cols-2">
             <div className="landing-gradient-stroke rounded-3xl bg-white p-5">
               <p className="text-sm font-semibold text-slate-700">Calls and LLM Calls by Period</p>
-              <div className="mt-4 h-72">
-                <ResponsiveContainer width="100%" height="100%">
+              <StableChartContainer className="mt-4 h-72">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <AreaChart data={chartRows}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -544,13 +573,13 @@ function UsageAnalyticsTab() {
                     <Area yAxisId="right" type="monotone" dataKey="llmCalls" name="LLM Calls" stroke="#0ea5e9" fill="#bae6fd" />
                   </AreaChart>
                 </ResponsiveContainer>
-              </div>
+              </StableChartContainer>
             </div>
 
             <div className="landing-gradient-stroke rounded-3xl bg-white p-5">
               <p className="text-sm font-semibold text-slate-700">Tokens and Cost by Period</p>
-              <div className="mt-4 h-72">
-                <ResponsiveContainer width="100%" height="100%">
+              <StableChartContainer className="mt-4 h-72">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <BarChart data={chartRows}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -566,7 +595,7 @@ function UsageAnalyticsTab() {
                     <Bar yAxisId="right" dataKey="cost" name="Cost (USD)" fill="#06b6d4" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              </StableChartContainer>
             </div>
           </div>
 
@@ -1347,6 +1376,7 @@ function PricingTab() {
 }
 
 function SettingsTab() {
+  const { user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -1354,7 +1384,8 @@ function SettingsTab() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setMessage('');
     setError('');
 
@@ -1393,48 +1424,62 @@ function SettingsTab() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Change Password</h3>
         <p className="text-sm text-gray-500 mb-6">Update your admin account password.</p>
+        <form className="space-y-6" onSubmit={handleChangePassword}>
+          <input
+            type="email"
+            name="username"
+            value={user?.email || ''}
+            readOnly
+            tabIndex={-1}
+            autoComplete="username"
+            aria-hidden="true"
+            className="sr-only"
+          />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Current Password</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Current Password</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {saving ? 'Changing...' : 'Change Password'}
+            </button>
+            {message && <p className="text-sm text-green-600 font-medium">{message}</p>}
+            {error && <p className="text-sm text-red-600">{error}</p>}
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 flex items-center gap-3">
-          <button
-            onClick={handleChangePassword}
-            disabled={saving}
-            className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {saving ? 'Changing...' : 'Change Password'}
-          </button>
-          {message && <p className="text-sm text-green-600 font-medium">{message}</p>}
-          {error && <p className="text-sm text-red-600">{error}</p>}
-        </div>
+        </form>
       </div>
     </div>
   );
