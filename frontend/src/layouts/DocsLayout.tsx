@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import LanguageSelector from '../components/LanguageSelector';
 
 interface NavItem {
   title: string;
@@ -115,6 +116,9 @@ export default function DocsLayout() {
             >
               {t('docs.playground', 'Playground')}
             </Link>
+            <div className="hidden sm:block">
+              <LanguageSelector variant="compact" />
+            </div>
             <Link
               to="/dashboard/api-keys"
               className="hidden rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white transition-all hover:-translate-y-0.5 sm:inline-flex"
@@ -176,6 +180,11 @@ export default function DocsLayout() {
                 </div>
               ))}
             </nav>
+
+            {/* Language Selector (mobile) */}
+            <div className="mt-8 sm:hidden">
+              <LanguageSelector />
+            </div>
 
             {/* Try It Section */}
             <div className="mt-8 p-4 bg-blue-50 rounded-xl">

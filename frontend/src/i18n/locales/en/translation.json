@@ -1012,6 +1012,375 @@
       "viewDocs": "View documentation"
     }
   },
+  "docs": {
+    "title": "Documentation",
+    "search": "Search docs...",
+    "playground": "Playground",
+    "getApiKey": "Get API Key",
+    "nav": {
+      "gettingStarted": "Getting Started",
+      "overview": "Overview",
+      "quickStart": "Quick Start",
+      "authentication": "Authentication",
+      "apiReference": "API Reference",
+      "matchResume": "Match Resume",
+      "parseResume": "Parse Resume",
+      "parseJd": "Parse JD",
+      "inviteCandidate": "Invite Candidate",
+      "evaluateInterview": "Evaluate Interview",
+      "advanced": "Advanced",
+      "webhooks": "Webhooks",
+      "errors": "Error Handling"
+    },
+    "tryIt": {
+      "title": "Try it out",
+      "description": "Test the APIs interactively in our playground.",
+      "cta": "Open Playground"
+    },
+    "footer": {
+      "tryPlayground": "Try in Playground"
+    },
+    "overview": {
+      "title": "RoboHire Documentation",
+      "intro": "Welcome to the RoboHire documentation. Learn how to integrate AI-powered recruitment features into your application.",
+      "quickStartTitle": "Get started in minutes",
+      "quickStartDesc": "Follow our quick start guide to make your first API call.",
+      "quickStartCta": "Quick Start Guide",
+      "baseUrl": "Base URL",
+      "authentication": "Authentication",
+      "authDesc": "All API requests require authentication using an API key. Include your key in the request headers:",
+      "learnMoreAuth": "Learn more about authentication",
+      "endpoints": "Available Endpoints",
+      "needHelp": "Need help?",
+      "helpDesc": "If you have questions or need assistance, check out our resources or reach out to support.",
+      "tryPlayground": "Try the Playground",
+      "contactSupport": "Contact Support",
+      "ep": {
+        "matchResume": "Match Resume",
+        "matchResumeDesc": "Match resumes against job descriptions with AI scoring.",
+        "parseResume": "Parse Resume",
+        "parseResumeDesc": "Extract structured data from resume PDFs.",
+        "parseJd": "Parse JD",
+        "parseJdDesc": "Extract structured data from job description PDFs.",
+        "inviteCandidate": "Invite Candidate",
+        "inviteCandidateDesc": "Generate professional interview invitation emails.",
+        "evaluateInterview": "Evaluate Interview",
+        "evaluateInterviewDesc": "Analyze interview transcripts with comprehensive scoring."
+      }
+    },
+    "quickStart": {
+      "title": "Quick Start",
+      "intro": "Get up and running with the RoboHire in just a few minutes.",
+      "step1": {
+        "title": "Get your API key",
+        "desc": "Sign up for a RoboHire account and generate an API key from your dashboard.",
+        "cta": "Get API Key"
+      },
+      "step2": {
+        "title": "Install dependencies (optional)",
+        "desc": "Install any HTTP client library for your programming language."
+      },
+      "step3": {
+        "title": "Make your first API call",
+        "desc": "Let's match a resume against a job description:"
+      },
+      "step4": {
+        "title": "Handle the response",
+        "desc": "You'll receive a JSON response with the match analysis:"
+      },
+      "nextSteps": {
+        "title": "Next steps",
+        "auth": "Learn about authentication methods",
+        "matchResume": "Explore the Match Resume API",
+        "playground": "Try the interactive Playground"
+      }
+    },
+    "auth": {
+      "title": "Authentication",
+      "intro": "Learn how to authenticate your API requests to RoboHire.",
+      "apiKeys": {
+        "title": "API Keys",
+        "desc": "API keys are the primary way to authenticate with the RoboHire. Each key is prefixed with \"rh_\" and provides full access to the API on behalf of your account.",
+        "warning": {
+          "title": "Keep your API keys secure",
+          "desc": "Never expose your API keys in client-side code, public repositories, or anywhere they could be accessed by unauthorized parties."
+        },
+        "creating": "Creating API Keys",
+        "step1": "Log in to your RoboHire dashboard",
+        "step2": "Navigate to API Keys section",
+        "step3": "Click \"Create Key\" and provide a name",
+        "step4": "Copy and securely store your key (shown only once)",
+        "manage": "Manage your API keys"
+      },
+      "using": {
+        "title": "Using API Keys",
+        "desc": "Include your API key in the Authorization header of each request:",
+        "bearer": "Bearer Token (Recommended)",
+        "xApiKey": "X-API-Key Header",
+        "xApiKeyDesc": "Alternatively, you can use the X-API-Key header:"
+      },
+      "scopes": {
+        "title": "Key Scopes",
+        "desc": "API keys can have different scopes to limit their permissions:",
+        "scopeHeader": "Scope",
+        "descHeader": "Description",
+        "read": "Access to read operations (GET endpoints)",
+        "write": "Access to create and modify operations (POST, PUT, DELETE)"
+      },
+      "errors": {
+        "title": "Authentication Errors",
+        "desc": "If authentication fails, you will receive one of these error responses:",
+        "authRequired": "No authentication credentials were provided.",
+        "invalidToken": "The provided API key is invalid or has been revoked.",
+        "insufficientScopes": "The API key does not have the required scopes for this operation."
+      },
+      "bestPractices": {
+        "title": "Best Practices",
+        "envVars": "Store API keys in environment variables, not in code",
+        "rotate": "Rotate keys periodically and after any potential exposure",
+        "minScope": "Use the minimum required scopes for each key",
+        "expiration": "Set expiration dates for keys when possible",
+        "separate": "Use separate keys for development and production"
+      }
+    },
+    "matchResume": {
+      "title": "Match Resume",
+      "intro": "Match a resume against a job description to get an AI-powered compatibility score and detailed analysis.",
+      "endpointDesc": "Match a resume against a job description",
+      "request": "Request",
+      "note": "Note",
+      "noteDesc": "You can provide either text content (resumeText/jdText) or base64-encoded PDF files (resumeFile/jdFile). If both are provided, the file takes precedence.",
+      "response": "Response",
+      "scoring": {
+        "title": "Match Scoring",
+        "desc": "The match score is calculated based on multiple factors:",
+        "scoreRange": "Score Range",
+        "recommendation": "Recommendation",
+        "meaning": "Meaning",
+        "strong": "Excellent fit, meets or exceeds requirements",
+        "good": "Good fit, meets most requirements",
+        "partial": "Some alignment, missing key requirements",
+        "weak": "Poor fit, significant gaps"
+      },
+      "tryIt": {
+        "title": "Try it out",
+        "desc": "Test this endpoint interactively in the API Playground.",
+        "cta": "Open in Playground"
+      }
+    },
+    "parseResume": {
+      "title": "Parse Resume",
+      "intro": "Extract structured data from a resume PDF, including contact information, experience, education, and skills.",
+      "endpointDesc": "Parse a resume PDF into structured data",
+      "request": "Request",
+      "response": "Response",
+      "formats": {
+        "title": "Supported Formats",
+        "desc": "Currently supported document formats:"
+      },
+      "tip": "Tip",
+      "tipDesc": "For best results, ensure the PDF is text-based (not a scanned image). OCR-based parsing may have reduced accuracy.",
+      "tryIt": {
+        "title": "Try it out",
+        "desc": "Test this endpoint interactively in the API Playground.",
+        "cta": "Open in Playground"
+      }
+    },
+    "parseJD": {
+      "title": "Parse Job Description",
+      "intro": "Extract structured data from a job description PDF, including requirements, responsibilities, and benefits.",
+      "endpointDesc": "Parse a job description PDF into structured data",
+      "request": "Request",
+      "response": "Response",
+      "requirements": {
+        "title": "Requirements Structure",
+        "desc": "The requirements object contains categorized qualifications:",
+        "mustHave": "Required qualifications the candidate must possess",
+        "niceToHave": "Preferred qualifications that are beneficial but not mandatory",
+        "education": "Educational requirements"
+      },
+      "tryIt": {
+        "title": "Try it out",
+        "desc": "Test this endpoint interactively in the API Playground.",
+        "cta": "Open in Playground"
+      }
+    },
+    "inviteCandidate": {
+      "title": "Invite Candidate",
+      "intro": "Generate professional interview invitation emails for candidates. The AI crafts personalized messages based on the provided details.",
+      "endpointDesc": "Generate an interview invitation email",
+      "request": "Request",
+      "response": "Response",
+      "tones": {
+        "title": "Available Tones",
+        "toneHeader": "Tone",
+        "descHeader": "Description",
+        "formal": "Traditional, corporate-style communication",
+        "professional": "Balanced, business-appropriate (default)",
+        "friendly": "Warm, approachable, startup-friendly"
+      },
+      "tryIt": {
+        "title": "Try it out",
+        "desc": "Test this endpoint interactively in the API Playground.",
+        "cta": "Open in Playground"
+      }
+    },
+    "evaluateInterview": {
+      "title": "Evaluate Interview",
+      "intro": "Analyze interview transcripts to generate comprehensive evaluation reports with scoring, recommendations, and cheating detection.",
+      "endpointDesc": "Evaluate an interview transcript",
+      "request": "Request",
+      "response": "Response",
+      "recommendations": {
+        "title": "Recommendation Values",
+        "value": "Value",
+        "scoreRange": "Score Range",
+        "meaning": "Meaning",
+        "strongHire": "Excellent candidate, highly recommend",
+        "hire": "Good candidate, recommend hiring",
+        "maybe": "Some concerns, needs further evaluation",
+        "noHire": "Does not meet requirements"
+      },
+      "cheating": {
+        "title": "Cheating Detection",
+        "desc": "The API analyzes transcripts for potential cheating indicators:",
+        "rehearsed": "Unusually perfect or rehearsed-sounding responses",
+        "inconsistencies": "Inconsistencies between different answers",
+        "verbatim": "Responses that seem to be read verbatim",
+        "pauses": "Unusual pauses or typing sounds",
+        "copyPaste": "Copy-paste patterns in technical questions"
+      },
+      "note": "Note",
+      "noteDesc": "Cheating analysis is advisory and should be used alongside human judgment. A high suspicion level does not definitively indicate cheating.",
+      "tryIt": {
+        "title": "Try it out",
+        "desc": "Test this endpoint interactively in the API Playground.",
+        "cta": "Open in Playground"
+      }
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "intro": "Receive real-time notifications when events occur in RoboHire. Webhooks allow you to integrate with your existing systems and automate workflows.",
+      "setup": {
+        "title": "Setting Up Webhooks",
+        "step1": "Configure your webhook URL in the dashboard settings",
+        "step2": "Select which events you want to receive",
+        "step3": "Copy your webhook secret for signature verification",
+        "step4": "Implement an endpoint to receive webhook payloads"
+      },
+      "events": {
+        "title": "Event Types",
+        "tableTitle": "Available Events"
+      },
+      "payload": {
+        "title": "Payload Structure",
+        "tableTitle": "Payload Fields",
+        "exampleTitle": "Example Webhook Payload"
+      },
+      "verification": {
+        "title": "Signature Verification",
+        "desc": "All webhook requests include an X-RoboHire-Signature header containing an HMAC-SHA256 signature of the payload. Always verify this signature to ensure the webhook is from RoboHire.",
+        "exampleTitle": "Verification Example (Node.js)"
+      },
+      "bestPractices": {
+        "title": "Best Practices",
+        "respond": "Respond quickly: Return a 200 status within 5 seconds to avoid timeouts",
+        "async": "Process asynchronously: Queue webhook processing for heavy operations",
+        "duplicates": "Handle duplicates: Use webhookId to detect and handle duplicate deliveries",
+        "verify": "Always verify: Check the signature on every request",
+        "https": "Use HTTPS: Always use HTTPS endpoints for security"
+      },
+      "retries": {
+        "title": "Retry Policy",
+        "desc": "If your endpoint returns an error or times out, we will retry the webhook delivery:",
+        "r1": "1st retry: After 1 minute",
+        "r2": "2nd retry: After 5 minutes",
+        "r3": "3rd retry: After 30 minutes",
+        "r4": "4th retry: After 2 hours",
+        "r5": "5th retry: After 24 hours"
+      }
+    },
+    "errors": {
+      "title": "Error Handling",
+      "intro": "Learn how to handle errors returned by the RoboHire and implement robust error handling in your application.",
+      "format": {
+        "title": "Error Response Format",
+        "desc": "When an error occurs, the API returns a JSON response with the following structure:",
+        "exampleTitle": "Error Response",
+        "field": "Field",
+        "description": "Description",
+        "successDesc": "Always false for error responses",
+        "errorDesc": "Human-readable error message",
+        "codeDesc": "Machine-readable error code",
+        "detailsDesc": "Additional error details (optional)"
+      },
+      "codes": {
+        "title": "Error Codes Reference",
+        "badRequest": {
+          "desc": "The request was malformed or missing required parameters",
+          "fix": "Check the request body and ensure all required fields are provided"
+        },
+        "validation": {
+          "desc": "One or more request parameters failed validation",
+          "fix": "Check the details field for specific validation errors"
+        },
+        "authRequired": {
+          "desc": "No authentication credentials were provided",
+          "fix": "Include an API key in the Authorization header"
+        },
+        "invalidToken": {
+          "desc": "The provided API key is invalid or expired",
+          "fix": "Check your API key or generate a new one"
+        },
+        "insufficientScopes": {
+          "desc": "The API key lacks required permissions",
+          "fix": "Use an API key with the required scopes"
+        },
+        "notFound": {
+          "desc": "The requested resource was not found",
+          "fix": "Check the endpoint URL and resource ID"
+        },
+        "rateLimited": {
+          "desc": "Too many requests in a short period",
+          "fix": "Implement rate limiting and retry with backoff"
+        },
+        "internalError": {
+          "desc": "An unexpected error occurred on the server",
+          "fix": "Retry the request or contact support if it persists"
+        },
+        "serviceUnavailable": {
+          "desc": "The service is temporarily unavailable",
+          "fix": "Wait and retry the request"
+        },
+        "fixLabel": "Fix"
+      },
+      "handling": {
+        "title": "Handling Errors in Code",
+        "desc": "Here is an example of robust error handling:",
+        "exampleTitle": "Error Handling Example"
+      },
+      "rateLimiting": {
+        "title": "Rate Limiting",
+        "desc": "The API implements rate limiting to ensure fair usage. When you exceed the rate limit:",
+        "status429": "You will receive a 429 status code",
+        "retryAfter": "The response includes a retryAfter field (seconds until you can retry)",
+        "backoff": "Implement exponential backoff for automatic retries"
+      },
+      "bestPractices": {
+        "title": "Error Handling Best Practices",
+        "checkSuccess": "Always check the success field before processing the response",
+        "useCode": "Use the code field for programmatic error handling",
+        "logErrors": "Log errors with context for debugging",
+        "retryLogic": "Implement retry logic with exponential backoff for transient errors",
+        "userFriendly": "Show user-friendly messages to end users, not raw error messages"
+      }
+    },
+    "common": {
+      "bodyParams": "Body Parameters",
+      "responseFields": "Response Fields",
+      "exampleResponse": "Example Response"
+    }
+  },
   "pages": {
     "matchResume": {
       "title": "Match Resume with JD",

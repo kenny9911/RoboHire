@@ -1013,6 +1013,375 @@
       "viewDocs": "檢視文件"
     }
   },
+  "docs": {
+    "title": "文件",
+    "search": "搜尋文件...",
+    "playground": "Playground",
+    "getApiKey": "取得 API 金鑰",
+    "nav": {
+      "gettingStarted": "快速上手",
+      "overview": "總覽",
+      "quickStart": "快速開始",
+      "authentication": "身份驗證",
+      "apiReference": "API 參考",
+      "matchResume": "簡歷匹配",
+      "parseResume": "解析簡歷",
+      "parseJd": "解析 JD",
+      "inviteCandidate": "邀請候選人",
+      "evaluateInterview": "面試評估",
+      "advanced": "進階",
+      "webhooks": "Webhooks",
+      "errors": "錯誤處理"
+    },
+    "tryIt": {
+      "title": "立即試用",
+      "description": "在我們的 Playground 中互動式測試 API。",
+      "cta": "開啟 Playground"
+    },
+    "footer": {
+      "tryPlayground": "在 Playground 中試用"
+    },
+    "overview": {
+      "title": "RoboHire 文件",
+      "intro": "歡迎來到 RoboHire 文件。瞭解如何將 AI 驅動的招聘功能整合到您的應用程式中。",
+      "quickStartTitle": "幾分鐘即可上手",
+      "quickStartDesc": "按照我們的快速入門指南，發出您的第一個 API 請求。",
+      "quickStartCta": "快速入門指南",
+      "baseUrl": "Base URL",
+      "authentication": "身份驗證",
+      "authDesc": "所有 API 請求都需要使用 API 金鑰進行身份驗證。請在請求標頭中附帶您的金鑰：",
+      "learnMoreAuth": "瞭解更多身份驗證方式",
+      "endpoints": "可用端點",
+      "needHelp": "需要協助？",
+      "helpDesc": "如果您有任何問題或需要協助，請查閱我們的資源或聯繫技術支援。",
+      "tryPlayground": "試用 Playground",
+      "contactSupport": "聯繫技術支援",
+      "ep": {
+        "matchResume": "簡歷匹配",
+        "matchResumeDesc": "使用 AI 評分將簡歷與職位描述進行匹配。",
+        "parseResume": "解析簡歷",
+        "parseResumeDesc": "從簡歷 PDF 中擷取結構化資料。",
+        "parseJd": "解析 JD",
+        "parseJdDesc": "從職位描述 PDF 中擷取結構化資料。",
+        "inviteCandidate": "邀請候選人",
+        "inviteCandidateDesc": "產生專業的面試邀請郵件。",
+        "evaluateInterview": "面試評估",
+        "evaluateInterviewDesc": "分析面試逐字稿並提供全面評分。"
+      }
+    },
+    "quickStart": {
+      "title": "快速開始",
+      "intro": "只需幾分鐘，即可啟動並執行 RoboHire。",
+      "step1": {
+        "title": "取得您的 API 金鑰",
+        "desc": "註冊 RoboHire 帳號，並從控制面板產生 API 金鑰。",
+        "cta": "取得 API 金鑰"
+      },
+      "step2": {
+        "title": "安裝相依套件（選用）",
+        "desc": "為您的程式語言安裝任何 HTTP 用戶端函式庫。"
+      },
+      "step3": {
+        "title": "發出您的第一個 API 請求",
+        "desc": "讓我們將一份簡歷與職位描述進行匹配："
+      },
+      "step4": {
+        "title": "處理回應",
+        "desc": "您將收到包含匹配分析結果的 JSON 回應："
+      },
+      "nextSteps": {
+        "title": "後續步驟",
+        "auth": "瞭解身份驗證方式",
+        "matchResume": "探索簡歷匹配 API",
+        "playground": "試用互動式 Playground"
+      }
+    },
+    "auth": {
+      "title": "身份驗證",
+      "intro": "瞭解如何驗證您對 RoboHire 的 API 請求。",
+      "apiKeys": {
+        "title": "API 金鑰",
+        "desc": "API 金鑰是存取 RoboHire 的主要驗證方式。每個金鑰以 \"rh_\" 為前綴，代表您的帳號擁有完整的 API 存取權限。",
+        "warning": {
+          "title": "請妥善保管您的 API 金鑰",
+          "desc": "切勿在前端程式碼、公開儲存庫或任何可能被未授權者存取的地方暴露您的 API 金鑰。"
+        },
+        "creating": "建立 API 金鑰",
+        "step1": "登入您的 RoboHire 控制面板",
+        "step2": "前往 API 金鑰區段",
+        "step3": "點選「建立金鑰」並輸入名稱",
+        "step4": "複製並安全保存您的金鑰（僅顯示一次）",
+        "manage": "管理您的 API 金鑰"
+      },
+      "using": {
+        "title": "使用 API 金鑰",
+        "desc": "在每個請求的 Authorization 標頭中附帶您的 API 金鑰：",
+        "bearer": "Bearer Token（推薦）",
+        "xApiKey": "X-API-Key 標頭",
+        "xApiKeyDesc": "您也可以使用 X-API-Key 標頭："
+      },
+      "scopes": {
+        "title": "金鑰範圍",
+        "desc": "API 金鑰可設定不同的範圍以限制其權限：",
+        "scopeHeader": "範圍",
+        "descHeader": "說明",
+        "read": "存取讀取操作（GET 端點）",
+        "write": "存取建立和修改操作（POST、PUT、DELETE）"
+      },
+      "errors": {
+        "title": "身份驗證錯誤",
+        "desc": "如果驗證失敗，您將收到以下錯誤回應之一：",
+        "authRequired": "未提供身份驗證憑證。",
+        "invalidToken": "提供的 API 金鑰無效或已被撤銷。",
+        "insufficientScopes": "該 API 金鑰沒有此操作所需的權限範圍。"
+      },
+      "bestPractices": {
+        "title": "最佳實務",
+        "envVars": "將 API 金鑰存放在環境變數中，而非程式碼裡",
+        "rotate": "定期輪換金鑰，並在任何可能洩漏後立即更換",
+        "minScope": "為每個金鑰設定所需的最小權限範圍",
+        "expiration": "盡可能為金鑰設定到期日",
+        "separate": "開發環境與正式環境使用不同的金鑰"
+      }
+    },
+    "matchResume": {
+      "title": "簡歷匹配",
+      "intro": "將簡歷與職位描述進行匹配，取得 AI 驅動的相容性評分與詳細分析。",
+      "endpointDesc": "將簡歷與職位描述進行匹配",
+      "request": "請求",
+      "note": "注意",
+      "noteDesc": "您可以提供文字內容（resumeText/jdText）或 base64 編碼的 PDF 檔案（resumeFile/jdFile）。如果同時提供兩者，將以檔案為準。",
+      "response": "回應",
+      "scoring": {
+        "title": "匹配評分",
+        "desc": "匹配分數根據多項因素計算：",
+        "scoreRange": "分數範圍",
+        "recommendation": "建議",
+        "meaning": "意義",
+        "strong": "非常適合，符合或超過要求",
+        "good": "適合，符合大部分要求",
+        "partial": "部分契合，缺少關鍵要求",
+        "weak": "不太適合，存在重大落差"
+      },
+      "tryIt": {
+        "title": "立即試用",
+        "desc": "在 API Playground 中互動式測試此端點。",
+        "cta": "在 Playground 中開啟"
+      }
+    },
+    "parseResume": {
+      "title": "解析簡歷",
+      "intro": "從簡歷 PDF 中擷取結構化資料，包括聯絡資訊、工作經歷、學歷和技能。",
+      "endpointDesc": "將簡歷 PDF 解析為結構化資料",
+      "request": "請求",
+      "response": "回應",
+      "formats": {
+        "title": "支援的格式",
+        "desc": "目前支援的文件格式："
+      },
+      "tip": "提示",
+      "tipDesc": "為獲得最佳結果，請確保 PDF 為文字型（非掃描圖片）。基於 OCR 的解析可能會降低準確度。",
+      "tryIt": {
+        "title": "立即試用",
+        "desc": "在 API Playground 中互動式測試此端點。",
+        "cta": "在 Playground 中開啟"
+      }
+    },
+    "parseJD": {
+      "title": "解析職位描述",
+      "intro": "從職位描述 PDF 中擷取結構化資料，包括要求、職責和福利。",
+      "endpointDesc": "將職位描述 PDF 解析為結構化資料",
+      "request": "請求",
+      "response": "回應",
+      "requirements": {
+        "title": "要求結構",
+        "desc": "requirements 物件包含分類的資格條件：",
+        "mustHave": "候選人必須具備的必要資格",
+        "niceToHave": "有加分但非必要的優先資格",
+        "education": "學歷要求"
+      },
+      "tryIt": {
+        "title": "立即試用",
+        "desc": "在 API Playground 中互動式測試此端點。",
+        "cta": "在 Playground 中開啟"
+      }
+    },
+    "inviteCandidate": {
+      "title": "邀請候選人",
+      "intro": "為候選人產生專業的面試邀請郵件。AI 會根據提供的資訊撰寫個人化的邀請訊息。",
+      "endpointDesc": "產生面試邀請郵件",
+      "request": "請求",
+      "response": "回應",
+      "tones": {
+        "title": "可用語氣",
+        "toneHeader": "語氣",
+        "descHeader": "說明",
+        "formal": "傳統、正式的企業風格溝通",
+        "professional": "平衡、商務的專業風格（預設）",
+        "friendly": "親切、平易近人、適合新創公司"
+      },
+      "tryIt": {
+        "title": "立即試用",
+        "desc": "在 API Playground 中互動式測試此端點。",
+        "cta": "在 Playground 中開啟"
+      }
+    },
+    "evaluateInterview": {
+      "title": "面試評估",
+      "intro": "分析面試逐字稿，產生包含評分、建議和作弊偵測的全面評估報告。",
+      "endpointDesc": "評估面試逐字稿",
+      "request": "請求",
+      "response": "回應",
+      "recommendations": {
+        "title": "建議值",
+        "value": "值",
+        "scoreRange": "分數範圍",
+        "meaning": "意義",
+        "strongHire": "優秀候選人，強烈推薦",
+        "hire": "良好候選人，建議錄用",
+        "maybe": "有些疑慮，需要進一步評估",
+        "noHire": "不符合要求"
+      },
+      "cheating": {
+        "title": "作弊偵測",
+        "desc": "API 會分析逐字稿中潛在的作弊跡象：",
+        "rehearsed": "異常完美或像背誦的回答",
+        "inconsistencies": "不同回答之間的矛盾",
+        "verbatim": "看起來像是逐字朗讀的回答",
+        "pauses": "不尋常的停頓或打字聲",
+        "copyPaste": "技術問題中的複製貼上模式"
+      },
+      "note": "注意",
+      "noteDesc": "作弊分析僅供參考，應與人工判斷結合使用。高度可疑並不等同於確認作弊。",
+      "tryIt": {
+        "title": "立即試用",
+        "desc": "在 API Playground 中互動式測試此端點。",
+        "cta": "在 Playground 中開啟"
+      }
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "intro": "當 RoboHire 中發生事件時接收即時通知。Webhooks 讓您能夠與現有系統整合並自動化工作流程。",
+      "setup": {
+        "title": "設定 Webhooks",
+        "step1": "在控制面板設定中配置您的 Webhook URL",
+        "step2": "選擇您想接收的事件類型",
+        "step3": "複製您的 Webhook 密鑰以進行簽名驗證",
+        "step4": "實作一個端點來接收 Webhook 酬載"
+      },
+      "events": {
+        "title": "事件類型",
+        "tableTitle": "可用事件"
+      },
+      "payload": {
+        "title": "酬載結構",
+        "tableTitle": "酬載欄位",
+        "exampleTitle": "Webhook 酬載範例"
+      },
+      "verification": {
+        "title": "簽名驗證",
+        "desc": "所有 Webhook 請求都包含一個 X-RoboHire-Signature 標頭，其中包含酬載的 HMAC-SHA256 簽名。請務必驗證此簽名以確保 Webhook 來自 RoboHire。",
+        "exampleTitle": "驗證範例（Node.js）"
+      },
+      "bestPractices": {
+        "title": "最佳實務",
+        "respond": "快速回應：在 5 秒內回傳 200 狀態碼以避免逾時",
+        "async": "非同步處理：將耗時的 Webhook 處理放入佇列",
+        "duplicates": "處理重複：使用 webhookId 偵測並處理重複的投遞",
+        "verify": "始終驗證：檢查每個請求的簽名",
+        "https": "使用 HTTPS：始終使用 HTTPS 端點以確保安全"
+      },
+      "retries": {
+        "title": "重試策略",
+        "desc": "如果您的端點回傳錯誤或逾時，我們將重試 Webhook 投遞：",
+        "r1": "第 1 次重試：1 分鐘後",
+        "r2": "第 2 次重試：5 分鐘後",
+        "r3": "第 3 次重試：30 分鐘後",
+        "r4": "第 4 次重試：2 小時後",
+        "r5": "第 5 次重試：24 小時後"
+      }
+    },
+    "errors": {
+      "title": "錯誤處理",
+      "intro": "瞭解如何處理 RoboHire 回傳的錯誤，並在您的應用程式中實作健全的錯誤處理。",
+      "format": {
+        "title": "錯誤回應格式",
+        "desc": "當錯誤發生時，API 會回傳以下結構的 JSON 回應：",
+        "exampleTitle": "錯誤回應",
+        "field": "欄位",
+        "description": "說明",
+        "successDesc": "錯誤回應時固定為 false",
+        "errorDesc": "人類可讀的錯誤訊息",
+        "codeDesc": "機器可讀的錯誤代碼",
+        "detailsDesc": "額外的錯誤詳情（選用）"
+      },
+      "codes": {
+        "title": "錯誤代碼參考",
+        "badRequest": {
+          "desc": "請求格式錯誤或缺少必要參數",
+          "fix": "檢查請求主體並確保所有必要欄位已提供"
+        },
+        "validation": {
+          "desc": "一個或多個請求參數驗證失敗",
+          "fix": "檢查 details 欄位以取得具體的驗證錯誤"
+        },
+        "authRequired": {
+          "desc": "未提供身份驗證憑證",
+          "fix": "在 Authorization 標頭中附帶 API 金鑰"
+        },
+        "invalidToken": {
+          "desc": "提供的 API 金鑰無效或已過期",
+          "fix": "檢查您的 API 金鑰或產生一個新的"
+        },
+        "insufficientScopes": {
+          "desc": "API 金鑰缺少所需的權限",
+          "fix": "使用具有所需權限範圍的 API 金鑰"
+        },
+        "notFound": {
+          "desc": "找不到請求的資源",
+          "fix": "檢查端點 URL 和資源 ID"
+        },
+        "rateLimited": {
+          "desc": "短時間內發送了太多請求",
+          "fix": "實作速率限制並使用退避策略重試"
+        },
+        "internalError": {
+          "desc": "伺服器發生了非預期的錯誤",
+          "fix": "重試請求，如果問題持續請聯繫技術支援"
+        },
+        "serviceUnavailable": {
+          "desc": "服務暫時無法使用",
+          "fix": "請稍候再重試"
+        },
+        "fixLabel": "修正方式"
+      },
+      "handling": {
+        "title": "在程式碼中處理錯誤",
+        "desc": "以下是健全的錯誤處理範例：",
+        "exampleTitle": "錯誤處理範例"
+      },
+      "rateLimiting": {
+        "title": "速率限制",
+        "desc": "API 實作了速率限制以確保公平使用。當您超過速率限制時：",
+        "status429": "您將收到 429 狀態碼",
+        "retryAfter": "回應中包含 retryAfter 欄位（重試前等待的秒數）",
+        "backoff": "實作指數退避以自動重試"
+      },
+      "bestPractices": {
+        "title": "錯誤處理最佳實務",
+        "checkSuccess": "在處理回應之前，務必檢查 success 欄位",
+        "useCode": "使用 code 欄位進行程式化的錯誤處理",
+        "logErrors": "記錄錯誤及其上下文以便偵錯",
+        "retryLogic": "針對暫時性錯誤實作指數退避的重試邏輯",
+        "userFriendly": "向終端使用者顯示友善的訊息，而非原始錯誤訊息"
+      }
+    },
+    "common": {
+      "bodyParams": "請求參數",
+      "responseFields": "回應欄位",
+      "exampleResponse": "回應範例"
+    }
+  },
   "pages": {
     "matchResume": {
       "title": "簡歷與JD匹配",

@@ -297,6 +297,375 @@
       "viewDocs": "ドキュメントを見る"
     }
   },
+  "docs": {
+    "title": "ドキュメント",
+    "search": "ドキュメントを検索...",
+    "playground": "Playground",
+    "getApiKey": "APIキーを取得",
+    "nav": {
+      "gettingStarted": "はじめに",
+      "overview": "概要",
+      "quickStart": "クイックスタート",
+      "authentication": "認証",
+      "apiReference": "APIリファレンス",
+      "matchResume": "レジュメ照合",
+      "parseResume": "レジュメ解析",
+      "parseJd": "JD解析",
+      "inviteCandidate": "候補者招待",
+      "evaluateInterview": "面接評価",
+      "advanced": "応用",
+      "webhooks": "Webhook",
+      "errors": "エラーハンドリング"
+    },
+    "tryIt": {
+      "title": "試してみる",
+      "description": "Playgroundでインタラクティブにテストできます。",
+      "cta": "Playgroundを開く"
+    },
+    "footer": {
+      "tryPlayground": "Playgroundで試す"
+    },
+    "overview": {
+      "title": "RoboHire ドキュメント",
+      "intro": "RoboHireドキュメントへようこそ。AI採用機能をアプリケーションに統合する方法をご紹介します。",
+      "quickStartTitle": "数分で始められます",
+      "quickStartDesc": "クイックスタートガイドに従って、最初のAPI呼び出しを行いましょう。",
+      "quickStartCta": "クイックスタートガイド",
+      "baseUrl": "ベースURL",
+      "authentication": "認証",
+      "authDesc": "すべてのAPIリクエストにはAPIキーによる認証が必要です。リクエストヘッダーにキーを含めてください：",
+      "learnMoreAuth": "認証について詳しく見る",
+      "endpoints": "利用可能なエンドポイント",
+      "needHelp": "お困りですか？",
+      "helpDesc": "ご質問やサポートが必要な場合は、リソースをご確認いただくか、サポートまでお問い合わせください。",
+      "tryPlayground": "Playgroundを試す",
+      "contactSupport": "サポートに連絡",
+      "ep": {
+        "matchResume": "レジュメ照合",
+        "matchResumeDesc": "AIスコアリングでレジュメと求人票を照合します。",
+        "parseResume": "レジュメ解析",
+        "parseResumeDesc": "レジュメPDFから構造化データを抽出します。",
+        "parseJd": "JD解析",
+        "parseJdDesc": "求人票PDFから構造化データを抽出します。",
+        "inviteCandidate": "候補者招待",
+        "inviteCandidateDesc": "プロフェッショナルな面接招待メールを生成します。",
+        "evaluateInterview": "面接評価",
+        "evaluateInterviewDesc": "面接記録を分析し、包括的なスコアリングを行います。"
+      }
+    },
+    "quickStart": {
+      "title": "クイックスタート",
+      "intro": "RoboHireを数分でセットアップして使い始めましょう。",
+      "step1": {
+        "title": "APIキーを取得する",
+        "desc": "RoboHireアカウントにサインアップし、ダッシュボードからAPIキーを生成してください。",
+        "cta": "APIキーを取得"
+      },
+      "step2": {
+        "title": "依存パッケージをインストール（任意）",
+        "desc": "お使いのプログラミング言語のHTTPクライアントライブラリをインストールしてください。"
+      },
+      "step3": {
+        "title": "最初のAPI呼び出しを行う",
+        "desc": "レジュメと求人票を照合してみましょう："
+      },
+      "step4": {
+        "title": "レスポンスを処理する",
+        "desc": "マッチング分析結果を含むJSONレスポンスが返されます："
+      },
+      "nextSteps": {
+        "title": "次のステップ",
+        "auth": "認証方法について学ぶ",
+        "matchResume": "レジュメ照合APIを詳しく見る",
+        "playground": "インタラクティブPlaygroundを試す"
+      }
+    },
+    "auth": {
+      "title": "認証",
+      "intro": "RoboHire APIリクエストの認証方法を説明します。",
+      "apiKeys": {
+        "title": "APIキー",
+        "desc": "APIキーはRoboHire APIの主要な認証方式です。各キーには「rh_」プレフィックスが付き、アカウントに代わってAPIへのフルアクセスを提供します。",
+        "warning": {
+          "title": "APIキーを安全に管理してください",
+          "desc": "クライアントサイドのコード、公開リポジトリ、その他不正アクセスされる可能性のある場所にAPIキーを公開しないでください。"
+        },
+        "creating": "APIキーの作成",
+        "step1": "RoboHireダッシュボードにログイン",
+        "step2": "APIキーセクションに移動",
+        "step3": "「キーを作成」をクリックし、名前を入力",
+        "step4": "キーをコピーして安全に保管（一度しか表示されません）",
+        "manage": "APIキーを管理する"
+      },
+      "using": {
+        "title": "APIキーの使用方法",
+        "desc": "各リクエストのAuthorizationヘッダーにAPIキーを含めてください：",
+        "bearer": "Bearer Token（推奨）",
+        "xApiKey": "X-API-Keyヘッダー",
+        "xApiKeyDesc": "代わりにX-API-Keyヘッダーを使用することもできます："
+      },
+      "scopes": {
+        "title": "キーのスコープ",
+        "desc": "APIキーには異なるスコープを設定して権限を制限できます：",
+        "scopeHeader": "スコープ",
+        "descHeader": "説明",
+        "read": "読み取り操作へのアクセス（GETエンドポイント）",
+        "write": "作成・変更操作へのアクセス（POST、PUT、DELETE）"
+      },
+      "errors": {
+        "title": "認証エラー",
+        "desc": "認証に失敗した場合、以下のエラーレスポンスが返されます：",
+        "authRequired": "認証情報が提供されていません。",
+        "invalidToken": "提供されたAPIキーが無効または失効しています。",
+        "insufficientScopes": "このAPIキーには、この操作に必要なスコープがありません。"
+      },
+      "bestPractices": {
+        "title": "ベストプラクティス",
+        "envVars": "APIキーはコード内ではなく環境変数に保存する",
+        "rotate": "キーは定期的に、また漏洩の可能性がある場合はローテーションする",
+        "minScope": "各キーには必要最小限のスコープを使用する",
+        "expiration": "可能な場合はキーに有効期限を設定する",
+        "separate": "開発用と本番用で別々のキーを使用する"
+      }
+    },
+    "matchResume": {
+      "title": "レジュメ照合",
+      "intro": "レジュメと求人票を照合し、AIによる適合度スコアと詳細な分析を取得します。",
+      "endpointDesc": "レジュメと求人票を照合する",
+      "request": "リクエスト",
+      "note": "注意",
+      "noteDesc": "テキスト（resumeText/jdText）またはBase64エンコードされたPDFファイル（resumeFile/jdFile）のいずれかを指定できます。両方が指定された場合、ファイルが優先されます。",
+      "response": "レスポンス",
+      "scoring": {
+        "title": "マッチスコアリング",
+        "desc": "マッチスコアは複数の要因に基づいて算出されます：",
+        "scoreRange": "スコア範囲",
+        "recommendation": "推奨",
+        "meaning": "意味",
+        "strong": "非常に適合、要件を満たすか上回っている",
+        "good": "良好な適合、ほとんどの要件を満たしている",
+        "partial": "部分的に一致、主要な要件が不足",
+        "weak": "適合度が低い、大きなギャップがある"
+      },
+      "tryIt": {
+        "title": "試してみる",
+        "desc": "API Playgroundでこのエンドポイントをインタラクティブにテストできます。",
+        "cta": "Playgroundで開く"
+      }
+    },
+    "parseResume": {
+      "title": "レジュメ解析",
+      "intro": "レジュメPDFから連絡先情報、職歴、学歴、スキルなどの構造化データを抽出します。",
+      "endpointDesc": "レジュメPDFを構造化データに変換する",
+      "request": "リクエスト",
+      "response": "レスポンス",
+      "formats": {
+        "title": "対応フォーマット",
+        "desc": "現在対応しているドキュメント形式："
+      },
+      "tip": "ヒント",
+      "tipDesc": "最良の結果を得るには、テキストベースのPDF（スキャン画像ではないもの）をご使用ください。OCRベースの解析は精度が低下する場合があります。",
+      "tryIt": {
+        "title": "試してみる",
+        "desc": "API Playgroundでこのエンドポイントをインタラクティブにテストできます。",
+        "cta": "Playgroundで開く"
+      }
+    },
+    "parseJD": {
+      "title": "求人票解析",
+      "intro": "求人票PDFから要件、職務内容、福利厚生などの構造化データを抽出します。",
+      "endpointDesc": "求人票PDFを構造化データに変換する",
+      "request": "リクエスト",
+      "response": "レスポンス",
+      "requirements": {
+        "title": "要件の構造",
+        "desc": "要件オブジェクトにはカテゴリ別の資格情報が含まれます：",
+        "mustHave": "候補者が必ず備えるべき必須条件",
+        "niceToHave": "あると望ましいが必須ではない条件",
+        "education": "学歴要件"
+      },
+      "tryIt": {
+        "title": "試してみる",
+        "desc": "API Playgroundでこのエンドポイントをインタラクティブにテストできます。",
+        "cta": "Playgroundで開く"
+      }
+    },
+    "inviteCandidate": {
+      "title": "候補者招待",
+      "intro": "候補者向けのプロフェッショナルな面接招待メールを生成します。AIが提供された情報に基づいてパーソナライズされたメッセージを作成します。",
+      "endpointDesc": "面接招待メールを生成する",
+      "request": "リクエスト",
+      "response": "レスポンス",
+      "tones": {
+        "title": "利用可能なトーン",
+        "toneHeader": "トーン",
+        "descHeader": "説明",
+        "formal": "伝統的でフォーマルなビジネスコミュニケーション",
+        "professional": "バランスの取れたビジネス文体（デフォルト）",
+        "friendly": "温かみのある親しみやすいスタートアップ風"
+      },
+      "tryIt": {
+        "title": "試してみる",
+        "desc": "API Playgroundでこのエンドポイントをインタラクティブにテストできます。",
+        "cta": "Playgroundで開く"
+      }
+    },
+    "evaluateInterview": {
+      "title": "面接評価",
+      "intro": "面接記録を分析し、スコアリング、推奨事項、不正検知を含む包括的な評価レポートを生成します。",
+      "endpointDesc": "面接記録を評価する",
+      "request": "リクエスト",
+      "response": "レスポンス",
+      "recommendations": {
+        "title": "推奨値",
+        "value": "値",
+        "scoreRange": "スコア範囲",
+        "meaning": "意味",
+        "strongHire": "優秀な候補者、強く推奨",
+        "hire": "良い候補者、採用を推奨",
+        "maybe": "懸念点あり、追加評価が必要",
+        "noHire": "要件を満たしていない"
+      },
+      "cheating": {
+        "title": "不正検知",
+        "desc": "APIは記録から不正の可能性がある兆候を分析します：",
+        "rehearsed": "不自然なほど完璧または暗記したように聞こえる回答",
+        "inconsistencies": "異なる回答間の矛盾",
+        "verbatim": "そのまま読み上げているように見える回答",
+        "pauses": "不自然な間やタイピング音",
+        "copyPaste": "技術的な質問でのコピー＆ペーストパターン"
+      },
+      "note": "注意",
+      "noteDesc": "不正分析は参考情報であり、人間の判断と併せて使用してください。高い疑惑レベルは必ずしも不正を意味するものではありません。",
+      "tryIt": {
+        "title": "試してみる",
+        "desc": "API Playgroundでこのエンドポイントをインタラクティブにテストできます。",
+        "cta": "Playgroundで開く"
+      }
+    },
+    "webhooks": {
+      "title": "Webhook",
+      "intro": "RoboHireでイベントが発生した際にリアルタイム通知を受け取ります。Webhookにより、既存システムとの連携やワークフローの自動化が可能です。",
+      "setup": {
+        "title": "Webhookのセットアップ",
+        "step1": "ダッシュボードの設定でWebhook URLを設定する",
+        "step2": "受信するイベントを選択する",
+        "step3": "署名検証用のWebhookシークレットをコピーする",
+        "step4": "Webhookペイロードを受信するエンドポイントを実装する"
+      },
+      "events": {
+        "title": "イベントタイプ",
+        "tableTitle": "利用可能なイベント"
+      },
+      "payload": {
+        "title": "ペイロード構造",
+        "tableTitle": "ペイロードフィールド",
+        "exampleTitle": "Webhookペイロードの例"
+      },
+      "verification": {
+        "title": "署名検証",
+        "desc": "すべてのWebhookリクエストにはX-RoboHire-Signatureヘッダーが含まれ、ペイロードのHMAC-SHA256署名が格納されています。RoboHireからのWebhookであることを確認するため、必ずこの署名を検証してください。",
+        "exampleTitle": "検証の例（Node.js）"
+      },
+      "bestPractices": {
+        "title": "ベストプラクティス",
+        "respond": "素早く応答する：タイムアウトを避けるため、5秒以内に200ステータスを返す",
+        "async": "非同期で処理する：重い処理はWebhookの処理をキューに入れる",
+        "duplicates": "重複に対応する：webhookIdを使用して重複配信を検出・処理する",
+        "verify": "常に検証する：すべてのリクエストで署名を確認する",
+        "https": "HTTPSを使用する：セキュリティのため常にHTTPSエンドポイントを使用する"
+      },
+      "retries": {
+        "title": "リトライポリシー",
+        "desc": "エンドポイントがエラーを返すかタイムアウトした場合、Webhook配信をリトライします：",
+        "r1": "1回目のリトライ：1分後",
+        "r2": "2回目のリトライ：5分後",
+        "r3": "3回目のリトライ：30分後",
+        "r4": "4回目のリトライ：2時間後",
+        "r5": "5回目のリトライ：24時間後"
+      }
+    },
+    "errors": {
+      "title": "エラーハンドリング",
+      "intro": "RoboHire APIが返すエラーの処理方法と、アプリケーションでの堅牢なエラーハンドリングの実装方法を説明します。",
+      "format": {
+        "title": "エラーレスポンス形式",
+        "desc": "エラーが発生すると、APIは以下の構造のJSONレスポンスを返します：",
+        "exampleTitle": "エラーレスポンス",
+        "field": "フィールド",
+        "description": "説明",
+        "successDesc": "エラーレスポンスでは常にfalse",
+        "errorDesc": "人間が読めるエラーメッセージ",
+        "codeDesc": "機械処理用のエラーコード",
+        "detailsDesc": "追加のエラー詳細（任意）"
+      },
+      "codes": {
+        "title": "エラーコードリファレンス",
+        "badRequest": {
+          "desc": "リクエストの形式が不正、または必須パラメータが不足しています",
+          "fix": "リクエストボディを確認し、すべての必須フィールドが含まれていることを確認してください"
+        },
+        "validation": {
+          "desc": "1つ以上のリクエストパラメータがバリデーションに失敗しました",
+          "fix": "detailsフィールドで具体的なバリデーションエラーを確認してください"
+        },
+        "authRequired": {
+          "desc": "認証情報が提供されていません",
+          "fix": "AuthorizationヘッダーにAPIキーを含めてください"
+        },
+        "invalidToken": {
+          "desc": "提供されたAPIキーが無効または期限切れです",
+          "fix": "APIキーを確認するか、新しいキーを生成してください"
+        },
+        "insufficientScopes": {
+          "desc": "APIキーに必要な権限がありません",
+          "fix": "必要なスコープを持つAPIキーを使用してください"
+        },
+        "notFound": {
+          "desc": "リクエストされたリソースが見つかりません",
+          "fix": "エンドポイントURLとリソースIDを確認してください"
+        },
+        "rateLimited": {
+          "desc": "短期間にリクエストが多すぎます",
+          "fix": "レート制限を実装し、バックオフ付きでリトライしてください"
+        },
+        "internalError": {
+          "desc": "サーバーで予期しないエラーが発生しました",
+          "fix": "リクエストを再試行するか、問題が続く場合はサポートに連絡してください"
+        },
+        "serviceUnavailable": {
+          "desc": "サービスが一時的に利用できません",
+          "fix": "しばらく待ってからリクエストを再試行してください"
+        },
+        "fixLabel": "対処法"
+      },
+      "handling": {
+        "title": "コードでのエラーハンドリング",
+        "desc": "堅牢なエラーハンドリングの実装例：",
+        "exampleTitle": "エラーハンドリングの例"
+      },
+      "rateLimiting": {
+        "title": "レート制限",
+        "desc": "APIは公平な利用のためにレート制限を実装しています。レート制限を超過した場合：",
+        "status429": "429ステータスコードが返されます",
+        "retryAfter": "レスポンスにretryAfterフィールド（リトライまでの秒数）が含まれます",
+        "backoff": "自動リトライにはエクスポネンシャルバックオフを実装してください"
+      },
+      "bestPractices": {
+        "title": "エラーハンドリングのベストプラクティス",
+        "checkSuccess": "レスポンスを処理する前に必ずsuccessフィールドを確認する",
+        "useCode": "プログラムによるエラーハンドリングにはcodeフィールドを使用する",
+        "logErrors": "デバッグのためにコンテキスト付きでエラーをログに記録する",
+        "retryLogic": "一時的なエラーにはエクスポネンシャルバックオフ付きのリトライロジックを実装する",
+        "userFriendly": "エンドユーザーには生のエラーメッセージではなくわかりやすいメッセージを表示する"
+      }
+    },
+    "common": {
+      "bodyParams": "ボディパラメータ",
+      "responseFields": "レスポンスフィールド",
+      "exampleResponse": "レスポンス例"
+    }
+  },
   "hiring": {
     "templateSelected": "採用したい: {{title}}",
     "templateLoaded": "素晴らしい選択です！{{title}}テンプレートを読み込みました。\n\n",

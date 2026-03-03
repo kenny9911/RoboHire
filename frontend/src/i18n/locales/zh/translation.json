@@ -1013,6 +1013,375 @@
       "viewDocs": "查看文档"
     }
   },
+  "docs": {
+    "title": "文档",
+    "search": "搜索文档...",
+    "playground": "Playground",
+    "getApiKey": "获取API密钥",
+    "nav": {
+      "gettingStarted": "快速入门",
+      "overview": "概览",
+      "quickStart": "快速开始",
+      "authentication": "身份认证",
+      "apiReference": "API参考",
+      "matchResume": "简历匹配",
+      "parseResume": "解析简历",
+      "parseJd": "解析JD",
+      "inviteCandidate": "邀请候选人",
+      "evaluateInterview": "面试评估",
+      "advanced": "高级功能",
+      "webhooks": "Webhooks",
+      "errors": "错误处理"
+    },
+    "tryIt": {
+      "title": "在线试用",
+      "description": "在 Playground 中交互式测试API。",
+      "cta": "打开 Playground"
+    },
+    "footer": {
+      "tryPlayground": "在 Playground 中试用"
+    },
+    "overview": {
+      "title": "RoboHire 文档",
+      "intro": "欢迎使用 RoboHire 文档。了解如何将 AI 驱动的招聘功能集成到您的应用中。",
+      "quickStartTitle": "几分钟即可上手",
+      "quickStartDesc": "按照快速入门指南完成您的第一次API调用。",
+      "quickStartCta": "快速入门指南",
+      "baseUrl": "Base URL",
+      "authentication": "身份认证",
+      "authDesc": "所有API请求都需要通过API密钥进行身份认证。在请求头中包含您的密钥：",
+      "learnMoreAuth": "了解更多身份认证方式",
+      "endpoints": "可用端点",
+      "needHelp": "需要帮助？",
+      "helpDesc": "如有疑问或需要帮助，请查阅相关资源或联系技术支持。",
+      "tryPlayground": "试用 Playground",
+      "contactSupport": "联系支持",
+      "ep": {
+        "matchResume": "简历匹配",
+        "matchResumeDesc": "使用AI评分将简历与职位描述进行匹配。",
+        "parseResume": "解析简历",
+        "parseResumeDesc": "从简历PDF中提取结构化数据。",
+        "parseJd": "解析JD",
+        "parseJdDesc": "从职位描述PDF中提取结构化数据。",
+        "inviteCandidate": "邀请候选人",
+        "inviteCandidateDesc": "生成专业的面试邀请邮件。",
+        "evaluateInterview": "面试评估",
+        "evaluateInterviewDesc": "对面试记录进行综合评分分析。"
+      }
+    },
+    "quickStart": {
+      "title": "快速开始",
+      "intro": "只需几分钟即可开始使用 RoboHire。",
+      "step1": {
+        "title": "获取API密钥",
+        "desc": "注册 RoboHire 账号并在控制面板中生成API密钥。",
+        "cta": "获取API密钥"
+      },
+      "step2": {
+        "title": "安装依赖（可选）",
+        "desc": "为您的编程语言安装任意HTTP客户端库。"
+      },
+      "step3": {
+        "title": "发起第一个API调用",
+        "desc": "让我们将一份简历与职位描述进行匹配："
+      },
+      "step4": {
+        "title": "处理响应",
+        "desc": "您将收到包含匹配分析的JSON响应："
+      },
+      "nextSteps": {
+        "title": "下一步",
+        "auth": "了解身份认证方式",
+        "matchResume": "探索简历匹配API",
+        "playground": "试用交互式 Playground"
+      }
+    },
+    "auth": {
+      "title": "身份认证",
+      "intro": "了解如何对 RoboHire API请求进行身份认证。",
+      "apiKeys": {
+        "title": "API密钥",
+        "desc": "API密钥是 RoboHire 的主要认证方式。每个密钥以 \"rh_\" 为前缀，代表您的账号拥有API的完整访问权限。",
+        "warning": {
+          "title": "请妥善保管您的API密钥",
+          "desc": "切勿在客户端代码、公开仓库或任何可能被未授权方访问的地方暴露API密钥。"
+        },
+        "creating": "创建API密钥",
+        "step1": "登录 RoboHire 控制面板",
+        "step2": "进入API密钥管理页面",
+        "step3": "点击「创建密钥」并填写名称",
+        "step4": "复制并安全保存您的密钥（仅显示一次）",
+        "manage": "管理您的API密钥"
+      },
+      "using": {
+        "title": "使用API密钥",
+        "desc": "在每个请求的 Authorization 头中包含您的API密钥：",
+        "bearer": "Bearer Token（推荐）",
+        "xApiKey": "X-API-Key 头",
+        "xApiKeyDesc": "您也可以使用 X-API-Key 请求头："
+      },
+      "scopes": {
+        "title": "密钥权限范围",
+        "desc": "API密钥可以设置不同的权限范围来限制其操作：",
+        "scopeHeader": "权限范围",
+        "descHeader": "说明",
+        "read": "读取操作权限（GET端点）",
+        "write": "创建和修改操作权限（POST、PUT、DELETE）"
+      },
+      "errors": {
+        "title": "认证错误",
+        "desc": "认证失败时，您将收到以下错误响应之一：",
+        "authRequired": "未提供身份认证凭据。",
+        "invalidToken": "提供的API密钥无效或已被撤销。",
+        "insufficientScopes": "该API密钥没有执行此操作所需的权限。"
+      },
+      "bestPractices": {
+        "title": "最佳实践",
+        "envVars": "将API密钥存储在环境变量中，而非代码里",
+        "rotate": "定期轮换密钥，发现泄露后立即更换",
+        "minScope": "为每个密钥分配最小必要权限",
+        "expiration": "尽可能为密钥设置过期时间",
+        "separate": "开发环境和生产环境使用不同的密钥"
+      }
+    },
+    "matchResume": {
+      "title": "简历匹配",
+      "intro": "将简历与职位描述进行匹配，获取AI驱动的兼容性评分和详细分析。",
+      "endpointDesc": "将简历与职位描述进行匹配",
+      "request": "请求",
+      "note": "注意",
+      "noteDesc": "您可以提供文本内容（resumeText/jdText）或 Base64 编码的PDF文件（resumeFile/jdFile）。如果同时提供，文件优先。",
+      "response": "响应",
+      "scoring": {
+        "title": "匹配评分",
+        "desc": "匹配分数基于多个维度综合计算：",
+        "scoreRange": "分数区间",
+        "recommendation": "建议",
+        "meaning": "含义",
+        "strong": "非常匹配，达到或超出要求",
+        "good": "较为匹配，满足大部分要求",
+        "partial": "部分匹配，缺少关键要求",
+        "weak": "匹配度低，存在较大差距"
+      },
+      "tryIt": {
+        "title": "在线试用",
+        "desc": "在API Playground中交互式测试此端点。",
+        "cta": "在 Playground 中打开"
+      }
+    },
+    "parseResume": {
+      "title": "解析简历",
+      "intro": "从简历PDF中提取结构化数据，包括联系方式、工作经历、教育背景和技能。",
+      "endpointDesc": "将简历PDF解析为结构化数据",
+      "request": "请求",
+      "response": "响应",
+      "formats": {
+        "title": "支持的格式",
+        "desc": "当前支持的文档格式："
+      },
+      "tip": "提示",
+      "tipDesc": "为获得最佳解析效果，请确保PDF为文本格式（非扫描图片）。基于OCR的解析准确率可能较低。",
+      "tryIt": {
+        "title": "在线试用",
+        "desc": "在API Playground中交互式测试此端点。",
+        "cta": "在 Playground 中打开"
+      }
+    },
+    "parseJD": {
+      "title": "解析职位描述",
+      "intro": "从职位描述PDF中提取结构化数据，包括岗位要求、职责和福利。",
+      "endpointDesc": "将职位描述PDF解析为结构化数据",
+      "request": "请求",
+      "response": "响应",
+      "requirements": {
+        "title": "要求结构",
+        "desc": "requirements 对象包含分类的任职资格：",
+        "mustHave": "候选人必须具备的必要资格",
+        "niceToHave": "有益但非必需的加分项",
+        "education": "学历要求"
+      },
+      "tryIt": {
+        "title": "在线试用",
+        "desc": "在API Playground中交互式测试此端点。",
+        "cta": "在 Playground 中打开"
+      }
+    },
+    "inviteCandidate": {
+      "title": "邀请候选人",
+      "intro": "为候选人生成专业的面试邀请邮件。AI会根据提供的信息撰写个性化邀请内容。",
+      "endpointDesc": "生成面试邀请邮件",
+      "request": "请求",
+      "response": "响应",
+      "tones": {
+        "title": "可用语气",
+        "toneHeader": "语气",
+        "descHeader": "说明",
+        "formal": "传统正式的商务风格",
+        "professional": "平衡得体的商务风格（默认）",
+        "friendly": "亲切友好，适合初创企业"
+      },
+      "tryIt": {
+        "title": "在线试用",
+        "desc": "在API Playground中交互式测试此端点。",
+        "cta": "在 Playground 中打开"
+      }
+    },
+    "evaluateInterview": {
+      "title": "面试评估",
+      "intro": "分析面试记录，生成包含评分、建议和作弊检测的综合评估报告。",
+      "endpointDesc": "评估面试记录",
+      "request": "请求",
+      "response": "响应",
+      "recommendations": {
+        "title": "推荐值说明",
+        "value": "值",
+        "scoreRange": "分数区间",
+        "meaning": "含义",
+        "strongHire": "优秀候选人，强烈推荐录用",
+        "hire": "合格候选人，建议录用",
+        "maybe": "存在疑虑，需进一步评估",
+        "noHire": "不符合要求"
+      },
+      "cheating": {
+        "title": "作弊检测",
+        "desc": "API会分析面试记录中的潜在作弊指标：",
+        "rehearsed": "回答异常完美或有明显排练痕迹",
+        "inconsistencies": "不同回答之间存在矛盾",
+        "verbatim": "回答似乎在照本宣科",
+        "pauses": "异常的停顿或打字声",
+        "copyPaste": "技术题回答中出现复制粘贴特征"
+      },
+      "note": "注意",
+      "noteDesc": "作弊分析仅供参考，应配合人工判断使用。高嫌疑等级并不代表一定存在作弊行为。",
+      "tryIt": {
+        "title": "在线试用",
+        "desc": "在API Playground中交互式测试此端点。",
+        "cta": "在 Playground 中打开"
+      }
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "intro": "当 RoboHire 中发生事件时接收实时通知。通过 Webhooks 与现有系统集成，实现工作流自动化。",
+      "setup": {
+        "title": "配置 Webhooks",
+        "step1": "在控制面板设置中配置 Webhook URL",
+        "step2": "选择需要接收的事件类型",
+        "step3": "复制 Webhook 密钥用于签名验证",
+        "step4": "实现一个端点来接收 Webhook 请求"
+      },
+      "events": {
+        "title": "事件类型",
+        "tableTitle": "可用事件"
+      },
+      "payload": {
+        "title": "载荷结构",
+        "tableTitle": "载荷字段",
+        "exampleTitle": "Webhook 载荷示例"
+      },
+      "verification": {
+        "title": "签名验证",
+        "desc": "所有 Webhook 请求都包含一个 X-RoboHire-Signature 头，其中包含载荷的 HMAC-SHA256 签名。请始终验证此签名以确保请求来自 RoboHire。",
+        "exampleTitle": "验证示例（Node.js）"
+      },
+      "bestPractices": {
+        "title": "最佳实践",
+        "respond": "快速响应：在5秒内返回200状态码以避免超时",
+        "async": "异步处理：对耗时操作使用队列异步处理",
+        "duplicates": "处理重复：使用 webhookId 检测和处理重复投递",
+        "verify": "始终验证：对每个请求都校验签名",
+        "https": "使用 HTTPS：始终使用 HTTPS 端点以确保安全"
+      },
+      "retries": {
+        "title": "重试策略",
+        "desc": "如果您的端点返回错误或超时，我们将重试投递 Webhook：",
+        "r1": "第1次重试：1分钟后",
+        "r2": "第2次重试：5分钟后",
+        "r3": "第3次重试：30分钟后",
+        "r4": "第4次重试：2小时后",
+        "r5": "第5次重试：24小时后"
+      }
+    },
+    "errors": {
+      "title": "错误处理",
+      "intro": "了解如何处理 RoboHire 返回的错误，并在应用中实现健壮的错误处理机制。",
+      "format": {
+        "title": "错误响应格式",
+        "desc": "发生错误时，API会返回以下结构的JSON响应：",
+        "exampleTitle": "错误响应",
+        "field": "字段",
+        "description": "说明",
+        "successDesc": "错误响应中始终为 false",
+        "errorDesc": "人类可读的错误信息",
+        "codeDesc": "机器可读的错误代码",
+        "detailsDesc": "附加错误详情（可选）"
+      },
+      "codes": {
+        "title": "错误代码参考",
+        "badRequest": {
+          "desc": "请求格式不正确或缺少必要参数",
+          "fix": "检查请求体并确保提供了所有必填字段"
+        },
+        "validation": {
+          "desc": "一个或多个请求参数校验失败",
+          "fix": "查看 details 字段获取具体的校验错误信息"
+        },
+        "authRequired": {
+          "desc": "未提供身份认证凭据",
+          "fix": "在 Authorization 头中包含API密钥"
+        },
+        "invalidToken": {
+          "desc": "提供的API密钥无效或已过期",
+          "fix": "检查API密钥或重新生成一个"
+        },
+        "insufficientScopes": {
+          "desc": "API密钥缺少所需权限",
+          "fix": "使用具有相应权限的API密钥"
+        },
+        "notFound": {
+          "desc": "请求的资源未找到",
+          "fix": "检查端点URL和资源ID"
+        },
+        "rateLimited": {
+          "desc": "短时间内请求过多",
+          "fix": "实现速率限制并使用退避策略重试"
+        },
+        "internalError": {
+          "desc": "服务器发生意外错误",
+          "fix": "重试请求，如果持续出现请联系技术支持"
+        },
+        "serviceUnavailable": {
+          "desc": "服务暂时不可用",
+          "fix": "稍后重试请求"
+        },
+        "fixLabel": "修复方法"
+      },
+      "handling": {
+        "title": "代码中的错误处理",
+        "desc": "以下是一个健壮的错误处理示例：",
+        "exampleTitle": "错误处理示例"
+      },
+      "rateLimiting": {
+        "title": "速率限制",
+        "desc": "API实现了速率限制以确保公平使用。当您超出速率限制时：",
+        "status429": "您将收到 429 状态码",
+        "retryAfter": "响应中包含 retryAfter 字段（可重试前的等待秒数）",
+        "backoff": "实现指数退避策略进行自动重试"
+      },
+      "bestPractices": {
+        "title": "错误处理最佳实践",
+        "checkSuccess": "处理响应前始终检查 success 字段",
+        "useCode": "使用 code 字段进行程序化的错误处理",
+        "logErrors": "记录错误日志并附带上下文信息以便调试",
+        "retryLogic": "对临时性错误实现指数退避重试逻辑",
+        "userFriendly": "向终端用户展示友好的提示信息，而非原始错误消息"
+      }
+    },
+    "common": {
+      "bodyParams": "请求体参数",
+      "responseFields": "响应字段",
+      "exampleResponse": "响应示例"
+    }
+  },
   "pages": {
     "matchResume": {
       "title": "简历与JD匹配",
