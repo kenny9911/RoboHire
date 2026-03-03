@@ -117,9 +117,28 @@ Benefits:
 
   // Seed default pricing config
   const defaultPricing: Record<string, string> = {
+    // Legacy USD keys (kept for compatibility)
     price_starter_monthly: '29',
     price_growth_monthly: '199',
     price_business_monthly: '399',
+
+    // Multi-currency keys
+    price_usd_starter_monthly: '29',
+    price_usd_growth_monthly: '199',
+    price_usd_business_monthly: '399',
+
+    price_cny_starter_monthly: '199',
+    price_cny_growth_monthly: '1369',
+    price_cny_business_monthly: '2749',
+
+    price_jpy_starter_monthly: '4559',
+    price_jpy_growth_monthly: '31329',
+    price_jpy_business_monthly: '62799',
+
+    // Discount config
+    pricing_discount_enabled: 'false',
+    pricing_discount_percent: '0',
+    stripe_coupon_id_pricing_discount: '',
   };
 
   for (const [key, value] of Object.entries(defaultPricing)) {

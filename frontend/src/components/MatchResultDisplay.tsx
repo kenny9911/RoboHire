@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-interface MatchResultData {
+export interface MatchResultData {
   resumeAnalysis: {
     candidateName: string;
     totalYearsExperience: string;
@@ -192,13 +192,13 @@ interface MatchResultData {
   areasToProbeDeeper?: ProbingArea[];
 }
 
-interface InterviewQuestionCategory {
+export interface InterviewQuestionCategory {
   area: string;
   subArea?: string;
   questions: InterviewQuestion[];
 }
 
-interface InterviewQuestion {
+export interface InterviewQuestion {
   question: string;
   purpose: string;
   lookFor: string[];
@@ -207,7 +207,7 @@ interface InterviewQuestion {
   timeEstimate: string;
 }
 
-interface ProbingArea {
+export interface ProbingArea {
   area: string;
   priority: string;
   reason: string;
@@ -215,7 +215,7 @@ interface ProbingArea {
   suggestedApproach: string;
 }
 
-interface ProbingSubArea {
+export interface ProbingSubArea {
   name: string;
   specificConcerns: string[];
   validationQuestions: string[];

@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { resetUsageCounters } from '../middleware/usageMeter.js';
+import { isDiscountActive, loadPricingConfigFromDb, toPublicPricingPayload } from '../services/pricingConfig.js';
 import '../types/auth.js';
 
 const router = Router();
@@ -46,6 +47,28 @@ loadPriceIdsFromConfig();
 const TOPUP_MIN_CENTS = 1000;  // $10 minimum
 const TOPUP_MAX_CENTS = 100000; // $1,000 maximum
 const FREE_TRIAL_DAYS = parseInt(process.env.STRIPE_FREE_TRIAL_DAYS || '14', 10);
+const TIER_RANK: Record<'free' | 'starter' | 'growth' | 'business' | 'custom', number> = {
+  free: 0,
+  starter: 1,
+  growth: 2,
+  business: 3,
+  custom: 4,
+};
+
+function resolveEffectiveTier(user: Express.User): 'free' | 'starter' | 'growth' | 'business' | 'custom' {
+  const tier = (user.subscriptionTier || 'free').toLowerCase();
+  const status = (user.subscriptionStatus || 'active').toLowerCase();
+
+  if (tier === 'custom') return 'custom';
+  if (tier !== 'free' && status !== 'active' && status !== 'trialing') {
+    return 'free';
+  }
+  if (tier === 'starter' || tier === 'growth' || tier === 'business' || tier === 'free') {
+    return tier;
+  }
+
+  return 'free';
+}
 
 /**
  * Helper: ensure the user has a Stripe customer ID, creating one if needed.
@@ -86,6 +109,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
     if (!tier || !['starter', 'growth', 'business'].includes(tier)) {
       return res.status(400).json({ success: false, error: 'Invalid tier' });
     }
+    const requestedTier = tier as 'starter' | 'growth' | 'business';
 
     const priceId = PRICE_MAP[`${tier}_${interval}`];
     if (!priceId) {
@@ -96,6 +120,20 @@ router.post('/checkout', requireAuth, async (req, res) => {
     }
 
     const user = req.user!;
+    const currentTier = resolveEffectiveTier(user);
+    if (currentTier === 'custom') {
+      return res.status(400).json({
+        success: false,
+        error: 'Custom plan is managed by sales. Please contact support for changes.',
+      });
+    }
+    if (currentTier !== 'free' && TIER_RANK[requestedTier] <= TIER_RANK[currentTier]) {
+      return res.status(400).json({
+        success: false,
+        error: 'You are already on this plan or a higher plan. Please choose a higher tier.',
+      });
+    }
+
     const customerId = await ensureStripeCustomer(stripe, user);
 
     // Only allow trial for users who haven't had a paid subscription before
@@ -119,6 +157,11 @@ router.post('/checkout', requireAuth, async (req, res) => {
       };
     }
 
+    const pricingConfig = await loadPricingConfigFromDb();
+    if (isDiscountActive(pricingConfig.discount) && pricingConfig.discount.stripeCouponId) {
+      sessionParams.discounts = [{ coupon: pricingConfig.discount.stripeCouponId }];
+    }
+
     const session = await stripe.checkout.sessions.create(sessionParams);
 
     res.json({ success: true, data: { url: session.url } });
@@ -135,19 +178,26 @@ router.post('/checkout', requireAuth, async (req, res) => {
  */
 router.get('/config/pricing', async (_req, res) => {
   try {
-    const defaults: Record<string, number> = { starter: 29, growth: 199, business: 399 };
-    const configs = await prisma.appConfig.findMany({
-      where: { key: { in: ['price_starter_monthly', 'price_growth_monthly', 'price_business_monthly'] } },
-    });
-    const prices: Record<string, number> = { ...defaults };
-    for (const c of configs) {
-      const tier = c.key.replace('price_', '').replace('_monthly', '');
-      const val = parseFloat(c.value);
-      if (!isNaN(val)) prices[tier] = val;
-    }
-    res.json({ success: true, data: prices });
+    const snapshot = await loadPricingConfigFromDb();
+    res.json({ success: true, data: toPublicPricingPayload(snapshot) });
   } catch (error) {
-    res.json({ success: true, data: { starter: 29, growth: 199, business: 399 } });
+    res.json({
+      success: true,
+      data: {
+        starter: 29,
+        growth: 199,
+        business: 399,
+        prices: {
+          USD: { starter: 29, growth: 199, business: 399 },
+          CNY: { starter: 199, growth: 1369, business: 2749 },
+          JPY: { starter: 4559, growth: 31329, business: 62799 },
+        },
+        discount: {
+          enabled: false,
+          percentOff: 0,
+        },
+      },
+    });
   }
 });
 

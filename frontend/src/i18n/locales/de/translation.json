@@ -342,6 +342,15 @@
     "errorCreating": "Beim Erstellen Ihrer Anfrage ist ein Problem aufgetreten: ",
     "tryAgain": "Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
     "errorGeneric": "Beim Erstellen Ihrer Anfrage ist ein Problem aufgetreten. Bitte versuchen Sie es erneut.",
+    "thinking": {
+      "title": "Denke nach...",
+      "analyzeTitle": "Analyse Ihrer Anfrage",
+      "analyzeThought": "Rollenkontext, Anforderungen und fehlende Details werden extrahiert.",
+      "benchmarkTitle": "Abgleich der Rollenerwartungen",
+      "benchmarkThought": "Ihre Anforderungen werden mit bewährten Recruiting-Mustern für diese Rolle verglichen.",
+      "draftTitle": "Empfehlungen werden erstellt",
+      "draftThought": "Umsetzbare Hinweise, Klärungsfragen und nächste Schritte werden vorbereitet."
+    },
     "quickRoles": {
       "engineer": "Softwareentwickler",
       "pm": "Produktmanager",
@@ -354,6 +363,16 @@
     "inputPlaceholder": "Beschreiben Sie Ihren idealen Kandidaten...",
     "uploadJd": "Stellenbeschreibung hochladen",
     "quickStartFromJd": "Kandidat basierend auf der Stellenbeschreibung",
+    "defaultRoleLabel": "diese Rolle",
+    "suggestions": {
+      "title": "Versuchen Sie zu fragen",
+      "general1": "Schärfe Muss- vs. Kann-Skills für {{role}}.",
+      "general2": "Schlage einen Interviewplan und eine Scorecard für diese Rolle vor.",
+      "general3": "Erstelle jetzt die finale Stellenbeschreibung.",
+      "confirm1": "Kürze die JD auf 8 Stichpunkte.",
+      "confirm2": "Ergänze Gehaltsspanne und gewünschtes Startdatum.",
+      "confirm3": "Passe diese JD für Remote-First-Kandidaten an."
+    },
     "heroTitle": "Mit KI einstellen",
     "heroSubtitle": "Sagen Sie uns, wen Sie suchen. Unsere KI hilft beim Finden, Filtern und Bewerten von Kandidaten.",
     "templatesTitle": "Beliebte Rollen-Vorlagen",
@@ -537,7 +556,8 @@
       "apiKeys": "API-Schlüssel",
       "apiPlayground": "API Playground",
       "account": "Konto",
-      "usage": "Nutzung"
+      "usage": "Nutzung",
+      "resumes": "Lebenslauf-Bibliothek"
     },
     "welcome": "Willkommen zurück",
     "user": "da",
@@ -979,6 +999,60 @@
       "viewReceipt": "Beleg"
     }
   },
+  "usage": {
+    "title": "API-Nutzung",
+    "apiCalls": "API-Aufrufe",
+    "inputTokens": "Eingabe-Tokens",
+    "outputTokens": "Ausgabe-Tokens",
+    "totalCost": "Gesamtkosten",
+    "empty": "Noch keine Nutzungsdaten. Führen Sie API-Aufrufe durch, um Daten hier zu sehen.",
+    "inactive": "Inaktiv",
+    "range": {
+      "7d": "7 Tage",
+      "30d": "30 Tage",
+      "90d": "90 Tage",
+      "all": "Gesamt"
+    },
+    "chart": {
+      "callsOverTime": "API-Aufrufe im Zeitverlauf",
+      "calls": "Aufrufe",
+      "tokenUsage": "Token-Nutzung (Eingabe vs Ausgabe)",
+      "input": "Eingabe",
+      "output": "Ausgabe"
+    },
+    "table": {
+      "byEndpoint": "Nutzung nach Endpunkt",
+      "endpoint": "Endpunkt",
+      "calls": "Aufrufe",
+      "tokens": "Tokens",
+      "cost": "Kosten",
+      "byKey": "Nutzung nach API-Schlüssel",
+      "key": "Schlüssel"
+    },
+    "callHistory": {
+      "title": "API-Aufrufverlauf",
+      "empty": "Keine API-Aufrufe aufgezeichnet.",
+      "time": "Zeit",
+      "endpoint": "Endpunkt",
+      "status": "Status",
+      "duration": "Dauer",
+      "tokens": "Tokens",
+      "cost": "Kosten",
+      "view": "Ansehen",
+      "prev": "Zurück",
+      "next": "Weiter",
+      "pageInfo": "Seite {{page}} von {{total}}",
+      "back": "Zurück zur Nutzung",
+      "detailTitle": "API-Aufrufdetail",
+      "notFound": "Aufruf nicht gefunden",
+      "llmCalls": "LLM-Aufrufe",
+      "requestPayload": "Eingabeparameter",
+      "responsePayload": "KI-Ausgabe",
+      "model": "Modell",
+      "apiKey": "API-Schlüssel",
+      "sessionAuth": "Sitzung"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - KI-gestützte Recruiting-Plattform",
     "defaultDescription": "Stellen Sie Spitzenkandidaten vor anderen ein. Unser KI-Recruiting-Agent filtert Lebensläufe, führt Interviews und liefert umfassende Bewertungsberichte.",
@@ -1021,6 +1095,94 @@
       "evaluate": { "title": "Interview-Bewertung API", "desc": "API-Referenz für die KI-gestützte Interview-Bewertung." },
       "webhooks": { "title": "Webhooks", "desc": "Webhooks für Echtzeit-Benachrichtigungen konfigurieren." },
       "errors": { "title": "Fehlerbehandlung", "desc": "Fehlercodes, Antwortformate und Fehlerbehebungsanleitung." }
+    }
+  },
+  "resumeLibrary": {
+    "title": "Lebenslauf-Bibliothek",
+    "subtitle": "Verwalten und analysieren Sie die Lebensläufe Ihrer Kandidaten",
+    "upload": "Lebenslauf hochladen",
+    "uploadBatch": "Stapel-Upload",
+    "stats": {
+      "total": "Lebensläufe gesamt",
+      "thisWeek": "Diese Woche",
+      "analyzed": "KI-analysiert"
+    },
+    "search": {
+      "placeholder": "Nach Name, Fähigkeiten oder Position suchen..."
+    },
+    "empty": {
+      "title": "Noch keine Lebensläufe",
+      "description": "Laden Sie Lebensläufe hoch, um Ihre Kandidaten-Bibliothek aufzubauen",
+      "cta": "Ersten Lebenslauf hochladen"
+    },
+    "card": {
+      "topFit": "Beste Eignung"
+    },
+    "uploadModal": {
+      "title": "Lebenslauf hochladen",
+      "batchTitle": "Lebensläufe im Stapel hochladen",
+      "dragDrop": "Lebenslauf-Dateien hierher ziehen",
+      "formats": "Formate: PDF, DOCX, TXT",
+      "maxFiles": "Bis zu 10 Dateien gleichzeitig",
+      "uploading": "Wird verarbeitet...",
+      "duplicate": "Duplikat"
+    },
+    "detail": {
+      "back": "Zurück zu Lebensläufen",
+      "title": "Lebenslauf-Details",
+      "tabs": {
+        "overview": "Übersicht",
+        "insights": "KI-Analyse",
+        "jobFit": "Stelleneignung",
+        "notes": "Notizen & Tags"
+      },
+      "actions": {
+        "archive": "Archivieren"
+      },
+      "overview": {
+        "summary": "Berufliche Zusammenfassung",
+        "skills": "Fähigkeiten",
+        "experience": "Berufserfahrung",
+        "education": "Ausbildung",
+        "certifications": "Zertifikate",
+        "projects": "Projekte"
+      }
+    },
+    "insights": {
+      "generate": "KI-Analyse generieren",
+      "generating": "Lebenslauf wird analysiert...",
+      "generatingDesc": "Dies kann 10-15 Sekunden dauern",
+      "regenerate": "Analyse neu generieren",
+      "executiveSummary": "Zusammenfassung",
+      "careerTrajectory": "Karriereverlauf",
+      "salaryEstimate": "Gehaltsschätzung",
+      "marketCompetitiveness": "Marktwettbewerbsfähigkeit",
+      "cultureFit": "Kulturelle Passung",
+      "strengths": "Kernstärken",
+      "development": "Entwicklungsbereiche",
+      "redFlags": "Warnhinweise",
+      "noRedFlags": "Keine Warnhinweise identifiziert",
+      "recommendedRoles": "Empfohlene Positionen"
+    },
+    "jobFit": {
+      "analyze": "Stelleneignung analysieren",
+      "analyzing": "Abgleich mit Ihren Stellenangeboten...",
+      "reanalyze": "Eignung neu analysieren",
+      "bestFit": "Beste Eignung",
+      "matchedSkills": "Übereinstimmende Fähigkeiten",
+      "missingSkills": "Fehlende kritische Fähigkeiten",
+      "recommendation": "Empfehlung",
+      "noActiveRequests": "Keine aktiven Stellenangebote gefunden",
+      "noActiveRequestsDesc": "Erstellen Sie zuerst ein Stellenangebot, um die Eignungsanalyse zu sehen"
+    },
+    "notes": {
+      "tags": "Tags",
+      "addTag": "z.B. Senior, Frontend, interviewt",
+      "notes": "Notizen",
+      "notesPlaceholder": "Notizen zu diesem Kandidaten hinzufügen...",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "saved": "Gespeichert!"
     }
   }
 }

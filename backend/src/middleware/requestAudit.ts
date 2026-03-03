@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { logger } from '../services/LoggerService.js';
 import { classifyApiRequest } from '../lib/requestClassification.js';
@@ -79,6 +80,8 @@ export function persistRequestAudit(req: Request, res: Response, next: NextFunct
           model,
           ipAddress: getClientIp(req),
           userAgent: req.get('user-agent') || null,
+          requestPayload: (req.payloadCapture?.requestPayload as Prisma.InputJsonValue) ?? undefined,
+          responsePayload: (req.payloadCapture?.responsePayload as Prisma.InputJsonValue) ?? undefined,
         },
       });
 

@@ -6,6 +6,7 @@ import MatchResultDisplay from '../components/MatchResultDisplay';
 import JsonViewer from '../components/JsonViewer';
 import ApiInfoPanel from '../components/ApiInfoPanel';
 import { useFormData } from '../context/FormDataContext';
+import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO';
 
@@ -20,6 +21,7 @@ type ViewMode = 'formatted' | 'json';
 
 export default function MatchResume() {
   const { t } = useTranslation();
+  const { refreshUser } = useAuth();
   const { formData, setMatchResumeData } = useFormData();
   const { resume, jd } = formData.matchResume;
   
@@ -70,6 +72,7 @@ export default function MatchResume() {
       }
     } finally {
       setLoading(false);
+      void refreshUser();
     }
   };
 

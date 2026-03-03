@@ -292,7 +292,15 @@
     "error": "There was an issue creating your request: ",
     "tryAgain": "Please try again or contact support if the issue persists.",
     "signIn": "Sign In",
-    "thinking": "Thinking...",
+    "thinking": {
+      "title": "Thinking...",
+      "analyzeTitle": "Analyzing your request",
+      "analyzeThought": "Extracting role context, requirements, and missing details.",
+      "benchmarkTitle": "Benchmarking role expectations",
+      "benchmarkThought": "Comparing your needs with proven hiring patterns for this role.",
+      "draftTitle": "Drafting recommendations",
+      "draftThought": "Preparing actionable guidance, clarifying questions, and next steps."
+    },
     "readyToStart": "Ready to Start Hiring?",
     "signInToSave": "Sign in to save your hiring request and start receiving candidates.",
     "signInToContinue": "Sign In to Continue",
@@ -327,6 +335,16 @@
     "newRequest": "New Request",
     "quickStartSelected": "I want to hire a {{role}}",
     "quickStartFromJd": "candidate based on job description",
+    "defaultRoleLabel": "this role",
+    "suggestions": {
+      "title": "Try asking",
+      "general1": "Refine must-have vs nice-to-have skills for {{role}}.",
+      "general2": "Suggest an interview plan and scorecard for this role.",
+      "general3": "Draft the final job description now.",
+      "confirm1": "Shorten the JD into 8 bullet points.",
+      "confirm2": "Add compensation range and target start date.",
+      "confirm3": "Tailor this JD for remote-first candidates."
+    },
     "quickRoles": {
       "engineer": "Software Engineer",
       "pm": "Product Manager",
@@ -509,7 +527,8 @@
       "apiKeys": "API Keys",
       "apiPlayground": "API Playground",
       "account": "Account",
-      "usage": "Usage"
+      "usage": "Usage",
+      "resumes": "Resumes"
     },
     "welcome": "Welcome back",
     "user": "there",
@@ -913,6 +932,60 @@
       "viewReceipt": "Receipt"
     }
   },
+  "usage": {
+    "title": "API Usage",
+    "apiCalls": "API Calls",
+    "inputTokens": "Input Tokens",
+    "outputTokens": "Output Tokens",
+    "totalCost": "Total Cost",
+    "empty": "No usage data yet. Make API calls to see data here.",
+    "inactive": "Inactive",
+    "range": {
+      "7d": "7 Days",
+      "30d": "30 Days",
+      "90d": "90 Days",
+      "all": "All Time"
+    },
+    "chart": {
+      "callsOverTime": "API Calls Over Time",
+      "calls": "Calls",
+      "tokenUsage": "Token Usage (Input vs Output)",
+      "input": "Input",
+      "output": "Output"
+    },
+    "table": {
+      "byEndpoint": "Usage by Endpoint",
+      "endpoint": "Endpoint",
+      "calls": "Calls",
+      "tokens": "Tokens",
+      "cost": "Cost",
+      "byKey": "Usage by API Key",
+      "key": "Key"
+    },
+    "callHistory": {
+      "title": "API Call History",
+      "empty": "No API calls recorded yet.",
+      "time": "Time",
+      "endpoint": "Endpoint",
+      "status": "Status",
+      "duration": "Duration",
+      "tokens": "Tokens",
+      "cost": "Cost",
+      "view": "View",
+      "prev": "Previous",
+      "next": "Next",
+      "pageInfo": "Page {{page}} of {{total}}",
+      "back": "Back to Usage",
+      "detailTitle": "API Call Detail",
+      "notFound": "Call not found",
+      "llmCalls": "LLM Calls",
+      "requestPayload": "Input Parameters",
+      "responsePayload": "AI Output",
+      "model": "Model",
+      "apiKey": "API Key",
+      "sessionAuth": "Session"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - AI-Powered Hiring Platform",
     "defaultDescription": "Hire elite candidates before others. Our AI hiring agent automatically screens resumes, conducts interviews, and delivers comprehensive evaluation reports.",
@@ -955,6 +1028,94 @@
       "evaluate": { "title": "Evaluate Interview API", "desc": "API reference for AI-powered interview evaluation." },
       "webhooks": { "title": "Webhooks", "desc": "Configure webhooks to receive real-time notifications about hiring events." },
       "errors": { "title": "Error Handling", "desc": "RoboHire API error codes, response formats, and troubleshooting guide." }
+    }
+  },
+  "resumeLibrary": {
+    "title": "Resume Library",
+    "subtitle": "Manage and analyze your candidate resumes",
+    "upload": "Upload Resume",
+    "uploadBatch": "Batch Upload",
+    "stats": {
+      "total": "Total Resumes",
+      "thisWeek": "This Week",
+      "analyzed": "AI Analyzed"
+    },
+    "search": {
+      "placeholder": "Search by name, skills, or role..."
+    },
+    "empty": {
+      "title": "No resumes yet",
+      "description": "Upload resumes to build your candidate library",
+      "cta": "Upload Your First Resume"
+    },
+    "card": {
+      "topFit": "Top Fit"
+    },
+    "uploadModal": {
+      "title": "Upload Resume",
+      "batchTitle": "Batch Upload Resumes",
+      "dragDrop": "Drag & drop resume files here",
+      "formats": "Supported: PDF, DOCX, TXT",
+      "maxFiles": "Up to 10 files at once",
+      "uploading": "Processing...",
+      "duplicate": "Duplicate"
+    },
+    "detail": {
+      "back": "Back to Resumes",
+      "title": "Resume Detail",
+      "tabs": {
+        "overview": "Overview",
+        "insights": "AI Insights",
+        "jobFit": "Job Fit",
+        "notes": "Notes & Tags"
+      },
+      "actions": {
+        "archive": "Archive"
+      },
+      "overview": {
+        "summary": "Professional Summary",
+        "skills": "Skills",
+        "experience": "Work Experience",
+        "education": "Education",
+        "certifications": "Certifications",
+        "projects": "Projects"
+      }
+    },
+    "insights": {
+      "generate": "Generate AI Insights",
+      "generating": "Analyzing resume...",
+      "generatingDesc": "This may take 10-15 seconds",
+      "regenerate": "Regenerate insights",
+      "executiveSummary": "Executive Summary",
+      "careerTrajectory": "Career Trajectory",
+      "salaryEstimate": "Salary Estimate",
+      "marketCompetitiveness": "Market Competitiveness",
+      "cultureFit": "Culture Fit Indicators",
+      "strengths": "Core Strengths",
+      "development": "Development Areas",
+      "redFlags": "Red Flags",
+      "noRedFlags": "No red flags identified",
+      "recommendedRoles": "Recommended Roles"
+    },
+    "jobFit": {
+      "analyze": "Analyze Job Fit",
+      "analyzing": "Matching against your hiring requests...",
+      "reanalyze": "Re-analyze job fit",
+      "bestFit": "Best Fit",
+      "matchedSkills": "Matched Skills",
+      "missingSkills": "Missing Critical",
+      "recommendation": "Recommendation",
+      "noActiveRequests": "No active hiring requests found",
+      "noActiveRequestsDesc": "Create a hiring request first to see job fit analysis"
+    },
+    "notes": {
+      "tags": "Tags",
+      "addTag": "e.g. senior, frontend, interviewed",
+      "notes": "Notes",
+      "notesPlaceholder": "Add notes about this candidate...",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved!"
     }
   }
 }

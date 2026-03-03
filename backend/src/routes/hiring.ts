@@ -264,6 +264,106 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * GET /api/v1/hiring-requests/stats
+ * Aggregated hiring statistics for the current user (DB-backed).
+ */
+router.get('/stats', async (req, res) => {
+  try {
+    const userId = req.user!.id;
+
+    const [
+      totalRequests,
+      requestStatusGroups,
+      totalCandidates,
+      candidateStatusGroups,
+      avgMatchScoreAgg,
+      recentRequests,
+    ] = await Promise.all([
+      prisma.hiringRequest.count({
+        where: { userId },
+      }),
+      prisma.hiringRequest.groupBy({
+        by: ['status'],
+        where: { userId },
+        _count: { _all: true },
+      }),
+      prisma.candidate.count({
+        where: {
+          hiringRequest: { userId },
+        },
+      }),
+      prisma.candidate.groupBy({
+        by: ['status'],
+        where: {
+          hiringRequest: { userId },
+        },
+        _count: { _all: true },
+      }),
+      prisma.candidate.aggregate({
+        where: {
+          hiringRequest: { userId },
+          matchScore: { not: null },
+        },
+        _avg: { matchScore: true },
+      }),
+      prisma.hiringRequest.findMany({
+        where: { userId },
+        include: {
+          _count: {
+            select: { candidates: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
+    ]);
+
+    const requestStatusCounts = requestStatusGroups.reduce(
+      (acc, row) => {
+        acc[row.status] = row._count._all;
+        return acc;
+      },
+      { active: 0, paused: 0, closed: 0 } as Record<string, number>
+    );
+
+    const candidateStatusCounts = candidateStatusGroups.reduce(
+      (acc, row) => {
+        acc[row.status] = row._count._all;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    const avgMatchScoreRaw = avgMatchScoreAgg._avg.matchScore;
+    const avgMatchScore = avgMatchScoreRaw === null
+      ? null
+      : Math.round(avgMatchScoreRaw * 10) / 10;
+
+    return res.json({
+      success: true,
+      data: {
+        totalRequests,
+        activeRequests: requestStatusCounts.active || 0,
+        pausedRequests: requestStatusCounts.paused || 0,
+        closedRequests: requestStatusCounts.closed || 0,
+        totalCandidates,
+        invitationsSent: candidateStatusCounts.screening || 0,
+        interviewsCompleted: candidateStatusCounts.interviewed || 0,
+        avgMatchScore,
+        candidateStatusCounts,
+        recentRequests,
+      },
+    });
+  } catch (error) {
+    console.error('Hiring stats error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to fetch hiring stats',
+    });
+  }
+});
+
+/**
  * GET /api/v1/hiring-requests/:id
  * Get a single hiring request with candidates
  */

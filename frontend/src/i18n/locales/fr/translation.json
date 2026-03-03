@@ -342,6 +342,15 @@
     "errorCreating": "Un problème est survenu lors de la création de votre demande : ",
     "tryAgain": "Veuillez réessayer ou contacter le support si le problème persiste.",
     "errorGeneric": "Un problème est survenu lors de la création de votre demande. Veuillez réessayer.",
+    "thinking": {
+      "title": "Réflexion...",
+      "analyzeTitle": "Analyse de votre demande",
+      "analyzeThought": "Extraction du contexte du poste, des exigences et des éléments manquants.",
+      "benchmarkTitle": "Comparaison des attentes du poste",
+      "benchmarkThought": "Comparaison de vos besoins avec des schémas de recrutement éprouvés pour ce poste.",
+      "draftTitle": "Rédaction des recommandations",
+      "draftThought": "Préparation de conseils actionnables, de questions de clarification et des prochaines étapes."
+    },
     "quickRoles": {
       "engineer": "Ingénieur logiciel",
       "pm": "Chef de produit",
@@ -354,6 +363,16 @@
     "inputPlaceholder": "Décrivez votre candidat idéal...",
     "uploadJd": "Importer une description de poste",
     "quickStartFromJd": "candidat basé sur la description de poste",
+    "defaultRoleLabel": "ce poste",
+    "suggestions": {
+      "title": "Essayez de demander",
+      "general1": "Affinez les compétences indispensables vs optionnelles pour {{role}}.",
+      "general2": "Propose un plan d'entretien et une grille d'évaluation pour ce poste.",
+      "general3": "Rédige maintenant la version finale de la fiche de poste.",
+      "confirm1": "Condense la JD en 8 points.",
+      "confirm2": "Ajoute la fourchette salariale et la date cible de prise de poste.",
+      "confirm3": "Adapte cette JD pour des candidats en télétravail prioritaire."
+    },
     "heroTitle": "Commencez à recruter avec l'IA",
     "heroSubtitle": "Dites-nous qui vous recherchez. Notre IA vous aidera à trouver, présélectionner et évaluer les candidats automatiquement.",
     "templatesTitle": "Modèles de rôles populaires",
@@ -537,7 +556,8 @@
       "apiKeys": "Clés API",
       "apiPlayground": "API Playground",
       "account": "Compte",
-      "usage": "Utilisation"
+      "usage": "Utilisation",
+      "resumes": "Bibliothèque de CV"
     },
     "welcome": "Bon retour",
     "user": "vous",
@@ -980,6 +1000,60 @@
       "viewReceipt": "Reçu"
     }
   },
+  "usage": {
+    "title": "Utilisation de l'API",
+    "apiCalls": "Appels API",
+    "inputTokens": "Tokens d'entrée",
+    "outputTokens": "Tokens de sortie",
+    "totalCost": "Coût total",
+    "empty": "Aucune donnée d'utilisation. Effectuez des appels API pour voir les données ici.",
+    "inactive": "Inactif",
+    "range": {
+      "7d": "7 jours",
+      "30d": "30 jours",
+      "90d": "90 jours",
+      "all": "Tout"
+    },
+    "chart": {
+      "callsOverTime": "Appels API dans le temps",
+      "calls": "Appels",
+      "tokenUsage": "Utilisation des tokens (Entrée vs Sortie)",
+      "input": "Entrée",
+      "output": "Sortie"
+    },
+    "table": {
+      "byEndpoint": "Utilisation par endpoint",
+      "endpoint": "Endpoint",
+      "calls": "Appels",
+      "tokens": "Tokens",
+      "cost": "Coût",
+      "byKey": "Utilisation par clé API",
+      "key": "Clé"
+    },
+    "callHistory": {
+      "title": "Historique des appels API",
+      "empty": "Aucun appel API enregistré.",
+      "time": "Heure",
+      "endpoint": "Endpoint",
+      "status": "Statut",
+      "duration": "Durée",
+      "tokens": "Tokens",
+      "cost": "Coût",
+      "view": "Voir",
+      "prev": "Précédent",
+      "next": "Suivant",
+      "pageInfo": "Page {{page}} sur {{total}}",
+      "back": "Retour à l'utilisation",
+      "detailTitle": "Détail de l'appel API",
+      "notFound": "Appel non trouvé",
+      "llmCalls": "Appels LLM",
+      "requestPayload": "Paramètres d'entrée",
+      "responsePayload": "Sortie IA",
+      "model": "Modèle",
+      "apiKey": "Clé API",
+      "sessionAuth": "Session"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - Plateforme de Recrutement IA",
     "defaultDescription": "Recrutez les meilleurs candidats avant les autres. Notre agent de recrutement IA filtre les CV, mène les entretiens et fournit des rapports d'évaluation complets.",
@@ -1022,6 +1096,94 @@
       "evaluate": { "title": "API Évaluer Entretien", "desc": "Référence pour l'évaluation d'entretiens avec IA." },
       "webhooks": { "title": "Webhooks", "desc": "Configurez les webhooks pour les notifications en temps réel." },
       "errors": { "title": "Gestion des Erreurs", "desc": "Codes d'erreur, formats de réponse et guide de dépannage." }
+    }
+  },
+  "resumeLibrary": {
+    "title": "Bibliothèque de CV",
+    "subtitle": "Gérez et analysez les CV de vos candidats",
+    "upload": "Télécharger un CV",
+    "uploadBatch": "Téléchargement groupé",
+    "stats": {
+      "total": "Total des CV",
+      "thisWeek": "Cette semaine",
+      "analyzed": "Analysés par IA"
+    },
+    "search": {
+      "placeholder": "Rechercher par nom, compétences ou poste..."
+    },
+    "empty": {
+      "title": "Aucun CV pour le moment",
+      "description": "Téléchargez des CV pour constituer votre bibliothèque de candidats",
+      "cta": "Téléchargez votre premier CV"
+    },
+    "card": {
+      "topFit": "Meilleure adéquation"
+    },
+    "uploadModal": {
+      "title": "Télécharger un CV",
+      "batchTitle": "Téléchargement groupé de CV",
+      "dragDrop": "Glissez-déposez les fichiers CV ici",
+      "formats": "Formats : PDF, DOCX, TXT",
+      "maxFiles": "Jusqu'à 10 fichiers à la fois",
+      "uploading": "Traitement...",
+      "duplicate": "Doublon"
+    },
+    "detail": {
+      "back": "Retour aux CV",
+      "title": "Détail du CV",
+      "tabs": {
+        "overview": "Aperçu",
+        "insights": "Analyses IA",
+        "jobFit": "Adéquation au poste",
+        "notes": "Notes et tags"
+      },
+      "actions": {
+        "archive": "Archiver"
+      },
+      "overview": {
+        "summary": "Résumé professionnel",
+        "skills": "Compétences",
+        "experience": "Expérience professionnelle",
+        "education": "Formation",
+        "certifications": "Certifications",
+        "projects": "Projets"
+      }
+    },
+    "insights": {
+      "generate": "Générer les analyses IA",
+      "generating": "Analyse du CV en cours...",
+      "generatingDesc": "Cela peut prendre 10 à 15 secondes",
+      "regenerate": "Régénérer les analyses",
+      "executiveSummary": "Synthèse",
+      "careerTrajectory": "Trajectoire de carrière",
+      "salaryEstimate": "Estimation salariale",
+      "marketCompetitiveness": "Compétitivité sur le marché",
+      "cultureFit": "Indicateurs d'adéquation culturelle",
+      "strengths": "Points forts",
+      "development": "Axes de développement",
+      "redFlags": "Points de vigilance",
+      "noRedFlags": "Aucun point de vigilance identifié",
+      "recommendedRoles": "Postes recommandés"
+    },
+    "jobFit": {
+      "analyze": "Analyser l'adéquation au poste",
+      "analyzing": "Comparaison avec vos offres d'emploi...",
+      "reanalyze": "Réanalyser l'adéquation",
+      "bestFit": "Meilleure adéquation",
+      "matchedSkills": "Compétences correspondantes",
+      "missingSkills": "Compétences critiques manquantes",
+      "recommendation": "Recommandation",
+      "noActiveRequests": "Aucune offre d'emploi active trouvée",
+      "noActiveRequestsDesc": "Créez d'abord une offre d'emploi pour voir l'analyse d'adéquation"
+    },
+    "notes": {
+      "tags": "Tags",
+      "addTag": "ex. senior, frontend, interviewé",
+      "notes": "Notes",
+      "notesPlaceholder": "Ajoutez des notes sur ce candidat...",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "saved": "Enregistré !"
     }
   }
 }

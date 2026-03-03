@@ -24,6 +24,7 @@ import usageRouter from './routes/usage.js';
 import demoRouter from './routes/demo.js';
 import checkoutRouter from './routes/checkout.js';
 import adminRouter from './routes/admin.js';
+import resumesRouter from './routes/resumes.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
 import { logger } from './services/LoggerService.js';
@@ -65,6 +66,7 @@ app.use('/api/v1/usage', usageRouter);
 app.use('/api/v1/request-demo', demoRouter);
 app.use('/api/v1', checkoutRouter);
 app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/resumes', resumesRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {

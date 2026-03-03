@@ -4,6 +4,7 @@ import { Message, LLMOptions, LLMProvider, LLMResponse } from '../../types/index
 export class GoogleProvider implements LLMProvider {
   private genAI: GoogleGenerativeAI;
   private defaultModel: string;
+  private readonly retryDelayMs = 800;
 
   constructor(apiKey: string, defaultModel: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
@@ -48,7 +49,7 @@ export class GoogleProvider implements LLMProvider {
       prompt += `${role}: ${msg.content}\n\n`;
     }
 
-    const result = await model.generateContent(prompt);
+    const result = await this.generateContentWithRetry(model, prompt);
     const response = result.response;
     const text = response.text();
 
@@ -68,5 +69,66 @@ export class GoogleProvider implements LLMProvider {
       },
       model: modelName,
     };
+  }
+
+  private async generateContentWithRetry(
+    model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>,
+    prompt: string
+  ) {
+    const maxAttempts = 2;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        return await model.generateContent(prompt);
+      } catch (error) {
+        const isLastAttempt = attempt === maxAttempts;
+        if (isLastAttempt || !this.shouldRetryHighDemandError(error)) {
+          throw error;
+        }
+
+        await this.sleep(this.retryDelayMs);
+      }
+    }
+
+    throw new Error('Failed to generate content after retry');
+  }
+
+  private shouldRetryHighDemandError(error: unknown): boolean {
+    const fallbackMessage = String(error ?? '');
+    if (!error || typeof error !== 'object') {
+      return this.isRetryableMessage(fallbackMessage);
+    }
+
+    const err = error as {
+      status?: number | string;
+      statusCode?: number | string;
+      code?: number | string;
+      message?: string;
+    };
+
+    const rawStatus = err.status ?? err.statusCode ?? err.code;
+    const status = typeof rawStatus === 'string' ? Number(rawStatus) : rawStatus;
+    const message = typeof err.message === 'string' ? err.message : fallbackMessage;
+
+    if (status === 503) {
+      return true;
+    }
+
+    return this.isRetryableMessage(message);
+  }
+
+  private isRetryableMessage(message: string): boolean {
+    const normalized = message.toLowerCase();
+
+    return (
+      normalized.includes('503 service unavailable') ||
+      (normalized.includes('service unavailable') && normalized.includes('high demand')) ||
+      normalized.includes('currently experiencing high demand') ||
+      normalized.includes('spikes in demand are usually temporary')
+    );
+  }
+
+  private async sleep(ms: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

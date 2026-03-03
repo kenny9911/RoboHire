@@ -158,8 +158,18 @@ export class PDFService {
    */
   async extractText(buffer: Buffer): Promise<string> {
     try {
-      const data = await pdf(buffer);
-      return this.cleanText(data.text);
+      // Suppress noisy "Ran out of space in font private use area" warnings from pdf-parse
+      const originalWarn = console.warn;
+      console.warn = (...args: unknown[]) => {
+        if (typeof args[0] === 'string' && args[0].includes('private use area')) return;
+        originalWarn.apply(console, args);
+      };
+      try {
+        const data = await pdf(buffer);
+        return this.cleanText(data.text);
+      } finally {
+        console.warn = originalWarn;
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Failed to parse PDF: ${message}`);
@@ -175,12 +185,21 @@ export class PDFService {
     info: Record<string, unknown>;
   }> {
     try {
-      const data = await pdf(buffer);
-      return {
-        text: this.cleanText(data.text),
-        numPages: data.numpages,
-        info: data.info || {},
+      const originalWarn = console.warn;
+      console.warn = (...args: unknown[]) => {
+        if (typeof args[0] === 'string' && args[0].includes('private use area')) return;
+        originalWarn.apply(console, args);
       };
+      try {
+        const data = await pdf(buffer);
+        return {
+          text: this.cleanText(data.text),
+          numPages: data.numpages,
+          info: data.info || {},
+        };
+      } finally {
+        console.warn = originalWarn;
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Failed to parse PDF: ${message}`);

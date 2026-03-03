@@ -1276,7 +1276,13 @@ function UsersTab() {
 }
 
 function PricingTab() {
-  const [prices, setPrices] = useState({ starter: '', growth: '', business: '' });
+  const [prices, setPrices] = useState<Record<'USD' | 'CNY' | 'JPY', Record<'starter' | 'growth' | 'business', string>>>({
+    USD: { starter: '29', growth: '199', business: '399' },
+    CNY: { starter: '199', growth: '1369', business: '2749' },
+    JPY: { starter: '4559', growth: '31329', business: '62799' },
+  });
+  const [discountEnabled, setDiscountEnabled] = useState(false);
+  const [discountPercent, setDiscountPercent] = useState('0');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -1286,33 +1292,92 @@ function PricingTab() {
     adminFetch('/config')
       .then((data) => {
         const configs: { key: string; value: string }[] = data.data?.configs || [];
-        const p = { starter: '29', growth: '199', business: '399' };
+        const p: Record<'USD' | 'CNY' | 'JPY', Record<'starter' | 'growth' | 'business', string>> = {
+          USD: { starter: '29', growth: '199', business: '399' },
+          CNY: { starter: '199', growth: '1369', business: '2749' },
+          JPY: { starter: '4559', growth: '31329', business: '62799' },
+        };
+        let nextDiscountEnabled = false;
+        let nextDiscountPercent = '0';
+
         for (const c of configs) {
-          if (c.key === 'price_starter_monthly') p.starter = c.value;
-          if (c.key === 'price_growth_monthly') p.growth = c.value;
-          if (c.key === 'price_business_monthly') p.business = c.value;
+          if (c.key === 'price_starter_monthly') p.USD.starter = c.value;
+          if (c.key === 'price_growth_monthly') p.USD.growth = c.value;
+          if (c.key === 'price_business_monthly') p.USD.business = c.value;
+
+          const match = c.key.match(/^price_(usd|cny|jpy)_(starter|growth|business)_monthly$/i);
+          if (match) {
+            const currency = match[1].toUpperCase() as 'USD' | 'CNY' | 'JPY';
+            const tier = match[2].toLowerCase() as 'starter' | 'growth' | 'business';
+            p[currency][tier] = c.value;
+          }
+
+          if (c.key === 'pricing_discount_enabled') {
+            nextDiscountEnabled = c.value === 'true' || c.value === '1';
+          }
+          if (c.key === 'pricing_discount_percent') {
+            nextDiscountPercent = c.value;
+          }
         }
         setPrices(p);
+        setDiscountEnabled(nextDiscountEnabled);
+        setDiscountPercent(nextDiscountPercent);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
   const handleSave = async () => {
+    const parsePrice = (value: string) => Number.parseFloat(value);
+    const parsedPrices = {
+      USD: {
+        starter: parsePrice(prices.USD.starter),
+        growth: parsePrice(prices.USD.growth),
+        business: parsePrice(prices.USD.business),
+      },
+      CNY: {
+        starter: parsePrice(prices.CNY.starter),
+        growth: parsePrice(prices.CNY.growth),
+        business: parsePrice(prices.CNY.business),
+      },
+      JPY: {
+        starter: parsePrice(prices.JPY.starter),
+        growth: parsePrice(prices.JPY.growth),
+        business: parsePrice(prices.JPY.business),
+      },
+    };
+
+    const invalidPrice = Object.values(parsedPrices).some((currencyPrices) =>
+      Object.values(currencyPrices).some((price) => !Number.isFinite(price) || price <= 0)
+    );
+    if (invalidPrice) {
+      setError('All prices must be positive numbers');
+      return;
+    }
+
+    const parsedDiscountPercent = Number.parseFloat(discountPercent || '0');
+    if (discountEnabled && (!Number.isFinite(parsedDiscountPercent) || parsedDiscountPercent <= 0 || parsedDiscountPercent >= 100)) {
+      setError('Discount must be a number greater than 0 and less than 100');
+      return;
+    }
+
     setSaving(true);
     setMessage('');
     setError('');
     try {
-      const body: Record<string, number> = {};
-      if (prices.starter) body.starter = parseInt(prices.starter);
-      if (prices.growth) body.growth = parseInt(prices.growth);
-      if (prices.business) body.business = parseInt(prices.business);
+      const body = {
+        prices: parsedPrices,
+        discount: {
+          enabled: discountEnabled,
+          percentOff: discountEnabled ? Number(parsedDiscountPercent.toFixed(2)) : 0,
+        },
+      };
 
       await adminFetch('/config/pricing', {
         method: 'POST',
         body: JSON.stringify(body),
       });
-      setMessage('Prices updated successfully. New subscribers will see the updated prices.');
+      setMessage('Pricing updated successfully. New subscribers will see the latest prices and discount settings.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update prices');
     } finally {
@@ -1323,34 +1388,88 @@ function PricingTab() {
   if (loading) return <p className="text-sm text-gray-500 p-6">Loading pricing config...</p>;
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-4xl">
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Subscription Pricing</h3>
         <p className="text-sm text-gray-500 mb-6">
-          Set monthly prices for each plan. Changes apply to new subscribers and renewals. Existing subscribers keep their current pricing until their next billing cycle.
+          Set monthly prices for each plan and currency. Changes apply to new subscribers and renewals. Existing subscribers keep their current pricing until their next billing cycle.
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {([
-            { key: 'starter' as const, label: 'Starter', color: 'border-l-blue-400' },
-            { key: 'growth' as const, label: 'Growth', color: 'border-l-emerald-400' },
-            { key: 'business' as const, label: 'Business', color: 'border-l-purple-400' },
-          ]).map((plan) => (
-            <div key={plan.key} className={`border-l-4 ${plan.color} pl-4`}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{plan.label}</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={prices[plan.key]}
-                  onChange={(e) => setPrices({ ...prices, [plan.key]: e.target.value })}
-                  className="w-full pl-7 pr-12 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">/mo</span>
+            { code: 'USD' as const, symbol: '$', localeLabel: 'US Dollar' },
+            { code: 'CNY' as const, symbol: '¥', localeLabel: 'Chinese Yuan' },
+            { code: 'JPY' as const, symbol: '¥', localeLabel: 'Japanese Yen' },
+          ]).map((currency) => (
+            <div key={currency.code} className="rounded-xl border border-gray-200 p-4">
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-900">{currency.code}</h4>
+                <p className="text-xs text-gray-500">{currency.localeLabel}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {([
+                  { key: 'starter' as const, label: 'Starter', color: 'border-l-blue-400' },
+                  { key: 'growth' as const, label: 'Growth', color: 'border-l-emerald-400' },
+                  { key: 'business' as const, label: 'Business', color: 'border-l-purple-400' },
+                ]).map((plan) => (
+                  <div key={plan.key} className={`border-l-4 ${plan.color} pl-3`}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{plan.label}</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{currency.symbol}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step={currency.code === 'USD' ? '0.01' : '1'}
+                        value={prices[currency.code][plan.key]}
+                        onChange={(e) => setPrices((prev) => ({
+                          ...prev,
+                          [currency.code]: {
+                            ...prev[currency.code],
+                            [plan.key]: e.target.value,
+                          },
+                        }))}
+                        className="w-full pl-7 pr-12 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">/mo</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-6 rounded-xl border border-gray-200 p-4">
+          <h4 className="text-sm font-semibold text-gray-900 mb-3">Discount</h4>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-5">
+            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={discountEnabled}
+                onChange={(e) => setDiscountEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              Enable discount for new checkouts
+            </label>
+            <div className="relative w-full md:w-56">
+              <input
+                type="number"
+                min="0"
+                max="99.99"
+                step="0.01"
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(e.target.value)}
+                disabled={!discountEnabled}
+                className="w-full rounded-lg border border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-400"
+                placeholder="0"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            This applies to new Stripe checkouts only. Existing subscriptions remain on their current pricing.
+          </p>
         </div>
 
         <div className="mt-6 flex items-center gap-3">
@@ -1367,7 +1486,7 @@ function PricingTab() {
 
         <div className="mt-6 rounded-lg bg-amber-50 border border-amber-200 p-4">
           <p className="text-sm text-amber-800">
-            <strong>Note:</strong> Stripe prices are immutable. Updating prices will create new Stripe Price objects and archive the old ones. Existing active subscriptions will continue at their current price until renewal.
+            <strong>Note:</strong> Stripe prices are immutable. Updating USD prices creates new Stripe Price objects and archives old ones. Currency display values for CNY/JPY are controlled here for the pricing page.
           </p>
         </div>
       </div>

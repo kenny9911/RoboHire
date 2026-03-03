@@ -614,6 +614,101 @@ export interface EvaluateInterviewRequest {
   userInstructions?: string;
 }
 
+// Resume Insight Types
+export interface ResumeInsightInput {
+  parsedResume: ParsedResume;
+  resumeText: string;
+}
+
+export interface ResumeInsight {
+  executiveSummary: string;
+  careerTrajectory: {
+    direction: 'Upward' | 'Lateral' | 'Declining' | 'Early Career' | 'Career Change';
+    analysis: string;
+    keyTransitions: string[];
+    progressionRate: string;
+  };
+  salaryEstimate: {
+    rangeLow: string;
+    rangeHigh: string;
+    currency: string;
+    confidence: 'High' | 'Medium' | 'Low';
+    factors: string[];
+    marketContext: string;
+  };
+  marketCompetitiveness: {
+    score: number;
+    level: 'Highly Sought-After' | 'Competitive' | 'Average' | 'Below Average';
+    inDemandSkills: string[];
+    rareSkills: string[];
+    commoditySkills: string[];
+    marketTrends: string;
+  };
+  strengthsAndDevelopment: {
+    coreStrengths: Array<{
+      strength: string;
+      evidence: string;
+      impact: string;
+    }>;
+    developmentAreas: Array<{
+      area: string;
+      currentLevel: string;
+      recommendation: string;
+    }>;
+  };
+  cultureFitIndicators: {
+    workStyle: string[];
+    values: string[];
+    environmentPreferences: string[];
+    managementStyle: string;
+  };
+  redFlags: Array<{
+    flag: string;
+    severity: 'High' | 'Medium' | 'Low';
+    details: string;
+    mitigatingFactors: string;
+  }>;
+  recommendedRoles: Array<{
+    roleType: string;
+    industry: string;
+    seniorityLevel: string;
+    fitReason: string;
+  }>;
+}
+
+// Job Fit Types
+export interface JobFitInput {
+  parsedResume: ParsedResume;
+  resumeText: string;
+  hiringRequests: Array<{
+    id: string;
+    title: string;
+    requirements: string;
+    jobDescription?: string;
+  }>;
+}
+
+export interface JobFitResult {
+  fits: Array<{
+    hiringRequestId: string;
+    hiringRequestTitle: string;
+    fitScore: number;
+    fitGrade: string;
+    verdict: 'Strong Fit' | 'Good Fit' | 'Moderate Fit' | 'Weak Fit' | 'Not a Fit';
+    matchedSkills: string[];
+    missingCriticalSkills: string[];
+    experienceAlignment: string;
+    topReasons: string[];
+    recommendation: string;
+  }>;
+  bestFit: {
+    hiringRequestId: string;
+    hiringRequestTitle: string;
+    reason: string;
+  } | null;
+  candidateSummary: string;
+}
+
 // API Response Types
 export interface APIResponse<T> {
   success: boolean;

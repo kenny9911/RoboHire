@@ -342,6 +342,15 @@
     "errorCreating": "リクエスト作成中に問題が発生しました: ",
     "tryAgain": "もう一度お試しください。問題が続く場合はサポートへお問い合わせください。",
     "errorGeneric": "リクエスト作成中に問題が発生しました。もう一度お試しください。",
+    "thinking": {
+      "title": "思考中...",
+      "analyzeTitle": "要件を分析しています",
+      "analyzeThought": "職種の文脈、要件、不足情報を抽出しています。",
+      "benchmarkTitle": "職種の期待値を照合しています",
+      "benchmarkThought": "あなたの要望を、この職種で実績のある採用パターンと比較しています。",
+      "draftTitle": "提案を作成しています",
+      "draftThought": "実行可能な提案、確認質問、次のステップを準備しています。"
+    },
     "quickRoles": {
       "engineer": "ソフトウェアエンジニア",
       "pm": "プロダクトマネージャー",
@@ -354,6 +363,16 @@
     "inputPlaceholder": "理想の候補者について教えてください...",
     "uploadJd": "職務記述をアップロード",
     "quickStartFromJd": "職務記述に基づく候補者",
+    "defaultRoleLabel": "この職種",
+    "suggestions": {
+      "title": "こんな質問を試してください",
+      "general1": "{{role}}の必須スキルと歓迎スキルを整理して。",
+      "general2": "この職種向けの面接計画と評価シートを提案して。",
+      "general3": "最終版の求人票を今作成して。",
+      "confirm1": "このJDを8つの箇条書きに要約して。",
+      "confirm2": "給与レンジと希望開始日を追加して。",
+      "confirm3": "このJDをリモートファースト候補者向けに最適化して。"
+    },
     "heroTitle": "AIで採用を始める",
     "heroSubtitle": "求める人材を教えてください。AIが候補者の検索・スクリーニング・評価を支援します。",
     "templatesTitle": "人気の職種テンプレート",
@@ -537,7 +556,8 @@
       "apiKeys": "APIキー",
       "apiPlayground": "API テスト",
       "account": "アカウント",
-      "usage": "使用状況"
+      "usage": "使用状況",
+      "resumes": "履歴書ライブラリ"
     },
     "welcome": "おかえりなさい",
     "user": "ユーザー",
@@ -822,6 +842,8 @@
     "customBadge": "カスタム",
     "customPrice": "カスタム",
     "redirecting": "リダイレクト中...",
+    "currentPlanCta": "現在のプラン",
+    "upgradeOnlyCta": "アップグレードのみ",
     "starter": {
       "name": "スターター",
       "subtitle": "個人で始める方向け",
@@ -980,6 +1002,60 @@
       "viewReceipt": "領収書"
     }
   },
+  "usage": {
+    "title": "API 使用量",
+    "apiCalls": "API コール",
+    "inputTokens": "入力トークン",
+    "outputTokens": "出力トークン",
+    "totalCost": "合計費用",
+    "empty": "使用データがありません。API を呼び出すとここにデータが表示されます。",
+    "inactive": "無効",
+    "range": {
+      "7d": "7 日間",
+      "30d": "30 日間",
+      "90d": "90 日間",
+      "all": "全期間"
+    },
+    "chart": {
+      "callsOverTime": "API コール推移",
+      "calls": "コール数",
+      "tokenUsage": "トークン使用量（入力 vs 出力）",
+      "input": "入力",
+      "output": "出力"
+    },
+    "table": {
+      "byEndpoint": "エンドポイント別",
+      "endpoint": "エンドポイント",
+      "calls": "コール数",
+      "tokens": "トークン",
+      "cost": "費用",
+      "byKey": "API キー別",
+      "key": "キー"
+    },
+    "callHistory": {
+      "title": "API コール履歴",
+      "empty": "API コール記録がありません。",
+      "time": "時間",
+      "endpoint": "エンドポイント",
+      "status": "ステータス",
+      "duration": "所要時間",
+      "tokens": "トークン",
+      "cost": "費用",
+      "view": "表示",
+      "prev": "前へ",
+      "next": "次へ",
+      "pageInfo": "{{page}} / {{total}} ページ",
+      "back": "使用量に戻る",
+      "detailTitle": "API コール詳細",
+      "notFound": "コールが見つかりません",
+      "llmCalls": "LLM コール",
+      "requestPayload": "入力パラメータ",
+      "responsePayload": "AI 出力",
+      "model": "モデル",
+      "apiKey": "API キー",
+      "sessionAuth": "セッション"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - AI採用プラットフォーム",
     "defaultDescription": "他社に先駆けて優秀な人材を採用。AIが自動で履歴書をスクリーニング、面接を実施し、包括的な評価レポートを提供します。",
@@ -1022,6 +1098,94 @@
       "evaluate": { "title": "面接評価API", "desc": "AI面接評価のAPIリファレンス。" },
       "webhooks": { "title": "Webhooks", "desc": "採用イベントのリアルタイム通知を受け取るWebhookの設定。" },
       "errors": { "title": "エラーハンドリング", "desc": "RoboHire APIのエラーコード、レスポンスフォーマット、トラブルシューティングガイド。" }
+    }
+  },
+  "resumeLibrary": {
+    "title": "履歴書ライブラリ",
+    "subtitle": "候補者の履歴書を管理・分析",
+    "upload": "履歴書をアップロード",
+    "uploadBatch": "一括アップロード",
+    "stats": {
+      "total": "履歴書総数",
+      "thisWeek": "今週の追加",
+      "analyzed": "AI分析済み"
+    },
+    "search": {
+      "placeholder": "名前、スキル、職種で検索..."
+    },
+    "empty": {
+      "title": "履歴書がありません",
+      "description": "履歴書をアップロードして候補者ライブラリを構築しましょう",
+      "cta": "最初の履歴書をアップロード"
+    },
+    "card": {
+      "topFit": "最適マッチ"
+    },
+    "uploadModal": {
+      "title": "履歴書をアップロード",
+      "batchTitle": "履歴書を一括アップロード",
+      "dragDrop": "履歴書ファイルをここにドラッグ＆ドロップ",
+      "formats": "対応形式：PDF、DOCX、TXT",
+      "maxFiles": "一度に最大10ファイル",
+      "uploading": "処理中...",
+      "duplicate": "重複"
+    },
+    "detail": {
+      "back": "履歴書一覧に戻る",
+      "title": "履歴書詳細",
+      "tabs": {
+        "overview": "概要",
+        "insights": "AIインサイト",
+        "jobFit": "職種適性",
+        "notes": "メモ・タグ"
+      },
+      "actions": {
+        "archive": "アーカイブ"
+      },
+      "overview": {
+        "summary": "職務概要",
+        "skills": "スキル",
+        "experience": "職歴",
+        "education": "学歴",
+        "certifications": "資格",
+        "projects": "プロジェクト"
+      }
+    },
+    "insights": {
+      "generate": "AIインサイトを生成",
+      "generating": "履歴書を分析中...",
+      "generatingDesc": "10〜15秒ほどかかります",
+      "regenerate": "インサイトを再生成",
+      "executiveSummary": "総合評価",
+      "careerTrajectory": "キャリア軌跡",
+      "salaryEstimate": "年収推定",
+      "marketCompetitiveness": "市場競争力",
+      "cultureFit": "カルチャーフィット指標",
+      "strengths": "コア強み",
+      "development": "成長領域",
+      "redFlags": "注意事項",
+      "noRedFlags": "注意事項はありません",
+      "recommendedRoles": "推奨ポジション"
+    },
+    "jobFit": {
+      "analyze": "職種適性を分析",
+      "analyzing": "求人案件とマッチング中...",
+      "reanalyze": "適性を再分析",
+      "bestFit": "最適マッチ",
+      "matchedSkills": "一致するスキル",
+      "missingSkills": "不足する重要スキル",
+      "recommendation": "推薦",
+      "noActiveRequests": "有効な求人案件がありません",
+      "noActiveRequestsDesc": "職種適性分析を表示するには、まず求人案件を作成してください"
+    },
+    "notes": {
+      "tags": "タグ",
+      "addTag": "例：シニア、フロントエンド、面接済み",
+      "notes": "メモ",
+      "notesPlaceholder": "この候補者についてのメモを追加...",
+      "save": "保存",
+      "saving": "保存中...",
+      "saved": "保存しました！"
     }
   }
 }

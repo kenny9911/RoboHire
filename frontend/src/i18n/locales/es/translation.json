@@ -342,6 +342,15 @@
     "errorCreating": "Hubo un problema al crear tu solicitud: ",
     "tryAgain": "Inténtalo de nuevo o contacta soporte si el problema persiste.",
     "errorGeneric": "Hubo un problema al crear tu solicitud. Inténtalo de nuevo.",
+    "thinking": {
+      "title": "Pensando...",
+      "analyzeTitle": "Analizando tu solicitud",
+      "analyzeThought": "Extrayendo el contexto del rol, requisitos y detalles faltantes.",
+      "benchmarkTitle": "Comparando expectativas del rol",
+      "benchmarkThought": "Comparando tus necesidades con patrones de contratación probados para este rol.",
+      "draftTitle": "Redactando recomendaciones",
+      "draftThought": "Preparando orientación accionable, preguntas de aclaración y próximos pasos."
+    },
     "quickRoles": {
       "engineer": "Ingeniero de Software",
       "pm": "Gerente de Producto",
@@ -354,6 +363,16 @@
     "inputPlaceholder": "Describe a tu candidato ideal...",
     "uploadJd": "Subir descripción del puesto",
     "quickStartFromJd": "candidato basado en la descripción del puesto",
+    "defaultRoleLabel": "este rol",
+    "suggestions": {
+      "title": "Prueba preguntar",
+      "general1": "Refina las habilidades imprescindibles vs deseables para {{role}}.",
+      "general2": "Sugiere un plan de entrevistas y una scorecard para este rol.",
+      "general3": "Redacta ahora la descripción final del puesto.",
+      "confirm1": "Resume la JD en 8 viñetas.",
+      "confirm2": "Añade rango salarial y fecha objetivo de inicio.",
+      "confirm3": "Adapta esta JD para candidatos con enfoque remote-first."
+    },
     "heroTitle": "Empieza a contratar con IA",
     "heroSubtitle": "Cuéntanos a quién buscas. Nuestra IA te ayudará a encontrar, filtrar y evaluar candidatos automáticamente.",
     "templatesTitle": "Plantillas de roles populares",
@@ -537,7 +556,8 @@
       "apiKeys": "Claves API",
       "apiPlayground": "API de prueba",
       "account": "Cuenta",
-      "usage": "Uso"
+      "usage": "Uso",
+      "resumes": "Currículos"
     },
     "welcome": "Bienvenido de nuevo",
     "user": "ahí",
@@ -980,6 +1000,60 @@
       "viewReceipt": "Recibo"
     }
   },
+  "usage": {
+    "title": "Uso de API",
+    "apiCalls": "Llamadas API",
+    "inputTokens": "Tokens de entrada",
+    "outputTokens": "Tokens de salida",
+    "totalCost": "Costo total",
+    "empty": "Sin datos de uso aún. Realiza llamadas a la API para ver datos aquí.",
+    "inactive": "Inactivo",
+    "range": {
+      "7d": "7 Días",
+      "30d": "30 Días",
+      "90d": "90 Días",
+      "all": "Todo"
+    },
+    "chart": {
+      "callsOverTime": "Llamadas API en el tiempo",
+      "calls": "Llamadas",
+      "tokenUsage": "Uso de tokens (Entrada vs Salida)",
+      "input": "Entrada",
+      "output": "Salida"
+    },
+    "table": {
+      "byEndpoint": "Uso por endpoint",
+      "endpoint": "Endpoint",
+      "calls": "Llamadas",
+      "tokens": "Tokens",
+      "cost": "Costo",
+      "byKey": "Uso por clave API",
+      "key": "Clave"
+    },
+    "callHistory": {
+      "title": "Historial de llamadas API",
+      "empty": "No hay llamadas API registradas.",
+      "time": "Hora",
+      "endpoint": "Endpoint",
+      "status": "Estado",
+      "duration": "Duración",
+      "tokens": "Tokens",
+      "cost": "Costo",
+      "view": "Ver",
+      "prev": "Anterior",
+      "next": "Siguiente",
+      "pageInfo": "Página {{page}} de {{total}}",
+      "back": "Volver al uso",
+      "detailTitle": "Detalle de llamada API",
+      "notFound": "Llamada no encontrada",
+      "llmCalls": "Llamadas LLM",
+      "requestPayload": "Parámetros de entrada",
+      "responsePayload": "Salida de IA",
+      "model": "Modelo",
+      "apiKey": "Clave API",
+      "sessionAuth": "Sesión"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - Plataforma de Contratación con IA",
     "defaultDescription": "Contrata candidatos de élite antes que otros. Nuestro agente de contratación con IA filtra currículos, realiza entrevistas y genera informes de evaluación completos.",
@@ -1022,6 +1096,94 @@
       "evaluate": { "title": "API Evaluar Entrevista", "desc": "Referencia para la evaluación de entrevistas con IA." },
       "webhooks": { "title": "Webhooks", "desc": "Configura webhooks para notificaciones en tiempo real." },
       "errors": { "title": "Manejo de Errores", "desc": "Códigos de error, formatos de respuesta y guía de solución de problemas." }
+    }
+  },
+  "resumeLibrary": {
+    "title": "Biblioteca de Currículos",
+    "subtitle": "Gestiona y analiza los currículos de tus candidatos",
+    "upload": "Subir Currículo",
+    "uploadBatch": "Subida Masiva",
+    "stats": {
+      "total": "Total de Currículos",
+      "thisWeek": "Esta Semana",
+      "analyzed": "Analizados por IA"
+    },
+    "search": {
+      "placeholder": "Buscar por nombre, habilidades o puesto..."
+    },
+    "empty": {
+      "title": "Aún no hay currículos",
+      "description": "Sube currículos para construir tu biblioteca de candidatos",
+      "cta": "Sube tu Primer Currículo"
+    },
+    "card": {
+      "topFit": "Mejor Ajuste"
+    },
+    "uploadModal": {
+      "title": "Subir Currículo",
+      "batchTitle": "Subida Masiva de Currículos",
+      "dragDrop": "Arrastra y suelta archivos de currículos aquí",
+      "formats": "Formatos: PDF, DOCX, TXT",
+      "maxFiles": "Hasta 10 archivos a la vez",
+      "uploading": "Procesando...",
+      "duplicate": "Duplicado"
+    },
+    "detail": {
+      "back": "Volver a Currículos",
+      "title": "Detalle del Currículo",
+      "tabs": {
+        "overview": "Resumen",
+        "insights": "Análisis IA",
+        "jobFit": "Ajuste al Puesto",
+        "notes": "Notas y Etiquetas"
+      },
+      "actions": {
+        "archive": "Archivar"
+      },
+      "overview": {
+        "summary": "Resumen Profesional",
+        "skills": "Habilidades",
+        "experience": "Experiencia Laboral",
+        "education": "Educación",
+        "certifications": "Certificaciones",
+        "projects": "Proyectos"
+      }
+    },
+    "insights": {
+      "generate": "Generar Análisis IA",
+      "generating": "Analizando currículo...",
+      "generatingDesc": "Esto puede tardar 10-15 segundos",
+      "regenerate": "Regenerar análisis",
+      "executiveSummary": "Resumen Ejecutivo",
+      "careerTrajectory": "Trayectoria Profesional",
+      "salaryEstimate": "Estimación Salarial",
+      "marketCompetitiveness": "Competitividad en el Mercado",
+      "cultureFit": "Indicadores de Ajuste Cultural",
+      "strengths": "Fortalezas Principales",
+      "development": "Áreas de Desarrollo",
+      "redFlags": "Señales de Alerta",
+      "noRedFlags": "No se identificaron señales de alerta",
+      "recommendedRoles": "Puestos Recomendados"
+    },
+    "jobFit": {
+      "analyze": "Analizar Ajuste al Puesto",
+      "analyzing": "Comparando con tus solicitudes de contratación...",
+      "reanalyze": "Reanalizar ajuste",
+      "bestFit": "Mejor Ajuste",
+      "matchedSkills": "Habilidades Coincidentes",
+      "missingSkills": "Habilidades Críticas Faltantes",
+      "recommendation": "Recomendación",
+      "noActiveRequests": "No se encontraron solicitudes de contratación activas",
+      "noActiveRequestsDesc": "Crea primero una solicitud de contratación para ver el análisis de ajuste"
+    },
+    "notes": {
+      "tags": "Etiquetas",
+      "addTag": "ej. senior, frontend, entrevistado",
+      "notes": "Notas",
+      "notesPlaceholder": "Añade notas sobre este candidato...",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "saved": "¡Guardado!"
     }
   }
 }

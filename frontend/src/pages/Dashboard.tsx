@@ -591,7 +591,11 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900">{t('dashboard.actions.usage', 'API Usage')}</h3>
-                    <p className="text-xs text-gray-500">{t('dashboard.actions.usageDesc', 'View usage & costs')}</p>
+                    <p className="text-xs text-gray-500">
+                      {user?.role === 'admin'
+                        ? t('dashboard.actions.usageDesc', 'View usage & costs')
+                        : t('dashboard.actions.usageDescNoCost', 'View usage')}
+                    </p>
                   </div>
                 </div>
               </Link>

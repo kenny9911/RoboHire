@@ -42,6 +42,7 @@ model User {
   apiRequestLogs  ApiRequestLog[]
   llmCallLogs     LLMCallLog[]
   topUpRecords    TopUpRecord[]
+  resumes         Resume[]
   adminAdjustmentsReceived  AdminAdjustment[] @relation("AdminAdjustmentsReceived")
   adminAdjustmentsMade      AdminAdjustment[] @relation("AdminAdjustmentsMade")
 
@@ -73,8 +74,9 @@ model HiringRequest {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  candidates Candidate[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  candidates     Candidate[]
+  resumeJobFits  ResumeJobFit[]
 
   @@index([userId])
   @@index([status])
@@ -183,6 +185,8 @@ model ApiRequestLog {
   model            String?
   ipAddress        String?
   userAgent        String?
+  requestPayload   Json?
+  responsePayload  Json?
   createdAt        DateTime @default(now())
 
   user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -278,4 +282,57 @@ model AppConfig {
   updatedBy String?
 
   @@index([key])
+}
+
+model Resume {
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
+  email           String?
+  phone           String?
+  currentRole     String?
+  experienceYears String?
+  resumeText      String    @db.Text
+  parsedData      Json?
+  insightData     Json?
+  jobFitData      Json?
+  fileName        String?
+  fileSize        Int?
+  fileType        String?
+  contentHash     String?
+  status          String    @default("active")
+  source          String    @default("upload")
+  tags            String[]  @default([])
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeJobFits   ResumeJobFit[]
+
+  @@unique([userId, contentHash])
+  @@index([userId])
+  @@index([userId, status])
+  @@index([name])
+  @@index([contentHash])
+  @@index([createdAt])
+}
+
+model ResumeJobFit {
+  id               String   @id @default(cuid())
+  resumeId         String
+  hiringRequestId  String
+  fitScore         Int?
+  fitGrade         String?
+  fitData          Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  resume           Resume         @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  hiringRequest    HiringRequest  @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
+
+  @@unique([resumeId, hiringRequestId])
+  @@index([resumeId])
+  @@index([hiringRequestId])
+  @@index([fitScore])
 }
