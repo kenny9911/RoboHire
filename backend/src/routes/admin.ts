@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import prisma from '../lib/prisma.js';
+import { clearLimitsCache } from '../middleware/usageMeter.js';
 import { updatePriceId } from './checkout.js';
 import {
   PRICING_CURRENCIES,
@@ -1291,6 +1292,89 @@ router.post('/config/pricing', async (req, res) => {
   } catch (error) {
     console.error('Admin pricing update error:', error);
     res.status(500).json({ success: false, error: 'Failed to update pricing' });
+  }
+});
+
+/**
+ * POST /api/v1/admin/config/limits
+ * Update plan usage limits and pay-per-use rates.
+ * Body:
+ * {
+ *   limits?: { free?: { interviews?: number, matches?: number }, starter?: {...}, growth?: {...}, business?: {...} },
+ *   payPerUse?: { interview?: number, match?: number }
+ * }
+ */
+router.post('/config/limits', async (req, res) => {
+  try {
+    const { limits, payPerUse } = req.body ?? {};
+    const upserts: { key: string; value: string }[] = [];
+    const tiers = ['free', 'starter', 'growth', 'business'] as const;
+
+    if (limits) {
+      for (const tier of tiers) {
+        const tierLimits = limits[tier];
+        if (!tierLimits) continue;
+        for (const action of ['interviews', 'matches'] as const) {
+          if (tierLimits[action] !== undefined) {
+            const val = Number(tierLimits[action]);
+            if (!Number.isFinite(val) || val < 0 || !Number.isInteger(val)) {
+              res.status(400).json({ success: false, error: `Invalid limit for ${tier}.${action}: must be a non-negative integer` });
+              return;
+            }
+            upserts.push({ key: `limit_${tier}_${action}`, value: String(val) });
+          }
+        }
+      }
+    }
+
+    if (payPerUse) {
+      for (const action of ['interview', 'match'] as const) {
+        if (payPerUse[action] !== undefined) {
+          const val = Number(payPerUse[action]);
+          if (!Number.isFinite(val) || val <= 0) {
+            res.status(400).json({ success: false, error: `Invalid pay-per-use rate for ${action}: must be a positive number` });
+            return;
+          }
+          upserts.push({ key: `payperuse_${action}`, value: String(val) });
+        }
+      }
+    }
+
+    if (upserts.length === 0) {
+      res.status(400).json({ success: false, error: 'No valid limits or rates provided' });
+      return;
+    }
+
+    const adminId = req.user!.id;
+
+    await prisma.$transaction(async (tx) => {
+      for (const { key, value } of upserts) {
+        const existing = await tx.appConfig.findUnique({ where: { key } });
+        await tx.appConfig.upsert({
+          where: { key },
+          create: { key, value, updatedBy: adminId },
+          update: { value, updatedBy: adminId },
+        });
+        await tx.adminAdjustment.create({
+          data: {
+            userId: adminId,
+            adminId,
+            type: 'limits',
+            amount: Number(value),
+            oldValue: existing?.value ?? null,
+            newValue: value,
+            reason: `Admin updated ${key} to ${value}`,
+          },
+        });
+      }
+    });
+
+    clearLimitsCache();
+
+    res.json({ success: true, data: { updated: upserts.length } });
+  } catch (error) {
+    console.error('Admin limits update error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update limits' });
   }
 });
 

@@ -1598,6 +1598,218 @@ function PricingTab() {
           </p>
         </div>
       </div>
+
+      <UsageLimitsSection />
+    </div>
+  );
+}
+
+function UsageLimitsSection() {
+  const TIERS = ['free', 'starter', 'growth', 'business'] as const;
+  const TIER_LABELS: Record<string, string> = { free: 'Free', starter: 'Starter', growth: 'Growth', business: 'Business' };
+  const TIER_COLORS: Record<string, string> = { free: 'border-l-gray-300', starter: 'border-l-blue-400', growth: 'border-l-emerald-400', business: 'border-l-purple-400' };
+
+  const DEFAULTS: Record<string, { interviews: string; matches: string }> = {
+    free: { interviews: '0', matches: '0' },
+    starter: { interviews: '15', matches: '30' },
+    growth: { interviews: '120', matches: '240' },
+    business: { interviews: '280', matches: '500' },
+  };
+
+  const [limits, setLimits] = useState(DEFAULTS);
+  const [ppuInterview, setPpuInterview] = useState('2.00');
+  const [ppuMatch, setPpuMatch] = useState('0.40');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    adminFetch('/config')
+      .then((data) => {
+        const configs: { key: string; value: string }[] = data.data?.configs || [];
+        const next = { ...DEFAULTS };
+        let nextPpuInterview = '2.00';
+        let nextPpuMatch = '0.40';
+
+        for (const c of configs) {
+          const limitMatch = c.key.match(/^limit_(\w+)_(interviews|matches)$/);
+          if (limitMatch) {
+            const tier = limitMatch[1];
+            const action = limitMatch[2] as 'interviews' | 'matches';
+            if (next[tier]) {
+              next[tier] = { ...next[tier], [action]: c.value };
+            }
+          }
+          if (c.key === 'payperuse_interview') nextPpuInterview = c.value;
+          if (c.key === 'payperuse_match') nextPpuMatch = c.value;
+        }
+        setLimits(next);
+        setPpuInterview(nextPpuInterview);
+        setPpuMatch(nextPpuMatch);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage('');
+    setError('');
+    try {
+      const body: { limits: Record<string, { interviews: number; matches: number }>; payPerUse: { interview: number; match: number } } = {
+        limits: {},
+        payPerUse: {
+          interview: Number.parseFloat(ppuInterview),
+          match: Number.parseFloat(ppuMatch),
+        },
+      };
+
+      for (const tier of TIERS) {
+        const interviews = Number.parseInt(limits[tier].interviews, 10);
+        const matches = Number.parseInt(limits[tier].matches, 10);
+        if (!Number.isFinite(interviews) || interviews < 0 || !Number.isFinite(matches) || matches < 0) {
+          setError(`Invalid limits for ${TIER_LABELS[tier]}: must be non-negative integers`);
+          setSaving(false);
+          return;
+        }
+        body.limits[tier] = { interviews, matches };
+      }
+
+      if (!Number.isFinite(body.payPerUse.interview) || body.payPerUse.interview <= 0 ||
+          !Number.isFinite(body.payPerUse.match) || body.payPerUse.match <= 0) {
+        setError('Pay-per-use rates must be positive numbers');
+        setSaving(false);
+        return;
+      }
+
+      await adminFetch('/config/limits', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      setMessage('Usage limits updated successfully.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update limits');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <p className="text-sm text-gray-500 p-6 mt-6">Loading usage limits...</p>;
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-6 mt-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-1">API Usage Limits</h3>
+      <p className="text-sm text-gray-500 mb-6">
+        Set monthly usage limits for each subscription tier. Changes take effect immediately for all users on that tier (unless they have a per-user override).
+      </p>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-2 pr-4 font-medium text-gray-600">Tier</th>
+              <th className="text-left py-2 px-4 font-medium text-gray-600">Interviews / month</th>
+              <th className="text-left py-2 px-4 font-medium text-gray-600">Resume Matches / month</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TIERS.map((tier) => (
+              <tr key={tier} className="border-b border-gray-100">
+                <td className="py-3 pr-4">
+                  <span className={`inline-block border-l-4 ${TIER_COLORS[tier]} pl-2 font-medium text-gray-800`}>
+                    {TIER_LABELS[tier]}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={limits[tier].interviews}
+                    onChange={(e) => setLimits((prev) => ({
+                      ...prev,
+                      [tier]: { ...prev[tier], interviews: e.target.value },
+                    }))}
+                    className="w-28 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </td>
+                <td className="py-3 px-4">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={limits[tier].matches}
+                    onChange={(e) => setLimits((prev) => ({
+                      ...prev,
+                      [tier]: { ...prev[tier], matches: e.target.value },
+                    }))}
+                    className="w-28 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </td>
+              </tr>
+            ))}
+            <tr>
+              <td className="py-3 pr-4">
+                <span className="inline-block border-l-4 border-l-amber-400 pl-2 font-medium text-gray-400">
+                  Custom
+                </span>
+              </td>
+              <td className="py-3 px-4 text-gray-400 text-xs">Unlimited</td>
+              <td className="py-3 px-4 text-gray-400 text-xs">Unlimited</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-gray-200 p-4">
+        <h4 className="text-sm font-semibold text-gray-900 mb-3">Pay-Per-Use Rates</h4>
+        <p className="text-xs text-gray-500 mb-3">
+          Charged when users exceed their plan limits and have top-up balance.
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Interview (per use)</label>
+            <div className="relative w-36">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={ppuInterview}
+                onChange={(e) => setPpuInterview(e.target.value)}
+                className="w-full pl-7 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Resume Match (per use)</label>
+            <div className="relative w-36">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={ppuMatch}
+                onChange={(e) => setPpuMatch(e.target.value)}
+                className="w-full pl-7 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-center gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {saving ? 'Updating...' : 'Update Limits'}
+        </button>
+        {message && <p className="text-sm text-green-600 font-medium">{message}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </div>
     </div>
   );
 }
