@@ -385,31 +385,7 @@ export default function Pricing() {
     return `JPY ¥${value.toLocaleString('ja-JP')}`;
   };
 
-  const normalizeCurrencyAmount = (value: number) => {
-    if (displayCurrency === 'USD') {
-      return Math.round(value * 100) / 100;
-    }
-    return Math.round(value);
-  };
-
-  const applyDiscount = (value: number) => {
-    if (discountPercent <= 0) return normalizeCurrencyAmount(value);
-    return normalizeCurrencyAmount(value * (1 - discountPercent / 100));
-  };
-
-  const formatCurrencyAmount = (value: number) => {
-    if (displayCurrency === 'USD') {
-      const hasDecimals = Math.round(value * 100) % 100 !== 0;
-      return `USD $${value.toLocaleString('en-US', {
-        minimumFractionDigits: hasDecimals ? 2 : 0,
-        maximumFractionDigits: 2,
-      })}`;
-    }
-    if (displayCurrency === 'CNY') {
-      return `CNY ¥${value.toLocaleString('zh-CN')}`;
-    }
-    return `JPY ¥${value.toLocaleString('ja-JP')}`;
-  };
+ 
 
   const formatPrice = (plan: Plan) => {
     if (plan.custom) return null;
