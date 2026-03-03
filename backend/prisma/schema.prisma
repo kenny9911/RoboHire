@@ -47,7 +47,7 @@ model User {
   resumes         Resume[]
   adminAdjustmentsReceived  AdminAdjustment[] @relation("AdminAdjustmentsReceived")
   adminAdjustmentsMade      AdminAdjustment[] @relation("AdminAdjustmentsMade")
-
+  paymentRecords           PaymentRecord[]
   @@index([email])
   @@index([provider, providerId])
 }
