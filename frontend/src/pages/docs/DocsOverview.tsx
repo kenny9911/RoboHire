@@ -60,24 +60,24 @@ export default function DocsOverview() {
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(techArticleSchema)}</script>
       </Helmet>
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.overview.title', 'RoboHire Documentation')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.overview.intro', 'Welcome to the RoboHire documentation. Learn how to integrate AI-powered recruitment features into your application.')}
       </p>
 
       {/* Quick Start Card */}
-      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 mb-8 text-white">
+      <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl p-6 mb-8 text-white">
         <h2 className="text-xl font-semibold mb-2">
           {t('docs.overview.quickStartTitle', 'Get started in minutes')}
         </h2>
-        <p className="text-indigo-100 mb-4">
+        <p className="text-blue-100 mb-4">
           {t('docs.overview.quickStartDesc', 'Follow our quick start guide to make your first API call.')}
         </p>
         <Link
           to="/docs/quick-start"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white text-indigo-600 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 font-medium rounded-lg hover:bg-slate-100 transition-colors"
         >
           {t('docs.overview.quickStartCta', 'Quick Start Guide')}
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,29 +88,29 @@ export default function DocsOverview() {
 
       {/* Base URL */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-3">
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">
           {t('docs.overview.baseUrl', 'Base URL')}
         </h2>
-        <div className="bg-gray-100 rounded-lg px-4 py-3">
-          <code className="text-sm font-mono text-gray-800">https://api.robohire.io/v1</code>
+        <div className="bg-slate-100 rounded-lg px-4 py-3">
+          <code className="text-sm font-mono text-slate-800">https://api.robohire.io/v1</code>
         </div>
       </div>
 
       {/* Authentication */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-3">
+        <h2 className="text-xl font-semibold text-slate-900 mb-3">
           {t('docs.overview.authentication', 'Authentication')}
         </h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-slate-600 mb-4">
           {t('docs.overview.authDesc', 'All API requests require authentication using an API key. Include your key in the request headers:')}
         </p>
-        <div className="bg-gray-900 rounded-lg px-4 py-3">
-          <code className="text-sm font-mono text-gray-300">
+        <div className="bg-slate-900 rounded-lg px-4 py-3">
+          <code className="text-sm font-mono text-slate-300">
             Authorization: Bearer rh_your_api_key
           </code>
         </div>
-        <p className="text-sm text-gray-500 mt-2">
-          <Link to="/docs/authentication" className="text-indigo-600 hover:underline">
+        <p className="text-sm text-slate-500 mt-2">
+          <Link to="/docs/authentication" className="text-blue-600 hover:underline">
             {t('docs.overview.learnMoreAuth', 'Learn more about authentication')}
           </Link>
         </p>
@@ -118,7 +118,7 @@ export default function DocsOverview() {
 
       {/* Available Endpoints */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <h2 className="text-xl font-semibold text-slate-900 mb-4">
           {t('docs.overview.endpoints', 'Available Endpoints')}
         </h2>
         <div className="grid gap-4">
@@ -126,14 +126,14 @@ export default function DocsOverview() {
             <Link
               key={endpoint.href}
               to={endpoint.href}
-              className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+              className="block p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-gray-900">{endpoint.name}</h3>
-                  <p className="text-sm text-gray-600">{endpoint.description}</p>
+                  <h3 className="font-medium text-slate-900">{endpoint.name}</h3>
+                  <p className="text-sm text-slate-600">{endpoint.description}</p>
                 </div>
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>

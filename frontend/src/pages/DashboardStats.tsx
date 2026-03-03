@@ -83,42 +83,42 @@ export default function DashboardStats() {
     <div className="max-w-7xl mx-auto">
         <SEO title="Statistics" noIndex />
         <div className="mb-8">
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">
+          <h1 className="text-xl font-semibold text-slate-900 mb-2 landing-display">
             {t('stats.title', 'Statistics')}
           </h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             {t('stats.subtitle', 'Overview of your hiring pipeline')}
           </p>
         </div>
 
         {isLoading ? (
           <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="text-gray-500 mt-4">{t('dashboard.loading', 'Loading...')}</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-slate-500 mt-4">{t('dashboard.loading', 'Loading...')}</p>
           </div>
         ) : error ? (
           <div className="p-12 text-center text-rose-500">{error}</div>
         ) : stats ? (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-100 rounded-2xl p-5">
-                <p className="text-xs text-gray-500">{t('stats.cards.totalRequests', 'Total requests')}</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalRequests}</p>
-                <p className="text-xs text-gray-400 mt-2">
+              <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-5">
+                <p className="text-xs text-slate-500">{t('stats.cards.totalRequests', 'Total requests')}</p>
+                <p className="text-2xl font-semibold text-slate-900 landing-display">{stats.totalRequests}</p>
+                <p className="text-xs text-slate-400 mt-2">
                   {t('stats.cards.activeRequests', '{{count}} active', { count: stats.activeRequests })}
                 </p>
               </div>
-              <div className="bg-white border border-gray-100 rounded-2xl p-5">
-                <p className="text-xs text-gray-500">{t('stats.cards.totalCandidates', 'Total candidates')}</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalCandidates}</p>
-                <p className="text-xs text-gray-400 mt-2">
+              <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-5">
+                <p className="text-xs text-slate-500">{t('stats.cards.totalCandidates', 'Total candidates')}</p>
+                <p className="text-2xl font-semibold text-slate-900 landing-display">{stats.totalCandidates}</p>
+                <p className="text-xs text-slate-400 mt-2">
                   {t('stats.cards.invitationsSent', '{{count}} invitations sent', { count: stats.invitationsSent })}
                 </p>
               </div>
-              <div className="bg-white border border-gray-100 rounded-2xl p-5">
-                <p className="text-xs text-gray-500">{t('stats.cards.interviewsCompleted', 'Interviews completed')}</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.interviewsCompleted}</p>
-                <p className="text-xs text-gray-400 mt-2">
+              <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-5">
+                <p className="text-xs text-slate-500">{t('stats.cards.interviewsCompleted', 'Interviews completed')}</p>
+                <p className="text-2xl font-semibold text-slate-900 landing-display">{stats.interviewsCompleted}</p>
+                <p className="text-xs text-slate-400 mt-2">
                   {stats.avgMatchScore !== null
                     ? t('stats.cards.avgMatchScore', 'Avg match score {{score}}', { score: stats.avgMatchScore })
                     : t('stats.cards.avgMatchScoreEmpty', 'Avg match score --')}
@@ -127,59 +127,59 @@ export default function DashboardStats() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-white border border-gray-100 rounded-2xl p-6">
-                <h2 className="text-sm font-semibold text-gray-900 mb-4">
+              <div className="landing-gradient-stroke bg-white rounded-[28px] shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] p-6">
+                <h2 className="text-sm font-semibold text-slate-900 mb-4">
                   {t('stats.sections.requestStatus', 'Request status')}
                 </h2>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">{t('stats.status.active', 'Active')}</span>
-                    <span className="font-medium text-gray-900">{stats.activeRequests}</span>
+                    <span className="text-slate-500">{t('stats.status.active', 'Active')}</span>
+                    <span className="font-medium text-slate-900">{stats.activeRequests}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">{t('stats.status.paused', 'Paused')}</span>
-                    <span className="font-medium text-gray-900">{stats.pausedRequests}</span>
+                    <span className="text-slate-500">{t('stats.status.paused', 'Paused')}</span>
+                    <span className="font-medium text-slate-900">{stats.pausedRequests}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">{t('stats.status.closed', 'Closed')}</span>
-                    <span className="font-medium text-gray-900">{stats.closedRequests}</span>
+                    <span className="text-slate-500">{t('stats.status.closed', 'Closed')}</span>
+                    <span className="font-medium text-slate-900">{stats.closedRequests}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-100 rounded-2xl p-6">
-                <h2 className="text-sm font-semibold text-gray-900 mb-4">
+              <div className="landing-gradient-stroke bg-white rounded-[28px] shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] p-6">
+                <h2 className="text-sm font-semibold text-slate-900 mb-4">
                   {t('stats.sections.candidateStatus', 'Candidate status')}
                 </h2>
                 <div className="space-y-3 text-sm">
                   {candidateStatusRows.map((row) => (
                     <div key={row.status} className="flex items-center justify-between">
-                      <span className="text-gray-500">{row.label}</span>
-                      <span className="font-medium text-gray-900">{row.value}</span>
+                      <span className="text-slate-500">{row.label}</span>
+                      <span className="font-medium text-slate-900">{row.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-100 rounded-2xl p-6">
-                <h2 className="text-sm font-semibold text-gray-900 mb-4">
+              <div className="landing-gradient-stroke bg-white rounded-[28px] shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] p-6">
+                <h2 className="text-sm font-semibold text-slate-900 mb-4">
                   {t('stats.sections.recentRequests', 'Recent requests')}
                 </h2>
                 {recentRequests.length === 0 ? (
-                  <p className="text-sm text-gray-500">{t('stats.empty', 'No requests yet')}</p>
+                  <p className="text-sm text-slate-500">{t('stats.empty', 'No requests yet')}</p>
                 ) : (
                   <div className="space-y-3">
                     {recentRequests.map((request) => (
                       <div key={request.id} className="flex items-center justify-between text-sm">
                         <div>
-                          <p className="font-medium text-gray-900">{request.title}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="font-medium text-slate-900">{request.title}</p>
+                          <p className="text-xs text-slate-500">
                             {t('stats.requestCandidates', '{{count}} candidates', {
                               count: request._count?.candidates || 0,
                             })}
                           </p>
                         </div>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-slate-400">
                           {new Date(request.createdAt).toLocaleDateString()}
                         </span>
                       </div>

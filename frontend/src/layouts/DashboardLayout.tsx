@@ -77,7 +77,7 @@ const getNotificationIcon = (type: NotificationType) => {
       );
     default:
       return (
-        <div className={`${base} bg-indigo-100 text-indigo-700`}>
+        <div className={`${base} bg-blue-100 text-blue-700`}>
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -318,13 +318,13 @@ export default function DashboardLayout() {
     <>
       {/* Logo */}
       <div className="px-5 py-5">
-        <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold text-indigo-600">
+        <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold text-blue-700">
           <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span>RoboHire</span>
+          <span className="landing-display">RoboHire</span>
         </Link>
       </div>
 
@@ -339,11 +339,11 @@ export default function DashboardLayout() {
                 to={item.path}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <span className={active ? 'text-indigo-600' : 'text-gray-400'}>{item.icon}</span>
+                <span className={active ? 'text-blue-600' : 'text-slate-400'}>{item.icon}</span>
                 {t(item.labelKey, item.fallback)}
               </Link>
             );
@@ -353,11 +353,11 @@ export default function DashboardLayout() {
               to="/dashboard/admin"
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/dashboard/admin')
-                  ? 'bg-indigo-50 text-indigo-700'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <span className={isActive('/dashboard/admin') ? 'text-indigo-600' : 'text-gray-400'}>
+              <span className={isActive('/dashboard/admin') ? 'text-blue-600' : 'text-slate-400'}>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -369,7 +369,7 @@ export default function DashboardLayout() {
         </div>
 
         {/* Separator */}
-        <div className="my-4 border-t border-gray-200" />
+        <div className="my-4 border-t border-slate-200" />
 
         {/* Secondary links */}
         <div className="space-y-1">
@@ -377,9 +377,9 @@ export default function DashboardLayout() {
             <Link
               key={item.path}
               to={item.path}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
             >
-              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
               {t(item.labelKey, item.fallback)}
@@ -389,27 +389,27 @@ export default function DashboardLayout() {
       </nav>
 
       {/* User section */}
-      <div className="border-t border-gray-200 px-3 py-4">
+      <div className="border-t border-slate-200 px-3 py-4">
         <div className="relative mb-3" ref={usageSummaryRef}>
           <div className="flex items-center gap-2">
             <Link
               to="/dashboard/account"
               onClick={() => setUsageSummaryOpen(false)}
-              className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 -my-1 transition-colors hover:bg-gray-100"
+              className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 -my-1 transition-colors hover:bg-slate-100"
             >
               {user?.avatar ? (
                 <img src={user.avatar} alt="" className="h-9 w-9 rounded-full" />
               ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100">
-                  <span className="text-sm font-medium text-indigo-600">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+                  <span className="text-sm font-medium text-blue-600">
                     {user?.name?.[0] || user?.email?.[0] || 'U'}
                   </span>
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
-                <p className="truncate text-xs text-gray-500">{user?.email}</p>
-                <p className="mt-1 text-[11px] font-semibold tracking-wide text-indigo-600">
+                <p className="truncate text-sm font-medium text-slate-900">{user?.name || 'User'}</p>
+                <p className="truncate text-xs text-slate-500">{user?.email}</p>
+                <p className="mt-1 text-[11px] font-semibold tracking-wide text-blue-600">
                   {tierLabel}
                 </p>
               </div>
@@ -417,7 +417,7 @@ export default function DashboardLayout() {
             <button
               type="button"
               onClick={() => setUsageSummaryOpen((prev) => !prev)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors hover:border-indigo-300 hover:text-indigo-600"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:border-blue-300 hover:text-blue-600"
               aria-label={t('dashboard.accountUsage', 'View usage and credit')}
               aria-expanded={usageSummaryOpen}
               title={t('dashboard.accountUsage', 'View usage and credit')}
@@ -428,24 +428,24 @@ export default function DashboardLayout() {
             </button>
           </div>
           {usageSummaryOpen && (
-            <div className="absolute bottom-full right-0 z-20 mb-2 w-60 rounded-xl border border-gray-200 bg-white p-3 shadow-[0_18px_36px_-24px_rgba(15,23,42,0.75)]">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="absolute bottom-full right-0 z-20 mb-2 w-60 rounded-xl border border-slate-200 bg-white p-3 shadow-[0_18px_36px_-24px_rgba(15,23,42,0.75)]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 {t('dashboard.quickUsage', 'Quick Usage')}
               </p>
-              <div className="mt-2 space-y-2 text-xs text-gray-600">
+              <div className="mt-2 space-y-2 text-xs text-slate-600">
                 <div className="flex items-center justify-between gap-3">
                   <span>{t('dashboard.interviews', 'Interviews')}</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-slate-900">
                     {interviewsUsed} {t('dashboard.used', 'used')} / {interviewRemaining} {t('dashboard.unused', 'unused')}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span>{t('dashboard.resumeMatches', 'Resume Matches')}</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-slate-900">
                     {resumeMatchesUsed} {t('dashboard.used', 'used')} / {resumeMatchRemaining} {t('dashboard.unused', 'unused')}
                   </span>
                 </div>
-                <div className="my-1 border-t border-gray-100" />
+                <div className="my-1 border-t border-slate-100" />
                 <div className="flex items-center justify-between gap-3">
                   <span>{t('dashboard.creditBalance', 'Credit Balance')}</span>
                   <span className="font-semibold text-emerald-700">${creditBalance}</span>
@@ -456,7 +456,7 @@ export default function DashboardLayout() {
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -468,7 +468,7 @@ export default function DashboardLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -479,7 +479,7 @@ export default function DashboardLayout() {
 
       {/* Sidebar -- mobile: slide-over, desktop: static */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:sticky lg:top-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200/80 flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:sticky lg:top-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -489,19 +489,19 @@ export default function DashboardLayout() {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
+        <header className="sticky top-0 z-30 landing-glass border-b border-slate-200/80">
           <div className="flex items-center justify-between h-14 px-4 sm:px-6">
             <div className="flex items-center gap-3">
               {/* Mobile hamburger */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-1.5 -ml-1.5 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                className="lg:hidden p-1.5 -ml-1.5 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <h1 className="text-base font-semibold text-gray-900">{pageTitle}</h1>
+              <h1 className="text-base font-semibold text-slate-900">{pageTitle}</h1>
             </div>
 
             <div className="flex items-center gap-2">
@@ -511,7 +511,7 @@ export default function DashboardLayout() {
               <div className="relative" ref={notificationsRef}>
                 <button
                   onClick={toggleNotifications}
-                  className="relative w-9 h-9 rounded-full border border-gray-200 bg-white hover:border-indigo-300 text-gray-500 hover:text-indigo-600 transition-colors flex items-center justify-center"
+                  className="relative w-9 h-9 rounded-full border border-slate-200 bg-white hover:border-blue-300 text-slate-500 hover:text-blue-600 transition-colors flex items-center justify-center"
                   aria-label={t('notifications.title', 'Notifications')}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -523,22 +523,22 @@ export default function DashboardLayout() {
                 </button>
 
                 {notificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 shadow-lg rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-900">
+                  <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-100 shadow-lg rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-slate-900">
                         {t('notifications.title', 'Notifications')}
                       </span>
-                      <span className="text-xs text-gray-400">{notifications.length}</span>
+                      <span className="text-xs text-slate-400">{notifications.length}</span>
                     </div>
 
                     {isLoadingNotifications ? (
-                      <div className="p-6 text-center text-sm text-gray-500">
+                      <div className="p-6 text-center text-sm text-slate-500">
                         {t('dashboard.loading', 'Loading...')}
                       </div>
                     ) : notificationsError ? (
                       <div className="p-4 text-sm text-rose-500">{notificationsError}</div>
                     ) : notifications.length === 0 ? (
-                      <div className="p-6 text-center text-sm text-gray-500">
+                      <div className="p-6 text-center text-sm text-slate-500">
                         {t('notifications.empty', 'You are all caught up.')}
                       </div>
                     ) : (
@@ -550,17 +550,17 @@ export default function DashboardLayout() {
                               setNotificationsOpen(false);
                               navigate(`/dashboard/requests/${n.requestId}`);
                             }}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex gap-3"
+                            className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex gap-3"
                           >
                             {getNotificationIcon(n.type)}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-sm font-medium text-gray-900">{n.title}</p>
-                                <span className="text-xs text-gray-400 flex-shrink-0">
+                                <p className="text-sm font-medium text-slate-900">{n.title}</p>
+                                <span className="text-xs text-slate-400 flex-shrink-0">
                                   {formatRelativeTime(n.timestamp, t)}
                                 </span>
                               </div>
-                              <p className="text-xs text-gray-500 mt-0.5 truncate">{n.description}</p>
+                              <p className="text-xs text-slate-500 mt-0.5 truncate">{n.description}</p>
                             </div>
                           </button>
                         ))}

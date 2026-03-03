@@ -134,10 +134,10 @@ result = response.json()`,
   return (
     <div>
       <SEO title={t('seo.docsMatchResume.title', 'Match Resume API')} description={t('seo.docsMatchResume.desc', 'API reference for the AI-powered resume matching endpoint. Match candidates to job descriptions automatically.')} url="https://robohire.io/docs/api/match-resume" keywords={t('seo.docsMatchResume.keywords', 'RoboHire API documentation, resume matching API, candidate matching, AI recruitment')} />
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.matchResume.title', 'Match Resume')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.matchResume.intro', 'Match a resume against a job description to get an AI-powered compatibility score and detailed analysis.')}
       </p>
 
@@ -148,7 +148,7 @@ result = response.json()`,
       />
 
       {/* Request */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.matchResume.request', 'Request')}
       </h2>
       <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
@@ -168,7 +168,7 @@ result = response.json()`,
       />
 
       {/* Response */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.matchResume.response', 'Response')}
       </h2>
       <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
@@ -176,57 +176,57 @@ result = response.json()`,
       <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Match Scores */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.matchResume.scoring.title', 'Match Scoring')}
       </h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-slate-600 mb-4">
         {t('docs.matchResume.scoring.desc', 'The match score is calculated based on multiple factors:')}
       </p>
-      <div className="bg-gray-50 rounded-xl overflow-hidden mb-6">
+      <div className="bg-slate-50 rounded-xl overflow-hidden mb-6">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.matchResume.scoring.scoreRange', 'Score Range')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.matchResume.scoring.recommendation', 'Recommendation')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.matchResume.scoring.meaning', 'Meaning')}</th>
+            <tr className="border-b border-slate-200">
+              <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.matchResume.scoring.scoreRange', 'Score Range')}</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.matchResume.scoring.recommendation', 'Recommendation')}</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.matchResume.scoring.meaning', 'Meaning')}</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-slate-100">
               <td className="px-4 py-3 text-emerald-600 font-medium">80-100</td>
               <td className="px-4 py-3"><code>STRONG_MATCH</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.matchResume.scoring.strong', 'Excellent fit, meets or exceeds requirements')}</td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.matchResume.scoring.strong', 'Excellent fit, meets or exceeds requirements')}</td>
             </tr>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-slate-100">
               <td className="px-4 py-3 text-blue-600 font-medium">60-79</td>
               <td className="px-4 py-3"><code>GOOD_MATCH</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.matchResume.scoring.good', 'Good fit, meets most requirements')}</td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.matchResume.scoring.good', 'Good fit, meets most requirements')}</td>
             </tr>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-slate-100">
               <td className="px-4 py-3 text-amber-600 font-medium">40-59</td>
               <td className="px-4 py-3"><code>PARTIAL_MATCH</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.matchResume.scoring.partial', 'Some alignment, missing key requirements')}</td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.matchResume.scoring.partial', 'Some alignment, missing key requirements')}</td>
             </tr>
             <tr>
               <td className="px-4 py-3 text-red-600 font-medium">0-39</td>
               <td className="px-4 py-3"><code>WEAK_MATCH</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.matchResume.scoring.weak', 'Poor fit, significant gaps')}</td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.matchResume.scoring.weak', 'Poor fit, significant gaps')}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* Try It */}
-      <div className="bg-indigo-50 rounded-xl p-6">
-        <h3 className="font-semibold text-indigo-900 mb-2">
+      <div className="bg-blue-50 rounded-xl p-6">
+        <h3 className="font-semibold text-blue-900 mb-2">
           {t('docs.matchResume.tryIt.title', 'Try it out')}
         </h3>
-        <p className="text-indigo-700 text-sm mb-3">
+        <p className="text-blue-700 text-sm mb-3">
           {t('docs.matchResume.tryIt.desc', 'Test this endpoint interactively in the API Playground.')}
         </p>
         <Link
           to="/api-playground/match-resume"
-          className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           {t('docs.matchResume.tryIt.cta', 'Open in Playground')}
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

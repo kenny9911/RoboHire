@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'zh', name: '中文', flag: '🇨🇳' },
-  { code: 'ja', name: '日本語', flag: '🇯🇵' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'pt', name: 'Português', flag: '🇧🇷' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'en', name: 'English' },
+  { code: 'zh', name: '简体中文' },
+  { code: 'zh-TW', name: '繁體中文' },
+  { code: 'ja', name: '日本語' },
+  { code: 'es', name: 'Español' },
+  { code: 'fr', name: 'Français' },
+  { code: 'pt', name: 'Português' },
+  { code: 'de', name: 'Deutsch' },
 ];
 
 interface LanguageSelectorProps {
@@ -44,10 +45,13 @@ export default function LanguageSelector({ variant = 'default', className = '' }
       <div className={`relative ${className}`} ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
           aria-label="Select language"
         >
-          <span className="text-base">{currentLanguage.flag}</span>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+          </svg>
+          <span className="text-xs font-medium">{currentLanguage.code.toUpperCase()}</span>
           <svg className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -60,10 +64,9 @@ export default function LanguageSelector({ variant = 'default', className = '' }
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                  lang.code === i18n.language ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700'
+                  lang.code === i18n.language ? 'text-blue-600 bg-blue-50' : 'text-gray-700'
                 }`}
               >
-                <span>{lang.flag}</span>
                 <span>{lang.name}</span>
               </button>
             ))}
@@ -77,10 +80,12 @@ export default function LanguageSelector({ variant = 'default', className = '' }
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 border border-gray-200 hover:border-indigo-300 rounded-lg transition-colors bg-white"
+        className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-blue-600 border border-gray-200 hover:border-blue-300 rounded-lg transition-colors bg-white"
         aria-label="Select language"
       >
-        <span className="text-lg">{currentLanguage.flag}</span>
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+        </svg>
         <span className="font-medium">{currentLanguage.name}</span>
         <svg className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -94,10 +99,9 @@ export default function LanguageSelector({ variant = 'default', className = '' }
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
-                lang.code === i18n.language ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700'
+                lang.code === i18n.language ? 'text-blue-600 bg-blue-50' : 'text-gray-700'
               }`}
             >
-              <span className="text-lg">{lang.flag}</span>
               <span>{lang.name}</span>
               {lang.code === i18n.language && (
                 <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">

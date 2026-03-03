@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import axios from '../lib/axios';
-import LanguageSwitcher from '../components/LanguageSwitcher';
+import LanguageSelector from '../components/LanguageSelector';
 import SEO from '../components/SEO';
 
 const DOC_ACCEPT = '.pdf,.docx,.doc,.xlsx,.xls,.txt';
@@ -74,6 +74,249 @@ interface InvitationResult {
 }
 
 type Step = 'setup' | 'review' | 'results';
+
+type JsonMap = Record<string, unknown>;
+
+interface ResumeReviewInfo {
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  role: string | null;
+  summary: string | null;
+}
+
+interface JdReviewInfo {
+  title: string | null;
+  company: string | null;
+  location: string | null;
+  employmentType: string | null;
+  requirementsCount: number;
+  summary: string | null;
+}
+
+const isJsonMap = (value: unknown): value is JsonMap =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const cleanText = (value: string) => value.replace(/\s+/g, ' ').trim();
+
+const truncateText = (value: string, maxLength = 120) => {
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength - 1)}...`;
+};
+
+const asNonEmptyString = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+};
+
+const getByPath = (obj: JsonMap, path: string[]): unknown => {
+  let current: unknown = obj;
+  for (const key of path) {
+    if (!isJsonMap(current)) return undefined;
+    current = current[key];
+  }
+  return current;
+};
+
+const getFirstStringByPaths = (obj: JsonMap | null, paths: string[][]): string | null => {
+  if (!obj) return null;
+  for (const path of paths) {
+    const value = asNonEmptyString(getByPath(obj, path));
+    if (value) return value;
+  }
+  return null;
+};
+
+const getArrayLengthByPaths = (obj: JsonMap | null, paths: string[][]): number => {
+  if (!obj) return 0;
+  for (const path of paths) {
+    const value = getByPath(obj, path);
+    if (Array.isArray(value)) {
+      return value.filter(
+        (item) => (typeof item === 'string' ? Boolean(item.trim()) : item !== null && item !== undefined)
+      ).length;
+    }
+  }
+  return 0;
+};
+
+const parsePossibleJson = (text: string): unknown | null => {
+  const raw = text.trim();
+  if (!raw) return null;
+
+  const candidates = [raw];
+  if (raw.startsWith('```')) {
+    const unfenced = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+    if (unfenced.trim()) {
+      candidates.push(unfenced.trim());
+    }
+  }
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // ignore parse failures and continue
+    }
+  }
+
+  const firstBrace = raw.indexOf('{');
+  const lastBrace = raw.lastIndexOf('}');
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(raw.slice(firstBrace, lastBrace + 1));
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
+};
+
+const unwrapDataPayload = (value: unknown): JsonMap | null => {
+  if (!isJsonMap(value)) return null;
+  if (isJsonMap(value.data)) return value.data;
+  return value;
+};
+
+const extractEmail = (text: string): string | null => {
+  const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? null;
+  return email ? email.trim() : null;
+};
+
+const extractPhone = (text: string): string | null => {
+  const phone = text.match(/(?:\+?\d[\d\s\-().]{7,}\d)/)?.[0] ?? null;
+  return phone ? phone.trim() : null;
+};
+
+const extractTitleFromRawJd = (jdText: string): string | null => {
+  const normalized = jdText.replace(/\r/g, '').trim();
+  if (!normalized) return null;
+
+  const lines = normalized
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  for (const line of lines) {
+    const headingStripped = line.replace(/^#+\s*/, '').trim();
+    const match = headingStripped.match(
+      /^(?:job\s*title|position|role|职位|职位名称|岗位|岗位名称)\s*[:：-]\s*(.+)$/i
+    );
+    if (match?.[1]?.trim()) {
+      return match[1].trim();
+    }
+  }
+
+  const firstContentLine = lines[0]?.replace(/^#+\s*/, '').trim();
+  if (firstContentLine) {
+    return firstContentLine;
+  }
+
+  return null;
+};
+
+const extractResumeReviewInfo = (resumeText: string): ResumeReviewInfo => {
+  const parsed = parsePossibleJson(resumeText);
+  const payload = unwrapDataPayload(parsed);
+
+  const name = getFirstStringByPaths(payload, [
+    ['name'],
+    ['candidateName'],
+    ['fullName'],
+    ['candidate', 'name'],
+    ['profile', 'name'],
+  ]);
+
+  const emailFromPayload = getFirstStringByPaths(payload, [
+    ['email'],
+    ['candidateEmail'],
+    ['contact', 'email'],
+    ['candidate', 'email'],
+  ]);
+
+  const phoneFromPayload = getFirstStringByPaths(payload, [
+    ['phone'],
+    ['mobile'],
+    ['contact', 'phone'],
+    ['candidate', 'phone'],
+  ]);
+
+  const role = getFirstStringByPaths(payload, [
+    ['title'],
+    ['currentRole'],
+    ['position'],
+    ['jobTitle'],
+    ['candidate', 'title'],
+  ]);
+
+  const summaryFromPayload = getFirstStringByPaths(payload, [
+    ['summary'],
+    ['professionalSummary'],
+    ['overview'],
+  ]);
+
+  return {
+    name,
+    email: emailFromPayload ?? extractEmail(resumeText),
+    phone: phoneFromPayload ?? extractPhone(resumeText),
+    role,
+    summary: summaryFromPayload ? truncateText(cleanText(summaryFromPayload), 140) : null,
+  };
+};
+
+const extractJdReviewInfo = (jdText: string): JdReviewInfo => {
+  const parsed = parsePossibleJson(jdText);
+  const payload = unwrapDataPayload(parsed);
+
+  const title = getFirstStringByPaths(payload, [
+    ['title'],
+    ['jobTitle'],
+    ['position'],
+    ['role'],
+  ]);
+
+  const company = getFirstStringByPaths(payload, [
+    ['company'],
+    ['companyName'],
+    ['organization'],
+  ]);
+
+  const location = getFirstStringByPaths(payload, [
+    ['location'],
+    ['workLocation'],
+  ]);
+
+  const employmentType = getFirstStringByPaths(payload, [
+    ['employmentType'],
+    ['type'],
+    ['jobType'],
+  ]);
+
+  const summary = getFirstStringByPaths(payload, [
+    ['overview'],
+    ['summary'],
+    ['description'],
+  ]);
+
+  const requirementsCount = getArrayLengthByPaths(payload, [
+    ['requirements'],
+    ['mustHave'],
+    ['qualifications'],
+  ]);
+
+  const fallbackTitle = extractTitleFromRawJd(jdText);
+
+  return {
+    title: title ?? fallbackTitle,
+    company,
+    location,
+    employmentType,
+    requirementsCount,
+    summary: summary ? truncateText(cleanText(summary), 140) : null,
+  };
+};
 
 export default function QuickInvite() {
   const { t } = useTranslation();
@@ -351,34 +594,55 @@ export default function QuickInvite() {
     (pasteText.trim() ? 1 : 0);
   const sentCount = resumes.filter(r => r.status === 'sent').length;
   const errorCount = resumes.filter(r => r.status === 'error').length;
+  const reviewResumes = useMemo(
+    () =>
+      resumes
+        .filter((r) => r.status === 'ready' && r.text.trim())
+        .map((entry) => ({ entry, info: extractResumeReviewInfo(entry.text) })),
+    [resumes]
+  );
+  const recipientEmails = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          reviewResumes
+            .map(({ info }) => info.email)
+            .filter((email): email is string => Boolean(email))
+        )
+      ),
+    [reviewResumes]
+  );
+  const unresolvedRecipientCount = reviewResumes.filter(({ info }) => !info.email).length;
+  const jdReviewInfo = useMemo(() => extractJdReviewInfo(jd), [jd]);
+  const targetJobTitle = jdReviewInfo.title || t('pages.quickInvite.notSpecified', 'Not specified');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50">
+    <div className="landing-page min-h-screen">
       <SEO title={t('seo.quickInvite.title', 'Quick Interview Invite')} description={t('seo.quickInvite.desc', 'Upload resumes and job descriptions, then send interview invitations with QR codes and links to all candidates in one click.')} url="https://robohire.io/quick-invite" keywords={t('seo.quickInvite.keywords', 'batch interview invite, QR code interview, one-click hiring, candidate invitation, bulk resume upload')} />
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+      <header className="landing-glass border-b border-slate-200/80 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-lg font-bold text-indigo-600">
+          <Link to="/" className="flex items-center gap-2 text-lg font-bold text-blue-700">
             <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span>{t('app.title')}</span>
+            <span className="landing-display">{t('app.title')}</span>
           </Link>
           <div className="flex items-center gap-3">
-            <LanguageSwitcher className="w-44" />
+            <LanguageSelector variant="compact" className="rounded-full border border-slate-200 bg-white/90 px-1" />
             {user ? (
               <button
                 onClick={() => navigate('/dashboard')}
-                className="text-sm text-gray-600 hover:text-indigo-600 transition-colors"
+                className="text-sm text-slate-600 hover:text-blue-700 transition-colors"
               >
                 {t('apiPlayground.dashboard', 'Dashboard')}
               </button>
             ) : (
               <Link
                 to="/login"
-                className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="text-sm text-white px-5 py-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5"
               >
                 {t('apiPlayground.signIn', 'Sign In')}
               </Link>
@@ -390,8 +654,8 @@ export default function QuickInvite() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{t('pages.quickInvite.title')}</h1>
-          <p className="text-gray-500 mt-2">{t('pages.quickInvite.subtitle')}</p>
+          <h1 className="landing-display text-3xl font-semibold text-slate-900 sm:text-4xl">{t('pages.quickInvite.title')}</h1>
+          <p className="text-slate-500 mt-2">{t('pages.quickInvite.subtitle')}</p>
         </div>
 
         {/* Progress Steps */}
@@ -408,15 +672,15 @@ export default function QuickInvite() {
             return (
               <div key={s.key} className="flex items-center gap-2">
                 {i > 0 && (
-                  <div className={`w-8 sm:w-16 h-0.5 ${isDone || isCurrent ? 'bg-amber-500' : 'bg-gray-300'}`} />
+                  <div className={`w-8 sm:w-16 h-0.5 ${isDone || isCurrent ? 'bg-blue-500' : 'bg-gray-300'}`} />
                 )}
                 <div className="flex items-center gap-2">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                       isDone
-                        ? 'bg-amber-500 text-white'
+                        ? 'bg-blue-600 text-white'
                         : isCurrent
-                          ? 'bg-amber-500 text-white ring-4 ring-amber-100'
+                          ? 'bg-blue-600 text-white ring-4 ring-blue-100'
                           : 'bg-gray-200 text-gray-500'
                     }`}
                   >
@@ -428,7 +692,7 @@ export default function QuickInvite() {
                       s.num
                     )}
                   </div>
-                  <span className={`text-sm font-medium hidden sm:inline ${isCurrent ? 'text-amber-700' : isDone ? 'text-amber-600' : 'text-gray-400'}`}>
+                  <span className={`text-sm font-medium hidden sm:inline ${isCurrent ? 'text-blue-700' : isDone ? 'text-blue-600' : 'text-gray-400'}`}>
                     {s.label}
                   </span>
                 </div>
@@ -449,13 +713,13 @@ export default function QuickInvite() {
 
         {/* Auth Warning */}
         {!user && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-            <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+            <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div className="text-sm">
-              <p className="font-medium text-amber-800">{t('pages.quickInvite.authRequired')}</p>
-              <p className="text-amber-700 mt-1">{t('pages.quickInvite.authRequiredDesc')}</p>
+              <p className="font-medium text-blue-800">{t('pages.quickInvite.authRequired')}</p>
+              <p className="text-blue-700 mt-1">{t('pages.quickInvite.authRequiredDesc')}</p>
             </div>
           </div>
         )}
@@ -464,17 +728,17 @@ export default function QuickInvite() {
         {step === 'setup' && (
           <div className="space-y-6">
             {/* Job Description */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="landing-gradient-stroke rounded-[28px] bg-white p-7 shadow-[0_28px_56px_-42px_rgba(15,23,42,0.7)]">
               <div className="flex items-center justify-between mb-1">
-                <h2 className="text-lg font-semibold text-gray-800">
+                <h2 className="landing-display text-lg font-semibold text-slate-900">
                   {t('pages.quickInvite.jdTitle')}
                 </h2>
                 <div className="flex items-center gap-2">
                   {jdFileName && (
-                    <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full flex items-center gap-1.5">
+                    <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full flex items-center gap-1.5">
                       {jdFileName}
                       {formattingJd && (
-                        <div className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                       )}
                     </span>
                   )}
@@ -482,7 +746,7 @@ export default function QuickInvite() {
                   {jd.trim() && (formattedJd || jdFileName) && (
                     <button
                       onClick={handlePreviewJd}
-                      className="text-gray-400 hover:text-indigo-600 transition-colors p-1"
+                      className="text-gray-400 hover:text-blue-600 transition-colors p-1"
                       title={t('pages.quickInvite.viewJd', 'View formatted JD')}
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -494,10 +758,10 @@ export default function QuickInvite() {
                   <button
                     onClick={() => jdFileInputRef.current?.click()}
                     disabled={jdUploading}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50"
                   >
                     {jdUploading ? (
-                      <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -514,37 +778,37 @@ export default function QuickInvite() {
                   />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-slate-500 mb-4">
                 {t('pages.quickInvite.jdDesc')}
-                <span className="text-xs text-gray-400 ml-1">({t('pages.quickInvite.jdFormats')})</span>
+                <span className="text-xs text-slate-400 ml-1">({t('pages.quickInvite.jdFormats')})</span>
               </p>
               <textarea
                 value={jd}
                 onChange={(e) => { setJd(e.target.value); setJdFileName(null); setFormattedJd(null); }}
                 placeholder={t('pages.quickInvite.jdPlaceholder')}
                 rows={8}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm transition-colors resize-y"
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors resize-y"
               />
             </div>
 
             {/* Resumes Upload */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-1">
+            <div className="landing-gradient-stroke rounded-[28px] bg-white p-7 shadow-[0_28px_56px_-42px_rgba(15,23,42,0.7)]">
+              <h2 className="landing-display text-lg font-semibold text-slate-900 mb-1">
                 {t('pages.quickInvite.resumesTitle')}
               </h2>
-              <p className="text-sm text-gray-500 mb-4">{t('pages.quickInvite.resumesDesc')}</p>
+              <p className="text-sm text-slate-500 mb-4">{t('pages.quickInvite.resumesDesc')}</p>
 
               {/* Upload Zone */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-amber-500', 'bg-amber-50'); }}
-                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50'); }}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-blue-500', 'bg-blue-50'); }}
+                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50'); }}
                 onDrop={(e) => {
                   e.preventDefault();
-                  e.currentTarget.classList.remove('border-amber-500', 'bg-amber-50');
+                  e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
                   handleFileUpload(e.dataTransfer.files);
                 }}
-                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/50 transition-colors"
+                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
               >
                 <input
                   ref={fileInputRef}
@@ -556,8 +820,8 @@ export default function QuickInvite() {
                 />
                 {uploading ? (
                   <div className="flex items-center justify-center gap-3">
-                    <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-amber-700 font-medium">{t('pages.quickInvite.uploading')}</span>
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-blue-700 font-medium">{t('pages.quickInvite.uploading')}</span>
                   </div>
                 ) : (
                   <>
@@ -572,7 +836,7 @@ export default function QuickInvite() {
               <div className="mt-3 flex items-center gap-2">
                 <button
                   onClick={() => setPasteMode(!pasteMode)}
-                  className="text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                 >
                   {pasteMode ? t('pages.quickInvite.hideTextInput') : t('pages.quickInvite.pasteInstead')}
                 </button>
@@ -585,12 +849,12 @@ export default function QuickInvite() {
                     onChange={(e) => setPasteText(e.target.value)}
                     placeholder={t('pages.quickInvite.pastePlaceholder')}
                     rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
                   <button
                     onClick={handleAddPaste}
                     disabled={!pasteText.trim()}
-                    className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-0.5"
                   >
                     {t('pages.quickInvite.addResume')}
                   </button>
@@ -609,7 +873,7 @@ export default function QuickInvite() {
                       className={`flex items-center justify-between px-4 py-3 rounded-lg border ${
                         r.status === 'error'
                           ? 'bg-red-50 border-red-200'
-                          : 'bg-gray-50 border-gray-200'
+                          : 'bg-slate-50 border-slate-200'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -630,7 +894,7 @@ export default function QuickInvite() {
                         {r.text && !r.error && (
                           <button
                             onClick={() => handlePreviewResume(r)}
-                            className="text-gray-400 hover:text-indigo-600 transition-colors p-1"
+                            className="text-gray-400 hover:text-blue-600 transition-colors p-1"
                             title={t('pages.quickInvite.viewResume')}
                           >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -655,8 +919,8 @@ export default function QuickInvite() {
             </div>
 
             {/* Settings (collapsible) */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            <div className="landing-gradient-stroke rounded-[28px] bg-white p-7 shadow-[0_28px_56px_-42px_rgba(15,23,42,0.7)]">
+              <h2 className="landing-display text-lg font-semibold text-slate-900 mb-4">
                 {t('pages.quickInvite.settingsTitle')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -668,19 +932,19 @@ export default function QuickInvite() {
                     type="email"
                     value={recruiterEmail}
                     onChange={(e) => setRecruiterEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('pages.quickInvite.interviewerReq')} <span className="text-gray-400">({t('pages.quickInvite.optional')})</span>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    {t('pages.quickInvite.interviewerReq')} <span className="text-slate-400">({t('pages.quickInvite.optional')})</span>
                   </label>
                   <input
                     type="text"
                     value={interviewerRequirement}
                     onChange={(e) => setInterviewerRequirement(e.target.value)}
                     placeholder={t('pages.quickInvite.interviewerPlaceholder')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
                 </div>
               </div>
@@ -691,7 +955,7 @@ export default function QuickInvite() {
               <button
                 onClick={handleProceedToReview}
                 disabled={!jd.trim() || readyCount === 0}
-                className="px-8 py-3 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                className="px-8 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(37,99,235,0.95)]"
               >
                 {t('pages.quickInvite.reviewAndSend')} ({readyCount})
               </button>
@@ -703,35 +967,161 @@ export default function QuickInvite() {
         {step === 'review' && (
           <div className="space-y-6">
             {/* Summary */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            <div className="landing-gradient-stroke rounded-[28px] bg-white p-7 shadow-[0_28px_56px_-42px_rgba(15,23,42,0.7)]">
+              <h2 className="landing-display text-lg font-semibold text-slate-900 mb-4">
                 {t('pages.quickInvite.reviewTitle')}
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-amber-50 rounded-lg p-4 text-center">
-                  <p className="text-3xl font-bold text-amber-600">{readyCount}</p>
-                  <p className="text-sm text-amber-700">{t('pages.quickInvite.candidatesReady')}</p>
+              <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {t('pages.quickInvite.invitationOverview', 'Invitation overview')}
+                </p>
+                <p className="mt-2 text-sm text-slate-600">
+                  {t(
+                    'pages.quickInvite.inviteScope',
+                    'All {{count}} candidate(s) below will be invited to interview for this one position.',
+                    { count: readyCount }
+                  )}
+                </p>
+                <h3 className="mt-2 text-xl font-semibold text-slate-900 leading-snug break-words">
+                  {targetJobTitle}
+                </h3>
+                {(jdReviewInfo.company || jdReviewInfo.location || jdReviewInfo.employmentType) && (
+                  <p className="mt-2 text-sm text-slate-600 break-words">
+                    {[jdReviewInfo.company, jdReviewInfo.location, jdReviewInfo.employmentType]
+                      .filter(Boolean)
+                      .join(' • ')}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                <div className="bg-blue-50 rounded-2xl p-4 text-center">
+                  <p className="landing-display text-3xl font-bold text-blue-600">{readyCount}</p>
+                  <p className="text-sm text-blue-700">{t('pages.quickInvite.candidatesReady')}</p>
                 </div>
-                <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <p className="text-sm font-medium text-blue-700 mb-1">{t('pages.quickInvite.from')}</p>
-                  <p className="text-sm text-blue-600 truncate">{recruiterEmail}</p>
+                <div className="bg-cyan-50 rounded-2xl p-4 text-center">
+                  <p className="text-sm font-medium text-cyan-700 mb-1">{t('pages.quickInvite.from')}</p>
+                  <p className="text-sm text-cyan-700 break-all">{recruiterEmail}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <p className="text-sm font-medium text-gray-700 mb-1">{t('pages.quickInvite.jdPreview')}</p>
-                  <p className="text-sm text-gray-600 truncate">{jd.substring(0, 60)}...</p>
+                <div className="bg-violet-50 rounded-2xl p-4 text-center">
+                  <p className="text-sm font-medium text-violet-700 mb-1">
+                    {t('pages.quickInvite.recipientsRecognized', 'Recipients recognized')}
+                  </p>
+                  <p className="landing-display text-3xl font-bold text-violet-600">{recipientEmails.length}</p>
+                  {unresolvedRecipientCount > 0 ? (
+                    <p className="text-xs text-violet-600 mt-1">
+                      {t('pages.quickInvite.unresolvedRecipients', '{{count}} resume(s) without visible email', {
+                        count: unresolvedRecipientCount,
+                      })}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-violet-500 mt-1">
+                      {t('pages.quickInvite.allRecipientsReady', 'All recipients have visible emails')}
+                    </p>
+                  )}
                 </div>
               </div>
 
+              <div className="mb-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                  {t('pages.quickInvite.toLabel', 'To')}
+                </p>
+                {recipientEmails.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {recipientEmails.map((email) => (
+                      <span
+                        key={email}
+                        className="rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-xs text-violet-700"
+                      >
+                        {email}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-violet-600">
+                    {t('pages.quickInvite.emailMissing', 'Email will be extracted when sending')}
+                  </p>
+                )}
+              </div>
+
+              {(jdReviewInfo.summary || jdReviewInfo.requirementsCount > 0 || interviewerRequirement.trim()) && (
+                <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                    {t('pages.quickInvite.jdSummary', 'What will be sent')}
+                  </p>
+                  {jdReviewInfo.summary && (
+                    <p className="text-sm text-slate-700 mb-1">{jdReviewInfo.summary}</p>
+                  )}
+                  <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+                    {jdReviewInfo.requirementsCount > 0 && (
+                      <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200">
+                        {t('pages.quickInvite.requirementsCount', '{{count}} requirements', {
+                          count: jdReviewInfo.requirementsCount,
+                        })}
+                      </span>
+                    )}
+                    {interviewerRequirement.trim() && (
+                      <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200">
+                        {t('pages.quickInvite.interviewerReq', 'Interviewer Requirement')}:{' '}
+                        {truncateText(cleanText(interviewerRequirement.trim()), 80)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Candidate Preview List */}
               <div className="space-y-2">
-                {resumes.filter(r => r.status === 'ready' && r.text.trim()).map((r, i) => (
-                  <div key={r.id} className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-bold text-gray-400 w-6">{i + 1}</span>
-                    <span className="text-lg">📄</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{r.fileName}</p>
-                      <p className="text-xs text-gray-500 truncate">{r.text.substring(0, 100)}</p>
+                <p className="text-sm font-semibold text-slate-700 mb-2">
+                  {t('pages.quickInvite.candidateReviewTitle', 'Candidates receiving this invitation')}
+                </p>
+                {reviewResumes.map(({ entry, info }, i) => (
+                  <div key={entry.id} className="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <div className="flex items-start gap-3">
+                      <span className="text-sm font-bold text-slate-400 w-6 pt-0.5">{i + 1}</span>
+                      <span className="text-lg">📄</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <p className="text-sm font-semibold text-slate-800 truncate">
+                            {info.name || entry.fileName}
+                          </p>
+                          <span className="text-xs text-slate-500 truncate">
+                            {t('pages.quickInvite.sourceLabel', 'Source')}: {entry.fileName}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mb-2 break-words">
+                          {t('pages.quickInvite.invitedPositionLabel', 'Invited Position')}:{' '}
+                          <span className="font-medium text-slate-700">{targetJobTitle}</span>
+                        </p>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200 text-slate-600">
+                            {t('pages.quickInvite.email', 'Email')}:{' '}
+                            {info.email || t('pages.quickInvite.notFound', 'Not found')}
+                          </span>
+                          {info.phone && (
+                            <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200 text-slate-600">
+                              {t('pages.quickInvite.phoneLabel', 'Phone')}: {info.phone}
+                            </span>
+                          )}
+                          {info.role && (
+                            <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200 text-slate-600">
+                              {t('pages.quickInvite.roleLabel', 'Role')}: {info.role}
+                            </span>
+                          )}
+                        </div>
+                        {info.summary && (
+                          <p className="text-xs text-slate-500 mt-2">{info.summary}</p>
+                        )}
+                        {!info.email && (
+                          <p className="text-xs text-amber-600 mt-2">
+                            {t(
+                              'pages.quickInvite.emailMissingCandidate',
+                              'Email is not visible in this resume. Please confirm before sending.'
+                            )}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -749,7 +1139,7 @@ export default function QuickInvite() {
               <button
                 onClick={handleSendAll}
                 disabled={sending || readyCount === 0}
-                className="px-8 py-3 bg-amber-600 text-white font-semibold rounded-xl hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center gap-2"
+                className="px-8 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(37,99,235,0.95)] flex items-center gap-2"
               >
                 {sending ? (
                   <>
@@ -771,16 +1161,16 @@ export default function QuickInvite() {
           <div className="space-y-6">
             {/* Summary Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
-                <p className="text-3xl font-bold text-green-600">{sentCount}</p>
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-5 text-center">
+                <p className="landing-display text-3xl font-bold text-green-600">{sentCount}</p>
                 <p className="text-sm text-green-700">{t('pages.quickInvite.sentSuccess')}</p>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
-                <p className="text-3xl font-bold text-red-600">{errorCount}</p>
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-center">
+                <p className="landing-display text-3xl font-bold text-red-600">{errorCount}</p>
                 <p className="text-sm text-red-700">{t('pages.quickInvite.sentFailed')}</p>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center">
-                <p className="text-3xl font-bold text-blue-600">{resumes.length}</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center">
+                <p className="landing-display text-3xl font-bold text-blue-600">{resumes.length}</p>
                 <p className="text-sm text-blue-700">{t('pages.quickInvite.totalProcessed')}</p>
               </div>
             </div>
@@ -790,12 +1180,12 @@ export default function QuickInvite() {
               {resumes.map((r) => (
                 <div
                   key={r.id}
-                  className={`bg-white rounded-xl border p-6 ${
+                  className={`bg-white rounded-2xl border p-6 ${
                     r.status === 'sent'
                       ? 'border-green-200'
                       : r.status === 'error'
                         ? 'border-red-200'
-                        : 'border-gray-200'
+                        : 'border-slate-200'
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -845,7 +1235,7 @@ export default function QuickInvite() {
                                 href={r.result.login_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-indigo-600 hover:text-indigo-800 break-all"
+                                className="text-sm text-blue-600 hover:text-blue-800 break-all"
                               >
                                 {r.result.login_url}
                               </a>
@@ -885,13 +1275,13 @@ export default function QuickInvite() {
                   setStep('setup');
                   setError(null);
                 }}
-                className="px-6 py-3 text-amber-600 font-medium hover:text-amber-700 transition-colors"
+                className="px-6 py-3 text-blue-600 font-medium hover:text-blue-700 transition-colors"
               >
                 {t('pages.quickInvite.startNew')}
               </button>
               <button
                 onClick={() => navigate('/dashboard/resumes')}
-                className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-colors"
+                className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(37,99,235,0.95)]"
               >
                 {t('pages.quickInvite.viewResumeLibrary')}
               </button>
@@ -907,13 +1297,13 @@ export default function QuickInvite() {
           onClick={() => { setPreviewResume(null); setFormattedResume(null); }}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col"
+            className="bg-white rounded-[28px] shadow-[0_40px_72px_-48px_rgba(15,23,42,0.8)] max-w-3xl w-full max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <div className="min-w-0">
-                <h3 className="text-lg font-semibold text-gray-800 truncate">
+                <h3 className="landing-display text-lg font-semibold text-slate-900 truncate">
                   {previewResume.fileName}
                 </h3>
                 <p className="text-xs text-gray-500">
@@ -966,14 +1356,14 @@ export default function QuickInvite() {
                 </div>
               ) : formattedResume && formattedResume.name ? (
                 /* Professionally formatted resume */
-                <div className="p-8 font-[system-ui]">
+                <div className="p-8">
                   {/* Header — Name & Title */}
                   <div className="text-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-900 tracking-wide">
                       {formattedResume.name}
                     </h1>
                     {formattedResume.title && (
-                      <p className="text-base text-indigo-600 font-medium mt-1">{formattedResume.title}</p>
+                      <p className="text-base text-blue-600 font-medium mt-1">{formattedResume.title}</p>
                     )}
                   </div>
 
@@ -1006,13 +1396,13 @@ export default function QuickInvite() {
                     </div>
                   )}
 
-                  <div className="border-t border-gray-300 mt-4 mb-5" />
+                  <div className="border-t border-slate-200 mt-4 mb-5" />
 
                   {/* Summary */}
                   {formattedResume.summary && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.resumeSections.summary', 'Summary')}
                       </h2>
                       <p className="text-sm text-gray-700 leading-relaxed">{formattedResume.summary}</p>
@@ -1022,8 +1412,8 @@ export default function QuickInvite() {
                   {/* Experience */}
                   {formattedResume.experience.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.resumeSections.experience', 'Experience')}
                       </h2>
                       <div className="space-y-4">
@@ -1032,7 +1422,7 @@ export default function QuickInvite() {
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <h3 className="text-sm font-semibold text-gray-900">{exp.role}</h3>
-                                <p className="text-sm text-indigo-600 font-medium">
+                                <p className="text-sm text-blue-600 font-medium">
                                   {exp.company}
                                   {exp.location && <span className="text-gray-400 font-normal"> · {exp.location}</span>}
                                 </p>
@@ -1045,7 +1435,7 @@ export default function QuickInvite() {
                               <ul className="mt-1.5 space-y-1">
                                 {exp.bullets.map((b, j) => (
                                   <li key={j} className="text-xs text-gray-600 leading-relaxed flex gap-2">
-                                    <span className="text-indigo-400 mt-1.5 flex-shrink-0">•</span>
+                                    <span className="text-blue-400 mt-1.5 flex-shrink-0">•</span>
                                     <span>{b}</span>
                                   </li>
                                 ))}
@@ -1060,8 +1450,8 @@ export default function QuickInvite() {
                   {/* Education */}
                   {formattedResume.education.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.resumeSections.education', 'Education')}
                       </h2>
                       <div className="space-y-2">
@@ -1085,8 +1475,8 @@ export default function QuickInvite() {
                   {/* Skills */}
                   {formattedResume.skills.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.resumeSections.skills', 'Skills')}
                       </h2>
                       <div className="space-y-2">
@@ -1103,8 +1493,8 @@ export default function QuickInvite() {
                   {/* Projects */}
                   {formattedResume.projects.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.resumeSections.projects', 'Projects')}
                       </h2>
                       <div className="space-y-3">
@@ -1117,7 +1507,7 @@ export default function QuickInvite() {
                             {proj.technologies.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {proj.technologies.map((tech, j) => (
-                                  <span key={j} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-medium">
+                                  <span key={j} className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium">
                                     {tech}
                                   </span>
                                 ))}
@@ -1132,14 +1522,14 @@ export default function QuickInvite() {
                   {/* Certifications */}
                   {formattedResume.certifications.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.resumeSections.certifications', 'Certifications')}
                       </h2>
                       <ul className="space-y-1">
                         {formattedResume.certifications.map((c, i) => (
                           <li key={i} className="text-xs text-gray-600 flex gap-2">
-                            <span className="text-indigo-400">•</span>
+                            <span className="text-blue-400">•</span>
                             <span>{c}</span>
                           </li>
                         ))}
@@ -1150,8 +1540,8 @@ export default function QuickInvite() {
                   {/* Languages */}
                   {formattedResume.languages.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.resumeSections.languages', 'Languages')}
                       </h2>
                       <p className="text-xs text-gray-600">{formattedResume.languages.join(' · ')}</p>
@@ -1161,8 +1551,8 @@ export default function QuickInvite() {
                   {/* Awards */}
                   {formattedResume.awards.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.resumeSections.awards', 'Awards')}
                       </h2>
                       <ul className="space-y-1">
@@ -1196,13 +1586,13 @@ export default function QuickInvite() {
           onClick={() => setPreviewJd(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col"
+            className="bg-white rounded-[28px] shadow-[0_40px_72px_-48px_rgba(15,23,42,0.8)] max-w-3xl w-full max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <div className="min-w-0">
-                <h3 className="text-lg font-semibold text-gray-800 truncate">
+                <h3 className="landing-display text-lg font-semibold text-slate-900 truncate">
                   {jdFileName || t('pages.quickInvite.jdTitle')}
                 </h3>
                 <p className="text-xs text-gray-500">
@@ -1256,7 +1646,7 @@ export default function QuickInvite() {
                 </div>
               ) : formattedJd && formattedJd.jobTitle ? (
                 /* Professionally formatted JD */
-                <div className="p-8 font-[system-ui]">
+                <div className="p-8">
                   {/* Header — Title & Meta */}
                   <div className="mb-1">
                     <h1 className="text-2xl font-bold text-gray-900">
@@ -1264,7 +1654,7 @@ export default function QuickInvite() {
                     </h1>
                     <div className="flex flex-wrap items-center gap-3 mt-2">
                       {formattedJd.company && (
-                        <span className="flex items-center gap-1 text-sm text-indigo-600 font-medium">
+                        <span className="flex items-center gap-1 text-sm text-blue-600 font-medium">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                           {formattedJd.company}
                         </span>
@@ -1294,13 +1684,13 @@ export default function QuickInvite() {
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-300 mt-4 mb-5" />
+                  <div className="border-t border-slate-200 mt-4 mb-5" />
 
                   {/* Overview */}
                   {formattedJd.overview && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.jdSections.overview', 'Overview')}
                       </h2>
                       <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{formattedJd.overview}</p>
@@ -1310,14 +1700,14 @@ export default function QuickInvite() {
                   {/* Responsibilities */}
                   {formattedJd.responsibilities.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.jdSections.responsibilities', 'Responsibilities')}
                       </h2>
                       <ul className="space-y-1.5">
                         {formattedJd.responsibilities.map((item, i) => (
                           <li key={i} className="text-xs text-gray-600 leading-relaxed flex gap-2">
-                            <span className="text-indigo-400 mt-1.5 flex-shrink-0">•</span>
+                            <span className="text-blue-400 mt-1.5 flex-shrink-0">•</span>
                             <span>{item}</span>
                           </li>
                         ))}
@@ -1328,8 +1718,8 @@ export default function QuickInvite() {
                   {/* Requirements */}
                   {formattedJd.requirements.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.jdSections.requirements', 'Requirements')}
                       </h2>
                       <ul className="space-y-1.5">
@@ -1348,8 +1738,8 @@ export default function QuickInvite() {
                   {/* Preferred Qualifications */}
                   {formattedJd.preferredQualifications.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.jdSections.preferred', 'Preferred Qualifications')}
                       </h2>
                       <ul className="space-y-1.5">
@@ -1366,13 +1756,13 @@ export default function QuickInvite() {
                   {/* Skills */}
                   {formattedJd.skills.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.jdSections.skills', 'Skills')}
                       </h2>
                       <div className="flex flex-wrap gap-1.5">
                         {formattedJd.skills.map((skill, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-[11px] font-medium">
+                          <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[11px] font-medium">
                             {skill}
                           </span>
                         ))}
@@ -1383,8 +1773,8 @@ export default function QuickInvite() {
                   {/* Benefits */}
                   {formattedJd.benefits.length > 0 && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.jdSections.benefits', 'Benefits')}
                       </h2>
                       <ul className="space-y-1.5">
@@ -1401,8 +1791,8 @@ export default function QuickInvite() {
                   {/* About */}
                   {formattedJd.about && (
                     <div className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {t('pages.quickInvite.jdSections.about', 'About the Company')}
                       </h2>
                       <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{formattedJd.about}</p>
@@ -1412,8 +1802,8 @@ export default function QuickInvite() {
                   {/* Other sections */}
                   {formattedJd.other.length > 0 && formattedJd.other.map((section, i) => (
                     <div key={i} className="mb-5">
-                      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-gray-400" />
+                      <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-slate-300" />
                         {section.heading}
                       </h2>
                       <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{section.content}</p>

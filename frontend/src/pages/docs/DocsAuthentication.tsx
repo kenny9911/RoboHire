@@ -9,19 +9,19 @@ export default function DocsAuthentication() {
   return (
     <div>
       <SEO title={t('seo.docsAuth.title', 'API Authentication')} description={t('seo.docsAuth.desc', 'Learn how to authenticate with the RoboHire API using API keys and JWT tokens.')} url="https://robohire.io/docs/authentication" keywords={t('seo.docsAuth.keywords', 'RoboHire API documentation, API authentication, API keys, JWT tokens')} />
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.auth.title', 'Authentication')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.auth.intro', 'Learn how to authenticate your API requests to RoboHire.')}
       </p>
 
       {/* API Keys */}
       <div className="mb-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <h2 className="text-xl font-semibold text-slate-900 mb-4">
           {t('docs.auth.apiKeys.title', 'API Keys')}
         </h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-slate-600 mb-4">
           {t('docs.auth.apiKeys.desc', 'API keys are the primary way to authenticate with the RoboHire. Each key is prefixed with "rh_" and provides full access to the API on behalf of your account.')}
         </p>
 
@@ -41,10 +41,10 @@ export default function DocsAuthentication() {
           </div>
         </div>
 
-        <h3 className="font-semibold text-gray-900 mb-3">
+        <h3 className="font-semibold text-slate-900 mb-3">
           {t('docs.auth.apiKeys.creating', 'Creating API Keys')}
         </h3>
-        <ol className="list-decimal list-inside space-y-2 text-gray-600 mb-4">
+        <ol className="list-decimal list-inside space-y-2 text-slate-600 mb-4">
           <li>{t('docs.auth.apiKeys.step1', 'Log in to your RoboHire dashboard')}</li>
           <li>{t('docs.auth.apiKeys.step2', 'Navigate to API Keys section')}</li>
           <li>{t('docs.auth.apiKeys.step3', 'Click "Create Key" and provide a name')}</li>
@@ -52,7 +52,7 @@ export default function DocsAuthentication() {
         </ol>
         <Link
           to="/dashboard/api-keys"
-          className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium"
+          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
         >
           {t('docs.auth.apiKeys.manage', 'Manage your API keys')}
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,14 +63,14 @@ export default function DocsAuthentication() {
 
       {/* Using API Keys */}
       <div className="mb-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <h2 className="text-xl font-semibold text-slate-900 mb-4">
           {t('docs.auth.using.title', 'Using API Keys')}
         </h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-slate-600 mb-4">
           {t('docs.auth.using.desc', 'Include your API key in the Authorization header of each request:')}
         </p>
 
-        <h3 className="font-semibold text-gray-900 mb-3">
+        <h3 className="font-semibold text-slate-900 mb-3">
           {t('docs.auth.using.bearer', 'Bearer Token (Recommended)')}
         </h3>
         <CodeBlock
@@ -79,10 +79,10 @@ export default function DocsAuthentication() {
   https://api.robohire.io/v1/health`}
         />
 
-        <h3 className="font-semibold text-gray-900 mb-3 mt-6">
+        <h3 className="font-semibold text-slate-900 mb-3 mt-6">
           {t('docs.auth.using.xApiKey', 'X-API-Key Header')}
         </h3>
-        <p className="text-gray-600 mb-3">
+        <p className="text-slate-600 mb-3">
           {t('docs.auth.using.xApiKeyDesc', 'Alternatively, you can use the X-API-Key header:')}
         </p>
         <CodeBlock
@@ -94,35 +94,35 @@ export default function DocsAuthentication() {
 
       {/* Key Scopes */}
       <div className="mb-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <h2 className="text-xl font-semibold text-slate-900 mb-4">
           {t('docs.auth.scopes.title', 'Key Scopes')}
         </h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-slate-600 mb-4">
           {t('docs.auth.scopes.desc', 'API keys can have different scopes to limit their permissions:')}
         </p>
 
-        <div className="bg-gray-50 rounded-xl overflow-hidden">
+        <div className="bg-slate-50 rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.auth.scopes.scopeHeader', 'Scope')}</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.auth.scopes.descHeader', 'Description')}</th>
+              <tr className="border-b border-slate-200">
+                <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.auth.scopes.scopeHeader', 'Scope')}</th>
+                <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.auth.scopes.descHeader', 'Description')}</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-slate-100">
                 <td className="px-4 py-3">
-                  <code className="text-indigo-600 font-mono">read</code>
+                  <code className="text-blue-600 font-mono">read</code>
                 </td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-4 py-3 text-slate-600">
                   {t('docs.auth.scopes.read', 'Access to read operations (GET endpoints)')}
                 </td>
               </tr>
               <tr>
                 <td className="px-4 py-3">
-                  <code className="text-indigo-600 font-mono">write</code>
+                  <code className="text-blue-600 font-mono">write</code>
                 </td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-4 py-3 text-slate-600">
                   {t('docs.auth.scopes.write', 'Access to create and modify operations (POST, PUT, DELETE)')}
                 </td>
               </tr>
@@ -133,40 +133,40 @@ export default function DocsAuthentication() {
 
       {/* Errors */}
       <div className="mb-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <h2 className="text-xl font-semibold text-slate-900 mb-4">
           {t('docs.auth.errors.title', 'Authentication Errors')}
         </h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-slate-600 mb-4">
           {t('docs.auth.errors.desc', 'If authentication fails, you will receive one of these error responses:')}
         </p>
 
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-xl p-4">
+          <div className="bg-slate-50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">401</span>
-              <span className="font-mono text-sm text-gray-800">AUTH_REQUIRED</span>
+              <span className="font-mono text-sm text-slate-800">AUTH_REQUIRED</span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               {t('docs.auth.errors.authRequired', 'No authentication credentials were provided.')}
             </p>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-4">
+          <div className="bg-slate-50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">401</span>
-              <span className="font-mono text-sm text-gray-800">INVALID_TOKEN</span>
+              <span className="font-mono text-sm text-slate-800">INVALID_TOKEN</span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               {t('docs.auth.errors.invalidToken', 'The provided API key is invalid or has been revoked.')}
             </p>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-4">
+          <div className="bg-slate-50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">403</span>
-              <span className="font-mono text-sm text-gray-800">INSUFFICIENT_SCOPES</span>
+              <span className="font-mono text-sm text-slate-800">INSUFFICIENT_SCOPES</span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               {t('docs.auth.errors.insufficientScopes', 'The API key does not have the required scopes for this operation.')}
             </p>
           </div>

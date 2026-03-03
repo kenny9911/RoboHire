@@ -51,7 +51,7 @@ export default function CodeBlock({ code = '', language = 'javascript', title, t
           tokens.push({
             start: match.index,
             end: match.index + match[0].length,
-            html: `<span class="text-gray-500">${match[0]}</span>`
+            html: `<span class="text-slate-500">${match[0]}</span>`
           });
         }
       }
@@ -89,9 +89,9 @@ export default function CodeBlock({ code = '', language = 'javascript', title, t
   };
 
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-800 bg-gray-900 my-6">
+    <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900 my-6">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700">
         <div className="flex items-center gap-4">
           {tabs ? (
             <div className="flex gap-1">
@@ -101,8 +101,8 @@ export default function CodeBlock({ code = '', language = 'javascript', title, t
                   onClick={() => setActiveTab(index)}
                   className={`px-3 py-1 text-sm rounded-md transition-colors ${
                     activeTab === index
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-400 hover:text-white'
+                      ? 'bg-slate-700 text-white'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   {tab.label}
@@ -110,15 +110,15 @@ export default function CodeBlock({ code = '', language = 'javascript', title, t
               ))}
             </div>
           ) : title ? (
-            <span className="text-sm text-gray-400">{title}</span>
+            <span className="text-sm text-slate-400">{title}</span>
           ) : (
-            <span className="text-sm text-gray-400">{currentLanguage}</span>
+            <span className="text-sm text-slate-400">{currentLanguage}</span>
           )}
         </div>
 
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 px-2 py-1 text-sm text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 px-2 py-1 text-sm text-slate-400 hover:text-white transition-colors"
         >
           {copied ? (
             <>
@@ -140,7 +140,7 @@ export default function CodeBlock({ code = '', language = 'javascript', title, t
 
       {/* Code */}
       <pre className="p-4 overflow-x-auto text-sm">
-        <code className="text-gray-300 font-mono">
+        <code className="text-slate-300 font-mono">
           {highlightCode(currentCode, currentLanguage)}
         </code>
       </pre>

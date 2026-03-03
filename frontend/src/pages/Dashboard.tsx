@@ -160,17 +160,17 @@ function RichTextPanel({
   title: string;
   content?: string;
   emptyText: string;
-  accent: 'indigo' | 'cyan';
+  accent: 'blue' | 'cyan';
 }) {
   const parsed = useMemo(() => parseJobContent(content || ''), [content]);
   const colorClass =
-    accent === 'indigo'
+    accent === 'blue'
       ? {
-          border: 'border-indigo-100',
-          bg: 'bg-indigo-50',
-          text: 'text-indigo-700',
-          dot: 'bg-indigo-500',
-          strip: 'from-indigo-500 to-violet-500',
+          border: 'border-blue-100',
+          bg: 'bg-blue-50',
+          text: 'text-blue-700',
+          dot: 'bg-blue-500',
+          strip: 'from-blue-600 to-cyan-600',
         }
       : {
           border: 'border-cyan-100',
@@ -312,9 +312,9 @@ export default function Dashboard() {
       case 'paused':
         return 'bg-amber-50 text-amber-700 border border-amber-100';
       case 'closed':
-        return 'bg-gray-100 text-gray-600 border border-gray-200';
+        return 'bg-slate-100 text-slate-600 border border-slate-200';
       default:
-        return 'bg-gray-100 text-gray-600 border border-gray-200';
+        return 'bg-slate-100 text-slate-600 border border-slate-200';
     }
   };
 
@@ -325,11 +325,11 @@ export default function Dashboard() {
       case 'interviewed':
         return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
       case 'shortlisted':
-        return 'bg-indigo-50 text-indigo-700 border border-indigo-100';
+        return 'bg-blue-50 text-blue-700 border border-blue-100';
       case 'rejected':
         return 'bg-rose-50 text-rose-700 border border-rose-100';
       default:
-        return 'bg-gray-50 text-gray-600 border border-gray-200';
+        return 'bg-slate-50 text-slate-600 border border-slate-200';
     }
   };
 
@@ -370,7 +370,7 @@ export default function Dashboard() {
         <SEO title="Dashboard" noIndex />
         {requestId ? (
           <div>
-            <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6">
+            <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-6">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -379,29 +379,29 @@ export default function Dashboard() {
 
             {detailLoading ? (
               <div className="p-12 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                <p className="text-gray-500 mt-4">{t('dashboard.loading', 'Loading...')}</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="text-slate-500 mt-4">{t('dashboard.loading', 'Loading...')}</p>
               </div>
             ) : detailError ? (
               <div className="p-12 text-center text-rose-500">{detailError}</div>
             ) : selectedRequest ? (
               <div className="space-y-6">
-                <div className="bg-white/90 border border-gray-100 shadow-sm rounded-2xl p-6">
+                <div className="landing-gradient-stroke bg-white rounded-[28px] shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] p-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-xl font-semibold text-gray-900">
+                        <h1 className="text-xl font-semibold text-slate-900">
                           {selectedRequest.title}
                         </h1>
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedRequest.status)}`}>
                           {selectedRequest.status.charAt(0).toUpperCase() + selectedRequest.status.slice(1)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-slate-500">
                         {t('dashboard.detail.updated', 'Updated')} {formatDateTime(selectedRequest.updatedAt)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-4 text-sm text-slate-500">
                       <span>
                         {t('dashboard.detail.created', 'Created')} {formatDate(selectedRequest.createdAt)}
                       </span>
@@ -415,17 +415,17 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-white border border-gray-100 rounded-2xl p-4">
-                    <p className="text-xs text-gray-500">{t('dashboard.detail.matches', 'Matches')}</p>
-                    <p className="text-2xl font-semibold text-gray-900">{candidateStats.matches}</p>
+                  <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-4">
+                    <p className="text-xs text-slate-500">{t('dashboard.detail.matches', 'Matches')}</p>
+                    <p className="text-2xl font-semibold text-slate-900">{candidateStats.matches}</p>
                   </div>
-                  <div className="bg-white border border-gray-100 rounded-2xl p-4">
-                    <p className="text-xs text-gray-500">{t('dashboard.detail.invited', 'Invitations sent')}</p>
-                    <p className="text-2xl font-semibold text-gray-900">{candidateStats.invited}</p>
+                  <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-4">
+                    <p className="text-xs text-slate-500">{t('dashboard.detail.invited', 'Invitations sent')}</p>
+                    <p className="text-2xl font-semibold text-slate-900">{candidateStats.invited}</p>
                   </div>
-                  <div className="bg-white border border-gray-100 rounded-2xl p-4">
-                    <p className="text-xs text-gray-500">{t('dashboard.detail.interviewsCompleted', 'Interviews completed')}</p>
-                    <p className="text-2xl font-semibold text-gray-900">{candidateStats.interviewed}</p>
+                  <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-4">
+                    <p className="text-xs text-slate-500">{t('dashboard.detail.interviewsCompleted', 'Interviews completed')}</p>
+                    <p className="text-2xl font-semibold text-slate-900">{candidateStats.interviewed}</p>
                   </div>
                 </div>
 
@@ -435,7 +435,7 @@ export default function Dashboard() {
                       title={t('dashboard.detail.requirements', 'Requirements')}
                       content={selectedRequest.requirements}
                       emptyText={t('dashboard.detail.noRequirements', 'No requirements yet.')}
-                      accent="indigo"
+                      accent="blue"
                     />
                   </div>
                   {/* Draggable divider */}
@@ -465,7 +465,7 @@ export default function Dashboard() {
                       document.addEventListener('mouseup', onMouseUp);
                     }}
                   >
-                    <div className="w-1 h-8 rounded-full bg-gray-300 group-hover:bg-indigo-400 transition-colors" />
+                    <div className="w-1 h-8 rounded-full bg-slate-300 group-hover:bg-blue-400 transition-colors" />
                   </div>
                   <div className="mt-4 min-w-0 flex-1 lg:mt-0">
                     <RichTextPanel
@@ -486,22 +486,22 @@ export default function Dashboard() {
                   onCandidatesUpdated={() => fetchRequestDetail(selectedRequest.id)}
                 />
 
-                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-gray-900">
+                <div className="landing-gradient-stroke bg-white rounded-[28px] overflow-hidden shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)]">
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-slate-900">
                       {t('dashboard.detail.candidates', 'Candidates')}
                     </h2>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-slate-500">
                       {selectedRequest.candidates.length} {t('dashboard.requests.candidates', 'candidates')}
                     </span>
                   </div>
                   {selectedRequest.candidates.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
+                    <div className="p-6 text-sm text-slate-500">
                       {t('dashboard.detail.noCandidates', 'No candidates yet.')}
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-100">
-                      <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 text-xs uppercase tracking-wide text-gray-400">
+                    <div className="divide-y divide-slate-100">
+                      <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 text-xs uppercase tracking-wide text-slate-400">
                         <span className="col-span-4">{t('dashboard.detail.candidate', 'Candidate')}</span>
                         <span className="col-span-2">{t('dashboard.detail.matchScore', 'Match score')}</span>
                         <span className="col-span-3">{t('dashboard.detail.status', 'Status')}</span>
@@ -510,14 +510,14 @@ export default function Dashboard() {
                       {selectedRequest.candidates.map((candidate) => (
                         <div key={candidate.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4">
                           <div className="md:col-span-4">
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-slate-900">
                               {candidate.name || candidate.email || t('dashboard.detail.candidate', 'Candidate')}
                             </p>
                             {candidate.email && (
-                              <p className="text-xs text-gray-500">{candidate.email}</p>
+                              <p className="text-xs text-slate-500">{candidate.email}</p>
                             )}
                           </div>
-                          <div className="md:col-span-2 text-sm text-gray-600">
+                          <div className="md:col-span-2 text-sm text-slate-600">
                             {candidate.matchScore !== null && candidate.matchScore !== undefined
                               ? candidate.matchScore
                               : '--'}
@@ -527,7 +527,7 @@ export default function Dashboard() {
                               {candidate.status ? t(`dashboard.candidateStatus.${candidate.status}`, candidate.status) : t('dashboard.candidateStatus.pending', 'Pending')}
                             </span>
                           </div>
-                          <div className="md:col-span-3 text-xs text-gray-500">
+                          <div className="md:col-span-3 text-xs text-slate-500">
                             {formatDateTime(candidate.updatedAt)}
                           </div>
                         </div>
@@ -537,7 +537,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div className="p-12 text-center text-gray-500">
+              <div className="p-12 text-center text-slate-500">
                 {t('dashboard.detail.notFound', 'Request not found')}
               </div>
             )}
@@ -546,10 +546,10 @@ export default function Dashboard() {
           <div>
             {/* Welcome Section */}
             <div className="mb-8">
-              <h1 className="text-xl font-semibold text-gray-900 mb-2">
+              <h1 className="text-xl font-semibold text-slate-900 mb-2 landing-display">
                 {t('dashboard.welcome', 'Welcome back')}, {user?.name?.split(' ')[0] || t('dashboard.user', 'there')}!
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 {t('dashboard.subtitle', 'Manage your hiring requests and track candidates.')}
               </p>
             </div>
@@ -558,7 +558,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <Link
                 to="/start-hiring"
-                className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white hover:shadow-lg transition-shadow"
+                className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-[28px] p-5 text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center">
@@ -568,14 +568,14 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold">{t('dashboard.actions.newHiring', 'Start New Hiring')}</h3>
-                    <p className="text-xs text-indigo-100">{t('dashboard.actions.newHiringDesc', 'Create a new job opening')}</p>
+                    <p className="text-xs text-blue-100">{t('dashboard.actions.newHiringDesc', 'Create a new job opening')}</p>
                   </div>
                 </div>
               </Link>
 
               <Link
                 to="/dashboard/api-keys"
-                className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-indigo-200 hover:shadow-md transition-all"
+                className="landing-gradient-stroke bg-white rounded-[28px] p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center">
@@ -584,15 +584,15 @@ export default function Dashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900">{t('dashboard.actions.apiKeys', 'API Keys')}</h3>
-                    <p className="text-xs text-gray-500">{t('dashboard.actions.apiKeysDesc', 'Manage API access')}</p>
+                    <h3 className="text-sm font-semibold text-slate-900">{t('dashboard.actions.apiKeys', 'API Keys')}</h3>
+                    <p className="text-xs text-slate-500">{t('dashboard.actions.apiKeysDesc', 'Manage API access')}</p>
                   </div>
                 </div>
               </Link>
 
               <Link
                 to="/dashboard/usage"
-                className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-indigo-200 hover:shadow-md transition-all"
+                className="landing-gradient-stroke bg-white rounded-[28px] p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center">
@@ -601,8 +601,8 @@ export default function Dashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900">{t('dashboard.actions.usage', 'API Usage')}</h3>
-                    <p className="text-xs text-gray-500">
+                    <h3 className="text-sm font-semibold text-slate-900">{t('dashboard.actions.usage', 'API Usage')}</h3>
+                    <p className="text-xs text-slate-500">
                       {user?.role === 'admin'
                         ? t('dashboard.actions.usageDesc', 'View usage & costs')
                         : t('dashboard.actions.usageDescNoCost', 'View usage')}
@@ -613,7 +613,7 @@ export default function Dashboard() {
 
               <Link
                 to="/dashboard/stats"
-                className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-indigo-200 hover:shadow-md transition-all"
+                className="landing-gradient-stroke bg-white rounded-[28px] p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center">
@@ -622,8 +622,8 @@ export default function Dashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900">{t('dashboard.actions.stats', 'Statistics')}</h3>
-                    <p className="text-xs text-gray-500">
+                    <h3 className="text-sm font-semibold text-slate-900">{t('dashboard.actions.stats', 'Statistics')}</h3>
+                    <p className="text-xs text-slate-500">
                       {activeRequests} {t('dashboard.actions.activeRequests', 'active requests')}
                     </p>
                   </div>
@@ -632,14 +632,14 @@ export default function Dashboard() {
             </div>
 
             {/* Hiring Requests */}
-            <div className="bg-white/90 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="text-base font-semibold text-gray-900">
+            <div className="landing-gradient-stroke bg-white rounded-[28px] shadow-[0_28px_56px_-42px_rgba(15,23,42,0.7)] overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h2 className="text-base font-semibold text-slate-900">
                   {t('dashboard.requests.title', 'Your Hiring Requests')}
                 </h2>
                 <Link
                   to="/start-hiring"
-                  className="text-indigo-600 hover:text-indigo-700 font-medium text-xs flex items-center gap-1"
+                  className="text-blue-600 hover:text-blue-700 font-medium text-xs flex items-center gap-1"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -650,8 +650,8 @@ export default function Dashboard() {
 
               {isLoading ? (
                 <div className="p-12 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                  <p className="text-gray-500 mt-4">{t('dashboard.loading', 'Loading...')}</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-slate-500 mt-4">{t('dashboard.loading', 'Loading...')}</p>
                 </div>
               ) : error ? (
                 <div className="p-12 text-center">
@@ -659,20 +659,20 @@ export default function Dashboard() {
                 </div>
               ) : hiringRequests.length === 0 ? (
                 <div className="p-12 text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                     </svg>
                   </div>
-                  <h3 className="text-base font-medium text-gray-900 mb-2">
+                  <h3 className="text-base font-medium text-slate-900 mb-2">
                     {t('dashboard.requests.empty', 'No hiring requests yet')}
                   </h3>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="text-sm text-slate-500 mb-4">
                     {t('dashboard.requests.emptyDesc', 'Create your first hiring request to start finding candidates.')}
                   </p>
                   <Link
                     to="/start-hiring"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors text-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] text-white font-medium transition-colors text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -681,27 +681,27 @@ export default function Dashboard() {
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-slate-100">
                   {hiringRequests.map((request) => (
                     <div
                       key={request.id}
-                      className="p-5 hover:bg-gray-50/80 transition-colors cursor-pointer"
+                      className="p-5 hover:bg-slate-50/80 transition-colors cursor-pointer"
                       onClick={() => navigate(`/dashboard/requests/${request.id}`)}
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-base font-semibold text-gray-900 truncate">
+                            <h3 className="text-base font-semibold text-slate-900 truncate">
                               {request.title}
                             </h3>
                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
                               {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+                          <p className="text-sm text-slate-500 line-clamp-2 mb-3">
                             {request.requirements}
                           </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-4 text-xs text-slate-500">
                             <span className="flex items-center gap-1">
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -716,7 +716,7 @@ export default function Dashboard() {
                             </span>
                           </div>
                         </div>
-                        <div className="text-xs text-indigo-600 font-medium flex items-center gap-1">
+                        <div className="text-xs text-blue-600 font-medium flex items-center gap-1">
                           {t('dashboard.requests.viewDetail', 'View details')}
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

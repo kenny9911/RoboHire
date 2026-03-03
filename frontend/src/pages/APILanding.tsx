@@ -78,41 +78,41 @@ console.log(result.data.matchScore); // 85`;
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-16 pt-24 sm:pb-20 sm:pt-32 lg:pb-32 lg:pt-40">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-900" />
+        <div className="absolute inset-0 bg-slate-950" />
         <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500 rounded-full blur-3xl" />
+          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500 rounded-full blur-3xl" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
             {/* Left Content */}
             <div className="min-w-0">
-              <p className="mb-3 text-sm font-medium uppercase tracking-wide text-indigo-400 sm:mb-4">
+              <p className="mb-3 text-sm font-medium uppercase tracking-wide text-blue-400 sm:mb-4">
                 {t('apiLanding.hero.badge', 'RoboHire')}
               </p>
-              <h1 className="mb-4 text-3xl font-bold leading-tight text-white sm:mb-6 sm:text-4xl lg:text-6xl">
+              <h1 className="mb-4 text-3xl font-bold leading-tight text-white landing-display sm:mb-6 sm:text-4xl lg:text-6xl">
                 {t('apiLanding.hero.headline', 'Build AI-powered hiring in minutes')}
               </h1>
-              <p className="mb-6 text-base leading-relaxed text-gray-300 sm:mb-8 sm:text-lg lg:text-xl">
+              <p className="mb-6 text-base leading-relaxed text-slate-300 sm:mb-8 sm:text-lg lg:text-xl">
                 {t('apiLanding.hero.subheadline', 'Integrate intelligent resume matching, interview evaluation, and candidate screening into your application with just a few lines of code.')}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
                 <button
                   onClick={() => navigate(isAuthenticated ? '/dashboard/api-keys' : '/login')}
-                  className="w-full rounded-xl bg-white px-6 py-3.5 text-center font-semibold text-gray-900 transition-colors hover:bg-gray-100 sm:w-auto sm:px-8 sm:py-4"
+                  className="w-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3.5 text-center font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 sm:w-auto sm:px-8 sm:py-4"
                 >
                   {t('apiLanding.hero.getKey', 'Get your API key')}
                 </button>
                 <Link
                   to="/docs"
-                  className="w-full rounded-xl border border-gray-600 px-6 py-3.5 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto sm:px-8 sm:py-4"
+                  className="w-full rounded-full border border-slate-600 px-6 py-3.5 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto sm:px-8 sm:py-4"
                 >
                   {t('apiLanding.hero.readDocs', 'Read the docs')}
                 </Link>
                 <Link
                   to="/api-playground"
-                  className="w-full rounded-xl border border-gray-600 px-6 py-3.5 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto sm:px-8 sm:py-4"
+                  className="w-full rounded-full border border-slate-600 px-6 py-3.5 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto sm:px-8 sm:py-4"
                 >
                   {t('apiLanding.hero.playground', 'API Playground')}
                 </Link>
@@ -121,19 +121,19 @@ console.log(result.data.matchScore); // 85`;
 
             {/* Right Code Preview */}
             <div className="relative min-w-0">
-              <div className="w-full overflow-hidden rounded-2xl border border-gray-700 bg-gray-900/80 backdrop-blur-sm">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-700">
+              <div className="w-full overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/80 backdrop-blur-sm">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-700">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
                   <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="ml-2 text-sm text-gray-400">example.js</span>
+                  <span className="ml-2 text-sm text-slate-400">example.js</span>
                 </div>
                 <pre className="max-w-full overflow-x-auto p-3 text-xs sm:p-4 sm:text-sm">
-                  <code className="text-gray-300">
+                  <code className="text-slate-300">
                     {codeExample.split('\n').map((line, i) => (
                       <div key={i} className="whitespace-pre leading-relaxed">
                         {line.includes('//') ? (
-                          <span className="text-gray-500">{line}</span>
+                          <span className="text-slate-500">{line}</span>
                         ) : line.includes("'") || line.includes('"') ? (
                           <span>
                             {line.split(/('[^']*'|"[^"]*")/g).map((part, j) =>
@@ -158,16 +158,16 @@ console.log(result.data.matchScore); // 85`;
       </section>
 
       {/* What is it Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-3">
+            <p className="text-sm font-medium text-blue-600 uppercase tracking-wide mb-3">
               {t('apiLanding.what.badge', 'What is it?')}
             </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 landing-display mb-6">
               {t('apiLanding.what.title', 'Powerful AI recruitment APIs')}
             </h2>
-            <p className="text-lg text-gray-600 leading-relaxed">
+            <p className="text-lg text-slate-600 leading-relaxed">
               {t('apiLanding.what.description', 'RoboHire provides a complete suite of AI-powered recruitment tools. Match resumes to job descriptions, parse documents, evaluate interviews, and automate candidate communication - all through simple REST API endpoints.')}
             </p>
           </div>
@@ -175,7 +175,7 @@ console.log(result.data.matchScore); // 85`;
           <div className="flex justify-center gap-4">
             <Link
               to="/docs"
-              className="inline-flex items-center gap-2 text-indigo-600 font-medium hover:text-indigo-700"
+              className="inline-flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700"
             >
               {t('apiLanding.what.exploreDocs', 'Explore documentation')}
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -190,23 +190,23 @@ console.log(result.data.matchScore); // 85`;
       <section className="py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-3">
+            <p className="text-sm font-medium text-blue-600 uppercase tracking-wide mb-3">
               {t('apiLanding.howItWorks.badge', 'Getting Started')}
             </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 landing-display">
               {t('apiLanding.howItWorks.title', 'How it works')}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
             {steps.map((step, index) => (
-              <div key={index} className="relative">
+              <div key={index} className="landing-gradient-stroke relative rounded-[28px] bg-white p-7 shadow-[0_28px_52px_-40px_rgba(15,23,42,0.62)]">
                 {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-full w-full h-px bg-gray-200 -translate-x-1/2" />
+                  <div className="hidden md:block absolute top-8 left-full w-full h-px bg-slate-200 -translate-x-1/2 z-10" />
                 )}
-                <div className="text-5xl font-bold text-gray-200 mb-4">{step.number}</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
+                <div className="text-5xl font-bold text-slate-200 mb-4">{step.number}</div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">{step.title}</h3>
+                <p className="text-slate-600">{step.description}</p>
               </div>
             ))}
           </div>
@@ -214,26 +214,26 @@ console.log(result.data.matchScore); // 85`;
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-3">
+            <p className="text-sm font-medium text-blue-600 uppercase tracking-wide mb-3">
               {t('apiLanding.features.badge', 'Key Features')}
             </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 landing-display mb-4">
               {t('apiLanding.features.title', 'Everything you need to automate hiring')}
             </h2>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-slate-600">
               {t('apiLanding.features.subtitle', 'Powerful APIs that handle the complex AI work behind the scenes.')}
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="w-2 h-2 rounded-full bg-indigo-500 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600 text-sm">{feature.description}</p>
+              <div key={index} className="landing-gradient-stroke bg-white rounded-[28px] p-6 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300">
+                <div className="w-2 h-2 rounded-full bg-blue-600 mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{feature.title}</h3>
+                <p className="text-slate-600 text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -243,15 +243,15 @@ console.log(result.data.matchScore); // 85`;
       {/* Playground CTA */}
       <section className="py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 landing-display mb-4">
             {t('apiLanding.playground.title', 'Try it in the Playground')}
           </h2>
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-slate-600 mb-8">
             {t('apiLanding.playground.description', 'Test our APIs interactively before integrating them into your application.')}
           </p>
           <button
             onClick={() => navigate('/api-playground')}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-full shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -263,30 +263,30 @@ console.log(result.data.matchScore); // 85`;
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-gray-900 py-24">
+      <section className="bg-slate-950 py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white landing-display mb-4">
             {t('apiLanding.cta.title', 'Get your API key')}
           </h2>
-          <p className="text-lg text-gray-400 mb-8">
+          <p className="text-lg text-slate-400 mb-8">
             {t('apiLanding.cta.description', 'Start building AI-powered hiring features today. Free to start, no credit card required.')}
           </p>
           <div className="flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
             <button
               onClick={() => navigate(isAuthenticated ? '/dashboard/api-keys' : '/login')}
-              className="w-full rounded-xl bg-white px-8 py-4 font-semibold text-gray-900 transition-colors hover:bg-gray-100 sm:w-auto"
+              className="w-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-4 font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 sm:w-auto"
             >
               {t('apiLanding.cta.getStarted', 'Get started')}
             </button>
             <Link
               to="/docs"
-              className="w-full rounded-xl border border-gray-600 px-8 py-4 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
+              className="w-full rounded-full border border-slate-600 px-8 py-4 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
               {t('apiLanding.cta.viewDocs', 'View documentation')}
             </Link>
             <Link
               to="/api-playground"
-              className="w-full rounded-xl border border-gray-600 px-8 py-4 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
+              className="w-full rounded-full border border-slate-600 px-8 py-4 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
               {t('apiLanding.hero.playground', 'API Playground')}
             </Link>

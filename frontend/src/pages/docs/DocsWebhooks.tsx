@@ -68,18 +68,18 @@ app.post('/webhook', (req, res) => {
   return (
     <div>
       <SEO title={t('seo.docsWebhooks.title', 'Webhooks')} description={t('seo.docsWebhooks.desc', 'Configure webhooks to receive real-time notifications about hiring events and interview completions.')} url="https://robohire.io/docs/webhooks" keywords={t('seo.docsWebhooks.keywords', 'RoboHire API documentation, webhooks, real-time notifications, hiring events')} />
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.webhooks.title', 'Webhooks')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.webhooks.intro', 'Receive real-time notifications when events occur in RoboHire. Webhooks allow you to integrate with your existing systems and automate workflows.')}
       </p>
 
       {/* Setup */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.webhooks.setup.title', 'Setting Up Webhooks')}
       </h2>
-      <ol className="list-decimal list-inside space-y-2 text-gray-600 mb-6">
+      <ol className="list-decimal list-inside space-y-2 text-slate-600 mb-6">
         <li>{t('docs.webhooks.setup.step1', 'Configure your webhook URL in the dashboard settings')}</li>
         <li>{t('docs.webhooks.setup.step2', 'Select which events you want to receive')}</li>
         <li>{t('docs.webhooks.setup.step3', 'Copy your webhook secret for signature verification')}</li>
@@ -87,13 +87,13 @@ app.post('/webhook', (req, res) => {
       </ol>
 
       {/* Event Types */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.webhooks.events.title', 'Event Types')}
       </h2>
       <ParamTable title={t('docs.webhooks.events.tableTitle', 'Available Events')} params={eventTypes} />
 
       {/* Payload Structure */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.webhooks.payload.title', 'Payload Structure')}
       </h2>
       <ParamTable title={t('docs.webhooks.payload.tableTitle', 'Payload Fields')} params={payloadFields} />
@@ -101,17 +101,17 @@ app.post('/webhook', (req, res) => {
       <CodeBlock code={examplePayload} language="json" title={t('docs.webhooks.payload.exampleTitle', 'Example Webhook Payload')} />
 
       {/* Signature Verification */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.webhooks.verification.title', 'Signature Verification')}
       </h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-slate-600 mb-4">
         {t('docs.webhooks.verification.desc', 'All webhook requests include an X-RoboHire-Signature header containing an HMAC-SHA256 signature of the payload. Always verify this signature to ensure the webhook is from RoboHire.')}
       </p>
 
       <CodeBlock code={verificationCode} language="javascript" title={t('docs.webhooks.verification.exampleTitle', 'Verification Example (Node.js)')} />
 
       {/* Best Practices */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.webhooks.bestPractices.title', 'Best Practices')}
       </h2>
       <div className="bg-blue-50 rounded-xl p-6">
@@ -150,13 +150,13 @@ app.post('/webhook', (req, res) => {
       </div>
 
       {/* Retry Policy */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.webhooks.retries.title', 'Retry Policy')}
       </h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-slate-600 mb-4">
         {t('docs.webhooks.retries.desc', 'If your endpoint returns an error or times out, we will retry the webhook delivery:')}
       </p>
-      <ul className="list-disc list-inside text-gray-600 space-y-1">
+      <ul className="list-disc list-inside text-slate-600 space-y-1">
         <li>{t('docs.webhooks.retries.r1', '1st retry: After 1 minute')}</li>
         <li>{t('docs.webhooks.retries.r2', '2nd retry: After 5 minutes')}</li>
         <li>{t('docs.webhooks.retries.r3', '3rd retry: After 30 minutes')}</li>

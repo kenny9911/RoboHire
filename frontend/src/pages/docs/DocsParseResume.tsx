@@ -126,10 +126,10 @@ result = response.json()`,
   return (
     <div>
       <SEO title={t('seo.docsParseResume.title', 'Parse Resume API')} description={t('seo.docsParseResume.desc', 'API reference for resume parsing. Extract structured data from resumes using AI.')} url="https://robohire.io/docs/api/parse-resume" keywords={t('seo.docsParseResume.keywords', 'RoboHire API documentation, resume parsing API, resume data extraction, AI resume parser')} />
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.parseResume.title', 'Parse Resume')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.parseResume.intro', 'Extract structured data from a resume PDF, including contact information, experience, education, and skills.')}
       </p>
 
@@ -140,7 +140,7 @@ result = response.json()`,
       />
 
       {/* Request */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.parseResume.request', 'Request')}
       </h2>
       <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
@@ -154,7 +154,7 @@ result = response.json()`,
       />
 
       {/* Response */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.parseResume.response', 'Response')}
       </h2>
       <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
@@ -162,13 +162,13 @@ result = response.json()`,
       <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Supported Formats */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.parseResume.formats.title', 'Supported Formats')}
       </h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-slate-600 mb-4">
         {t('docs.parseResume.formats.desc', 'Currently supported document formats:')}
       </p>
-      <ul className="list-disc list-inside text-gray-600 space-y-1 mb-6">
+      <ul className="list-disc list-inside text-slate-600 space-y-1 mb-6">
         <li>PDF (.pdf)</li>
       </ul>
 
@@ -179,16 +179,16 @@ result = response.json()`,
       </div>
 
       {/* Try It */}
-      <div className="bg-indigo-50 rounded-xl p-6">
-        <h3 className="font-semibold text-indigo-900 mb-2">
+      <div className="bg-blue-50 rounded-xl p-6">
+        <h3 className="font-semibold text-blue-900 mb-2">
           {t('docs.parseResume.tryIt.title', 'Try it out')}
         </h3>
-        <p className="text-indigo-700 text-sm mb-3">
+        <p className="text-blue-700 text-sm mb-3">
           {t('docs.parseResume.tryIt.desc', 'Test this endpoint interactively in the API Playground.')}
         </p>
         <Link
           to="/api-playground/parse-resume"
-          className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           {t('docs.parseResume.tryIt.cta', 'Open in Playground')}
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

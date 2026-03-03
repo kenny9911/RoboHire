@@ -142,7 +142,7 @@ export default function DocsLayout() {
       <div className="flex pt-[88px] sm:pt-[104px]">
         {/* Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-40 w-72 bg-gray-50 border-r border-gray-200 pt-[88px] sm:pt-[104px]
+          fixed inset-y-0 left-0 z-40 w-72 bg-slate-50 border-r border-slate-200 pt-[88px] sm:pt-[104px]
           transform transition-transform duration-200 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 lg:static lg:inset-auto lg:pt-0
@@ -151,7 +151,7 @@ export default function DocsLayout() {
             <nav className="space-y-8">
               {navigation.map((section) => (
                 <div key={section.title}>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                     {section.title}
                   </h3>
                   <ul className="space-y-1">
@@ -163,8 +163,8 @@ export default function DocsLayout() {
                           className={({ isActive }) =>
                             `block px-3 py-2 rounded-lg text-sm transition-colors ${
                               isActive
-                                ? 'bg-indigo-50 text-indigo-700 font-medium'
-                                : 'text-gray-700 hover:bg-gray-100'
+                                ? 'bg-blue-50 text-blue-700 font-medium'
+                                : 'text-slate-700 hover:bg-slate-100'
                             }`
                           }
                         >
@@ -178,16 +178,16 @@ export default function DocsLayout() {
             </nav>
 
             {/* Try It Section */}
-            <div className="mt-8 p-4 bg-indigo-50 rounded-xl">
-              <h4 className="font-medium text-indigo-900 mb-2">
+            <div className="mt-8 p-4 bg-blue-50 rounded-xl">
+              <h4 className="font-medium text-blue-900 mb-2">
                 {t('docs.tryIt.title', 'Try it out')}
               </h4>
-              <p className="text-sm text-indigo-700 mb-3">
+              <p className="text-sm text-blue-700 mb-3">
                 {t('docs.tryIt.description', 'Test the APIs interactively in our playground.')}
               </p>
               <Link
                 to="/api-playground"
-                className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 {t('docs.tryIt.cta', 'Open Playground')}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,12 +214,12 @@ export default function DocsLayout() {
               <nav className="mb-6 text-sm">
                 <ol className="flex items-center gap-2">
                   <li>
-                    <Link to="/docs" className="text-gray-500 hover:text-gray-700">
+                    <Link to="/docs" className="text-slate-500 hover:text-slate-700">
                       {t('docs.title', 'Docs')}
                     </Link>
                   </li>
-                  <li className="text-gray-400">/</li>
-                  <li className="text-gray-500">{currentSection.title}</li>
+                  <li className="text-slate-400">/</li>
+                  <li className="text-slate-500">{currentSection.title}</li>
                 </ol>
               </nav>
             )}
@@ -228,14 +228,14 @@ export default function DocsLayout() {
             <Outlet />
 
             {/* Footer Navigation */}
-            <div className="mt-16 pt-8 border-t border-gray-200">
+            <div className="mt-16 pt-8 border-t border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
                   {/* Previous link would go here */}
                 </div>
                 <Link
                   to="/api-playground"
-                  className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                  className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   {t('docs.footer.tryPlayground', 'Try in Playground')}
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

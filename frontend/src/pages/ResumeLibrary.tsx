@@ -170,13 +170,13 @@ export default function ResumeLibrary() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('resumeLibrary.title', 'Resume Library')}</h1>
-          <p className="text-sm text-gray-500 mt-1">{t('resumeLibrary.subtitle', 'Manage and analyze your candidate resumes')}</p>
+          <h1 className="text-2xl font-bold text-slate-900 landing-display">{t('resumeLibrary.title', 'Resume Library')}</h1>
+          <p className="text-sm text-slate-500 mt-1">{t('resumeLibrary.subtitle', 'Manage and analyze your candidate resumes')}</p>
         </div>
         <div className="flex gap-2 mt-4 sm:mt-0">
           <button
             onClick={() => openUpload(false)}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-sm font-medium text-white rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-colors flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -185,7 +185,7 @@ export default function ResumeLibrary() {
           </button>
           <button
             onClick={() => openUpload(true)}
-            className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-full border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700 transition-colors"
           >
             {t('resumeLibrary.uploadBatch', 'Batch Upload')}
           </button>
@@ -195,17 +195,17 @@ export default function ResumeLibrary() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('resumeLibrary.stats.total', 'Total Resumes')}</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{stats.total}</p>
+          <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-4">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{t('resumeLibrary.stats.total', 'Total Resumes')}</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{stats.total}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('resumeLibrary.stats.thisWeek', 'This Week')}</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{stats.thisWeek}</p>
+          <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-4">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{t('resumeLibrary.stats.thisWeek', 'This Week')}</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{stats.thisWeek}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('resumeLibrary.stats.analyzed', 'AI Analyzed')}</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{stats.analyzed}</p>
+          <div className="bg-white/80 rounded-2xl border border-slate-200/80 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] backdrop-blur p-4">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{t('resumeLibrary.stats.analyzed', 'AI Analyzed')}</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{stats.analyzed}</p>
           </div>
         </div>
       )}
@@ -213,7 +213,7 @@ export default function ResumeLibrary() {
       {/* Search */}
       <div className="flex gap-2 mb-6">
         <div className="flex-1 relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -222,12 +222,12 @@ export default function ResumeLibrary() {
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('resumeLibrary.search.placeholder', 'Search by name, skills, or role...')}
-            className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <button
           onClick={handleSearch}
-          className="px-4 py-2.5 text-sm font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
+          className="px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-900 transition-colors"
         >
           {t('actions.search', 'Search')}
         </button>
@@ -236,24 +236,24 @@ export default function ResumeLibrary() {
       <div className="flex items-center gap-2 mb-4">
         <button
           onClick={() => handleStatusFilterChange('active')}
-          className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-            statusFilter === 'active' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+            statusFilter === 'active' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
           }`}
         >
           {t('resumeLibrary.filters.active', 'Active')}
         </button>
         <button
           onClick={() => handleStatusFilterChange('archived')}
-          className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-            statusFilter === 'archived' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+            statusFilter === 'archived' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
           }`}
         >
           {t('resumeLibrary.filters.archived', 'Archived')}
         </button>
         <button
           onClick={() => handleStatusFilterChange('all')}
-          className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-            statusFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+            statusFilter === 'all' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
           }`}
         >
           {t('resumeLibrary.filters.all', 'All')}
@@ -271,25 +271,25 @@ export default function ResumeLibrary() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-24">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
       ) : resumes.length === 0 ? (
         <div className="text-center py-24">
-          <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           {statusFilter === 'archived' ? (
             <>
-              <h3 className="text-lg font-medium text-gray-700 mb-2">{t('resumeLibrary.empty.archivedTitle', 'No archived resumes')}</h3>
-              <p className="text-sm text-gray-500 mb-6">{t('resumeLibrary.empty.archivedDescription', 'Archived resumes will appear here')}</p>
+              <h3 className="text-lg font-medium text-slate-700 mb-2">{t('resumeLibrary.empty.archivedTitle', 'No archived resumes')}</h3>
+              <p className="text-sm text-slate-500 mb-6">{t('resumeLibrary.empty.archivedDescription', 'Archived resumes will appear here')}</p>
             </>
           ) : (
             <>
-              <h3 className="text-lg font-medium text-gray-700 mb-2">{t('resumeLibrary.empty.title', 'No resumes yet')}</h3>
-              <p className="text-sm text-gray-500 mb-6">{t('resumeLibrary.empty.description', 'Upload resumes to build your candidate library')}</p>
+              <h3 className="text-lg font-medium text-slate-700 mb-2">{t('resumeLibrary.empty.title', 'No resumes yet')}</h3>
+              <p className="text-sm text-slate-500 mb-6">{t('resumeLibrary.empty.description', 'Upload resumes to build your candidate library')}</p>
               <button
                 onClick={() => openUpload(false)}
-                className="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="px-6 py-2.5 text-sm font-medium text-white rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-colors"
               >
                 {t('resumeLibrary.empty.cta', 'Upload Your First Resume')}
               </button>
@@ -298,7 +298,7 @@ export default function ResumeLibrary() {
         </div>
       ) : (
         <>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-slate-500 mb-4">
             {total} {t('resumeLibrary.stats.total', 'resumes')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
@@ -318,21 +318,21 @@ export default function ResumeLibrary() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="text-sm text-gray-600 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="text-sm text-slate-600 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {t('usage.callHistory.prev', 'Previous')}
               </button>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-slate-500">
                 {t('usage.callHistory.pageInfo', 'Page {{page}} of {{total}}', { page, total: totalPages })}
               </span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="text-sm text-gray-600 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="text-sm text-slate-600 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {t('usage.callHistory.next', 'Next')}
               </button>

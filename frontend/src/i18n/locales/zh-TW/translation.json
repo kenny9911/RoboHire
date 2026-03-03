@@ -1,0 +1,1585 @@
+{
+  "app": {
+    "title": "RoboHire",
+    "subtitle": "管理面板"
+  },
+  "language": {
+    "label": "語言"
+  },
+  "nav": {
+    "matchResume": "簡歷匹配",
+    "inviteCandidate": "邀請候選人",
+    "evaluateInterview": "面試評估",
+    "parseResume": "解析簡歷",
+    "parseJd": "解析JD"
+  },
+  "actions": {
+    "paste": "貼上",
+    "pasted": "已貼上！",
+    "copy": "複製",
+    "copied": "已複製！",
+    "clear": "清空",
+    "download": "下載",
+    "search": "搜尋...",
+    "expand": "展開",
+    "collapse": "收起",
+    "formatted": "格式化",
+    "json": "JSON",
+    "formattedView": "格式化檢視",
+    "jsonView": "JSON 檢視",
+    "newAnalysis": "新分析",
+    "downloadReport": "下載報告",
+    "analyzing": "分析中...",
+    "analyzeMatch": "開始匹配"
+  },
+  "status": {
+    "sending": "傳送中...",
+    "requestId": "請求 ID",
+    "status": "狀態"
+  },
+  "units": {
+    "characters": "字元",
+    "lines": "行"
+  },
+  "messages": {
+    "noResults": "暫無結果。提交請求後可檢視結果。",
+    "error": "錯誤",
+    "thisMayTake": "這可能需要 10-15 秒...",
+    "noMatchesFound": "未找到匹配內容"
+  },
+  "tooltips": {
+    "paste": "從剪貼簿貼上 (Ctrl+V)",
+    "copy": "複製到剪貼簿 (Ctrl+C)",
+    "clear": "清空內容",
+    "downloadJson": "下載 JSON",
+    "copyJson": "複製 JSON"
+  },
+  "components": {
+    "fileUpload": {
+      "defaultLabel": "上傳 PDF",
+      "dragDrop": "拖拽檔案或點選瀏覽"
+    },
+    "resultViewer": {
+      "title": "結果"
+    },
+    "jsonViewer": {
+      "title": "JSON 響應"
+    }
+  },
+  "auth": {
+    "welcomeBack": "歡迎回來",
+    "createAccount": "建立賬戶",
+    "loginSubtitle": "登入以訪問您的控制面板",
+    "signupSubtitle": "用 AI 開啟智慧招聘",
+    "signIn": "登入",
+    "signUp": "註冊",
+    "continueWithGoogle": "使用 Google 登入",
+    "continueWithGitHub": "使用 GitHub 登入",
+    "continueWithLinkedIn": "使用 LinkedIn 登入",
+    "orContinueWith": "或使用郵箱繼續",
+    "name": "姓名",
+    "namePlaceholder": "張三",
+    "company": "公司",
+    "companyPlaceholder": "科技公司",
+    "optional": "可選",
+    "email": "郵箱",
+    "emailPlaceholder": "you@example.com",
+    "password": "密碼",
+    "passwordPlaceholderSignup": "至少8個字元",
+    "signInButton": "登入",
+    "createAccountButton": "建立賬戶",
+    "loading": "請稍候...",
+    "termsAgreement": "建立賬戶即表示您同意我們的",
+    "termsOfService": "服務條款",
+    "and": "和",
+    "privacyPolicy": "隱私政策",
+    "backToHome": "返回首頁"
+  },
+  "landing": {
+    "nav": {
+      "services": "服務",
+      "howItWorks": "工作原理",
+      "api": "API",
+      "docs": "文件",
+      "features": "功能特點",
+      "pricing": "價格",
+      "signIn": "登入",
+      "getStarted": "開始使用",
+      "dashboard": "控制面板"
+    },
+    "hero": {
+      "badge": "AI 驅動的招聘平臺",
+      "headline": "比別人更快地",
+      "headlineHighlight": "招到精英人才",
+      "subheadline": "告別花費大量時間翻閱簡歷堆。我們的 AI 招聘助手自動篩選候選人、進行面試，並提供全面的評估報告。",
+      "ctaPrimary": "開始免費試用",
+      "ctaSecondary": "立即開始招聘",
+      "stat1": "節省時間",
+      "stat2": "篩選更快",
+      "stat3": "合作企業",
+      "stat4": "全天候服務"
+    },
+    "services": {
+      "title": "三種高效招聘方式",
+      "subtitle": "選擇適合您需求的方案 - 或同時使用兩者以獲得最大效率。",
+      "hiring": {
+        "title": "開始招聘",
+        "subtitle": "AI 招聘助手",
+        "description": "讓 AI 處理繁重工作。我們的招聘助手自動篩選簡歷、進行面試並生成評估報告。專注於重要的事情 - 與優秀候選人會面。",
+        "feature1": "自動簡歷篩選",
+        "feature2": "AI 驅動面試",
+        "feature3": "全面評估報告",
+        "feature4": "Webhook 整合",
+        "cta": "立即開始招聘",
+        "badge": "最受歡迎"
+      },
+      "quickInvite": {
+        "title": "一鍵邀約面試",
+        "subtitle": "批次一鍵邀約",
+        "description": "上傳簡歷和職位描述，一鍵向所有候選人傳送帶有二維碼和連結的面試邀請。",
+        "feature1": "批次上傳簡歷（PDF）",
+        "feature2": "AI 智慧簡歷解析",
+        "feature3": "二維碼面試連結",
+        "feature4": "一鍵傳送郵件邀請",
+        "cta": "開始邀約",
+        "badge": "新功能"
+      },
+      "api": {
+        "title": "RoboHire",
+        "subtitle": "面向開發者",
+        "description": "將強大的 AI 招聘能力整合到您現有的系統中。透過我們全面的 API 套件解析簡歷、匹配候選人、評估面試等。",
+        "feature1": "簡歷與 JD 解析",
+        "feature2": "AI 候選人匹配",
+        "feature3": "面試評估",
+        "feature4": "RESTful API 介面",
+        "cta": "探索 API"
+      }
+    },
+    "howItWorks": {
+      "badge": "簡單流程",
+      "title": "RoboHire 工作原理",
+      "subtitle": "我們使用 AI 作為您的招聘助手，審核每份簡歷，聯絡和面試匹配的候選人，並自動傳送全面的評估報告。",
+      "step1": {
+        "title": "設定職位",
+        "description": "描述您理想的候選人或上傳職位描述。指定必備技能、經驗要求和加分項。其餘的交給我們。"
+      },
+      "step2": {
+        "title": "接入您的工作流",
+        "description": "透過 API 或 Webhook 與您現有的 ATS 整合。無需複雜操作 - 只需將候選人管道指向 RoboHire，我們將接管一切。"
+      },
+      "step3": {
+        "title": "獲取最佳匹配",
+        "description": "我們的 AI 篩選每份申請，進行初步面試，並按匹配度對候選人進行排名。您只需與合適的人交流。"
+      },
+      "step4": {
+        "title": "即時獲取報告",
+        "description": "透過 Webhook 接收全面的評估報告。瞭解每個候選人匹配的原因 - 技能評估、面試分析和錄用建議。"
+      }
+    },
+    "features": {
+      "badge": "強大功能",
+      "title": "智慧招聘所需的一切",
+      "subtitle": "從 AI 篩選到自動面試，我們提供所有工具來改變您的招聘流程。",
+      "aiScreening": {
+        "title": "AI 簡歷篩選",
+        "description": "我們的 AI 根據您的要求分析每份簡歷，識別必備技能、經驗差距和潛在能力。"
+      },
+      "autoInterviews": {
+        "title": "自動面試",
+        "description": "AI 全天候進行初步篩選面試，提出相關問題並實時評估回答。"
+      },
+      "evalReports": {
+        "title": "評估報告",
+        "description": "獲取包含技能評估、面試分析、優缺點和錄用建議的全面報告。"
+      },
+      "timeSavings": {
+        "title": "節省 90% 時間",
+        "description": "不再花費數小時審核不匹配的候選人。將時間集中在最適合您團隊的人選上。"
+      },
+      "apiAccess": {
+        "title": "開發者 API",
+        "description": "完整的 REST API 訪問，用於解析、匹配和評估。將 AI 招聘能力整合到您現有的系統中。"
+      },
+      "webhooks": {
+        "title": "Webhook 推送",
+        "description": "透過 Webhook 自動接收入圍候選人和評估報告。與您的工作流無縫整合。"
+      },
+      "multilingual": {
+        "title": "多語言支援",
+        "description": "支援 7 種語言，包括英語、中文、日語、西班牙語、法語、葡萄牙語和德語。"
+      },
+      "cheatingDetection": {
+        "title": "作弊檢測",
+        "description": "先進的 AI 分析來檢測 AI 輔助回答，確保您評估的是真實的候選人能力。"
+      }
+    },
+    "cta": {
+      "title": "準備好智慧招聘了嗎？",
+      "subtitle": "加入數百家使用 AI 更快找到精英人才的公司。立即開始免費試用 - 無需信用卡。",
+      "primary": "開始免費試用",
+      "secondary": "聯絡銷售",
+      "benefit1": "無需信用卡",
+      "benefit2": "14 天免費試用",
+      "benefit3": "隨時取消"
+    },
+    "footer": {
+      "tagline": "AI 驅動的招聘平臺，幫助您比他人更快地找到和僱用精英人才。",
+      "product": "產品",
+      "startHiring": "開始招聘",
+      "api": "API",
+      "playground": "Playground",
+      "apiDocs": "API 文件",
+      "pricing": "價格",
+      "developers": "開發者",
+      "docs": "文件",
+      "apiReference": "API 參考",
+      "quickStart": "快速開始",
+      "apiKeys": "API 金鑰",
+      "changelog": "更新日誌",
+      "company": "公司",
+      "about": "關於我們",
+      "blog": "部落格",
+      "careers": "加入我們",
+      "contact": "聯絡我們",
+      "resources": "資源",
+      "help": "幫助中心",
+      "guides": "指南",
+      "status": "服務狀態",
+      "legal": "法律",
+      "privacy": "隱私政策",
+      "terms": "服務條款",
+      "cookies": "Cookie 政策",
+      "security": "安全",
+      "rights": "版權所有。"
+    }
+  },
+  "hiring": {
+    "welcome": "歡迎！我是您的 AI 招聘助手。告訴我您正在招聘的職位，我會幫助您找到完美的候選人。\n\n您可以描述您理想的候選人，貼上職位描述，或上傳 JD 檔案。您在尋找什麼？",
+    "gotIt": "好的！我已經記錄了您的要求。讓我總結一下：\n\n",
+    "confirm": "這樣對嗎？您可以：\n- 輸入'是'開始招聘\n- 新增更多詳情\n- 上傳完整的 JD 以獲得更準確的匹配",
+    "moreInfo": "這是一個好的開始！您能告訴我更多關於：\n\n",
+    "orUpload": "或者您可以上傳職位描述檔案以獲得更詳細的匹配。",
+    "loginRequired": "要建立招聘請求並開始接收候選人，您需要先登入。\n\n",
+    "loginPrompt": "點選下方按鈕登入或建立賬戶。您的招聘要求將被儲存。",
+    "updated": "明白了！我已更新您的要求。準備好開始招聘了嗎？輸入'是'繼續，或繼續新增詳情。",
+    "jdParsed": "我已分析了您的職位描述。以下是我發現的：\n\n",
+    "jdConfirm": "您想繼續使用這些要求，還是想新增任何特定條件？",
+    "confirmTitle": "確認招聘請求",
+    "confirmSubtitle": "建立請求前，請確認並編輯職位名稱。",
+    "titleLabel": "職位名稱",
+    "titlePlaceholder": "例如：高階全棧工程師",
+    "titleGenerating": "正在生成職位名稱...",
+    "titleError": "無法生成職位名稱，請手動編輯。",
+    "requirementsLabel": "崗位要求",
+    "jdLabel": "職位描述",
+    "jdMarkdownLabel": "Markdown",
+    "jdPlaceholder": "草稿將顯示在這裡...",
+    "jdGenerating": "正在生成職位描述...",
+    "jdPreview": "預覽",
+    "jdPreviewEmpty": "預覽將顯示在這裡...",
+    "jdAiGenerate": "AI 生成",
+    "jdAiRefine": "AI 最佳化",
+    "jdError": "無法生成職位描述，請手動編輯。",
+    "createRequest": "建立招聘請求",
+    "defaultTitle": "新的招聘請求",
+    "success": "您的招聘請求已建立！🎉\n\n",
+    "nextSteps": "**接下來會發生什麼：**\n",
+    "step1": "我們的 AI 將開始篩選收到的候選人",
+    "step2": "匹配的候選人將自動安排面試",
+    "step3": "您將收到最佳匹配候選人的評估報告",
+    "visitDashboard": "訪問您的控制面板以跟蹤進度並管理候選人。",
+    "chatError": "抱歉，處理過程中遇到了問題。請重試。",
+    "dashboard": "控制面板",
+    "error": "建立請求時出現問題：",
+    "tryAgain": "請重試或聯絡支援團隊。",
+    "signIn": "登入",
+    "thinking": {
+      "title": "思考中...",
+      "analyzeTitle": "正在分析你的需求",
+      "analyzeThought": "提取崗位背景、核心要求和缺失資訊。",
+      "benchmarkTitle": "正在對標崗位預期",
+      "benchmarkThought": "將你的需求與該崗位的成熟招聘模式進行比較。",
+      "draftTitle": "正在起草建議",
+      "draftThought": "整理可執行建議、澄清問題和下一步行動。"
+    },
+    "readyToStart": "準備好開始招聘了嗎？",
+    "signInToSave": "登入以儲存您的招聘請求並開始接收候選人。",
+    "signInToContinue": "登入以繼續",
+    "goToDashboard": "前往控制面板",
+    "uploadJd": "上傳職位描述",
+    "inputPlaceholder": "描述您理想的候選人...",
+    "helperText": "按 Enter 傳送，Shift+Enter 換行。上傳 JD 檔案可獲得更詳細的匹配。",
+    "inputHelperText": "按 Enter 傳送，Shift+Enter 換行。上傳 JD 檔案可更快設定。",
+    "heroTitle": "開始使用 AI 招聘",
+    "heroSubtitle": "告訴我們你要找的人才，我們的 AI 將幫助你篩選、評估並找到最佳候選人。",
+    "templatesTitle": "熱門崗位模板",
+    "templatesSubtitle": "從預設模板開始，或描述你的需求",
+    "viewAllTemplates": "檢視全部模板",
+    "howItWorksTitle": "工作原理",
+    "howItWorks": {
+      "step1": {
+        "title": "描述你的崗位",
+        "desc": "告訴我們所需的技能、經驗和特質。"
+      },
+      "step2": {
+        "title": "AI 篩選候選人",
+        "desc": "AI 會審閱簡歷、進行初篩面試並評估匹配度。"
+      },
+      "step3": {
+        "title": "檢視最佳匹配",
+        "desc": "獲取最佳候選人的詳細報告，加速招聘決策。"
+      }
+    },
+    "ctaTitle": "準備好簡化招聘了嗎？",
+    "ctaSubtitle": "加入數千家企業，使用 AI 更快更聰明地招聘。",
+    "ctaButton": "立即開始招聘",
+    "newRequest": "新建請求",
+    "templateSelected": "我想招聘：{{title}}",
+    "quickStartSelected": "我想招聘一名{{role}}",
+    "quickStartFromJd": "基於職位描述的候選人",
+    "defaultRoleLabel": "該崗位",
+    "suggestions": {
+      "title": "試著這樣問",
+      "general1": "細化{{role}}的必備技能與加分技能。",
+      "general2": "為這個崗位給出面試流程和評分卡建議。",
+      "general3": "現在幫我起草最終版職位描述。",
+      "confirm1": "把這份 JD 精簡成 8 條要點。",
+      "confirm2": "補充薪資範圍和預計入職時間。",
+      "confirm3": "把這份 JD 最佳化為更適合遠端優先候選人的版本。"
+    },
+    "quickRoles": {
+      "engineer": "軟體工程師",
+      "pm": "產品經理",
+      "designer": "UX 設計師",
+      "data": "資料科學家"
+    },
+    "history": "歷史記錄",
+    "expandSidebar": "展開側邊欄",
+    "collapseSidebar": "收起側邊欄",
+    "newChat": "新聊天",
+    "backToDashboard": "返回控制面板",
+    "today": "今天",
+    "yesterday": "昨天",
+    "lastWeek": "最近 7 天",
+    "older": "更早",
+    "chatSessions": "聊天記錄",
+    "noSessions": "暫無聊天記錄",
+    "pastRequisitions": "歷史招聘需求",
+    "noRequisitions": "暫無招聘需求",
+    "untitledChat": "未命名聊天",
+    "deleteSession": "刪除聊天",
+    "confirmDelete": "確定要刪除這個聊天嗎？",
+    "useTemplate": "使用模板",
+    "searchTemplates": "搜尋模板...",
+    "allCategories": "全部",
+    "noTemplatesFound": "未找到模板",
+    "tryDifferentSearch": "換個關鍵詞或分類試試",
+    "showingTemplates": "共顯示 {{count}} 個模板",
+    "categories": {
+      "engineering": "工程",
+      "product": "產品",
+      "design": "設計",
+      "sales": "銷售",
+      "marketing": "市場",
+      "operations": "運營",
+      "finance": "財務",
+      "hr": "人力資源"
+    },
+    "templates": {
+      "aiSoftwareEngineer": {
+        "title": "AI 軟體工程師",
+        "description": "打造 AI 產品的全棧工程，從原型到上線",
+        "experienceLevel": "4 年以上",
+        "requirements": "我們正在招聘一名 AI 軟體工程師，負責端到端構建 AI 功能。\n\n**職責：**\n- 將 AI 原型落地為可擴充套件的生產功能\n- 整合模型 API、向量檢索與資料管道\n- 設計推理服務與監控體系\n- 與產品協作打造 AI 使用者體驗\n\n**要求：**\n- 4 年以上軟體工程經驗\n- 紮實的 Python/TypeScript 與後端能力\n- 有 LLM API 或 ML 框架使用經驗\n- 熟悉向量資料庫與 RAG 方案\n- 瞭解雲服務與可觀測性體系\n\n**加分項：**\n- 模型微調或評測經驗\n- MLOps / ML 平臺經驗\n- NLP 相關背景",
+        "skills": [
+          "Python",
+          "TypeScript",
+          "LLM",
+          "向量檢索",
+          "MLOps"
+        ]
+      },
+      "aiLlmEngineer": {
+        "title": "AI LLM 工程師",
+        "description": "負責大模型流程、評測與效果最佳化",
+        "experienceLevel": "3 年以上",
+        "requirements": "我們正在尋找 AI LLM 工程師，負責大模型應用與評測體系。\n\n**職責：**\n- 搭建 LLM 應用的提示詞與檢索流程\n- 最佳化模型輸出的延遲、成本和質量\n- 建立評測框架與安全護欄\n- 與資料團隊協作提升模型效果\n\n**要求：**\n- 3 年以上 ML/AI 工程經驗\n- 深度理解 LLM、RAG 與 Embeddings\n- 精通 Python 與主流 ML 工具鏈\n- 有向量檢索與評測指標經驗\n- 熟悉提示詞設計與安全性實踐\n\n**加分項：**\n- OpenAI/Anthropic/開源模型微調經驗\n- LangChain 或 LlamaIndex 經驗\n- NLP 研究背景",
+        "skills": [
+          "LLM",
+          "RAG",
+          "Embeddings",
+          "Python",
+          "評測"
+        ]
+      },
+      "fullStackEngineer": {
+        "title": "全棧工程師",
+        "description": "前後端一體化交付，快速上線功能",
+        "experienceLevel": "4 年以上",
+        "requirements": "我們正在招聘全棧工程師，負責從前端到後端的完整交付。\n\n**職責：**\n- 構建並維護 Web 應用與 API\n- 從 UI 到資料庫全流程負責功能交付\n- 與產品、設計協作打造高質量體驗\n- 最佳化效能、穩定性與測試體系\n\n**要求：**\n- 4 年以上全棧開發經驗\n- 熟練掌握 React 與 TypeScript\n- 有 REST API 開發經驗（Node/Python/Go）\n- 熟悉 SQL 資料庫與 ORM\n- 瞭解雲部署與 CI/CD\n\n**加分項：**\n- Next.js 經驗\n- 可觀測性/監控經驗\n- 創業公司背景",
+        "skills": [
+          "React",
+          "TypeScript",
+          "Node.js",
+          "SQL",
+          "API 設計"
+        ]
+      },
+      "seniorSoftwareEngineer": {
+        "title": "高階軟體工程師",
+        "description": "構建可擴充套件系統並指導初級工程師",
+        "experienceLevel": "5 年以上",
+        "requirements": "我們正在招聘一名高階軟體工程師加入團隊。\n\n**職責：**\n- 設計並實現可擴充套件的後端服務\n- 牽頭技術討論與程式碼評審\n- 指導初級工程師並共建工程文化\n- 與產品、設計團隊緊密協作\n\n**要求：**\n- 5 年以上軟體開發經驗\n- 精通至少一種程式語言（Python/Java/TypeScript/Go）\n- 有云服務經驗（AWS/GCP/Azure）\n- 熟悉資料庫（SQL 與 NoSQL）\n- 解決問題能力強，注重細節\n\n**加分項：**\n- 微服務架構經驗\n- 容器化經驗（Docker/Kubernetes）\n- 有開源貢獻",
+        "skills": [
+          "Python",
+          "TypeScript",
+          "AWS",
+          "系統設計",
+          "微服務"
+        ]
+      },
+      "frontendDeveloper": {
+        "title": "前端工程師",
+        "description": "打造美觀且高效能的使用者介面",
+        "experienceLevel": "3 年以上",
+        "requirements": "我們正在招聘前端工程師，打造出色的使用者體驗。\n\n**職責：**\n- 使用 React/Vue 開發響應式 Web 應用\n- 將 Figma 設計高保真還原\n- 最佳化頁面效能與載入速度\n- 編寫可維護且有測試的程式碼\n\n**要求：**\n- 3 年以上前端開發經驗\n- 精通 React 或 Vue.js\n- 紮實的 CSS 能力（Tailwind、styled-components）\n- TypeScript 實戰經驗\n- 瞭解前端效能最佳化\n\n**加分項：**\n- Next.js 或 Nuxt.js 經驗\n- 移動端開發經驗（React Native）\n- 具備 UI/UX 設計感",
+        "skills": [
+          "React",
+          "TypeScript",
+          "CSS",
+          "Tailwind",
+          "Next.js"
+        ]
+      },
+      "devopsEngineer": {
+        "title": "DevOps 工程師",
+        "description": "構建並維護穩定的 CI/CD 流水線",
+        "experienceLevel": "4 年以上",
+        "requirements": "我們需要一名 DevOps 工程師來最佳化基礎設施與釋出流程。\n\n**職責：**\n- 設計並維護 CI/CD 流水線\n- 管理雲基礎設施（AWS/GCP）\n- 搭建監控與告警體系\n- 保障安全最佳實踐\n\n**要求：**\n- 4 年以上 DevOps/SRE 經驗\n- 熟悉 AWS 或 GCP\n- 熟練使用 Kubernetes 與 Docker\n- 基礎設施即程式碼經驗（Terraform/CloudFormation）\n- 指令碼能力（Python/Bash）\n\n**加分項：**\n- 安全相關認證\n- GitOps 經驗\n- 輪值值班經驗",
+        "skills": [
+          "AWS",
+          "Kubernetes",
+          "Terraform",
+          "Docker",
+          "CI/CD"
+        ]
+      },
+      "dataScientist": {
+        "title": "資料科學家",
+        "description": "把資料轉化為洞察與機器學習模型",
+        "experienceLevel": "3 年以上",
+        "requirements": "我們正在招聘資料科學家，幫助我們釋放資料價值。\n\n**職責：**\n- 構建並部署機器學習模型\n- 分析大規模資料集並輸出洞察\n- 與產品團隊協作落地資料驅動功能\n- 製作報表與視覺化\n\n**要求：**\n- 3 年以上資料科學經驗\n- 精通 Python（pandas、scikit-learn、TensorFlow/PyTorch）\n- 熟悉 SQL 與資料倉儲\n- 統計學與機器學習基礎紮實\n- 良好的溝通能力\n\n**加分項：**\n- NLP 或計算機視覺經驗\n- MLOps 經驗\n- 量化領域博士學位",
+        "skills": [
+          "Python",
+          "機器學習",
+          "SQL",
+          "TensorFlow",
+          "統計學"
+        ]
+      },
+      "productManager": {
+        "title": "產品經理",
+        "description": "制定產品戰略並推動落地",
+        "experienceLevel": "4 年以上",
+        "requirements": "我們需要一名產品經理來推動產品發展。\n\n**職責：**\n- 制定產品路線圖與策略\n- 收集並優先順序排序需求\n- 與工程與設計緊密協作\n- 關注指標並驅動產品決策\n\n**要求：**\n- 4 年以上產品管理經驗\n- 熟悉敏捷方法\n- 出色的分析與問題解決能力\n- 優秀的溝通與干係人管理\n- 有技術背景更佳\n\n**加分項：**\n- B2B SaaS 經驗\n- SQL 與資料分析能力\n- MBA 或相關學歷",
+        "skills": [
+          "產品戰略",
+          "敏捷",
+          "資料分析",
+          "路線圖",
+          "干係人管理"
+        ]
+      },
+      "scrumMaster": {
+        "title": "Scrum Master",
+        "description": "促進敏捷流程與團隊效率",
+        "experienceLevel": "3 年以上",
+        "requirements": "我們正在招聘 Scrum Master，幫助團隊高效交付。\n\n**職責：**\n- 主持敏捷會議與迭代節奏\n- 清除障礙並輔導團隊\n- 跟蹤並最佳化團隊指標\n- 促進持續改進\n\n**要求：**\n- 3 年以上 Scrum Master 經驗\n- CSM 或同等認證\n- 熟悉多種敏捷框架\n- 優秀的引導與協作能力\n- 熟悉 Jira 或類似工具\n\n**加分項：**\n- 技術背景\n- SAFe 認證\n- 教練/輔導認證",
+        "skills": [
+          "Scrum",
+          "敏捷",
+          "引導",
+          "Jira",
+          "團隊輔導"
+        ]
+      },
+      "uxDesigner": {
+        "title": "UX 設計師",
+        "description": "打造直觀且愉悅的使用者體驗",
+        "experienceLevel": "3 年以上",
+        "requirements": "我們需要一名 UX 設計師來塑造產品體驗。\n\n**職責：**\n- 進行使用者研究與可用性測試\n- 輸出線框圖、原型和使用者流程\n- 與產品和工程團隊協作\n- 維護並演進設計系統\n\n**要求：**\n- 3 年以上 UX 設計經驗\n- 熟練使用 Figma\n- 作品集體現完整 UX 流程\n- 熟悉使用者研究方法\n- 理解無障礙標準\n\n**加分項：**\n- UI 設計能力\n- 動效設計經驗\n- 設計系統經驗",
+        "skills": [
+          "Figma",
+          "使用者研究",
+          "原型設計",
+          "線框圖",
+          "可用性測試"
+        ]
+      },
+      "uiDesigner": {
+        "title": "UI 設計師",
+        "description": "打造精緻的視覺設計與介面",
+        "experienceLevel": "2 年以上",
+        "requirements": "我們正在尋找 UI 設計師，打造出色的介面視覺。\n\n**職責：**\n- 設計精美且高還原度的介面\n- 建立並維護設計系統元件\n- 與開發協作落地實現\n- 製作品牌與營銷物料\n\n**要求：**\n- 2 年以上 UI 設計經驗\n- 精通 Figma\n- 出色的視覺設計作品集\n- 理解設計原則與排版\n- 具備基礎 HTML/CSS 認知\n\n**加分項：**\n- 動畫/動效設計能力\n- 插畫能力\n- 品牌設計經驗",
+        "skills": [
+          "Figma",
+          "視覺設計",
+          "設計系統",
+          "排版",
+          "色彩"
+        ]
+      },
+      "accountExecutive": {
+        "title": "客戶經理（AE）",
+        "description": "負責成交併拓展企業客戶",
+        "experienceLevel": "3 年以上",
+        "requirements": "我們需要一名客戶經理（AE）推動營收增長。\n\n**職責：**\n- 全流程銷售：拓客到成交\n- 建立並維護企業客戶關係\n- 達成季度銷售目標\n- 與 SDR/客戶成功協作\n\n**要求：**\n- 3 年以上 B2B SaaS 銷售經驗\n- 有持續達成指標的記錄\n- 熟悉企業級銷售週期\n- 出色的展示與談判能力\n- 熟練使用 CRM（如 Salesforce）\n\n**加分項：**\n- 有招聘/HR 領域銷售經驗\n- 技術背景\n- 目標行業人脈",
+        "skills": [
+          "B2B 銷售",
+          "Salesforce",
+          "企業銷售",
+          "談判",
+          "拓客"
+        ]
+      },
+      "salesEngineer": {
+        "title": "售前工程師",
+        "description": "連線技術與銷售，推動成交",
+        "experienceLevel": "4 年以上",
+        "requirements": "我們正在招聘售前工程師，支援銷售團隊。\n\n**職責：**\n- 負責技術演示與 POC\n- 解答銷售過程中的技術問題\n- 編寫技術文件與解決方案\n- 將客戶反饋傳遞給產品團隊\n\n**要求：**\n- 4 年以上售前/解決方案架構經驗\n- 紮實的技術背景（軟體開發）\n- 優秀的表達與溝通能力\n- 能清晰講解複雜技術概念\n- 有 API/整合相關經驗\n\n**加分項：**\n- 軟體開發經驗\n- 行業認證\n- HR 科技領域經驗",
+        "skills": [
+          "技術演示",
+          "API 整合",
+          "解決方案架構",
+          "演示",
+          "POC"
+        ]
+      },
+      "marketingManager": {
+        "title": "市場經理",
+        "description": "主導市場活動與品牌策略",
+        "experienceLevel": "4 年以上",
+        "requirements": "我們需要一名市場經理提升品牌影響力。\n\n**職責：**\n- 策劃並執行市場活動\n- 管理市場預算與 ROI\n- 負責內容與品牌策略\n- 分析資料並持續最佳化\n\n**要求：**\n- 4 年以上市場經驗\n- B2B SaaS 市場經驗\n- 強資料分析能力\n- 優秀的寫作與溝通能力\n- 熟悉營銷工具（HubSpot、Google Analytics）\n\n**加分項：**\n- 產品營銷經驗\n- 增長/獲客經驗\n- 團隊管理經驗",
+        "skills": [
+          "活動策劃",
+          "內容策略",
+          "資料分析",
+          "B2B 營銷",
+          "HubSpot"
+        ]
+      },
+      "contentWriter": {
+        "title": "內容寫作",
+        "description": "創作有轉化力的內容",
+        "experienceLevel": "2 年以上",
+        "requirements": "我們正在尋找內容寫作，講好品牌故事。\n\n**職責：**\n- 撰寫部落格、案例與白皮書\n- 負責網站與產品文案\n- 製作郵件營銷內容\n- 進行 SEO 最佳化\n\n**要求：**\n- 2 年以上內容寫作經驗\n- 優秀的寫作與編輯能力\n- 理解 SEO 最佳實踐\n- 具備 B2B/SaaS 內容經驗\n- 能將技術內容解釋清楚\n\n**加分項：**\n- 有發表作品集\n- 瞭解 CMS/內容管理系統\n- 影片指令碼寫作經驗",
+        "skills": [
+          "文案寫作",
+          "SEO",
+          "部落格寫作",
+          "郵件營銷",
+          "敘事能力"
+        ]
+      },
+      "operationsManager": {
+        "title": "運營經理",
+        "description": "最佳化流程並支撐業務規模化",
+        "experienceLevel": "5 年以上",
+        "requirements": "我們需要一名運營經理最佳化流程與效率。\n\n**職責：**\n- 設計並落地運營流程\n- 管理供應商與合作伙伴\n- 跟蹤並彙報運營指標\n- 推動效率提升\n\n**要求：**\n- 5 年以上運營經驗\n- 出色的專案管理能力\n- 有流程最佳化經驗\n- 強分析能力\n- 熟悉運營工具\n\n**加分項：**\n- 六西格瑪或精益認證\n- 科技/SaaS 公司經驗\n- 團隊管理經驗",
+        "skills": [
+          "流程最佳化",
+          "專案管理",
+          "供應商管理",
+          "分析",
+          "精益"
+        ]
+      },
+      "financialAnalyst": {
+        "title": "財務分析師",
+        "description": "推動財務規劃與分析",
+        "experienceLevel": "3 年以上",
+        "requirements": "我們正在招聘財務分析師支援財務團隊。\n\n**職責：**\n- 構建財務模型與預測\n- 編制月度財務報表\n- 分析業務表現\n- 支援預算編制\n\n**要求：**\n- 3 年以上 FP&A 經驗\n- 高階 Excel 技能\n- 有財務建模經驗\n- 理解 SaaS 指標\n- 細緻嚴謹\n\n**加分項：**\n- CPA 或 CFA\n- 有 NetSuite 等系統經驗\n- SQL 技能",
+        "skills": [
+          "財務建模",
+          "Excel",
+          "FP&A",
+          "預算",
+          "SaaS 指標"
+        ]
+      },
+      "hrManager": {
+        "title": "人力資源經理",
+        "description": "建設文化並支援員工成長",
+        "experienceLevel": "4 年以上",
+        "requirements": "我們需要一名人力資源經理負責人才與組織運營。\n\n**職責：**\n- 管理員工全生命週期\n- 制定 HR 政策與專案\n- 處理員工關係\n- 負責薪酬與福利\n\n**要求：**\n- 4 年以上 HR 經驗\n- 熟悉勞動法律法規\n- 有 HRIS 系統經驗\n- 出色的溝通與協作能力\n- 科技公司經驗優先\n\n**加分項：**\n- PHR/SHRM 認證\n- 從 0 到 1 搭建 HR 體系\n- 國際化 HR 經驗",
+        "skills": [
+          "員工關係",
+          "HRIS",
+          "薪酬福利",
+          "合規",
+          "文化建設"
+        ]
+      },
+      "technicalRecruiter": {
+        "title": "技術招聘",
+        "description": "吸引並招聘頂尖工程人才",
+        "experienceLevel": "3 年以上",
+        "requirements": "我們正在尋找技術招聘，幫助團隊擴張。\n\n**職責：**\n- 負責工程崗位的全流程招聘\n- 主動尋訪並吸引候選人\n- 與用人經理緊密合作\n- 最佳化招聘流程\n\n**要求：**\n- 3 年以上技術招聘經驗\n- 強大的尋訪能力\n- 熟悉 ATS 招聘系統\n- 理解技術崗位與技能\n- 優秀的溝通能力\n\n**加分項：**\n- 網際網路/科技公司招聘經驗\n- 僱主品牌建設經驗\n- 多元化招聘經驗",
+        "skills": [
+          "技術尋訪",
+          "ATS",
+          "面試",
+          "僱主品牌",
+          "LinkedIn 招聘"
+        ]
+      },
+      "dataAnnotation": {
+        "title": "資料標註",
+        "description": "管理 AI/ML 模型的資料標註流程與質量",
+        "experienceLevel": "1 年以上",
+        "requirements": "我們正在招聘資料標註專員，支援 AI/ML 專案。\n\n**職責：**\n- 對機器學習訓練資料進行標註與分類\n- 制定並維護標註規範與標準\n- 對已標註資料進行質量檢查\n- 與 ML 工程師協作確定標註需求\n- 管理標註工具與工作流程\n\n**要求：**\n- 1 年以上資料標註或標籤經驗\n- 熟悉標註工具（Label Studio、Prodigy 等）\n- 高度注重細節與一致性\n- 瞭解 NLP 或計算機視覺任務\n- 良好的溝通與文件能力\n\n**加分項：**\n- 大模型微調資料準備經驗\n- Python 指令碼資料處理能力\n- 語言學或相關領域背景",
+        "skills": [
+          "資料標註",
+          "質量檢查",
+          "標註工具",
+          "NLP",
+          "注重細節"
+        ]
+      },
+      "wecomOperations": {
+        "title": "企微運營",
+        "description": "透過企業微信驅動客戶互動與增長",
+        "experienceLevel": "2 年以上",
+        "requirements": "我們正在招聘企微運營專員，負責企業微信的客戶運營。\n\n**職責：**\n- 規劃並執行企微客戶互動策略\n- 搭建與運營客戶社群\n- 制定內容日曆併發布營銷活動\n- 分析互動資料並最佳化轉化漏斗\n- 與銷售和市場團隊配合進行客戶培育\n\n**要求：**\n- 2 年以上企微或微信運營經驗\n- 優秀的文案與內容創作能力\n- 熟悉企微 API 及第三方工具\n- 資料驅動思維，有資料分析經驗\n- 瞭解私域流量運營策略\n\n**加分項：**\n- CRM 系統整合經驗\n- 營銷自動化工具使用經驗\n- 社群運營背景",
+        "skills": [
+          "企業微信",
+          "內容運營",
+          "社群管理",
+          "資料分析",
+          "私域流量"
+        ]
+      }
+    },
+    "postCreation": {
+      "title": "招聘需求已建立！",
+      "subtitle": "您接下來想做什麼？",
+      "smartMatch": "智慧簡歷匹配",
+      "smartMatchDesc": "從您的簡歷庫中找到匹配的候選人",
+      "smartMatchAction": "立即匹配",
+      "smartMatchNoResumes": "上傳簡歷到您的簡歷庫以開始匹配候選人",
+      "smartMatchNoResumesAction": "前往簡歷庫",
+      "smartMatchHasResumes": "您的簡歷庫中有 {{count}} 份簡歷，立即匹配最佳人選！",
+      "smartMatchRunning": "正在匹配簡歷...",
+      "smartMatchDone": "從 {{total}} 份簡歷中匹配到 {{matched}} 個",
+      "intelReport": "招聘智慧分析",
+      "intelReportDesc": "獲取AI驅動的候選人畫像、尋訪策略和市場分析",
+      "intelReportAction": "生成報告",
+      "intelReportGenerating": "正在生成報告...",
+      "intelReportDone": "報告已就緒！",
+      "goToDashboard": "前往儀表盤",
+      "viewFullReport": "檢視完整報告"
+    }
+  },
+  "dashboard": {
+    "nav": {
+      "dashboard": "控制面板",
+      "stats": "統計",
+      "newHiring": "新招聘",
+      "apiKeys": "API 金鑰",
+      "apiPlayground": "API 測試",
+      "account": "賬戶",
+      "usage": "使用量",
+      "resumes": "簡歷庫"
+    },
+    "welcome": "歡迎回來",
+    "user": "使用者",
+    "subtitle": "管理您的招聘請求並追蹤候選人。",
+    "logout": "退出登入",
+    "loading": "載入中...",
+    "actions": {
+      "newHiring": "開始新招聘",
+      "newHiringDesc": "建立新的職位",
+      "apiKeys": "API 金鑰",
+      "apiKeysDesc": "管理 API 訪問",
+      "api": "API 測試",
+      "apiDesc": "測試 API 介面",
+      "stats": "統計",
+      "activeRequests": "個活躍請求"
+    },
+    "requests": {
+      "title": "您的招聘請求",
+      "new": "新請求",
+      "empty": "暫無招聘請求",
+      "emptyDesc": "建立您的第一個招聘請求以開始尋找候選人。",
+      "create": "建立招聘請求",
+      "candidates": "候選人",
+      "created": "建立於",
+      "viewDetail": "檢視詳情"
+    },
+    "detail": {
+      "back": "返回請求列表",
+      "updated": "更新於",
+      "created": "建立於",
+      "candidatesCount": "{{count}} 位候選人",
+      "matches": "匹配數",
+      "invited": "已傳送邀請",
+      "interviewsCompleted": "面試已完成",
+      "requirements": "崗位要求",
+      "jobDescription": "職位描述",
+      "noJobDescription": "暫無職位描述。",
+      "candidates": "候選人",
+      "noCandidates": "暫無候選人。",
+      "candidate": "候選人",
+      "matchScore": "匹配分",
+      "status": "狀態",
+      "lastUpdated": "最近更新",
+      "notFound": "未找到該請求",
+      "loadError": "載入請求詳情失敗"
+    },
+    "candidateStatus": {
+      "pending": "待篩選",
+      "screening": "已邀請",
+      "interviewed": "已面試",
+      "shortlisted": "已入圍",
+      "rejected": "已淘汰"
+    },
+    "autoMatch": {
+      "title": "簡歷篩選",
+      "button": "自動匹配簡歷",
+      "buttonMatching": "匹配中...",
+      "progress": "正在篩選第 {{current}} / {{total}} 份簡歷...",
+      "progressComplete": "篩選完成，新增 {{matched}} 個匹配結果。",
+      "noResumes": "簡歷庫中沒有簡歷，請先上傳簡歷。",
+      "noMatchesYet": "暫無匹配結果。",
+      "noMatchesDesc": "點選「自動匹配」將簡歷庫中的簡歷與該職位進行篩選。",
+      "resumeMatches": "簡歷匹配",
+      "filterAll": "全部",
+      "filterMatched": "已匹配",
+      "filterShortlisted": "已入圍",
+      "filterRejected": "已淘汰",
+      "filterInvited": "已邀請",
+      "scoreFilter": "最低分數",
+      "sortBy": "排序方式",
+      "sortScoreDesc": "分數（從高到低）",
+      "sortScoreAsc": "分數（從低到高）",
+      "sortName": "姓名",
+      "sortDate": "匹配日期",
+      "search": "搜尋簡歷...",
+      "selectAll": "全選",
+      "deselectAll": "取消全選",
+      "selected": "已選 {{count}} 項",
+      "shortlistSelected": "加入候選",
+      "rejectSelected": "淘汰",
+      "inviteSelected": "邀請面試",
+      "candidateName": "候選人",
+      "fitScore": "匹配分數",
+      "fitGrade": "等級",
+      "verdict": "評估結果",
+      "matchedSkills": "匹配技能",
+      "missingSkills": "缺失技能",
+      "pipelineStatus": "狀態",
+      "recommendation": "建議",
+      "topReasons": "主要原因",
+      "experienceAlignment": "經驗匹配",
+      "transferableSkills": "可遷移技能",
+      "hardRequirementGaps": "硬性要求缺口",
+      "viewResume": "檢視簡歷",
+      "inviteModalTitle": "邀請候選人面試",
+      "inviteModalDesc": "向選中的候選人傳送面試邀請。",
+      "candidateCount": "將邀請 {{count}} 位候選人",
+      "recruiterEmail": "招聘人員郵箱",
+      "interviewerRequirement": "面試要求（選填）",
+      "interviewerRequirementPlaceholder": "例如：側重系統設計和領導力考察...",
+      "usageNote": "此操作將消耗 {{count}} 次面試額度。",
+      "send": "傳送邀請",
+      "sending": "傳送中...",
+      "cancel": "取消",
+      "inviteSuccess": "成功傳送 {{count}} 份邀請。",
+      "invitePartial": "{{total}} 份邀請中成功 {{sent}} 份，失敗 {{failed}} 份。",
+      "inviteError": "傳送邀請失敗。",
+      "matchError": "自動匹配失敗。",
+      "updateError": "更新狀態失敗。",
+      "statusMatched": "已匹配",
+      "statusShortlisted": "已入圍",
+      "statusRejected": "已淘汰",
+      "statusInvited": "已邀請",
+      "moreSkills": "+{{count}} 更多",
+      "reMatch": "重新匹配",
+      "reMatchAll": "全部重新匹配"
+    },
+    "intelligence": {
+      "title": "招聘智慧分析報告",
+      "generate": "生成報告",
+      "regenerate": "重新生成報告",
+      "generating": "正在生成智慧分析報告...",
+      "generatingStep1": "正在分析理想候選人畫像...",
+      "generatingStep2": "正在制定尋訪策略和市場分析...",
+      "generatingStep3": "正在編寫報告...",
+      "noReport": "暫無智慧分析報告",
+      "noReportDesc": "為此職位生成AI驅動的招聘智慧分析報告。",
+      "candidateProfile": "理想候選人畫像",
+      "idealBackground": "理想背景",
+      "degrees": "典型學歷",
+      "careerPath": "職業路徑",
+      "experience": "工作經驗",
+      "industryBackground": "行業背景",
+      "skillMapping": "技能圖譜",
+      "mustHave": "必備技能",
+      "niceToHave": "加分技能",
+      "seniorityExpectation": "期望水平",
+      "reason": "原因",
+      "valueAdd": "附加價值",
+      "personalityTraits": "性格特質與文化契合",
+      "traits": "關鍵特質",
+      "cultureFit": "文化契合指標",
+      "dayInTheLife": "典型工作日",
+      "persona": "候選人畫像",
+      "sourcingStrategy": "尋訪策略",
+      "platforms": "尋訪平臺",
+      "effectiveness": "有效性",
+      "searchStrategy": "策略",
+      "searchKeywords": "關鍵詞",
+      "booleanSearch": "布林搜尋字串",
+      "targetCompanies": "目標公司",
+      "targetIndustries": "目標行業",
+      "passiveVsActive": "被動與主動尋訪",
+      "passive": "被動",
+      "active": "主動",
+      "both": "兩者兼顧",
+      "passiveStrategy": "被動策略",
+      "activeStrategy": "主動策略",
+      "networking": "社交策略",
+      "expectedYield": "預期成效",
+      "sourcingSummary": "尋訪總結",
+      "marketIntelligence": "市場情報",
+      "salaryRanges": "薪資範圍",
+      "region": "地區",
+      "level": "級別",
+      "range": "範圍",
+      "notes": "備註",
+      "supplyDemand": "供需分析",
+      "talentPoolSize": "人才池規模",
+      "difficulty": "招聘難度",
+      "difficultyScore": "難度評分",
+      "factors": "關鍵因素",
+      "timeToHire": "招聘週期",
+      "estimateDays": "預估天數",
+      "competition": "競爭分析",
+      "competitor": "競爭者",
+      "hiringActivity": "招聘活躍度",
+      "relevance": "相關性",
+      "marketTrends": "市場趨勢",
+      "trend": "趨勢",
+      "impact": "影響",
+      "marketSummary": "市場總結",
+      "copy": "複製",
+      "copied": "已複製！",
+      "cached": "快取報告",
+      "generatedAt": "生成時間",
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "critical": "關鍵",
+      "oversupplied": "供過於求",
+      "balanced": "供需平衡",
+      "undersupplied": "供不應求",
+      "severelyUndersupplied": "嚴重供不應求",
+      "positive": "積極",
+      "negative": "消極",
+      "neutral": "中性"
+    }
+  },
+  "stats": {
+    "title": "統計",
+    "subtitle": "招聘進度一覽",
+    "cards": {
+      "totalRequests": "請求總數",
+      "activeRequests": "{{count}} 個進行中",
+      "totalCandidates": "候選人總數",
+      "invitationsSent": "已傳送 {{count}} 份邀請",
+      "interviewsCompleted": "已完成面試",
+      "avgMatchScore": "平均匹配分 {{score}}",
+      "avgMatchScoreEmpty": "平均匹配分 --"
+    },
+    "sections": {
+      "requestStatus": "請求狀態",
+      "candidateStatus": "候選人狀態",
+      "recentRequests": "近期請求"
+    },
+    "status": {
+      "active": "進行中",
+      "paused": "暫停",
+      "closed": "已關閉",
+      "pending": "待篩選",
+      "screening": "已邀請",
+      "interviewed": "已面試",
+      "shortlisted": "已入圍",
+      "rejected": "已淘汰"
+    },
+    "empty": "暫無請求",
+    "requestCandidates": "{{count}} 位候選人"
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "暫無新動態。",
+    "viewAll": "檢視全部動態",
+    "match": "新增匹配",
+    "invitation": "已傳送面試邀請",
+    "interview": "面試已完成",
+    "subtitle": "{{name}} · {{request}}",
+    "candidate": "候選人",
+    "justNow": "剛剛",
+    "minutesAgo": "{{count}} 分鐘前",
+    "hoursAgo": "{{count}} 小時前",
+    "daysAgo": "{{count}} 天前"
+  },
+  "apiPlayground": {
+    "title": "API 測試",
+    "dashboard": "控制面板",
+    "startHiring": "開始招聘",
+    "endpoints": "API 介面",
+    "logout": "退出登入"
+  },
+  "apiLanding": {
+    "hero": {
+      "badge": "RoboHire",
+      "headline": "幾分鐘內構建AI招聘功能",
+      "subheadline": "只需幾行程式碼，即可將智慧簡歷匹配、面試評估和候選人篩選整合到您的應用程式中。",
+      "getKey": "獲取 API 金鑰",
+      "readDocs": "閱讀文件"
+    },
+    "what": {
+      "badge": "這是什麼？",
+      "title": "強大的AI招聘API",
+      "description": "RoboHire 提供完整的 AI 招聘工具套件。透過簡單的 REST API 端點，實現簡歷與職位描述匹配、文件解析、面試評估和候選人溝通自動化。",
+      "exploreDocs": "瀏覽文件"
+    },
+    "howItWorks": {
+      "badge": "快速入門",
+      "title": "工作原理"
+    },
+    "steps": {
+      "signup": {
+        "title": "註冊或登入",
+        "desc": "建立免費賬戶或登入以訪問您的 RoboHire 控制面板。"
+      },
+      "apikey": {
+        "title": "獲取 API 金鑰",
+        "desc": "從控制面板生成 API 金鑰以開始進行 API 呼叫。"
+      },
+      "develop": {
+        "title": "開始開發",
+        "desc": "使用我們全面的文件將 RoboHire 整合到您的應用程式中。"
+      }
+    },
+    "features": {
+      "badge": "核心功能",
+      "title": "自動化招聘所需的一切",
+      "subtitle": "強大的 API 在後臺處理複雜的 AI 工作。",
+      "matching": {
+        "title": "AI 簡歷匹配",
+        "desc": "使用 AI 驅動的評分和詳細分析將簡歷與職位描述進行匹配。"
+      },
+      "parsing": {
+        "title": "文件解析",
+        "desc": "從 PDF 格式的簡歷和職位描述中提取結構化資料。"
+      },
+      "evaluation": {
+        "title": "面試評估",
+        "desc": "分析面試記錄，提供全面評分和作弊檢測。"
+      },
+      "invitation": {
+        "title": "候選人邀請",
+        "desc": "自動生成專業的面試邀請郵件。"
+      },
+      "multilingual": {
+        "title": "多語言支援",
+        "desc": "支援7種語言，包括中文、英文、日文等。"
+      },
+      "webhooks": {
+        "title": "Webhook 整合",
+        "desc": "在處理候選人時透過 Webhook 接收實時更新。"
+      }
+    },
+    "playground": {
+      "title": "在 Playground 中試用",
+      "description": "在整合到您的應用程式之前，互動式測試我們的 API。",
+      "cta": "開啟 Playground"
+    },
+    "cta": {
+      "title": "獲取您的 API 金鑰",
+      "description": "立即開始構建 AI 招聘功能。免費開始，無需信用卡。",
+      "getStarted": "立即開始",
+      "viewDocs": "檢視文件"
+    }
+  },
+  "pages": {
+    "matchResume": {
+      "title": "簡歷與JD匹配",
+      "subtitle": "分析候選人簡歷與職位描述的匹配度",
+      "resultsTitle": "匹配分析結果",
+      "resultsSubtitle": "候選人與崗位匹配的綜合分析",
+      "resumeLabel": "簡歷",
+      "jdLabel": "職位描述",
+      "resumePlaceholder": "Paste resume content here...\n\nExample:\nJohn Doe\nSenior Software Engineer\njohn.doe@email.com\n\nEXPERIENCE:\nGoogle (2019-2024) - Senior Software Engineer\n- Led team of 5 engineers\n- Built React dashboard for 10M+ users\n\nSKILLS: Python, JavaScript, React, Node.js, AWS\n\nEDUCATION:\nMIT - BS Computer Science, 2017",
+      "jdPlaceholder": "Paste job description here...\n\nExample:\nSenior Software Engineer at TechCorp\nLocation: San Francisco, CA\n\nAbout the role:\nWe are looking for a Senior Software Engineer to lead our backend team.\n\nRequired Qualifications:\n- 5+ years of software engineering experience\n- Expert-level Python programming\n- Strong experience with React\n\nNice to have:\n- AWS or cloud infrastructure experience\n- Machine Learning background\n\nResponsibilities:\n- Lead technical design decisions\n- Mentor junior engineers",
+      "errorMissing": "請提供簡歷和職位描述"
+    },
+    "inviteCandidate": {
+      "title": "邀請候選人面試",
+      "subtitle": "透過 RoboHire 傳送面試邀請",
+      "toggleExternal": "顯示外部 RoboHire 請求",
+      "externalHint": "檢視傳送到 RoboHire 的實際請求以便測試",
+      "recruiterEmail": "招聘郵箱",
+      "interviewerRequirement": "面試要求",
+      "optional": "（可選）",
+      "recruiterPlaceholder": "hr@yourcompany.com",
+      "interviewerPlaceholder": "例如：詢問工作地點偏好、薪資期望等...",
+      "recruiterHelp": "用於接收通知並作為抄送收件人",
+      "interviewerHelp": "面試的附加要求（地點、輪次等）",
+      "resumeLabel": "簡歷（需包含候選人姓名和郵箱）",
+      "resumePlaceholder": "在此貼上簡歷內容...需包含候選人姓名和郵箱。",
+      "jdLabel": "職位描述",
+      "jdPlaceholder": "在此貼上職位描述...",
+      "sendInvitation": "傳送邀請",
+      "successTitle": "邀請傳送成功！",
+      "candidateInfo": "候選人資訊",
+      "name": "姓名",
+      "email": "郵箱",
+      "position": "職位",
+      "loginLink": "登入連結",
+      "scanQr": "掃碼",
+      "wechatHint": "使用微信移動端訪問",
+      "errorTitle": "邀請失敗",
+      "apiResponse": "API 響應",
+      "errorMissingResumeJd": "請提供簡歷和職位描述",
+      "errorMissingRecruiter": "請提供招聘郵箱",
+      "externalApiTitle": "RoboHire 外部 API",
+      "copyCode": "複製程式碼",
+      "tip": "提示：複製並在終端/控制檯執行此程式碼，可直接測試 RoboHire"
+    },
+    "parseResume": {
+      "title": "解析簡歷",
+      "subtitle": "從簡歷 PDF 中提取結構化資料",
+      "uploadLabel": "上傳簡歷 PDF",
+      "parseButton": "解析簡歷",
+      "parsedData": "解析結果",
+      "errorMissingFile": "請上傳簡歷 PDF 檔案"
+    },
+    "parseJd": {
+      "title": "解析職位描述",
+      "subtitle": "從 JD PDF 中提取結構化資料",
+      "uploadLabel": "上傳 JD PDF",
+      "parseButton": "解析 JD",
+      "parsedData": "解析結果",
+      "errorMissingFile": "請上傳職位描述 PDF 檔案"
+    },
+    "evaluateInterview": {
+      "title": "面試評估",
+      "subtitle": "根據簡歷和JD分析面試記錄",
+      "resumeLabel": "簡歷",
+      "jdLabel": "職位描述",
+      "interviewLabel": "面試記錄",
+      "resumePlaceholder": "在此貼上簡歷內容...",
+      "jdPlaceholder": "在此貼上職位描述...",
+      "interviewPlaceholder": "在此貼上面試記錄...",
+      "optionsTitle": "評估選項",
+      "includeCheating": "包含作弊檢測",
+      "cheatingHint": "（分析是否存在 AI/LLM 輔助回答）",
+      "specialInstructions": "特殊說明（可選）",
+      "specialInstructionsPlaceholder": "新增評估的特殊說明，例如'重點關注系統設計能力'或'關注表達清晰度'",
+      "buttonWithCheating": "評估面試（含作弊檢測）",
+      "buttonDefault": "評估面試",
+      "resultTitle": "評估結果",
+      "loadingDefault": "正在評估面試...",
+      "loadingWithCheating": "正在評估面試並進行作弊檢測...",
+      "stepResume": "正在載入簡歷...",
+      "stepResumeDone": "簡歷已載入",
+      "stepJd": "正在載入職位描述...",
+      "stepJdDone": "職位描述已載入",
+      "stepAnalyze": "正在分析和評估面試...",
+      "stepAnalyzeDone": "評估完成",
+      "cheatingIncluded": "結果中包含作弊檢測分析",
+      "errorMissingFields": "請提供簡歷、職位描述和面試記錄",
+      "jsonTitle": "評估結果 JSON"
+    },
+    "quickInvite": {
+      "title": "一鍵邀約面試",
+      "subtitle": "上傳簡歷，輸入職位描述，一次性向所有候選人傳送面試邀請。",
+      "stepSetup": "設定",
+      "stepReview": "審核",
+      "stepResults": "結果",
+      "jdTitle": "職位描述",
+      "jdDesc": "貼上或輸入您招聘崗位的職位描述。",
+      "jdPlaceholder": "在此貼上職位描述...",
+      "resumesTitle": "候選人簡歷",
+      "resumesDesc": "上傳 PDF 簡歷或貼上簡歷文字。支援新增多份簡歷。",
+      "uploading": "正在從 PDF 中提取文字...",
+      "dropResumes": "點選或拖拽簡歷到此處",
+      "supportedFormats": "支援 PDF、DOCX、XLSX、TXT 格式，可上傳多個檔案。",
+      "hideTextInput": "隱藏文字輸入",
+      "pasteInstead": "或貼上簡歷文字",
+      "pastePlaceholder": "在此貼上簡歷文字...",
+      "addResume": "新增簡歷",
+      "pastedResume": "貼上的簡歷 #{{num}}",
+      "resumeCount": "已載入 {{count}} 份簡歷",
+      "pdfOnlyError": "不支援的檔案格式，請上傳 PDF 或 TXT 檔案。",
+      "settingsTitle": "邀請設定",
+      "recruiterEmail": "招聘人員郵箱",
+      "interviewerReq": "面試官要求",
+      "interviewerPlaceholder": "例如：5 年以上相關領域經驗",
+      "optional": "可選",
+      "reviewAndSend": "審核併傳送",
+      "reviewTitle": "傳送前確認",
+      "candidatesReady": "待傳送候選人",
+      "from": "發件人",
+      "jdPreview": "職位描述",
+      "back": "返回",
+      "sending": "正在傳送邀請...",
+      "sendInvitations": "傳送邀請",
+      "sentSuccess": "傳送成功",
+      "sentFailed": "傳送失敗",
+      "totalProcessed": "處理總數",
+      "name": "姓名",
+      "email": "郵箱",
+      "position": "職位",
+      "scanQr": "掃描二維碼",
+      "qrHint": "掃碼開始面試",
+      "qrAlt": "面試二維碼",
+      "statusSent": "已傳送",
+      "statusFailed": "失敗",
+      "statusPending": "待處理",
+      "startNew": "開始新一批",
+      "goToDashboard": "前往控制面板",
+      "viewResumeLibrary": "檢視簡歷庫",
+      "authRequired": "需要登入",
+      "authRequiredDesc": "您需要登入才能傳送面試邀請。",
+      "errorNoJd": "請輸入職位描述。",
+      "errorNoResumes": "請至少新增一份簡歷。",
+      "uploadJd": "上傳檔案",
+      "jdFormats": "支援 PDF、DOCX、XLSX、TXT 格式",
+      "viewResume": "檢視完整簡歷",
+      "extractFailed": "無法從檔案中提取文字。",
+      "resumePreviewChars": "{{count}} 個字元",
+      "formattingResume": "AI 排版中...",
+      "resumeSections": {
+        "summary": "個人簡介",
+        "experience": "工作經歷",
+        "education": "教育背景",
+        "skills": "專業技能",
+        "projects": "專案經歷",
+        "certifications": "證書資質",
+        "languages": "語言能力",
+        "awards": "榮譽獎項"
+      },
+      "viewJd": "檢視格式化JD",
+      "formattingJd": "AI 排版中...",
+      "jdPreviewChars": "{{count}} 個字元",
+      "jdSections": {
+        "overview": "職位概述",
+        "responsibilities": "崗位職責",
+        "requirements": "任職要求",
+        "preferred": "優先條件",
+        "skills": "技能要求",
+        "benefits": "福利待遇",
+        "about": "公司介紹"
+      }
+    }
+  },
+  "pricing": {
+    "seo": {
+      "title": "定價 - 適合每個團隊的 AI 招聘方案",
+      "desc": "選擇適合您的 RoboHire 方案。入門版 $29/月、成長版 $199/月、商務版 $399/月，或定製方案。包含 AI 簡歷匹配和面試功能。"
+    },
+    "label": "定價方案",
+    "headline": "與您一起",
+    "headlineAccent": "成長的定價",
+    "subheadline": "簡單透明的定價。按需擴充套件。",
+    "month": "月",
+    "popular": "最受歡迎",
+    "customBadge": "定製",
+    "customPrice": "定製",
+    "redirecting": "跳轉中...",
+    "currentPlanCta": "當前方案",
+    "upgradeOnlyCta": "僅可升級",
+    "starter": {
+      "name": "入門版",
+      "subtitle": "適合個人起步",
+      "cta": "開始免費試用",
+      "f1": "1 個席位",
+      "f2": "3 個職位",
+      "f3": "15 次面試",
+      "f4": "30 次簡歷匹配",
+      "f5": "面試評分與評估",
+      "f6": "面試總結"
+    },
+    "growth": {
+      "name": "成長版",
+      "subtitle": "適合成長中的團隊",
+      "cta": "開始免費試用",
+      "f1": "無限席位",
+      "f2": "無限職位",
+      "f3": "120 次面試 / 月",
+      "f4": "240 次簡歷匹配 / 月",
+      "f5": "包含入門版全部功能",
+      "f6": "RoboHire 接入",
+      "f6s": "與您的系統整合",
+      "f7": "6 種面試語言",
+      "f8": "語言能力評估",
+      "f9": "郵件支援"
+    },
+    "business": {
+      "name": "商務版",
+      "subtitle": "適合快速擴張的大團隊",
+      "cta": "開始免費試用",
+      "f1": "無限席位",
+      "f2": "無限職位",
+      "f3": "280 次面試 / 月",
+      "f4": "500 次簡歷匹配 / 月",
+      "f5": "包含成長版全部功能",
+      "f6": "優先支援",
+      "f6s": "更快的響應時間",
+      "f7": "高階分析",
+      "f7s": "詳細的招聘漏斗洞察",
+      "f8": "白標面試報告",
+      "f9": "完整面試影片回放",
+      "f10": "作弊檢測"
+    },
+    "custom": {
+      "name": "定製版",
+      "subtitle": "適合大規模組織",
+      "cta": "聯絡我們",
+      "f1": "一切無限制",
+      "f2": "包含商務版全部功能",
+      "f3": "自定義工作流",
+      "f3s": "匹配您的招聘流程",
+      "f4": "45+ ATS 整合",
+      "f4s": "連線現有工具",
+      "f5": "自定義面試語音",
+      "f6": "專屬客戶經理與支援"
+    },
+    "ppu": {
+      "title": "按次計費",
+      "subtitle": "需要更靈活？充值餘額，按需使用。",
+      "includes": "包含",
+      "match": {
+        "title": "簡歷匹配",
+        "unit": "每份簡歷 / JD",
+        "f1": "匹配決策與洞察",
+        "f2": "必備要求分析",
+        "f3": "差距分析與建議",
+        "f4": "資歷與經驗驗證",
+        "f5": "推薦面試問題",
+        "f6": "深度考察建議"
+      },
+      "interview": {
+        "title": "面試",
+        "unit": "每次面試",
+        "f1": "完整影片回放",
+        "f2": "自動郵件邀請",
+        "f3": "評分與結構化評估",
+        "f4": "作弊檢測",
+        "f5": "面試總結",
+        "f6": "語言能力評估"
+      }
+    },
+    "faq": {
+      "title": "常見問題",
+      "q1": "可以免費試用 RoboHire 嗎？",
+      "a1": "可以！所有付費方案均包含 14 天免費試用，無需信用卡即可開始。",
+      "q2": "支援哪些支付方式？",
+      "a2": "我們支援所有主流信用卡和簽帳金融卡（Visa、Mastercard、American Express）以及支付寶。所有付款透過 Stripe 安全處理。",
+      "q3": "可以隨時切換方案嗎？",
+      "a3": "當然可以。您可以隨時升級或降級。升級時按比例補差價，降級時餘額將用於下一個計費週期。",
+      "q4": "超出月度額度後會怎樣？",
+      "a4": "您可以使用按次計費繼續使用。簡歷匹配 $0.40/次，面試 $2.00/次，從充值餘額中扣除。",
+      "q5": "按次計費包含什麼？",
+      "a5": "按次計費讓您充值餘額，按需使用簡歷匹配（$0.40）或面試（$2.00）。每次使用包含全部功能：AI 評分、總結、作弊檢測等。",
+      "q6": "需要籤合同嗎？",
+      "a6": "不需要。月付方案可隨時取消，沒有提前終止費用。",
+      "q7": "提供定製方案嗎？",
+      "a7": "是的！定製版包含無限使用量、自定義工作流、ATS 整合、專屬支援等。聯絡銷售團隊獲取定製報價。"
+    },
+    "cta": {
+      "title": "準備好簡化招聘了嗎？",
+      "subtitle": "加入數千家使用 AI 更快更聰明地招聘的公司。",
+      "primary": "立即開始招聘",
+      "secondary": "申請演示"
+    }
+  },
+  "account": {
+    "profile": {
+      "title": "個人資料",
+      "name": "姓名",
+      "company": "公司",
+      "avatar": "頭像 URL",
+      "save": "儲存更改",
+      "saving": "儲存中...",
+      "saved": "個人資料更新成功"
+    },
+    "security": {
+      "title": "安全",
+      "currentPassword": "當前密碼",
+      "newPassword": "新密碼",
+      "confirmPassword": "確認新密碼",
+      "change": "修改密碼",
+      "changing": "修改中...",
+      "changed": "密碼修改成功",
+      "mismatch": "密碼不匹配",
+      "oauthNote": "社交登入賬戶無法修改密碼。"
+    },
+    "subscription": {
+      "title": "訂閱",
+      "currentPlan": "當前方案",
+      "status": "狀態",
+      "renewsOn": "續訂日期",
+      "trialEnds": "免費試用結束日期",
+      "usage": "使用量",
+      "interviews": "面試",
+      "matches": "簡歷匹配",
+      "changePlan": "更改方案",
+      "of": "/"
+    },
+    "topup": {
+      "title": "充值餘額",
+      "currentBalance": "當前餘額",
+      "selectAmount": "選擇充值金額：",
+      "processing": "處理中...",
+      "success": "充值成功！餘額已更新。"
+    },
+    "billing": {
+      "title": "賬單歷史",
+      "date": "日期",
+      "description": "描述",
+      "amount": "金額",
+      "status": "狀態",
+      "action": "收據",
+      "empty": "暫無賬單記錄。",
+      "loading": "載入賬單歷史...",
+      "viewInvoice": "檢視",
+      "viewReceipt": "收據"
+    }
+  },
+  "usage": {
+    "title": "API 用量",
+    "apiCalls": "API 呼叫",
+    "inputTokens": "輸入 Tokens",
+    "outputTokens": "輸出 Tokens",
+    "totalCost": "總費用",
+    "empty": "暫無用量資料。呼叫 API 後資料將顯示在此處。",
+    "inactive": "已停用",
+    "range": {
+      "7d": "7 天",
+      "30d": "30 天",
+      "90d": "90 天",
+      "all": "全部"
+    },
+    "chart": {
+      "callsOverTime": "API 呼叫趨勢",
+      "calls": "呼叫次數",
+      "tokenUsage": "Token 用量（輸入 vs 輸出）",
+      "input": "輸入",
+      "output": "輸出"
+    },
+    "table": {
+      "byEndpoint": "按介面統計",
+      "endpoint": "介面",
+      "calls": "呼叫次數",
+      "tokens": "Tokens",
+      "cost": "費用",
+      "byKey": "按 API Key 統計",
+      "key": "金鑰"
+    },
+    "callHistory": {
+      "title": "API 呼叫記錄",
+      "empty": "暫無 API 呼叫記錄。",
+      "time": "時間",
+      "endpoint": "介面",
+      "status": "狀態",
+      "duration": "耗時",
+      "tokens": "Tokens",
+      "cost": "費用",
+      "view": "檢視",
+      "prev": "上一頁",
+      "next": "下一頁",
+      "pageInfo": "第 {{page}} 頁 / 共 {{total}} 頁",
+      "back": "返回用量",
+      "detailTitle": "API 呼叫詳情",
+      "notFound": "未找到呼叫記錄",
+      "llmCalls": "LLM 呼叫",
+      "requestPayload": "輸入引數",
+      "responsePayload": "AI 輸出",
+      "model": "模型",
+      "apiKey": "API 金鑰",
+      "sessionAuth": "會話"
+    }
+  },
+  "seo": {
+    "defaultTitle": "RoboHire - AI智慧招聘平臺",
+    "defaultDescription": "比其他人更快招到精英人才。我們的AI招聘助手自動篩選簡歷、進行面試並提供綜合評估報告。",
+    "defaultKeywords": "AI招聘, 智慧招聘, 簡歷篩選, 面試評估, 候選人匹配, 招聘平臺, 自動化招聘, 人才獲取, 人工智慧面試",
+    "startHiring": {
+      "title": "AI招聘助手",
+      "desc": "讓AI來處理繁重的工作。我們的招聘助手自動篩選簡歷、進行面試並提供評估報告。",
+      "keywords": "AI招聘助手, 自動化招聘, 簡歷篩選, AI面試, 招聘自動化"
+    },
+    "developers": {
+      "title": "開發者API",
+      "desc": "將強大的AI招聘能力整合到您的系統中。透過RESTful API解析簡歷、匹配候選人、評估面試。",
+      "keywords": "招聘API, AI招聘API, 簡歷解析API, 候選人匹配API, 面試評估API, 開發者工具"
+    },
+    "quickInvite": {
+      "title": "一鍵邀約面試",
+      "desc": "上傳簡歷和職位描述，一鍵向所有候選人傳送帶二維碼和連結的面試邀請。",
+      "keywords": "批次面試邀請, 二維碼面試, 一鍵招聘, 候選人邀約, 批次簡歷上傳"
+    },
+    "requestDemo": {
+      "title": "申請演示",
+      "desc": "預約RoboHire個性化演示。瞭解AI智慧招聘如何變革您的招聘流程。"
+    },
+    "login": {
+      "title": "登入",
+      "desc": "登入您的RoboHire賬戶。訪問AI招聘看板，管理候選人，追蹤招聘進度。"
+    },
+    "pricing": {
+      "title": "定價方案",
+      "desc": "選擇適合您團隊的RoboHire方案。從免費試用到無限AI招聘的企業解決方案。"
+    },
+    "docs": {
+      "overview": {
+        "title": "API文件",
+        "desc": "RoboHire API完整文件。幾分鐘內開始使用AI招聘。"
+      },
+      "quickStart": {
+        "title": "快速入門",
+        "desc": "5分鐘內開始使用RoboHire API。分步整合指南。"
+      },
+      "auth": {
+        "title": "API認證",
+        "desc": "瞭解如何使用API金鑰和JWT令牌進行RoboHire API認證。"
+      },
+      "matchResume": {
+        "title": "簡歷匹配API",
+        "desc": "AI簡歷匹配介面參考文件。"
+      },
+      "parseResume": {
+        "title": "簡歷解析API",
+        "desc": "簡歷解析介面參考。使用AI從簡歷中提取結構化資料。"
+      },
+      "parseJd": {
+        "title": "職位描述解析API",
+        "desc": "職位描述解析介面參考。"
+      },
+      "invite": {
+        "title": "邀請候選人API",
+        "desc": "向候選人傳送AI面試邀請的介面參考。"
+      },
+      "evaluate": {
+        "title": "面試評估API",
+        "desc": "AI面試評估介面參考。"
+      },
+      "webhooks": {
+        "title": "Webhooks",
+        "desc": "配置Webhooks接收招聘事件的實時通知。"
+      },
+      "errors": {
+        "title": "錯誤處理",
+        "desc": "RoboHire API錯誤程式碼、響應格式和故障排除指南。"
+      }
+    }
+  },
+  "resumeLibrary": {
+    "title": "簡歷庫",
+    "subtitle": "管理和分析候選人簡歷",
+    "upload": "上傳簡歷",
+    "uploadBatch": "批次上傳",
+    "stats": {
+      "total": "簡歷總數",
+      "thisWeek": "本週新增",
+      "analyzed": "AI已分析"
+    },
+    "search": {
+      "placeholder": "按姓名、技能或職位搜尋..."
+    },
+    "empty": {
+      "title": "暫無簡歷",
+      "description": "上傳簡歷以構建候選人庫",
+      "cta": "上傳第一份簡歷"
+    },
+    "card": {
+      "topFit": "最佳匹配"
+    },
+    "uploadModal": {
+      "title": "上傳簡歷",
+      "batchTitle": "批次上傳簡歷",
+      "dragDrop": "將簡歷檔案拖放到此處",
+      "formats": "支援格式：PDF、DOCX、TXT",
+      "maxFiles": "一次最多10個檔案",
+      "uploading": "處理中...",
+      "duplicate": "重複"
+    },
+    "detail": {
+      "back": "返回簡歷庫",
+      "title": "簡歷詳情",
+      "tabs": {
+        "overview": "概覽",
+        "insights": "AI洞察",
+        "jobFit": "崗位匹配",
+        "notes": "備註與標籤"
+      },
+      "actions": {
+        "archive": "歸檔"
+      },
+      "overview": {
+        "summary": "職業概述",
+        "skills": "技能",
+        "experience": "工作經歷",
+        "education": "教育背景",
+        "certifications": "證書",
+        "projects": "專案經歷",
+        "showAllSkills": "顯示全部 {{count}} 項技能",
+        "showLess": "收起"
+      }
+    },
+    "insights": {
+      "generate": "生成AI洞察",
+      "generating": "正在分析簡歷...",
+      "generatingDesc": "預計需要10-15秒",
+      "regenerate": "重新生成洞察",
+      "executiveSummary": "綜合評估",
+      "careerTrajectory": "職業發展軌跡",
+      "salaryEstimate": "薪資估算",
+      "marketCompetitiveness": "市場競爭力",
+      "cultureFit": "文化匹配指標",
+      "strengths": "核心優勢",
+      "development": "發展領域",
+      "redFlags": "風險提示",
+      "noRedFlags": "未發現風險項",
+      "recommendedRoles": "推薦崗位"
+    },
+    "jobFit": {
+      "analyze": "分析崗位匹配度",
+      "analyzing": "正在與您的招聘需求進行匹配...",
+      "reanalyze": "重新分析匹配度",
+      "bestFit": "最佳匹配",
+      "matchedSkills": "匹配技能",
+      "missingSkills": "缺失關鍵技能",
+      "recommendation": "推薦建議",
+      "noActiveRequests": "未找到有效招聘需求",
+      "noActiveRequestsDesc": "請先建立招聘需求以檢視崗位匹配分析",
+      "fullTime": "全職",
+      "internship": "實習",
+      "hardGaps": "硬性要求缺口",
+      "transferable": "可遷移技能"
+    },
+    "notes": {
+      "tags": "標籤",
+      "addTag": "例如：高階、前端、已面試",
+      "notes": "備註",
+      "notesPlaceholder": "新增關於該候選人的備註...",
+      "save": "儲存",
+      "saving": "儲存中...",
+      "saved": "已儲存！"
+    }
+  }
+}

@@ -1299,7 +1299,7 @@ export default function StartHiring() {
       {/* Hero Section */}
       <section className="px-5 pb-16 pt-16 sm:px-6">
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+          <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 landing-display sm:text-5xl">
             {t('hiring.heroTitle', 'Start hiring with AI')}
           </h1>
           <p className="mx-auto mb-12 max-w-2xl text-xl text-slate-600">
@@ -1373,9 +1373,9 @@ export default function StartHiring() {
 
       {/* Templates Section */}
       <section className="px-5 py-16 sm:px-6">
-        <div className="mx-auto max-w-5xl rounded-[28px] border border-slate-200 bg-white/80 px-5 py-10 shadow-[0_30px_62px_-44px_rgba(15,23,42,0.65)] backdrop-blur sm:px-8">
+        <div className="mx-auto max-w-5xl landing-gradient-stroke rounded-[28px] bg-white/80 px-5 py-10 shadow-[0_30px_62px_-44px_rgba(15,23,42,0.65)] backdrop-blur sm:px-8">
           <div className="mb-10 text-center">
-            <h2 className="mb-2 text-2xl font-semibold text-slate-900">
+            <h2 className="mb-2 text-2xl font-semibold text-slate-900 landing-display">
               {t('hiring.templatesTitle', 'Popular role templates')}
             </h2>
             <p className="text-slate-600">
@@ -1388,7 +1388,7 @@ export default function StartHiring() {
               <button
                 key={template.id}
                 onClick={() => handleTemplateSelect(template)}
-                className="group rounded-2xl border border-slate-200 bg-white p-5 text-left transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_18px_34px_-24px_rgba(37,99,235,0.55)]"
+                className="group landing-gradient-stroke rounded-2xl bg-white p-5 text-left transition-all hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)]"
               >
                 <h3 className="mb-1 font-medium text-slate-900 group-hover:text-blue-600">
                   {template.title}
@@ -1398,7 +1398,7 @@ export default function StartHiring() {
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {template.skills.slice(0, 3).map((skill) => (
-                    <span key={skill} className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                    <span key={skill} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600">
                       {skill}
                     </span>
                   ))}
@@ -1425,15 +1425,15 @@ export default function StartHiring() {
       <section className="px-5 py-20 sm:px-6">
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
-            <h2 className="mb-2 text-2xl font-semibold text-slate-900">
+            <h2 className="mb-2 text-2xl font-semibold text-slate-900 landing-display">
               {t('hiring.howItWorksTitle', 'How it works')}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 text-center shadow-[0_22px_40px_-32px_rgba(15,23,42,0.52)] backdrop-blur">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <span className="text-lg font-semibold text-blue-600">1</span>
+            <div className="landing-gradient-stroke rounded-3xl bg-white/80 p-6 text-center shadow-[0_28px_52px_-40px_rgba(15,23,42,0.62)] backdrop-blur">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900">
+                <span className="text-lg font-semibold text-white">1</span>
               </div>
               <h3 className="mb-2 font-medium text-slate-900">
                 {t('hiring.howItWorks.step1.title', 'Describe your role')}
@@ -1445,9 +1445,9 @@ export default function StartHiring() {
                 )}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 text-center shadow-[0_22px_40px_-32px_rgba(15,23,42,0.52)] backdrop-blur">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <span className="text-lg font-semibold text-blue-600">2</span>
+            <div className="landing-gradient-stroke rounded-3xl bg-white/80 p-6 text-center shadow-[0_28px_52px_-40px_rgba(15,23,42,0.62)] backdrop-blur">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900">
+                <span className="text-lg font-semibold text-white">2</span>
               </div>
               <h3 className="mb-2 font-medium text-slate-900">
                 {t('hiring.howItWorks.step2.title', 'AI screens candidates')}
@@ -1459,9 +1459,9 @@ export default function StartHiring() {
                 )}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 text-center shadow-[0_22px_40px_-32px_rgba(15,23,42,0.52)] backdrop-blur">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <span className="text-lg font-semibold text-blue-600">3</span>
+            <div className="landing-gradient-stroke rounded-3xl bg-white/80 p-6 text-center shadow-[0_28px_52px_-40px_rgba(15,23,42,0.62)] backdrop-blur">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900">
+                <span className="text-lg font-semibold text-white">3</span>
               </div>
               <h3 className="mb-2 font-medium text-slate-900">
                 {t('hiring.howItWorks.step3.title', 'Review top matches')}
@@ -1480,7 +1480,7 @@ export default function StartHiring() {
       {/* CTA */}
       <section className="px-5 py-16 sm:px-6">
         <div className="mx-auto max-w-4xl rounded-[28px] bg-slate-950 px-6 py-14 text-center shadow-[0_40px_70px_-44px_rgba(2,6,23,0.92)] sm:px-10">
-          <h2 className="mb-4 text-2xl font-semibold text-white">
+          <h2 className="mb-4 text-2xl font-semibold text-white landing-display">
             {t('hiring.ctaTitle', 'Ready to streamline your hiring?')}
           </h2>
           <p className="mb-8 text-slate-300">

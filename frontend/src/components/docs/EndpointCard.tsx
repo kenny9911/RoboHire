@@ -14,15 +14,15 @@ const methodColors = {
 
 export default function EndpointCard({ method, path, description }: EndpointCardProps) {
   return (
-    <div className="bg-gray-50 rounded-xl p-4 mb-6">
+    <div className="bg-slate-50 rounded-xl p-4 mb-6">
       <div className="flex items-center gap-3 mb-2">
         <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase ${methodColors[method]}`}>
           {method}
         </span>
-        <code className="text-sm font-mono text-gray-800">{path}</code>
+        <code className="text-sm font-mono text-slate-800">{path}</code>
       </div>
       {description && (
-        <p className="text-gray-600 text-sm ml-[70px]">{description}</p>
+        <p className="text-slate-600 text-sm ml-[70px]">{description}</p>
       )}
     </div>
   );

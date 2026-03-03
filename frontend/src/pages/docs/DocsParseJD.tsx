@@ -119,10 +119,10 @@ result = response.json()`,
   return (
     <div>
       <SEO title={t('seo.docsParseJD.title', 'Parse Job Description API')} description={t('seo.docsParseJD.desc', 'API reference for job description parsing. Extract structured requirements from JDs.')} url="https://robohire.io/docs/api/parse-jd" keywords={t('seo.docsParseJD.keywords', 'RoboHire API documentation, job description parsing API, JD parser, AI recruitment')} />
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.parseJD.title', 'Parse Job Description')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.parseJD.intro', 'Extract structured data from a job description PDF, including requirements, responsibilities, and benefits.')}
       </p>
 
@@ -133,7 +133,7 @@ result = response.json()`,
       />
 
       {/* Request */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.parseJD.request', 'Request')}
       </h2>
       <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
@@ -147,7 +147,7 @@ result = response.json()`,
       />
 
       {/* Response */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.parseJD.response', 'Response')}
       </h2>
       <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
@@ -155,29 +155,29 @@ result = response.json()`,
       <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Requirements Structure */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.parseJD.requirements.title', 'Requirements Structure')}
       </h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-slate-600 mb-4">
         {t('docs.parseJD.requirements.desc', 'The requirements object contains categorized qualifications:')}
       </p>
-      <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
-        <li><code className="text-indigo-600">mustHave</code> - {t('docs.parseJD.requirements.mustHave', 'Required qualifications the candidate must possess')}</li>
-        <li><code className="text-indigo-600">niceToHave</code> - {t('docs.parseJD.requirements.niceToHave', 'Preferred qualifications that are beneficial but not mandatory')}</li>
-        <li><code className="text-indigo-600">education</code> - {t('docs.parseJD.requirements.education', 'Educational requirements')}</li>
+      <ul className="list-disc list-inside text-slate-600 space-y-2 mb-6">
+        <li><code className="text-blue-600">mustHave</code> - {t('docs.parseJD.requirements.mustHave', 'Required qualifications the candidate must possess')}</li>
+        <li><code className="text-blue-600">niceToHave</code> - {t('docs.parseJD.requirements.niceToHave', 'Preferred qualifications that are beneficial but not mandatory')}</li>
+        <li><code className="text-blue-600">education</code> - {t('docs.parseJD.requirements.education', 'Educational requirements')}</li>
       </ul>
 
       {/* Try It */}
-      <div className="bg-indigo-50 rounded-xl p-6">
-        <h3 className="font-semibold text-indigo-900 mb-2">
+      <div className="bg-blue-50 rounded-xl p-6">
+        <h3 className="font-semibold text-blue-900 mb-2">
           {t('docs.parseJD.tryIt.title', 'Try it out')}
         </h3>
-        <p className="text-indigo-700 text-sm mb-3">
+        <p className="text-blue-700 text-sm mb-3">
           {t('docs.parseJD.tryIt.desc', 'Test this endpoint interactively in the API Playground.')}
         </p>
         <Link
           to="/api-playground/parse-jd"
-          className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           {t('docs.parseJD.tryIt.cta', 'Open in Playground')}
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

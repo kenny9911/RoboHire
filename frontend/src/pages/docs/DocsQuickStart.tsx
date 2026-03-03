@@ -90,28 +90,28 @@ print(result['data']['matchScore'])  # e.g., 85`,
         <script type="application/ld+json">{JSON.stringify(techArticleSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
       </Helmet>
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.quickStart.title', 'Quick Start')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.quickStart.intro', 'Get up and running with the RoboHire in just a few minutes.')}
       </p>
 
       {/* Step 1 */}
       <div className="mb-12">
         <div className="flex items-center gap-3 mb-4">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-sm">1</span>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-sm">1</span>
+          <h2 className="text-xl font-semibold text-slate-900">
             {t('docs.quickStart.step1.title', 'Get your API key')}
           </h2>
         </div>
-        <p className="text-gray-600 mb-4 ml-11">
+        <p className="text-slate-600 mb-4 ml-11">
           {t('docs.quickStart.step1.desc', 'Sign up for a RoboHire account and generate an API key from your dashboard.')}
         </p>
         <div className="ml-11">
           <Link
             to="/dashboard/api-keys"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium rounded-full shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5"
           >
             {t('docs.quickStart.step1.cta', 'Get API Key')}
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,12 +124,12 @@ print(result['data']['matchScore'])  # e.g., 85`,
       {/* Step 2 */}
       <div className="mb-12">
         <div className="flex items-center gap-3 mb-4">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-sm">2</span>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-sm">2</span>
+          <h2 className="text-xl font-semibold text-slate-900">
             {t('docs.quickStart.step2.title', 'Install dependencies (optional)')}
           </h2>
         </div>
-        <p className="text-gray-600 mb-4 ml-11">
+        <p className="text-slate-600 mb-4 ml-11">
           {t('docs.quickStart.step2.desc', 'Install any HTTP client library for your programming language.')}
         </p>
         <div className="ml-11">
@@ -146,12 +146,12 @@ print(result['data']['matchScore'])  # e.g., 85`,
       {/* Step 3 */}
       <div className="mb-12">
         <div className="flex items-center gap-3 mb-4">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-sm">3</span>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-sm">3</span>
+          <h2 className="text-xl font-semibold text-slate-900">
             {t('docs.quickStart.step3.title', 'Make your first API call')}
           </h2>
         </div>
-        <p className="text-gray-600 mb-4 ml-11">
+        <p className="text-slate-600 mb-4 ml-11">
           {t('docs.quickStart.step3.desc', "Let's match a resume against a job description:")}
         </p>
         <div className="ml-11">
@@ -168,12 +168,12 @@ print(result['data']['matchScore'])  # e.g., 85`,
       {/* Step 4 */}
       <div className="mb-12">
         <div className="flex items-center gap-3 mb-4">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-sm">4</span>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-sm">4</span>
+          <h2 className="text-xl font-semibold text-slate-900">
             {t('docs.quickStart.step4.title', 'Handle the response')}
           </h2>
         </div>
-        <p className="text-gray-600 mb-4 ml-11">
+        <p className="text-slate-600 mb-4 ml-11">
           {t('docs.quickStart.step4.desc', "You'll receive a JSON response with the match analysis:")}
         </p>
         <div className="ml-11">
@@ -204,13 +204,13 @@ print(result['data']['matchScore'])  # e.g., 85`,
       </div>
 
       {/* Next Steps */}
-      <div className="bg-gray-50 rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">
+      <div className="bg-slate-50 rounded-xl p-6">
+        <h3 className="font-semibold text-slate-900 mb-4">
           {t('docs.quickStart.nextSteps.title', 'Next steps')}
         </h3>
         <ul className="space-y-3">
           <li>
-            <Link to="/docs/authentication" className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700">
+            <Link to="/docs/authentication" className="flex items-center gap-2 text-blue-600 hover:text-blue-700">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -218,7 +218,7 @@ print(result['data']['matchScore'])  # e.g., 85`,
             </Link>
           </li>
           <li>
-            <Link to="/docs/api/match-resume" className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700">
+            <Link to="/docs/api/match-resume" className="flex items-center gap-2 text-blue-600 hover:text-blue-700">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -226,7 +226,7 @@ print(result['data']['matchScore'])  # e.g., 85`,
             </Link>
           </li>
           <li>
-            <Link to="/api-playground" className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700">
+            <Link to="/api-playground" className="flex items-center gap-2 text-blue-600 hover:text-blue-700">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>

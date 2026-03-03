@@ -96,10 +96,10 @@ result = response.json()`,
   return (
     <div>
       <SEO title={t('seo.docsInviteCandidate.title', 'Invite Candidate API')} description={t('seo.docsInviteCandidate.desc', 'API reference for sending AI interview invitations to candidates with QR codes and links.')} url="https://robohire.io/docs/api/invite-candidate" keywords={t('seo.docsInviteCandidate.keywords', 'RoboHire API documentation, candidate invitation API, interview invitation, AI hiring')} />
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.inviteCandidate.title', 'Invite Candidate')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.inviteCandidate.intro', 'Generate professional interview invitation emails for candidates. The AI crafts personalized messages based on the provided details.')}
       </p>
 
@@ -110,7 +110,7 @@ result = response.json()`,
       />
 
       {/* Request */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.inviteCandidate.request', 'Request')}
       </h2>
       <ParamTable title={t('docs.common.bodyParams', 'Body Parameters')} params={requestParams} />
@@ -124,7 +124,7 @@ result = response.json()`,
       />
 
       {/* Response */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.inviteCandidate.response', 'Response')}
       </h2>
       <ParamTable title={t('docs.common.responseFields', 'Response Fields')} params={responseParams} />
@@ -132,45 +132,45 @@ result = response.json()`,
       <CodeBlock code={exampleResponse} language="json" title={t('docs.common.exampleResponse', 'Example Response')} />
 
       {/* Email Tones */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.inviteCandidate.tones.title', 'Available Tones')}
       </h2>
-      <div className="bg-gray-50 rounded-xl overflow-hidden mb-6">
+      <div className="bg-slate-50 rounded-xl overflow-hidden mb-6">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.inviteCandidate.tones.toneHeader', 'Tone')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.inviteCandidate.tones.descHeader', 'Description')}</th>
+            <tr className="border-b border-slate-200">
+              <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.inviteCandidate.tones.toneHeader', 'Tone')}</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.inviteCandidate.tones.descHeader', 'Description')}</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-100">
-              <td className="px-4 py-3"><code className="text-indigo-600">formal</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.inviteCandidate.tones.formal', 'Traditional, corporate-style communication')}</td>
+            <tr className="border-b border-slate-100">
+              <td className="px-4 py-3"><code className="text-blue-600">formal</code></td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.inviteCandidate.tones.formal', 'Traditional, corporate-style communication')}</td>
             </tr>
-            <tr className="border-b border-gray-100">
-              <td className="px-4 py-3"><code className="text-indigo-600">professional</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.inviteCandidate.tones.professional', 'Balanced, business-appropriate (default)')}</td>
+            <tr className="border-b border-slate-100">
+              <td className="px-4 py-3"><code className="text-blue-600">professional</code></td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.inviteCandidate.tones.professional', 'Balanced, business-appropriate (default)')}</td>
             </tr>
             <tr>
-              <td className="px-4 py-3"><code className="text-indigo-600">friendly</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.inviteCandidate.tones.friendly', 'Warm, approachable, startup-friendly')}</td>
+              <td className="px-4 py-3"><code className="text-blue-600">friendly</code></td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.inviteCandidate.tones.friendly', 'Warm, approachable, startup-friendly')}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* Try It */}
-      <div className="bg-indigo-50 rounded-xl p-6">
-        <h3 className="font-semibold text-indigo-900 mb-2">
+      <div className="bg-blue-50 rounded-xl p-6">
+        <h3 className="font-semibold text-blue-900 mb-2">
           {t('docs.inviteCandidate.tryIt.title', 'Try it out')}
         </h3>
-        <p className="text-indigo-700 text-sm mb-3">
+        <p className="text-blue-700 text-sm mb-3">
           {t('docs.inviteCandidate.tryIt.desc', 'Test this endpoint interactively in the API Playground.')}
         </p>
         <Link
           to="/api-playground/invite"
-          className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           {t('docs.inviteCandidate.tryIt.cta', 'Open in Playground')}
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

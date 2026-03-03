@@ -8,10 +8,12 @@ import es from './locales/es/translation.json';
 import fr from './locales/fr/translation.json';
 import pt from './locales/pt/translation.json';
 import de from './locales/de/translation.json';
+import zhTW from './locales/zh-TW/translation.json';
 
 const resources = {
   en: { translation: en },
   zh: { translation: zh },
+  'zh-TW': { translation: zhTW },
   ja: { translation: ja },
   es: { translation: es },
   fr: { translation: fr },
@@ -25,7 +27,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
-    supportedLngs: ['en', 'zh', 'ja', 'es', 'fr', 'pt', 'de'],
+    supportedLngs: ['en', 'zh', 'zh-TW', 'ja', 'es', 'fr', 'pt', 'de'],
     interpolation: { escapeValue: false },
     detection: {
       order: ['localStorage', 'navigator'],

@@ -57,7 +57,7 @@ export default function ResumeCard({
   const topFit = resume.resumeJobFits?.[0];
 
   const fitColor = (score: number | null | undefined) => {
-    if (!score) return 'bg-gray-100 text-gray-500';
+    if (!score) return 'bg-slate-100 text-slate-500';
     if (score >= 80) return 'bg-emerald-100 text-emerald-700';
     if (score >= 60) return 'bg-amber-100 text-amber-700';
     return 'bg-red-100 text-red-700';
@@ -66,20 +66,20 @@ export default function ResumeCard({
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group"
+      className="landing-gradient-stroke bg-white rounded-2xl p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300 cursor-pointer group"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+          <h3 className="text-sm font-semibold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
             {resume.name}
           </h3>
           <div className="flex items-center gap-2 mt-0.5">
             {resume.currentRole && (
-              <p className="text-xs text-gray-600 truncate">{resume.currentRole}</p>
+              <p className="text-xs text-slate-600 truncate">{resume.currentRole}</p>
             )}
             {resume.status === 'archived' && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
                 {t('resumeLibrary.card.archived', 'Archived')}
               </span>
             )}
@@ -96,12 +96,12 @@ export default function ResumeCard({
       {displaySkills.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {displaySkills.map((skill, i) => (
-            <span key={i} className="inline-block bg-indigo-50 text-indigo-600 text-[11px] px-2 py-0.5 rounded-full">
+            <span key={i} className="inline-block bg-blue-50 text-blue-600 text-[11px] px-2 py-0.5 rounded-full">
               {skill}
             </span>
           ))}
           {extraSkills > 0 && (
-            <span className="inline-block bg-gray-100 text-gray-600 text-[11px] px-2 py-0.5 rounded-full">
+            <span className="inline-block bg-slate-100 text-slate-600 text-[11px] px-2 py-0.5 rounded-full">
               +{extraSkills}
             </span>
           )}
@@ -109,7 +109,7 @@ export default function ResumeCard({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-[11px] text-gray-500">
+      <div className="flex items-center justify-between text-[11px] text-slate-500">
         <span>{new Date(resume.createdAt).toLocaleDateString()}</span>
         {topFit ? (
           <span className="truncate max-w-[120px]" title={topFit.hiringRequest.title}>
@@ -121,7 +121,7 @@ export default function ResumeCard({
       </div>
 
       {(onRegenerateInsights || onReanalyzeJobFit || onReupload) && (
-        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-1.5">
+        <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-1.5">
           {onRegenerateInsights && (
             <button
               onClick={(e) => {
@@ -132,7 +132,7 @@ export default function ResumeCard({
               title={insightLoading
                 ? t('resumeLibrary.card.regeneratingInsights', 'Regenerating...')
                 : t('resumeLibrary.card.regenerateInsights', 'Re-generate Insights')}
-              className="p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors disabled:opacity-60"
+              className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors disabled:opacity-60"
             >
               {insightLoading ? (
                 <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">

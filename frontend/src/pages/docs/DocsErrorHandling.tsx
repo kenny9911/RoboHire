@@ -116,60 +116,60 @@ export default function DocsErrorHandling() {
   return (
     <div>
       <SEO title={t('seo.docsErrorHandling.title', 'Error Handling')} description={t('seo.docsErrorHandling.desc', 'RoboHire API error codes, response formats, and troubleshooting guide.')} url="https://robohire.io/docs/error-handling" keywords={t('seo.docsErrorHandling.keywords', 'RoboHire API documentation, error handling, API error codes, troubleshooting')} />
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <h1 className="text-3xl font-bold text-slate-900 landing-display mb-4">
         {t('docs.errors.title', 'Error Handling')}
       </h1>
-      <p className="text-lg text-gray-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         {t('docs.errors.intro', 'Learn how to handle errors returned by the RoboHire and implement robust error handling in your application.')}
       </p>
 
       {/* Error Response Format */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.errors.format.title', 'Error Response Format')}
       </h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-slate-600 mb-4">
         {t('docs.errors.format.desc', 'When an error occurs, the API returns a JSON response with the following structure:')}
       </p>
 
       <CodeBlock code={errorExample} language="json" title={t('docs.errors.format.exampleTitle', 'Error Response')} />
 
-      <div className="bg-gray-50 rounded-xl overflow-hidden mb-6">
+      <div className="bg-slate-50 rounded-xl overflow-hidden mb-6">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.errors.format.field', 'Field')}</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">{t('docs.errors.format.description', 'Description')}</th>
+            <tr className="border-b border-slate-200">
+              <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.errors.format.field', 'Field')}</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-500">{t('docs.errors.format.description', 'Description')}</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-100">
-              <td className="px-4 py-3"><code className="text-indigo-600">success</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.errors.format.successDesc', 'Always false for error responses')}</td>
+            <tr className="border-b border-slate-100">
+              <td className="px-4 py-3"><code className="text-blue-600">success</code></td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.errors.format.successDesc', 'Always false for error responses')}</td>
             </tr>
-            <tr className="border-b border-gray-100">
-              <td className="px-4 py-3"><code className="text-indigo-600">error</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.errors.format.errorDesc', 'Human-readable error message')}</td>
+            <tr className="border-b border-slate-100">
+              <td className="px-4 py-3"><code className="text-blue-600">error</code></td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.errors.format.errorDesc', 'Human-readable error message')}</td>
             </tr>
-            <tr className="border-b border-gray-100">
-              <td className="px-4 py-3"><code className="text-indigo-600">code</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.errors.format.codeDesc', 'Machine-readable error code')}</td>
+            <tr className="border-b border-slate-100">
+              <td className="px-4 py-3"><code className="text-blue-600">code</code></td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.errors.format.codeDesc', 'Machine-readable error code')}</td>
             </tr>
             <tr>
-              <td className="px-4 py-3"><code className="text-indigo-600">details</code></td>
-              <td className="px-4 py-3 text-gray-600">{t('docs.errors.format.detailsDesc', 'Additional error details (optional)')}</td>
+              <td className="px-4 py-3"><code className="text-blue-600">details</code></td>
+              <td className="px-4 py-3 text-slate-600">{t('docs.errors.format.detailsDesc', 'Additional error details (optional)')}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       {/* Error Codes */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.errors.codes.title', 'Error Codes Reference')}
       </h2>
 
       <div className="space-y-4 mb-8">
         {errors.map((error, index) => (
-          <div key={index} className="bg-gray-50 rounded-xl p-4">
+          <div key={index} className="bg-slate-50 rounded-xl p-4">
             <div className="flex items-center gap-3 mb-2">
               <span className={`px-2 py-1 text-xs font-bold rounded ${
                 error.status >= 500 ? 'bg-red-100 text-red-700' :
@@ -178,35 +178,35 @@ export default function DocsErrorHandling() {
               }`}>
                 {error.status}
               </span>
-              <code className="font-mono text-gray-800">{error.code}</code>
+              <code className="font-mono text-slate-800">{error.code}</code>
             </div>
-            <p className="text-gray-600 text-sm mb-2">{error.description}</p>
+            <p className="text-slate-600 text-sm mb-2">{error.description}</p>
             <p className="text-sm">
-              <span className="font-medium text-gray-700">{t('docs.errors.codes.fixLabel', 'Fix')}: </span>
-              <span className="text-gray-600">{error.fix}</span>
+              <span className="font-medium text-slate-700">{t('docs.errors.codes.fixLabel', 'Fix')}: </span>
+              <span className="text-slate-600">{error.fix}</span>
             </p>
           </div>
         ))}
       </div>
 
       {/* Handling Errors */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.errors.handling.title', 'Handling Errors in Code')}
       </h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-slate-600 mb-4">
         {t('docs.errors.handling.desc', 'Here is an example of robust error handling:')}
       </p>
 
       <CodeBlock code={errorHandlingCode} language="javascript" title={t('docs.errors.handling.exampleTitle', 'Error Handling Example')} />
 
       {/* Rate Limiting */}
-      <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">
+      <h2 className="text-xl font-semibold text-slate-900 mt-8 mb-4">
         {t('docs.errors.rateLimiting.title', 'Rate Limiting')}
       </h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-slate-600 mb-4">
         {t('docs.errors.rateLimiting.desc', 'The API implements rate limiting to ensure fair usage. When you exceed the rate limit:')}
       </p>
-      <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
+      <ul className="list-disc list-inside text-slate-600 space-y-2 mb-6">
         <li>{t('docs.errors.rateLimiting.status429', 'You will receive a 429 status code')}</li>
         <li>{t('docs.errors.rateLimiting.retryAfter', 'The response includes a retryAfter field (seconds until you can retry)')}</li>
         <li>{t('docs.errors.rateLimiting.backoff', 'Implement exponential backoff for automatic retries')}</li>
