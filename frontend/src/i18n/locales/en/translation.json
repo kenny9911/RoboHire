@@ -1518,6 +1518,7 @@
       "candidateReviewTitle": "Candidates receiving this invitation",
       "invitedPositionLabel": "Invited Position",
       "emailMissingCandidate": "Email is not visible in this resume. Please confirm before sending.",
+      "candidateFallback": "Candidate #{{num}}",
       "notFound": "Not found",
       "phoneLabel": "Phone",
       "roleLabel": "Role",

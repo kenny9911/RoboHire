@@ -1519,6 +1519,7 @@
       "candidateReviewTitle": "将收到邀约的候选人",
       "invitedPositionLabel": "邀约岗位",
       "emailMissingCandidate": "该简历未识别到邮箱，请发送前确认。",
+      "candidateFallback": "候选人 #{{num}}",
       "notFound": "未识别",
       "phoneLabel": "电话",
       "roleLabel": "职位",

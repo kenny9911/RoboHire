@@ -190,6 +190,68 @@ const extractPhone = (text: string): string | null => {
   return phone ? phone.trim() : null;
 };
 
+const sanitizeCandidateName = (value: string): string | null => {
+  const cleaned = value
+    .replace(/^["'`]+|["'`,.，。;；:：]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return null;
+  if (cleaned.length > 80) return null;
+  if (cleaned.includes('@')) return null;
+  if (/^[\d\W_]+$/.test(cleaned)) return null;
+  return cleaned;
+};
+
+const titleCase = (value: string) =>
+  value
+    .split(' ')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
+
+const extractNameFromRawResume = (resumeText: string, email?: string | null): string | null => {
+  const patterns = [
+    /"(?:name|fullName|candidateName|candidate_name)"\s*:\s*"([^"]+)"/i,
+    /(?:^|\n)\s*(?:name|full\s*name|candidate\s*name)\s*[:：]\s*([^\n]+)/i,
+    /(?:^|\n)\s*(?:姓名|候选人姓名|名字)\s*[:：]\s*([^\n]+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = resumeText.match(pattern);
+    const candidate = match?.[1] ? sanitizeCandidateName(match[1]) : null;
+    if (candidate) return candidate;
+  }
+
+  const lines = resumeText
+    .replace(/\r/g, '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 10);
+
+  for (const line of lines) {
+    const compact = line.replace(/^[-*#\d.)\s]+/, '').trim();
+    if (!compact) continue;
+    if (compact.length > 40) continue;
+    if (/[{}[\]":]/.test(compact)) continue;
+    if (/@/.test(compact)) continue;
+    if (/\d{3,}/.test(compact)) continue;
+    if (/^(name|email|phone|summary|experience|education|skills|职位|邮箱|电话)\b/i.test(compact)) continue;
+
+    const firstSegment = compact.split(/[，,|]/)[0] ?? compact;
+    const candidate = sanitizeCandidateName(firstSegment);
+    if (candidate) return candidate;
+  }
+
+  if (email) {
+    const localPart = email.split('@')[0]?.replace(/[._-]+/g, ' ').trim();
+    const fallback = localPart ? sanitizeCandidateName(titleCase(localPart)) : null;
+    if (fallback) return fallback;
+  }
+
+  return null;
+};
+
 const extractTitleFromRawJd = (jdText: string): string | null => {
   const normalized = jdText.replace(/\r/g, '').trim();
   if (!normalized) return null;
@@ -221,7 +283,7 @@ const extractResumeReviewInfo = (resumeText: string): ResumeReviewInfo => {
   const parsed = parsePossibleJson(resumeText);
   const payload = unwrapDataPayload(parsed);
 
-  const name = getFirstStringByPaths(payload, [
+  const nameFromPayload = getFirstStringByPaths(payload, [
     ['name'],
     ['candidateName'],
     ['fullName'],
@@ -257,9 +319,12 @@ const extractResumeReviewInfo = (resumeText: string): ResumeReviewInfo => {
     ['overview'],
   ]);
 
+  const email = emailFromPayload ?? extractEmail(resumeText);
+  const name = sanitizeCandidateName(nameFromPayload || '') ?? extractNameFromRawResume(resumeText, email);
+
   return {
     name,
-    email: emailFromPayload ?? extractEmail(resumeText),
+    email,
     phone: phoneFromPayload ?? extractPhone(resumeText),
     role,
     summary: summaryFromPayload ? truncateText(cleanText(summaryFromPayload), 140) : null,
@@ -1076,55 +1141,62 @@ export default function QuickInvite() {
                 <p className="text-sm font-semibold text-slate-700 mb-2">
                   {t('pages.quickInvite.candidateReviewTitle', 'Candidates receiving this invitation')}
                 </p>
-                {reviewResumes.map(({ entry, info }, i) => (
-                  <div key={entry.id} className="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <div className="flex items-start gap-3">
-                      <span className="text-sm font-bold text-slate-400 w-6 pt-0.5">{i + 1}</span>
-                      <span className="text-lg">📄</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <p className="text-sm font-semibold text-slate-800 truncate">
-                            {info.name || entry.fileName}
+                {reviewResumes.map(({ entry, info }, i) => {
+                  const candidateDisplayName =
+                    info.name ||
+                    (info.email ? info.email.split('@')[0] : null) ||
+                    t('pages.quickInvite.candidateFallback', 'Candidate #{{num}}', { num: i + 1 });
+
+                  return (
+                    <div key={entry.id} className="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="flex items-start gap-3">
+                        <span className="text-sm font-bold text-slate-400 w-6 pt-0.5">{i + 1}</span>
+                        <span className="text-lg">📄</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <p className="text-sm font-semibold text-slate-800 truncate">
+                              {candidateDisplayName}
+                            </p>
+                            <span className="text-xs text-slate-500 truncate">
+                              {t('pages.quickInvite.sourceLabel', 'Source')}: {entry.fileName}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 mb-2 break-words">
+                            {t('pages.quickInvite.invitedPositionLabel', 'Invited Position')}:{' '}
+                            <span className="font-medium text-slate-700">{targetJobTitle}</span>
                           </p>
-                          <span className="text-xs text-slate-500 truncate">
-                            {t('pages.quickInvite.sourceLabel', 'Source')}: {entry.fileName}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-600 mb-2 break-words">
-                          {t('pages.quickInvite.invitedPositionLabel', 'Invited Position')}:{' '}
-                          <span className="font-medium text-slate-700">{targetJobTitle}</span>
-                        </p>
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200 text-slate-600">
-                            {t('pages.quickInvite.email', 'Email')}:{' '}
-                            {info.email || t('pages.quickInvite.notFound', 'Not found')}
-                          </span>
-                          {info.phone && (
+                          <div className="flex flex-wrap gap-2 text-xs">
                             <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200 text-slate-600">
-                              {t('pages.quickInvite.phoneLabel', 'Phone')}: {info.phone}
+                              {t('pages.quickInvite.email', 'Email')}:{' '}
+                              {info.email || t('pages.quickInvite.notFound', 'Not found')}
                             </span>
-                          )}
-                          {info.role && (
-                            <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200 text-slate-600">
-                              {t('pages.quickInvite.roleLabel', 'Role')}: {info.role}
-                            </span>
-                          )}
-                        </div>
-                        {info.summary && (
-                          <p className="text-xs text-slate-500 mt-2">{info.summary}</p>
-                        )}
-                        {!info.email && (
-                          <p className="text-xs text-amber-600 mt-2">
-                            {t(
-                              'pages.quickInvite.emailMissingCandidate',
-                              'Email is not visible in this resume. Please confirm before sending.'
+                            {info.phone && (
+                              <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200 text-slate-600">
+                                {t('pages.quickInvite.phoneLabel', 'Phone')}: {info.phone}
+                              </span>
                             )}
-                          </p>
-                        )}
+                            {info.role && (
+                              <span className="rounded-full bg-white px-2.5 py-1 border border-slate-200 text-slate-600">
+                                {t('pages.quickInvite.roleLabel', 'Role')}: {info.role}
+                              </span>
+                            )}
+                          </div>
+                          {info.summary && (
+                            <p className="text-xs text-slate-500 mt-2">{info.summary}</p>
+                          )}
+                          {!info.email && (
+                            <p className="text-xs text-amber-600 mt-2">
+                              {t(
+                                'pages.quickInvite.emailMissingCandidate',
+                                'Email is not visible in this resume. Please confirm before sending.'
+                              )}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
