@@ -78,7 +78,7 @@ export default function PostCreationPanel({ hiringRequestId }: PostCreationPanel
       {/* Cards row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Card 1: Smart Resume Match */}
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm flex flex-col">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
               <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -93,6 +93,7 @@ export default function PostCreationPanel({ hiringRequestId }: PostCreationPanel
             {t('hiring.postCreation.smartMatchDesc')}
           </p>
 
+          <div className="mt-auto">
           {resumeCount === null ? (
             <div className="h-8 flex items-center">
               <div className="animate-pulse bg-slate-200 rounded h-4 w-24" />
@@ -134,10 +135,11 @@ export default function PostCreationPanel({ hiringRequestId }: PostCreationPanel
               {t('hiring.postCreation.smartMatchDone', { matched: matchResult.matched, total: matchResult.total })}
             </div>
           ) : null}
+          </div>
         </div>
 
         {/* Card 2: Recruitment Intelligence */}
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm flex flex-col">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
               <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,6 +154,7 @@ export default function PostCreationPanel({ hiringRequestId }: PostCreationPanel
             {t('hiring.postCreation.intelReportDesc')}
           </p>
 
+          <div className="mt-auto">
           {intelState === 'idle' ? (
             <button
               onClick={handleGenerateIntel}
@@ -202,6 +205,7 @@ export default function PostCreationPanel({ hiringRequestId }: PostCreationPanel
               </Link>
             </div>
           ) : null}
+          </div>
         </div>
       </div>
 

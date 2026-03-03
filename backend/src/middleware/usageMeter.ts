@@ -2,10 +2,9 @@ import type { Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma.js';
 
 /**
- * Plan limits based on pricing.md
- * Matches per month / Interviews per month
+ * Default plan limits (fallback when no DB config exists).
  */
-const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
+const DEFAULT_PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
   free: { interviews: 0, matches: 0 },
   starter: { interviews: 15, matches: 30 },
   growth: { interviews: 120, matches: 240 },
@@ -13,11 +12,99 @@ const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
   custom: { interviews: Infinity, matches: Infinity },
 };
 
-/** Pay-per-use prices when plan limits are exceeded */
-const PAY_PER_USE = {
+/** Default pay-per-use prices */
+const DEFAULT_PAY_PER_USE = {
   interview: 2.0,   // $2.00 per interview
   match: 0.4,       // $0.40 per resume match
 };
+
+// ---------------------------------------------------------------------------
+// In-memory cache for DB-backed config (5-minute TTL)
+// ---------------------------------------------------------------------------
+let cachedLimits: Record<string, { interviews: number; matches: number }> | null = null;
+let cachedPayPerUse: { interview: number; match: number } | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+/** Clear the in-memory cache (called after admin updates limits). */
+export function clearLimitsCache(): void {
+  cachedLimits = null;
+  cachedPayPerUse = null;
+  cacheTimestamp = 0;
+}
+
+async function loadConfigFromDb(): Promise<void> {
+  if (cachedLimits && cachedPayPerUse && Date.now() - cacheTimestamp < CACHE_TTL_MS) {
+    return; // cache still fresh
+  }
+
+  try {
+    const rows = await prisma.appConfig.findMany({
+      where: {
+        key: { startsWith: 'limit_' },
+      },
+    });
+    const ppuRows = await prisma.appConfig.findMany({
+      where: {
+        key: { startsWith: 'payperuse_' },
+      },
+    });
+
+    // Build limits from DB rows, merging with defaults
+    const limits: Record<string, { interviews: number; matches: number }> = {};
+    for (const [tier, defaults] of Object.entries(DEFAULT_PLAN_LIMITS)) {
+      limits[tier] = { ...defaults };
+    }
+    for (const row of rows) {
+      // key format: limit_{tier}_{action}  e.g. limit_starter_interviews
+      const match = row.key.match(/^limit_(\w+)_(interviews|matches)$/);
+      if (match) {
+        const tier = match[1];
+        const action = match[2] as 'interviews' | 'matches';
+        const val = Number(row.value);
+        if (limits[tier] && Number.isFinite(val) && val >= 0) {
+          limits[tier][action] = val;
+        }
+      }
+    }
+    // custom tier is always unlimited
+    limits.custom = { interviews: Infinity, matches: Infinity };
+
+    // Build pay-per-use from DB
+    const ppu = { ...DEFAULT_PAY_PER_USE };
+    for (const row of ppuRows) {
+      if (row.key === 'payperuse_interview') {
+        const val = Number(row.value);
+        if (Number.isFinite(val) && val > 0) ppu.interview = val;
+      }
+      if (row.key === 'payperuse_match') {
+        const val = Number(row.value);
+        if (Number.isFinite(val) && val > 0) ppu.match = val;
+      }
+    }
+
+    cachedLimits = limits;
+    cachedPayPerUse = ppu;
+    cacheTimestamp = Date.now();
+  } catch {
+    // On DB error, fall back to defaults
+    cachedLimits = { ...DEFAULT_PLAN_LIMITS };
+    cachedPayPerUse = { ...DEFAULT_PAY_PER_USE };
+    cacheTimestamp = Date.now();
+  }
+}
+
+/** Get plan limits (DB-backed with fallback). */
+export async function getPlanLimits(): Promise<Record<string, { interviews: number; matches: number }>> {
+  await loadConfigFromDb();
+  return cachedLimits!;
+}
+
+/** Get pay-per-use rates (DB-backed with fallback). */
+export async function getPayPerUseRates(): Promise<{ interview: number; match: number }> {
+  await loadConfigFromDb();
+  return cachedPayPerUse!;
+}
 
 type BillableAction = 'interview' | 'match';
 
@@ -83,7 +170,9 @@ export function checkUsageLimit(action: BillableAction) {
       }
 
       const tier = freshUser.subscriptionTier || 'free';
-      const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+      const planLimits = await getPlanLimits();
+      const payPerUse = await getPayPerUseRates();
+      const limits = planLimits[tier] || planLimits.free;
       const status = freshUser.subscriptionStatus;
 
       // Check subscription is in a valid state (active, trialing, or free tier)
@@ -105,7 +194,7 @@ export function checkUsageLimit(action: BillableAction) {
       const limit = action === 'interview'
         ? (freshUser.customMaxInterviews ?? limits.interviews)
         : (freshUser.customMaxMatches ?? limits.matches);
-      const price = action === 'interview' ? PAY_PER_USE.interview : PAY_PER_USE.match;
+      const price = action === 'interview' ? payPerUse.interview : payPerUse.match;
 
       if (used < limit) {
         // Within plan limits — increment counter
