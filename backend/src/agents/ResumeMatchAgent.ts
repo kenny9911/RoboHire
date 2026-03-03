@@ -27,6 +27,37 @@ Analyze the following aspects:
 11. Calculate the overall match score based on the skill match and experience match.
 12. **Overall Fit**: Assess the overall compatibility between the candidate and the position
 
+## Experience Analysis Rules:
+- When analyzing work experience, classify each position's employment type by looking for keywords in the resume:
+  - "Intern", "Internship", "实习", "インターン", "Stagiaire", "Praktikant" → internship
+  - "Contract", "Contractor", "Consultant", "合同工" → contract
+  - "Part-time", "Freelance", "兼职" → part-time/freelance
+  - Default to full-time if unclear
+- **Internships count ONLY as internship experience, NOT toward full-time work years**
+- When a JD requires "X+ years experience", internships do NOT count toward that requirement
+- Internship experience IS still valuable for skill acquisition and domain familiarity
+- Always report experience breakdown in the "experienceBreakdown" field
+
+## Hard Requirements Analysis:
+Before scoring, extract hard/must-have requirements from the JD:
+- Required degrees or certifications explicitly stated (e.g., "CPA required", "Master's degree required", "须持有XX证书")
+- Required licenses or professional credentials
+- Required minimum years of FULL-TIME experience (internships don't count)
+- Non-negotiable technical skills explicitly marked as "required" or "must-have"
+- Language requirements (e.g., "Fluent in Mandarin required")
+Report each gap in "hardRequirementGaps" with severity and what the candidate has instead.
+These feed into the existing disqualification logic — a dealbreaker hard requirement gap triggers disqualification.
+
+## Transferable Skills & Growth Potential:
+You MUST look beyond exact keyword matches for adjacent/transferable skills:
+1. **Related Technologies**: React ↔ Vue.js ↔ Angular, Python ↔ Ruby ↔ Go, AWS ↔ GCP ↔ Azure — closely related and learnable quickly
+2. **Adjacent Experience**: Product management → project management, backend → full-stack
+3. **Demonstrated Learning Ability**: Multiple languages/frameworks mastered → high adaptability
+4. **Domain Knowledge Transfer**: Same industry across different roles
+Score transferable skills at 60-80% of the value of exact matches (NOT 0%).
+Report each in "transferableSkills" with what candidate has, what's required, and why it transfers.
+**Goal: Do NOT miss high-potential candidates.** Better to flag "Good Match with growth potential" than dismiss as "Weak Match" due to missing exact keywords. But do NOT be too loose — a Java developer is not a fit for a machine learning researcher role.
+
 ## CRITICAL SCORING RULES:
 - **Disqualification**: If candidate is missing ANY must-have skill/experience with severity "Dealbreaker", they MUST be disqualified:
   - Set mustHaveAnalysis.disqualified = true
@@ -173,6 +204,29 @@ Provide your analysis in the following JSON format (and ONLY this JSON format, n
     "cultureFitIndicators": ["<signals about work style, values>"],
     "riskFactors": ["<potential concerns for long-term fit>"]
   },
+  "transferableSkills": [
+    {
+      "required": "<skill the JD requires>",
+      "candidateHas": "<adjacent skill the candidate has>",
+      "relevance": "<why it's transferable and how quickly they could ramp up>",
+      "valueFactor": <number 0-100, how much of exact match value this provides>
+    }
+  ],
+  "experienceBreakdown": {
+    "fullTimeExperience": "<X years Y months of full-time work>",
+    "internshipExperience": "<X months of internship experience>",
+    "contractExperience": "<X months of contract work, if any>",
+    "totalRelevantExperience": "<summary line combining all relevant experience>",
+    "note": "<how experience types affect qualification for this specific role>"
+  },
+  "hardRequirementGaps": [
+    {
+      "requirement": "<the hard requirement from the JD>",
+      "severity": "<dealbreaker/critical/significant>",
+      "candidateStatus": "<what the candidate has instead>",
+      "impact": "<how this gap affects the overall assessment>"
+    }
+  ],
   "overallMatchScore": {
     "score": <number 0-100>,
     "grade": "<A+/A/B+/B/C+/C/D/F>",
@@ -443,6 +497,14 @@ Please analyze the match between this resume and job description.`;
           cultureFitIndicators: [],
           riskFactors: [],
         },
+        transferableSkills: [],
+        experienceBreakdown: {
+          fullTimeExperience: 'Unknown',
+          internshipExperience: 'Unknown',
+          totalRelevantExperience: 'Unknown',
+          note: 'Unable to analyze',
+        },
+        hardRequirementGaps: [],
         overallMatchScore: {
           score: 0,
           grade: 'F',

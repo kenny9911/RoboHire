@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
+import { useAuth } from '../context/AuthContext';
 
 interface ApiKey {
   id: string;
@@ -243,6 +244,8 @@ function KeyCreatedModal({ apiKey, onClose }: KeyCreatedModalProps) {
 
 export default function APIKeys() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const showCost = user?.role === 'admin';
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -250,7 +253,7 @@ export default function APIKeys() {
   const [showNewKeyModal, setShowNewKeyModal] = useState(false);
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<(ApiKey & { key: string }) | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [keyUsage, setKeyUsage] = useState<Record<string, { calls: number; totalTokens: number; cost: number }>>({});
+  const [keyUsage, setKeyUsage] = useState<Record<string, { calls: number; totalTokens: number; cost?: number }>>({});
   const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set());
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
 
@@ -268,10 +271,14 @@ export default function APIKeys() {
       });
       const data = await response.json();
       if (data.success) {
-        const map: Record<string, { calls: number; totalTokens: number; cost: number }> = {};
+        const map: Record<string, { calls: number; totalTokens: number; cost?: number }> = {};
         for (const entry of data.data) {
           if (entry.apiKeyId) {
-            map[entry.apiKeyId] = { calls: entry.calls, totalTokens: entry.totalTokens, cost: entry.cost };
+            map[entry.apiKeyId] = {
+              calls: entry.calls,
+              totalTokens: entry.totalTokens,
+              ...(typeof entry.cost === 'number' ? { cost: entry.cost } : {}),
+            };
           }
         }
         setKeyUsage(map);
@@ -542,9 +549,11 @@ export default function APIKeys() {
                               : keyUsage[apiKey.id].totalTokens}{' '}
                             {t('apiKeys.tokens', 'tokens')}
                           </span>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md text-xs font-medium">
-                            ${keyUsage[apiKey.id].cost.toFixed(4)}
-                          </span>
+                          {showCost && typeof keyUsage[apiKey.id].cost === 'number' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md text-xs font-medium">
+                              ${(keyUsage[apiKey.id].cost ?? 0).toFixed(4)}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>

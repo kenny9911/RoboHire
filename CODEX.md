@@ -14,7 +14,7 @@ This guide summarizes the codebase structure, key execution flows, and change-sa
 ## Repository Snapshot
 
 - Monorepo: npm workspaces (`backend`, `frontend`)
-- Total tracked files (repo inventory pass): ~138
+- Total tracked files (repo inventory pass): ~165
 - Source stack:
   - Backend: Node.js, Express, Prisma, PostgreSQL, Stripe, Passport, multer, pdf-parse
   - Frontend: React 18, Vite, TypeScript, Tailwind, i18next, Axios, Recharts
@@ -148,7 +148,8 @@ Notable behavior:
 - Uses `cors`, `cookie-parser`, `passport`
 - Applies raw body parsing specifically for Stripe webhook before JSON parser
 - Adds request ID middleware (`X-Request-Id`)
-- Mounts auth + API + hiring + usage + checkout + demo routes
+- Adds request audit pipeline (`beginRequestLogging`, `persistRequestAudit`) for `/api/*`
+- Mounts auth + API + hiring + usage + checkout + demo + resumes + admin routes
 - Centralized error handler returns JSON errors
 - Graceful shutdown on `SIGINT` / `SIGTERM` with logger summary
 
@@ -179,8 +180,10 @@ All AI features follow a `BaseAgent<TInput, TOutput>` pattern:
 - `AuthService.ts`: signup/login/session/JWT/OAuth account linking/profile/password
 - `LoggerService.ts`: JSONL logs, request tracking, token/cost accounting, summaries
 - `DocumentStorageService.ts`: file-based cache of parsed resumes/JDs/match results by content hash
+- `DocumentParsingService.ts`: unified PDF/DOCX/XLSX/TXT extraction
 - `PDFService.ts`: PDF extraction and text cleanup (`pdf-parse`)
 - `LanguageService.ts`: language detection + prompt language hints
+- `pricingConfig.ts`: central pricing matrix + discount config loading/parsing
 
 #### Middleware (`backend/src/middleware`)
 
@@ -194,8 +197,12 @@ All AI features follow a `BaseAgent<TInput, TOutput>` pattern:
   - Resets on server restart (not distributed)
 - `requestId.ts`:
   - Attaches request ID to request + response header
+- `requestAudit.ts`:
+  - Starts request context and persists `ApiRequestLog` + `LLMCallLog` rows on response finish
 - `usageTracker.ts`:
   - Persists API usage records after response completes
+- `usageMeter.ts`:
+  - Enforces plan limits + top-up deduction for billable endpoints only
 
 #### Types (`backend/src/types`)
 
@@ -254,8 +261,10 @@ All AI features follow a `BaseAgent<TInput, TOutput>` pattern:
 #### Developer Platform / Billing
 
 - `backend/src/routes/apiKeys.ts`: create/list/reveal/regenerate/update/delete API keys
-- `backend/src/routes/usage.ts`: usage list/summary/by-key aggregations
-- `backend/src/routes/checkout.ts`: Stripe checkout, top-ups, billing history, webhooks
+- `backend/src/routes/usage.ts`: usage list/summary/by-key aggregations + call history/detail
+- `backend/src/routes/checkout.ts`: Stripe checkout, top-ups, billing history, webhooks, public pricing config
+- `backend/src/routes/admin.ts`: admin analytics, user controls, and pricing config management
+- `backend/src/routes/resumes.ts`: resume library upload/list/detail/insights/job-fit APIs
 - `backend/src/routes/demo.ts`: demo request capture endpoint
 
 ### Data Model (Prisma)
@@ -278,6 +287,16 @@ Key models:
   - hashed API keys + scopes/active status
 - `ApiUsageRecord`
   - endpoint usage/tokens/cost tracking
+- `ApiRequestLog`
+  - request-level audit logs with request/response payload capture
+- `LLMCallLog`
+  - per-LLM-call token/cost telemetry tied to request log
+- `AppConfig`
+  - key/value app configuration (pricing, Stripe IDs, discount settings)
+- `Resume`
+  - user-owned parsed resumes, metadata, AI insights, and status/tags/notes
+- `ResumeJobFit`
+  - join table for resume-vs-hiring-request fit analyses
 
 Seed script: `backend/prisma/seed.ts`
 
@@ -307,12 +326,17 @@ Major route groups:
   - `/developers`
   - `/pricing`
   - `/request-demo`
+  - `/quick-invite`
 - Protected dashboard:
   - `/dashboard`
+  - `/dashboard/resumes`
+  - `/dashboard/resumes/:id`
   - `/dashboard/api-keys`
   - `/dashboard/usage`
+  - `/dashboard/usage/calls/:id`
   - `/dashboard/stats`
   - `/dashboard/account`
+  - `/dashboard/admin`
   - `/dashboard/requests/:id`
 - API playground:
   - `/api-playground/*`
@@ -368,9 +392,9 @@ Behavior:
 - Supports role templates and quick prompts
 - Supports file attachment reading (`.pdf/.doc/.docx/.txt`) using client-side `file.text()`
 - Detects assistant action markers (`create_request`)
-- Confirmation step lets user edit:
-  - generated title
-  - generated JD markdown
+- Confirmation step lets user edit generated title/JD with markdown + preview modes
+- Thinking state UI is surfaced with localized step-by-step reasoning labels
+- "Try asking" follow-up suggestions are rendered beneath assistant responses
 - Creates final hiring request through API after confirmation
 
 Related helper data/components:
@@ -399,10 +423,14 @@ Shared output/rendering components:
 #### Dashboard Pages
 
 - `frontend/src/pages/Dashboard.tsx`
+- `frontend/src/pages/ResumeLibrary.tsx`
+- `frontend/src/pages/ResumeDetail.tsx`
 - `frontend/src/pages/APIKeys.tsx`
 - `frontend/src/pages/UsageDashboard.tsx`
+- `frontend/src/pages/CallDetail.tsx`
 - `frontend/src/pages/DashboardStats.tsx`
 - `frontend/src/pages/Account.tsx`
+- `frontend/src/pages/AdminDashboard.tsx`
 
 These pages depend on authenticated backend routes and are tightly coupled to the current response shapes.
 
@@ -471,16 +499,20 @@ These files have dense logic and higher regression risk:
 
 - Rate limiting is in-memory and per-process only.
 - Usage tracking is recorded after response completion via middleware.
+- Request audit now persists API request/response payloads in DB (`ApiRequestLog`) plus per-call LLM telemetry (`LLMCallLog`).
 - API keys, JWTs, and session tokens all coexist; avoid breaking auth precedence.
 - File uploads use memory storage; large PDF handling changes can affect RAM usage.
 - Document cache keys are based on normalized content hashing; whitespace-only text transforms can change cache behavior.
 - Stripe webhook signature validation depends on raw request body path handling.
+- Public pricing is now config-driven (USD/CNY/JPY + discount), and checkout can apply a Stripe coupon when discount is enabled.
 
 ### Frontend Behavior Details That Matter
 
 - `axios` auth header injection depends on `auth_token` in localStorage.
 - Dev/prod API base behavior differs (`''` in dev via Vite proxy, `VITE_API_URL` in prod).
 - `StartHiring` mixes UI state, API orchestration, and action parsing in one file.
+- `/pricing` consumes backend pricing config (no hard-coded localized pricing constants).
+- Usage and statistics pages hide cost data for non-admin users; admin users see cost metrics and call-level details.
 - Docs pages contain hardcoded examples; they are not generated from backend schemas.
 
 ## Recommended Workflow for Changes
@@ -509,12 +541,18 @@ These files have dense logic and higher regression risk:
 - Core AI endpoints: `backend/src/routes/api.ts`
 - Hiring product APIs: `backend/src/routes/hiring.ts`
 - Hiring chat/session APIs: `backend/src/routes/hiringChat.ts`, `backend/src/routes/hiringSessions.ts`
+- Resume library APIs: `backend/src/routes/resumes.ts`
+- Request auditing: `backend/src/middleware/requestAudit.ts`, `backend/src/lib/requestClassification.ts`
+- Admin APIs: `backend/src/routes/admin.ts`
 - Auth implementation: `backend/src/middleware/auth.ts`, `backend/src/services/AuthService.ts`
 - LLM abstraction: `backend/src/services/llm/LLMService.ts`
 - Prisma schema: `backend/prisma/schema.prisma`
 - Frontend routes: `frontend/src/App.tsx`
 - Auth state: `frontend/src/context/AuthContext.tsx`
 - Start Hiring flow: `frontend/src/pages/StartHiring.tsx`
+- Pricing UI: `frontend/src/pages/Pricing.tsx`
+- Admin dashboard UI: `frontend/src/pages/AdminDashboard.tsx`
+- Resume dashboard UI: `frontend/src/pages/ResumeLibrary.tsx`, `frontend/src/pages/ResumeDetail.tsx`
 - Dashboard shell: `frontend/src/layouts/DashboardLayout.tsx`
 - API playground shell: `frontend/src/layouts/APIPlayground.tsx`
 - Docs shell: `frontend/src/layouts/DocsLayout.tsx`

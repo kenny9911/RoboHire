@@ -13,16 +13,6 @@ interface HiringRequest {
   };
 }
 
-interface Candidate {
-  id: string;
-  status?: 'pending' | 'screening' | 'interviewed' | 'shortlisted' | 'rejected';
-  matchScore?: number | null;
-}
-
-interface HiringRequestDetail extends HiringRequest {
-  candidates: Candidate[];
-}
-
 interface StatsSummary {
   totalRequests: number;
   activeRequests: number;
@@ -35,8 +25,6 @@ interface StatsSummary {
   candidateStatusCounts: Record<string, number>;
 }
 
-const REQUEST_LIMIT = 50;
-
 export default function DashboardStats() {
   const { t } = useTranslation();
   const [requests, setRequests] = useState<HiringRequest[]>([]);
@@ -48,7 +36,7 @@ export default function DashboardStats() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`${API_BASE}/api/v1/hiring-requests?limit=${REQUEST_LIMIT}`, {
+        const response = await fetch(`${API_BASE}/api/v1/hiring-requests/stats`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           credentials: 'include',
         });
@@ -57,76 +45,18 @@ export default function DashboardStats() {
           throw new Error(data.error || 'Failed to load stats');
         }
 
-        const requestList: HiringRequest[] = data.data || [];
-        setRequests(requestList);
-
-        if (requestList.length === 0) {
-          setStats({
-            totalRequests: 0,
-            activeRequests: 0,
-            pausedRequests: 0,
-            closedRequests: 0,
-            totalCandidates: 0,
-            invitationsSent: 0,
-            interviewsCompleted: 0,
-            avgMatchScore: null,
-            candidateStatusCounts: {},
-          });
-          return;
-        }
-
-        const detailResponses = await Promise.all(
-          requestList.map((request) =>
-            fetch(`${API_BASE}/api/v1/hiring-requests/${request.id}`, {
-              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-              credentials: 'include',
-            })
-          )
-        );
-        const detailData = await Promise.all(detailResponses.map((res) => res.json()));
-
-        const candidates: Candidate[] = detailData.flatMap((detail: { success: boolean; data?: HiringRequestDetail }) => {
-          if (!detail?.success || !detail.data) {
-            return [];
-          }
-          return detail.data.candidates || [];
-        });
-
-        const requestStatusCounts = requestList.reduce(
-          (acc, request) => {
-            acc[request.status] = (acc[request.status] || 0) + 1;
-            return acc;
-          },
-          { active: 0, paused: 0, closed: 0 } as Record<string, number>
-        );
-
-        const candidateStatusCounts = candidates.reduce(
-          (acc, candidate) => {
-            const status = candidate.status || 'pending';
-            acc[status] = (acc[status] || 0) + 1;
-            return acc;
-          },
-          {} as Record<string, number>
-        );
-
-        const scores = candidates
-          .map((candidate) => candidate.matchScore)
-          .filter((score): score is number => typeof score === 'number');
-        const avgMatchScore = scores.length
-          ? Math.round((scores.reduce((sum, score) => sum + score, 0) / scores.length) * 10) / 10
-          : null;
-
         setStats({
-          totalRequests: requestList.length,
-          activeRequests: requestStatusCounts.active || 0,
-          pausedRequests: requestStatusCounts.paused || 0,
-          closedRequests: requestStatusCounts.closed || 0,
-          totalCandidates: candidates.length,
-          invitationsSent: candidateStatusCounts.screening || 0,
-          interviewsCompleted: candidateStatusCounts.interviewed || 0,
-          avgMatchScore,
-          candidateStatusCounts,
+          totalRequests: data.data.totalRequests || 0,
+          activeRequests: data.data.activeRequests || 0,
+          pausedRequests: data.data.pausedRequests || 0,
+          closedRequests: data.data.closedRequests || 0,
+          totalCandidates: data.data.totalCandidates || 0,
+          invitationsSent: data.data.invitationsSent || 0,
+          interviewsCompleted: data.data.interviewsCompleted || 0,
+          avgMatchScore: data.data.avgMatchScore ?? null,
+          candidateStatusCounts: data.data.candidateStatusCounts || {},
         });
+        setRequests(data.data.recentRequests || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load stats');
       } finally {

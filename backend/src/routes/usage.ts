@@ -7,6 +7,150 @@ const router = Router();
 // All usage endpoints require authentication
 router.use(requireAuth);
 
+type UsageFilters = {
+  userId: string;
+  apiKeyId?: string;
+  endpoint?: string;
+  from?: string;
+  to?: string;
+};
+
+function buildRequestLogWhere(filters: UsageFilters): Record<string, unknown> {
+  const { userId, apiKeyId, endpoint, from, to } = filters;
+  const where: Record<string, unknown> = {
+    userId,
+    // Keep usage analytics aligned with "real API calls" that have captured payloads.
+    requestPayload: { not: null },
+  };
+  if (apiKeyId) where.apiKeyId = apiKeyId;
+  if (endpoint) where.endpoint = { contains: endpoint };
+  if (from || to) {
+    where.createdAt = {
+      ...(from ? { gte: new Date(from) } : {}),
+      ...(to ? { lte: new Date(to) } : {}),
+    };
+  }
+  return where;
+}
+
+function canViewCost(req: Request): boolean {
+  return req.user?.role === 'admin';
+}
+
+/**
+ * GET /api/v1/usage/calls
+ * Paginated list of individual API calls (with payloads) for the authenticated user.
+ * Query params: endpoint, from, to, page, limit
+ */
+router.get('/calls', async (req: Request, res: Response) => {
+  try {
+    const showCost = canViewCost(req);
+    const userId = req.user!.id;
+    const { endpoint, from, to, page = '1', limit = '20' } = req.query as Record<string, string | undefined>;
+
+    const take = Math.min(Number(limit) || 20, 100);
+    const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
+
+    const where = buildRequestLogWhere({ userId, endpoint, from, to });
+
+    const [records, total] = await Promise.all([
+      prisma.apiRequestLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+        select: {
+          id: true,
+          requestId: true,
+          endpoint: true,
+          method: true,
+          module: true,
+          apiName: true,
+          statusCode: true,
+          durationMs: true,
+          promptTokens: true,
+          completionTokens: true,
+          totalTokens: true,
+          llmCalls: true,
+          ...(showCost ? { cost: true } : {}),
+          provider: true,
+          model: true,
+          createdAt: true,
+        },
+      }),
+      prisma.apiRequestLog.count({ where }),
+    ]);
+
+    return res.json({
+      success: true,
+      data: records,
+      pagination: {
+        page: Math.floor(skip / take) + 1,
+        limit: take,
+        total,
+        totalPages: Math.ceil(total / take),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch call history',
+    });
+  }
+});
+
+/**
+ * GET /api/v1/usage/calls/:id
+ * Full detail of a single API call including request/response payloads.
+ */
+router.get('/calls/:id', async (req: Request, res: Response) => {
+  try {
+    const showCost = canViewCost(req);
+    const userId = req.user!.id;
+    const { id } = req.params;
+
+    const record = await prisma.apiRequestLog.findFirst({
+      where: { id, userId },
+      include: {
+        llmCallLog: {
+          orderBy: { createdAt: 'asc' },
+        },
+        apiKey: {
+          select: { id: true, name: true, prefix: true },
+        },
+      },
+    });
+
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        error: 'Call not found',
+      });
+    }
+
+    if (!showCost) {
+      const { cost: _recordCost, llmCallLog, ...restRecord } = record;
+      return res.json({
+        success: true,
+        data: {
+          ...restRecord,
+          llmCallLog: llmCallLog.map(({ cost: _llmCost, ...restLlm }) => restLlm),
+        },
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: record,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch call detail',
+    });
+  }
+});
+
 /**
  * GET /api/v1/usage
  * Paginated list of usage records for the authenticated user.
@@ -14,6 +158,7 @@ router.use(requireAuth);
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
+    const showCost = canViewCost(req);
     const userId = req.user!.id;
     const {
       apiKeyId,
@@ -52,7 +197,9 @@ router.get('/', async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      data: records,
+      data: showCost
+        ? records
+        : records.map(({ cost: _cost, ...rest }) => rest),
       pagination: {
         page: Math.floor(skip / take) + 1,
         limit: take,
@@ -75,43 +222,36 @@ router.get('/', async (req: Request, res: Response) => {
  */
 router.get('/summary', async (req: Request, res: Response) => {
   try {
+    const showCost = canViewCost(req);
     const userId = req.user!.id;
     const { from, to, apiKeyId } = req.query as Record<string, string | undefined>;
 
-    const where: Record<string, unknown> = { userId };
-    if (apiKeyId) where.apiKeyId = apiKeyId;
-    if (from || to) {
-      where.createdAt = {
-        ...(from ? { gte: new Date(from) } : {}),
-        ...(to ? { lte: new Date(to) } : {}),
-      };
-    }
+    const where = buildRequestLogWhere({ userId, apiKeyId, from, to });
 
-    const agg = await prisma.apiUsageRecord.aggregate({
-      where,
-      _sum: {
-        promptTokens: true,
-        completionTokens: true,
-        totalTokens: true,
-        cost: true,
-      },
-      _count: true,
-    });
-
-    // Daily breakdown for charting
-    const records = await prisma.apiUsageRecord.findMany({
-      where,
-      select: {
-        createdAt: true,
-        promptTokens: true,
-        completionTokens: true,
-        totalTokens: true,
-        cost: true,
-        endpoint: true,
-        apiKeyId: true,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const [agg, totalCalls, records] = await Promise.all([
+      prisma.apiRequestLog.aggregate({
+        where,
+        _sum: {
+          promptTokens: true,
+          completionTokens: true,
+          totalTokens: true,
+          cost: true,
+        },
+      }),
+      prisma.apiRequestLog.count({ where }),
+      prisma.apiRequestLog.findMany({
+        where,
+        select: {
+          createdAt: true,
+          promptTokens: true,
+          completionTokens: true,
+          totalTokens: true,
+          cost: true,
+          endpoint: true,
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+    ]);
 
     // Group by day
     const dailyMap = new Map<string, {
@@ -150,18 +290,21 @@ router.get('/summary', async (req: Request, res: Response) => {
       endpointMap.set(r.endpoint, entry);
     }
 
+    const daily = Array.from(dailyMap.values());
+    const byEndpoint = Array.from(endpointMap.values()).sort((a, b) => b.calls - a.calls);
+
     return res.json({
       success: true,
       data: {
         totals: {
-          calls: agg._count,
+          calls: totalCalls,
           promptTokens: agg._sum.promptTokens ?? 0,
           completionTokens: agg._sum.completionTokens ?? 0,
           totalTokens: agg._sum.totalTokens ?? 0,
-          cost: agg._sum.cost ?? 0,
+          ...(showCost ? { cost: agg._sum.cost ?? 0 } : {}),
         },
-        daily: Array.from(dailyMap.values()),
-        byEndpoint: Array.from(endpointMap.values()).sort((a, b) => b.calls - a.calls),
+        daily: showCost ? daily : daily.map(({ cost: _cost, ...rest }) => rest),
+        byEndpoint: showCost ? byEndpoint : byEndpoint.map(({ cost: _cost, ...rest }) => rest),
       },
     });
   } catch (error) {
@@ -179,18 +322,13 @@ router.get('/summary', async (req: Request, res: Response) => {
  */
 router.get('/by-key', async (req: Request, res: Response) => {
   try {
+    const showCost = canViewCost(req);
     const userId = req.user!.id;
     const { from, to } = req.query as Record<string, string | undefined>;
 
-    const where: Record<string, unknown> = { userId };
-    if (from || to) {
-      where.createdAt = {
-        ...(from ? { gte: new Date(from) } : {}),
-        ...(to ? { lte: new Date(to) } : {}),
-      };
-    }
+    const where = buildRequestLogWhere({ userId, from, to });
 
-    const grouped = await prisma.apiUsageRecord.groupBy({
+    const grouped = await prisma.apiRequestLog.groupBy({
       by: ['apiKeyId'],
       where,
       _sum: {
@@ -199,7 +337,9 @@ router.get('/by-key', async (req: Request, res: Response) => {
         totalTokens: true,
         cost: true,
       },
-      _count: true,
+      _count: {
+        _all: true,
+      },
     });
 
     // Fetch key names
@@ -220,11 +360,11 @@ router.get('/by-key', async (req: Request, res: Response) => {
         keyPrefix: key?.prefix ?? null,
         isActive: key?.isActive ?? null,
         lastUsedAt: key?.lastUsedAt ?? null,
-        calls: g._count,
+        calls: g._count._all,
         promptTokens: g._sum.promptTokens ?? 0,
         completionTokens: g._sum.completionTokens ?? 0,
         totalTokens: g._sum.totalTokens ?? 0,
-        cost: g._sum.cost ?? 0,
+        ...(showCost ? { cost: g._sum.cost ?? 0 } : {}),
       };
     });
 

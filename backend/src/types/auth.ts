@@ -57,6 +57,10 @@ declare global {
       sessionToken?: string;
       apiKeyId?: string;
       apiKeyScopes?: ApiKeyScope[];
+      payloadCapture?: {
+        requestPayload: Record<string, unknown>;
+        responsePayload: Record<string, unknown>;
+      };
     }
   }
 }

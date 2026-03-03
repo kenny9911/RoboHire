@@ -104,6 +104,54 @@ Do not explain the marker. Keep it on its own line.`;
     };
   }
 
+  private getRoleLabel(input: RecruitmentChatInput): string {
+    if (input.context?.role && input.context.role.trim()) {
+      return input.context.role.trim();
+    }
+    if (input.message && input.message.trim()) {
+      return input.message.trim();
+    }
+    return 'the role';
+  }
+
+  private buildFallbackReply(role: string, language: string): string {
+    if (language === 'Chinese') {
+      return `当前 AI 服务暂时繁忙，我先给你一个可直接用的招聘梳理草案。
+
+1) 建议
+- 明确该岗位的优先级：必须项与加分项分开写，避免候选人误判。
+- 把职责写成可衡量目标（例如 3 个月内完成什么、6 个月达到什么指标）。
+- 先锁定技术栈和协作方式（远程/现场、跨时区、汇报对象）。
+
+2) 关键澄清问题
+- 该岗位是中级、高级还是负责人级别？
+- 必须掌握的 3-5 项核心技能是什么？
+- 业务目标与入职后 90 天重点任务是什么？
+- 预算薪资范围和办公地点/远程政策是什么？
+
+3) 当前已确认
+- 目标岗位：${role}
+- 下一步：回复以上问题后，我可以继续生成完整招聘需求并细化 JD。`;
+    }
+
+    return `The AI provider is temporarily busy, so here is a practical draft you can use now.
+
+1) Recommendations
+- Separate true must-haves from nice-to-haves to improve candidate targeting.
+- Convert responsibilities into measurable outcomes (first 90/180 days).
+- Confirm stack, reporting line, and work mode (remote/hybrid/on-site) early.
+
+2) Clarifying questions
+- What seniority level is required for this role?
+- What are the top 3-5 non-negotiable skills?
+- What business outcomes should this hire deliver in the first 90 days?
+- What are the compensation range and location constraints?
+
+3) Summary so far
+- Target role: ${role}
+- Next step: share the above details and I will produce a complete hiring brief.`;
+  }
+
   async chat(input: RecruitmentChatInput): Promise<RecruitmentChatResult> {
     const preferredLocale = input.context?.language;
     const languageSource = input.context?.jobDescription || input.message;
@@ -127,12 +175,22 @@ Do not explain the marker. Keep it on its own line.`;
       { role: 'user', content: userMessage },
     ];
 
-    const response = await llmService.chat(messages, {
-      temperature: 0.6,
-      requestId: input.requestId,
-    });
+    try {
+      const response = await llmService.chat(messages, {
+        temperature: 0.6,
+        requestId: input.requestId,
+      });
 
-    return this.extractAction(response);
+      return this.extractAction(response);
+    } catch (error) {
+      logger.error('HIRING_CHAT', 'Recruitment consultant fallback activated', {
+        error: error instanceof Error ? error.message : String(error),
+      }, input.requestId);
+
+      return {
+        reply: this.buildFallbackReply(this.getRoleLabel(input), resolvedLanguage),
+      };
+    }
   }
 }
 

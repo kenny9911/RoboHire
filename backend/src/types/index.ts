@@ -71,6 +71,7 @@ export interface WorkExperience {
   description?: string;
   achievements?: string[];
   technologies?: string[];
+  employmentType?: 'full-time' | 'part-time' | 'internship' | 'contract' | 'freelance';
 }
 
 export interface Project {
@@ -325,6 +326,25 @@ export interface MatchResult {
     cultureFitIndicators: string[];
     riskFactors: string[];
   };
+  transferableSkills?: Array<{
+    required: string;
+    candidateHas: string;
+    relevance: string;
+    valueFactor: number;
+  }>;
+  experienceBreakdown?: {
+    fullTimeExperience: string;
+    internshipExperience: string;
+    contractExperience?: string;
+    totalRelevantExperience: string;
+    note: string;
+  };
+  hardRequirementGaps?: Array<{
+    requirement: string;
+    severity: 'dealbreaker' | 'critical' | 'significant';
+    candidateStatus: string;
+    impact: string;
+  }>;
   overallMatchScore: {
     score: number;
     grade: string;
@@ -612,6 +632,253 @@ export interface EvaluateInterviewRequest {
   interviewScript: string;
   includeCheatingDetection?: boolean;
   userInstructions?: string;
+}
+
+// Resume Insight Types
+export interface ResumeInsightInput {
+  parsedResume: ParsedResume;
+  resumeText: string;
+}
+
+export interface ResumeInsight {
+  executiveSummary: string;
+  careerTrajectory: {
+    direction: 'Upward' | 'Lateral' | 'Declining' | 'Early Career' | 'Career Change';
+    analysis: string;
+    keyTransitions: string[];
+    progressionRate: string;
+  };
+  salaryEstimate: {
+    rangeLow: string;
+    rangeHigh: string;
+    currency: string;
+    confidence: 'High' | 'Medium' | 'Low';
+    factors: string[];
+    marketContext: string;
+  };
+  marketCompetitiveness: {
+    score: number;
+    level: 'Highly Sought-After' | 'Competitive' | 'Average' | 'Below Average';
+    inDemandSkills: string[];
+    rareSkills: string[];
+    commoditySkills: string[];
+    marketTrends: string;
+  };
+  strengthsAndDevelopment: {
+    coreStrengths: Array<{
+      strength: string;
+      evidence: string;
+      impact: string;
+    }>;
+    developmentAreas: Array<{
+      area: string;
+      currentLevel: string;
+      recommendation: string;
+    }>;
+  };
+  cultureFitIndicators: {
+    workStyle: string[];
+    values: string[];
+    environmentPreferences: string[];
+    managementStyle: string;
+  };
+  redFlags: Array<{
+    flag: string;
+    severity: 'High' | 'Medium' | 'Low';
+    details: string;
+    mitigatingFactors: string;
+  }>;
+  recommendedRoles: Array<{
+    roleType: string;
+    industry: string;
+    seniorityLevel: string;
+    fitReason: string;
+  }>;
+}
+
+// Job Fit Types
+export interface JobFitInput {
+  parsedResume: ParsedResume;
+  resumeText: string;
+  hiringRequests: Array<{
+    id: string;
+    title: string;
+    requirements: string;
+    jobDescription?: string;
+  }>;
+}
+
+export interface JobFitResult {
+  fits: Array<{
+    hiringRequestId: string;
+    hiringRequestTitle: string;
+    fitScore: number;
+    fitGrade: string;
+    verdict: 'Strong Fit' | 'Good Fit' | 'Moderate Fit' | 'Weak Fit' | 'Not a Fit';
+    matchedSkills: string[];
+    missingCriticalSkills: string[];
+    experienceAlignment: string;
+    topReasons: string[];
+    recommendation: string;
+    hardRequirementGaps?: Array<{
+      requirement: string;
+      severity: 'dealbreaker' | 'significant' | 'minor';
+      candidateStatus: string;
+    }>;
+    transferableSkills?: Array<{
+      required: string;
+      candidateHas: string;
+      relevance: string;
+    }>;
+    fullTimeExperience?: string;
+    internshipExperience?: string;
+  }>;
+  bestFit: {
+    hiringRequestId: string;
+    hiringRequestTitle: string;
+    reason: string;
+  } | null;
+  candidateSummary: string;
+}
+
+// Screening Types (one-job-many-resumes)
+export interface ScreeningInput {
+  hiringRequest: {
+    id: string;
+    title: string;
+    requirements: string;
+    jobDescription?: string;
+  };
+  resumes: Array<{
+    resumeId: string;
+    name: string;
+    resumeText: string;
+    parsedSummary: string;
+  }>;
+}
+
+export interface ScreeningResult {
+  screenings: Array<{
+    resumeId: string;
+    fitScore: number;
+    fitGrade: string;
+    verdict: 'Strong Fit' | 'Good Fit' | 'Moderate Fit' | 'Weak Fit' | 'Not a Fit';
+    matchedSkills: string[];
+    missingCriticalSkills: string[];
+    experienceAlignment: string;
+    topReasons: string[];
+    recommendation: string;
+    hardRequirementGaps?: Array<{
+      requirement: string;
+      severity: string;
+      candidateStatus: string;
+    }>;
+    transferableSkills?: Array<{
+      required: string;
+      candidateHas: string;
+      relevance: string;
+    }>;
+  }>;
+}
+
+// Recruitment Intelligence Types (Multi-Agent)
+export interface RecruitmentIntelligenceInput {
+  title: string;
+  requirements: string;
+  jobDescription?: string;
+}
+
+export interface SourcingStrategyInput extends RecruitmentIntelligenceInput {
+  candidateProfile: CandidateProfileResult;
+}
+
+export interface MarketIntelligenceInput extends RecruitmentIntelligenceInput {
+  candidateProfile: CandidateProfileResult;
+}
+
+export interface CandidateProfileResult {
+  candidatePersonaSummary: string;
+  idealBackground: {
+    typicalDegrees: string[];
+    typicalCareerPath: string[];
+    yearsOfExperience: string;
+    industryBackground: string[];
+  };
+  skillMapping: {
+    mustHave: Array<{ skill: string; seniorityExpectation: string; reason: string }>;
+    niceToHave: Array<{ skill: string; valueAdd: string }>;
+  };
+  personalityTraits: {
+    traits: Array<{ trait: string; importance: 'Critical' | 'High' | 'Medium'; reason: string }>;
+    cultureFitIndicators: string[];
+  };
+  dayInTheLife: string;
+}
+
+export interface SourcingStrategyResult {
+  sourcingSummary: string;
+  platforms: Array<{
+    platform: string;
+    effectiveness: 'High' | 'Medium' | 'Low';
+    strategy: string;
+    searchKeywords?: string[];
+  }>;
+  booleanSearchStrings: string[];
+  targetCompanies: Array<{ company: string; reason: string }>;
+  targetIndustries: string[];
+  passiveVsActive: {
+    recommendation: 'Passive' | 'Active' | 'Both';
+    passiveStrategy: string;
+    activeStrategy: string;
+  };
+  networkingStrategies: Array<{
+    strategy: string;
+    expectedYield: 'High' | 'Medium' | 'Low';
+    details: string;
+  }>;
+}
+
+export interface MarketIntelligenceResult {
+  marketSummary: string;
+  salaryRanges: Array<{
+    region: string;
+    level: string;
+    rangeLow: string;
+    rangeHigh: string;
+    currency: string;
+    notes: string;
+  }>;
+  supplyDemand: {
+    assessment: 'Oversupplied' | 'Balanced' | 'Undersupplied' | 'Severely Undersupplied';
+    details: string;
+    talentPoolSize: string;
+  };
+  recruitmentDifficulty: {
+    score: number;
+    level: string;
+    factors: string[];
+  };
+  timeToHire: {
+    estimateDays: string;
+    factors: string[];
+  };
+  competition: Array<{
+    competitor: string;
+    hiringActivity: string;
+    relevance: string;
+  }>;
+  marketTrends: Array<{
+    trend: string;
+    impact: 'Positive' | 'Negative' | 'Neutral';
+    details: string;
+  }>;
+}
+
+export interface RecruitmentIntelligenceReport {
+  candidateProfile: CandidateProfileResult;
+  sourcingStrategy: SourcingStrategyResult;
+  marketIntelligence: MarketIntelligenceResult;
+  generatedAt: string;
 }
 
 // API Response Types

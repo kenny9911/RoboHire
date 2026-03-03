@@ -18,8 +18,11 @@ import Dashboard from './pages/Dashboard';
 import APIKeys from './pages/APIKeys';
 import DashboardStats from './pages/DashboardStats';
 import UsageDashboard from './pages/UsageDashboard';
+import CallDetail from './pages/CallDetail';
 import Account from './pages/Account';
 import AdminDashboard from './pages/AdminDashboard';
+import ResumeLibrary from './pages/ResumeLibrary';
+import ResumeDetail from './pages/ResumeDetail';
 
 // API Playground layout
 import APIPlayground from './layouts/APIPlayground';
@@ -71,9 +74,12 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="requests/:id" element={<Dashboard />} />
+            <Route path="resumes" element={<ResumeLibrary />} />
+            <Route path="resumes/:id" element={<ResumeDetail />} />
             <Route path="api-keys" element={<APIKeys />} />
             <Route path="stats" element={<DashboardStats />} />
             <Route path="usage" element={<UsageDashboard />} />
+            <Route path="usage/calls/:id" element={<CallDetail />} />
             <Route path="account" element={<Account />} />
             <Route path="admin" element={<AdminDashboard />} />
           </Route>

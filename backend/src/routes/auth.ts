@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type CookieOptions } from 'express';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy } from 'passport-github2';
@@ -10,6 +10,36 @@ import { logger, generateRequestId } from '../services/LoggerService.js';
 import '../types/auth.js';
 
 const router = Router();
+const SESSION_COOKIE_NAME = 'session_token';
+const SESSION_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+const resolvedSameSite = (() => {
+  const configured = (process.env.COOKIE_SAME_SITE || 'lax').toLowerCase();
+  if (configured === 'strict') return 'strict';
+  if (configured === 'none') return 'none';
+  return 'lax';
+})();
+
+const sessionCookieOptions: CookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: resolvedSameSite,
+  maxAge: SESSION_COOKIE_MAX_AGE_MS,
+};
+
+if (process.env.COOKIE_DOMAIN) {
+  sessionCookieOptions.domain = process.env.COOKIE_DOMAIN;
+}
+
+const sessionCookieClearOptions: CookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: resolvedSameSite,
+};
+
+if (process.env.COOKIE_DOMAIN) {
+  sessionCookieClearOptions.domain = process.env.COOKIE_DOMAIN;
+}
 
 const getClientMeta = (req: any) => {
   const forwardedFor = req.headers?.['x-forwarded-for'];
@@ -168,12 +198,7 @@ router.post('/signup', authRateLimit, async (req, res) => {
     const result = await authService.signup({ email, password, name, company });
 
     // Set session cookie
-    res.cookie('session_token', result.sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    });
+    res.cookie(SESSION_COOKIE_NAME, result.sessionToken, sessionCookieOptions);
 
     res.status(201).json({
       success: true,
@@ -233,12 +258,7 @@ router.post('/login', authRateLimit, async (req, res) => {
     const result = await authService.login({ email, password });
 
     // Set session cookie
-    res.cookie('session_token', result.sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    });
+    res.cookie(SESSION_COOKIE_NAME, result.sessionToken, sessionCookieOptions);
 
     res.json({
       success: true,
@@ -287,7 +307,7 @@ router.post('/logout', requireAuth, async (req, res) => {
       await authService.invalidateSession(req.sessionToken);
     }
 
-    res.clearCookie('session_token');
+    res.clearCookie(SESSION_COOKIE_NAME, sessionCookieClearOptions);
 
     res.json({
       success: true,
@@ -419,12 +439,7 @@ router.get('/google/callback', (req, res, next) => {
     }
 
     // Set session cookie
-    res.cookie('session_token', result.sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(SESSION_COOKIE_NAME, result.sessionToken, sessionCookieOptions);
 
     // Redirect to frontend dashboard
     res.redirect(`${FRONTEND_URL}/dashboard`);
@@ -476,12 +491,7 @@ router.get('/github/callback', (req, res, next) => {
       return res.redirect(`${FRONTEND_URL}/login?error=${encodeURIComponent(err?.message || 'OAuth failed')}`);
     }
 
-    res.cookie('session_token', result.sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(SESSION_COOKIE_NAME, result.sessionToken, sessionCookieOptions);
 
     res.redirect(`${FRONTEND_URL}/dashboard`);
 
@@ -532,12 +542,7 @@ router.get('/linkedin/callback', (req, res, next) => {
       return res.redirect(`${FRONTEND_URL}/login?error=${encodeURIComponent(err?.message || 'OAuth failed')}`);
     }
 
-    res.cookie('session_token', result.sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(SESSION_COOKIE_NAME, result.sessionToken, sessionCookieOptions);
 
     res.redirect(`${FRONTEND_URL}/dashboard`);
 

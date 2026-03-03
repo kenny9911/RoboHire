@@ -342,6 +342,15 @@
     "errorCreating": "リクエスト作成中に問題が発生しました: ",
     "tryAgain": "もう一度お試しください。問題が続く場合はサポートへお問い合わせください。",
     "errorGeneric": "リクエスト作成中に問題が発生しました。もう一度お試しください。",
+    "thinking": {
+      "title": "思考中...",
+      "analyzeTitle": "要件を分析しています",
+      "analyzeThought": "職種の文脈、要件、不足情報を抽出しています。",
+      "benchmarkTitle": "職種の期待値を照合しています",
+      "benchmarkThought": "あなたの要望を、この職種で実績のある採用パターンと比較しています。",
+      "draftTitle": "提案を作成しています",
+      "draftThought": "実行可能な提案、確認質問、次のステップを準備しています。"
+    },
     "quickRoles": {
       "engineer": "ソフトウェアエンジニア",
       "pm": "プロダクトマネージャー",
@@ -354,6 +363,16 @@
     "inputPlaceholder": "理想の候補者について教えてください...",
     "uploadJd": "職務記述をアップロード",
     "quickStartFromJd": "職務記述に基づく候補者",
+    "defaultRoleLabel": "この職種",
+    "suggestions": {
+      "title": "こんな質問を試してください",
+      "general1": "{{role}}の必須スキルと歓迎スキルを整理して。",
+      "general2": "この職種向けの面接計画と評価シートを提案して。",
+      "general3": "最終版の求人票を今作成して。",
+      "confirm1": "このJDを8つの箇条書きに要約して。",
+      "confirm2": "給与レンジと希望開始日を追加して。",
+      "confirm3": "このJDをリモートファースト候補者向けに最適化して。"
+    },
     "heroTitle": "AIで採用を始める",
     "heroSubtitle": "求める人材を教えてください。AIが候補者の検索・スクリーニング・評価を支援します。",
     "templatesTitle": "人気の職種テンプレート",
@@ -399,134 +418,267 @@
         "description": "AIプロダクトを企画から本番まで構築",
         "experienceLevel": "4年以上",
         "requirements": "AIプロダクトをエンドツーエンドで構築するAIソフトウェアエンジニアを募集します。\n\n**職務内容：**\n- AI機能をプロトタイプから本番まで実装\n- モデルAPI、ベクトル検索、データパイプラインの統合\n- 推論サービスと監視の設計\n- プロダクトと連携してAIの体験設計を推進\n\n**必須要件：**\n- ソフトウェアエンジニア経験4年以上\n- Python/TypeScriptとバックエンドの実務力\n- LLM APIまたはMLフレームワークの経験\n- ベクトルDBやRAGパターンの理解\n- クラウドと可観測性の知識\n\n**歓迎要件：**\n- モデルの微調整・評価経験\n- MLOps/MLプラットフォーム経験\n- NLPのバックグラウンド",
-        "skills": ["Python", "TypeScript", "LLM", "ベクトル検索", "MLOps"]
+        "skills": [
+          "Python",
+          "TypeScript",
+          "LLM",
+          "ベクトル検索",
+          "MLOps"
+        ]
       },
       "aiLlmEngineer": {
         "title": "AI LLM エンジニア",
         "description": "LLMパイプラインと評価を統括",
         "experienceLevel": "3年以上",
         "requirements": "LLMスタックと評価を担当するAI LLMエンジニアを募集します。\n\n**職務内容：**\n- LLMアプリのプロンプト/検索パイプライン構築\n- 出力の品質・コスト・レイテンシ最適化\n- 評価フレームワークとガードレールの実装\n- データチームと連携して性能改善\n\n**必須要件：**\n- ML/AIエンジニア経験3年以上\n- LLM・RAG・Embeddingsの深い理解\n- Pythonと最新MLツールの実務経験\n- ベクトル検索と評価指標の経験\n- プロンプト設計と安全性の理解\n\n**歓迎要件：**\n- OpenAI/Anthropic/OSSの微調整経験\n- LangChainまたはLlamaIndexの経験\n- NLP研究のバックグラウンド",
-        "skills": ["LLM", "RAG", "Embeddings", "Python", "評価"]
+        "skills": [
+          "LLM",
+          "RAG",
+          "Embeddings",
+          "Python",
+          "評価"
+        ]
       },
       "fullStackEngineer": {
         "title": "フルスタックエンジニア",
         "description": "フロントからバックエンドまで一貫して開発",
         "experienceLevel": "4年以上",
         "requirements": "フロントエンドからバックエンドまで一貫して開発するフルスタックエンジニアを募集します。\n\n**職務内容：**\n- WebアプリとAPIの構築・運用\n- UIからデータベースまで機能を一貫して担当\n- デザイン/プロダクトと連携しUXを磨き込む\n- 性能・信頼性・テストの改善\n\n**必須要件：**\n- フルスタック開発4年以上\n- ReactとTypeScriptに精通\n- REST API開発経験（Node/Python/Go）\n- SQLデータベースとORMの実務経験\n- クラウド運用とCI/CDの理解\n\n**歓迎要件：**\n- Next.js経験\n- 可観測性/監視の経験\n- スタートアップ経験",
-        "skills": ["React", "TypeScript", "Node.js", "SQL", "API設計"]
+        "skills": [
+          "React",
+          "TypeScript",
+          "Node.js",
+          "SQL",
+          "API設計"
+        ]
       },
       "seniorSoftwareEngineer": {
         "title": "シニアソフトウェアエンジニア",
         "description": "スケーラブルなシステム構築とメンター",
         "experienceLevel": "5年以上",
         "requirements": "チームに参画いただくシニアソフトウェアエンジニアを募集します。\n\n**職務内容：**\n- スケーラブルなバックエンドサービスの設計・実装\n- 技術議論とコードレビューのリード\n- ジュニアエンジニアの育成とカルチャーづくり\n- プロダクト/デザインとの協業\n\n**必須要件：**\n- ソフトウェア開発経験5年以上\n- Python/Java/TypeScript/Goのいずれかに精通\n- クラウド（AWS/GCP/Azure）の利用経験\n- SQL/NoSQLのデータベース経験\n- 問題解決力と細部へのこだわり\n\n**歓迎要件：**\n- マイクロサービスアーキテクチャ経験\n- Docker/Kubernetesなどのコンテナ経験\n- OSSへの貢献経験",
-        "skills": ["Python", "TypeScript", "AWS", "システム設計", "マイクロサービス"]
+        "skills": [
+          "Python",
+          "TypeScript",
+          "AWS",
+          "システム設計",
+          "マイクロサービス"
+        ]
       },
       "frontendDeveloper": {
         "title": "フロントエンドエンジニア",
         "description": "美しく高速なUIを実装",
         "experienceLevel": "3年以上",
         "requirements": "優れたユーザー体験を作るフロントエンドエンジニアを募集します。\n\n**職務内容：**\n- React/VueでレスポンシブなWebアプリ開発\n- Figmaのデザインを正確に実装\n- パフォーマンス最適化\n- テストを含む保守性の高いコード作成\n\n**必須要件：**\n- フロントエンド開発3年以上\n- ReactまたはVue.jsに精通\n- CSS（Tailwind、styled-components）に強い\n- TypeScriptの実務経験\n- パフォーマンス最適化の知識\n\n**歓迎要件：**\n- Next.js/Nuxt.js経験\n- React Nativeなどのモバイル経験\n- UI/UXの感度",
-        "skills": ["React", "TypeScript", "CSS", "Tailwind", "Next.js"]
+        "skills": [
+          "React",
+          "TypeScript",
+          "CSS",
+          "Tailwind",
+          "Next.js"
+        ]
       },
       "devopsEngineer": {
         "title": "DevOpsエンジニア",
         "description": "堅牢なCI/CDとインフラ運用",
         "experienceLevel": "4年以上",
         "requirements": "インフラとデプロイを改善するDevOpsエンジニアを募集します。\n\n**職務内容：**\n- CI/CDパイプラインの設計・運用\n- クラウドインフラ（AWS/GCP）の管理\n- 監視・アラート基盤の構築\n- セキュリティベストプラクティスの徹底\n\n**必須要件：**\n- DevOps/SRE経験4年以上\n- AWSまたはGCPの深い知識\n- Kubernetes/Dockerの実務経験\n- IaC（Terraform/CloudFormation）の経験\n- スクリプト作成能力（Python/Bash）\n\n**歓迎要件：**\n- セキュリティ関連資格\n- GitOpsの経験\n- オンコール経験",
-        "skills": ["AWS", "Kubernetes", "Terraform", "Docker", "CI/CD"]
+        "skills": [
+          "AWS",
+          "Kubernetes",
+          "Terraform",
+          "Docker",
+          "CI/CD"
+        ]
       },
       "dataScientist": {
         "title": "データサイエンティスト",
         "description": "データから洞察とMLモデルを創出",
         "experienceLevel": "3年以上",
         "requirements": "データを活用するデータサイエンティストを募集します。\n\n**職務内容：**\n- 機械学習モデルの構築・運用\n- 大規模データの分析と洞察抽出\n- データドリブン機能をプロダクトと連携\n- ダッシュボードや可視化の作成\n\n**必須要件：**\n- データサイエンス経験3年以上\n- Python（pandas、scikit-learn、TensorFlow/PyTorch）に強い\n- SQLとデータウェアハウスの経験\n- 統計・機械学習の基礎\n- 高いコミュニケーション能力\n\n**歓迎要件：**\n- NLP/コンピュータビジョン経験\n- MLOps経験\n- 定量系の博士号",
-        "skills": ["Python", "機械学習", "SQL", "TensorFlow", "統計"]
+        "skills": [
+          "Python",
+          "機械学習",
+          "SQL",
+          "TensorFlow",
+          "統計"
+        ]
       },
       "productManager": {
         "title": "プロダクトマネージャー",
         "description": "戦略を描き実行を推進",
         "experienceLevel": "4年以上",
         "requirements": "プロダクト開発をリードするプロダクトマネージャーを募集します。\n\n**職務内容：**\n- プロダクトロードマップと戦略の策定\n- 要件の収集と優先順位付け\n- エンジニア/デザインと密に協業\n- 指標分析と意思決定の推進\n\n**必須要件：**\n- プロダクトマネジメント経験4年以上\n- アジャイル手法の経験\n- 分析力と問題解決力\n- ステークホルダーとの優れた調整力\n- 技術的バックグラウンドがあると尚可\n\n**歓迎要件：**\n- B2B SaaS経験\n- SQLやデータ分析のスキル\n- MBAまたは関連学位",
-        "skills": ["プロダクト戦略", "アジャイル", "データ分析", "ロードマップ", "ステークホルダー管理"]
+        "skills": [
+          "プロダクト戦略",
+          "アジャイル",
+          "データ分析",
+          "ロードマップ",
+          "ステークホルダー管理"
+        ]
       },
       "scrumMaster": {
         "title": "スクラムマスター",
         "description": "アジャイル運営とチーム改善を支援",
         "experienceLevel": "3年以上",
         "requirements": "チームのデリバリーを支えるスクラムマスターを募集します。\n\n**職務内容：**\n- スプリントイベントのファシリテーション\n- 障害の除去とチームのコーチング\n- チーム指標のトラッキングと改善\n- 継続的改善の促進\n\n**必須要件：**\n- スクラムマスター経験3年以上\n- CSM等の認定資格\n- 複数のアジャイルフレームワーク経験\n- ファシリテーション能力\n- Jira等のツール経験\n\n**歓迎要件：**\n- 技術的バックグラウンド\n- SAFe認定\n- コーチング認定",
-        "skills": ["Scrum", "アジャイル", "ファシリテーション", "Jira", "チームコーチング"]
+        "skills": [
+          "Scrum",
+          "アジャイル",
+          "ファシリテーション",
+          "Jira",
+          "チームコーチング"
+        ]
       },
       "uxDesigner": {
         "title": "UXデザイナー",
         "description": "直感的で心地よい体験を設計",
         "experienceLevel": "3年以上",
         "requirements": "プロダクト体験を形作るUXデザイナーを募集します。\n\n**職務内容：**\n- ユーザーリサーチとユーザビリティテスト\n- ワイヤーフレーム/プロトタイプ/ユーザーフローの作成\n- プロダクト/エンジニアと協業\n- デザインシステムの維持・改善\n\n**必須要件：**\n- UXデザイン経験3年以上\n- Figmaの高いスキル\n- UXプロセスを示すポートフォリオ\n- ユーザーリサーチ手法の理解\n- アクセシビリティ基準への理解\n\n**歓迎要件：**\n- UIデザインスキル\n- モーションデザイン経験\n- デザインシステム経験",
-        "skills": ["Figma", "ユーザーリサーチ", "プロトタイピング", "ワイヤーフレーム", "ユーザビリティテスト"]
+        "skills": [
+          "Figma",
+          "ユーザーリサーチ",
+          "プロトタイピング",
+          "ワイヤーフレーム",
+          "ユーザビリティテスト"
+        ]
       },
       "uiDesigner": {
         "title": "UIデザイナー",
         "description": "美しく一貫性のあるUIを設計",
         "experienceLevel": "2年以上",
         "requirements": "魅力的なUIを作るUIデザイナーを募集します。\n\n**職務内容：**\n- ピクセルパーフェクトなUI設計\n- デザインシステムコンポーネントの作成・管理\n- 開発との実装連携\n- ブランド/マーケ素材の制作\n\n**必須要件：**\n- UIデザイン経験2年以上\n- Figmaの高いスキル\n- ビジュアルデザインの強いポートフォリオ\n- タイポグラフィ/デザイン原則の理解\n- HTML/CSSの基礎理解\n\n**歓迎要件：**\n- アニメーション/モーションデザイン\n- イラスト制作スキル\n- ブランドデザイン経験",
-        "skills": ["Figma", "ビジュアルデザイン", "デザインシステム", "タイポグラフィ", "配色"]
+        "skills": [
+          "Figma",
+          "ビジュアルデザイン",
+          "デザインシステム",
+          "タイポグラフィ",
+          "配色"
+        ]
       },
       "accountExecutive": {
         "title": "アカウントエグゼクティブ",
         "description": "エンタープライズ案件のクロージング",
         "experienceLevel": "3年以上",
         "requirements": "売上成長を牽引するアカウントエグゼクティブを募集します。\n\n**職務内容：**\n- 見込み開拓からクロージングまでの営業活動\n- エンタープライズ顧客との関係構築\n- 四半期目標の達成\n- SDR/カスタマーサクセスとの連携\n\n**必須要件：**\n- B2B SaaS営業経験3年以上\n- 目標達成実績\n- エンタープライズセールス経験\n- プレゼン/交渉スキル\n- CRM（Salesforce）利用経験\n\n**歓迎要件：**\n- HR/採用領域への営業経験\n- 技術バックグラウンド\n- 既存ネットワーク",
-        "skills": ["B2Bセールス", "Salesforce", "エンタープライズ営業", "交渉", "新規開拓"]
+        "skills": [
+          "B2Bセールス",
+          "Salesforce",
+          "エンタープライズ営業",
+          "交渉",
+          "新規開拓"
+        ]
       },
       "salesEngineer": {
         "title": "セールスエンジニア",
         "description": "技術と営業を橋渡し",
         "experienceLevel": "4年以上",
         "requirements": "営業チームを技術面で支えるセールスエンジニアを募集します。\n\n**職務内容：**\n- 技術デモやPOCのリード\n- 営業プロセスでの技術的質疑対応\n- 技術資料や提案書の作成\n- 顧客フィードバックをプロダクトに共有\n\n**必須要件：**\n- セールスエンジニア/ソリューションアーキテクト経験4年以上\n- ソフトウェア開発の技術背景\n- 高いプレゼン/コミュニケーション力\n- 複雑な技術をわかりやすく説明できる\n- API/連携の経験\n\n**歓迎要件：**\n- ソフトウェア開発経験\n- 業界資格\n- HR Tech経験",
-        "skills": ["技術デモ", "API連携", "ソリューション設計", "プレゼン", "POC"]
+        "skills": [
+          "技術デモ",
+          "API連携",
+          "ソリューション設計",
+          "プレゼン",
+          "POC"
+        ]
       },
       "marketingManager": {
         "title": "マーケティングマネージャー",
         "description": "キャンペーンとブランド戦略を推進",
         "experienceLevel": "4年以上",
         "requirements": "ブランド拡大を担うマーケティングマネージャーを募集します。\n\n**職務内容：**\n- マーケティング施策の企画・実行\n- 予算とROIの管理\n- コンテンツ/ブランド戦略の推進\n- 指標分析と最適化\n\n**必須要件：**\n- マーケティング経験4年以上\n- B2B SaaSマーケ経験\n- 分析力\n- 優れたライティング/コミュニケーション力\n- HubSpotやGoogle Analyticsの経験\n\n**歓迎要件：**\n- プロダクトマーケ経験\n- デマンドジェネレーション経験\n- チームマネジメント経験",
-        "skills": ["キャンペーン運用", "コンテンツ戦略", "分析", "B2Bマーケ", "HubSpot"]
+        "skills": [
+          "キャンペーン運用",
+          "コンテンツ戦略",
+          "分析",
+          "B2Bマーケ",
+          "HubSpot"
+        ]
       },
       "contentWriter": {
         "title": "コンテンツライター",
         "description": "成果につながるコンテンツを制作",
         "experienceLevel": "2年以上",
         "requirements": "ブランドストーリーを伝えるコンテンツライターを募集します。\n\n**職務内容：**\n- ブログ/ケーススタディ/ホワイトペーパーの執筆\n- Webサイト/プロダクトコピーの作成\n- メールマーケティングコンテンツ作成\n- SEO最適化\n\n**必須要件：**\n- コンテンツライティング経験2年以上\n- 高い文章力/編集力\n- SEOの基本理解\n- B2B/SaaSコンテンツ経験\n- 技術内容をわかりやすく説明できる\n\n**歓迎要件：**\n- 公開実績/ポートフォリオ\n- CMS運用経験\n- 動画台本の執筆経験",
-        "skills": ["コピーライティング", "SEO", "ブログ", "メールマーケ", "ストーリーテリング"]
+        "skills": [
+          "コピーライティング",
+          "SEO",
+          "ブログ",
+          "メールマーケ",
+          "ストーリーテリング"
+        ]
       },
       "operationsManager": {
         "title": "オペレーションマネージャー",
         "description": "業務プロセスを改善し拡大を支援",
         "experienceLevel": "5年以上",
         "requirements": "業務プロセスを最適化するオペレーションマネージャーを募集します。\n\n**職務内容：**\n- 業務プロセスの設計と実装\n- ベンダー管理\n- 指標の追跡とレポート\n- 効率化の推進\n\n**必須要件：**\n- オペレーション経験5年以上\n- プロジェクト管理能力\n- プロセス改善の経験\n- 高い分析力\n- オペレーションツールの使用経験\n\n**歓迎要件：**\n- Six Sigma/Leanの認定\n- SaaS/テック企業経験\n- チームマネジメント経験",
-        "skills": ["プロセス改善", "プロジェクト管理", "ベンダー管理", "分析", "Lean"]
+        "skills": [
+          "プロセス改善",
+          "プロジェクト管理",
+          "ベンダー管理",
+          "分析",
+          "Lean"
+        ]
       },
       "financialAnalyst": {
         "title": "財務アナリスト",
         "description": "財務計画と分析を推進",
         "experienceLevel": "3年以上",
         "requirements": "財務チームを支える財務アナリストを募集します。\n\n**職務内容：**\n- 財務モデルと予測の作成\n- 月次レポート作成\n- 事業パフォーマンス分析\n- 予算策定の支援\n\n**必須要件：**\n- FP&A経験3年以上\n- 高度なExcelスキル\n- 財務モデリング経験\n- SaaS指標の理解\n- 細部への注意力\n\n**歓迎要件：**\n- CPA/CFA\n- NetSuiteなどの経験\n- SQLスキル",
-        "skills": ["財務モデリング", "Excel", "FP&A", "予算", "SaaS指標"]
+        "skills": [
+          "財務モデリング",
+          "Excel",
+          "FP&A",
+          "予算",
+          "SaaS指標"
+        ]
       },
       "hrManager": {
         "title": "人事マネージャー",
         "description": "カルチャー構築と人材支援",
         "experienceLevel": "4年以上",
         "requirements": "人事オペレーションをリードする人事マネージャーを募集します。\n\n**職務内容：**\n- 従業員ライフサイクル全体の管理\n- HRポリシー/プログラムの策定\n- 労務対応\n- 報酬/福利厚生の運用\n\n**必須要件：**\n- 人事経験4年以上\n- 労働法の知識\n- HRISの運用経験\n- 高い対人スキル\n- テック企業経験があると尚可\n\n**歓迎要件：**\n- PHR/SHRM認定\n- 人事制度の立ち上げ経験\n- グローバル人事経験",
-        "skills": ["労務対応", "HRIS", "報酬福利厚生", "コンプライアンス", "カルチャー"]
+        "skills": [
+          "労務対応",
+          "HRIS",
+          "報酬福利厚生",
+          "コンプライアンス",
+          "カルチャー"
+        ]
       },
       "technicalRecruiter": {
         "title": "テクニカルリクルーター",
         "description": "エンジニア採用をリード",
         "experienceLevel": "3年以上",
         "requirements": "エンジニア採用を拡大するテクニカルリクルーターを募集します。\n\n**職務内容：**\n- エンジニア職の一連の採用プロセス\n- 候補者のソーシングとエンゲージ\n- 採用マネージャーとの連携\n- 採用プロセス改善\n\n**必須要件：**\n- テクニカルリクルーティング経験3年以上\n- 高いソーシングスキル\n- ATS利用経験\n- 技術職種/スキルへの理解\n- 優れたコミュニケーション力\n\n**歓迎要件：**\n- 事業会社での採用経験\n- 雇用ブランド経験\n- ダイバーシティ採用経験",
-        "skills": ["ソーシング", "ATS", "面接", "採用ブランディング", "LinkedIn"]
+        "skills": [
+          "ソーシング",
+          "ATS",
+          "面接",
+          "採用ブランディング",
+          "LinkedIn"
+        ]
       }
+    },
+    "postCreation": {
+      "title": "求人リクエストが作成されました！",
+      "subtitle": "次に何をしますか？",
+      "smartMatch": "スマート履歴書マッチング",
+      "smartMatchDesc": "履歴書ライブラリからマッチする候補者を検索",
+      "smartMatchAction": "今すぐマッチング",
+      "smartMatchNoResumes": "候補者のマッチングを開始するために履歴書をアップロードしてください",
+      "smartMatchNoResumesAction": "履歴書ライブラリへ",
+      "smartMatchHasResumes": "ライブラリに {{count}} 件の履歴書があります。最適な候補者を見つけましょう！",
+      "smartMatchRunning": "履歴書をマッチング中...",
+      "smartMatchDone": "{{total}} 件中 {{matched}} 件がマッチしました",
+      "intelReport": "採用インテリジェンス",
+      "intelReportDesc": "候補者プロファイル、ソーシング戦略、市場分析のAIインサイトを取得",
+      "intelReportAction": "レポートを生成",
+      "intelReportGenerating": "レポートを生成中...",
+      "intelReportDone": "レポート完成！",
+      "goToDashboard": "ダッシュボードへ",
+      "viewFullReport": "完全なレポートを見る"
     }
   },
   "dashboard": {
@@ -537,7 +689,8 @@
       "apiKeys": "APIキー",
       "apiPlayground": "API テスト",
       "account": "アカウント",
-      "usage": "使用状況"
+      "usage": "使用状況",
+      "resumes": "履歴書ライブラリ"
     },
     "welcome": "おかえりなさい",
     "user": "ユーザー",
@@ -590,6 +743,151 @@
       "interviewed": "面接済み",
       "shortlisted": "最終候補",
       "rejected": "不採用"
+    },
+    "autoMatch": {
+      "title": "レジュメスクリーニング",
+      "button": "自動マッチング",
+      "buttonMatching": "マッチング中...",
+      "progress": "{{total}} 件中 {{current}} 件をスクリーニング中...",
+      "progressComplete": "スクリーニング完了。{{matched}} 件の新しいマッチングが見つかりました。",
+      "noResumes": "レジュメライブラリにレジュメがありません。先にアップロードしてください。",
+      "noMatchesYet": "まだマッチング結果がありません。",
+      "noMatchesDesc": "「自動マッチング」をクリックして、レジュメライブラリをこの求人と照合します。",
+      "resumeMatches": "レジュメマッチ",
+      "filterAll": "すべて",
+      "filterMatched": "マッチ済み",
+      "filterShortlisted": "最終候補",
+      "filterRejected": "不採用",
+      "filterInvited": "招待済み",
+      "scoreFilter": "最低スコア",
+      "sortBy": "並び替え",
+      "sortScoreDesc": "スコア（高い順）",
+      "sortScoreAsc": "スコア（低い順）",
+      "sortName": "氏名",
+      "sortDate": "マッチング日",
+      "search": "レジュメを検索...",
+      "selectAll": "すべて選択",
+      "deselectAll": "選択解除",
+      "selected": "{{count}} 件選択中",
+      "shortlistSelected": "最終候補に追加",
+      "rejectSelected": "不採用",
+      "inviteSelected": "面接に招待",
+      "candidateName": "候補者",
+      "fitScore": "適合スコア",
+      "fitGrade": "グレード",
+      "verdict": "評価結果",
+      "matchedSkills": "マッチしたスキル",
+      "missingSkills": "不足スキル",
+      "pipelineStatus": "ステータス",
+      "recommendation": "推薦",
+      "topReasons": "主な理由",
+      "experienceAlignment": "経験の適合",
+      "transferableSkills": "転用可能なスキル",
+      "hardRequirementGaps": "必須要件の不足",
+      "viewResume": "レジュメを表示",
+      "inviteModalTitle": "候補者を面接に招待",
+      "inviteModalDesc": "選択した候補者に面接の招待を送信します。",
+      "candidateCount": "{{count}} 名の候補者を招待します",
+      "recruiterEmail": "リクルーターメール",
+      "interviewerRequirement": "面接要件（任意）",
+      "interviewerRequirementPlaceholder": "例：システム設計とリーダーシップスキルを重視...",
+      "usageNote": "面接クレジットを {{count}} 回使用します。",
+      "send": "招待を送信",
+      "sending": "送信中...",
+      "cancel": "キャンセル",
+      "inviteSuccess": "{{count}} 件の招待を送信しました。",
+      "invitePartial": "{{total}} 件中 {{sent}} 件送信成功、{{failed}} 件失敗。",
+      "inviteError": "招待の送信に失敗しました。",
+      "matchError": "自動マッチングに失敗しました。",
+      "updateError": "ステータスの更新に失敗しました。",
+      "statusMatched": "マッチ済み",
+      "statusShortlisted": "最終候補",
+      "statusRejected": "不採用",
+      "statusInvited": "招待済み",
+      "moreSkills": "+{{count}} 件",
+      "reMatch": "再マッチ",
+      "reMatchAll": "すべて再マッチ"
+    },
+    "intelligence": {
+      "title": "採用インテリジェンスレポート",
+      "generate": "レポートを生成",
+      "regenerate": "レポートを再生成",
+      "generating": "インテリジェンスレポートを生成中...",
+      "generatingStep1": "理想的な候補者プロファイルを分析中...",
+      "generatingStep2": "ソーシング戦略と市場分析を作成中...",
+      "generatingStep3": "レポートを編集中...",
+      "noReport": "インテリジェンスレポートはまだありません",
+      "noReportDesc": "このポジションのAI採用インテリジェンスレポートを生成します。",
+      "candidateProfile": "理想的な候補者プロファイル",
+      "idealBackground": "理想的な経歴",
+      "degrees": "典型的な学歴",
+      "careerPath": "キャリアパス",
+      "experience": "経験",
+      "industryBackground": "業界バックグラウンド",
+      "skillMapping": "スキルマップ",
+      "mustHave": "必須スキル",
+      "niceToHave": "あると望ましいスキル",
+      "seniorityExpectation": "期待レベル",
+      "reason": "理由",
+      "valueAdd": "付加価値",
+      "personalityTraits": "人物特性とカルチャーフィット",
+      "traits": "主要な特性",
+      "cultureFit": "カルチャーフィット指標",
+      "dayInTheLife": "典型的な一日",
+      "persona": "候補者ペルソナ",
+      "sourcingStrategy": "ソーシング戦略",
+      "platforms": "ソーシングプラットフォーム",
+      "effectiveness": "効果",
+      "searchStrategy": "戦略",
+      "searchKeywords": "キーワード",
+      "booleanSearch": "ブーリアン検索文字列",
+      "targetCompanies": "ターゲット企業",
+      "targetIndustries": "ターゲット業界",
+      "passiveVsActive": "パッシブ vs アクティブソーシング",
+      "passive": "パッシブ",
+      "active": "アクティブ",
+      "both": "両方",
+      "passiveStrategy": "パッシブ戦略",
+      "activeStrategy": "アクティブ戦略",
+      "networking": "ネットワーキング戦略",
+      "expectedYield": "期待される成果",
+      "sourcingSummary": "ソーシングサマリー",
+      "marketIntelligence": "市場インテリジェンス",
+      "salaryRanges": "給与レンジ",
+      "region": "地域",
+      "level": "レベル",
+      "range": "レンジ",
+      "notes": "備考",
+      "supplyDemand": "需給分析",
+      "talentPoolSize": "人材プールサイズ",
+      "difficulty": "採用難易度",
+      "difficultyScore": "難易度スコア",
+      "factors": "主要因",
+      "timeToHire": "採用期間",
+      "estimateDays": "推定日数",
+      "competition": "競合分析",
+      "competitor": "競合",
+      "hiringActivity": "採用活動",
+      "relevance": "関連性",
+      "marketTrends": "市場トレンド",
+      "trend": "トレンド",
+      "impact": "影響",
+      "marketSummary": "市場サマリー",
+      "copy": "コピー",
+      "copied": "コピーしました！",
+      "cached": "キャッシュレポート",
+      "generatedAt": "生成日時",
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "critical": "重要",
+      "oversupplied": "供給過多",
+      "balanced": "需給均衡",
+      "undersupplied": "供給不足",
+      "severelyUndersupplied": "深刻な供給不足",
+      "positive": "ポジティブ",
+      "negative": "ネガティブ",
+      "neutral": "ニュートラル"
     }
   },
   "stats": {
@@ -822,6 +1120,8 @@
     "customBadge": "カスタム",
     "customPrice": "カスタム",
     "redirecting": "リダイレクト中...",
+    "currentPlanCta": "現在のプラン",
+    "upgradeOnlyCta": "アップグレードのみ",
     "starter": {
       "name": "スターター",
       "subtitle": "個人で始める方向け",
@@ -984,6 +1284,60 @@
       "viewReceipt": "領収書"
     }
   },
+  "usage": {
+    "title": "API 使用量",
+    "apiCalls": "API コール",
+    "inputTokens": "入力トークン",
+    "outputTokens": "出力トークン",
+    "totalCost": "合計費用",
+    "empty": "使用データがありません。API を呼び出すとここにデータが表示されます。",
+    "inactive": "無効",
+    "range": {
+      "7d": "7 日間",
+      "30d": "30 日間",
+      "90d": "90 日間",
+      "all": "全期間"
+    },
+    "chart": {
+      "callsOverTime": "API コール推移",
+      "calls": "コール数",
+      "tokenUsage": "トークン使用量（入力 vs 出力）",
+      "input": "入力",
+      "output": "出力"
+    },
+    "table": {
+      "byEndpoint": "エンドポイント別",
+      "endpoint": "エンドポイント",
+      "calls": "コール数",
+      "tokens": "トークン",
+      "cost": "費用",
+      "byKey": "API キー別",
+      "key": "キー"
+    },
+    "callHistory": {
+      "title": "API コール履歴",
+      "empty": "API コール記録がありません。",
+      "time": "時間",
+      "endpoint": "エンドポイント",
+      "status": "ステータス",
+      "duration": "所要時間",
+      "tokens": "トークン",
+      "cost": "費用",
+      "view": "表示",
+      "prev": "前へ",
+      "next": "次へ",
+      "pageInfo": "{{page}} / {{total}} ページ",
+      "back": "使用量に戻る",
+      "detailTitle": "API コール詳細",
+      "notFound": "コールが見つかりません",
+      "llmCalls": "LLM コール",
+      "requestPayload": "入力パラメータ",
+      "responsePayload": "AI 出力",
+      "model": "モデル",
+      "apiKey": "API キー",
+      "sessionAuth": "セッション"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - AI採用プラットフォーム",
     "defaultDescription": "他社に先駆けて優秀な人材を採用。AIが自動で履歴書をスクリーニング、面接を実施し、包括的な評価レポートを提供します。",
@@ -1016,16 +1370,140 @@
       "desc": "チームに最適なRoboHireプランを選択。無料トライアルからAI採用無制限のエンタープライズまで。"
     },
     "docs": {
-      "overview": { "title": "APIドキュメント", "desc": "RoboHire APIの完全なドキュメント。数分でAI採用を開始。" },
-      "quickStart": { "title": "クイックスタート", "desc": "5分でRoboHire APIを使い始める。ステップバイステップの統合ガイド。" },
-      "auth": { "title": "API認証", "desc": "APIキーとJWTトークンを使用したRoboHire APIの認証方法。" },
-      "matchResume": { "title": "履歴書マッチングAPI", "desc": "AI履歴書マッチングエンドポイントのAPIリファレンス。" },
-      "parseResume": { "title": "履歴書解析API", "desc": "AIを使用して履歴書から構造化データを抽出するAPIリファレンス。" },
-      "parseJd": { "title": "求人解析API", "desc": "求人情報解析のAPIリファレンス。" },
-      "invite": { "title": "候補者招待API", "desc": "候補者にAI面接招待を送信するAPIリファレンス。" },
-      "evaluate": { "title": "面接評価API", "desc": "AI面接評価のAPIリファレンス。" },
-      "webhooks": { "title": "Webhooks", "desc": "採用イベントのリアルタイム通知を受け取るWebhookの設定。" },
-      "errors": { "title": "エラーハンドリング", "desc": "RoboHire APIのエラーコード、レスポンスフォーマット、トラブルシューティングガイド。" }
+      "overview": {
+        "title": "APIドキュメント",
+        "desc": "RoboHire APIの完全なドキュメント。数分でAI採用を開始。"
+      },
+      "quickStart": {
+        "title": "クイックスタート",
+        "desc": "5分でRoboHire APIを使い始める。ステップバイステップの統合ガイド。"
+      },
+      "auth": {
+        "title": "API認証",
+        "desc": "APIキーとJWTトークンを使用したRoboHire APIの認証方法。"
+      },
+      "matchResume": {
+        "title": "履歴書マッチングAPI",
+        "desc": "AI履歴書マッチングエンドポイントのAPIリファレンス。"
+      },
+      "parseResume": {
+        "title": "履歴書解析API",
+        "desc": "AIを使用して履歴書から構造化データを抽出するAPIリファレンス。"
+      },
+      "parseJd": {
+        "title": "求人解析API",
+        "desc": "求人情報解析のAPIリファレンス。"
+      },
+      "invite": {
+        "title": "候補者招待API",
+        "desc": "候補者にAI面接招待を送信するAPIリファレンス。"
+      },
+      "evaluate": {
+        "title": "面接評価API",
+        "desc": "AI面接評価のAPIリファレンス。"
+      },
+      "webhooks": {
+        "title": "Webhooks",
+        "desc": "採用イベントのリアルタイム通知を受け取るWebhookの設定。"
+      },
+      "errors": {
+        "title": "エラーハンドリング",
+        "desc": "RoboHire APIのエラーコード、レスポンスフォーマット、トラブルシューティングガイド。"
+      }
+    }
+  },
+  "resumeLibrary": {
+    "title": "履歴書ライブラリ",
+    "subtitle": "候補者の履歴書を管理・分析",
+    "upload": "履歴書をアップロード",
+    "uploadBatch": "一括アップロード",
+    "stats": {
+      "total": "履歴書総数",
+      "thisWeek": "今週の追加",
+      "analyzed": "AI分析済み"
+    },
+    "search": {
+      "placeholder": "名前、スキル、職種で検索..."
+    },
+    "empty": {
+      "title": "履歴書がありません",
+      "description": "履歴書をアップロードして候補者ライブラリを構築しましょう",
+      "cta": "最初の履歴書をアップロード"
+    },
+    "card": {
+      "topFit": "最適マッチ"
+    },
+    "uploadModal": {
+      "title": "履歴書をアップロード",
+      "batchTitle": "履歴書を一括アップロード",
+      "dragDrop": "履歴書ファイルをここにドラッグ＆ドロップ",
+      "formats": "対応形式：PDF、DOCX、TXT",
+      "maxFiles": "一度に最大10ファイル",
+      "uploading": "処理中...",
+      "duplicate": "重複"
+    },
+    "detail": {
+      "back": "履歴書一覧に戻る",
+      "title": "履歴書詳細",
+      "tabs": {
+        "overview": "概要",
+        "insights": "AIインサイト",
+        "jobFit": "職種適性",
+        "notes": "メモ・タグ"
+      },
+      "actions": {
+        "archive": "アーカイブ"
+      },
+      "overview": {
+        "summary": "職務概要",
+        "skills": "スキル",
+        "experience": "職歴",
+        "education": "学歴",
+        "certifications": "資格",
+        "projects": "プロジェクト",
+        "showAllSkills": "全{{count}}件のスキルを表示",
+        "showLess": "閉じる"
+      }
+    },
+    "insights": {
+      "generate": "AIインサイトを生成",
+      "generating": "履歴書を分析中...",
+      "generatingDesc": "10〜15秒ほどかかります",
+      "regenerate": "インサイトを再生成",
+      "executiveSummary": "総合評価",
+      "careerTrajectory": "キャリア軌跡",
+      "salaryEstimate": "年収推定",
+      "marketCompetitiveness": "市場競争力",
+      "cultureFit": "カルチャーフィット指標",
+      "strengths": "コア強み",
+      "development": "成長領域",
+      "redFlags": "注意事項",
+      "noRedFlags": "注意事項はありません",
+      "recommendedRoles": "推奨ポジション"
+    },
+    "jobFit": {
+      "analyze": "職種適性を分析",
+      "analyzing": "求人案件とマッチング中...",
+      "reanalyze": "適性を再分析",
+      "bestFit": "最適マッチ",
+      "matchedSkills": "一致するスキル",
+      "missingSkills": "不足する重要スキル",
+      "recommendation": "推薦",
+      "noActiveRequests": "有効な求人案件がありません",
+      "noActiveRequestsDesc": "職種適性分析を表示するには、まず求人案件を作成してください",
+      "fullTime": "正社員",
+      "internship": "インターン",
+      "hardGaps": "必須要件の不足",
+      "transferable": "応用可能なスキル"
+    },
+    "notes": {
+      "tags": "タグ",
+      "addTag": "例：シニア、フロントエンド、面接済み",
+      "notes": "メモ",
+      "notesPlaceholder": "この候補者についてのメモを追加...",
+      "save": "保存",
+      "saving": "保存中...",
+      "saved": "保存しました！"
     }
   }
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-interface MatchResultData {
+export interface MatchResultData {
   resumeAnalysis: {
     candidateName: string;
     totalYearsExperience: string;
@@ -155,6 +155,25 @@ interface MatchResultData {
     cultureFitIndicators: string[];
     riskFactors: string[];
   };
+  transferableSkills?: Array<{
+    required: string;
+    candidateHas: string;
+    relevance: string;
+    valueFactor: number;
+  }>;
+  experienceBreakdown?: {
+    fullTimeExperience: string;
+    internshipExperience: string;
+    contractExperience?: string;
+    totalRelevantExperience: string;
+    note: string;
+  };
+  hardRequirementGaps?: Array<{
+    requirement: string;
+    severity: 'dealbreaker' | 'critical' | 'significant';
+    candidateStatus: string;
+    impact: string;
+  }>;
   overallMatchScore: {
     score: number;
     grade: string;
@@ -192,13 +211,13 @@ interface MatchResultData {
   areasToProbeDeeper?: ProbingArea[];
 }
 
-interface InterviewQuestionCategory {
+export interface InterviewQuestionCategory {
   area: string;
   subArea?: string;
   questions: InterviewQuestion[];
 }
 
-interface InterviewQuestion {
+export interface InterviewQuestion {
   question: string;
   purpose: string;
   lookFor: string[];
@@ -207,7 +226,7 @@ interface InterviewQuestion {
   timeEstimate: string;
 }
 
-interface ProbingArea {
+export interface ProbingArea {
   area: string;
   priority: string;
   reason: string;
@@ -215,7 +234,7 @@ interface ProbingArea {
   suggestedApproach: string;
 }
 
-interface ProbingSubArea {
+export interface ProbingSubArea {
   name: string;
   specificConcerns: string[];
   validationQuestions: string[];
@@ -478,6 +497,33 @@ export default function MatchResultDisplay({ data, requestId }: Props) {
                   ))}
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hard Requirement Gaps */}
+      {data.hardRequirementGaps && data.hardRequirementGaps.length > 0 && (
+        <Card>
+          <CardHeader icon="🚫">Hard Requirement Gaps</CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {data.hardRequirementGaps.map((gap, i) => (
+                <div key={i} className={`rounded-lg p-4 border-l-4 ${
+                  gap.severity === 'dealbreaker' ? 'bg-red-50 border-red-500' :
+                  gap.severity === 'critical' ? 'bg-orange-50 border-orange-500' :
+                  'bg-yellow-50 border-yellow-500'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-gray-900">{gap.requirement}</span>
+                    <Badge variant={gap.severity === 'dealbreaker' ? 'error' : gap.severity === 'critical' ? 'warning' : 'default'}>
+                      {gap.severity}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-1">Candidate: {gap.candidateStatus}</p>
+                  <p className="text-sm text-gray-500">{gap.impact}</p>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -982,6 +1028,33 @@ export default function MatchResultDisplay({ data, requestId }: Props) {
         </CardContent>
       </Card>
 
+      {/* Transferable Skills */}
+      {data.transferableSkills && data.transferableSkills.length > 0 && (
+        <Card>
+          <CardHeader icon="🔄">Transferable Skills</CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500 mb-4">
+              Adjacent skills that transfer to the required competencies
+            </p>
+            <div className="space-y-3">
+              {data.transferableSkills.map((ts, i) => (
+                <div key={i} className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="info">{ts.candidateHas}</Badge>
+                      <span className="text-gray-400">→</span>
+                      <Badge variant="default">{ts.required}</Badge>
+                    </div>
+                    <span className="text-sm font-medium text-blue-700">{ts.valueFactor}% value</span>
+                  </div>
+                  <p className="text-sm text-blue-700">{ts.relevance}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Credibility Analysis */}
       <Card>
         <CardHeader icon={data.skillMatchScore.credibilityFlags.hasRedFlags ? "⚠️" : "✅"}>
@@ -1044,6 +1117,31 @@ export default function MatchResultDisplay({ data, requestId }: Props) {
               <p className="text-xl font-bold text-emerald-800">{data.experienceMatch.yearsGap}</p>
             </div>
           </div>
+
+          {/* Experience Breakdown by Type */}
+          {data.experienceBreakdown && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <p className="text-xs text-blue-600">Full-Time</p>
+                  <p className="text-lg font-bold text-blue-800">{data.experienceBreakdown.fullTimeExperience}</p>
+                </div>
+                <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-100">
+                  <p className="text-xs text-amber-600">Internship</p>
+                  <p className="text-lg font-bold text-amber-800">{data.experienceBreakdown.internshipExperience}</p>
+                </div>
+                {data.experienceBreakdown.contractExperience && (
+                  <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                    <p className="text-xs text-purple-600">Contract</p>
+                    <p className="text-lg font-bold text-purple-800">{data.experienceBreakdown.contractExperience}</p>
+                  </div>
+                )}
+              </div>
+              {data.experienceBreakdown.note && (
+                <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 mb-6">{data.experienceBreakdown.note}</p>
+              )}
+            </>
+          )}
 
           <div className="mb-6">
             <ProgressBar value={data.experienceValidation.score} label="Experience Relevance Score" />

@@ -9,40 +9,42 @@ datasource db {
 }
 
 model User {
-  id                       String            @id @default(cuid())
-  email                    String            @unique
-  passwordHash             String?
-  name                     String?
-  company                  String?
-  avatar                   String?
-  provider                 String?
-  providerId               String?
-  createdAt                DateTime          @default(now())
-  updatedAt                DateTime          @updatedAt
-  currentPeriodEnd         DateTime?
-  interviewsUsed           Int               @default(0)
-  resumeMatchesUsed        Int               @default(0)
-  stripeCustomerId         String?           @unique
-  subscriptionId           String?
-  subscriptionStatus       String            @default("active")
-  subscriptionTier         String            @default("free")
-  topUpBalance             Float             @default(0)
-  trialEnd                 DateTime?
-  role                     String            @default("user")
-  customMaxInterviews      Int?
-  customMaxMatches         Int?
-  adminAdjustmentsMade     AdminAdjustment[] @relation("AdminAdjustmentsMade")
-  adminAdjustmentsReceived AdminAdjustment[] @relation("AdminAdjustmentsReceived")
-  apiKeys                  ApiKey[]
-  apiRequestLogs           ApiRequestLog[]
-  usageRecords             ApiUsageRecord[]
-  hiringRequests           HiringRequest[]
-  hiringSessions           HiringSession[]
-  llmCallLogs              LLMCallLog[]
-  paymentRecords           PaymentRecord[]
-  Resume                   Resume[]
-  sessions                 Session[]
-  topUpRecords             TopUpRecord[]
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String?
+  company       String?
+  avatar        String?
+  role          String    @default("user") // 'user' or 'admin'
+  provider      String?   // 'email', 'google', 'github', 'linkedin'
+  providerId    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Subscription / Stripe
+  stripeCustomerId    String?   @unique
+  subscriptionTier    String    @default("free") // free, startup, business, custom
+  subscriptionStatus  String    @default("active") // active, past_due, canceled
+  subscriptionId      String?
+  currentPeriodEnd    DateTime?
+  trialEnd            DateTime?
+  interviewsUsed      Int       @default(0)
+  resumeMatchesUsed   Int       @default(0)
+  topUpBalance        Float     @default(0)
+  customMaxInterviews Int?      // Admin override for max interviews (null = use plan default)
+  customMaxMatches    Int?      // Admin override for max matches (null = use plan default)
+  
+  hiringRequests  HiringRequest[]
+  sessions        Session[]
+  hiringSessions  HiringSession[]
+  apiKeys         ApiKey[]
+  usageRecords    ApiUsageRecord[]
+  apiRequestLogs  ApiRequestLog[]
+  llmCallLogs     LLMCallLog[]
+  topUpRecords    TopUpRecord[]
+  resumes         Resume[]
+  adminAdjustmentsReceived  AdminAdjustment[] @relation("AdminAdjustmentsReceived")
+  adminAdjustmentsMade      AdminAdjustment[] @relation("AdminAdjustmentsMade")
 
   @@index([email])
   @@index([provider, providerId])
@@ -61,18 +63,21 @@ model Session {
 }
 
 model HiringRequest {
-  id             String         @id @default(cuid())
-  userId         String
-  title          String
-  requirements   String
-  jobDescription String?
-  status         String         @default("active")
-  webhookUrl     String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id              String   @id @default(cuid())
+  userId          String
+  title           String
+  requirements    String   @db.Text
+  jobDescription  String?  @db.Text
+  status                String   @default("active") // active, paused, closed
+  webhookUrl            String?
+  intelligenceData      Json?
+  intelligenceUpdatedAt DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   candidates     Candidate[]
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ResumeJobFit   ResumeJobFit[]
+  resumeJobFits  ResumeJobFit[]
 
   @@index([userId])
   @@index([status])
@@ -177,12 +182,13 @@ model ApiRequestLog {
   model            String?
   ipAddress        String?
   userAgent        String?
-  createdAt        DateTime     @default(now())
   requestPayload   Json?
   responsePayload  Json?
-  apiKey           ApiKey?      @relation(fields: [apiKeyId], references: [id])
-  user             User?        @relation(fields: [userId], references: [id])
-  llmCallLog       LLMCallLog[]
+  createdAt        DateTime @default(now())
+
+  user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  apiKey     ApiKey?      @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  llmCallLog LLMCallLog[]
 
   @@index([requestId])
   @@index([userId])
@@ -294,14 +300,14 @@ model AppConfig {
 }
 
 model Resume {
-  id              String         @id
+  id              String    @id @default(cuid())
   userId          String
   name            String
   email           String?
   phone           String?
   currentRole     String?
   experienceYears String?
-  resumeText      String
+  resumeText      String    @db.Text
   parsedData      Json?
   insightData     Json?
   jobFitData      Json?
@@ -309,39 +315,41 @@ model Resume {
   fileSize        Int?
   fileType        String?
   contentHash     String?
-  status          String         @default("active")
-  source          String         @default("upload")
-  tags            String[]       @default([])
-  notes           String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime
-  User            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ResumeJobFit    ResumeJobFit[]
+  status          String    @default("active")
+  source          String    @default("upload")
+  tags            String[]  @default([])
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeJobFits   ResumeJobFit[]
 
   @@unique([userId, contentHash])
-  @@index([contentHash])
-  @@index([createdAt])
-  @@index([name])
   @@index([userId])
   @@index([userId, status])
+  @@index([name])
+  @@index([contentHash])
+  @@index([createdAt])
 }
 
 model ResumeJobFit {
-  id              String        @id
-  resumeId        String
-  hiringRequestId String
-  fitScore        Int?
-  fitGrade        String?
-  fitData         Json?
-  pipelineStatus  String        @default("matched")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime
-  HiringRequest   HiringRequest @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
-  Resume          Resume        @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  resumeId         String
+  hiringRequestId  String
+  fitScore         Int?
+  fitGrade         String?
+  fitData          Json?
+  pipelineStatus   String   @default("matched") // matched, shortlisted, rejected, invited
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  resume           Resume         @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  hiringRequest    HiringRequest  @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
 
   @@unique([resumeId, hiringRequestId])
-  @@index([fitScore])
-  @@index([hiringRequestId])
-  @@index([pipelineStatus])
   @@index([resumeId])
+  @@index([hiringRequestId])
+  @@index([fitScore])
+  @@index([pipelineStatus])
 }

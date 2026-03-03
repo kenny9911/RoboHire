@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +24,47 @@ interface Plan {
   custom?: boolean;
 }
 
+type PaidTier = 'starter' | 'growth' | 'business';
+type Tier = 'free' | PaidTier | 'custom';
+type DisplayCurrency = 'USD' | 'CNY' | 'JPY';
+type PricingMatrix = Record<DisplayCurrency, Record<PaidTier, number>>;
+
+const TIER_RANK: Record<Tier, number> = {
+  free: 0,
+  starter: 1,
+  growth: 2,
+  business: 3,
+  custom: 4,
+};
+
+const DEFAULT_PRICES: PricingMatrix = {
+  USD: { starter: 29, growth: 199, business: 399 },
+  CNY: { starter: 199, growth: 1369, business: 2749 },
+  JPY: { starter: 4559, growth: 31329, business: 62799 },
+};
+
+function resolveDisplayCurrency(language: string): DisplayCurrency {
+  const normalized = language.toLowerCase();
+  if (normalized.startsWith('zh')) return 'CNY';
+  if (normalized.startsWith('ja')) return 'JPY';
+  return 'USD';
+}
+
+function resolveEffectiveTier(subscriptionTier?: string, subscriptionStatus?: string): Tier {
+  const tier = (subscriptionTier || 'free').toLowerCase();
+  const status = (subscriptionStatus || 'active').toLowerCase();
+
+  if (tier === 'custom') return 'custom';
+  if (tier !== 'free' && status !== 'active' && status !== 'trialing') {
+    return 'free';
+  }
+  if (tier === 'starter' || tier === 'growth' || tier === 'business' || tier === 'free') {
+    return tier;
+  }
+
+  return 'free';
+}
+
 const CHECK_ICON = (
   <svg className="w-5 h-5 text-indigo-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -31,27 +72,82 @@ const CHECK_ICON = (
 );
 
 export default function Pricing() {
-  const { t } = useTranslation();
-  const { isAuthenticated } = useAuth();
+  const { t, i18n } = useTranslation();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [dynamicPrices, setDynamicPrices] = useState<{ starter: number; growth: number; business: number }>({
-    starter: 29, growth: 199, business: 399,
+  const [pricingMatrix, setPricingMatrix] = useState<PricingMatrix>(DEFAULT_PRICES);
+  const [discountConfig, setDiscountConfig] = useState<{ enabled: boolean; percentOff: number }>({
+    enabled: false,
+    percentOff: 0,
   });
+  const displayCurrency = useMemo<DisplayCurrency>(
+    () => resolveDisplayCurrency(i18n.language || 'en'),
+    [i18n.language]
+  );
+  const effectiveTier = useMemo<Tier>(
+    () =>
+      resolveEffectiveTier(
+        user?.subscriptionTier,
+        user?.subscriptionStatus
+      ),
+    [user?.subscriptionTier, user?.subscriptionStatus]
+  );
+  const displayPlanPrices = useMemo<Record<PaidTier, number>>(
+    () => pricingMatrix[displayCurrency] || DEFAULT_PRICES[displayCurrency],
+    [displayCurrency, pricingMatrix]
+  );
+  const discountPercent = useMemo(
+    () => (discountConfig.enabled && discountConfig.percentOff > 0 ? discountConfig.percentOff : 0),
+    [discountConfig.enabled, discountConfig.percentOff]
+  );
 
   useEffect(() => {
     fetch(`${API_BASE}/api/v1/config/pricing`)
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.data) {
-          setDynamicPrices({
-            starter: data.data.starter ?? 29,
-            growth: data.data.growth ?? 199,
-            business: data.data.business ?? 399,
-          });
+          const next: PricingMatrix = {
+            USD: { ...DEFAULT_PRICES.USD },
+            CNY: { ...DEFAULT_PRICES.CNY },
+            JPY: { ...DEFAULT_PRICES.JPY },
+          };
+
+          const incoming = data.data.prices as
+            | Partial<Record<DisplayCurrency, Partial<Record<PaidTier, number>>>>
+            | undefined;
+
+          if (incoming && typeof incoming === 'object') {
+            (['USD', 'CNY', 'JPY'] as DisplayCurrency[]).forEach((currency) => {
+              const values = incoming[currency];
+              if (!values || typeof values !== 'object') return;
+              (['starter', 'growth', 'business'] as PaidTier[]).forEach((tier) => {
+                const value = values[tier];
+                if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+                  next[currency][tier] = value;
+                }
+              });
+            });
+          } else {
+            // Backward compatibility for legacy API payloads.
+            if (typeof data.data.starter === 'number' && data.data.starter > 0) next.USD.starter = data.data.starter;
+            if (typeof data.data.growth === 'number' && data.data.growth > 0) next.USD.growth = data.data.growth;
+            if (typeof data.data.business === 'number' && data.data.business > 0) next.USD.business = data.data.business;
+          }
+
+          setPricingMatrix(next);
+
+          const discount = data.data.discount as { enabled?: boolean; percentOff?: number } | undefined;
+          if (discount && typeof discount === 'object') {
+            const enabled = discount.enabled === true;
+            const percentOff = typeof discount.percentOff === 'number' && discount.percentOff > 0
+              ? Number(discount.percentOff.toFixed(2))
+              : 0;
+            setDiscountConfig({ enabled, percentOff });
+          }
         }
       })
       .catch(() => { /* keep defaults */ });
@@ -62,7 +158,7 @@ export default function Pricing() {
       id: 'starter',
       name: t('pricing.starter.name', 'Starter'),
       subtitle: t('pricing.starter.subtitle', 'For individuals getting started'),
-      monthlyPrice: dynamicPrices.starter,
+      monthlyPrice: displayPlanPrices.starter,
       cta: t('pricing.starter.cta', 'Start free trial'),
       features: [
         { text: t('pricing.starter.f1', '1 seat') },
@@ -77,7 +173,7 @@ export default function Pricing() {
       id: 'growth',
       name: t('pricing.growth.name', 'Growth'),
       subtitle: t('pricing.growth.subtitle', 'For growing teams'),
-      monthlyPrice: dynamicPrices.growth,
+      monthlyPrice: displayPlanPrices.growth,
       cta: t('pricing.growth.cta', 'Start free trial'),
       features: [
         { text: t('pricing.growth.f1', 'Unlimited seats') },
@@ -95,7 +191,7 @@ export default function Pricing() {
       id: 'business',
       name: t('pricing.business.name', 'Business'),
       subtitle: t('pricing.business.subtitle', 'For large teams scaling fast'),
-      monthlyPrice: dynamicPrices.business,
+      monthlyPrice: displayPlanPrices.business,
       cta: t('pricing.business.cta', 'Start free trial'),
       popular: true,
       features: [
@@ -263,9 +359,91 @@ export default function Pricing() {
     }
   };
 
+  const normalizeCurrencyAmount = (value: number) => {
+    if (displayCurrency === 'USD') {
+      return Math.round(value * 100) / 100;
+    }
+    return Math.round(value);
+  };
+
+  const applyDiscount = (value: number) => {
+    if (discountPercent <= 0) return normalizeCurrencyAmount(value);
+    return normalizeCurrencyAmount(value * (1 - discountPercent / 100));
+  };
+
+  const formatCurrencyAmount = (value: number) => {
+    if (displayCurrency === 'USD') {
+      const hasDecimals = Math.round(value * 100) % 100 !== 0;
+      return `USD $${value.toLocaleString('en-US', {
+        minimumFractionDigits: hasDecimals ? 2 : 0,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+    if (displayCurrency === 'CNY') {
+      return `CNY ¥${value.toLocaleString('zh-CN')}`;
+    }
+    return `JPY ¥${value.toLocaleString('ja-JP')}`;
+  };
+
+  const normalizeCurrencyAmount = (value: number) => {
+    if (displayCurrency === 'USD') {
+      return Math.round(value * 100) / 100;
+    }
+    return Math.round(value);
+  };
+
+  const applyDiscount = (value: number) => {
+    if (discountPercent <= 0) return normalizeCurrencyAmount(value);
+    return normalizeCurrencyAmount(value * (1 - discountPercent / 100));
+  };
+
+  const formatCurrencyAmount = (value: number) => {
+    if (displayCurrency === 'USD') {
+      const hasDecimals = Math.round(value * 100) % 100 !== 0;
+      return `USD $${value.toLocaleString('en-US', {
+        minimumFractionDigits: hasDecimals ? 2 : 0,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+    if (displayCurrency === 'CNY') {
+      return `CNY ¥${value.toLocaleString('zh-CN')}`;
+    }
+    return `JPY ¥${value.toLocaleString('ja-JP')}`;
+  };
+
   const formatPrice = (plan: Plan) => {
     if (plan.custom) return null;
-    return { amount: `$${plan.monthlyPrice}`, period: `/ ${t('pricing.month', 'mo')}` };
+
+    const originalValue = normalizeCurrencyAmount(plan.monthlyPrice ?? 0);
+    const discountedValue = applyDiscount(originalValue);
+
+    return {
+      amount: formatCurrencyAmount(discountedValue),
+      originalAmount: discountPercent > 0 ? formatCurrencyAmount(originalValue) : null,
+      period: `/ ${t('pricing.month', 'mo')}`,
+    };
+  };
+
+  const getPlanAvailability = (plan: Plan): { disabled: boolean; isCurrentPlan: boolean } => {
+    if (plan.custom || !isAuthenticated) {
+      return { disabled: false, isCurrentPlan: false };
+    }
+
+    if (plan.id !== 'starter' && plan.id !== 'growth' && plan.id !== 'business') {
+      return { disabled: false, isCurrentPlan: false };
+    }
+
+    const planTier = plan.id as PaidTier;
+    const isCurrentPlan = planTier === effectiveTier;
+    const disabled = TIER_RANK[planTier] <= TIER_RANK[effectiveTier];
+
+    return { disabled, isCurrentPlan };
+  };
+
+  const schemaPrices = {
+    starter: applyDiscount(displayPlanPrices.starter),
+    growth: applyDiscount(displayPlanPrices.growth),
+    business: applyDiscount(displayPlanPrices.business),
   };
 
   const productSchema = {
@@ -277,16 +455,16 @@ export default function Pricing() {
     brand: { '@type': 'Brand', name: 'RoboHire' },
     offers: [
       {
-        '@type': 'Offer', name: 'Starter', priceCurrency: 'USD', description: '15 interviews, 30 resume matches per month',
-        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(dynamicPrices.starter), priceCurrency: 'USD', unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
+        '@type': 'Offer', name: 'Starter', priceCurrency: displayCurrency, description: '15 interviews, 30 resume matches per month',
+        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(schemaPrices.starter), priceCurrency: displayCurrency, unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
       },
       {
-        '@type': 'Offer', name: 'Growth', priceCurrency: 'USD', description: '120 interviews, 240 resume matches per month',
-        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(dynamicPrices.growth), priceCurrency: 'USD', unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
+        '@type': 'Offer', name: 'Growth', priceCurrency: displayCurrency, description: '120 interviews, 240 resume matches per month',
+        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(schemaPrices.growth), priceCurrency: displayCurrency, unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
       },
       {
-        '@type': 'Offer', name: 'Business', priceCurrency: 'USD', description: '280 interviews, 500 resume matches per month',
-        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(dynamicPrices.business), priceCurrency: 'USD', unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
+        '@type': 'Offer', name: 'Business', priceCurrency: displayCurrency, description: '280 interviews, 500 resume matches per month',
+        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(schemaPrices.business), priceCurrency: displayCurrency, unitCode: 'MON', billingDuration: 'P1M', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
       },
     ],
   };
@@ -412,10 +590,19 @@ export default function Pricing() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {plans.map((plan) => {
                 const priceInfo = formatPrice(plan);
+                const { disabled: planDisabled, isCurrentPlan } = getPlanAvailability(plan);
+                const isBusy = loadingTier === plan.id;
+                const disableCta = planDisabled || isBusy;
+                const isPaidSubscriber = effectiveTier !== 'free';
+                const shouldStartTrial = !plan.custom && effectiveTier === 'free';
+                const ctaLabel =
+                  isPaidSubscriber && !plan.custom
+                    ? t('pricing.upgradeCta', 'Upgrade')
+                    : plan.cta;
                 return (
                   <div
                     key={plan.id}
-                    className={`relative rounded-2xl border p-6 flex flex-col transition-all duration-200 hover:shadow-lg ${
+                    className={`relative h-full rounded-2xl border p-6 flex flex-col transition-all duration-200 hover:shadow-lg ${
                       plan.popular
                         ? 'border-indigo-600 ring-2 ring-indigo-600 shadow-md'
                         : 'border-gray-200'
@@ -435,41 +622,64 @@ export default function Pricing() {
                         </span>
                       </div>
                     )}
+                    {discountPercent > 0 && !plan.custom && (
+                      <div className="absolute -top-3.5 left-4">
+                        <span className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-full">
+                          {t('pricing.discountBadge', { defaultValue: '{{percent}}% OFF', percent: discountPercent })}
+                        </span>
+                      </div>
+                    )}
 
-                    <div className="mb-5">
-                      <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{plan.subtitle}</p>
+                    <div className="mb-2 min-h-[72px]">
+                      <h3 className="text-lg font-semibold leading-tight text-gray-900">{plan.name}</h3>
+                      <p className="mt-1 text-sm leading-snug text-gray-500">{plan.subtitle}</p>
                     </div>
 
-                    <div className="mb-6">
+                    <div className="mb-6 min-h-[76px]">
                       {plan.custom ? (
-                        <div>
-                          <span className="text-4xl font-bold text-gray-900">
+                        <div className="flex min-h-[64px] items-end">
+                          <span className="whitespace-nowrap text-2xl font-bold leading-tight text-gray-900 sm:text-[2rem]">
                             {t('pricing.customPrice', 'Custom')}
                           </span>
                         </div>
                       ) : (
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">{priceInfo?.amount}</span>
-                          {priceInfo?.period && (
-                            <span className="text-base text-gray-500">{priceInfo.period}</span>
+                        <div className="flex min-h-[76px] flex-col justify-end">
+                          {priceInfo?.originalAmount && (
+                            <span className="whitespace-nowrap text-sm tabular-nums text-gray-400 line-through">
+                              {priceInfo.originalAmount}
+                            </span>
                           )}
+                          <div className="flex items-end gap-1">
+                            <span className="whitespace-nowrap text-2xl font-bold leading-tight text-gray-900 tabular-nums sm:text-[2rem]">
+                              {priceInfo?.amount}
+                            </span>
+                            {priceInfo?.period && (
+                              <span className="whitespace-nowrap text-sm tabular-nums text-gray-500">
+                                {priceInfo.period}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
 
                     <button
-                      onClick={() => handlePlanCta(plan, !plan.custom)}
-                      disabled={loadingTier === plan.id}
-                      className={`w-full py-3 px-4 rounded-xl text-sm font-semibold transition-colors mb-6 ${
-                        plan.popular
-                          ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                          : plan.custom
-                            ? 'bg-gray-900 text-white hover:bg-gray-800'
-                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      onClick={() => {
+                        if (planDisabled) return;
+                        handlePlanCta(plan, shouldStartTrial);
+                      }}
+                      disabled={disableCta}
+                      className={`mb-6 h-12 w-full rounded-xl px-4 text-sm font-semibold transition-colors ${
+                        planDisabled
+                          ? 'bg-gray-200 text-gray-500'
+                          : plan.popular
+                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                            : plan.custom
+                              ? 'bg-gray-900 text-white hover:bg-gray-800'
+                              : 'bg-indigo-600 text-white hover:bg-indigo-700'
                       } disabled:opacity-60 disabled:cursor-not-allowed`}
                     >
-                      {loadingTier === plan.id ? (
+                      {isBusy ? (
                         <span className="flex items-center justify-center gap-2">
                           <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -477,7 +687,11 @@ export default function Pricing() {
                           </svg>
                           {t('pricing.redirecting', 'Redirecting...')}
                         </span>
-                      ) : plan.cta}
+                      ) : planDisabled
+                        ? isCurrentPlan
+                          ? t('pricing.currentPlanCta', 'Current plan')
+                          : t('pricing.upgradeOnlyCta', 'Upgrade required')
+                        : ctaLabel}
                     </button>
 
                     <div className="border-t border-gray-100 pt-5 flex-1">

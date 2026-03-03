@@ -11,6 +11,43 @@ export class LLMService {
   private providerName: string = '';
   private initialized: boolean = false;
 
+  private getConfiguredFallbackModel(primaryModel: string): string | null {
+    const configured = (process.env.LLM_FALLBACK_MODEL || '').trim();
+    if (configured && configured !== primaryModel) {
+      return configured;
+    }
+
+    const normalized = primaryModel.toLowerCase();
+    const providerPrefix = primaryModel.includes('/') ? `${primaryModel.split('/')[0]}/` : '';
+
+    if (normalized.includes('gemini-3.1-pro-preview') || normalized.includes('gemini-3-pro-preview')) {
+      return `${providerPrefix}gemini-3-flash-preview`;
+    }
+
+    return null;
+  }
+
+  private shouldTryFallback(error: unknown): boolean {
+    const message = String(
+      (error && typeof error === 'object' && 'message' in error)
+        ? (error as { message?: string }).message
+        : error
+    ).toLowerCase();
+
+    return (
+      message.includes('503') ||
+      message.includes('service unavailable') ||
+      message.includes('high demand') ||
+      message.includes('fetch failed') ||
+      message.includes('timeout') ||
+      message.includes('timed out') ||
+      message.includes('429') ||
+      message.includes('too many requests') ||
+      message.includes('quota exceeded') ||
+      message.includes('rate limit')
+    );
+  }
+
   /**
    * Lazily initialize the LLM provider
    * This ensures environment variables are loaded before accessing them
@@ -108,6 +145,51 @@ export class LLMService {
         error: error instanceof Error ? error.message : 'Unknown error',
         duration: `${duration}ms`,
       }, requestId);
+
+      const fallbackModel = this.getConfiguredFallbackModel(model);
+      if (fallbackModel && fallbackModel !== model && this.shouldTryFallback(error)) {
+        const fallbackStart = Date.now();
+        logger.warn('LLM', 'Retrying with fallback model', {
+          model,
+          fallbackModel,
+        }, requestId);
+
+        try {
+          const fallbackResponse = await this.provider!.chat(messages, {
+            ...options,
+            model: fallbackModel,
+          });
+
+          const fallbackDuration = Date.now() - fallbackStart;
+          if (requestId) {
+            logger.logLLMCall(
+              requestId,
+              fallbackResponse.model || fallbackModel,
+              this.provider!.getProviderName(),
+              fallbackResponse.usage.promptTokens,
+              fallbackResponse.usage.completionTokens,
+              fallbackDuration
+            );
+          } else {
+            logger.info('LLM', `Fallback LLM call completed`, {
+              model: fallbackResponse.model || fallbackModel,
+              tokens: `${fallbackResponse.usage.promptTokens}/${fallbackResponse.usage.completionTokens}/${fallbackResponse.usage.totalTokens}`,
+              duration: `${fallbackDuration}ms`,
+            });
+          }
+
+          return fallbackResponse.content;
+        } catch (fallbackError) {
+          const fallbackDuration = Date.now() - fallbackStart;
+          logger.error('LLM', `Fallback LLM call failed`, {
+            model: fallbackModel,
+            error: fallbackError instanceof Error ? fallbackError.message : 'Unknown error',
+            duration: `${fallbackDuration}ms`,
+          }, requestId);
+          throw fallbackError;
+        }
+      }
+
       throw error;
     }
   }

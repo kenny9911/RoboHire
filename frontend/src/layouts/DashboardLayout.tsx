@@ -99,6 +99,16 @@ const navItems = [
     ),
   },
   {
+    path: '/dashboard/resumes',
+    labelKey: 'dashboard.nav.resumes',
+    fallback: 'Resumes',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+  },
+  {
     path: '/dashboard/api-keys',
     labelKey: 'dashboard.nav.apiKeys',
     fallback: 'API Keys',
@@ -169,7 +179,10 @@ function getPageTitle(
   t: (key: string, fallback: string) => string,
 ): string {
   if (pathname.startsWith('/dashboard/requests/')) return t('dashboard.detail.title', 'Request Details');
+  if (pathname === '/dashboard/resumes') return t('resumeLibrary.title', 'Resume Library');
+  if (pathname.startsWith('/dashboard/resumes/')) return t('resumeLibrary.detail.title', 'Resume Detail');
   if (pathname === '/dashboard/api-keys') return t('apiKeys.title', 'API Keys');
+  if (pathname.startsWith('/dashboard/usage/calls/')) return t('usage.callHistory.detailTitle', 'API Call Detail');
   if (pathname === '/dashboard/usage') return t('dashboard.nav.usage', 'Usage');
   if (pathname === '/dashboard/stats') return t('dashboard.nav.stats', 'Statistics');
   if (pathname === '/dashboard/account') return t('dashboard.nav.account', 'Account');

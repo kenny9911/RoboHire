@@ -72,47 +72,47 @@ console.log(result.data.matchScore); // 85`;
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen overflow-x-hidden bg-white">
       <SEO title={t('seo.developers.title', 'Developer API')} description={t('seo.developers.desc', 'Integrate powerful AI recruitment capabilities into your existing systems. Parse resumes, match candidates, and evaluate interviews via RESTful API.')} url="https://robohire.io/developers" keywords={t('seo.developers.keywords', 'recruitment API, AI hiring API, resume parsing API, candidate matching API, interview evaluation API, developer tools')} />
       <Navbar />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 lg:pt-40 lg:pb-32 relative overflow-hidden">
+      <section className="relative overflow-hidden pb-16 pt-24 sm:pb-20 sm:pt-32 lg:pb-32 lg:pt-40">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-900" />
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-500 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500 rounded-full blur-3xl" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
             {/* Left Content */}
-            <div>
-              <p className="text-indigo-400 font-medium mb-4 uppercase tracking-wide text-sm">
+            <div className="min-w-0">
+              <p className="mb-3 text-sm font-medium uppercase tracking-wide text-indigo-400 sm:mb-4">
                 {t('apiLanding.hero.badge', 'RoboHire')}
               </p>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+              <h1 className="mb-4 text-3xl font-bold leading-tight text-white sm:mb-6 sm:text-4xl lg:text-6xl">
                 {t('apiLanding.hero.headline', 'Build AI-powered hiring in minutes')}
               </h1>
-              <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+              <p className="mb-6 text-base leading-relaxed text-gray-300 sm:mb-8 sm:text-lg lg:text-xl">
                 {t('apiLanding.hero.subheadline', 'Integrate intelligent resume matching, interview evaluation, and candidate screening into your application with just a few lines of code.')}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
                 <button
                   onClick={() => navigate(isAuthenticated ? '/dashboard/api-keys' : '/login')}
-                  className="px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-colors"
+                  className="w-full rounded-xl bg-white px-6 py-3.5 text-center font-semibold text-gray-900 transition-colors hover:bg-gray-100 sm:w-auto sm:px-8 sm:py-4"
                 >
                   {t('apiLanding.hero.getKey', 'Get your API key')}
                 </button>
                 <Link
                   to="/docs"
-                  className="px-8 py-4 border border-gray-600 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors text-center"
+                  className="w-full rounded-xl border border-gray-600 px-6 py-3.5 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto sm:px-8 sm:py-4"
                 >
                   {t('apiLanding.hero.readDocs', 'Read the docs')}
                 </Link>
                 <Link
                   to="/api-playground"
-                  className="px-8 py-4 border border-gray-600 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors text-center"
+                  className="w-full rounded-xl border border-gray-600 px-6 py-3.5 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto sm:px-8 sm:py-4"
                 >
                   {t('apiLanding.hero.playground', 'API Playground')}
                 </Link>
@@ -120,18 +120,18 @@ console.log(result.data.matchScore); // 85`;
             </div>
 
             {/* Right Code Preview */}
-            <div className="relative">
-              <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl border border-gray-700 overflow-hidden">
+            <div className="relative min-w-0">
+              <div className="w-full overflow-hidden rounded-2xl border border-gray-700 bg-gray-900/80 backdrop-blur-sm">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-700">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
                   <div className="w-3 h-3 rounded-full bg-green-500" />
                   <span className="ml-2 text-sm text-gray-400">example.js</span>
                 </div>
-                <pre className="p-4 text-sm overflow-x-auto">
+                <pre className="max-w-full overflow-x-auto p-3 text-xs sm:p-4 sm:text-sm">
                   <code className="text-gray-300">
                     {codeExample.split('\n').map((line, i) => (
-                      <div key={i} className="leading-relaxed">
+                      <div key={i} className="whitespace-pre leading-relaxed">
                         {line.includes('//') ? (
                           <span className="text-gray-500">{line}</span>
                         ) : line.includes("'") || line.includes('"') ? (
@@ -263,7 +263,7 @@ console.log(result.data.matchScore); // 85`;
       </section>
 
       {/* Bottom CTA */}
-      <section className="py-24 bg-gray-900">
+      <section className="bg-gray-900 py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             {t('apiLanding.cta.title', 'Get your API key')}
@@ -271,22 +271,22 @@ console.log(result.data.matchScore); // 85`;
           <p className="text-lg text-gray-400 mb-8">
             {t('apiLanding.cta.description', 'Start building AI-powered hiring features today. Free to start, no credit card required.')}
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
             <button
               onClick={() => navigate(isAuthenticated ? '/dashboard/api-keys' : '/login')}
-              className="px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-colors"
+              className="w-full rounded-xl bg-white px-8 py-4 font-semibold text-gray-900 transition-colors hover:bg-gray-100 sm:w-auto"
             >
               {t('apiLanding.cta.getStarted', 'Get started')}
             </button>
             <Link
               to="/docs"
-              className="px-8 py-4 border border-gray-600 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors"
+              className="w-full rounded-xl border border-gray-600 px-8 py-4 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
               {t('apiLanding.cta.viewDocs', 'View documentation')}
             </Link>
             <Link
               to="/api-playground"
-              className="px-8 py-4 border border-gray-600 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors"
+              className="w-full rounded-xl border border-gray-600 px-8 py-4 text-center font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
             >
               {t('apiLanding.hero.playground', 'API Playground')}
             </Link>

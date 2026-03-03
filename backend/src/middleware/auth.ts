@@ -92,12 +92,18 @@ export async function requireAuth(
     let token: string | undefined;
     let isSessionToken = false;
     let isApiKey = false;
+    let tokenSource: 'api_key' | 'authorization' | 'cookie' | 'session_header' | 'query' | null = null;
+    const cookieSessionToken = req.cookies?.session_token as string | undefined;
+    const headerSessionToken = typeof req.headers['x-session-token'] === 'string'
+      ? req.headers['x-session-token']
+      : undefined;
 
     // Check X-API-Key header first (API key)
     const apiKeyHeader = req.headers['x-api-key'];
     if (apiKeyHeader && typeof apiKeyHeader === 'string' && apiKeyHeader.startsWith('rh_')) {
       token = apiKeyHeader;
       isApiKey = true;
+      tokenSource = 'api_key';
     }
 
     // Check Authorization header (JWT or API key)
@@ -108,27 +114,32 @@ export async function requireAuth(
         if (bearerToken.startsWith('rh_')) {
           token = bearerToken;
           isApiKey = true;
+          tokenSource = 'authorization';
         } else {
           token = bearerToken;
+          tokenSource = 'authorization';
         }
       }
     }
 
     // Check for session token in cookie
-    if (!token && req.cookies?.session_token) {
-      token = req.cookies.session_token;
+    if (!token && cookieSessionToken) {
+      token = cookieSessionToken;
       isSessionToken = true;
+      tokenSource = 'cookie';
     }
 
     // Check for session token in header
-    if (!token && req.headers['x-session-token']) {
-      token = req.headers['x-session-token'] as string;
+    if (!token && headerSessionToken) {
+      token = headerSessionToken;
       isSessionToken = true;
+      tokenSource = 'session_header';
     }
 
     // Check query parameter (for OAuth callbacks)
     if (!token && req.query.token) {
       token = req.query.token as string;
+      tokenSource = 'query';
     }
 
     if (!token) {
@@ -163,6 +174,17 @@ export async function requireAuth(
       const payload = authService.verifyToken(token);
       if (payload) {
         user = await authService.getUserById(payload.userId);
+      } else if (tokenSource === 'authorization') {
+        // If local JWT is stale, fall back to session tokens (cookie/header) when available.
+        const fallbackSessionToken = cookieSessionToken || headerSessionToken;
+        if (fallbackSessionToken) {
+          const sessionUser = await authService.validateSession(fallbackSessionToken);
+          if (sessionUser) {
+            const { passwordHash: _, ...userWithoutPassword } = sessionUser;
+            user = userWithoutPassword;
+            req.sessionToken = fallbackSessionToken;
+          }
+        }
       }
     }
 
@@ -199,12 +221,18 @@ export async function optionalAuth(
     let token: string | undefined;
     let isSessionToken = false;
     let isApiKey = false;
+    let tokenSource: 'api_key' | 'authorization' | 'cookie' | 'session_header' | null = null;
+    const cookieSessionToken = req.cookies?.session_token as string | undefined;
+    const headerSessionToken = typeof req.headers['x-session-token'] === 'string'
+      ? req.headers['x-session-token']
+      : undefined;
 
     // Check X-API-Key header first (API key)
     const apiKeyHeader = req.headers['x-api-key'];
     if (apiKeyHeader && typeof apiKeyHeader === 'string' && apiKeyHeader.startsWith('rh_')) {
       token = apiKeyHeader;
       isApiKey = true;
+      tokenSource = 'api_key';
     }
 
     // Check Authorization header (JWT or API key)
@@ -215,22 +243,26 @@ export async function optionalAuth(
         if (bearerToken.startsWith('rh_')) {
           token = bearerToken;
           isApiKey = true;
+          tokenSource = 'authorization';
         } else {
           token = bearerToken;
+          tokenSource = 'authorization';
         }
       }
     }
 
     // Check for session token in cookie
-    if (!token && req.cookies?.session_token) {
-      token = req.cookies.session_token;
+    if (!token && cookieSessionToken) {
+      token = cookieSessionToken;
       isSessionToken = true;
+      tokenSource = 'cookie';
     }
 
     // Check for session token in header
-    if (!token && req.headers['x-session-token']) {
-      token = req.headers['x-session-token'] as string;
+    if (!token && headerSessionToken) {
+      token = headerSessionToken;
       isSessionToken = true;
+      tokenSource = 'session_header';
     }
 
     if (token) {
@@ -255,6 +287,16 @@ export async function optionalAuth(
         const payload = authService.verifyToken(token);
         if (payload) {
           user = await authService.getUserById(payload.userId);
+        } else if (tokenSource === 'authorization') {
+          const fallbackSessionToken = cookieSessionToken || headerSessionToken;
+          if (fallbackSessionToken) {
+            const sessionUser = await authService.validateSession(fallbackSessionToken);
+            if (sessionUser) {
+              const { passwordHash: _, ...userWithoutPassword } = sessionUser;
+              user = userWithoutPassword;
+              req.sessionToken = fallbackSessionToken;
+            }
+          }
         }
       }
 

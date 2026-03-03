@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
+import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
 
@@ -13,14 +15,14 @@ interface DailyData {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
-  cost: number;
+  cost?: number;
 }
 
 interface EndpointData {
   endpoint: string;
   calls: number;
   totalTokens: number;
-  cost: number;
+  cost?: number;
 }
 
 interface KeyUsage {
@@ -32,7 +34,7 @@ interface KeyUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
-  cost: number;
+  cost?: number;
 }
 
 interface UsageSummary {
@@ -41,10 +43,26 @@ interface UsageSummary {
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;
-    cost: number;
+    cost?: number;
   };
   daily: DailyData[];
   byEndpoint: EndpointData[];
+}
+
+interface CallHistoryRecord {
+  id: string;
+  requestId: string | null;
+  endpoint: string;
+  method: string;
+  apiName: string;
+  statusCode: number;
+  durationMs: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  cost?: number;
+  model: string | null;
+  createdAt: string;
 }
 
 type TimeRange = '7d' | '30d' | '90d' | 'all';
@@ -66,10 +84,19 @@ const RANGE_LABELS: Record<TimeRange, string> = {
 
 export default function UsageDashboard() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const showCost = user?.role === 'admin';
   const [range, setRange] = useState<TimeRange>('30d');
   const [summary, setSummary] = useState<UsageSummary | null>(null);
   const [byKey, setByKey] = useState<KeyUsage[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [callHistory, setCallHistory] = useState<CallHistoryRecord[]>([]);
+  const [callHistoryPage, setCallHistoryPage] = useState(1);
+  const [callHistoryTotal, setCallHistoryTotal] = useState(0);
+  const [callHistoryLoading, setCallHistoryLoading] = useState(false);
+  const callHistoryLimit = 10;
 
   const rangeLabels: Record<TimeRange, string> = {
     '7d': t('usage.range.7d', RANGE_LABELS['7d']),
@@ -78,11 +105,43 @@ export default function UsageDashboard() {
     all: t('usage.range.all', RANGE_LABELS.all),
   };
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  const fetchCallHistory = async (page: number, fromDate?: string) => {
+    setCallHistoryLoading(true);
+    const headers = getAuthHeaders();
+    const params = new URLSearchParams({ page: String(page), limit: String(callHistoryLimit) });
+    if (fromDate) params.set('from', fromDate);
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/usage/calls?${params}`, { headers, credentials: 'include' });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch call history (${res.status})`);
+      }
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error || 'Failed to fetch call history');
+      }
+      setCallHistory(json.data || []);
+      setCallHistoryTotal(json.pagination?.totalPages || 0);
+    } catch (err) {
+      setCallHistory([]);
+      setCallHistoryTotal(0);
+      setError(err instanceof Error ? err.message : 'Failed to load call history');
+    } finally {
+      setCallHistoryLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const token = localStorage.getItem('auth_token');
-      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+      setError(null);
+      setSummary(null);
+      setByKey([]);
+      const headers = getAuthHeaders();
       const from = rangeToDate(range);
       const qs = from ? `?from=${from}` : '';
 
@@ -91,18 +150,38 @@ export default function UsageDashboard() {
           fetch(`${API_BASE}/api/v1/usage/summary${qs}`, { headers, credentials: 'include' }),
           fetch(`${API_BASE}/api/v1/usage/by-key${qs}`, { headers, credentials: 'include' }),
         ]);
+        if (!sumRes.ok) {
+          throw new Error(`Failed to fetch usage summary (${sumRes.status})`);
+        }
+        if (!keyRes.ok) {
+          throw new Error(`Failed to fetch usage by key (${keyRes.status})`);
+        }
         const sumJson = await sumRes.json();
         const keyJson = await keyRes.json();
-        if (sumJson.success) setSummary(sumJson.data);
-        if (keyJson.success) setByKey(keyJson.data);
-      } catch {
-        // silently fail
+        if (!sumJson.success) {
+          throw new Error(sumJson.error || 'Failed to fetch usage summary');
+        }
+        if (!keyJson.success) {
+          throw new Error(keyJson.error || 'Failed to fetch usage by key');
+        }
+        setSummary(sumJson.data);
+        setByKey(keyJson.data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load usage data');
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    setCallHistoryPage(1);
+    fetchCallHistory(1, rangeToDate(range));
   }, [range]);
+
+  useEffect(() => {
+    if (callHistoryPage > 1) {
+      fetchCallHistory(callHistoryPage, rangeToDate(range));
+    }
+  }, [callHistoryPage]);
 
   const formatCost = (v: number) => `$${v.toFixed(4)}`;
   const formatTokens = (v: number) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${(v / 1_000).toFixed(1)}K` : String(v);
@@ -128,6 +207,12 @@ export default function UsageDashboard() {
           </div>
         </div>
 
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
@@ -141,7 +226,9 @@ export default function UsageDashboard() {
               <SummaryCard label={t('usage.apiCalls', 'API Calls')} value={String(summary.totals.calls)} />
               <SummaryCard label={t('usage.inputTokens', 'Input Tokens')} value={formatTokens(summary.totals.promptTokens)} />
               <SummaryCard label={t('usage.outputTokens', 'Output Tokens')} value={formatTokens(summary.totals.completionTokens)} />
-              <SummaryCard label={t('usage.totalCost', 'Total Cost')} value={formatCost(summary.totals.cost)} />
+              {showCost && (
+                <SummaryCard label={t('usage.totalCost', 'Total Cost')} value={formatCost(summary.totals.cost ?? 0)} />
+              )}
             </div>
 
             {/* Charts */}
@@ -188,7 +275,7 @@ export default function UsageDashboard() {
                         <th className="pb-2 font-medium">{t('usage.table.endpoint', 'Endpoint')}</th>
                         <th className="pb-2 font-medium text-right">{t('usage.table.calls', 'Calls')}</th>
                         <th className="pb-2 font-medium text-right">{t('usage.table.tokens', 'Tokens')}</th>
-                        <th className="pb-2 font-medium text-right">{t('usage.table.cost', 'Cost')}</th>
+                        {showCost && <th className="pb-2 font-medium text-right">{t('usage.table.cost', 'Cost')}</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -197,7 +284,7 @@ export default function UsageDashboard() {
                           <td className="py-2 font-mono text-xs text-gray-700">{ep.endpoint}</td>
                           <td className="py-2 text-right text-gray-600">{ep.calls}</td>
                           <td className="py-2 text-right text-gray-600">{formatTokens(ep.totalTokens)}</td>
-                          <td className="py-2 text-right text-gray-600">{formatCost(ep.cost)}</td>
+                          {showCost && <td className="py-2 text-right text-gray-600">{formatCost(ep.cost ?? 0)}</td>}
                         </tr>
                       ))}
                     </tbody>
@@ -208,7 +295,7 @@ export default function UsageDashboard() {
 
             {/* Per-key breakdown */}
             {byKey.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
                 <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('usage.table.byKey', 'Usage by API Key')}</h2>
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-sm">
@@ -218,7 +305,7 @@ export default function UsageDashboard() {
                         <th className="pb-2 font-medium text-right">{t('usage.table.calls', 'Calls')}</th>
                         <th className="pb-2 font-medium text-right">{t('usage.inputTokens', 'Input Tokens')}</th>
                         <th className="pb-2 font-medium text-right">{t('usage.outputTokens', 'Output Tokens')}</th>
-                        <th className="pb-2 font-medium text-right">{t('usage.table.cost', 'Cost')}</th>
+                        {showCost && <th className="pb-2 font-medium text-right">{t('usage.table.cost', 'Cost')}</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -236,7 +323,7 @@ export default function UsageDashboard() {
                           <td className="py-2 text-right text-gray-600">{k.calls}</td>
                           <td className="py-2 text-right text-gray-600">{formatTokens(k.promptTokens)}</td>
                           <td className="py-2 text-right text-gray-600">{formatTokens(k.completionTokens)}</td>
-                          <td className="py-2 text-right text-gray-600">{formatCost(k.cost)}</td>
+                          {showCost && <td className="py-2 text-right text-gray-600">{formatCost(k.cost ?? 0)}</td>}
                         </tr>
                       ))}
                     </tbody>
@@ -244,6 +331,105 @@ export default function UsageDashboard() {
                 </div>
               </div>
             )}
+
+            {/* Call History */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('usage.callHistory.title', 'API Call History')}</h2>
+              {callHistoryLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+                </div>
+              ) : callHistory.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">
+                  {t('usage.callHistory.empty', 'No API calls recorded yet.')}
+                </p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-gray-500 border-b border-gray-100">
+                          <th className="pb-2 font-medium">{t('usage.callHistory.time', 'Time')}</th>
+                          <th className="pb-2 font-medium">{t('usage.callHistory.endpoint', 'Endpoint')}</th>
+                          <th className="pb-2 font-medium text-center">{t('usage.callHistory.status', 'Status')}</th>
+                          <th className="pb-2 font-medium text-right">{t('usage.callHistory.duration', 'Duration')}</th>
+                          <th className="pb-2 font-medium text-right">{t('usage.callHistory.tokens', 'Tokens')}</th>
+                          {showCost && <th className="pb-2 font-medium text-right">{t('usage.callHistory.cost', 'Cost')}</th>}
+                          <th className="pb-2 font-medium text-right"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {callHistory.map((call) => {
+                          const statusColor = call.statusCode < 400
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-red-100 text-red-700';
+                          return (
+                            <tr key={call.id} className="border-b border-gray-50 hover:bg-gray-50">
+                              <td className="py-2 text-xs text-gray-600 whitespace-nowrap">
+                                {new Date(call.createdAt).toLocaleString()}
+                              </td>
+                              <td className="py-2 font-mono text-xs text-gray-700">
+                                {call.endpoint.replace('/api/v1/', '')}
+                              </td>
+                              <td className="py-2 text-center">
+                                <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${statusColor}`}>
+                                  {call.statusCode}
+                                </span>
+                              </td>
+                              <td className="py-2 text-right text-gray-600 text-xs">
+                                {(call.durationMs / 1000).toFixed(2)}s
+                              </td>
+                              <td className="py-2 text-right text-gray-600 text-xs">
+                                {formatTokens(call.totalTokens)}
+                              </td>
+                              {showCost && (
+                                <td className="py-2 text-right text-gray-600 text-xs">
+                                  {formatCost(call.cost ?? 0)}
+                                </td>
+                              )}
+                              <td className="py-2 text-right">
+                                <button
+                                  onClick={() => navigate(`/dashboard/usage/calls/${call.id}`)}
+                                  className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                                >
+                                  {t('usage.callHistory.view', 'View')}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  {callHistoryTotal > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => setCallHistoryPage((p) => Math.max(1, p - 1))}
+                        disabled={callHistoryPage <= 1}
+                        className="text-sm text-gray-600 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {t('usage.callHistory.prev', 'Previous')}
+                      </button>
+                      <span className="text-xs text-gray-500">
+                        {t('usage.callHistory.pageInfo', 'Page {{page}} of {{total}}', {
+                          page: callHistoryPage,
+                          total: callHistoryTotal,
+                        })}
+                      </span>
+                      <button
+                        onClick={() => setCallHistoryPage((p) => Math.min(callHistoryTotal, p + 1))}
+                        disabled={callHistoryPage >= callHistoryTotal}
+                        className="text-sm text-gray-600 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {t('usage.callHistory.next', 'Next')}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </>
         )}
     </div>

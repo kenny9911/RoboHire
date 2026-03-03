@@ -122,9 +122,9 @@ export abstract class BaseAgent<TInput, TOutput> {
    */
   async executeWithJsonResponse(input: TInput, jdContent?: string, requestId?: string): Promise<TOutput> {
     const stepNum = requestId ? logger.startStep(requestId, `${this.name}: Execute (JSON)`) : 0;
-    
+
     logger.logAgentStart(requestId || '', this.name, { inputType: typeof input, outputFormat: 'JSON' });
-    
+
     const systemPrompt = this.buildSystemPrompt(jdContent, requestId);
     const userMessage = this.formatInput(input);
 
@@ -139,29 +139,38 @@ export abstract class BaseAgent<TInput, TOutput> {
     }, requestId);
 
     try {
-      const output = await this.llm.chatWithJsonResponse<TOutput>(messages, {
+      // Use chat() + parseOutput() so agent-specific fallback logic is always used.
+      // chatWithJsonResponse() throws on malformed JSON with no fallback,
+      // whereas each agent's parseOutput() provides a safe default.
+      const response = await this.llm.chat(messages, {
         temperature: 0.7,
         requestId,
       });
-      
+
+      logger.debug('AGENT', `${this.name}: Parsing JSON response`, {
+        responseLength: response.length,
+      }, requestId);
+
+      const output = this.parseOutput(response);
+
       logger.logAgentEnd(requestId || '', this.name, true, JSON.stringify(output).length);
-      
+
       if (requestId && stepNum) {
         logger.endStep(requestId, stepNum, 'completed');
       }
-      
+
       return output;
     } catch (error) {
       logger.error('AGENT', `${this.name}: JSON execution failed`, {
         error: error instanceof Error ? error.message : 'Unknown error',
       }, requestId);
-      
+
       logger.logAgentEnd(requestId || '', this.name, false);
-      
+
       if (requestId && stepNum) {
         logger.endStep(requestId, stepNum, 'failed');
       }
-      
+
       throw error;
     }
   }

@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import ResultViewer from '../components/ResultViewer';
 import ApiInfoPanel from '../components/ApiInfoPanel';
 import { useFormData } from '../context/FormDataContext';
+import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO';
 
@@ -26,6 +27,7 @@ const ROBOHIRE_API_URL = import.meta.env.ROBOHIRE_INVITATION_API || 'https://rep
 
 export default function InviteCandidate() {
   const { t } = useTranslation();
+  const { refreshUser } = useAuth();
   const { formData, setInviteCandidateData } = useFormData();
   const { resume, jd, recruiterEmail, interviewerRequirement } = formData.inviteCandidate;
 
@@ -88,6 +90,7 @@ export default function InviteCandidate() {
       }
     } finally {
       setLoading(false);
+      void refreshUser();
     }
   };
 

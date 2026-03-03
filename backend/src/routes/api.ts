@@ -91,6 +91,16 @@ router.post('/match-resume', requireAuth, requireScopes('write'), apiRateLimit()
       jobTitle: stored.jobTitle,
     });
 
+    req.payloadCapture = {
+      requestPayload: {
+        resumePreview: resume.slice(0, 10000),
+        resumeLength: resume.length,
+        jdPreview: jd.slice(0, 10000),
+        jdLength: jd.length,
+      },
+      responsePayload: result as unknown as Record<string, unknown>,
+    };
+
     logger.endRequest(requestId, 'success', 200);
     return res.json({
       success: true,
@@ -149,6 +159,18 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
       interviewer_requirement
     );
 
+    req.payloadCapture = {
+      requestPayload: {
+        resumePreview: resume.slice(0, 10000),
+        resumeLength: resume.length,
+        jdPreview: jd.slice(0, 10000),
+        jdLength: jd.length,
+        recruiter_email: recruiter_email || null,
+        interviewer_requirement: interviewer_requirement || null,
+      },
+      responsePayload: result as unknown as Record<string, unknown>,
+    };
+
     logger.endRequest(requestId, 'success', 200);
     return res.json({
       success: true,
@@ -172,7 +194,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
  * POST /api/v1/parse-resume
  * Parse a resume PDF and extract structured data
  */
-router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit(), trackUsage, upload.single('file'), async (req: Request, res: Response) => {
+router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit(), upload.single('file'), async (req: Request, res: Response) => {
   const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/parse-resume', 'POST');
 
@@ -220,6 +242,16 @@ router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit()
     
     if (existingResume) {
       logger.endStep(requestId, cacheStep, 'completed', { cached: true, id: existingResume.id });
+      req.payloadCapture = {
+        requestPayload: {
+          fileName: req.file.originalname,
+          fileSize: req.file.size,
+          extractedTextPreview: text.slice(0, 10000),
+          extractedTextLength: text.length,
+          cached: true,
+        },
+        responsePayload: existingResume.data as unknown as Record<string, unknown>,
+      };
       logger.endRequest(requestId, 'success', 200);
       return res.json({
         success: true,
@@ -238,6 +270,17 @@ router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit()
     const saveStep = logger.startStep(requestId, 'Save to document storage');
     const stored = documentStorage.saveResume(text, result, req.file.originalname, requestId);
     logger.endStep(requestId, saveStep, 'completed', { id: stored.id, filename: stored.savedFilename });
+
+    req.payloadCapture = {
+      requestPayload: {
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        extractedTextPreview: text.slice(0, 10000),
+        extractedTextLength: text.length,
+        cached: false,
+      },
+      responsePayload: result as unknown as Record<string, unknown>,
+    };
 
     logger.endRequest(requestId, 'success', 200);
     return res.json({
@@ -265,7 +308,7 @@ router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit()
  * POST /api/v1/parse-jd
  * Parse a job description PDF and extract structured data
  */
-router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), trackUsage, upload.single('file'), async (req: Request, res: Response) => {
+router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), upload.single('file'), async (req: Request, res: Response) => {
   const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/parse-jd', 'POST');
 
@@ -313,6 +356,16 @@ router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), tr
     
     if (existingJD) {
       logger.endStep(requestId, cacheStep, 'completed', { cached: true, id: existingJD.id });
+      req.payloadCapture = {
+        requestPayload: {
+          fileName: req.file!.originalname,
+          fileSize: req.file!.size,
+          extractedTextPreview: text.slice(0, 10000),
+          extractedTextLength: text.length,
+          cached: true,
+        },
+        responsePayload: existingJD.data as unknown as Record<string, unknown>,
+      };
       logger.endRequest(requestId, 'success', 200);
       return res.json({
         success: true,
@@ -331,6 +384,17 @@ router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), tr
     const saveStep = logger.startStep(requestId, 'Save to document storage');
     const stored = documentStorage.saveJD(text, result, req.file.originalname, requestId);
     logger.endStep(requestId, saveStep, 'completed', { id: stored.id, filename: stored.savedFilename });
+
+    req.payloadCapture = {
+      requestPayload: {
+        fileName: req.file!.originalname,
+        fileSize: req.file!.size,
+        extractedTextPreview: text.slice(0, 10000),
+        extractedTextLength: text.length,
+        cached: false,
+      },
+      responsePayload: result as unknown as Record<string, unknown>,
+    };
 
     logger.endRequest(requestId, 'success', 200);
     return res.json({
@@ -403,6 +467,20 @@ router.post('/evaluate-interview', requireAuth, requireScopes('write'), apiRateL
       },
       requestId
     );
+
+    req.payloadCapture = {
+      requestPayload: {
+        resumePreview: resume.slice(0, 10000),
+        resumeLength: resume.length,
+        jdPreview: jd.slice(0, 10000),
+        jdLength: jd.length,
+        interviewScriptPreview: interviewScript.slice(0, 10000),
+        interviewScriptLength: interviewScript.length,
+        includeCheatingDetection: !!includeCheatingDetection,
+        hasUserInstructions: !!userInstructions,
+      },
+      responsePayload: result as unknown as Record<string, unknown>,
+    };
 
     logger.endRequest(requestId, 'success', 200);
     return res.json({

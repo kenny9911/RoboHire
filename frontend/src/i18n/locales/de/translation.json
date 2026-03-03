@@ -342,6 +342,15 @@
     "errorCreating": "Beim Erstellen Ihrer Anfrage ist ein Problem aufgetreten: ",
     "tryAgain": "Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
     "errorGeneric": "Beim Erstellen Ihrer Anfrage ist ein Problem aufgetreten. Bitte versuchen Sie es erneut.",
+    "thinking": {
+      "title": "Denke nach...",
+      "analyzeTitle": "Analyse Ihrer Anfrage",
+      "analyzeThought": "Rollenkontext, Anforderungen und fehlende Details werden extrahiert.",
+      "benchmarkTitle": "Abgleich der Rollenerwartungen",
+      "benchmarkThought": "Ihre Anforderungen werden mit bewährten Recruiting-Mustern für diese Rolle verglichen.",
+      "draftTitle": "Empfehlungen werden erstellt",
+      "draftThought": "Umsetzbare Hinweise, Klärungsfragen und nächste Schritte werden vorbereitet."
+    },
     "quickRoles": {
       "engineer": "Softwareentwickler",
       "pm": "Produktmanager",
@@ -354,6 +363,16 @@
     "inputPlaceholder": "Beschreiben Sie Ihren idealen Kandidaten...",
     "uploadJd": "Stellenbeschreibung hochladen",
     "quickStartFromJd": "Kandidat basierend auf der Stellenbeschreibung",
+    "defaultRoleLabel": "diese Rolle",
+    "suggestions": {
+      "title": "Versuchen Sie zu fragen",
+      "general1": "Schärfe Muss- vs. Kann-Skills für {{role}}.",
+      "general2": "Schlage einen Interviewplan und eine Scorecard für diese Rolle vor.",
+      "general3": "Erstelle jetzt die finale Stellenbeschreibung.",
+      "confirm1": "Kürze die JD auf 8 Stichpunkte.",
+      "confirm2": "Ergänze Gehaltsspanne und gewünschtes Startdatum.",
+      "confirm3": "Passe diese JD für Remote-First-Kandidaten an."
+    },
     "heroTitle": "Mit KI einstellen",
     "heroSubtitle": "Sagen Sie uns, wen Sie suchen. Unsere KI hilft beim Finden, Filtern und Bewerten von Kandidaten.",
     "templatesTitle": "Beliebte Rollen-Vorlagen",
@@ -399,134 +418,267 @@
         "description": "KI-Produkte von der Idee bis zur Produktion bauen",
         "experienceLevel": "4+ Jahre",
         "requirements": "Wir suchen eine/n KI-Softwareentwickler/in, um KI-Produkte end-to-end zu bauen.\n\n**Aufgaben:**\n- KI-Funktionen vom Prototyp bis zur Produktion umsetzen\n- Modell-APIs, Vektorsuche und Datenpipelines integrieren\n- Skalierbare Inferenz-Services und Monitoring designen\n- Mit dem Produktteam KI-User-Experiences definieren\n\n**Anforderungen:**\n- 4+ Jahre Erfahrung in der Softwareentwicklung\n- Sehr gute Python/TypeScript- und Backend-Skills\n- Erfahrung mit LLM-APIs oder ML-Frameworks\n- Verständnis für Vektor-Datenbanken und RAG-Patterns\n- Kenntnisse in Cloud-Services und Observability\n\n**Wünschenswert:**\n- Erfahrung mit Fine-Tuning oder Model-Evaluation\n- Erfahrung mit MLOps/ML-Plattformen\n- NLP-Background",
-        "skills": ["Python", "TypeScript", "LLM", "Vektorsuche", "MLOps"]
+        "skills": [
+          "Python",
+          "TypeScript",
+          "LLM",
+          "Vektorsuche",
+          "MLOps"
+        ]
       },
       "aiLlmEngineer": {
         "title": "KI-LLM-Engineer",
         "description": "LLM-Pipelines, Evaluation und Qualität verantworten",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen eine/n KI-LLM-Engineer, um unseren LLM-Stack und die Evaluation zu verantworten.\n\n**Aufgaben:**\n- Prompt- und Retrieval-Pipelines für LLM-Apps bauen\n- Latenz, Kosten und Qualität der Outputs optimieren\n- Evaluations-Frameworks und Guardrails implementieren\n- Mit Daten arbeiten, um die Modellleistung zu verbessern\n\n**Anforderungen:**\n- 3+ Jahre ML/AI-Engineering-Erfahrung\n- Tiefe Erfahrung mit LLM, RAG und Embeddings\n- Sehr gute Python- und moderne ML-Tooling-Kenntnisse\n- Erfahrung mit Vector Stores und Evaluationsmetriken\n- Starkes Verständnis von Prompt Design und Sicherheit\n\n**Wünschenswert:**\n- Fine-Tuning-Erfahrung (OpenAI/Anthropic/OSS)\n- Erfahrung mit LangChain oder LlamaIndex\n- NLP-Forschungsbackground",
-        "skills": ["LLM", "RAG", "Embeddings", "Python", "Evaluation"]
+        "skills": [
+          "LLM",
+          "RAG",
+          "Embeddings",
+          "Python",
+          "Evaluation"
+        ]
       },
       "fullStackEngineer": {
         "title": "Full Stack Engineer",
         "description": "Features über Frontend und Backend liefern",
         "experienceLevel": "4+ Jahre",
         "requirements": "Wir suchen eine/n Full Stack Engineer, um Features über Frontend und Backend zu liefern.\n\n**Aufgaben:**\n- Web-Apps und APIs bauen und betreiben\n- Features von der UI bis zur Datenbank verantworten\n- Mit Design und Produkt für ein poliertes UX zusammenarbeiten\n- Performance, Zuverlässigkeit und Tests verbessern\n\n**Anforderungen:**\n- 4+ Jahre Full-Stack-Entwicklung\n- Starke React- und TypeScript-Skills\n- Erfahrung mit REST-APIs (Node, Python oder Go)\n- Sicherer Umgang mit SQL und ORMs\n- Verständnis für Cloud-Deployments und CI/CD\n\n**Wünschenswert:**\n- Next.js-Erfahrung\n- Observability/Monitoring-Erfahrung\n- Startup-Erfahrung",
-        "skills": ["React", "TypeScript", "Node.js", "SQL", "API-Design"]
+        "skills": [
+          "React",
+          "TypeScript",
+          "Node.js",
+          "SQL",
+          "API-Design"
+        ]
       },
       "seniorSoftwareEngineer": {
         "title": "Senior Software Engineer",
         "description": "Skalierbare Systeme bauen und Junioren coachen",
         "experienceLevel": "5+ Jahre",
         "requirements": "Wir suchen eine/n Senior Software Engineer für unser Team.\n\n**Aufgaben:**\n- Skalierbare Backend-Services designen und implementieren\n- Technische Diskussionen und Code Reviews führen\n- Junioren coachen und zur Engineering-Kultur beitragen\n- Mit Produkt und Design eng zusammenarbeiten\n\n**Anforderungen:**\n- 5+ Jahre Softwareentwicklung\n- Sehr gute Kenntnisse in einer oder mehreren Sprachen (Python, Java, TypeScript, Go)\n- Erfahrung mit Cloud-Services (AWS, GCP oder Azure)\n- Datenbankerfahrung (SQL und NoSQL)\n- Starkes Problemlösungsvermögen und Detailgenauigkeit\n\n**Wünschenswert:**\n- Erfahrung mit Microservices-Architektur\n- Container-Erfahrung (Docker, Kubernetes)\n- Open-Source-Beiträge",
-        "skills": ["Python", "TypeScript", "AWS", "Systemdesign", "Microservices"]
+        "skills": [
+          "Python",
+          "TypeScript",
+          "AWS",
+          "Systemdesign",
+          "Microservices"
+        ]
       },
       "frontendDeveloper": {
         "title": "Frontend Entwickler/in",
         "description": "Schöne, performante UIs bauen",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen eine/n Frontend Entwickler/in für herausragende User Experiences.\n\n**Aufgaben:**\n- Responsive Web-Apps mit React/Vue entwickeln\n- Pixelgenaue Umsetzung von Figma-Designs\n- Performance optimieren\n- Sauberen, wartbaren Code mit Tests schreiben\n\n**Anforderungen:**\n- 3+ Jahre Frontend-Erfahrung\n- Sehr gute Kenntnisse in React oder Vue.js\n- Starke CSS-Skills (Tailwind, styled-components)\n- Erfahrung mit TypeScript\n- Verständnis von Web-Performance-Optimierung\n\n**Wünschenswert:**\n- Next.js- oder Nuxt.js-Erfahrung\n- Mobile Erfahrung (React Native)\n- UI/UX-Sensibilität",
-        "skills": ["React", "TypeScript", "CSS", "Tailwind", "Next.js"]
+        "skills": [
+          "React",
+          "TypeScript",
+          "CSS",
+          "Tailwind",
+          "Next.js"
+        ]
       },
       "devopsEngineer": {
         "title": "DevOps Engineer",
         "description": "Robuste CI/CD-Pipelines aufbauen",
         "experienceLevel": "4+ Jahre",
         "requirements": "Wir benötigen eine/n DevOps Engineer zur Verbesserung von Infrastruktur und Deployment.\n\n**Aufgaben:**\n- CI/CD-Pipelines designen und betreiben\n- Cloud-Infrastruktur (AWS/GCP) managen\n- Monitoring und Alerting implementieren\n- Security Best Practices sicherstellen\n\n**Anforderungen:**\n- 4+ Jahre DevOps/SRE-Erfahrung\n- Sehr gute Kenntnisse in AWS oder GCP\n- Erfahrung mit Kubernetes und Docker\n- Infrastructure-as-Code (Terraform, CloudFormation)\n- Scripting-Skills (Python, Bash)\n\n**Wünschenswert:**\n- Security-Zertifizierungen\n- GitOps-Erfahrung\n- On-Call-Erfahrung",
-        "skills": ["AWS", "Kubernetes", "Terraform", "Docker", "CI/CD"]
+        "skills": [
+          "AWS",
+          "Kubernetes",
+          "Terraform",
+          "Docker",
+          "CI/CD"
+        ]
       },
       "dataScientist": {
         "title": "Data Scientist",
         "description": "Daten in Insights und ML-Modelle übersetzen",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen eine/n Data Scientist, um unsere Daten zu nutzen.\n\n**Aufgaben:**\n- ML-Modelle bauen und deployen\n- Große Datensätze analysieren und Insights ableiten\n- Mit Produktteams an datengetriebenen Features arbeiten\n- Dashboards und Visualisierungen erstellen\n\n**Anforderungen:**\n- 3+ Jahre Data-Science-Erfahrung\n- Starke Python-Skills (pandas, scikit-learn, TensorFlow/PyTorch)\n- Erfahrung mit SQL und Data Warehouses\n- Grundlagen in Statistik und ML\n- Sehr gute Kommunikationsfähigkeit\n\n**Wünschenswert:**\n- NLP- oder Computer-Vision-Erfahrung\n- MLOps-Erfahrung\n- PhD in einem quantitativen Fach",
-        "skills": ["Python", "Machine Learning", "SQL", "TensorFlow", "Statistik"]
+        "skills": [
+          "Python",
+          "Machine Learning",
+          "SQL",
+          "TensorFlow",
+          "Statistik"
+        ]
       },
       "productManager": {
         "title": "Product Manager",
         "description": "Produktstrategie definieren und umsetzen",
         "experienceLevel": "4+ Jahre",
         "requirements": "Wir brauchen eine/n Product Manager, um die Produktentwicklung zu leiten.\n\n**Aufgaben:**\n- Roadmap und Strategie definieren\n- Anforderungen sammeln und priorisieren\n- Eng mit Engineering und Design zusammenarbeiten\n- Metriken analysieren und Entscheidungen treiben\n\n**Anforderungen:**\n- 4+ Jahre Product-Management-Erfahrung\n- Erfahrung mit agilen Methoden\n- Starke analytische und Problemlösungsfähigkeiten\n- Exzellente Kommunikation und Stakeholder-Management\n- Technischer Hintergrund ist von Vorteil\n\n**Wünschenswert:**\n- B2B-SaaS-Erfahrung\n- SQL- und Datenanalyse-Skills\n- MBA oder relevanter Abschluss",
-        "skills": ["Produktstrategie", "Agile", "Datenanalyse", "Roadmapping", "Stakeholder-Management"]
+        "skills": [
+          "Produktstrategie",
+          "Agile",
+          "Datenanalyse",
+          "Roadmapping",
+          "Stakeholder-Management"
+        ]
       },
       "scrumMaster": {
         "title": "Scrum Master",
         "description": "Agile Prozesse und Team-Effizienz fördern",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen eine/n Scrum Master, um Teams bei der Delivery zu unterstützen.\n\n**Aufgaben:**\n- Sprint-Zeremonien moderieren\n- Hindernisse entfernen und Team coachen\n- Teammetriken verfolgen und verbessern\n- Kontinuierliche Verbesserung fördern\n\n**Anforderungen:**\n- 3+ Jahre als Scrum Master\n- CSM-Zertifizierung oder vergleichbar\n- Erfahrung mit mehreren agilen Frameworks\n- Starke Moderationsfähigkeiten\n- Erfahrung mit Jira oder ähnlichen Tools\n\n**Wünschenswert:**\n- Technischer Hintergrund\n- SAFe-Zertifizierung\n- Coaching-Zertifizierung",
-        "skills": ["Scrum", "Agile", "Moderation", "Jira", "Team-Coaching"]
+        "skills": [
+          "Scrum",
+          "Agile",
+          "Moderation",
+          "Jira",
+          "Team-Coaching"
+        ]
       },
       "uxDesigner": {
         "title": "UX Designer/in",
         "description": "Intuitive und angenehme Nutzererlebnisse gestalten",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen eine/n UX Designer/in, um die Produkterfahrung zu gestalten.\n\n**Aufgaben:**\n- Nutzerforschung und Usability-Tests durchführen\n- Wireframes, Prototypen und User Flows erstellen\n- Mit Produkt und Engineering zusammenarbeiten\n- Design System pflegen und weiterentwickeln\n\n**Anforderungen:**\n- 3+ Jahre UX-Design-Erfahrung\n- Figma-Kenntnisse\n- Starkes Portfolio mit UX-Prozess\n- Erfahrung mit User-Research-Methoden\n- Verständnis von Accessibility-Standards\n\n**Wünschenswert:**\n- UI-Design-Skills\n- Motion-Design-Erfahrung\n- Design-System-Erfahrung",
-        "skills": ["Figma", "Nutzerforschung", "Prototyping", "Wireframing", "Usability-Tests"]
+        "skills": [
+          "Figma",
+          "Nutzerforschung",
+          "Prototyping",
+          "Wireframing",
+          "Usability-Tests"
+        ]
       },
       "uiDesigner": {
         "title": "UI Designer/in",
         "description": "Visuell starke Interfaces gestalten",
         "experienceLevel": "2+ Jahre",
         "requirements": "Wir suchen eine/n UI Designer/in für überzeugende Interfaces.\n\n**Aufgaben:**\n- Pixelgenaue Interfaces gestalten\n- Design-System-Komponenten erstellen und pflegen\n- Mit Entwicklern an der Umsetzung arbeiten\n- Marken- und Marketingmaterial erstellen\n\n**Anforderungen:**\n- 2+ Jahre UI-Design-Erfahrung\n- Expertenlevel in Figma\n- Starkes visuelles Portfolio\n- Verständnis von Designprinzipien und Typografie\n- Grundkenntnisse in HTML/CSS\n\n**Wünschenswert:**\n- Animation/Motion Design\n- Illustrations-Skills\n- Branding-Erfahrung",
-        "skills": ["Figma", "Visuelles Design", "Design System", "Typografie", "Farbe"]
+        "skills": [
+          "Figma",
+          "Visuelles Design",
+          "Design System",
+          "Typografie",
+          "Farbe"
+        ]
       },
       "accountExecutive": {
         "title": "Account Executive",
         "description": "Deals abschließen und Enterprise-Accounts ausbauen",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen eine/n Account Executive für Umsatzwachstum.\n\n**Aufgaben:**\n- Den gesamten Sales Cycle von Prospecting bis Close managen\n- Beziehungen zu Enterprise-Kunden aufbauen\n- Quartalsziele erreichen und übertreffen\n- Mit SDRs und Customer Success zusammenarbeiten\n\n**Anforderungen:**\n- 3+ Jahre B2B-SaaS-Vertriebserfahrung\n- Nachweisliche Quoten-Erfüllung\n- Erfahrung mit Enterprise-Sales-Zyklen\n- Hervorragende Präsentations- und Verhandlungskompetenz\n- CRM-Erfahrung (Salesforce)\n\n**Wünschenswert:**\n- Erfahrung im Verkauf an HR/Rekrutierungsteams\n- Technischer Hintergrund\n- Netzwerk in der Zielbranche",
-        "skills": ["B2B-Vertrieb", "Salesforce", "Enterprise Sales", "Verhandlung", "Prospecting"]
+        "skills": [
+          "B2B-Vertrieb",
+          "Salesforce",
+          "Enterprise Sales",
+          "Verhandlung",
+          "Prospecting"
+        ]
       },
       "salesEngineer": {
         "title": "Sales Engineer",
         "description": "Technik und Vertrieb verbinden",
         "experienceLevel": "4+ Jahre",
         "requirements": "Wir suchen eine/n Sales Engineer zur Unterstützung des Sales-Teams.\n\n**Aufgaben:**\n- Technische Demos und POCs leiten\n- Technische Fragen im Sales-Prozess beantworten\n- Technische Dokumentation und Vorschläge erstellen\n- Feedback aus Kundenprojekten ins Produkt zurückspielen\n\n**Anforderungen:**\n- 4+ Jahre Sales Engineering / Solutions Architect Erfahrung\n- Solider technischer Hintergrund (Softwareentwicklung)\n- Sehr gute Präsentations- und Kommunikationsfähigkeiten\n- Fähigkeit, komplexe Themen verständlich zu erklären\n- Erfahrung mit APIs und Integrationen\n\n**Wünschenswert:**\n- Vorherige Softwareentwicklung\n- Branchenzertifizierungen\n- Erfahrung im HR-Tech-Bereich",
-        "skills": ["Technische Demos", "API-Integration", "Solution Architecture", "Präsentation", "POC"]
+        "skills": [
+          "Technische Demos",
+          "API-Integration",
+          "Solution Architecture",
+          "Präsentation",
+          "POC"
+        ]
       },
       "marketingManager": {
         "title": "Marketing Manager",
         "description": "Marketingkampagnen und Markenstrategie führen",
         "experienceLevel": "4+ Jahre",
         "requirements": "Wir suchen eine/n Marketing Manager, um die Marke auszubauen.\n\n**Aufgaben:**\n- Marketingkampagnen planen und umsetzen\n- Marketingbudget und ROI steuern\n- Content- und Markenstrategie führen\n- Kennzahlen analysieren und optimieren\n\n**Anforderungen:**\n- 4+ Jahre Marketing-Erfahrung\n- B2B-SaaS-Marketing-Erfahrung\n- Starke analytische Fähigkeiten\n- Sehr gute Text- und Kommunikationsskills\n- Erfahrung mit Marketing-Tools (HubSpot, Google Analytics)\n\n**Wünschenswert:**\n- Product-Marketing-Erfahrung\n- Demand-Generation-Expertise\n- Teamführungserfahrung",
-        "skills": ["Kampagnenmanagement", "Content-Strategie", "Analytics", "B2B-Marketing", "HubSpot"]
+        "skills": [
+          "Kampagnenmanagement",
+          "Content-Strategie",
+          "Analytics",
+          "B2B-Marketing",
+          "HubSpot"
+        ]
       },
       "contentWriter": {
         "title": "Content Writer",
         "description": "Inhalte erstellen, die konvertieren",
         "experienceLevel": "2+ Jahre",
         "requirements": "Wir suchen eine/n Content Writer, um unsere Story zu erzählen.\n\n**Aufgaben:**\n- Blogposts, Case Studies und Whitepaper schreiben\n- Website- und Produkttexte erstellen\n- E-Mail-Marketing-Inhalte entwickeln\n- SEO-Optimierung\n\n**Anforderungen:**\n- 2+ Jahre Content-Writing-Erfahrung\n- Sehr gute Schreib- und Editierfähigkeiten\n- Verständnis von SEO-Best-Practices\n- Erfahrung mit B2B/SaaS-Content\n- Fähigkeit, technische Themen verständlich zu erklären\n\n**Wünschenswert:**\n- Portfolio veröffentlichter Arbeiten\n- Erfahrung mit CMS\n- Erfahrung im Schreiben von Video-Skripten",
-        "skills": ["Copywriting", "SEO", "Blog", "E-Mail-Marketing", "Storytelling"]
+        "skills": [
+          "Copywriting",
+          "SEO",
+          "Blog",
+          "E-Mail-Marketing",
+          "Storytelling"
+        ]
       },
       "operationsManager": {
         "title": "Operations Manager",
         "description": "Prozesse optimieren und skalieren",
         "experienceLevel": "5+ Jahre",
         "requirements": "Wir suchen eine/n Operations Manager zur Prozessoptimierung.\n\n**Aufgaben:**\n- Operative Prozesse designen und implementieren\n- Lieferantenbeziehungen managen\n- Operative Kennzahlen tracken und reporten\n- Effizienzsteigerungen vorantreiben\n\n**Anforderungen:**\n- 5+ Jahre Operations-Erfahrung\n- Starke Projektmanagement-Skills\n- Erfahrung in Prozessoptimierung\n- Ausgeprägte analytische Fähigkeiten\n- Erfahrung mit Operations-Tools\n\n**Wünschenswert:**\n- Six-Sigma- oder Lean-Zertifizierung\n- Erfahrung in Tech/SaaS-Unternehmen\n- Teamführungserfahrung",
-        "skills": ["Prozessoptimierung", "Projektmanagement", "Lieferantenmanagement", "Analytics", "Lean"]
+        "skills": [
+          "Prozessoptimierung",
+          "Projektmanagement",
+          "Lieferantenmanagement",
+          "Analytics",
+          "Lean"
+        ]
       },
       "financialAnalyst": {
         "title": "Financial Analyst",
         "description": "Finanzplanung und -analyse vorantreiben",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen eine/n Financial Analyst zur Unterstützung des Finance-Teams.\n\n**Aufgaben:**\n- Finanzmodelle und Forecasts erstellen\n- Monatliche Finanzberichte vorbereiten\n- Geschäftsperformance analysieren\n- Budgetierungsprozess unterstützen\n\n**Anforderungen:**\n- 3+ Jahre FP&A-Erfahrung\n- Sehr gute Excel-Kenntnisse\n- Erfahrung in Financial Modeling\n- Verständnis von SaaS-Metriken\n- Hohe Detailgenauigkeit\n\n**Wünschenswert:**\n- CPA oder CFA\n- Erfahrung mit NetSuite oder ähnlichen Tools\n- SQL-Kenntnisse",
-        "skills": ["Financial Modeling", "Excel", "FP&A", "Budgetierung", "SaaS-Metriken"]
+        "skills": [
+          "Financial Modeling",
+          "Excel",
+          "FP&A",
+          "Budgetierung",
+          "SaaS-Metriken"
+        ]
       },
       "hrManager": {
         "title": "HR Manager",
         "description": "Kultur aufbauen und Mitarbeitende unterstützen",
         "experienceLevel": "4+ Jahre",
         "requirements": "Wir suchen eine/n HR Manager für People Operations.\n\n**Aufgaben:**\n- Den kompletten Employee Lifecycle managen\n- HR-Richtlinien und Programme entwickeln\n- Mitarbeiterbeziehungen betreuen\n- Compensation & Benefits verantworten\n\n**Anforderungen:**\n- 4+ Jahre HR-Erfahrung\n- Kenntnisse im Arbeitsrecht\n- Erfahrung mit HRIS-Systemen\n- Starke zwischenmenschliche Fähigkeiten\n- Tech-Unternehmenserfahrung von Vorteil\n\n**Wünschenswert:**\n- PHR- oder SHRM-Zertifizierung\n- Aufbau von HR-Strukturen von Grund auf\n- Internationale HR-Erfahrung",
-        "skills": ["Employee Relations", "HRIS", "Compensation", "Compliance", "Kultur"]
+        "skills": [
+          "Employee Relations",
+          "HRIS",
+          "Compensation",
+          "Compliance",
+          "Kultur"
+        ]
       },
       "technicalRecruiter": {
         "title": "Technical Recruiter",
         "description": "Top Engineering-Talente gewinnen",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen eine/n Technical Recruiter, um unser Team zu vergrößern.\n\n**Aufgaben:**\n- Full-Cycle-Recruiting für Engineering-Rollen\n- Passive Kandidaten sourcen und ansprechen\n- Partnerschaft mit Hiring Managern\n- Recruiting-Prozesse verbessern\n\n**Anforderungen:**\n- 3+ Jahre technisches Recruiting\n- Starke Sourcing-Skills\n- Erfahrung mit ATS-Systemen\n- Verständnis technischer Rollen und Skills\n- Sehr gute Kommunikationsfähigkeit\n\n**Wünschenswert:**\n- Inhouse-Erfahrung in Tech-Unternehmen\n- Employer-Branding-Erfahrung\n- Diversity-Recruiting-Erfahrung",
-        "skills": ["Technical Sourcing", "ATS", "Interviews", "Employer Branding", "LinkedIn Recruiting"]
+        "skills": [
+          "Technical Sourcing",
+          "ATS",
+          "Interviews",
+          "Employer Branding",
+          "LinkedIn Recruiting"
+        ]
       }
+    },
+    "postCreation": {
+      "title": "Stellenanfrage erstellt!",
+      "subtitle": "Was möchten Sie als Nächstes tun?",
+      "smartMatch": "Intelligenter Lebenslauf-Abgleich",
+      "smartMatchDesc": "Finden Sie passende Kandidaten aus Ihrer Lebenslauf-Bibliothek",
+      "smartMatchAction": "Jetzt abgleichen",
+      "smartMatchNoResumes": "Laden Sie Lebensläufe hoch, um mit dem Kandidatenabgleich zu beginnen",
+      "smartMatchNoResumesAction": "Zur Lebenslauf-Bibliothek",
+      "smartMatchHasResumes": "Sie haben {{count}} Lebenslauf/Lebensläufe in Ihrer Bibliothek. Finden Sie die besten Treffer!",
+      "smartMatchRunning": "Lebensläufe werden abgeglichen...",
+      "smartMatchDone": "{{matched}} Treffer aus {{total}} Lebensläufen gefunden",
+      "intelReport": "Rekrutierungsintelligenz",
+      "intelReportDesc": "Erhalten Sie KI-gestützte Einblicke in Kandidatenprofile, Sourcing-Strategie und Marktbedingungen",
+      "intelReportAction": "Bericht erstellen",
+      "intelReportGenerating": "Bericht wird erstellt...",
+      "intelReportDone": "Bericht fertig!",
+      "goToDashboard": "Zum Dashboard",
+      "viewFullReport": "Vollständigen Bericht ansehen"
     }
   },
   "dashboard": {
@@ -537,7 +689,8 @@
       "apiKeys": "API-Schlüssel",
       "apiPlayground": "API Playground",
       "account": "Konto",
-      "usage": "Nutzung"
+      "usage": "Nutzung",
+      "resumes": "Lebenslauf-Bibliothek"
     },
     "welcome": "Willkommen zurück",
     "user": "da",
@@ -590,6 +743,151 @@
       "interviewed": "Interviewt",
       "shortlisted": "In der engeren Auswahl",
       "rejected": "Abgelehnt"
+    },
+    "autoMatch": {
+      "title": "Lebenslauf-Screening",
+      "button": "Auto-Match Lebensläufe",
+      "buttonMatching": "Matching läuft...",
+      "progress": "Screening von {{current}} von {{total}} Lebensläufen...",
+      "progressComplete": "Screening abgeschlossen. {{matched}} neue Übereinstimmungen gefunden.",
+      "noResumes": "Keine Lebensläufe in Ihrer Bibliothek. Laden Sie zuerst Lebensläufe hoch.",
+      "noMatchesYet": "Noch keine Übereinstimmungen.",
+      "noMatchesDesc": "Klicken Sie auf Auto-Match, um Ihre Lebenslauf-Bibliothek mit dieser Stelle abzugleichen.",
+      "resumeMatches": "Lebenslauf-Übereinstimmungen",
+      "filterAll": "Alle",
+      "filterMatched": "Abgeglichen",
+      "filterShortlisted": "Engere Auswahl",
+      "filterRejected": "Abgelehnt",
+      "filterInvited": "Eingeladen",
+      "scoreFilter": "Mindestpunktzahl",
+      "sortBy": "Sortieren nach",
+      "sortScoreDesc": "Punktzahl (absteigend)",
+      "sortScoreAsc": "Punktzahl (aufsteigend)",
+      "sortName": "Name",
+      "sortDate": "Match-Datum",
+      "search": "Lebensläufe suchen...",
+      "selectAll": "Alle auswählen",
+      "deselectAll": "Auswahl aufheben",
+      "selected": "{{count}} ausgewählt",
+      "shortlistSelected": "Engere Auswahl",
+      "rejectSelected": "Ablehnen",
+      "inviteSelected": "Zum Interview einladen",
+      "candidateName": "Kandidat",
+      "fitScore": "Eignung",
+      "fitGrade": "Note",
+      "verdict": "Bewertung",
+      "matchedSkills": "Übereinstimmende Fähigkeiten",
+      "missingSkills": "Fehlende Fähigkeiten",
+      "pipelineStatus": "Status",
+      "recommendation": "Empfehlung",
+      "topReasons": "Hauptgründe",
+      "experienceAlignment": "Erfahrung",
+      "transferableSkills": "Übertragbare Fähigkeiten",
+      "hardRequirementGaps": "Anforderungslücken",
+      "viewResume": "Lebenslauf anzeigen",
+      "inviteModalTitle": "Kandidaten zum Interview einladen",
+      "inviteModalDesc": "Intervieweinladungen an die ausgewählten Kandidaten senden.",
+      "candidateCount": "{{count}} Kandidaten werden eingeladen",
+      "recruiterEmail": "Recruiter-E-Mail",
+      "interviewerRequirement": "Interview-Anforderungen (optional)",
+      "interviewerRequirementPlaceholder": "z.B. Fokus auf Systemdesign und Führungsqualitäten...",
+      "usageNote": "Dies verbraucht {{count}} Interview-Guthaben.",
+      "send": "Einladungen senden",
+      "sending": "Wird gesendet...",
+      "cancel": "Abbrechen",
+      "inviteSuccess": "{{count}} Einladung(en) erfolgreich gesendet.",
+      "invitePartial": "{{sent}} von {{total}} Einladungen gesendet. {{failed}} fehlgeschlagen.",
+      "inviteError": "Einladungen konnten nicht gesendet werden.",
+      "matchError": "Auto-Match der Lebensläufe fehlgeschlagen.",
+      "updateError": "Status konnte nicht aktualisiert werden.",
+      "statusMatched": "Abgeglichen",
+      "statusShortlisted": "Engere Auswahl",
+      "statusRejected": "Abgelehnt",
+      "statusInvited": "Eingeladen",
+      "moreSkills": "+{{count}} mehr",
+      "reMatch": "Erneut abgleichen",
+      "reMatchAll": "Alle erneut abgleichen"
+    },
+    "intelligence": {
+      "title": "Rekrutierungsintelligenz-Bericht",
+      "generate": "Bericht erstellen",
+      "regenerate": "Bericht neu erstellen",
+      "generating": "Intelligenz-Bericht wird erstellt...",
+      "generatingStep1": "Ideales Kandidatenprofil wird analysiert...",
+      "generatingStep2": "Sourcing-Strategie und Marktanalyse werden entwickelt...",
+      "generatingStep3": "Bericht wird zusammengestellt...",
+      "noReport": "Noch kein Intelligenz-Bericht",
+      "noReportDesc": "Erstellen Sie einen KI-gestützten Rekrutierungsintelligenz-Bericht für diese Position.",
+      "candidateProfile": "Ideales Kandidatenprofil",
+      "idealBackground": "Idealer Hintergrund",
+      "degrees": "Typische Abschlüsse",
+      "careerPath": "Karrierepfad",
+      "experience": "Erfahrung",
+      "industryBackground": "Branchenhintergrund",
+      "skillMapping": "Kompetenzmatrix",
+      "mustHave": "Unverzichtbare Fähigkeiten",
+      "niceToHave": "Wünschenswerte Fähigkeiten",
+      "seniorityExpectation": "Erwartetes Niveau",
+      "reason": "Grund",
+      "valueAdd": "Mehrwert",
+      "personalityTraits": "Persönlichkeit & Kulturelle Passung",
+      "traits": "Schlüsselmerkmale",
+      "cultureFit": "Indikatoren für Kulturelle Passung",
+      "dayInTheLife": "Ein Typischer Tag",
+      "persona": "Kandidaten-Persona",
+      "sourcingStrategy": "Sourcing-Strategie",
+      "platforms": "Sourcing-Plattformen",
+      "effectiveness": "Effektivität",
+      "searchStrategy": "Strategie",
+      "searchKeywords": "Suchbegriffe",
+      "booleanSearch": "Boolesche Suchstrings",
+      "targetCompanies": "Zielunternehmen",
+      "targetIndustries": "Zielbranchen",
+      "passiveVsActive": "Passives vs Aktives Sourcing",
+      "passive": "Passiv",
+      "active": "Aktiv",
+      "both": "Beides",
+      "passiveStrategy": "Passive Strategie",
+      "activeStrategy": "Aktive Strategie",
+      "networking": "Networking-Strategien",
+      "expectedYield": "Erwarteter Ertrag",
+      "sourcingSummary": "Sourcing-Zusammenfassung",
+      "marketIntelligence": "Marktintelligenz",
+      "salaryRanges": "Gehaltsspannen",
+      "region": "Region",
+      "level": "Stufe",
+      "range": "Spanne",
+      "notes": "Anmerkungen",
+      "supplyDemand": "Angebot & Nachfrage",
+      "talentPoolSize": "Talentpool-Größe",
+      "difficulty": "Rekrutierungsschwierigkeit",
+      "difficultyScore": "Schwierigkeitsgrad",
+      "factors": "Schlüsselfaktoren",
+      "timeToHire": "Time-to-Hire",
+      "estimateDays": "Geschätzte Tage",
+      "competition": "Wettbewerb",
+      "competitor": "Wettbewerber",
+      "hiringActivity": "Einstellungsaktivität",
+      "relevance": "Relevanz",
+      "marketTrends": "Markttrends",
+      "trend": "Trend",
+      "impact": "Auswirkung",
+      "marketSummary": "Marktzusammenfassung",
+      "copy": "Kopieren",
+      "copied": "Kopiert!",
+      "cached": "Zwischengespeicherter Bericht",
+      "generatedAt": "Erstellt am",
+      "high": "Hoch",
+      "medium": "Mittel",
+      "low": "Niedrig",
+      "critical": "Kritisch",
+      "oversupplied": "Überangebot",
+      "balanced": "Ausgeglichen",
+      "undersupplied": "Unterangebot",
+      "severelyUndersupplied": "Starkes Unterangebot",
+      "positive": "Positiv",
+      "negative": "Negativ",
+      "neutral": "Neutral"
     }
   },
   "stats": {
@@ -983,6 +1281,60 @@
       "viewReceipt": "Beleg"
     }
   },
+  "usage": {
+    "title": "API-Nutzung",
+    "apiCalls": "API-Aufrufe",
+    "inputTokens": "Eingabe-Tokens",
+    "outputTokens": "Ausgabe-Tokens",
+    "totalCost": "Gesamtkosten",
+    "empty": "Noch keine Nutzungsdaten. Führen Sie API-Aufrufe durch, um Daten hier zu sehen.",
+    "inactive": "Inaktiv",
+    "range": {
+      "7d": "7 Tage",
+      "30d": "30 Tage",
+      "90d": "90 Tage",
+      "all": "Gesamt"
+    },
+    "chart": {
+      "callsOverTime": "API-Aufrufe im Zeitverlauf",
+      "calls": "Aufrufe",
+      "tokenUsage": "Token-Nutzung (Eingabe vs Ausgabe)",
+      "input": "Eingabe",
+      "output": "Ausgabe"
+    },
+    "table": {
+      "byEndpoint": "Nutzung nach Endpunkt",
+      "endpoint": "Endpunkt",
+      "calls": "Aufrufe",
+      "tokens": "Tokens",
+      "cost": "Kosten",
+      "byKey": "Nutzung nach API-Schlüssel",
+      "key": "Schlüssel"
+    },
+    "callHistory": {
+      "title": "API-Aufrufverlauf",
+      "empty": "Keine API-Aufrufe aufgezeichnet.",
+      "time": "Zeit",
+      "endpoint": "Endpunkt",
+      "status": "Status",
+      "duration": "Dauer",
+      "tokens": "Tokens",
+      "cost": "Kosten",
+      "view": "Ansehen",
+      "prev": "Zurück",
+      "next": "Weiter",
+      "pageInfo": "Seite {{page}} von {{total}}",
+      "back": "Zurück zur Nutzung",
+      "detailTitle": "API-Aufrufdetail",
+      "notFound": "Aufruf nicht gefunden",
+      "llmCalls": "LLM-Aufrufe",
+      "requestPayload": "Eingabeparameter",
+      "responsePayload": "KI-Ausgabe",
+      "model": "Modell",
+      "apiKey": "API-Schlüssel",
+      "sessionAuth": "Sitzung"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - KI-gestützte Recruiting-Plattform",
     "defaultDescription": "Stellen Sie Spitzenkandidaten vor anderen ein. Unser KI-Recruiting-Agent filtert Lebensläufe, führt Interviews und liefert umfassende Bewertungsberichte.",
@@ -1015,16 +1367,140 @@
       "desc": "Wählen Sie den richtigen RoboHire-Plan für Ihr Team. Von kostenlosen Tests bis zu Enterprise-Lösungen."
     },
     "docs": {
-      "overview": { "title": "API-Dokumentation", "desc": "Vollständige Dokumentation der RoboHire API." },
-      "quickStart": { "title": "Schnellstart-Anleitung", "desc": "Starten Sie mit der RoboHire API in 5 Minuten." },
-      "auth": { "title": "API-Authentifizierung", "desc": "Erfahren Sie, wie Sie sich bei der RoboHire API authentifizieren." },
-      "matchResume": { "title": "Lebenslauf-Matching API", "desc": "API-Referenz für das KI-gestützte Lebenslauf-Matching." },
-      "parseResume": { "title": "Lebenslauf-Analyse API", "desc": "API-Referenz für die Lebenslauf-Analyse." },
-      "parseJd": { "title": "Stellenbeschreibung-Analyse API", "desc": "API-Referenz für die Analyse von Stellenbeschreibungen." },
-      "invite": { "title": "Kandidaten-Einladung API", "desc": "API-Referenz für KI-Interview-Einladungen." },
-      "evaluate": { "title": "Interview-Bewertung API", "desc": "API-Referenz für die KI-gestützte Interview-Bewertung." },
-      "webhooks": { "title": "Webhooks", "desc": "Webhooks für Echtzeit-Benachrichtigungen konfigurieren." },
-      "errors": { "title": "Fehlerbehandlung", "desc": "Fehlercodes, Antwortformate und Fehlerbehebungsanleitung." }
+      "overview": {
+        "title": "API-Dokumentation",
+        "desc": "Vollständige Dokumentation der RoboHire API."
+      },
+      "quickStart": {
+        "title": "Schnellstart-Anleitung",
+        "desc": "Starten Sie mit der RoboHire API in 5 Minuten."
+      },
+      "auth": {
+        "title": "API-Authentifizierung",
+        "desc": "Erfahren Sie, wie Sie sich bei der RoboHire API authentifizieren."
+      },
+      "matchResume": {
+        "title": "Lebenslauf-Matching API",
+        "desc": "API-Referenz für das KI-gestützte Lebenslauf-Matching."
+      },
+      "parseResume": {
+        "title": "Lebenslauf-Analyse API",
+        "desc": "API-Referenz für die Lebenslauf-Analyse."
+      },
+      "parseJd": {
+        "title": "Stellenbeschreibung-Analyse API",
+        "desc": "API-Referenz für die Analyse von Stellenbeschreibungen."
+      },
+      "invite": {
+        "title": "Kandidaten-Einladung API",
+        "desc": "API-Referenz für KI-Interview-Einladungen."
+      },
+      "evaluate": {
+        "title": "Interview-Bewertung API",
+        "desc": "API-Referenz für die KI-gestützte Interview-Bewertung."
+      },
+      "webhooks": {
+        "title": "Webhooks",
+        "desc": "Webhooks für Echtzeit-Benachrichtigungen konfigurieren."
+      },
+      "errors": {
+        "title": "Fehlerbehandlung",
+        "desc": "Fehlercodes, Antwortformate und Fehlerbehebungsanleitung."
+      }
+    }
+  },
+  "resumeLibrary": {
+    "title": "Lebenslauf-Bibliothek",
+    "subtitle": "Verwalten und analysieren Sie die Lebensläufe Ihrer Kandidaten",
+    "upload": "Lebenslauf hochladen",
+    "uploadBatch": "Stapel-Upload",
+    "stats": {
+      "total": "Lebensläufe gesamt",
+      "thisWeek": "Diese Woche",
+      "analyzed": "KI-analysiert"
+    },
+    "search": {
+      "placeholder": "Nach Name, Fähigkeiten oder Position suchen..."
+    },
+    "empty": {
+      "title": "Noch keine Lebensläufe",
+      "description": "Laden Sie Lebensläufe hoch, um Ihre Kandidaten-Bibliothek aufzubauen",
+      "cta": "Ersten Lebenslauf hochladen"
+    },
+    "card": {
+      "topFit": "Beste Eignung"
+    },
+    "uploadModal": {
+      "title": "Lebenslauf hochladen",
+      "batchTitle": "Lebensläufe im Stapel hochladen",
+      "dragDrop": "Lebenslauf-Dateien hierher ziehen",
+      "formats": "Formate: PDF, DOCX, TXT",
+      "maxFiles": "Bis zu 10 Dateien gleichzeitig",
+      "uploading": "Wird verarbeitet...",
+      "duplicate": "Duplikat"
+    },
+    "detail": {
+      "back": "Zurück zu Lebensläufen",
+      "title": "Lebenslauf-Details",
+      "tabs": {
+        "overview": "Übersicht",
+        "insights": "KI-Analyse",
+        "jobFit": "Stelleneignung",
+        "notes": "Notizen & Tags"
+      },
+      "actions": {
+        "archive": "Archivieren"
+      },
+      "overview": {
+        "summary": "Berufliche Zusammenfassung",
+        "skills": "Fähigkeiten",
+        "experience": "Berufserfahrung",
+        "education": "Ausbildung",
+        "certifications": "Zertifikate",
+        "projects": "Projekte",
+        "showAllSkills": "Alle {{count}} Fähigkeiten anzeigen",
+        "showLess": "Weniger anzeigen"
+      }
+    },
+    "insights": {
+      "generate": "KI-Analyse generieren",
+      "generating": "Lebenslauf wird analysiert...",
+      "generatingDesc": "Dies kann 10-15 Sekunden dauern",
+      "regenerate": "Analyse neu generieren",
+      "executiveSummary": "Zusammenfassung",
+      "careerTrajectory": "Karriereverlauf",
+      "salaryEstimate": "Gehaltsschätzung",
+      "marketCompetitiveness": "Marktwettbewerbsfähigkeit",
+      "cultureFit": "Kulturelle Passung",
+      "strengths": "Kernstärken",
+      "development": "Entwicklungsbereiche",
+      "redFlags": "Warnhinweise",
+      "noRedFlags": "Keine Warnhinweise identifiziert",
+      "recommendedRoles": "Empfohlene Positionen"
+    },
+    "jobFit": {
+      "analyze": "Stelleneignung analysieren",
+      "analyzing": "Abgleich mit Ihren Stellenangeboten...",
+      "reanalyze": "Eignung neu analysieren",
+      "bestFit": "Beste Eignung",
+      "matchedSkills": "Übereinstimmende Fähigkeiten",
+      "missingSkills": "Fehlende kritische Fähigkeiten",
+      "recommendation": "Empfehlung",
+      "noActiveRequests": "Keine aktiven Stellenangebote gefunden",
+      "noActiveRequestsDesc": "Erstellen Sie zuerst ein Stellenangebot, um die Eignungsanalyse zu sehen",
+      "fullTime": "Vollzeit",
+      "internship": "Praktikum",
+      "hardGaps": "Fehlende Pflichtanforderungen",
+      "transferable": "Übertragbare Fähigkeiten"
+    },
+    "notes": {
+      "tags": "Tags",
+      "addTag": "z.B. Senior, Frontend, interviewt",
+      "notes": "Notizen",
+      "notesPlaceholder": "Notizen zu diesem Kandidaten hinzufügen...",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "saved": "Gespeichert!"
     }
   }
 }

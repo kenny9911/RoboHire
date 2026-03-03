@@ -24,12 +24,15 @@ export class ResumeParseAgent extends BaseAgent<ResumeParseInput, ParsedResume> 
 - Every bullet point, every sentence, every detail must be preserved
 - If there are multiple bullet points for a job, include ALL of them in the description
 - Copy the EXACT text from the resume - do not paraphrase or shorten
+- For non-English resumes (Chinese, Japanese, etc.), preserve the ORIGINAL language text exactly as-is
+- Every work experience entry, every education entry, every certification, every project MUST be included — do NOT skip any
+- If a field contains CJK characters, output them verbatim without translating or romanizing
 
 Extract ALL of the following:
 1. **Personal Information**: Name, email, phone, address, LinkedIn, GitHub, portfolio, etc.
 2. **Professional Summary/Objective**: The COMPLETE summary text
 3. **Skills**: ALL technical skills, soft skills, languages, tools, frameworks, certifications mentioned
-4. **Work Experience**: COMPLETE details for EACH position including ALL responsibilities and achievements
+4. **Work Experience**: COMPLETE details for EACH position including ALL responsibilities and achievements. For each position, classify the employmentType: use "internship" if the title contains "Intern", "实习", "インターン", "Stagiaire", "Praktikant", or similar, or if the role is explicitly an internship. Use "contract" for contractor/consultant roles, "freelance" for freelance work, "part-time" if specified. Default to "full-time" if unclear.
 5. **Projects**: ALL projects with COMPLETE descriptions
 6. **Education**: ALL education entries with complete details
 7. **Certifications**: ALL certifications with dates
@@ -64,6 +67,7 @@ Provide your response in the following JSON format (and ONLY this JSON format, n
       "startDate": "<start date>",
       "endDate": "<end date or 'Present'>",
       "duration": "<calculated duration>",
+      "employmentType": "<one of: full-time, part-time, internship, contract, freelance>",
       "description": "<COMPLETE job description - include ALL bullet points, ALL responsibilities, ALL achievements exactly as written. Do NOT summarize or truncate.>",
       "achievements": ["<achievement 1 - complete text>", "<achievement 2 - complete text>", ...],
       "technologies": ["tech1", "tech2", ...]

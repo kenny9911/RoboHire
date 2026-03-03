@@ -21,6 +21,20 @@ const PAY_PER_USE = {
 
 type BillableAction = 'interview' | 'match';
 
+function isBillableEndpointForAction(action: BillableAction, path: string): boolean {
+  const normalized = path.toLowerCase();
+
+  if (action === 'match') {
+    return normalized.endsWith('/match-resume');
+  }
+
+  if (action === 'interview') {
+    return normalized.endsWith('/invite-candidate') || normalized.endsWith('/batch-invite');
+  }
+
+  return false;
+}
+
 /**
  * Middleware factory that checks usage limits and handles billing
  * before allowing a billable API call to proceed.
@@ -34,6 +48,14 @@ type BillableAction = 'interview' | 'match';
 export function checkUsageLimit(action: BillableAction) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      // Safety guard: only bill explicitly billable endpoints for the given action.
+      // This prevents accidental quota deduction if middleware is attached to free endpoints.
+      if (!isBillableEndpointForAction(action, req.path)) {
+        (req as any).usageBilling = { source: 'free', action, cost: 0 };
+        next();
+        return;
+      }
+
       const user = req.user;
       if (!user) {
         res.status(401).json({ success: false, error: 'Authentication required', code: 'AUTH_REQUIRED' });
@@ -50,6 +72,8 @@ export function checkUsageLimit(action: BillableAction) {
           resumeMatchesUsed: true,
           topUpBalance: true,
           currentPeriodEnd: true,
+          customMaxInterviews: true,
+          customMaxMatches: true,
         },
       });
 
@@ -76,9 +100,11 @@ export function checkUsageLimit(action: BillableAction) {
       }
 
       const usedField = action === 'interview' ? 'interviewsUsed' : 'resumeMatchesUsed';
-      const limitField = action === 'interview' ? 'interviews' : 'matches';
       const used = action === 'interview' ? freshUser.interviewsUsed : freshUser.resumeMatchesUsed;
-      const limit = limits[limitField];
+      // Per-user admin override takes precedence over plan defaults
+      const limit = action === 'interview'
+        ? (freshUser.customMaxInterviews ?? limits.interviews)
+        : (freshUser.customMaxMatches ?? limits.matches);
       const price = action === 'interview' ? PAY_PER_USE.interview : PAY_PER_USE.match;
 
       if (used < limit) {

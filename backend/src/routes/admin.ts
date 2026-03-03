@@ -4,6 +4,18 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import prisma from '../lib/prisma.js';
 import { updatePriceId } from './checkout.js';
+import {
+  PRICING_CURRENCIES,
+  PRICING_DISCOUNT_COUPON_KEY,
+  PRICING_DISCOUNT_ENABLED_KEY,
+  PRICING_DISCOUNT_PERCENT_KEY,
+  PRICING_TIERS,
+  getPriceConfigKey,
+  loadPricingConfigFromDb,
+  normalizeDiscountPercent,
+  type PricingCurrency,
+  type PricingTier,
+} from '../services/pricingConfig.js';
 
 function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -80,6 +92,8 @@ router.get('/users', async (req, res) => {
           topUpBalance: true,
           currentPeriodEnd: true,
           trialEnd: true,
+          customMaxInterviews: true,
+          customMaxMatches: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -128,6 +142,8 @@ router.get('/users/:userId', async (req, res) => {
         interviewsUsed: true,
         resumeMatchesUsed: true,
         topUpBalance: true,
+        customMaxInterviews: true,
+        customMaxMatches: true,
       },
     });
 
@@ -372,6 +388,97 @@ router.post('/users/:userId/set-subscription', async (req, res) => {
     }
     console.error('Admin set subscription error:', error);
     res.status(500).json({ success: false, error: 'Failed to set subscription' });
+  }
+});
+
+/**
+ * POST /api/v1/admin/users/:userId/set-limits
+ * Override a user's maximum API call limits (interviews & matches)
+ * Body: { maxInterviews?: number | null, maxMatches?: number | null, reason: string }
+ * Pass null to clear an override and revert to plan defaults.
+ */
+router.post('/users/:userId/set-limits', async (req, res) => {
+  try {
+    const { maxInterviews, maxMatches, reason } = req.body;
+
+    if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+      res.status(400).json({ success: false, error: 'reason is required' });
+      return;
+    }
+
+    // Validate: must be null or a non-negative integer
+    const validate = (v: unknown, name: string) => {
+      if (v === null || v === undefined) return; // clearing override
+      if (typeof v !== 'number' || !Number.isInteger(v) || v < 0) {
+        throw new Error(`${name} must be null or a non-negative integer`);
+      }
+    };
+    try {
+      validate(maxInterviews, 'maxInterviews');
+      validate(maxMatches, 'maxMatches');
+    } catch (e) {
+      res.status(400).json({ success: false, error: (e as Error).message });
+      return;
+    }
+
+    if (maxInterviews === undefined && maxMatches === undefined) {
+      res.status(400).json({ success: false, error: 'Provide at least one of maxInterviews or maxMatches' });
+      return;
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: req.params.userId },
+        select: { id: true, customMaxInterviews: true, customMaxMatches: true },
+      });
+
+      if (!user) throw new Error('USER_NOT_FOUND');
+
+      const oldValue = JSON.stringify({
+        maxInterviews: user.customMaxInterviews,
+        maxMatches: user.customMaxMatches,
+      });
+
+      const updateData: Record<string, number | null> = {};
+      if (maxInterviews !== undefined) updateData.customMaxInterviews = maxInterviews;
+      if (maxMatches !== undefined) updateData.customMaxMatches = maxMatches;
+
+      const updatedUser = await tx.user.update({
+        where: { id: user.id },
+        data: updateData,
+        select: { id: true, customMaxInterviews: true, customMaxMatches: true },
+      });
+
+      const newValue = JSON.stringify({
+        maxInterviews: updatedUser.customMaxInterviews,
+        maxMatches: updatedUser.customMaxMatches,
+      });
+
+      await tx.adminAdjustment.create({
+        data: {
+          userId: user.id,
+          adminId: req.user!.id,
+          type: 'limits',
+          oldValue,
+          newValue,
+          reason: reason.trim(),
+        },
+      });
+
+      return {
+        old: { maxInterviews: user.customMaxInterviews, maxMatches: user.customMaxMatches },
+        new: { maxInterviews: updatedUser.customMaxInterviews, maxMatches: updatedUser.customMaxMatches },
+      };
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'USER_NOT_FOUND') {
+      res.status(404).json({ success: false, error: 'User not found' });
+      return;
+    }
+    console.error('Admin set limits error:', error);
+    res.status(500).json({ success: false, error: 'Failed to set limits' });
   }
 });
 
@@ -930,94 +1037,245 @@ router.get('/config', async (_req, res) => {
 
 /**
  * POST /api/v1/admin/config/pricing
- * Update subscription prices. Creates new Stripe prices (they're immutable).
- * Body: { starter?: number, growth?: number, business?: number }
+ * Update subscription prices and discount settings.
+ * Body:
+ * {
+ *   starter?: number, growth?: number, business?: number, // legacy USD-only fields
+ *   prices?: { USD?: { starter?: number, ... }, CNY?: { ... }, JPY?: { ... } },
+ *   discount?: { enabled?: boolean, percentOff?: number }
+ * }
  */
 router.post('/config/pricing', async (req, res) => {
   try {
-    const { starter, growth, business } = req.body;
-    const updates: { tier: string; price: number }[] = [];
+    const payload = (req.body ?? {}) as {
+      starter?: number;
+      growth?: number;
+      business?: number;
+      prices?: Partial<Record<PricingCurrency, Partial<Record<PricingTier, number>>>>;
+      discount?: { enabled?: boolean; percentOff?: number };
+    };
 
-    if (typeof starter === 'number' && starter > 0) updates.push({ tier: 'starter', price: starter });
-    if (typeof growth === 'number' && growth > 0) updates.push({ tier: 'growth', price: growth });
-    if (typeof business === 'number' && business > 0) updates.push({ tier: 'business', price: business });
+    const priceUpdateMap = new Map<string, { currency: PricingCurrency; tier: PricingTier; price: number }>();
+    const pushPriceUpdate = (currency: PricingCurrency, tier: PricingTier, value: unknown) => {
+      if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return;
+      priceUpdateMap.set(`${currency}_${tier}`, { currency, tier, price: value });
+    };
 
-    if (updates.length === 0) {
-      res.status(400).json({ success: false, error: 'Provide at least one tier price to update' });
+    // Legacy USD-only fields
+    pushPriceUpdate('USD', 'starter', payload.starter);
+    pushPriceUpdate('USD', 'growth', payload.growth);
+    pushPriceUpdate('USD', 'business', payload.business);
+
+    // New multi-currency format
+    if (payload.prices && typeof payload.prices === 'object') {
+      for (const currency of PRICING_CURRENCIES) {
+        const currencyPrices = payload.prices[currency];
+        if (!currencyPrices || typeof currencyPrices !== 'object') continue;
+        for (const tier of PRICING_TIERS) {
+          pushPriceUpdate(currency, tier, currencyPrices[tier]);
+        }
+      }
+    }
+
+    const hasDiscountPayload = !!payload.discount && typeof payload.discount === 'object';
+    if (priceUpdateMap.size === 0 && !hasDiscountPayload) {
+      res.status(400).json({ success: false, error: 'Provide at least one price update or discount update' });
       return;
     }
 
     const stripe = getStripe();
-    const results: Record<string, { price: number; stripePriceId?: string }> = {};
+    const currentConfig = await loadPricingConfigFromDb();
+    const priceUpdates = Array.from(priceUpdateMap.values());
+    const results: {
+      prices: Record<PricingCurrency, Partial<Record<PricingTier, { price: number; stripePriceId?: string }>>>;
+      discount?: { enabled: boolean; percentOff: number; stripeCouponId: string | null };
+    } = {
+      prices: {
+        USD: {},
+        CNY: {},
+        JPY: {},
+      },
+    };
 
-    for (const { tier, price } of updates) {
-      // Update AppConfig
+    for (const { currency, tier, price } of priceUpdates) {
+      const key = getPriceConfigKey(currency, tier);
       await prisma.appConfig.upsert({
-        where: { key: `price_${tier}_monthly` },
+        where: { key },
         update: { value: String(price), updatedBy: req.user!.id },
-        create: { key: `price_${tier}_monthly`, value: String(price), updatedBy: req.user!.id },
+        create: { key, value: String(price), updatedBy: req.user!.id },
       });
 
-      let stripePriceId: string | undefined;
+      // Keep legacy USD keys in sync for compatibility
+      if (currency === 'USD') {
+        await prisma.appConfig.upsert({
+          where: { key: `price_${tier}_monthly` },
+          update: { value: String(price), updatedBy: req.user!.id },
+          create: { key: `price_${tier}_monthly`, value: String(price), updatedBy: req.user!.id },
+        });
+      }
 
-      // Create new Stripe price if Stripe is configured
-      if (stripe) {
-        try {
-          // Get or create a product for this tier
-          let productId: string;
-          const configKey = `stripe_product_id_${tier}`;
-          const existingProduct = await prisma.appConfig.findUnique({ where: { key: configKey } });
+      results.prices[currency][tier] = { price };
+    }
 
-          if (existingProduct) {
-            productId = existingProduct.value;
-          } else {
-            const product = await stripe.products.create({
-              name: `RoboHire ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
-              metadata: { tier },
-            });
-            productId = product.id;
-            await prisma.appConfig.create({ data: { key: configKey, value: productId } });
+    const usdUpdates = priceUpdates.filter((u) => u.currency === 'USD');
+    for (const { tier, price } of usdUpdates) {
+      if (!stripe) continue;
+      try {
+        // Get or create product for this tier
+        let productId: string;
+        const configKey = `stripe_product_id_${tier}`;
+        const existingProduct = await prisma.appConfig.findUnique({ where: { key: configKey } });
+
+        if (existingProduct) {
+          productId = existingProduct.value;
+        } else {
+          const product = await stripe.products.create({
+            name: `RoboHire ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
+            metadata: { tier },
+          });
+          productId = product.id;
+          await prisma.appConfig.create({ data: { key: configKey, value: productId } });
+        }
+
+        // Create new Stripe price (Stripe prices are immutable)
+        const newPrice = await stripe.prices.create({
+          product: productId,
+          unit_amount: Math.round(price * 100),
+          currency: 'usd',
+          recurring: { interval: 'month' },
+          metadata: { tier, updatedBy: req.user!.id },
+        });
+
+        // Archive old price if exists
+        const oldPriceConfig = await prisma.appConfig.findUnique({
+          where: { key: `stripe_price_id_${tier}_monthly` },
+        });
+        if (oldPriceConfig?.value) {
+          try {
+            await stripe.prices.update(oldPriceConfig.value, { active: false });
+          } catch {
+            // old price may not exist anymore
           }
+        }
 
-          // Create new price (Stripe prices are immutable)
-          const newPrice = await stripe.prices.create({
-            product: productId,
-            unit_amount: Math.round(price * 100),
-            currency: 'usd',
-            recurring: { interval: 'month' },
-            metadata: { tier, updatedBy: req.user!.id },
-          });
+        await prisma.appConfig.upsert({
+          where: { key: `stripe_price_id_${tier}_monthly` },
+          update: { value: newPrice.id, updatedBy: req.user!.id },
+          create: { key: `stripe_price_id_${tier}_monthly`, value: newPrice.id, updatedBy: req.user!.id },
+        });
 
-          stripePriceId = newPrice.id;
+        updatePriceId(tier, newPrice.id);
+        const existing = results.prices.USD[tier];
+        if (existing) {
+          existing.stripePriceId = newPrice.id;
+        } else {
+          results.prices.USD[tier] = { price, stripePriceId: newPrice.id };
+        }
+      } catch (stripeErr) {
+        console.error(`Failed to create Stripe price for ${tier}:`, stripeErr);
+      }
+    }
 
-          // Archive old price if exists
-          const oldPriceConfig = await prisma.appConfig.findUnique({
-            where: { key: `stripe_price_id_${tier}_monthly` },
-          });
-          if (oldPriceConfig?.value) {
-            try {
-              await stripe.prices.update(oldPriceConfig.value, { active: false });
-            } catch { /* old price may not exist */ }
+    if (hasDiscountPayload) {
+      let enabled =
+        typeof payload.discount!.enabled === 'boolean'
+          ? payload.discount!.enabled
+          : currentConfig.discount.enabled;
+      let percentOff =
+        typeof payload.discount!.percentOff === 'number'
+          ? normalizeDiscountPercent(payload.discount!.percentOff)
+          : currentConfig.discount.percentOff;
+
+      if (!enabled) {
+        percentOff = 0;
+      }
+
+      if (enabled && percentOff <= 0) {
+        res.status(400).json({ success: false, error: 'Discount percent must be greater than 0 when enabled' });
+        return;
+      }
+
+      let stripeCouponId = currentConfig.discount.stripeCouponId;
+      const shouldCreateOrRefreshCoupon =
+        enabled &&
+        percentOff > 0 &&
+        (
+          !stripeCouponId ||
+          !currentConfig.discount.enabled ||
+          Math.abs(percentOff - currentConfig.discount.percentOff) > 0.0001
+        );
+
+      if (shouldCreateOrRefreshCoupon && stripe) {
+        const oldCouponId = stripeCouponId;
+        const coupon = await stripe.coupons.create({
+          percent_off: percentOff,
+          duration: 'forever',
+          name: `RoboHire ${percentOff}% off`,
+          metadata: {
+            source: 'admin_pricing',
+            updatedBy: req.user!.id,
+          },
+        });
+        stripeCouponId = coupon.id;
+
+        if (oldCouponId) {
+          try {
+            await stripe.coupons.del(oldCouponId);
+          } catch {
+            // ignore coupon deletion errors
           }
-
-          // Store new price ID
-          await prisma.appConfig.upsert({
-            where: { key: `stripe_price_id_${tier}_monthly` },
-            update: { value: newPrice.id, updatedBy: req.user!.id },
-            create: { key: `stripe_price_id_${tier}_monthly`, value: newPrice.id, updatedBy: req.user!.id },
-          });
-
-          // Update in-memory map
-          updatePriceId(tier, newPrice.id);
-        } catch (stripeErr) {
-          console.error(`Failed to create Stripe price for ${tier}:`, stripeErr);
         }
       }
 
-      results[tier] = { price, stripePriceId };
+      if (!enabled && stripeCouponId && stripe) {
+        try {
+          await stripe.coupons.del(stripeCouponId);
+          stripeCouponId = null;
+        } catch {
+          // ignore coupon deletion errors
+        }
+      }
+      if (!enabled) {
+        stripeCouponId = null;
+      }
+
+      await prisma.appConfig.upsert({
+        where: { key: PRICING_DISCOUNT_ENABLED_KEY },
+        update: { value: String(enabled), updatedBy: req.user!.id },
+        create: { key: PRICING_DISCOUNT_ENABLED_KEY, value: String(enabled), updatedBy: req.user!.id },
+      });
+      await prisma.appConfig.upsert({
+        where: { key: PRICING_DISCOUNT_PERCENT_KEY },
+        update: { value: String(percentOff), updatedBy: req.user!.id },
+        create: { key: PRICING_DISCOUNT_PERCENT_KEY, value: String(percentOff), updatedBy: req.user!.id },
+      });
+      await prisma.appConfig.upsert({
+        where: { key: PRICING_DISCOUNT_COUPON_KEY },
+        update: { value: stripeCouponId || '', updatedBy: req.user!.id },
+        create: { key: PRICING_DISCOUNT_COUPON_KEY, value: stripeCouponId || '', updatedBy: req.user!.id },
+      });
+
+      results.discount = {
+        enabled,
+        percentOff,
+        stripeCouponId: stripeCouponId || null,
+      };
     }
 
-    // Audit trail
+    const reasonParts: string[] = [];
+    if (priceUpdates.length > 0) {
+      reasonParts.push(
+        ...priceUpdates.map((u) => `${u.currency}.${u.tier}=${u.price}`)
+      );
+    }
+    if (results.discount) {
+      reasonParts.push(
+        results.discount.enabled
+          ? `discount=${results.discount.percentOff}%`
+          : 'discount=off'
+      );
+    }
+
     await prisma.adminAdjustment.create({
       data: {
         userId: req.user!.id,
@@ -1025,7 +1283,7 @@ router.post('/config/pricing', async (req, res) => {
         type: 'pricing',
         oldValue: null,
         newValue: JSON.stringify(results),
-        reason: `Updated pricing: ${updates.map(u => `${u.tier}=$${u.price}`).join(', ')}`,
+        reason: `Updated pricing config: ${reasonParts.join(', ')}`,
       },
     });
 

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
+import AutoMatchPanel from '../components/AutoMatchPanel';
+import IntelligenceReportPanel from '../components/IntelligenceReportPanel';
 
 interface HiringRequest {
   id: string;
@@ -475,6 +477,15 @@ export default function Dashboard() {
                   </div>
                 </div>
 
+                {/* Recruitment Intelligence Report */}
+                <IntelligenceReportPanel hiringRequestId={selectedRequest.id} />
+
+                {/* Auto-Match Resume Panel */}
+                <AutoMatchPanel
+                  hiringRequest={selectedRequest}
+                  onCandidatesUpdated={() => fetchRequestDetail(selectedRequest.id)}
+                />
+
                 <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-gray-900">
@@ -591,7 +602,11 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900">{t('dashboard.actions.usage', 'API Usage')}</h3>
-                    <p className="text-xs text-gray-500">{t('dashboard.actions.usageDesc', 'View usage & costs')}</p>
+                    <p className="text-xs text-gray-500">
+                      {user?.role === 'admin'
+                        ? t('dashboard.actions.usageDesc', 'View usage & costs')
+                        : t('dashboard.actions.usageDescNoCost', 'View usage')}
+                    </p>
                   </div>
                 </div>
               </Link>

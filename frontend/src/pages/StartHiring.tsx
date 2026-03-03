@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
@@ -9,6 +9,7 @@ import { API_BASE } from '../config';
 import type { HiringTemplate } from '../data/hiringTemplates';
 import { getLocalizedTemplates } from '../data/hiringTemplates';
 import SEO from '../components/SEO';
+import PostCreationPanel from '../components/PostCreationPanel';
 
 interface Message {
   id: string;
@@ -38,19 +39,22 @@ export default function StartHiring() {
   const [, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [step, setStep] = useState<'initial' | 'requirements' | 'confirm' | 'complete'>('initial');
+  const [createdRequestId, setCreatedRequestId] = useState<string | null>(null);
   const [hiringData, setHiringData] = useState({
     title: '',
     requirements: '',
     jobDescription: '',
   });
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [assistantSuggestions, setAssistantSuggestions] = useState<string[]>([]);
+  const [thinkingStepIndex, setThinkingStepIndex] = useState(0);
   const [isTitleGenerating, setIsTitleGenerating] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [jdDraft, setJdDraft] = useState('');
   const [isJdGenerating, setIsJdGenerating] = useState(false);
   const [jdError, setJdError] = useState<string | null>(null);
   const [showAllTemplates, setShowAllTemplates] = useState(false);
-  const [jdView, setJdView] = useState<'markdown' | 'preview'>('markdown');
+  const [jdView, setJdView] = useState<'markdown' | 'preview'>('preview');
   const [splitPercent, setSplitPercent] = useState(50);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -62,6 +66,32 @@ export default function StartHiring() {
   const CHAT_ERROR_FALLBACK = t(
     'hiring.chatError',
     'Sorry, I ran into an issue while processing that. Please try again.'
+  );
+  const thinkingSteps = useMemo(
+    () => [
+      {
+        title: t('hiring.thinking.analyzeTitle', 'Analyzing your request'),
+        thought: t(
+          'hiring.thinking.analyzeThought',
+          'Extracting role context, requirements, and missing details.'
+        ),
+      },
+      {
+        title: t('hiring.thinking.benchmarkTitle', 'Benchmarking role expectations'),
+        thought: t(
+          'hiring.thinking.benchmarkThought',
+          'Comparing your needs with proven hiring patterns for this role.'
+        ),
+      },
+      {
+        title: t('hiring.thinking.draftTitle', 'Drafting recommendations'),
+        thought: t(
+          'hiring.thinking.draftThought',
+          'Preparing actionable guidance, clarifying questions, and next steps.'
+        ),
+      },
+    ],
+    [t]
   );
 
   // Auto-resize textarea
@@ -77,6 +107,20 @@ export default function StartHiring() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (!isProcessing) {
+      setThinkingStepIndex(0);
+      return;
+    }
+
+    setThinkingStepIndex(0);
+    const timer = window.setInterval(() => {
+      setThinkingStepIndex((prev) => Math.min(prev + 1, thinkingSteps.length - 1));
+    }, 1400);
+
+    return () => window.clearInterval(timer);
+  }, [isProcessing, thinkingSteps.length]);
 
   // Load sessions on mount (if authenticated)
   useEffect(() => {
@@ -214,6 +258,37 @@ export default function StartHiring() {
     },
     [messages, MAX_CHAT_HISTORY]
   );
+
+  const buildFollowUpSuggestions = useCallback(
+    (action?: string): string[] => {
+      if (action === 'create_request') {
+        return [
+          t('hiring.suggestions.confirm1', 'Shorten the JD into 8 bullet points.'),
+          t('hiring.suggestions.confirm2', 'Add compensation range and target start date.'),
+          t('hiring.suggestions.confirm3', 'Tailor this JD for remote-first candidates.'),
+        ];
+      }
+
+      const role = hiringData.title.trim() || t('hiring.defaultRoleLabel', 'this role');
+      return [
+        t('hiring.suggestions.general1', 'Refine must-have vs nice-to-have skills for {{role}}.', {
+          role,
+        }),
+        t('hiring.suggestions.general2', 'Suggest an interview plan and scorecard for this role.'),
+        t('hiring.suggestions.general3', 'Draft the final job description now.'),
+      ];
+    },
+    [hiringData.title, t]
+  );
+
+  const lastAssistantMessageId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === 'assistant') {
+        return messages[i].id;
+      }
+    }
+    return null;
+  }, [messages]);
 
   const sendChatMessage = useCallback(
     async (
@@ -370,11 +445,13 @@ export default function StartHiring() {
       const result = await sendChatMessage(userPrompt, sessionId, { role: template.title });
       if (result?.message?.content) {
         await addMessage('assistant', result.message.content);
+        setAssistantSuggestions(buildFollowUpSuggestions(result?.action));
       }
       await handleChatAction(result?.action);
     } catch (error) {
       console.error('Failed to process chat message:', error);
       await addMessage('assistant', CHAT_ERROR_FALLBACK);
+      setAssistantSuggestions(buildFollowUpSuggestions());
     } finally {
       setIsProcessing(false);
     }
@@ -396,11 +473,13 @@ export default function StartHiring() {
       const result = await sendChatMessage(userPrompt, sessionId, { role });
       if (result?.message?.content) {
         await addMessage('assistant', result.message.content);
+        setAssistantSuggestions(buildFollowUpSuggestions(result?.action));
       }
       await handleChatAction(result?.action);
     } catch (error) {
       console.error('Failed to process chat message:', error);
       await addMessage('assistant', CHAT_ERROR_FALLBACK);
+      setAssistantSuggestions(buildFollowUpSuggestions());
     } finally {
       setIsProcessing(false);
     }
@@ -428,11 +507,49 @@ export default function StartHiring() {
       jdSnippet = `From JD:\n${text.substring(0, 500)}...`;
     }
 
+    const normalizeSignal = (value: string) =>
+      value
+        .trim()
+        .toLowerCase()
+        .replace(/^[`"'“”‘’\s]+|[`"'“”‘’\s]+$/g, '')
+        .replace(/[.!?。！？]+$/g, '');
+    const completionSignals = new Set([
+      'done',
+      'yes',
+      'y',
+      'ok',
+      'okay',
+      'confirm',
+      'confirmed',
+      'proceed',
+      'continue',
+      'finish',
+      'finished',
+      'complete',
+      'completed',
+      'all set',
+      "that's all",
+      'thats all',
+      'no more',
+      '好了',
+      '完成',
+      '完成了',
+      '就这样',
+      '可以了',
+      '是',
+      '是的',
+      '确认',
+    ]);
+    const shouldSkipRequirementsAppend = completionSignals.has(normalizeSignal(messageText));
+    const messageForRequirements = shouldSkipRequirementsAppend ? '' : messageText;
+
     setHiringData((prev) => {
       let nextRequirements = prev.requirements;
 
-      if (messageText) {
-        nextRequirements = nextRequirements ? `${nextRequirements}\n${messageText}` : messageText;
+      if (messageForRequirements) {
+        nextRequirements = nextRequirements
+          ? `${nextRequirements}\n${messageForRequirements}`
+          : messageForRequirements;
       }
 
       if (jdSnippet) {
@@ -441,7 +558,7 @@ export default function StartHiring() {
           : jobDescriptionText || jdSnippet;
       }
 
-      const inferredTitle = prev.title || inferTitle(`${messageText} ${nextRequirements ?? ''}`);
+      const inferredTitle = prev.title || inferTitle(`${messageForRequirements} ${nextRequirements ?? ''}`);
 
       return {
         ...prev,
@@ -469,11 +586,13 @@ export default function StartHiring() {
       );
       if (result?.message?.content) {
         await addMessage('assistant', result.message.content);
+        setAssistantSuggestions(buildFollowUpSuggestions(result?.action));
       }
       await handleChatAction(result?.action);
     } catch (error) {
       console.error('Failed to process chat message:', error);
       await addMessage('assistant', CHAT_ERROR_FALLBACK);
+      setAssistantSuggestions(buildFollowUpSuggestions());
     } finally {
       setIsProcessing(false);
     }
@@ -496,6 +615,9 @@ export default function StartHiring() {
       const data = await response.json();
 
       if (data.success) {
+        if (data.data?.id) {
+          setCreatedRequestId(data.data.id);
+        }
         await addMessage(
           'assistant',
           t('hiring.success', 'Your hiring request has been created! 🎉\n\n') +
@@ -505,6 +627,7 @@ export default function StartHiring() {
             `3. ${t('hiring.step3', "You'll receive evaluation reports for top matches")}\n\n` +
             t('hiring.visitDashboard', 'Visit your dashboard to track progress and manage candidates.')
         );
+        setAssistantSuggestions([]);
         setStep('complete');
       } else {
         await addMessage(
@@ -514,12 +637,14 @@ export default function StartHiring() {
             '\n\n' +
             t('hiring.tryAgain', 'Please try again or contact support if the issue persists.')
         );
+        setAssistantSuggestions(buildFollowUpSuggestions());
       }
     } catch (error) {
       await addMessage(
         'assistant',
         t('hiring.errorGeneric', 'There was an issue creating your request. Please try again.')
       );
+      setAssistantSuggestions(buildFollowUpSuggestions());
     }
   };
 
@@ -533,6 +658,7 @@ export default function StartHiring() {
       }
 
       setStep('confirm');
+      setJdView('preview');
       setTitleError(null);
       setJdError(null);
       setIsTitleGenerating(true);
@@ -686,9 +812,11 @@ export default function StartHiring() {
                   setMessages([]);
                   setStep('initial');
                   setHiringData({ title: '', requirements: '', jobDescription: '' });
+                  setAssistantSuggestions([]);
                   setIsTitleGenerating(false);
                   setTitleError(null);
                   setJdDraft('');
+                  setJdView('preview');
                   setIsJdGenerating(false);
                   setJdError(null);
                   setSearchParams({});
@@ -734,37 +862,106 @@ export default function StartHiring() {
                           ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
                           : 'border border-slate-200 bg-white/95 text-slate-800 backdrop-blur'
                       }`}>
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                          {message.content.split('\n').map((line, i) => {
-                            const parts = line.split(/\*\*(.+?)\*\*/g);
-                            return (
-                              <p key={i} className={i > 0 ? 'mt-2' : ''}>
-                                {parts.map((part, j) =>
-                                  j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-                                )}
-                              </p>
-                            );
-                          })}
-                        </div>
+                        {message.role === 'assistant' ? (
+                          <div className="text-sm leading-relaxed">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={markdownComponents}
+                            >
+                              {message.content}
+                            </ReactMarkdown>
+                          </div>
+                        ) : (
+                          <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                            {message.content}
+                          </div>
+                        )}
                       </div>
+
+                      {message.role === 'assistant' &&
+                        message.id === lastAssistantMessageId &&
+                        assistantSuggestions.length > 0 &&
+                        !isProcessing &&
+                        step !== 'complete' && (
+                          <div className="mt-3 space-y-2">
+                            <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">
+                              {t('hiring.suggestions.title', 'Try asking')}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {assistantSuggestions.map((suggestion) => (
+                                <button
+                                  key={suggestion}
+                                  type="button"
+                                  onClick={() => {
+                                    setInput(suggestion);
+                                    textareaRef.current?.focus();
+                                  }}
+                                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                                >
+                                  {suggestion}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                     </div>
                   </div>
                 ))}
 
                 {isProcessing && (
                   <div className="flex justify-start">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-cyan-500">
-                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
+                    <div className="max-w-[88%] sm:max-w-[80%]">
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-cyan-500">
+                          <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-medium text-slate-700">RoboHire</span>
                       </div>
-                    </div>
-                    <div className="ml-8 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-[0_20px_32px_-28px_rgba(15,23,42,0.58)]">
-                      <div className="flex gap-1">
-                        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: '0ms' }} />
-                        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: '150ms' }} />
-                        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: '300ms' }} />
+                      <div className="ml-8 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-[0_20px_32px_-28px_rgba(15,23,42,0.58)]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
+                          {t('hiring.thinking.title', 'Thinking...')}
+                        </p>
+                        <div className="mt-2 space-y-2">
+                          {thinkingSteps.map((thinkingStep, index) => {
+                            const isDone = index < thinkingStepIndex;
+                            const isActive = index === thinkingStepIndex;
+
+                            return (
+                              <div
+                                key={thinkingStep.title}
+                                className={`rounded-lg border px-2.5 py-2 transition-colors ${
+                                  isActive
+                                    ? 'border-blue-200 bg-blue-50/70'
+                                    : isDone
+                                      ? 'border-emerald-200 bg-emerald-50/70'
+                                      : 'border-slate-200 bg-slate-50'
+                                }`}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <span
+                                    className={`mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold ${
+                                      isActive
+                                        ? 'bg-blue-600 text-white'
+                                        : isDone
+                                          ? 'bg-emerald-600 text-white'
+                                          : 'bg-slate-300 text-white'
+                                    }`}
+                                  >
+                                    {isDone ? '✓' : index + 1}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-medium text-slate-800">{thinkingStep.title}</p>
+                                    {(isActive || isDone) && (
+                                      <p className="mt-1 text-xs text-slate-600">{thinkingStep.thought}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -994,7 +1191,11 @@ export default function StartHiring() {
                   </div>
                 )}
 
-                {step === 'complete' && isAuthenticated && (
+                {step === 'complete' && isAuthenticated && createdRequestId && (
+                  <PostCreationPanel hiringRequestId={createdRequestId} />
+                )}
+
+                {step === 'complete' && isAuthenticated && !createdRequestId && (
                   <div className="flex justify-center pt-4">
                     <Link
                       to="/dashboard"
@@ -1027,7 +1228,7 @@ export default function StartHiring() {
                     </button>
                   </div>
                 )}
-                <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_20px_36px_-30px_rgba(15,23,42,0.55)]">
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_20px_36px_-30px_rgba(15,23,42,0.55)]">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1037,7 +1238,7 @@ export default function StartHiring() {
                   />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex h-[44px] w-[44px] flex-shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                    className="flex h-[44px] w-[44px] self-center flex-shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -1058,7 +1259,7 @@ export default function StartHiring() {
                   <button
                     onClick={handleSubmit}
                     disabled={!input.trim() && !attachedFile}
-                    className="flex h-[44px] w-[44px] flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-[44px] w-[44px] self-center flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -1128,10 +1329,10 @@ export default function StartHiring() {
 
           {/* Main Input */}
           <div className="mb-8 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-[0_32px_64px_-42px_rgba(15,23,42,0.65)]">
-            <div className="flex items-end gap-2 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/70 p-1.5">
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/70 p-1.5">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-xl p-3 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                className="self-center rounded-xl p-3 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 title={t('hiring.uploadJd', 'Upload Job Description')}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1164,7 +1365,7 @@ export default function StartHiring() {
               <button
                 onClick={handleSubmit}
                 disabled={!input.trim()}
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+                className="self-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />

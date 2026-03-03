@@ -24,6 +24,7 @@ import usageRouter from './routes/usage.js';
 import demoRouter from './routes/demo.js';
 import checkoutRouter from './routes/checkout.js';
 import adminRouter from './routes/admin.js';
+import resumesRouter from './routes/resumes.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
 import { logger } from './services/LoggerService.js';
@@ -31,16 +32,25 @@ import { documentStorage } from './services/DocumentStorageService.js';
 
 const app = express();
 const PORT = process.env.PORT || 4607;
+const frontendUrlsFromEnv = (process.env.FRONTEND_URLS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+const productionOrigins = [
+  process.env.FRONTEND_URL || 'https://robohire.io',
+  'https://robohire.io',
+  'https://www.robohire.io',
+  'https://api.robohire.io',
+  ...frontendUrlsFromEnv,
+  // Render static sites use *.onrender.com; include previews to avoid auth breakage on Render domains.
+  /^https:\/\/[a-z0-9-]+\.onrender\.com$/i,
+];
 
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? [
-        process.env.FRONTEND_URL || 'https://robohire.io',
-        'https://robohire.io',
-        'https://www.robohire.io',
-        'https://api.robohire.io',
-      ]
+    ? productionOrigins
     : ['http://localhost:3607', 'http://localhost:5173'],
   credentials: true,
 }));
@@ -65,6 +75,7 @@ app.use('/api/v1/usage', usageRouter);
 app.use('/api/v1/request-demo', demoRouter);
 app.use('/api/v1', checkoutRouter);
 app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/resumes', resumesRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {
