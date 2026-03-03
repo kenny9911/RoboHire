@@ -742,7 +742,19 @@
       "create": "Créer une demande",
       "candidates": "candidats",
       "created": "Créé",
-      "viewDetail": "Voir le détail"
+      "viewDetail": "Voir le détail",
+      "archive": "Archiver",
+      "delete": "Supprimer"
+    },
+    "confirm": {
+      "deleteTitle": "Supprimer la demande de recrutement ?",
+      "archiveTitle": "Archiver la demande de recrutement ?",
+      "deleteDesc": "Cette action supprimera définitivement cette demande et tous les candidats associés. Cette action est irréversible.",
+      "archiveDesc": "Cette action clôturera la demande et la déplacera vers les archives. Elle restera visible dans votre liste.",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "archive": "Archiver",
+      "processing": "Traitement..."
     },
     "detail": {
       "back": "Retour aux demandes",

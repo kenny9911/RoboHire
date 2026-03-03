@@ -238,7 +238,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { id: requestId } = useParams();
-  
+
   const [hiringRequests, setHiringRequests] = useState<HiringRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -247,6 +247,10 @@ export default function Dashboard() {
   const [selectedRequest, setSelectedRequest] = useState<HiringRequestDetail | null>(null);
   const [splitPercent, setSplitPercent] = useState(50);
   const splitContainerRef = useRef<HTMLDivElement>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ id: string; title: string; action: 'delete' | 'archive' } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchHiringRequests();
@@ -302,6 +306,66 @@ export default function Dashboard() {
       setDetailError(t('dashboard.detail.loadError', 'Failed to load request details'));
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  // Close action menu when clicking outside
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openMenuId]);
+
+  const handleArchive = async (id: string) => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/v1/hiring-requests/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status: 'closed' }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        if (requestId === id) {
+          navigate('/dashboard');
+        }
+        await fetchHiringRequests();
+      }
+    } finally {
+      setActionLoading(false);
+      setConfirmAction(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/v1/hiring-requests/${id}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        if (requestId === id) {
+          navigate('/dashboard');
+        }
+        await fetchHiringRequests();
+      }
+    } finally {
+      setActionLoading(false);
+      setConfirmAction(null);
     }
   };
 
@@ -401,15 +465,39 @@ export default function Dashboard() {
                         {t('dashboard.detail.updated', 'Updated')} {formatDateTime(selectedRequest.updatedAt)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-slate-500">
-                      <span>
-                        {t('dashboard.detail.created', 'Created')} {formatDate(selectedRequest.createdAt)}
-                      </span>
-                      <span>
-                        {t('dashboard.detail.candidatesCount', '{{count}} candidates', {
-                          count: selectedRequest.candidates.length,
-                        })}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4 text-sm text-slate-500">
+                        <span>
+                          {t('dashboard.detail.created', 'Created')} {formatDate(selectedRequest.createdAt)}
+                        </span>
+                        <span>
+                          {t('dashboard.detail.candidatesCount', '{{count}} candidates', {
+                            count: selectedRequest.candidates.length,
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {selectedRequest.status !== 'closed' && (
+                          <button
+                            onClick={() => setConfirmAction({ id: selectedRequest.id, title: selectedRequest.title, action: 'archive' })}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                            </svg>
+                            {t('dashboard.requests.archive', 'Archive')}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setConfirmAction({ id: selectedRequest.id, title: selectedRequest.title, action: 'delete' })}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-full transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          {t('dashboard.requests.delete', 'Delete')}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -716,17 +804,110 @@ export default function Dashboard() {
                             </span>
                           </div>
                         </div>
-                        <div className="text-xs text-blue-600 font-medium flex items-center gap-1">
-                          {t('dashboard.requests.viewDetail', 'View details')}
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-blue-600 font-medium flex items-center gap-1">
+                            {t('dashboard.requests.viewDetail', 'View details')}
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                          <div className="relative" ref={openMenuId === request.id ? menuRef : undefined}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === request.id ? null : request.id); }}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                              </svg>
+                            </button>
+                            {openMenuId === request.id && (
+                              <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl border border-slate-200 shadow-lg z-20 py-1">
+                                {request.status !== 'closed' && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setConfirmAction({ id: request.id, title: request.title, action: 'archive' }); }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                  >
+                                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                    </svg>
+                                    {t('dashboard.requests.archive', 'Archive')}
+                                  </button>
+                                )}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setConfirmAction({ id: request.id, title: request.title, action: 'delete' }); }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                  {t('dashboard.requests.delete', 'Delete')}
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {confirmAction && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50" onClick={() => !actionLoading && setConfirmAction(null)} />
+            <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${confirmAction.action === 'delete' ? 'bg-rose-100' : 'bg-amber-100'}`}>
+                {confirmAction.action === 'delete' ? (
+                  <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                )}
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                {confirmAction.action === 'delete'
+                  ? t('dashboard.confirm.deleteTitle', 'Delete hiring request?')
+                  : t('dashboard.confirm.archiveTitle', 'Archive hiring request?')}
+              </h3>
+              <p className="text-sm text-slate-600 mb-1">
+                <span className="font-medium text-slate-800">{confirmAction.title}</span>
+              </p>
+              <p className="text-sm text-slate-500 mb-6">
+                {confirmAction.action === 'delete'
+                  ? t('dashboard.confirm.deleteDesc', 'This will permanently delete this request and all associated candidates. This action cannot be undone.')
+                  : t('dashboard.confirm.archiveDesc', 'This will close the request and move it to archived status. You can still view it in your list.')}
+              </p>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setConfirmAction(null)}
+                  disabled={actionLoading}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors disabled:opacity-50"
+                >
+                  {t('dashboard.confirm.cancel', 'Cancel')}
+                </button>
+                <button
+                  onClick={() => confirmAction.action === 'delete' ? handleDelete(confirmAction.id) : handleArchive(confirmAction.id)}
+                  disabled={actionLoading}
+                  className={`px-4 py-2 text-sm font-medium text-white rounded-full transition-colors disabled:opacity-50 ${
+                    confirmAction.action === 'delete'
+                      ? 'bg-rose-600 hover:bg-rose-700'
+                      : 'bg-amber-600 hover:bg-amber-700'
+                  }`}
+                >
+                  {actionLoading
+                    ? t('dashboard.confirm.processing', 'Processing...')
+                    : confirmAction.action === 'delete'
+                      ? t('dashboard.confirm.delete', 'Delete')
+                      : t('dashboard.confirm.archive', 'Archive')}
+                </button>
+              </div>
             </div>
           </div>
         )}

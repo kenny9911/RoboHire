@@ -1111,7 +1111,19 @@
       "create": "採用リクエストを作成",
       "candidates": "候補者",
       "created": "作成日",
-      "viewDetail": "詳細を見る"
+      "viewDetail": "詳細を見る",
+      "archive": "アーカイブ",
+      "delete": "削除"
+    },
+    "confirm": {
+      "deleteTitle": "採用リクエストを削除しますか？",
+      "archiveTitle": "採用リクエストをアーカイブしますか？",
+      "deleteDesc": "この採用リクエストと関連するすべての候補者データが完全に削除されます。この操作は元に戻せません。",
+      "archiveDesc": "このリクエストをクローズしてアーカイブに移動します。一覧からは引き続き確認できます。",
+      "cancel": "キャンセル",
+      "delete": "削除",
+      "archive": "アーカイブ",
+      "processing": "処理中..."
     },
     "detail": {
       "back": "リクエスト一覧へ戻る",

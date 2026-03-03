@@ -714,7 +714,19 @@
       "create": "建立招聘請求",
       "candidates": "候選人",
       "created": "建立於",
-      "viewDetail": "檢視詳情"
+      "viewDetail": "檢視詳情",
+      "archive": "封存",
+      "delete": "刪除"
+    },
+    "confirm": {
+      "deleteTitle": "確認刪除招募需求？",
+      "archiveTitle": "確認封存招募需求？",
+      "deleteDesc": "此操作將永久刪除該招募需求及所有關聯的候選人資料，且無法復原。",
+      "archiveDesc": "此操作將關閉該招募需求並將其封存，您仍可在列表中查看。",
+      "cancel": "取消",
+      "delete": "刪除",
+      "archive": "封存",
+      "processing": "處理中..."
     },
     "detail": {
       "back": "返回請求列表",

@@ -742,7 +742,19 @@
       "create": "Crear solicitud",
       "candidates": "candidatos",
       "created": "Creado",
-      "viewDetail": "Ver detalles"
+      "viewDetail": "Ver detalles",
+      "archive": "Archivar",
+      "delete": "Eliminar"
+    },
+    "confirm": {
+      "deleteTitle": "¿Eliminar solicitud de contratación?",
+      "archiveTitle": "¿Archivar solicitud de contratación?",
+      "deleteDesc": "Se eliminará permanentemente esta solicitud y todos los candidatos asociados. Esta acción no se puede deshacer.",
+      "archiveDesc": "Se cerrará la solicitud y se moverá al estado archivado. Seguirá visible en tu lista.",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "archive": "Archivar",
+      "processing": "Procesando..."
     },
     "detail": {
       "back": "Volver a solicitudes",

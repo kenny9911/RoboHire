@@ -714,7 +714,19 @@
       "create": "创建招聘请求",
       "candidates": "候选人",
       "created": "创建于",
-      "viewDetail": "查看详情"
+      "viewDetail": "查看详情",
+      "archive": "归档",
+      "delete": "删除"
+    },
+    "confirm": {
+      "deleteTitle": "确认删除招聘需求？",
+      "archiveTitle": "确认归档招聘需求？",
+      "deleteDesc": "此操作将永久删除该招聘需求及所有关联的候选人数据，且无法撤销。",
+      "archiveDesc": "此操作将关闭该招聘需求并将其归档，您仍可在列表中查看。",
+      "cancel": "取消",
+      "delete": "删除",
+      "archive": "归档",
+      "processing": "处理中..."
     },
     "detail": {
       "back": "返回请求列表",

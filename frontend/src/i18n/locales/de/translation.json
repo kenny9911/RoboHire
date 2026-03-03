@@ -742,7 +742,19 @@
       "create": "Einstellungsanfrage erstellen",
       "candidates": "Kandidaten",
       "created": "Erstellt",
-      "viewDetail": "Details ansehen"
+      "viewDetail": "Details ansehen",
+      "archive": "Archivieren",
+      "delete": "Löschen"
+    },
+    "confirm": {
+      "deleteTitle": "Stellenanfrage löschen?",
+      "archiveTitle": "Stellenanfrage archivieren?",
+      "deleteDesc": "Diese Aktion löscht die Anfrage und alle zugehörigen Kandidaten dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "archiveDesc": "Diese Aktion schließt die Anfrage und verschiebt sie in den archivierten Status. Sie bleibt in Ihrer Liste sichtbar.",
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "archive": "Archivieren",
+      "processing": "Wird verarbeitet..."
     },
     "detail": {
       "back": "Zurück zu Anfragen",

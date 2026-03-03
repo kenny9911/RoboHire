@@ -713,7 +713,19 @@
       "create": "Create Hiring Request",
       "candidates": "candidates",
       "created": "Created",
-      "viewDetail": "View details"
+      "viewDetail": "View details",
+      "archive": "Archive",
+      "delete": "Delete"
+    },
+    "confirm": {
+      "deleteTitle": "Delete hiring request?",
+      "archiveTitle": "Archive hiring request?",
+      "deleteDesc": "This will permanently delete this request and all associated candidates. This action cannot be undone.",
+      "archiveDesc": "This will close the request and move it to archived status. You can still view it in your list.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "archive": "Archive",
+      "processing": "Processing..."
     },
     "detail": {
       "back": "Back to requests",

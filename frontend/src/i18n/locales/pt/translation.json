@@ -742,7 +742,19 @@
       "create": "Criar solicitação",
       "candidates": "candidatos",
       "created": "Criado em",
-      "viewDetail": "Ver detalhes"
+      "viewDetail": "Ver detalhes",
+      "archive": "Arquivar",
+      "delete": "Excluir"
+    },
+    "confirm": {
+      "deleteTitle": "Excluir solicitação de contratação?",
+      "archiveTitle": "Arquivar solicitação de contratação?",
+      "deleteDesc": "Esta ação excluirá permanentemente esta solicitação e todos os candidatos associados. Esta ação não pode ser desfeita.",
+      "archiveDesc": "Esta ação encerrará a solicitação e a moverá para o status arquivado. Ela continuará visível na sua lista.",
+      "cancel": "Cancelar",
+      "delete": "Excluir",
+      "archive": "Arquivar",
+      "processing": "Processando..."
     },
     "detail": {
       "back": "Voltar para solicitações",
