@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import axios from '../lib/axios';
 import LanguageSelector from '../components/LanguageSelector';
 import SEO from '../components/SEO';
 
-const DOC_ACCEPT = '.pdf,.docx,.doc,.xlsx,.xls,.txt';
+const DOC_ACCEPT = '.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json';
 
 interface FormattedResume {
   name: string;
@@ -387,6 +387,7 @@ export default function QuickInvite() {
   const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jdFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -414,8 +415,17 @@ export default function QuickInvite() {
   const [formattedJd, setFormattedJd] = useState<FormattedJD | null>(null);
   const [formattingJd, setFormattingJd] = useState(false);
 
+  const requireAuth = () => {
+    if (!user) {
+      navigate('/login', { state: { from: location } });
+      return false;
+    }
+    return true;
+  };
+
   // Format JD with LLM
   const formatJd = async (text: string) => {
+    if (!requireAuth()) return;
     setFormattedJd(null);
     setFormattingJd(true);
     try {
@@ -441,6 +451,7 @@ export default function QuickInvite() {
 
   // Open resume preview — call LLM to format
   const handlePreviewResume = async (r: ResumeEntry) => {
+    if (!requireAuth()) return;
     setPreviewResume(r);
     setFormattedResume(null);
     setFormatting(true);
@@ -467,6 +478,7 @@ export default function QuickInvite() {
 
   // Upload JD file (PDF, DOCX, XLSX, TXT)
   const handleJdFileUpload = async (files: FileList | null) => {
+    if (!requireAuth()) return;
     if (!files || files.length === 0) return;
     const file = files[0];
     setJdUploading(true);
@@ -499,6 +511,7 @@ export default function QuickInvite() {
 
   // Handle resume file upload (PDF, DOCX, XLSX, TXT)
   const handleFileUpload = useCallback(async (files: FileList | null) => {
+    if (!user) { navigate('/login', { state: { from: location } }); return; }
     if (!files || files.length === 0) return;
     setUploading(true);
     setError(null);
@@ -546,7 +559,7 @@ export default function QuickInvite() {
     setResumes(prev => [...prev, ...newEntries]);
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [t]);
+  }, [t, user, navigate, location]);
 
   // Add resume from paste
   const handleAddPaste = () => {
@@ -588,6 +601,7 @@ export default function QuickInvite() {
 
   // Send all invitations
   const handleSendAll = async () => {
+    if (!requireAuth()) return;
     setSending(true);
     setError(null);
 
@@ -1352,7 +1366,7 @@ export default function QuickInvite() {
                 {t('pages.quickInvite.startNew')}
               </button>
               <button
-                onClick={() => navigate('/dashboard/resumes')}
+                onClick={() => navigate('/product/talent')}
                 className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(37,99,235,0.95)]"
               >
                 {t('pages.quickInvite.viewResumeLibrary')}

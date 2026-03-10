@@ -47,6 +47,9 @@ model User {
   resumes         Resume[]
   adminAdjustmentsReceived  AdminAdjustment[] @relation("AdminAdjustmentsReceived")
   adminAdjustmentsMade      AdminAdjustment[] @relation("AdminAdjustmentsMade")
+  atsIntegrations ATSIntegration[]
+  jobs            Job[]
+  interviews      Interview[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -83,6 +86,7 @@ model HiringRequest {
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   candidates     Candidate[]
   resumeJobFits  ResumeJobFit[]
+  jobs           Job[]
 
   @@index([userId])
   @@index([status])
@@ -102,6 +106,9 @@ model Candidate {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   
+  externalAtsId       String?
+  externalAtsProvider String?
+
   hiringRequest HiringRequest @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
 
   @@index([hiringRequestId])
@@ -109,6 +116,7 @@ model Candidate {
   @@index([email])
   @@index([hiringRequestId, status])
   @@index([hiringRequestId, matchScore])
+  @@index([externalAtsId])
 }
 
 model HiringSession {
@@ -321,6 +329,7 @@ model Resume {
 
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   resumeJobFits   ResumeJobFit[]
+  jobMatches      JobMatch[]
 
   @@unique([userId, contentHash])
   @@index([userId])
@@ -353,4 +362,183 @@ model ResumeJobFit {
   @@index([pipelineStatus])
   @@index([hiringRequestId, pipelineStatus])
   @@index([hiringRequestId, fitScore])
+}
+
+model Job {
+  id              String    @id @default(cuid())
+  userId          String
+  hiringRequestId String?
+  title           String
+  department      String?
+  location        String?
+  workType        String?   // remote, hybrid, onsite
+  employmentType  String?   // full-time, part-time, contract, internship
+  experienceLevel String?   // entry, mid, senior, lead, executive
+  salaryMin       Int?
+  salaryMax       Int?
+  salaryCurrency  String?   @default("USD")
+  companyName          String?
+  description          String?   @db.Text
+  qualifications       String?   @db.Text   // 任职要求
+  hardRequirements     String?   @db.Text   // 硬性要求
+  requirements         Json?     // { mustHave: [], niceToHave: [] }
+  parsedData           Json?     // AI-parsed JD cache
+  salaryPeriod         String?   @default("monthly") // monthly, yearly
+  locations            Json?     // Array of { country, city }
+  interviewMode        String?   @default("standard") // standard, question_bank
+  passingScore         Int?      @default(60)  // 20-80
+  interviewLanguage    String?   @default("en")
+  interviewDuration    Int?      @default(30)  // minutes: 15,30,45,60
+  interviewRequirements String?  @db.Text  // 面试要求
+  evaluationRules      String?   @db.Text  // 评估规则
+  status               String    @default("draft") // draft, open, paused, closed, filled
+  publishedAt     DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hiringRequest   HiringRequest? @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
+  jobMatches      JobMatch[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+model JobMatch {
+  id          String    @id @default(cuid())
+  jobId       String
+  resumeId    String
+  score       Int?
+  grade       String?   // A+, A, B+, B, C, D, F
+  matchData   Json?     // Full ResumeMatchAgent output
+  status      String    @default("new") // new, reviewed, shortlisted, rejected, invited
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume      Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, resumeId])
+  @@index([jobId])
+  @@index([resumeId])
+  @@index([score])
+  @@index([status])
+  @@index([jobId, score])
+}
+
+model Interview {
+  id              String    @id @default(cuid())
+  userId          String
+  jobId           String?
+  resumeId        String?
+  candidateName   String
+  candidateEmail  String?
+  jobTitle        String?
+  jobDescription  String?   @db.Text
+  resumeText      String?   @db.Text
+  status          String    @default("scheduled") // scheduled, in_progress, completed, cancelled, expired
+  type            String    @default("ai_video")  // ai_video, ai_audio, ai_text
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  duration        Int?      // seconds
+  accessToken     String?   @unique // unique token for candidate to join
+  roomId          String?   // LiveKit room ID
+  transcript      Json?     // Array of { role, content, timestamp }
+  recordingUrl    String?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evaluation      InterviewEvaluation?
+
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([accessToken])
+  @@index([userId, createdAt])
+}
+
+model InterviewEvaluation {
+  id              String    @id @default(cuid())
+  interviewId     String    @unique
+  overallScore    Int?
+  grade           String?
+  verdict         String?   // strong_hire, hire, lean_hire, lean_no_hire, no_hire
+  evaluationData  Json?     // Full evaluation agent output
+  summary         String?   @db.Text
+  strengths       Json?     // string[]
+  weaknesses      Json?     // string[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  interview       Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+  @@index([overallScore])
+  @@index([verdict])
+}
+
+model ATSIntegration {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      String   // "greenhouse" | "lever" | "ashby" | "bamboohr" | "workable"
+  credentials   String   // encrypted JSON: { apiKey, subdomain, etc. }
+  isActive      Boolean  @default(true)
+  syncEnabled   Boolean  @default(true)
+  lastSyncAt    DateTime?
+  config        Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  webhookDeliveries WebhookDelivery[]
+  syncLogs          ATSSyncLog[]
+
+  @@unique([userId, provider])
+  @@index([userId])
+}
+
+model ATSSyncLog {
+  id              String   @id @default(cuid())
+  integrationId   String
+  integration     ATSIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  direction       String   // "inbound" | "outbound"
+  entityType      String   // "job" | "candidate" | "application"
+  entityId        String?
+  externalId      String?
+  status          String   // "success" | "failed" | "skipped"
+  error           String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+
+  @@index([integrationId])
+  @@index([createdAt])
+}
+
+model WebhookDelivery {
+  id              String   @id @default(cuid())
+  integrationId   String?
+  integration     ATSIntegration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+  hiringRequestId String?
+  event           String
+  url             String
+  payload         Json
+  status          String   // "pending" | "delivered" | "failed"
+  statusCode      Int?
+  attempts        Int      @default(0)
+  maxAttempts     Int      @default(5)
+  lastAttemptAt   DateTime?
+  nextRetryAt     DateTime?
+  response        String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  @@index([status, nextRetryAt])
+  @@index([hiringRequestId])
 }

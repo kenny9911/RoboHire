@@ -105,12 +105,13 @@
       "pricing": "價格",
       "signIn": "登入",
       "getStarted": "開始使用",
-      "dashboard": "控制面板"
+      "dashboard": "控制面板",
+      "product": "產品"
     },
     "hero": {
       "badge": "AI 驅動的招聘平臺",
-      "headline": "比別人更快地",
-      "headlineHighlight": "招到精英人才",
+      "headline": "AI篩選，AI面試。",
+      "headlineHighlight": "你只負責錄用最優人才。",
       "definition": "RoboHire 是一款 AI 驅動的智慧招募平台，能自動篩選履歷、進行 AI 面試，並為每位候選人產出結構化的評估報告。",
       "subheadline": "不必再埋頭翻閱成堆的履歷——AI 招募助手替你完成候選人篩選、線上面試和完整評估，全程自動化。",
       "ctaPrimary": "開始免費試用",
@@ -134,7 +135,7 @@
         "feature1": "自動簡歷篩選",
         "feature2": "AI 驅動面試",
         "feature3": "全面評估報告",
-        "feature4": "Webhook 整合",
+        "feature4": "ATS與Webhook整合",
         "cta": "立即開始招聘",
         "badge": "最受歡迎"
       },
@@ -156,7 +157,7 @@
         "feature1": "簡歷與 JD 解析",
         "feature2": "AI 候選人匹配",
         "feature3": "面試評估",
-        "feature4": "RESTful API 介面",
+        "feature4": "ATS整合（5個供應商）",
         "cta": "探索 API"
       }
     },
@@ -170,7 +171,7 @@
       },
       "step2": {
         "title": "接入您的工作流",
-        "description": "透過 API 或 Webhook 與您現有的 ATS 整合。無需複雜操作 - 只需將候選人管道指向 RoboHire，我們將接管一切。"
+        "description": "一鍵連接您的ATS — Greenhouse、Lever、Ashby、BambooHR或Workable。或使用我們的API和Webhook。"
       },
       "step3": {
         "title": "獲取最佳匹配",
@@ -205,6 +206,10 @@
         "title": "開發者 API",
         "description": "完整的 REST API 訪問，用於解析、匹配和評估。將 AI 招聘能力整合到您現有的系統中。"
       },
+      "atsIntegration": {
+        "title": "ATS整合",
+        "description": "連接Greenhouse、Lever、Ashby、BambooHR或Workable，將匹配的候選人直接推送到您的招聘流程中。"
+      },
       "webhooks": {
         "title": "Webhook 推送",
         "description": "透過 Webhook 自動接收入圍候選人和評估報告。與您的工作流無縫整合。"
@@ -218,6 +223,29 @@
         "description": "先進的 AI 分析來檢測 AI 輔助回答，確保您評估的是真實的候選人能力。"
       },
       "learnMore": "瞭解更多"
+    },
+    "product": {
+      "badge": "產品套件",
+      "headline": "智慧招聘，一站搞定",
+      "subheadline": "四大AI驅動產品協同配合，將您的招聘從手動篩選升級為智慧化人才獲取。",
+      "explore": "了解更多",
+      "cta": "開啟產品控制台",
+      "easyHiring": {
+        "title": "輕鬆招聘",
+        "desc": "AI驅動的招聘流程，自動篩選履歷、管理候選人，全面優化您的招聘流程。"
+      },
+      "smartMatching": {
+        "title": "智慧匹配",
+        "desc": "AI精準匹配候選人與職位，智慧評分排名，讓您不錯過任何頂尖人才。"
+      },
+      "aiInterview": {
+        "title": "AI面試",
+        "desc": "AI主持的視訊面試，自然語音對話。候選人與AI面試官交流——您只需查看結果。"
+      },
+      "evaluation": {
+        "title": "綜合評估",
+        "desc": "多智能體AI評估系統，全面評估技能、經驗、文化契合度，提供詳盡的招聘報告。"
+      }
     },
     "cta": {
       "title": "準備好智慧招聘了嗎？",
@@ -759,7 +787,8 @@
       "apiPlayground": "API 測試",
       "account": "賬戶",
       "usage": "使用量",
-      "resumes": "簡歷庫"
+      "resumes": "簡歷庫",
+      "integrations": "整合"
     },
     "welcome": "歡迎回來",
     "user": "使用者",
@@ -1081,6 +1110,10 @@
       "webhooks": {
         "title": "Webhook 整合",
         "desc": "在處理候選人時透過 Webhook 接收實時更新。"
+      },
+      "ats": {
+        "title": "ATS整合",
+        "desc": "連接Greenhouse、Lever、Ashby、BambooHR或Workable，將候選人直接同步到您的招聘流程中。"
       }
     },
     "playground": {
@@ -1113,6 +1146,7 @@
       "evaluateInterview": "面試評估",
       "advanced": "進階",
       "webhooks": "Webhooks",
+      "atsIntegrations": "ATS 整合",
       "errors": "錯誤處理"
     },
     "tryIt": {
@@ -1567,14 +1601,14 @@
       "resumesDesc": "上傳 PDF 簡歷或貼上簡歷文字。支援新增多份簡歷。",
       "uploading": "正在從 PDF 中提取文字...",
       "dropResumes": "點選或拖拽簡歷到此處",
-      "supportedFormats": "支援 PDF、DOCX、XLSX、TXT 格式，可上傳多個檔案。",
+      "supportedFormats": "支援 PDF、DOCX、XLSX、TXT、MD、JSON 格式，可上傳多個檔案。",
       "hideTextInput": "隱藏文字輸入",
       "pasteInstead": "或貼上簡歷文字",
       "pastePlaceholder": "在此貼上簡歷文字...",
       "addResume": "新增簡歷",
       "pastedResume": "貼上的簡歷 #{{num}}",
       "resumeCount": "已載入 {{count}} 份簡歷",
-      "pdfOnlyError": "不支援的檔案格式，請上傳 PDF 或 TXT 檔案。",
+      "pdfOnlyError": "不支援的檔案格式，請上傳 PDF、TXT、MD 或 JSON 檔案。",
       "settingsTitle": "邀請設定",
       "recruiterEmail": "招聘人員郵箱",
       "interviewerReq": "面試官要求",
@@ -1608,7 +1642,7 @@
       "errorNoJd": "請輸入職位描述。",
       "errorNoResumes": "請至少新增一份簡歷。",
       "uploadJd": "上傳檔案",
-      "jdFormats": "支援 PDF、DOCX、XLSX、TXT 格式",
+      "jdFormats": "支援 PDF、DOCX、XLSX、TXT、MD、JSON 格式",
       "viewResume": "檢視完整簡歷",
       "extractFailed": "無法從檔案中提取文字。",
       "resumePreviewChars": "{{count}} 個字元",
@@ -1865,6 +1899,261 @@
       "sessionAuth": "會話"
     }
   },
+  "product": {
+    "nav": {
+      "dashboard": "控制台",
+      "hiringRequests": "招聘需求",
+      "talentHub": "人才中心",
+      "jobs": "職缺",
+      "aiInterview": "AI面試",
+      "profile": "個人檔案",
+      "devDashboard": "開發者控制台",
+      "smartMatching": "智慧配對",
+      "evaluations": "評估",
+      "candidateDetail": "候選人詳情",
+      "jobDetail": "職缺詳情",
+      "interviewRoom": "面試房間"
+    },
+    "dashboard": {
+      "welcome": "歡迎回來",
+      "welcomeDesc": "您的AI招聘指揮中心",
+      "activeJobs": "活躍職缺",
+      "totalCandidates": "候選人總數",
+      "interviewsThisWeek": "本週面試場數",
+      "avgMatchScore": "平均配對分數",
+      "interviews": "場面試等待AI評估",
+      "runEvaluations": "執行評估以取得招聘建議",
+      "actionQueue": "待辦事項佇列",
+      "noActions": "暫無待辦事項",
+      "pipelineOverview": "招聘流程概覽",
+      "quickActions": "快速操作",
+      "createJob": "建立職缺",
+      "createJobDesc": "發布新職位",
+      "uploadResumes": "上傳履歷",
+      "uploadResumesDesc": "新增候選人",
+      "runMatching": "執行AI配對",
+      "runMatchingDesc": "配對候選人",
+      "startInterview": "開始AI面試",
+      "startInterviewDesc": "啟動AI驅動面試",
+      "pipeline": {
+        "new": "新增",
+        "screening": "篩選中",
+        "matched": "已配對",
+        "interviewing": "面試中",
+        "evaluated": "已評估",
+        "offered": "已發Offer"
+      }
+    },
+    "profile": {
+      "quickLinks": "快速連結",
+      "accountSettings": "帳戶設定",
+      "apiKeys": "API金鑰",
+      "usage": "使用量與帳單",
+      "integrations": "ATS整合"
+    },
+    "interview": {
+      "title": "AI面試",
+      "description": "具有自動評估功能的AI驅動面試",
+      "schedule": "排程面試",
+      "new": "新面試",
+      "candidateName": "候選人名稱",
+      "candidateEmail": "候選人電子郵件",
+      "jobTitle": "職位名稱",
+      "type": "類型",
+      "types": {
+        "video": "AI視訊面試",
+        "audio": "AI語音面試",
+        "text": "AI文字面試"
+      },
+      "jobDescription": "職位描述",
+      "cancel": "取消",
+      "create": "建立",
+      "all": "全部",
+      "noInterviews": "暫無面試",
+      "empty": "排程AI面試",
+      "run": "執行AI評估",
+      "running": "評估中",
+      "arrangeInterview": "安排面試",
+      "step": "步驟",
+      "selectResumes": "選擇履歷",
+      "selectAll": "全選",
+      "deselectAll": "取消全選",
+      "searchResumes": "依姓名、電郵或職位搜尋...",
+      "noResumes": "未找到履歷，請先在人才庫中上傳履歷。",
+      "selectedCount": "已選擇 {{count}} 份",
+      "selectJob": "選擇職位",
+      "searchJobs": "依職位名稱、公司或部門搜尋...",
+      "noJobs": "未找到已發佈的職位，請先建立職位。",
+      "interviewReqs": "面試要求",
+      "interviewReqsDesc": "指定AI面試官的要求，這將引導面試重點領域。",
+      "selectedJobLabel": "職位",
+      "interviewReqsPlaceholder": "例如：著重考察系統設計和分散式系統經驗。透過實際場景評估解決問題的能力。",
+      "confirmSend": "確認並發送",
+      "candidates": "候選人",
+      "jobLabel": "職位",
+      "requirements": "要求",
+      "sendNote": "面試邀請將逐一發送給每位候選人。每次邀請消耗1個面試額度。",
+      "sendInvites": "發送邀請",
+      "inviteProgress": "正在發送 {{current}}/{{total}}",
+      "inviteComplete": "邀請發送完成",
+      "sending": "發送中...",
+      "sent": "已發送",
+      "sendError": "錯誤",
+      "pending": "等待中",
+      "failed": "失敗",
+      "loginUrl": "面試連結",
+      "qrCode": "QR Code",
+      "noResumeText": "履歷文本不可用",
+      "next": "下一步",
+      "back": "上一步",
+      "close": "關閉"
+    },
+    "jobs": {
+      "title": "職缺",
+      "description": "使用AI協助建立和管理職位發布",
+      "create": "建立職缺",
+      "new": "新職缺",
+      "edit": "編輯職缺",
+      "saveChanges": "儲存變更",
+      "saving": "儲存中",
+      "cancel": "取消",
+      "delete": "刪除",
+      "publish": "發布",
+      "pause": "暫停",
+      "resume": "繼續",
+      "all": "全部",
+      "noJobs": "暫無職缺",
+      "empty": "建立您的第一個職位發布",
+      "created": "建立於",
+      "fromRequest": "來自需求：",
+      "generating": "生成中",
+      "generateWithAI": "使用AI生成",
+      "fields": {
+        "jobTitle": "職位名稱",
+        "department": "部門",
+        "location": "地點",
+        "workType": "工作形式",
+        "employmentType": "僱傭型態",
+        "experienceLevel": "經驗水平",
+        "minSalary": "最低薪資",
+        "maxSalary": "最高薪資",
+        "description": "職位描述",
+        "select": "選擇"
+      },
+      "workTypes": {
+        "remote": "遠距",
+        "hybrid": "混合",
+        "onsite": "現場"
+      },
+      "employmentTypes": {
+        "fulltime": "全職",
+        "parttime": "兼職",
+        "contract": "約聘",
+        "internship": "實習"
+      },
+      "levels": {
+        "entry": "初級",
+        "mid": "中級",
+        "senior": "資深",
+        "lead": "主管",
+        "executive": "高層"
+      },
+      "basicInfo": "基本資訊",
+      "jobContent": "職位內容",
+      "companyName": "公司名稱",
+      "companyNamePlaceholder": "例如：Google、Microsoft",
+      "qualifications": "任職要求",
+      "qualificationsPlaceholder": "所需技能、學歷、經驗...",
+      "hardRequirements": "硬性要求",
+      "hardRequirementsPlaceholder": "不可協商的必備條件...",
+      "monthlySalary": "最低月薪",
+      "salaryMax": "最高月薪",
+      "currency": "幣別",
+      "locations": "工作地點",
+      "addLocation": "新增",
+      "country": "國家",
+      "city": "城市",
+      "interviewConfig": "面試配置",
+      "interviewMode": "面試模式",
+      "standard": "標準模式",
+      "questionBank": "題庫模式",
+      "passingScore": "通過分數",
+      "interviewLanguage": "面試語言",
+      "interviewDuration": "面試時長（分鐘）",
+      "interviewRequirements": "面試要求",
+      "interviewRequirementsPlaceholder": "面試中需要評估的內容...",
+      "evaluationRules": "評估規則",
+      "evaluationRulesPlaceholder": "評分標準、權重、通過/淘汰門檻...",
+      "autoGenerateAll": "一鍵AI生成",
+      "enhance": "優化",
+      "generate": "生成",
+      "importJd": "匯入JD",
+      "exportJob": "匯出",
+      "demandAnalysis": "需求分析",
+      "analyzing": "分析中...",
+      "marketDifficulty": "招聘難度",
+      "salaryBenchmark": "薪資基準",
+      "supplyDemand": "供需分析",
+      "competitors": "競爭分析",
+      "timeToHire": "招聘週期（天）",
+      "trends": "市場趨勢"
+    },
+    "hiring": {
+      "title": "招聘需求",
+      "description": "管理您的招聘需求",
+      "new": "新需求",
+      "all": "全部",
+      "noRequests": "暫無招聘需求",
+      "empty": "開始新招聘需求",
+      "candidates": "候選人",
+      "createJob": "建立職缺",
+      "viewDetail": "查看詳情",
+      "pause": "暫停",
+      "activate": "啟用",
+      "delete": "刪除"
+    },
+    "talent": {
+      "title": "人才中心",
+      "description": "您的候選人資料庫",
+      "upload": "上傳履歷",
+      "search": "按姓名、職位或技能搜尋",
+      "noTalent": "暫無候選人",
+      "empty": "上傳履歷",
+      "experience": "年工作經驗",
+      "viewProfile": "查看檔案"
+    },
+    "matching": {
+      "title": "智慧配對",
+      "description": "AI驅動的候選人職缺配對",
+      "selectJob": "選擇職缺",
+      "noJobs": "未找到職缺",
+      "goToJobs": "前往職缺",
+      "jobPlaceholder": "選擇職缺",
+      "all": "全部",
+      "run": "執行AI配對",
+      "running": "配對中",
+      "noResults": "暫無配對結果",
+      "empty": "點擊執行AI配對",
+      "score": "分數",
+      "shortlist": "加入候選名單",
+      "reject": "拒絕",
+      "viewProfile": "查看檔案"
+    },
+    "evaluations": {
+      "title": "評估",
+      "description": "AI驅動的多代理候選人評估報告",
+      "noEvaluations": "暫無評估",
+      "empty": "先完成面試",
+      "goToInterview": "前往AI面試",
+      "pending": "待評估",
+      "completed": "已完成評估",
+      "evaluating": "評估中",
+      "run": "執行評估",
+      "summary": "總結",
+      "strengths": "優勢",
+      "improvements": "改進區域"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - AI智慧招聘平臺",
     "defaultDescription": "比其他人更快招到精英人才。我們的AI招聘助手自動篩選簡歷、進行面試並提供綜合評估報告。",
@@ -1964,7 +2253,7 @@
       "title": "上傳簡歷",
       "batchTitle": "批次上傳簡歷",
       "dragDrop": "將簡歷檔案拖放到此處",
-      "formats": "支援格式：PDF、DOCX、TXT",
+      "formats": "支援格式：PDF、DOCX、TXT、MD、JSON",
       "maxFiles": "一次最多10個檔案",
       "uploading": "處理中...",
       "duplicate": "重複"
@@ -2355,5 +2644,28 @@
       "primary": "免費開始招聘",
       "secondary": "探索 API"
     }
+  },
+  "integrations": {
+    "title": "ATS 整合",
+    "subtitle": "連接您的招聘管理系統，自動同步候選人。",
+    "connect": "連接",
+    "disconnect": "中斷",
+    "connected": "已連接",
+    "disconnected": "整合已中斷",
+    "test": "測試",
+    "testing": "測試中...",
+    "testSuccess": "連接測試通過",
+    "testFailed": "連接測試失敗",
+    "connectAndTest": "連接並測試",
+    "cancel": "取消",
+    "lastSync": "上次同步",
+    "logs": "日誌",
+    "syncHistory": "同步歷史",
+    "noLogs": "尚無同步記錄",
+    "greenhouse": { "description": "企業級招聘管理系統，支援結構化招聘流程" },
+    "lever": { "description": "現代招聘管理系統，基於機會的候選人追蹤" },
+    "ashby": { "description": "一站式招聘平台，助力團隊規模化" },
+    "bamboohr": { "description": "人力資源軟體，含招聘追蹤功能" },
+    "workable": { "description": "招聘軟體，強大的招聘渠道整合" }
   }
 }

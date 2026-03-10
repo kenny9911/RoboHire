@@ -2,6 +2,7 @@ import { Router } from 'express';
 import prisma from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { checkBatchUsage } from '../middleware/usageMeter.js';
 import { llmService } from '../services/llm/LLMService.js';
 import { languageService } from '../services/LanguageService.js';
 import { generateRequestId, logger } from '../services/LoggerService.js';
@@ -9,6 +10,8 @@ import { createJDAgent } from '../agents/CreateJDAgent.js';
 import { screeningAgent } from '../agents/ScreeningAgent.js';
 import { inviteAgent } from '../agents/InviteAgent.js';
 import { recruitmentIntelligenceService } from '../services/RecruitmentIntelligenceService.js';
+import { DocumentParsingService } from '../services/DocumentParsingService.js';
+import { fireHiringRequestWebhook } from '../services/WebhookService.js';
 // Import auth types to extend Express
 import '../types/auth.js';
 
@@ -201,8 +204,8 @@ router.post('/', async (req, res) => {
       data: {
         userId,
         title,
-        requirements,
-        jobDescription,
+        requirements: DocumentParsingService.cleanTextContent(requirements),
+        jobDescription: jobDescription ? DocumentParsingService.cleanTextContent(jobDescription) : undefined,
         webhookUrl,
       },
     });
@@ -757,6 +760,13 @@ router.post('/:id/auto-match', async (req, res) => {
       });
     }
 
+    // Check and deduct usage for the batch
+    const usageCheck = await checkBatchUsage(userId, 'match', resumesToScreen.length);
+    if (!usageCheck.ok) {
+      logger.endRequest(requestId, 'error', 402);
+      return res.status(402).json({ success: false, error: usageCheck.error, code: usageCheck.code, details: usageCheck.details });
+    }
+
     // Build condensed parsed summaries for each resume
     const screeningResumes = resumesToScreen.map(r => {
       const parsed = r.parsedData as Record<string, any> | null;
@@ -994,6 +1004,14 @@ router.patch('/:id/resume-fits/:fitId', async (req, res) => {
         },
       },
     });
+
+    // Fire webhook asynchronously
+    fireHiringRequestWebhook(id, 'candidate.status_changed', {
+      resumeFitId: fitId,
+      hiringRequestId: id,
+      pipelineStatus,
+      candidate: fit.resume,
+    }).catch(() => {});
 
     return res.json({ success: true, data: fit });
   } catch (error) {

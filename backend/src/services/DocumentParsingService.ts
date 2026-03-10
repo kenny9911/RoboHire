@@ -2,7 +2,7 @@ import { pdfService } from './PDFService.js';
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 
-export type SupportedFormat = 'pdf' | 'docx' | 'xlsx' | 'txt' | 'unknown';
+export type SupportedFormat = 'pdf' | 'docx' | 'xlsx' | 'txt' | 'md' | 'json' | 'unknown';
 
 /**
  * Unified document parsing service that extracts text from PDF, DOCX, XLSX, and TXT files.
@@ -24,6 +24,8 @@ export class DocumentParsingService {
       mime === 'application/vnd.ms-excel'
     ) return 'xlsx';
     if (mime === 'text/plain') return 'txt';
+    if (mime === 'text/markdown') return 'md';
+    if (mime === 'application/json') return 'json';
 
     // Fallback: check file extension
     if (filename) {
@@ -32,6 +34,8 @@ export class DocumentParsingService {
       if (ext === 'docx' || ext === 'doc') return 'docx';
       if (ext === 'xlsx' || ext === 'xls') return 'xlsx';
       if (ext === 'txt') return 'txt';
+      if (ext === 'md' || ext === 'markdown') return 'md';
+      if (ext === 'json') return 'json';
     }
 
     return 'unknown';
@@ -52,6 +56,10 @@ export class DocumentParsingService {
         return this.extractXlsx(buffer);
       case 'txt':
         return this.extractTxt(buffer);
+      case 'md':
+        return this.extractMarkdown(buffer);
+      case 'json':
+        return this.extractJson(buffer);
       default:
         throw new Error(`Unsupported file format: ${mimetype}`);
     }
@@ -124,6 +132,128 @@ export class DocumentParsingService {
   }
 
   /**
+   * Extract text from Markdown files.
+   * Strips markdown formatting syntax, returning plain text.
+   */
+  private extractMarkdown(buffer: Buffer): string {
+    const raw = this.extractTxt(buffer);
+    return DocumentParsingService.stripMarkdown(raw);
+  }
+
+  /**
+   * Strip markdown formatting from text, returning plain text.
+   */
+  static stripMarkdown(text: string): string {
+    return text
+      // Remove code blocks (``` ... ```)
+      .replace(/```[\s\S]*?```/g, '')
+      // Remove inline code (`code`)
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove images ![alt](url)
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+      // Convert links [text](url) to text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove heading markers (# ## ### etc.)
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold/italic markers
+      .replace(/(\*{1,3}|_{1,3})([^*_]+)\1/g, '$2')
+      // Remove strikethrough ~~text~~
+      .replace(/~~([^~]+)~~/g, '$1')
+      // Remove horizontal rules
+      .replace(/^[-*_]{3,}\s*$/gm, '')
+      // Remove blockquote markers
+      .replace(/^>\s?/gm, '')
+      // Remove unordered list markers
+      .replace(/^[\s]*[-*+]\s+/gm, '')
+      // Remove ordered list markers
+      .replace(/^[\s]*\d+\.\s+/gm, '')
+      // Remove HTML tags
+      .replace(/<[^>]+>/g, '')
+      // Collapse multiple blank lines
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  /**
+   * Extract readable text from JSON files.
+   * Flattens JSON structure into human-readable key-value text.
+   */
+  private extractJson(buffer: Buffer): string {
+    const raw = buffer.toString('utf-8').trim();
+    try {
+      const parsed = JSON.parse(raw);
+      return DocumentParsingService.flattenJson(parsed);
+    } catch {
+      return raw;
+    }
+  }
+
+  /**
+   * Flatten a JSON value into human-readable text.
+   * Unwraps common API response wrappers like { success, data }.
+   */
+  static flattenJson(value: unknown): string {
+    // Unwrap common API response wrapper
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const obj = value as Record<string, unknown>;
+      if ('data' in obj && obj.data && typeof obj.data === 'object') {
+        value = obj.data;
+      }
+    }
+
+    const lines: string[] = [];
+
+    const walk = (v: unknown, prefix: string) => {
+      if (v === null || v === undefined || v === '') return;
+      if (typeof v === 'string') {
+        lines.push(prefix ? `${prefix}: ${v}` : v);
+      } else if (typeof v === 'number' || typeof v === 'boolean') {
+        lines.push(prefix ? `${prefix}: ${v}` : String(v));
+      } else if (Array.isArray(v)) {
+        for (const item of v) {
+          walk(item, prefix);
+        }
+      } else if (typeof v === 'object') {
+        for (const [k, child] of Object.entries(v as Record<string, unknown>)) {
+          walk(child, prefix ? `${prefix} > ${k}` : k);
+        }
+      }
+    };
+
+    walk(value, '');
+    return lines.join('\n').trim() || JSON.stringify(value, null, 2);
+  }
+
+  /**
+   * Detect and clean JSON or markdown from arbitrary text input.
+   * Used to sanitize user-provided content (pasted text, uploaded content).
+   */
+  static cleanTextContent(text: string): string {
+    if (!text || typeof text !== 'string') return text;
+    const trimmed = text.trim();
+
+    // Detect JSON: starts with { or [
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        const flattened = DocumentParsingService.flattenJson(parsed);
+        if (flattened) return flattened;
+      } catch {
+        // Not valid JSON, continue
+      }
+    }
+
+    // Detect heavy markdown: if text has many markdown markers, strip them
+    const mdMarkers = (trimmed.match(/^#{1,6}\s|```|\*\*|__|\[.+\]\(.+\)/gm) || []).length;
+    if (mdMarkers >= 3) {
+      return DocumentParsingService.stripMarkdown(trimmed);
+    }
+
+    return trimmed;
+  }
+
+  /**
    * List of accepted MIME types for multer fileFilter.
    */
   static ACCEPTED_MIMES = new Set([
@@ -133,6 +263,8 @@ export class DocumentParsingService {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/vnd.ms-excel',
     'text/plain',
+    'text/markdown',
+    'application/json',
   ]);
 }
 

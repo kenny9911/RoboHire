@@ -20,6 +20,17 @@ const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Blog = lazy(() => import('./pages/Blog'));
 
+// Lazy-loaded product app
+const ProductLayout = lazy(() => import('./layouts/ProductLayout'));
+const ProductDashboard = lazy(() => import('./pages/product/ProductDashboard'));
+const ProductHiringRequests = lazy(() => import('./pages/product/HiringRequests'));
+const ProductTalentHub = lazy(() => import('./pages/product/TalentHub'));
+const ProductJobs = lazy(() => import('./pages/product/Jobs'));
+const ProductSmartMatching = lazy(() => import('./pages/product/SmartMatching'));
+const ProductAIInterview = lazy(() => import('./pages/product/AIInterview'));
+const ProductEvaluations = lazy(() => import('./pages/product/Evaluations'));
+const ProductProfile = lazy(() => import('./pages/product/Profile'));
+
 // Lazy-loaded dashboard
 const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -29,8 +40,8 @@ const UsageDashboard = lazy(() => import('./pages/UsageDashboard'));
 const CallDetail = lazy(() => import('./pages/CallDetail'));
 const Account = lazy(() => import('./pages/Account'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const ResumeLibrary = lazy(() => import('./pages/ResumeLibrary'));
 const ResumeDetail = lazy(() => import('./pages/ResumeDetail'));
+const ATSIntegrations = lazy(() => import('./pages/ATSIntegrations'));
 
 // Lazy-loaded API Playground
 const APIPlayground = lazy(() => import('./layouts/APIPlayground'));
@@ -52,6 +63,7 @@ const DocsInviteCandidate = lazy(() => import('./pages/docs/DocsInviteCandidate'
 const DocsEvaluateInterview = lazy(() => import('./pages/docs/DocsEvaluateInterview'));
 const DocsWebhooks = lazy(() => import('./pages/docs/DocsWebhooks'));
 const DocsErrorHandling = lazy(() => import('./pages/docs/DocsErrorHandling'));
+const DocsATSIntegrations = lazy(() => import('./pages/docs/DocsATSIntegrations'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -80,6 +92,26 @@ function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/blog" element={<Blog />} />
 
+            {/* Product App (protected, sidebar layout) */}
+            <Route
+              path="/product"
+              element={
+                <ProtectedRoute>
+                  <ProductLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<ProductDashboard />} />
+              <Route path="hiring" element={<ProductHiringRequests />} />
+              <Route path="talent" element={<ProductTalentHub />} />
+              <Route path="talent/:id" element={<ResumeDetail />} />
+              <Route path="jobs" element={<ProductJobs />} />
+              <Route path="matching" element={<ProductSmartMatching />} />
+              <Route path="interview" element={<ProductAIInterview />} />
+              <Route path="evaluations" element={<ProductEvaluations />} />
+              <Route path="profile" element={<ProductProfile />} />
+            </Route>
+
             {/* Dashboard (protected, shared sidebar layout) */}
             <Route
               path="/dashboard"
@@ -91,14 +123,16 @@ function App() {
             >
               <Route index element={<Dashboard />} />
               <Route path="requests/:id" element={<Dashboard />} />
-              <Route path="resumes" element={<ResumeLibrary />} />
-              <Route path="resumes/:id" element={<ResumeDetail />} />
+              {/* Redirect old resume routes to /product/talent */}
+              <Route path="resumes" element={<Navigate to="/product/talent" replace />} />
+              <Route path="resumes/:id" element={<Navigate to="/product/talent" replace />} />
               <Route path="api-keys" element={<APIKeys />} />
               <Route path="stats" element={<DashboardStats />} />
               <Route path="usage" element={<UsageDashboard />} />
               <Route path="usage/calls/:id" element={<CallDetail />} />
               <Route path="account" element={<Account />} />
               <Route path="admin" element={<AdminDashboard />} />
+              <Route path="integrations" element={<ATSIntegrations />} />
             </Route>
 
             {/* API Playground Routes (Public) */}
@@ -123,6 +157,7 @@ function App() {
               <Route path="api/invite-candidate" element={<DocsInviteCandidate />} />
               <Route path="api/evaluate-interview" element={<DocsEvaluateInterview />} />
               <Route path="webhooks" element={<DocsWebhooks />} />
+              <Route path="ats-integrations" element={<DocsATSIntegrations />} />
               <Route path="errors" element={<DocsErrorHandling />} />
             </Route>
 

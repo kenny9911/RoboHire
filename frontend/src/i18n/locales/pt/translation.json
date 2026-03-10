@@ -76,12 +76,13 @@
       "pricing": "Preços",
       "signIn": "Entrar",
       "getStarted": "Começar",
-      "dashboard": "Painel"
+      "dashboard": "Painel",
+      "product": "Produto"
     },
     "hero": {
       "badge": "Plataforma de contratação com IA",
-      "headline": "Contrate talentos de elite",
-      "headlineHighlight": "antes dos outros",
+      "headline": "A IA seleciona. A IA entrevista.",
+      "headlineHighlight": "Você contrata os melhores.",
       "definition": "O RoboHire é uma plataforma de recrutamento com IA que automatiza a triagem de currículos, conduz entrevistas com inteligência artificial e gera relatórios de avaliação estruturados para cada candidato.",
       "subheadline": "Chega de perder horas analisando pilhas de currículos. Nosso agente de IA filtra candidatos, conduz entrevistas e entrega relatórios completos de avaliação de forma totalmente automática.",
       "ctaPrimary": "Teste gratuito",
@@ -105,7 +106,7 @@
         "feature1": "Triagem automática de currículos",
         "feature2": "Entrevistas com IA",
         "feature3": "Relatórios completos de avaliação",
-        "feature4": "Integração via webhooks",
+        "feature4": "Integração ATS e webhooks",
         "cta": "Começar agora",
         "badge": "Mais popular"
       },
@@ -127,7 +128,7 @@
         "feature1": "Parsing de CV e JD",
         "feature2": "Matching com IA",
         "feature3": "Avaliação de entrevistas",
-        "feature4": "Endpoints REST",
+        "feature4": "Integração ATS (5 provedores)",
         "cta": "Explorar API"
       }
     },
@@ -141,7 +142,7 @@
       },
       "step2": {
         "title": "Conecte ao seu fluxo",
-        "description": "Integre seu ATS via API ou webhooks. Sem esforço: aponte o pipeline para o RoboHire."
+        "description": "Conecte seu ATS — Greenhouse, Lever, Ashby, BambooHR ou Workable — com um clique. Ou use nossa API e webhooks."
       },
       "step3": {
         "title": "Receba os melhores matches",
@@ -176,6 +177,10 @@
         "title": "API para desenvolvedores",
         "description": "Acesso REST completo para parsing, matching e avaliação."
       },
+      "atsIntegration": {
+        "title": "Integração ATS",
+        "description": "Conecte Greenhouse, Lever, Ashby, BambooHR ou Workable. Envie candidatos compatíveis diretamente para seu pipeline de contratação."
+      },
       "webhooks": {
         "title": "Entrega por webhooks",
         "description": "Receba candidatos pré-selecionados e relatórios automaticamente."
@@ -189,6 +194,29 @@
         "description": "Análise avançada para detectar respostas assistidas por IA."
       },
       "learnMore": "Saiba mais"
+    },
+    "product": {
+      "badge": "Suite de Produtos",
+      "headline": "Tudo que você precisa para contratar melhor",
+      "subheadline": "Quatro produtos com IA que trabalham juntos para transformar seu recrutamento.",
+      "explore": "Explorar",
+      "cta": "Abrir Painel de Produto",
+      "easyHiring": {
+        "title": "Contratação Fácil",
+        "desc": "Fluxo de contratação com IA que triagem currículos, gerencia candidatos e otimiza todo o processo."
+      },
+      "smartMatching": {
+        "title": "Matching Inteligente",
+        "desc": "A IA combina candidatos com vagas usando pontuação precisa para que você não perca nenhum talento."
+      },
+      "aiInterview": {
+        "title": "Entrevista IA",
+        "desc": "Entrevistas em vídeo conduzidas por IA com voz natural. Os candidatos falam com nosso entrevistador IA."
+      },
+      "evaluation": {
+        "title": "Avaliação",
+        "desc": "Avaliação multi-agente que analisa habilidades, experiência e fit cultural com relatórios completos."
+      }
     },
     "cta": {
       "title": "Pronto para contratar de forma mais inteligente?",
@@ -353,6 +381,10 @@
       "webhooks": {
         "title": "Integração Webhook",
         "desc": "Receba atualizações em tempo real via webhooks quando candidatos são processados."
+      },
+      "ats": {
+        "title": "Integração ATS",
+        "desc": "Conecte Greenhouse, Lever, Ashby, BambooHR ou Workable para sincronizar candidatos diretamente no seu pipeline de contratação."
       }
     },
     "playground": {
@@ -787,7 +819,8 @@
       "apiPlayground": "API Playground",
       "account": "Conta",
       "usage": "Uso",
-      "resumes": "Currículos"
+      "resumes": "Currículos",
+      "integrations": "Integrações"
     },
     "welcome": "Bem-vindo de volta",
     "user": "por aqui",
@@ -1146,14 +1179,14 @@
       "resumesDesc": "Faça upload de currículos em PDF ou cole o texto. Você pode adicionar vários.",
       "uploading": "Extraindo texto do PDF...",
       "dropResumes": "Clique ou arraste currículos aqui",
-      "supportedFormats": "Arquivos PDF, DOCX, XLSX e TXT suportados. Múltiplos arquivos permitidos.",
+      "supportedFormats": "Arquivos PDF, DOCX, XLSX, TXT, MD e JSON suportados. Múltiplos arquivos permitidos.",
       "hideTextInput": "Ocultar entrada de texto",
       "pasteInstead": "Ou cole o texto do currículo",
       "pastePlaceholder": "Cole o texto do currículo aqui...",
       "addResume": "Adicionar currículo",
       "pastedResume": "Currículo colado #{{num}}",
       "resumeCount": "{{count}} currículo(s) carregado(s)",
-      "pdfOnlyError": "Formato de arquivo não suportado. Faça upload de um arquivo PDF ou TXT.",
+      "pdfOnlyError": "Formato de arquivo não suportado. Faça upload de um arquivo PDF, TXT, MD ou JSON.",
       "settingsTitle": "Configurações do convite",
       "recruiterEmail": "Email do recrutador",
       "interviewerReq": "Requisito do entrevistador",
@@ -1187,7 +1220,7 @@
       "errorNoJd": "Por favor, insira uma descrição da vaga.",
       "errorNoResumes": "Por favor, adicione pelo menos um currículo.",
       "uploadJd": "Enviar arquivo",
-      "jdFormats": "PDF, DOCX, XLSX, TXT suportados",
+      "jdFormats": "PDF, DOCX, XLSX, TXT, MD, JSON suportados",
       "viewResume": "Ver currículo completo",
       "extractFailed": "Não foi possível extrair texto do arquivo.",
       "resumePreviewChars": "{{count}} caracteres",
@@ -1441,6 +1474,262 @@
       "sessionAuth": "Sessão"
     }
   },
+  "product": {
+    "nav": {
+      "dashboard": "Painel",
+      "hiringRequests": "Solicitações de Contratação",
+      "talentHub": "Hub de Talentos",
+      "jobs": "Vagas",
+      "aiInterview": "Entrevista IA",
+      "profile": "Perfil",
+      "devDashboard": "Painel do Desenvolvedor",
+      "smartMatching": "Matching Inteligente",
+      "evaluations": "Avaliações",
+      "candidateDetail": "Detalhe do Candidato",
+      "jobDetail": "Detalhe da Vaga",
+      "interviewRoom": "Sala de Entrevista"
+    },
+    "dashboard": {
+      "welcome": "Bem-vindo de volta",
+      "welcomeDesc": "Seu centro de comando de contratação com IA. Deixe os agentes IA fazerem o trabalho pesado.",
+      "activeJobs": "Vagas Ativas",
+      "totalCandidates": "Total de Candidatos",
+      "interviewsThisWeek": "Entrevistas Esta Semana",
+      "avgMatchScore": "Pontuação Média",
+      "pendingEvals": "entrevista(s) aguardando avaliação IA",
+      "runEvalNow": "Execute avaliações para obter recomendações de contratação",
+      "actionQueue": "Fila de Ações",
+      "noActions": "Sem ações pendentes. Crie uma vaga para começar!",
+      "pipelineOverview": "Visão do Pipeline",
+      "quickActions": "Ações Rápidas",
+      "createJob": "Criar Vaga",
+      "createJobDesc": "Publique uma nova posição e deixe a IA ajudar a escrever a descrição.",
+      "uploadResumes": "Enviar Currículos",
+      "uploadResumesDesc": "Adicione candidatos ao seu pool de talentos para matching IA.",
+      "runMatching": "Executar Matching IA",
+      "runMatchingDesc": "Faça matching automático de candidatos com suas posições abertas.",
+      "startInterview": "Iniciar Entrevista IA",
+      "startInterviewDesc": "Inicie uma entrevista em vídeo com IA com um candidato.",
+      "pipeline": {
+        "new": "Novo",
+        "screening": "Triagem",
+        "matched": "Combinado",
+        "interviewing": "Entrevistando",
+        "evaluated": "Avaliado",
+        "offered": "Ofertado"
+      }
+    },
+    "profile": {
+      "quickLinks": "Links Rápidos",
+      "accountSettings": "Configurações da Conta",
+      "apiKeys": "Chaves API",
+      "usage": "Uso e Faturamento",
+      "integrations": "Integrações ATS"
+    },
+    "interview": {
+      "title": "Entrevista IA",
+      "subtitle": "Entrevistas com IA e avaliação automática.",
+      "schedule": "Agendar Entrevista",
+      "newInterview": "Nova Entrevista",
+      "candidateName": "Nome do Candidato",
+      "candidateEmail": "E-mail do Candidato",
+      "jobTitleLabel": "Título da Vaga",
+      "interviewType": "Tipo",
+      "typeVideo": "Entrevista Vídeo IA",
+      "typeAudio": "Entrevista Áudio IA",
+      "typeText": "Entrevista Texto IA",
+      "jobDescLabel": "Descrição da Vaga",
+      "cancel": "Cancelar",
+      "create": "Criar",
+      "allStatuses": "Todos",
+      "empty": "Sem entrevistas ainda",
+      "emptyDesc": "Agende uma entrevista IA para começar.",
+      "evaluate": "Executar Avaliação IA",
+      "arrangeInterview": "Agendar Entrevista",
+      "step": "Passo",
+      "selectResumes": "Selecionar Currículos",
+      "selectAll": "Selecionar Tudo",
+      "deselectAll": "Desmarcar Tudo",
+      "searchResumes": "Pesquisar por nome, e-mail ou cargo...",
+      "noResumes": "Nenhum currículo encontrado. Envie currículos no Hub de Talentos primeiro.",
+      "selectedCount": "{{count}} selecionados",
+      "selectJob": "Selecionar Vaga",
+      "searchJobs": "Pesquisar por título, empresa ou departamento...",
+      "noJobs": "Nenhuma vaga aberta encontrada. Crie uma vaga primeiro.",
+      "interviewReqs": "Requisitos da Entrevista",
+      "interviewReqsDesc": "Especifique os requisitos para o entrevistador IA. Isso guiará as áreas de foco da entrevista.",
+      "selectedJobLabel": "Vaga",
+      "interviewReqsPlaceholder": "Ex.: Focar em design de sistemas e experiência com sistemas distribuídos. Avaliar capacidade de resolução de problemas com cenários reais.",
+      "confirmSend": "Confirmar e Enviar",
+      "candidates": "Candidatos",
+      "jobLabel": "Vaga",
+      "requirements": "Requisitos",
+      "sendNote": "Os convites de entrevista serão enviados a cada candidato um por um. Cada convite usa 1 crédito de entrevista.",
+      "sendInvites": "Enviar Convites",
+      "inviteProgress": "Enviando {{current}}/{{total}}",
+      "inviteComplete": "Convites Concluídos",
+      "sending": "Enviando...",
+      "sent": "Enviado",
+      "sendError": "Erro",
+      "pending": "Pendente",
+      "failed": "falhou",
+      "loginUrl": "Link da Entrevista",
+      "qrCode": "Código QR",
+      "noResumeText": "Texto do currículo não disponível",
+      "next": "Próximo",
+      "back": "Voltar",
+      "close": "Fechar"
+    },
+    "jobs": {
+      "title": "Vagas",
+      "subtitle": "Crie e gerencie publicações de vagas com assistência IA.",
+      "create": "Criar Vaga",
+      "createBtn": "Criar Vaga",
+      "newJob": "Nova Vaga",
+      "editJob": "Editar Vaga",
+      "save": "Salvar Alterações",
+      "saving": "Salvando...",
+      "cancel": "Cancelar",
+      "delete": "Excluir",
+      "edit": "Editar",
+      "publish": "Publicar",
+      "pause": "Pausar",
+      "resume": "Retomar",
+      "allStatuses": "Todos",
+      "empty": "Sem vagas ainda",
+      "emptyDesc": "Crie sua primeira publicação de vaga para começar.",
+      "created": "Criado",
+      "fromRequest": "Da solicitação:",
+      "generating": "Gerando...",
+      "generateWithAI": "Gerar com IA",
+      "field": {
+        "title": "Título da Vaga",
+        "titlePlaceholder": "ex. Desenvolvedor Frontend Sênior",
+        "department": "Departamento",
+        "location": "Localização",
+        "workType": "Tipo de Trabalho",
+        "employmentType": "Tipo de Emprego",
+        "experienceLevel": "Nível de Experiência",
+        "salaryMin": "Salário Mín",
+        "salaryMax": "Salário Máx",
+        "description": "Descrição da Vaga",
+        "descriptionPlaceholder": "Escreva uma descrição ou deixe a IA gerar uma...",
+        "select": "Selecionar..."
+      },
+      "workTypes": {
+        "remote": "Remoto",
+        "hybrid": "Híbrido",
+        "onsite": "Presencial"
+      },
+      "empTypes": {
+        "fullTime": "Tempo Integral",
+        "partTime": "Meio Período",
+        "contract": "Contrato",
+        "internship": "Estágio"
+      },
+      "levels": {
+        "entry": "Júnior",
+        "mid": "Pleno",
+        "senior": "Sênior",
+        "lead": "Líder",
+        "executive": "Executivo"
+      },
+      "basicInfo": "Informacoes basicas",
+      "jobContent": "Conteudo da vaga",
+      "companyName": "Nome da empresa",
+      "companyNamePlaceholder": "ex. Google, Microsoft",
+      "qualifications": "Qualificacoes",
+      "qualificationsPlaceholder": "Habilidades necessarias, formacao, experiencia...",
+      "hardRequirements": "Requisitos obrigatorios",
+      "hardRequirementsPlaceholder": "Criterios indispensaveis nao negociaveis...",
+      "monthlySalary": "Salario mensal minimo",
+      "salaryMax": "Salario mensal maximo",
+      "currency": "Moeda",
+      "locations": "Localizacoes",
+      "addLocation": "Adicionar",
+      "country": "Pais",
+      "city": "Cidade",
+      "interviewConfig": "Configuracao de entrevista",
+      "interviewMode": "Modo de entrevista",
+      "standard": "Padrao",
+      "questionBank": "Banco de perguntas",
+      "passingScore": "Pontuacao de aprovacao",
+      "interviewLanguage": "Idioma",
+      "interviewDuration": "Duracao (min)",
+      "interviewRequirements": "Requisitos da entrevista",
+      "interviewRequirementsPlaceholder": "O que avaliar durante a entrevista...",
+      "evaluationRules": "Regras de avaliacao",
+      "evaluationRulesPlaceholder": "Criterios de pontuacao, pesos, limites...",
+      "autoGenerateAll": "Gerar tudo com IA",
+      "enhance": "Aprimorar",
+      "generate": "Gerar",
+      "importJd": "Importar JD",
+      "exportJob": "Exportar",
+      "demandAnalysis": "Analise de demanda",
+      "analyzing": "Analisando...",
+      "marketDifficulty": "Dificuldade do mercado",
+      "salaryBenchmark": "Referencia salarial",
+      "supplyDemand": "Oferta / Demanda",
+      "competitors": "Concorrencia",
+      "timeToHire": "Dias para contratar",
+      "trends": "Tendencias do mercado"
+    },
+    "hiring": {
+      "title": "Solicitações de Contratação",
+      "subtitle": "Gerencie suas solicitações e converta-as em publicações de vagas.",
+      "newRequest": "Nova Solicitação",
+      "allStatuses": "Todos",
+      "empty": "Sem solicitações ainda",
+      "emptyDesc": "Inicie uma nova solicitação com nosso assistente IA.",
+      "candidates": "candidatos",
+      "createJob": "Criar Vaga",
+      "viewDetail": "Ver Detalhe",
+      "pause": "Pausar",
+      "activate": "Ativar",
+      "delete": "Excluir"
+    },
+    "talent": {
+      "title": "Hub de Talentos",
+      "subtitle": "Seu repositório de candidatos com insights de IA.",
+      "upload": "Enviar Currículos",
+      "searchPlaceholder": "Buscar por nome, cargo, habilidades...",
+      "empty": "Sem candidatos ainda",
+      "emptyDesc": "Envie currículos para construir seu pool de talentos.",
+      "yearsExp": "anos de experiência",
+      "viewProfile": "Ver Perfil"
+    },
+    "matching": {
+      "title": "Matching Inteligente",
+      "subtitle": "Matching candidato-vaga com IA e análise detalhada.",
+      "selectJob": "Selecionar uma Vaga",
+      "noJobs": "Nenhuma vaga encontrada. Crie uma primeiro.",
+      "goToJobs": "Ir para Vagas",
+      "choosePlaceholder": "-- Escolha uma vaga --",
+      "allStatuses": "Todos",
+      "runMatch": "Executar Matching IA",
+      "running": "Matching...",
+      "noResults": "Sem resultados ainda",
+      "noResultsDesc": "Clique em \"Executar Matching IA\" para combinar candidatos com esta vaga.",
+      "score": "pontuação",
+      "shortlist": "Pré-selecionar",
+      "reject": "Rejeitar",
+      "viewProfile": "Ver Perfil"
+    },
+    "evaluations": {
+      "title": "Avaliações",
+      "subtitle": "Relatórios de avaliação multi-agente com IA.",
+      "empty": "Sem avaliações ainda",
+      "emptyDesc": "Complete entrevistas primeiro, depois execute avaliações IA.",
+      "goToInterviews": "Ir para Entrevista IA",
+      "pendingSection": "Avaliação Pendente",
+      "completedSection": "Avaliações Concluídas",
+      "evaluating": "Avaliando...",
+      "runEval": "Executar Avaliação",
+      "summary": "Resumo",
+      "strengths": "Pontos Fortes",
+      "weaknesses": "Áreas para Melhoria"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - Plataforma de Recrutamento com IA",
     "defaultDescription": "Contrate candidatos de elite antes dos outros. Nosso agente de recrutamento com IA filtra currículos, realiza entrevistas e gera relatórios de avaliação completos.",
@@ -1540,7 +1829,7 @@
       "title": "Enviar Currículo",
       "batchTitle": "Envio em Lote de Currículos",
       "dragDrop": "Arraste e solte arquivos de currículos aqui",
-      "formats": "Formatos: PDF, DOCX, TXT",
+      "formats": "Formatos: PDF, DOCX, TXT, MD, JSON",
       "maxFiles": "Até 10 arquivos de uma vez",
       "uploading": "Processando...",
       "duplicate": "Duplicado"
@@ -1931,5 +2220,28 @@
       "primary": "Comece a contratar gratuitamente",
       "secondary": "Explore a API"
     }
+  },
+  "integrations": {
+    "title": "Integrações ATS",
+    "subtitle": "Conecte seu Sistema de Rastreamento de Candidatos para sincronizar candidatos automaticamente.",
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "connected": "Conectado",
+    "disconnected": "Integração desconectada",
+    "test": "Testar",
+    "testing": "Testando...",
+    "testSuccess": "Teste de conexão aprovado",
+    "testFailed": "Teste de conexão falhou",
+    "connectAndTest": "Conectar e testar",
+    "cancel": "Cancelar",
+    "lastSync": "Última sincronização",
+    "logs": "Registros",
+    "syncHistory": "Histórico de sincronização",
+    "noLogs": "Nenhuma atividade de sincronização",
+    "greenhouse": { "description": "ATS empresarial com pipelines de contratação estruturados" },
+    "lever": { "description": "ATS moderno com rastreamento de candidatos baseado em oportunidades" },
+    "ashby": { "description": "Plataforma de recrutamento completa para equipes em crescimento" },
+    "bamboohr": { "description": "Software de RH com recursos de rastreamento de candidatos" },
+    "workable": { "description": "Software de recrutamento com fortes integrações de vagas de emprego" }
   }
 }

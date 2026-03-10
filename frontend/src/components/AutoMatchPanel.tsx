@@ -449,7 +449,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
                     {/* Name + Role */}
                     <div className="min-w-0 flex-1">
                       <Link
-                        to={`/dashboard/resumes/${fit.resume.id}`}
+                        to={`/product/talent/${fit.resume.id}`}
                         className="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors"
                       >
                         {fit.resume.name}
@@ -599,7 +599,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
 
                       {/* View resume link */}
                       <Link
-                        to={`/dashboard/resumes/${fit.resume.id}`}
+                        to={`/product/talent/${fit.resume.id}`}
                         className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                       >
                         {t('dashboard.autoMatch.viewResume')} &rarr;

@@ -118,7 +118,7 @@ export default function ResumeDetail() {
   const handleArchive = async () => {
     if (!resume) return;
     await axios.delete(`/api/v1/resumes/${resume.id}`);
-    navigate('/dashboard/resumes');
+    navigate('/product/talent');
   };
 
   if (loading) {
@@ -132,7 +132,7 @@ export default function ResumeDetail() {
   if (error || !resume) {
     return (
       <div className="max-w-4xl mx-auto">
-        <button onClick={() => navigate('/dashboard/resumes')} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-6">
+        <button onClick={() => navigate('/product/talent')} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-6">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           {t('resumeLibrary.detail.back', 'Back to Resumes')}
         </button>
@@ -155,7 +155,7 @@ export default function ResumeDetail() {
       <SEO title={`${resume.name} - Resume`} noIndex />
 
       {/* Back */}
-      <button onClick={() => navigate('/dashboard/resumes')} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-6">
+      <button onClick={() => navigate('/product/talent')} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-6">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         {t('resumeLibrary.detail.back', 'Back to Resumes')}
       </button>

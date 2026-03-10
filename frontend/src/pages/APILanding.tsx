@@ -51,6 +51,10 @@ console.log(result.data.matchScore); // 85`;
       title: t('apiLanding.features.webhooks.title', 'Webhook Integration'),
       description: t('apiLanding.features.webhooks.desc', 'Receive real-time updates via webhooks when candidates are processed.'),
     },
+    {
+      title: t('apiLanding.features.ats.title', 'ATS Integration'),
+      description: t('apiLanding.features.ats.desc', 'Connect Greenhouse, Lever, Ashby, BambooHR, or Workable to sync candidates directly into your hiring pipeline.'),
+    },
   ];
 
   const steps = [

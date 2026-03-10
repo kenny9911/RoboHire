@@ -104,7 +104,7 @@ export default function PostCreationPanel({ hiringRequestId }: PostCreationPanel
                 {t('hiring.postCreation.smartMatchNoResumes')}
               </p>
               <Link
-                to="/dashboard/resumes"
+                to="/product/talent"
                 className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
               >
                 {t('hiring.postCreation.smartMatchNoResumesAction')} →

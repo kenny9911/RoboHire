@@ -13,7 +13,7 @@ export default function HowItWorks() {
     {
       number: '02',
       title: t('landing.howItWorks.step2.title', 'Plug Into Your Workflow'),
-      description: t('landing.howItWorks.step2.description', 'Integrate with your existing ATS via API or webhooks. No heavy lifting required.'),
+      description: t('landing.howItWorks.step2.description', 'Connect your ATS — Greenhouse, Lever, Ashby, BambooHR, or Workable — in one click. Or use our API and webhooks.'),
     },
     {
       number: '03',

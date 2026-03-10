@@ -51,9 +51,9 @@ export default function Hero() {
           </div>
 
           <h1 className="landing-display mt-6 text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
-            {t('landing.hero.headline', 'Hire Elite Candidates')}{' '}
+            {t('landing.hero.headline', 'AI Screens. AI Interviews.')}{' '}
             <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent">
-              {t('landing.hero.headlineHighlight', 'Before Others')}
+              {t('landing.hero.headlineHighlight', 'You Hire the Best.')}
             </span>
           </h1>
 

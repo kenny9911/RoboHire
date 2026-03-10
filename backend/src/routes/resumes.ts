@@ -20,7 +20,7 @@ const uploadDoc = multer({
     if (DocumentParsingService.ACCEPTED_MIMES.has(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Unsupported file format. Accepted: PDF, DOCX, XLSX, TXT'));
+      cb(new Error('Unsupported file format. Accepted: PDF, DOCX, XLSX, TXT, MD, JSON'));
     }
   },
 });

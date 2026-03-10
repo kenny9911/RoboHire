@@ -43,6 +43,7 @@ export default function DocsLayout() {
       title: t('docs.nav.advanced', 'Advanced'),
       items: [
         { title: t('docs.nav.webhooks', 'Webhooks'), href: '/docs/webhooks' },
+        { title: t('docs.nav.atsIntegrations', 'ATS Integrations'), href: '/docs/ats-integrations' },
         { title: t('docs.nav.errors', 'Error Handling'), href: '/docs/errors' },
       ],
     },

@@ -306,7 +306,7 @@ export default function ResumeLibrary() {
               <ResumeCard
                 key={r.id}
                 resume={r}
-                onClick={() => navigate(`/dashboard/resumes/${r.id}`)}
+                onClick={() => navigate(`/product/talent/${r.id}`)}
                 onRegenerateInsights={r.status === 'active' ? () => regenerateInsights(r.id) : undefined}
                 onReanalyzeJobFit={r.status === 'active' ? () => reanalyzeJobFit(r.id) : undefined}
                 onReupload={() => openReplaceUpload(r.id)}

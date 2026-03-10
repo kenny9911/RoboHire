@@ -22,7 +22,7 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
 
   if (!open) return null;
 
-  const acceptedTypes = '.pdf,.docx,.doc,.txt';
+  const acceptedTypes = '.pdf,.docx,.doc,.txt,.md,.json';
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -141,7 +141,7 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
               ? t('resumeLibrary.uploadModal.replaceDragDrop', 'Drag & drop a new resume file here')
               : t('resumeLibrary.uploadModal.dragDrop', 'Drag & drop resume files here')}
           </p>
-          <p className="text-xs text-gray-400">{t('resumeLibrary.uploadModal.formats', 'Supported: PDF, DOCX, TXT')}</p>
+          <p className="text-xs text-gray-400">{t('resumeLibrary.uploadModal.formats', 'Supported: PDF, DOCX, TXT, MD, JSON')}</p>
           {effectiveBatch && <p className="text-xs text-gray-400 mt-1">{t('resumeLibrary.uploadModal.maxFiles', 'Up to 10 files at once')}</p>}
           <input
             ref={fileInputRef}

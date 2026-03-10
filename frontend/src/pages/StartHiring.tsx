@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
@@ -30,6 +30,8 @@ interface ChatSession {
 export default function StartHiring() {
   const { t, i18n } = useTranslation();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // State
@@ -396,7 +398,16 @@ export default function StartHiring() {
     return (data.data?.jobDescriptionDraft || '').trim();
   }, [getAuthHeaders, hiringData.title, hiringData.requirements, hiringData.jobDescription, i18n.language]);
 
+  const requireAuth = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location } });
+      return false;
+    }
+    return true;
+  };
+
   const handleJdAiAction = useCallback(async () => {
+    if (!isAuthenticated) { navigate('/login', { state: { from: location } }); return; }
     if (isJdGenerating) return;
 
     setIsJdGenerating(true);
@@ -420,9 +431,10 @@ export default function StartHiring() {
     } finally {
       setIsJdGenerating(false);
     }
-  }, [fetchJdDraft, isJdGenerating, jdDraft, t]);
+  }, [fetchJdDraft, isJdGenerating, jdDraft, t, isAuthenticated, navigate, location]);
 
   const handleTemplateSelect = async (template: HiringTemplate) => {
+    if (!requireAuth()) return;
     if (!activeSessionId && isAuthenticated) {
       await createSession();
     }
@@ -440,6 +452,7 @@ export default function StartHiring() {
   };
 
   const handleQuickStart = async (role: string) => {
+    if (!requireAuth()) return;
     let sessionId = activeSessionId;
     if (!sessionId && isAuthenticated) {
       sessionId = await createSession();
@@ -468,6 +481,7 @@ export default function StartHiring() {
   };
 
   const handleSubmit = async () => {
+    if (!requireAuth()) return;
     const messageText = input.trim();
     if (!messageText && !attachedFile) return;
 

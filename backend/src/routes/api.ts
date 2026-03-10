@@ -54,7 +54,7 @@ const uploadDoc = multer({
     if (DocumentParsingService.ACCEPTED_MIMES.has(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Unsupported file format. Accepted: PDF, DOCX, XLSX, TXT'));
+      cb(new Error('Unsupported file format. Accepted: PDF, DOCX, XLSX, TXT, MD, JSON'));
     }
   },
 });
@@ -941,7 +941,7 @@ router.post('/extract-document', requireAuth, requireScopes('read'), apiRateLimi
       logger.endRequest(requestId, 'error', 400);
       return res.status(400).json({
         success: false,
-        error: 'File is required. Accepted formats: PDF, DOCX, XLSX, TXT',
+        error: 'File is required. Accepted formats: PDF, DOCX, XLSX, TXT, MD, JSON',
         requestId,
       });
     }

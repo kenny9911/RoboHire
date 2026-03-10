@@ -105,12 +105,13 @@
       "pricing": "Pricing",
       "signIn": "Sign In",
       "getStarted": "Get Started",
-      "dashboard": "Dashboard"
+      "dashboard": "Dashboard",
+      "product": "Product"
     },
     "hero": {
       "badge": "AI-Powered Hiring Platform",
-      "headline": "Hire Elite Candidates",
-      "headlineHighlight": "Before Others",
+      "headline": "AI Screens. AI Interviews.",
+      "headlineHighlight": "You Hire the Best.",
       "definition": "RoboHire is an AI-powered recruitment platform that automates resume screening, conducts AI-led interviews, and delivers structured evaluation reports for every candidate.",
       "subheadline": "Say goodbye to spending long hours going through piles of resumes. Our AI hiring agent vets candidates, conducts interviews, and delivers comprehensive evaluation reports automatically.",
       "ctaPrimary": "Start Free Trial",
@@ -134,7 +135,7 @@
         "feature1": "Automated resume screening",
         "feature2": "AI-powered interviews",
         "feature3": "Comprehensive evaluation reports",
-        "feature4": "Webhook integration",
+        "feature4": "ATS & webhook integration",
         "cta": "Start Hiring Now",
         "badge": "Most Popular"
       },
@@ -156,7 +157,7 @@
         "feature1": "Resume & JD parsing",
         "feature2": "AI candidate matching",
         "feature3": "Interview evaluation",
-        "feature4": "RESTful API endpoints",
+        "feature4": "ATS integration (5 providers)",
         "cta": "Explore API"
       }
     },
@@ -170,7 +171,7 @@
       },
       "step2": {
         "title": "Plug Into Your Workflow",
-        "description": "Integrate with your existing ATS via API or webhooks. No heavy lifting required - just point your candidate pipeline to RoboHire and we take over."
+        "description": "Connect your ATS — Greenhouse, Lever, Ashby, BambooHR, or Workable — in one click. Or use our API and webhooks."
       },
       "step3": {
         "title": "Receive Best Matches",
@@ -205,6 +206,10 @@
         "title": "Developer API",
         "description": "Full REST API access for parsing, matching, and evaluation. Integrate AI hiring capabilities into your existing systems."
       },
+      "atsIntegration": {
+        "title": "ATS Integration",
+        "description": "Connect Greenhouse, Lever, Ashby, BambooHR, or Workable. Push matched candidates directly into your hiring pipeline."
+      },
       "webhooks": {
         "title": "Webhook Delivery",
         "description": "Receive shortlisted candidates and evaluation reports automatically via webhooks. Seamless integration with your workflow."
@@ -218,6 +223,29 @@
         "description": "Advanced AI analysis to detect AI-assisted answers, ensuring you evaluate genuine candidate capabilities."
       },
       "learnMore": "Learn more"
+    },
+    "product": {
+      "badge": "Product Suite",
+      "headline": "Everything You Need to Hire Smarter",
+      "subheadline": "Four AI-powered products that work together to transform your hiring from manual screening to intelligent recruitment.",
+      "explore": "Explore",
+      "cta": "Open Product Dashboard",
+      "easyHiring": {
+        "title": "Easy Hiring",
+        "desc": "AI-powered hiring workflow that screens resumes, manages candidates, and streamlines your entire recruitment process."
+      },
+      "smartMatching": {
+        "title": "Smart Matching",
+        "desc": "AI matches candidates to jobs with precision scoring, ranking the best fits so you never miss top talent."
+      },
+      "aiInterview": {
+        "title": "AI Interview",
+        "desc": "AI-led video interviews with natural voice conversation. Candidates talk to our AI interviewer — you review the results."
+      },
+      "evaluation": {
+        "title": "Evaluation",
+        "desc": "Multi-agent AI assessment that evaluates skills, experience, culture fit, and delivers comprehensive hiring reports."
+      }
     },
     "faq": {
       "badge": "FAQ",
@@ -717,7 +745,8 @@
       "apiPlayground": "API Playground",
       "account": "Account",
       "usage": "Usage",
-      "resumes": "Resumes"
+      "resumes": "Resumes",
+      "integrations": "Integrations"
     },
     "welcome": "Welcome back",
     "user": "there",
@@ -1039,6 +1068,10 @@
       "webhooks": {
         "title": "Webhook Integration",
         "desc": "Receive real-time updates via webhooks when candidates are processed."
+      },
+      "ats": {
+        "title": "ATS Integration",
+        "desc": "Connect Greenhouse, Lever, Ashby, BambooHR, or Workable to sync candidates directly into your hiring pipeline."
       }
     },
     "playground": {
@@ -1071,6 +1104,7 @@
       "evaluateInterview": "Evaluate Interview",
       "advanced": "Advanced",
       "webhooks": "Webhooks",
+      "atsIntegrations": "ATS Integrations",
       "errors": "Error Handling"
     },
     "tryIt": {
@@ -1525,14 +1559,14 @@
       "resumesDesc": "Upload PDF resumes or paste resume text. You can add multiple resumes.",
       "uploading": "Extracting text from PDF...",
       "dropResumes": "Click or drag resumes here",
-      "supportedFormats": "PDF, DOCX, XLSX, and TXT files supported. Multiple files allowed.",
+      "supportedFormats": "PDF, DOCX, XLSX, TXT, MD, and JSON files supported. Multiple files allowed.",
       "hideTextInput": "Hide text input",
       "pasteInstead": "Or paste resume text",
       "pastePlaceholder": "Paste resume text here...",
       "addResume": "Add Resume",
       "pastedResume": "Pasted Resume #{{num}}",
       "resumeCount": "{{count}} resume(s) loaded",
-      "pdfOnlyError": "Unsupported file format. Please upload a PDF or TXT file.",
+      "pdfOnlyError": "Unsupported file format. Please upload a PDF, TXT, MD, or JSON file.",
       "settingsTitle": "Invitation Settings",
       "recruiterEmail": "Recruiter Email",
       "interviewerReq": "Interviewer Requirement",
@@ -1586,7 +1620,7 @@
       "errorNoJd": "Please enter a job description.",
       "errorNoResumes": "Please add at least one resume.",
       "uploadJd": "Upload File",
-      "jdFormats": "PDF, DOCX, XLSX, TXT supported",
+      "jdFormats": "PDF, DOCX, XLSX, TXT, MD, JSON supported",
       "viewResume": "View full resume",
       "extractFailed": "Could not extract text from file.",
       "resumePreviewChars": "{{count}} characters",
@@ -1722,6 +1756,262 @@
       "sessionAuth": "Session"
     }
   },
+  "product": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "hiringRequests": "Hiring Requests",
+      "talentHub": "Talent Hub",
+      "jobs": "Jobs",
+      "aiInterview": "AI Interview",
+      "profile": "Profile",
+      "devDashboard": "Dev Dashboard",
+      "smartMatching": "Smart Matching",
+      "evaluations": "Evaluations",
+      "candidateDetail": "Candidate Detail",
+      "jobDetail": "Job Detail",
+      "interviewRoom": "Interview Room"
+    },
+    "dashboard": {
+      "welcome": "Welcome back",
+      "welcomeDesc": "Your AI hiring command center. Let AI agents handle the heavy lifting.",
+      "activeJobs": "Active Jobs",
+      "totalCandidates": "Total Candidates",
+      "interviewsThisWeek": "Interviews This Week",
+      "avgMatchScore": "Avg Match Score",
+      "actionQueue": "Action Queue",
+      "pendingEvals": "interview(s) awaiting AI evaluation",
+      "runEvalNow": "Run evaluations to get hiring recommendations",
+      "noActions": "No pending actions. Create a job to get started!",
+      "pipelineOverview": "Pipeline Overview",
+      "quickActions": "Quick Actions",
+      "createJob": "Create a Job",
+      "createJobDesc": "Post a new position and let AI help you write the job description.",
+      "uploadResumes": "Upload Resumes",
+      "uploadResumesDesc": "Add candidates to your talent pool for AI matching.",
+      "runMatching": "Run AI Matching",
+      "runMatchingDesc": "Match candidates against your open positions automatically.",
+      "startInterview": "Start AI Interview",
+      "startInterviewDesc": "Launch an AI-powered video interview with a candidate.",
+      "pipeline": {
+        "new": "New",
+        "screening": "Screening",
+        "matched": "Matched",
+        "interviewing": "Interviewing",
+        "evaluated": "Evaluated",
+        "offered": "Offered"
+      }
+    },
+    "profile": {
+      "quickLinks": "Quick Links",
+      "accountSettings": "Account Settings",
+      "apiKeys": "API Keys",
+      "usage": "Usage & Billing",
+      "integrations": "ATS Integrations"
+    },
+    "interview": {
+      "title": "AI Interview",
+      "subtitle": "AI-powered interviews with automatic evaluation.",
+      "schedule": "Schedule Interview",
+      "newInterview": "New Interview",
+      "candidateName": "Candidate Name",
+      "candidateEmail": "Candidate Email",
+      "jobTitleLabel": "Job Title",
+      "interviewType": "Type",
+      "typeVideo": "AI Video Interview",
+      "typeAudio": "AI Audio Interview",
+      "typeText": "AI Text Interview",
+      "jobDescLabel": "Job Description",
+      "cancel": "Cancel",
+      "create": "Create",
+      "allStatuses": "All",
+      "empty": "No interviews yet",
+      "emptyDesc": "Schedule an AI interview to get started.",
+      "evaluate": "Run AI Evaluation",
+      "arrangeInterview": "Arrange Interview",
+      "step": "Step",
+      "selectResumes": "Select Resumes",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "searchResumes": "Search by name, email, or role...",
+      "noResumes": "No resumes found. Upload resumes in Talent Hub first.",
+      "selectedCount": "{{count}} selected",
+      "selectJob": "Select Job",
+      "searchJobs": "Search by title, company, or department...",
+      "noJobs": "No open jobs found. Create a job first.",
+      "interviewReqs": "Interview Requirements",
+      "interviewReqsDesc": "Specify requirements for the interviewer AI. This will guide the interview focus areas.",
+      "selectedJobLabel": "Job",
+      "interviewReqsPlaceholder": "e.g., Focus on system design and distributed systems experience. Assess problem-solving ability with real-world scenarios.",
+      "confirmSend": "Confirm & Send",
+      "candidates": "Candidates",
+      "jobLabel": "Job",
+      "requirements": "Requirements",
+      "sendNote": "Interview invitations will be sent to each candidate one by one. Each invite uses 1 interview credit.",
+      "sendInvites": "Send Invites",
+      "inviteProgress": "Sending {{current}}/{{total}}",
+      "inviteComplete": "Invitations Complete",
+      "sending": "Sending...",
+      "sent": "Sent",
+      "sendError": "Error",
+      "pending": "Pending",
+      "failed": "failed",
+      "loginUrl": "Interview Link",
+      "qrCode": "QR Code",
+      "noResumeText": "Resume text not available",
+      "next": "Next",
+      "back": "Back",
+      "close": "Close"
+    },
+    "jobs": {
+      "title": "Jobs",
+      "subtitle": "Create and manage job postings with AI assistance.",
+      "create": "Create Job",
+      "createBtn": "Create Job",
+      "newJob": "New Job",
+      "editJob": "Edit Job",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "publish": "Publish",
+      "pause": "Pause",
+      "resume": "Resume",
+      "allStatuses": "All",
+      "empty": "No jobs yet",
+      "emptyDesc": "Create your first job posting to get started.",
+      "created": "Created",
+      "fromRequest": "From request:",
+      "generating": "Generating...",
+      "generateWithAI": "Generate with AI",
+      "field": {
+        "title": "Job Title",
+        "titlePlaceholder": "e.g. Senior Frontend Developer",
+        "department": "Department",
+        "location": "Location",
+        "workType": "Work Type",
+        "employmentType": "Employment Type",
+        "experienceLevel": "Experience Level",
+        "salaryMin": "Min Salary",
+        "salaryMax": "Max Salary",
+        "description": "Job Description",
+        "descriptionPlaceholder": "Write a job description or let AI generate one for you...",
+        "select": "Select..."
+      },
+      "workTypes": {
+        "remote": "Remote",
+        "hybrid": "Hybrid",
+        "onsite": "On-site"
+      },
+      "empTypes": {
+        "fullTime": "Full-time",
+        "partTime": "Part-time",
+        "contract": "Contract",
+        "internship": "Internship"
+      },
+      "levels": {
+        "entry": "Entry Level",
+        "mid": "Mid Level",
+        "senior": "Senior",
+        "lead": "Lead",
+        "executive": "Executive"
+      },
+      "basicInfo": "Basic Information",
+      "jobContent": "Job Content",
+      "companyName": "Company Name",
+      "companyNamePlaceholder": "e.g. Google, Microsoft",
+      "qualifications": "Qualifications",
+      "qualificationsPlaceholder": "Required skills, education, experience...",
+      "hardRequirements": "Hard Requirements",
+      "hardRequirementsPlaceholder": "Non-negotiable must-have criteria...",
+      "monthlySalary": "Monthly Salary Min",
+      "salaryMax": "Monthly Salary Max",
+      "currency": "Currency",
+      "locations": "Locations",
+      "addLocation": "Add",
+      "country": "Country",
+      "city": "City",
+      "interviewConfig": "Interview Configuration",
+      "interviewMode": "Interview Mode",
+      "standard": "Standard",
+      "questionBank": "Question Bank",
+      "passingScore": "Passing Score",
+      "interviewLanguage": "Language",
+      "interviewDuration": "Duration (min)",
+      "interviewRequirements": "Interview Requirements",
+      "interviewRequirementsPlaceholder": "What to assess during the interview...",
+      "evaluationRules": "Evaluation Rules",
+      "evaluationRulesPlaceholder": "Scoring criteria, weights, pass/fail thresholds...",
+      "autoGenerateAll": "Auto-Generate All",
+      "enhance": "Enhance",
+      "generate": "Generate",
+      "importJd": "Import JD",
+      "exportJob": "Export",
+      "demandAnalysis": "Demand Analysis",
+      "analyzing": "Analyzing...",
+      "marketDifficulty": "Market Difficulty",
+      "salaryBenchmark": "Salary Benchmarks",
+      "supplyDemand": "Supply / Demand",
+      "competitors": "Competition",
+      "timeToHire": "Days to Hire",
+      "trends": "Market Trends"
+    },
+    "hiring": {
+      "title": "Hiring Requests",
+      "subtitle": "Manage your hiring requests and convert them into job postings.",
+      "newRequest": "New Request",
+      "allStatuses": "All",
+      "empty": "No hiring requests yet",
+      "emptyDesc": "Start a new hiring request with our AI assistant.",
+      "candidates": "candidates",
+      "createJob": "Create Job",
+      "viewDetail": "View Detail",
+      "pause": "Pause",
+      "activate": "Activate",
+      "delete": "Delete"
+    },
+    "talent": {
+      "title": "Talent Hub",
+      "subtitle": "Your candidate repository with AI-powered insights.",
+      "upload": "Upload Resumes",
+      "searchPlaceholder": "Search by name, role, skills...",
+      "empty": "No candidates yet",
+      "emptyDesc": "Upload resumes to build your talent pool.",
+      "yearsExp": "years experience",
+      "viewProfile": "View Profile"
+    },
+    "matching": {
+      "title": "Smart Matching",
+      "subtitle": "AI-powered candidate-job matching with detailed analysis.",
+      "selectJob": "Select a Job",
+      "noJobs": "No jobs found. Create a job first.",
+      "goToJobs": "Go to Jobs",
+      "choosePlaceholder": "-- Choose a job --",
+      "allStatuses": "All",
+      "runMatch": "Run AI Matching",
+      "running": "Matching...",
+      "noResults": "No match results yet",
+      "noResultsDesc": "Click \"Run AI Matching\" to match candidates against this job.",
+      "score": "score",
+      "shortlist": "Shortlist",
+      "reject": "Reject",
+      "viewProfile": "View Profile"
+    },
+    "evaluations": {
+      "title": "Evaluations",
+      "subtitle": "AI-powered multi-agent candidate evaluation reports.",
+      "empty": "No evaluations yet",
+      "emptyDesc": "Complete interviews first, then run AI evaluations.",
+      "goToInterviews": "Go to AI Interview",
+      "pendingSection": "Pending Evaluation",
+      "completedSection": "Completed Evaluations",
+      "evaluating": "Evaluating...",
+      "runEval": "Run Evaluation",
+      "summary": "Summary",
+      "strengths": "Strengths",
+      "weaknesses": "Areas for Improvement"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - AI-Powered Hiring Platform",
     "defaultDescription": "Hire elite candidates before others. Our AI hiring agent automatically screens resumes, conducts interviews, and delivers comprehensive evaluation reports.",
@@ -1821,7 +2111,7 @@
       "title": "Upload Resume",
       "batchTitle": "Batch Upload Resumes",
       "dragDrop": "Drag & drop resume files here",
-      "formats": "Supported: PDF, DOCX, TXT",
+      "formats": "Supported: PDF, DOCX, TXT, MD, JSON",
       "maxFiles": "Up to 10 files at once",
       "uploading": "Processing...",
       "duplicate": "Duplicate"
@@ -2013,6 +2303,39 @@
       "subtitle": "Put these insights into practice. Start hiring with AI today.",
       "primary": "Start hiring free",
       "secondary": "Explore the API"
+    }
+  },
+  "integrations": {
+    "title": "ATS Integrations",
+    "subtitle": "Connect your Applicant Tracking System to sync candidates automatically.",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "connected": "Connected",
+    "disconnected": "Integration disconnected",
+    "test": "Test",
+    "testing": "Testing...",
+    "testSuccess": "Connection test passed",
+    "testFailed": "Connection test failed",
+    "connectAndTest": "Connect & Test",
+    "cancel": "Cancel",
+    "lastSync": "Last synced",
+    "logs": "Logs",
+    "syncHistory": "Sync History",
+    "noLogs": "No sync activity yet",
+    "greenhouse": {
+      "description": "Enterprise ATS with structured hiring pipelines"
+    },
+    "lever": {
+      "description": "Modern ATS with opportunity-based candidate tracking"
+    },
+    "ashby": {
+      "description": "All-in-one recruiting platform for scaling teams"
+    },
+    "bamboohr": {
+      "description": "HR software with applicant tracking capabilities"
+    },
+    "workable": {
+      "description": "Recruiting software with strong job board integrations"
     }
   }
 }

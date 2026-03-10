@@ -30,6 +30,11 @@ export default function Features() {
       docLink: '/docs/quick-start',
     },
     {
+      title: t('landing.features.atsIntegration.title', 'ATS Integration'),
+      description: t('landing.features.atsIntegration.description', 'Connect Greenhouse, Lever, Ashby, BambooHR, or Workable. Push matched candidates directly into your hiring pipeline.'),
+      docLink: '/docs/ats-integrations',
+    },
+    {
       title: t('landing.features.webhooks.title', 'Webhook Delivery'),
       description: t('landing.features.webhooks.description', 'Receive shortlisted candidates and evaluation reports automatically via webhooks.'),
       docLink: '/docs/webhooks',

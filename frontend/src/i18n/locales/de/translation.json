@@ -76,12 +76,13 @@
       "pricing": "Preise",
       "signIn": "Anmelden",
       "getStarted": "Loslegen",
-      "dashboard": "Dashboard"
+      "dashboard": "Dashboard",
+      "product": "Produkt"
     },
     "hero": {
       "badge": "KI-gestützte Recruiting-Plattform",
-      "headline": "Top-Talente einstellen",
-      "headlineHighlight": "vor der Konkurrenz",
+      "headline": "KI sichtet. KI interviewt.",
+      "headlineHighlight": "Sie stellen die Besten ein.",
       "definition": "RoboHire ist eine KI-gestützte Recruiting-Plattform, die Lebensläufe automatisch sichtet, KI-geführte Interviews durchführt und für jeden Kandidaten strukturierte Bewertungsberichte erstellt.",
       "subheadline": "Schluss mit stundenlangem Lebenslauf-Sichten. Unser KI-Recruiter übernimmt die Vorauswahl, führt Interviews und liefert umfassende Bewertungsberichte – vollautomatisch.",
       "ctaPrimary": "Kostenlos testen",
@@ -105,7 +106,7 @@
         "feature1": "Automatisches CV‑Screening",
         "feature2": "KI‑Interviews",
         "feature3": "Umfassende Bewertungsberichte",
-        "feature4": "Webhook‑Integration",
+        "feature4": "ATS- & Webhook-Integration",
         "cta": "Jetzt starten",
         "badge": "Beliebt"
       },
@@ -127,7 +128,7 @@
         "feature1": "Lebenslauf- & JD‑Parsing",
         "feature2": "KI‑Matching",
         "feature3": "Interview‑Bewertung",
-        "feature4": "REST‑API Endpunkte",
+        "feature4": "ATS-Integration (5 Anbieter)",
         "cta": "API entdecken"
       }
     },
@@ -141,7 +142,7 @@
       },
       "step2": {
         "title": "In Ihren Workflow integrieren",
-        "description": "ATS per API oder Webhook anbinden. Kein Aufwand – Pipeline auf RoboHire zeigen, fertig."
+        "description": "Verbinden Sie Ihr ATS — Greenhouse, Lever, Ashby, BambooHR oder Workable — mit einem Klick. Oder nutzen Sie unsere API und Webhooks."
       },
       "step3": {
         "title": "Beste Matches erhalten",
@@ -176,6 +177,10 @@
         "title": "Developer‑API",
         "description": "REST‑Zugriff für Parsing, Matching und Bewertung."
       },
+      "atsIntegration": {
+        "title": "ATS-Integration",
+        "description": "Verbinden Sie Greenhouse, Lever, Ashby, BambooHR oder Workable. Schieben Sie passende Kandidaten direkt in Ihre Recruiting-Pipeline."
+      },
       "webhooks": {
         "title": "Webhook‑Zustellung",
         "description": "Shortlist und Reports automatisch per Webhook."
@@ -189,6 +194,29 @@
         "description": "KI erkennt AI‑Assistenz und bewertet echte Fähigkeiten."
       },
       "learnMore": "Mehr erfahren"
+    },
+    "product": {
+      "badge": "Produktsuite",
+      "headline": "Alles, was Sie für smartes Recruiting brauchen",
+      "subheadline": "Vier KI-Produkte, die zusammenarbeiten und Ihr Recruiting von manueller Sichtung zu intelligenter Talentgewinnung transformieren.",
+      "explore": "Entdecken",
+      "cta": "Produkt-Dashboard öffnen",
+      "easyHiring": {
+        "title": "Einfaches Recruiting",
+        "desc": "KI-gestützter Recruiting-Workflow, der Lebensläufe sichtet, Kandidaten verwaltet und Ihren gesamten Prozess optimiert."
+      },
+      "smartMatching": {
+        "title": "Intelligentes Matching",
+        "desc": "KI ordnet Kandidaten Stellen mit präzisem Scoring zu, damit Sie kein Top-Talent verpassen."
+      },
+      "aiInterview": {
+        "title": "KI-Interview",
+        "desc": "KI-geführte Video-Interviews mit natürlicher Stimme. Kandidaten sprechen mit unserer KI — Sie prüfen die Ergebnisse."
+      },
+      "evaluation": {
+        "title": "Bewertung",
+        "desc": "Multi-Agenten-Bewertung, die Fähigkeiten, Erfahrung und kulturelle Passung analysiert und umfassende Berichte liefert."
+      }
     },
     "cta": {
       "title": "Bereit für smarteres Recruiting?",
@@ -353,6 +381,10 @@
       "webhooks": {
         "title": "Webhook-Integration",
         "desc": "Erhalten Sie Echtzeit-Updates über Webhooks, wenn Kandidaten verarbeitet werden."
+      },
+      "ats": {
+        "title": "ATS-Integration",
+        "desc": "Verbinden Sie Greenhouse, Lever, Ashby, BambooHR oder Workable, um Kandidaten direkt in Ihre Recruiting-Pipeline zu synchronisieren."
       }
     },
     "playground": {
@@ -787,7 +819,8 @@
       "apiPlayground": "API Playground",
       "account": "Konto",
       "usage": "Nutzung",
-      "resumes": "Lebenslauf-Bibliothek"
+      "resumes": "Lebenslauf-Bibliothek",
+      "integrations": "Integrationen"
     },
     "welcome": "Willkommen zurück",
     "user": "da",
@@ -1146,14 +1179,14 @@
       "resumesDesc": "Laden Sie PDF-Lebensläufe hoch oder fügen Sie den Text ein. Sie können mehrere hinzufügen.",
       "uploading": "Text wird aus PDF extrahiert...",
       "dropResumes": "Klicken oder Lebensläufe hierher ziehen",
-      "supportedFormats": "PDF, DOCX, XLSX und TXT Dateien unterstützt. Mehrere Dateien erlaubt.",
+      "supportedFormats": "PDF, DOCX, XLSX, TXT, MD und JSON Dateien unterstützt. Mehrere Dateien erlaubt.",
       "hideTextInput": "Texteingabe ausblenden",
       "pasteInstead": "Oder Lebenslauftext einfügen",
       "pastePlaceholder": "Lebenslauftext hier einfügen...",
       "addResume": "Lebenslauf hinzufügen",
       "pastedResume": "Eingefügter Lebenslauf #{{num}}",
       "resumeCount": "{{count}} Lebenslauf/Lebensläufe geladen",
-      "pdfOnlyError": "Nicht unterstütztes Dateiformat. Bitte laden Sie eine PDF- oder TXT-Datei hoch.",
+      "pdfOnlyError": "Nicht unterstütztes Dateiformat. Bitte laden Sie eine PDF-, TXT-, MD- oder JSON-Datei hoch.",
       "settingsTitle": "Einladungseinstellungen",
       "recruiterEmail": "Recruiter-E-Mail",
       "interviewerReq": "Anforderung an den Interviewer",
@@ -1187,7 +1220,7 @@
       "errorNoJd": "Bitte geben Sie eine Stellenbeschreibung ein.",
       "errorNoResumes": "Bitte fügen Sie mindestens einen Lebenslauf hinzu.",
       "uploadJd": "Datei hochladen",
-      "jdFormats": "PDF, DOCX, XLSX, TXT unterstützt",
+      "jdFormats": "PDF, DOCX, XLSX, TXT, MD, JSON unterstützt",
       "viewResume": "Vollständigen Lebenslauf anzeigen",
       "extractFailed": "Text konnte nicht aus der Datei extrahiert werden.",
       "resumePreviewChars": "{{count}} Zeichen",
@@ -1441,6 +1474,262 @@
       "sessionAuth": "Sitzung"
     }
   },
+  "product": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "hiringRequests": "Einstellungsanfragen",
+      "talentHub": "Talent-Hub",
+      "jobs": "Stellen",
+      "aiInterview": "KI-Interview",
+      "profile": "Profil",
+      "devDashboard": "Entwickler-Dashboard",
+      "smartMatching": "Intelligentes Matching",
+      "evaluations": "Bewertungen",
+      "candidateDetail": "Kandidatendetail",
+      "jobDetail": "Stellendetail",
+      "interviewRoom": "Interviewraum"
+    },
+    "dashboard": {
+      "welcome": "Willkommen zurück",
+      "welcomeDesc": "Ihr KI-Recruiting-Kommandozentrale. Lassen Sie KI-Agenten die schwere Arbeit erledigen.",
+      "activeJobs": "Aktive Stellen",
+      "totalCandidates": "Kandidaten gesamt",
+      "interviewsThisWeek": "Interviews diese Woche",
+      "avgMatchScore": "Durchschn. Match-Score",
+      "pendingEvals": "Interview(s) warten auf KI-Bewertung",
+      "runEvalNow": "Bewertungen ausführen für Einstellungsempfehlungen",
+      "actionQueue": "Aktions-Warteschlange",
+      "noActions": "Keine ausstehenden Aktionen. Erstellen Sie eine Stelle, um zu beginnen!",
+      "pipelineOverview": "Pipeline-Übersicht",
+      "quickActions": "Schnellaktionen",
+      "createJob": "Stelle erstellen",
+      "createJobDesc": "Veröffentlichen Sie eine neue Position und lassen Sie KI die Stellenbeschreibung verfassen.",
+      "uploadResumes": "Lebensläufe hochladen",
+      "uploadResumesDesc": "Fügen Sie Kandidaten zu Ihrem Talentpool für KI-Matching hinzu.",
+      "runMatching": "KI-Matching starten",
+      "runMatchingDesc": "Kandidaten automatisch mit Ihren offenen Stellen abgleichen.",
+      "startInterview": "KI-Interview starten",
+      "startInterviewDesc": "Starten Sie ein KI-gestütztes Video-Interview mit einem Kandidaten.",
+      "pipeline": {
+        "new": "Neu",
+        "screening": "Vorauswahl",
+        "matched": "Gematcht",
+        "interviewing": "Im Interview",
+        "evaluated": "Bewertet",
+        "offered": "Angebot gemacht"
+      }
+    },
+    "profile": {
+      "quickLinks": "Schnelllinks",
+      "accountSettings": "Kontoeinstellungen",
+      "apiKeys": "API-Schlüssel",
+      "usage": "Nutzung & Abrechnung",
+      "integrations": "ATS-Integrationen"
+    },
+    "interview": {
+      "title": "KI-Interview",
+      "subtitle": "KI-gestützte Interviews mit automatischer Bewertung.",
+      "schedule": "Interview planen",
+      "newInterview": "Neues Interview",
+      "candidateName": "Name des Kandidaten",
+      "candidateEmail": "E-Mail des Kandidaten",
+      "jobTitleLabel": "Stellenbezeichnung",
+      "interviewType": "Typ",
+      "typeVideo": "KI-Video-Interview",
+      "typeAudio": "KI-Audio-Interview",
+      "typeText": "KI-Text-Interview",
+      "jobDescLabel": "Stellenbeschreibung",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "allStatuses": "Alle",
+      "empty": "Noch keine Interviews",
+      "emptyDesc": "Planen Sie ein KI-Interview, um zu beginnen.",
+      "evaluate": "KI-Bewertung starten",
+      "arrangeInterview": "Interview Planen",
+      "step": "Schritt",
+      "selectResumes": "Lebensläufe Auswählen",
+      "selectAll": "Alle Auswählen",
+      "deselectAll": "Alle Abwählen",
+      "searchResumes": "Nach Name, E-Mail oder Position suchen...",
+      "noResumes": "Keine Lebensläufe gefunden. Laden Sie zuerst Lebensläufe im Talent-Hub hoch.",
+      "selectedCount": "{{count}} ausgewählt",
+      "selectJob": "Stelle Auswählen",
+      "searchJobs": "Nach Titel, Unternehmen oder Abteilung suchen...",
+      "noJobs": "Keine offenen Stellen gefunden. Erstellen Sie zuerst eine Stelle.",
+      "interviewReqs": "Interview-Anforderungen",
+      "interviewReqsDesc": "Geben Sie Anforderungen für den KI-Interviewer an. Dies leitet die Schwerpunktbereiche des Interviews.",
+      "selectedJobLabel": "Stelle",
+      "interviewReqsPlaceholder": "Z.B.: Fokus auf Systemdesign und Erfahrung mit verteilten Systemen. Problemlösungsfähigkeiten mit realen Szenarien bewerten.",
+      "confirmSend": "Bestätigen und Senden",
+      "candidates": "Kandidaten",
+      "jobLabel": "Stelle",
+      "requirements": "Anforderungen",
+      "sendNote": "Interview-Einladungen werden nacheinander an jeden Kandidaten gesendet. Jede Einladung verbraucht 1 Interview-Guthaben.",
+      "sendInvites": "Einladungen Senden",
+      "inviteProgress": "Sende {{current}}/{{total}}",
+      "inviteComplete": "Einladungen Abgeschlossen",
+      "sending": "Wird gesendet...",
+      "sent": "Gesendet",
+      "sendError": "Fehler",
+      "pending": "Ausstehend",
+      "failed": "fehlgeschlagen",
+      "loginUrl": "Interview-Link",
+      "qrCode": "QR-Code",
+      "noResumeText": "Lebenslauftext nicht verfügbar",
+      "next": "Weiter",
+      "back": "Zurück",
+      "close": "Schließen"
+    },
+    "jobs": {
+      "title": "Stellen",
+      "subtitle": "Stellenausschreibungen mit KI-Unterstützung erstellen und verwalten.",
+      "create": "Stelle erstellen",
+      "createBtn": "Stelle erstellen",
+      "newJob": "Neue Stelle",
+      "editJob": "Stelle bearbeiten",
+      "save": "Änderungen speichern",
+      "saving": "Speichert...",
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "edit": "Bearbeiten",
+      "publish": "Veröffentlichen",
+      "pause": "Pausieren",
+      "resume": "Fortsetzen",
+      "allStatuses": "Alle",
+      "empty": "Noch keine Stellen",
+      "emptyDesc": "Erstellen Sie Ihre erste Stellenausschreibung, um zu beginnen.",
+      "created": "Erstellt",
+      "fromRequest": "Von Anfrage:",
+      "generating": "Generiert...",
+      "generateWithAI": "Mit KI generieren",
+      "field": {
+        "title": "Stellenbezeichnung",
+        "titlePlaceholder": "z.B. Senior Frontend-Entwickler",
+        "department": "Abteilung",
+        "location": "Standort",
+        "workType": "Arbeitsmodell",
+        "employmentType": "Beschäftigungsart",
+        "experienceLevel": "Erfahrungsstufe",
+        "salaryMin": "Min. Gehalt",
+        "salaryMax": "Max. Gehalt",
+        "description": "Stellenbeschreibung",
+        "descriptionPlaceholder": "Schreiben Sie eine Beschreibung oder lassen Sie die KI eine generieren...",
+        "select": "Auswählen..."
+      },
+      "workTypes": {
+        "remote": "Remote",
+        "hybrid": "Hybrid",
+        "onsite": "Vor Ort"
+      },
+      "empTypes": {
+        "fullTime": "Vollzeit",
+        "partTime": "Teilzeit",
+        "contract": "Vertrag",
+        "internship": "Praktikum"
+      },
+      "levels": {
+        "entry": "Einstieg",
+        "mid": "Mittelstufe",
+        "senior": "Senior",
+        "lead": "Lead",
+        "executive": "Geschäftsführung"
+      },
+      "basicInfo": "Grundinformationen",
+      "jobContent": "Stelleninhalt",
+      "companyName": "Firmenname",
+      "companyNamePlaceholder": "z.B. Google, Microsoft",
+      "qualifications": "Anforderungen",
+      "qualificationsPlaceholder": "Erforderliche Faehigkeiten, Ausbildung, Erfahrung...",
+      "hardRequirements": "Pflichtanforderungen",
+      "hardRequirementsPlaceholder": "Nicht verhandelbare Muss-Kriterien...",
+      "monthlySalary": "Monatsgehalt Minimum",
+      "salaryMax": "Monatsgehalt Maximum",
+      "currency": "Waehrung",
+      "locations": "Standorte",
+      "addLocation": "Hinzufuegen",
+      "country": "Land",
+      "city": "Stadt",
+      "interviewConfig": "Interview-Konfiguration",
+      "interviewMode": "Interview-Modus",
+      "standard": "Standard",
+      "questionBank": "Fragenbank",
+      "passingScore": "Bestehensgrenze",
+      "interviewLanguage": "Sprache",
+      "interviewDuration": "Dauer (Min.)",
+      "interviewRequirements": "Interview-Anforderungen",
+      "interviewRequirementsPlaceholder": "Was im Interview bewertet werden soll...",
+      "evaluationRules": "Bewertungsregeln",
+      "evaluationRulesPlaceholder": "Bewertungskriterien, Gewichtung, Schwellenwerte...",
+      "autoGenerateAll": "Alles mit KI generieren",
+      "enhance": "Verbessern",
+      "generate": "Generieren",
+      "importJd": "JD importieren",
+      "exportJob": "Exportieren",
+      "demandAnalysis": "Bedarfsanalyse",
+      "analyzing": "Analysiere...",
+      "marketDifficulty": "Markt-Schwierigkeit",
+      "salaryBenchmark": "Gehaltsbenchmark",
+      "supplyDemand": "Angebot / Nachfrage",
+      "competitors": "Wettbewerb",
+      "timeToHire": "Einstellungstage",
+      "trends": "Markttrends"
+    },
+    "hiring": {
+      "title": "Einstellungsanfragen",
+      "subtitle": "Verwalten Sie Ihre Einstellungsanfragen und wandeln Sie sie in Stellenausschreibungen um.",
+      "newRequest": "Neue Anfrage",
+      "allStatuses": "Alle",
+      "empty": "Noch keine Anfragen",
+      "emptyDesc": "Starten Sie eine neue Anfrage mit unserem KI-Assistenten.",
+      "candidates": "Kandidaten",
+      "createJob": "Stelle erstellen",
+      "viewDetail": "Detail ansehen",
+      "pause": "Pausieren",
+      "activate": "Aktivieren",
+      "delete": "Löschen"
+    },
+    "talent": {
+      "title": "Talent-Hub",
+      "subtitle": "Ihr Kandidaten-Repository mit KI-Einblicken.",
+      "upload": "Lebensläufe hochladen",
+      "searchPlaceholder": "Nach Name, Rolle, Fähigkeiten suchen...",
+      "empty": "Noch keine Kandidaten",
+      "emptyDesc": "Laden Sie Lebensläufe hoch, um Ihren Talentpool aufzubauen.",
+      "yearsExp": "Jahre Erfahrung",
+      "viewProfile": "Profil ansehen"
+    },
+    "matching": {
+      "title": "Intelligentes Matching",
+      "subtitle": "KI-gestütztes Kandidaten-Stellen-Matching mit detaillierter Analyse.",
+      "selectJob": "Stelle auswählen",
+      "noJobs": "Keine Stellen gefunden. Erstellen Sie zuerst eine.",
+      "goToJobs": "Zu den Stellen",
+      "choosePlaceholder": "-- Stelle wählen --",
+      "allStatuses": "Alle",
+      "runMatch": "KI-Matching starten",
+      "running": "Matching läuft...",
+      "noResults": "Noch keine Ergebnisse",
+      "noResultsDesc": "Klicken Sie auf \"KI-Matching starten\", um Kandidaten mit dieser Stelle abzugleichen.",
+      "score": "Punkte",
+      "shortlist": "Vorauswahl",
+      "reject": "Ablehnen",
+      "viewProfile": "Profil ansehen"
+    },
+    "evaluations": {
+      "title": "Bewertungen",
+      "subtitle": "KI-gestützte Multi-Agenten-Bewertungsberichte.",
+      "empty": "Noch keine Bewertungen",
+      "emptyDesc": "Schließen Sie zuerst Interviews ab, dann starten Sie KI-Bewertungen.",
+      "goToInterviews": "Zu KI-Interviews",
+      "pendingSection": "Ausstehende Bewertung",
+      "completedSection": "Abgeschlossene Bewertungen",
+      "evaluating": "Bewertung läuft...",
+      "runEval": "Bewertung starten",
+      "summary": "Zusammenfassung",
+      "strengths": "Stärken",
+      "weaknesses": "Verbesserungsbereiche"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - KI-gestützte Recruiting-Plattform",
     "defaultDescription": "Stellen Sie Spitzenkandidaten vor anderen ein. Unser KI-Recruiting-Agent filtert Lebensläufe, führt Interviews und liefert umfassende Bewertungsberichte.",
@@ -1540,7 +1829,7 @@
       "title": "Lebenslauf hochladen",
       "batchTitle": "Lebensläufe im Stapel hochladen",
       "dragDrop": "Lebenslauf-Dateien hierher ziehen",
-      "formats": "Formate: PDF, DOCX, TXT",
+      "formats": "Formate: PDF, DOCX, TXT, MD, JSON",
       "maxFiles": "Bis zu 10 Dateien gleichzeitig",
       "uploading": "Wird verarbeitet...",
       "duplicate": "Duplikat"
@@ -1931,5 +2220,28 @@
       "primary": "Kostenlos einstellen",
       "secondary": "API entdecken"
     }
+  },
+  "integrations": {
+    "title": "ATS-Integrationen",
+    "subtitle": "Verbinden Sie Ihr Bewerbermanagementsystem, um Kandidaten automatisch zu synchronisieren.",
+    "connect": "Verbinden",
+    "disconnect": "Trennen",
+    "connected": "Verbunden",
+    "disconnected": "Integration getrennt",
+    "test": "Testen",
+    "testing": "Wird getestet...",
+    "testSuccess": "Verbindungstest bestanden",
+    "testFailed": "Verbindungstest fehlgeschlagen",
+    "connectAndTest": "Verbinden und testen",
+    "cancel": "Abbrechen",
+    "lastSync": "Letzte Synchronisierung",
+    "logs": "Protokolle",
+    "syncHistory": "Synchronisierungsverlauf",
+    "noLogs": "Keine Synchronisierungsaktivität",
+    "greenhouse": { "description": "Enterprise-ATS mit strukturierten Einstellungspipelines" },
+    "lever": { "description": "Modernes ATS mit chancenbasiertem Kandidaten-Tracking" },
+    "ashby": { "description": "All-in-One-Recruiting-Plattform für wachsende Teams" },
+    "bamboohr": { "description": "HR-Software mit Bewerberverfolgungsfunktionen" },
+    "workable": { "description": "Recruiting-Software mit starken Jobbörsen-Integrationen" }
   }
 }

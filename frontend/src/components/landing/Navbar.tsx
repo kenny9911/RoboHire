@@ -14,6 +14,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/#services', hash: 'services', label: t('landing.nav.services', 'Services') },
     { href: '/#how-it-works', hash: 'how-it-works', label: t('landing.nav.howItWorks', 'How It Works') },
+    { href: '/product', label: t('landing.nav.product', 'Product'), isRoute: true },
     { href: '/pricing', label: t('landing.nav.pricing', 'Pricing'), isRoute: true },
     { href: '/developers', label: t('landing.nav.api', 'API'), isRoute: true },
     { href: '/docs', label: t('landing.nav.docs', 'Docs'), isRoute: true },

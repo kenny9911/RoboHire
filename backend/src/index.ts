@@ -25,6 +25,10 @@ import demoRouter from './routes/demo.js';
 import checkoutRouter from './routes/checkout.js';
 import adminRouter from './routes/admin.js';
 import resumesRouter from './routes/resumes.js';
+import atsRouter from './routes/ats.js';
+import jobsRouter from './routes/jobs.js';
+import matchingRouter from './routes/matching.js';
+import interviewsRouter from './routes/interviews.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
 import { logger } from './services/LoggerService.js';
@@ -76,6 +80,10 @@ app.use('/api/v1/request-demo', demoRouter);
 app.use('/api/v1', checkoutRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/resumes', resumesRouter);
+app.use('/api/v1/ats', atsRouter);
+app.use('/api/v1/jobs', jobsRouter);
+app.use('/api/v1/matching', matchingRouter);
+app.use('/api/v1/interviews', interviewsRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {

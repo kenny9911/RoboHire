@@ -105,12 +105,13 @@
       "pricing": "价格",
       "signIn": "登录",
       "getStarted": "开始使用",
-      "dashboard": "控制面板"
+      "dashboard": "控制面板",
+      "product": "产品"
     },
     "hero": {
       "badge": "AI 驱动的招聘平台",
-      "headline": "比别人更快地",
-      "headlineHighlight": "招到精英人才",
+      "headline": "AI筛选，AI面试。",
+      "headlineHighlight": "你只负责录用最优人才。",
       "definition": "RoboHire 是一款 AI 驱动的智能招聘平台，能够自动筛选简历、主导 AI 面试，并为每位候选人生成结构化的评估报告。",
       "subheadline": "不再为堆积如山的简历头疼——AI 招聘助手帮你搞定候选人初筛、在线面试和综合评估，全程自动化。",
       "ctaPrimary": "开始免费试用",
@@ -134,7 +135,7 @@
         "feature1": "自动简历筛选",
         "feature2": "AI 驱动面试",
         "feature3": "全面评估报告",
-        "feature4": "Webhook 集成",
+        "feature4": "ATS与Webhook集成",
         "cta": "立即开始招聘",
         "badge": "最受欢迎"
       },
@@ -156,7 +157,7 @@
         "feature1": "简历与 JD 解析",
         "feature2": "AI 候选人匹配",
         "feature3": "面试评估",
-        "feature4": "RESTful API 接口",
+        "feature4": "ATS集成（5个供应商）",
         "cta": "探索 API"
       }
     },
@@ -170,7 +171,7 @@
       },
       "step2": {
         "title": "接入您的工作流",
-        "description": "通过 API 或 Webhook 与您现有的 ATS 集成。无需复杂操作 - 只需将候选人管道指向 RoboHire，我们将接管一切。"
+        "description": "一键连接您的ATS — Greenhouse、Lever、Ashby、BambooHR或Workable。或使用我们的API和Webhook。"
       },
       "step3": {
         "title": "获取最佳匹配",
@@ -205,6 +206,10 @@
         "title": "开发者 API",
         "description": "完整的 REST API 访问，用于解析、匹配和评估。将 AI 招聘能力集成到您现有的系统中。"
       },
+      "atsIntegration": {
+        "title": "ATS集成",
+        "description": "连接Greenhouse、Lever、Ashby、BambooHR或Workable，将匹配的候选人直接推送到您的招聘流程中。"
+      },
       "webhooks": {
         "title": "Webhook 推送",
         "description": "通过 Webhook 自动接收入围候选人和评估报告。与您的工作流无缝集成。"
@@ -218,6 +223,29 @@
         "description": "先进的 AI 分析来检测 AI 辅助回答，确保您评估的是真实的候选人能力。"
       },
       "learnMore": "了解更多"
+    },
+    "product": {
+      "badge": "产品套件",
+      "headline": "智能招聘，一站到位",
+      "subheadline": "四大AI驱动产品协同配合，将您的招聘从手动筛选升级为智能化人才获取。",
+      "explore": "了解更多",
+      "cta": "打开产品控制台",
+      "easyHiring": {
+        "title": "轻松招聘",
+        "desc": "AI驱动的招聘流程，自动筛选简历、管理候选人，全面优化您的招聘流程。"
+      },
+      "smartMatching": {
+        "title": "智能匹配",
+        "desc": "AI精准匹配候选人与职位，智能评分排名，让您不错过任何顶尖人才。"
+      },
+      "aiInterview": {
+        "title": "AI面试",
+        "desc": "AI主持的视频面试，自然语音对话。候选人与AI面试官交流——您只需查看结果。"
+      },
+      "evaluation": {
+        "title": "综合评估",
+        "desc": "多智能体AI评估系统，全面评估技能、经验、文化匹配度，提供详尽的招聘报告。"
+      }
     },
     "faq": {
       "badge": "常见问题",
@@ -718,7 +746,8 @@
       "apiPlayground": "API 测试",
       "account": "账户",
       "usage": "使用量",
-      "resumes": "简历库"
+      "resumes": "简历库",
+      "integrations": "集成"
     },
     "welcome": "欢迎回来",
     "user": "用户",
@@ -1040,6 +1069,10 @@
       "webhooks": {
         "title": "Webhook 集成",
         "desc": "在处理候选人时通过 Webhook 接收实时更新。"
+      },
+      "ats": {
+        "title": "ATS集成",
+        "desc": "连接Greenhouse、Lever、Ashby、BambooHR或Workable，将候选人直接同步到您的招聘流程中。"
       }
     },
     "playground": {
@@ -1072,6 +1105,7 @@
       "evaluateInterview": "面试评估",
       "advanced": "高级功能",
       "webhooks": "Webhooks",
+      "atsIntegrations": "ATS 集成",
       "errors": "错误处理"
     },
     "tryIt": {
@@ -1526,14 +1560,14 @@
       "resumesDesc": "上传 PDF 简历或粘贴简历文本。支持添加多份简历。",
       "uploading": "正在从 PDF 中提取文本...",
       "dropResumes": "点击或拖拽简历到此处",
-      "supportedFormats": "支持 PDF、DOCX、XLSX、TXT 格式，可上传多个文件。",
+      "supportedFormats": "支持 PDF、DOCX、XLSX、TXT、MD、JSON 格式，可上传多个文件。",
       "hideTextInput": "隐藏文本输入",
       "pasteInstead": "或粘贴简历文本",
       "pastePlaceholder": "在此粘贴简历文本...",
       "addResume": "添加简历",
       "pastedResume": "粘贴的简历 #{{num}}",
       "resumeCount": "已加载 {{count}} 份简历",
-      "pdfOnlyError": "不支持的文件格式，请上传 PDF 或 TXT 文件。",
+      "pdfOnlyError": "不支持的文件格式，请上传 PDF、TXT、MD 或 JSON 文件。",
       "settingsTitle": "邀请设置",
       "recruiterEmail": "招聘人员邮箱",
       "interviewerReq": "面试官要求",
@@ -1587,7 +1621,7 @@
       "errorNoJd": "请输入职位描述。",
       "errorNoResumes": "请至少添加一份简历。",
       "uploadJd": "上传文件",
-      "jdFormats": "支持 PDF、DOCX、XLSX、TXT 格式",
+      "jdFormats": "支持 PDF、DOCX、XLSX、TXT、MD、JSON 格式",
       "viewResume": "查看完整简历",
       "extractFailed": "无法从文件中提取文本。",
       "resumePreviewChars": "{{count}} 个字符",
@@ -1844,6 +1878,262 @@
       "sessionAuth": "会话"
     }
   },
+  "product": {
+    "nav": {
+      "dashboard": "仪表盘",
+      "hiringRequests": "招聘需求",
+      "talentHub": "人才库",
+      "jobs": "职位",
+      "aiInterview": "AI 面试",
+      "profile": "个人资料",
+      "devDashboard": "开发者控制台",
+      "smartMatching": "智能匹配",
+      "evaluations": "评估报告",
+      "candidateDetail": "候选人详情",
+      "jobDetail": "职位详情",
+      "interviewRoom": "面试房间"
+    },
+    "dashboard": {
+      "welcome": "欢迎回来",
+      "welcomeDesc": "您的AI招聘指挥中心。让AI代理处理繁重的工作。",
+      "activeJobs": "活跃职位",
+      "totalCandidates": "总候选人数",
+      "interviewsThisWeek": "本周面试",
+      "avgMatchScore": "平均匹配分数",
+      "pendingEvals": "场面试等待AI评估",
+      "runEvalNow": "运行评估以获取招聘建议",
+      "actionQueue": "操作队列",
+      "noActions": "暂无待处理操作。创建一个职位开始吧！",
+      "pipelineOverview": "招聘流程概览",
+      "quickActions": "快捷操作",
+      "createJob": "创建职位",
+      "createJobDesc": "发布新职位，让AI帮您撰写职位描述。",
+      "uploadResumes": "上传简历",
+      "uploadResumesDesc": "将候选人添加到您的人才库以进行AI匹配。",
+      "runMatching": "运行AI匹配",
+      "runMatchingDesc": "自动将候选人与您的开放职位进行匹配。",
+      "startInterview": "启动AI面试",
+      "startInterviewDesc": "与候选人启动AI驱动的视频面试。",
+      "pipeline": {
+        "new": "新增",
+        "screening": "筛选中",
+        "matched": "已匹配",
+        "interviewing": "面试中",
+        "evaluated": "已评估",
+        "offered": "已发Offer"
+      }
+    },
+    "profile": {
+      "quickLinks": "快捷链接",
+      "accountSettings": "账户设置",
+      "apiKeys": "API 密钥",
+      "usage": "用量与计费",
+      "integrations": "ATS 集成"
+    },
+    "interview": {
+      "title": "AI 面试",
+      "subtitle": "AI驱动的面试与自动评估。",
+      "schedule": "安排面试",
+      "newInterview": "新建面试",
+      "candidateName": "候选人姓名",
+      "candidateEmail": "候选人邮箱",
+      "jobTitleLabel": "职位名称",
+      "interviewType": "类型",
+      "typeVideo": "AI 视频面试",
+      "typeAudio": "AI 语音面试",
+      "typeText": "AI 文字面试",
+      "jobDescLabel": "职位描述",
+      "cancel": "取消",
+      "create": "创建",
+      "allStatuses": "全部",
+      "empty": "暂无面试",
+      "emptyDesc": "安排一场AI面试即可开始。",
+      "evaluate": "运行AI评估",
+      "arrangeInterview": "安排面试",
+      "step": "步骤",
+      "selectResumes": "选择简历",
+      "selectAll": "全选",
+      "deselectAll": "取消全选",
+      "searchResumes": "按姓名、邮箱或职位搜索...",
+      "noResumes": "未找到简历，请先在人才库中上传简历。",
+      "selectedCount": "已选择 {{count}} 份",
+      "selectJob": "选择职位",
+      "searchJobs": "按职位名称、公司或部门搜索...",
+      "noJobs": "未找到已发布的职位，请先创建职位。",
+      "interviewReqs": "面试要求",
+      "interviewReqsDesc": "指定AI面试官的要求，这将指导面试重点领域。",
+      "selectedJobLabel": "职位",
+      "interviewReqsPlaceholder": "例如：重点考察系统设计和分布式系统经验。通过实际场景评估解决问题的能力。",
+      "confirmSend": "确认并发送",
+      "candidates": "候选人",
+      "jobLabel": "职位",
+      "requirements": "要求",
+      "sendNote": "面试邀请将逐一发送给每位候选人。每次邀请消耗1个面试额度。",
+      "sendInvites": "发送邀请",
+      "inviteProgress": "正在发送 {{current}}/{{total}}",
+      "inviteComplete": "邀请发送完成",
+      "sending": "发送中...",
+      "sent": "已发送",
+      "sendError": "错误",
+      "pending": "等待中",
+      "failed": "失败",
+      "loginUrl": "面试链接",
+      "qrCode": "二维码",
+      "noResumeText": "简历文本不可用",
+      "next": "下一步",
+      "back": "上一步",
+      "close": "关闭"
+    },
+    "jobs": {
+      "title": "职位管理",
+      "subtitle": "借助AI创建和管理职位发布。",
+      "create": "创建职位",
+      "createBtn": "创建职位",
+      "newJob": "新建职位",
+      "editJob": "编辑职位",
+      "save": "保存更改",
+      "saving": "保存中...",
+      "cancel": "取消",
+      "delete": "删除",
+      "edit": "编辑",
+      "publish": "发布",
+      "pause": "暂停",
+      "resume": "恢复",
+      "allStatuses": "全部",
+      "empty": "暂无职位",
+      "emptyDesc": "创建您的第一个职位发布即可开始。",
+      "created": "创建于",
+      "fromRequest": "来自需求：",
+      "generating": "生成中...",
+      "generateWithAI": "AI 生成",
+      "field": {
+        "title": "职位名称",
+        "titlePlaceholder": "例如：高级前端开发工程师",
+        "department": "部门",
+        "location": "工作地点",
+        "workType": "工作方式",
+        "employmentType": "雇佣类型",
+        "experienceLevel": "经验级别",
+        "salaryMin": "最低薪资",
+        "salaryMax": "最高薪资",
+        "description": "职位描述",
+        "descriptionPlaceholder": "编写职位描述或让AI为您生成...",
+        "select": "请选择..."
+      },
+      "workTypes": {
+        "remote": "远程",
+        "hybrid": "混合",
+        "onsite": "现场"
+      },
+      "empTypes": {
+        "fullTime": "全职",
+        "partTime": "兼职",
+        "contract": "合同制",
+        "internship": "实习"
+      },
+      "levels": {
+        "entry": "初级",
+        "mid": "中级",
+        "senior": "高级",
+        "lead": "主管",
+        "executive": "管理层"
+      },
+      "basicInfo": "基本信息",
+      "jobContent": "职位内容",
+      "companyName": "公司名称",
+      "companyNamePlaceholder": "例如：谷歌、微软",
+      "qualifications": "任职要求",
+      "qualificationsPlaceholder": "所需技能、学历、经验...",
+      "hardRequirements": "硬性要求",
+      "hardRequirementsPlaceholder": "不可协商的必备条件...",
+      "monthlySalary": "最低月薪",
+      "salaryMax": "最高月薪",
+      "currency": "币种",
+      "locations": "工作地点",
+      "addLocation": "添加",
+      "country": "国家",
+      "city": "城市",
+      "interviewConfig": "面试配置",
+      "interviewMode": "面试模式",
+      "standard": "标准模式",
+      "questionBank": "题库模式",
+      "passingScore": "通过分数",
+      "interviewLanguage": "面试语言",
+      "interviewDuration": "面试时长（分钟）",
+      "interviewRequirements": "面试要求",
+      "interviewRequirementsPlaceholder": "面试中需要评估的内容...",
+      "evaluationRules": "评估规则",
+      "evaluationRulesPlaceholder": "评分标准、权重、通过/淘汰阈值...",
+      "autoGenerateAll": "一键AI生成",
+      "enhance": "优化",
+      "generate": "生成",
+      "importJd": "导入JD",
+      "exportJob": "导出",
+      "demandAnalysis": "需求分析",
+      "analyzing": "分析中...",
+      "marketDifficulty": "招聘难度",
+      "salaryBenchmark": "薪资基准",
+      "supplyDemand": "供需分析",
+      "competitors": "竞争分析",
+      "timeToHire": "招聘周期（天）",
+      "trends": "市场趋势"
+    },
+    "hiring": {
+      "title": "招聘需求",
+      "subtitle": "管理您的招聘需求并将其转化为职位发布。",
+      "newRequest": "新建需求",
+      "allStatuses": "全部",
+      "empty": "暂无招聘需求",
+      "emptyDesc": "与我们的AI助手开始新的招聘需求。",
+      "candidates": "位候选人",
+      "createJob": "创建职位",
+      "viewDetail": "查看详情",
+      "pause": "暂停",
+      "activate": "激活",
+      "delete": "删除"
+    },
+    "talent": {
+      "title": "人才库",
+      "subtitle": "您的候选人资料库，提供AI洞察。",
+      "upload": "上传简历",
+      "searchPlaceholder": "按姓名、职位、技能搜索...",
+      "empty": "暂无候选人",
+      "emptyDesc": "上传简历以构建您的人才库。",
+      "yearsExp": "年经验",
+      "viewProfile": "查看简历"
+    },
+    "matching": {
+      "title": "智能匹配",
+      "subtitle": "AI驱动的候选人-职位匹配与详细分析。",
+      "selectJob": "选择职位",
+      "noJobs": "未找到职位。请先创建一个职位。",
+      "goToJobs": "前往职位",
+      "choosePlaceholder": "-- 选择职位 --",
+      "allStatuses": "全部",
+      "runMatch": "运行AI匹配",
+      "running": "匹配中...",
+      "noResults": "暂无匹配结果",
+      "noResultsDesc": "点击「运行AI匹配」将候选人与该职位进行匹配。",
+      "score": "分数",
+      "shortlist": "入围",
+      "reject": "淘汰",
+      "viewProfile": "查看简历"
+    },
+    "evaluations": {
+      "title": "评估报告",
+      "subtitle": "AI驱动的多智能体候选人评估报告。",
+      "empty": "暂无评估",
+      "emptyDesc": "先完成面试，然后运行AI评估。",
+      "goToInterviews": "前往AI面试",
+      "pendingSection": "待评估",
+      "completedSection": "已完成评估",
+      "evaluating": "评估中...",
+      "runEval": "运行评估",
+      "summary": "摘要",
+      "strengths": "优势",
+      "weaknesses": "待改进领域"
+    }
+  },
   "seo": {
     "defaultTitle": "RoboHire - AI智能招聘平台",
     "defaultDescription": "比其他人更快招到精英人才。我们的AI招聘助手自动筛选简历、进行面试并提供综合评估报告。",
@@ -1943,7 +2233,7 @@
       "title": "上传简历",
       "batchTitle": "批量上传简历",
       "dragDrop": "将简历文件拖放到此处",
-      "formats": "支持格式：PDF、DOCX、TXT",
+      "formats": "支持格式：PDF、DOCX、TXT、MD、JSON",
       "maxFiles": "一次最多10个文件",
       "uploading": "处理中...",
       "duplicate": "重复"
@@ -2136,5 +2426,28 @@
       "primary": "免费开始招聘",
       "secondary": "探索 API"
     }
+  },
+  "integrations": {
+    "title": "ATS 集成",
+    "subtitle": "连接您的招聘管理系统，自动同步候选人。",
+    "connect": "连接",
+    "disconnect": "断开",
+    "connected": "已连接",
+    "disconnected": "集成已断开",
+    "test": "测试",
+    "testing": "测试中...",
+    "testSuccess": "连接测试通过",
+    "testFailed": "连接测试失败",
+    "connectAndTest": "连接并测试",
+    "cancel": "取消",
+    "lastSync": "上次同步",
+    "logs": "日志",
+    "syncHistory": "同步历史",
+    "noLogs": "暂无同步记录",
+    "greenhouse": { "description": "企业级招聘管理系统，支持结构化招聘流程" },
+    "lever": { "description": "现代招聘管理系统，基于机会的候选人跟踪" },
+    "ashby": { "description": "一站式招聘平台，助力团队规模化" },
+    "bamboohr": { "description": "人力资源软件，含招聘跟踪功能" },
+    "workable": { "description": "招聘软件，强大的招聘渠道集成" }
   }
 }
