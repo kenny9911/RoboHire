@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
+import { usePageState } from '../../hooks/usePageState';
 
 interface HiringRequest {
   id: string;
@@ -22,9 +23,9 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function HiringRequests() {
   const { t } = useTranslation();
-  const [requests, setRequests] = useState<HiringRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [requests, setRequests] = usePageState<HiringRequest[]>('hiring.requests', []);
+  const [loading, setLoading] = useState(requests.length > 0 ? false : true);
+  const [statusFilter, setStatusFilter] = usePageState<string>('hiring.statusFilter', '');
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -138,7 +139,7 @@ export default function HiringRequests() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Link
-                      to={`/dashboard/requests/${req.id}`}
+                      to={`/product/hiring/${req.id}`}
                       className="text-base font-semibold text-slate-900 hover:text-blue-700 transition-colors"
                     >
                       {req.title}
@@ -170,7 +171,7 @@ export default function HiringRequests() {
 
                   {/* View in dashboard */}
                   <Link
-                    to={`/dashboard/requests/${req.id}`}
+                    to={`/product/hiring/${req.id}`}
                     title={t('product.hiring.viewDetail', 'View Detail')}
                     className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
                   >

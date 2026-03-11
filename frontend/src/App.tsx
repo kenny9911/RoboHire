@@ -26,6 +26,7 @@ const ProductDashboard = lazy(() => import('./pages/product/ProductDashboard'));
 const ProductHiringRequests = lazy(() => import('./pages/product/HiringRequests'));
 const ProductTalentHub = lazy(() => import('./pages/product/TalentHub'));
 const ProductJobs = lazy(() => import('./pages/product/Jobs'));
+const ProductJobDetail = lazy(() => import('./pages/product/JobDetail'));
 const ProductSmartMatching = lazy(() => import('./pages/product/SmartMatching'));
 const ProductAIInterview = lazy(() => import('./pages/product/AIInterview'));
 const ProductEvaluations = lazy(() => import('./pages/product/Evaluations'));
@@ -103,9 +104,11 @@ function App() {
             >
               <Route index element={<ProductDashboard />} />
               <Route path="hiring" element={<ProductHiringRequests />} />
+              <Route path="hiring/:id" element={<Dashboard />} />
               <Route path="talent" element={<ProductTalentHub />} />
               <Route path="talent/:id" element={<ResumeDetail />} />
               <Route path="jobs" element={<ProductJobs />} />
+              <Route path="jobs/:id" element={<ProductJobDetail />} />
               <Route path="matching" element={<ProductSmartMatching />} />
               <Route path="interview" element={<ProductAIInterview />} />
               <Route path="evaluations" element={<ProductEvaluations />} />
@@ -122,7 +125,8 @@ function App() {
               }
             >
               <Route index element={<Dashboard />} />
-              <Route path="requests/:id" element={<Dashboard />} />
+              {/* Redirect old request detail routes to /product/hiring */}
+              <Route path="requests/:id" element={<Navigate to="/product/hiring" replace />} />
               {/* Redirect old resume routes to /product/talent */}
               <Route path="resumes" element={<Navigate to="/product/talent" replace />} />
               <Route path="resumes/:id" element={<Navigate to="/product/talent" replace />} />

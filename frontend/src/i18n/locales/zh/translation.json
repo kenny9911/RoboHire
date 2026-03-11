@@ -875,7 +875,13 @@
       "statusInvited": "已邀请",
       "moreSkills": "+{{count}} 更多",
       "reMatch": "重新匹配",
-      "reMatchAll": "全部重新匹配"
+      "reMatchAll": "全部重新匹配",
+      "buttonMatchingProgress": "匹配中 {{completed}}/{{total}}...",
+      "progressTitle": "正在匹配候选人与「{{jobTitle}}」",
+      "progressStats": "已完成 {{completed}}/{{total}}，失败 {{failed}}",
+      "progressSkipped": "跳过 {{skipped}} 个",
+      "progressBatch": "第 {{batch}}/{{totalBatches}} 批",
+      "progressCurrent": "正在匹配："
     },
     "intelligence": {
       "title": "招聘智能分析报告",
@@ -2076,7 +2082,28 @@
       "supplyDemand": "供需分析",
       "competitors": "竞争分析",
       "timeToHire": "招聘周期（天）",
-      "trends": "市场趋势"
+      "trends": "市场趋势",
+      "view": "查看"
+    },
+    "jobDetail": {
+      "backToJobs": "返回职位列表",
+      "edit": "编辑",
+      "created": "创建时间",
+      "updated": "更新时间",
+      "published": "发布时间",
+      "linkedRequest": "关联招聘需求",
+      "description": "职位描述",
+      "qualifications": "任职资格",
+      "hardRequirements": "硬性要求",
+      "interviewConfig": "面试配置",
+      "mode": "模式",
+      "passingScore": "及格分数",
+      "language": "语言",
+      "duration": "时长",
+      "interviewRequirements": "面试要求",
+      "evaluationRules": "评估规则",
+      "yearly": "年",
+      "monthly": "月"
     },
     "hiring": {
       "title": "招聘需求",
@@ -2090,7 +2117,11 @@
       "viewDetail": "查看详情",
       "pause": "暂停",
       "activate": "激活",
-      "delete": "删除"
+      "delete": "删除",
+      "postCreation": {
+        "viewReport": "查看招聘报告"
+      },
+      "goToHiringRequests": "查看招聘需求"
     },
     "talent": {
       "title": "人才库",
@@ -2100,7 +2131,11 @@
       "empty": "暂无候选人",
       "emptyDesc": "上传简历以构建您的人才库。",
       "yearsExp": "年经验",
-      "viewProfile": "查看简历"
+      "viewProfile": "查看简历",
+      "viewCard": "卡片视图",
+      "viewList": "列表视图",
+      "yearsWork": "年",
+      "monthsIntern": "月实习"
     },
     "matching": {
       "title": "智能匹配",
@@ -2248,7 +2283,27 @@
         "notes": "备注与标签"
       },
       "actions": {
+        "regenerateInsights": "重新生成洞察",
+        "regeneratingInsights": "生成中...",
+        "rematchJobs": "重新匹配岗位",
+        "rematchingJobs": "匹配中...",
+        "inviteInterview": "邀请面试",
+        "reupload": "重新上传并覆盖",
         "archive": "归档"
+      },
+      "invite": {
+        "title": "邀请面试",
+        "selectJob": "选择职位",
+        "loadingJobs": "加载职位中...",
+        "noJobs": "暂无已发布的职位，请先创建并发布一个职位。",
+        "cancel": "取消",
+        "sending": "发送中...",
+        "send": "发送邀请",
+        "success": "面试邀请已成功发送！",
+        "position": "职位",
+        "interviewLink": "面试链接",
+        "qrCode": "微信小程序二维码",
+        "done": "完成"
       },
       "overview": {
         "summary": "职业概述",
@@ -2281,6 +2336,7 @@
       "analyze": "分析岗位匹配度",
       "analyzing": "正在与您的招聘需求进行匹配...",
       "reanalyze": "重新分析匹配度",
+      "inviteInterview": "邀请面试",
       "bestFit": "最佳匹配",
       "matchedSkills": "匹配技能",
       "missingSkills": "缺失关键技能",

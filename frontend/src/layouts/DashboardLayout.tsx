@@ -188,7 +188,7 @@ function getPageTitle(
   pathname: string,
   t: (key: string, fallback: string) => string,
 ): string {
-  if (pathname.startsWith('/dashboard/requests/')) return t('dashboard.detail.title', 'Request Details');
+  if (pathname.startsWith('/dashboard/requests/') || pathname.startsWith('/product/hiring/')) return t('dashboard.detail.title', 'Request Details');
   if (pathname === '/product/talent') return t('resumeLibrary.title', 'Resume Library');
   if (pathname.startsWith('/product/talent/')) return t('resumeLibrary.detail.title', 'Resume Detail');
   if (pathname === '/dashboard/api-keys') return t('apiKeys.title', 'API Keys');
@@ -317,7 +317,7 @@ export default function DashboardLayout() {
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) {
-      return location.pathname === path || location.pathname.startsWith('/dashboard/requests');
+      return location.pathname === path;
     }
     return location.pathname === path;
   };
@@ -558,7 +558,7 @@ export default function DashboardLayout() {
                             key={n.id}
                             onClick={() => {
                               setNotificationsOpen(false);
-                              navigate(`/dashboard/requests/${n.requestId}`);
+                              navigate(`/product/hiring/${n.requestId}`);
                             }}
                             className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex gap-3"
                           >

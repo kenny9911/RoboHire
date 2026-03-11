@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../lib/axios';
+import { usePageState } from '../../hooks/usePageState';
 
 interface Interview {
   id: string;
@@ -77,9 +78,9 @@ const VERDICT_STYLES: Record<string, string> = {
 export default function AIInterview() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [interviews, setInterviews] = useState<Interview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [interviews, setInterviews] = usePageState<Interview[]>('interview.list', []);
+  const [loading, setLoading] = useState(interviews.length > 0 ? false : true);
+  const [statusFilter, setStatusFilter] = usePageState<string>('interview.statusFilter', '');
 
   // Arrange interview state
   const [showArrange, setShowArrange] = useState(false);

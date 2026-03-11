@@ -1318,7 +1318,13 @@
       "statusInvited": "招待済み",
       "moreSkills": "+{{count}} 件",
       "reMatch": "再マッチ",
-      "reMatchAll": "すべて再マッチ"
+      "reMatchAll": "すべて再マッチ",
+      "buttonMatchingProgress": "マッチング中 {{completed}}/{{total}}...",
+      "progressTitle": "「{{jobTitle}}」に候補者をマッチング中",
+      "progressStats": "完了 {{completed}}/{{total}}、失敗 {{failed}}",
+      "progressSkipped": "{{skipped}}件スキップ",
+      "progressBatch": "バッチ {{batch}}/{{totalBatches}}",
+      "progressCurrent": "マッチング中："
     },
     "intelligence": {
       "title": "採用インテリジェンスレポート",
@@ -2043,7 +2049,28 @@
       "competitors": "競合分析",
       "timeToHire": "採用日数",
       "trends": "市場トレンド",
-      "placeholder": "AI支援で求人を作成・管理。フェーズ2で実装予定。"
+      "placeholder": "AI支援で求人を作成・管理。フェーズ2で実装予定。",
+      "view": "表示"
+    },
+    "jobDetail": {
+      "backToJobs": "求人一覧に戻る",
+      "edit": "編集",
+      "created": "作成日",
+      "updated": "更新日",
+      "published": "公開日",
+      "linkedRequest": "関連する採用リクエスト",
+      "description": "職務内容",
+      "qualifications": "応募資格",
+      "hardRequirements": "必須要件",
+      "interviewConfig": "面接設定",
+      "mode": "モード",
+      "passingScore": "合格点",
+      "language": "言語",
+      "duration": "所要時間",
+      "interviewRequirements": "面接要件",
+      "evaluationRules": "評価基準",
+      "yearly": "年",
+      "monthly": "月"
     },
     "hiring": {
       "title": "採用リクエスト",
@@ -2068,7 +2095,11 @@
       "matched": "マッチ済み",
       "interviewed": "面接済み",
       "offered": "オファー済み",
-      "placeholder": "採用リクエストの作成と管理。フェーズ3で実装予定。"
+      "placeholder": "採用リクエストの作成と管理。フェーズ3で実装予定。",
+      "postCreation": {
+        "viewReport": "採用レポートを見る"
+      },
+      "goToHiringRequests": "採用依頼を見る"
     },
     "talent": {
       "title": "タレントハブ",
@@ -2094,7 +2125,11 @@
       "archived": "アーカイブ",
       "rejected": "不合格",
       "hired": "採用済み",
-      "placeholder": "AI洞察付きの候補者リポジトリ。フェーズ4で実装予定。"
+      "placeholder": "AI洞察付きの候補者リポジトリ。フェーズ4で実装予定。",
+      "viewCard": "カード表示",
+      "viewList": "リスト表示",
+      "yearsWork": "年",
+      "monthsIntern": "ヶ月インターン"
     },
     "matching": {
       "title": "スマートマッチング",
@@ -2264,7 +2299,27 @@
         "notes": "メモ・タグ"
       },
       "actions": {
+        "regenerateInsights": "インサイトを再生成",
+        "regeneratingInsights": "再生成中...",
+        "rematchJobs": "求人を再マッチング",
+        "rematchingJobs": "マッチング中...",
+        "inviteInterview": "面接に招待",
+        "reupload": "再アップロード＆上書き",
         "archive": "アーカイブ"
+      },
+      "invite": {
+        "title": "面接に招待",
+        "selectJob": "求人を選択",
+        "loadingJobs": "求人を読み込み中...",
+        "noJobs": "公開中の求人がありません。まず求人を作成して公開してください。",
+        "cancel": "キャンセル",
+        "sending": "送信中...",
+        "send": "招待を送信",
+        "success": "面接招待が正常に送信されました！",
+        "position": "ポジション",
+        "interviewLink": "面接リンク",
+        "qrCode": "WeChat QRコード",
+        "done": "完了"
       },
       "overview": {
         "summary": "職務概要",
@@ -2297,6 +2352,7 @@
       "analyze": "職種適性を分析",
       "analyzing": "求人案件とマッチング中...",
       "reanalyze": "適性を再分析",
+      "inviteInterview": "面接に招待",
       "bestFit": "最適マッチ",
       "matchedSkills": "一致するスキル",
       "missingSkills": "不足する重要スキル",

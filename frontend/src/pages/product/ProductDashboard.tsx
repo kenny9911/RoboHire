@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../lib/axios';
+import { usePageState } from '../../hooks/usePageState';
 
 interface Stats {
   activeJobs: number;
@@ -17,7 +18,7 @@ interface Stats {
 export default function ProductDashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [stats, setStats] = useState<Stats>({
+  const defaultStats: Stats = {
     activeJobs: 0,
     totalCandidates: 0,
     interviewsThisWeek: 0,
@@ -25,8 +26,10 @@ export default function ProductDashboard() {
     completedInterviews: 0,
     pendingEvaluations: 0,
     hiringRequests: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  };
+  const [stats, setStats] = usePageState<Stats>('dashboard.stats', defaultStats);
+  const hasCached = stats.activeJobs > 0 || stats.totalCandidates > 0 || stats.hiringRequests > 0;
+  const [loading, setLoading] = useState(!hasCached);
 
   useEffect(() => {
     const fetchStats = async () => {

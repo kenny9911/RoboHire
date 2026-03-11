@@ -874,7 +874,13 @@
       "statusInvited": "Invited",
       "moreSkills": "+{{count}} more",
       "reMatch": "Re-match",
-      "reMatchAll": "Re-match All"
+      "reMatchAll": "Re-match All",
+      "buttonMatchingProgress": "Matching {{completed}}/{{total}}...",
+      "progressTitle": "Matching candidates against \"{{jobTitle}}\"",
+      "progressStats": "Completed {{completed}}/{{total}}, failed {{failed}}",
+      "progressSkipped": "{{skipped}} skipped",
+      "progressBatch": "Batch {{batch}}/{{totalBatches}}",
+      "progressCurrent": "Matching:"
     },
     "intelligence": {
       "title": "Recruitment Intelligence Report",
@@ -1954,7 +1960,28 @@
       "supplyDemand": "Supply / Demand",
       "competitors": "Competition",
       "timeToHire": "Days to Hire",
-      "trends": "Market Trends"
+      "trends": "Market Trends",
+      "view": "View"
+    },
+    "jobDetail": {
+      "backToJobs": "Back to Jobs",
+      "edit": "Edit",
+      "created": "Created",
+      "updated": "Updated",
+      "published": "Published",
+      "linkedRequest": "Linked Hiring Request",
+      "description": "Job Description",
+      "qualifications": "Qualifications",
+      "hardRequirements": "Hard Requirements",
+      "interviewConfig": "Interview Configuration",
+      "mode": "Mode",
+      "passingScore": "Passing Score",
+      "language": "Language",
+      "duration": "Duration",
+      "interviewRequirements": "Interview Requirements",
+      "evaluationRules": "Evaluation Rules",
+      "yearly": "year",
+      "monthly": "month"
     },
     "hiring": {
       "title": "Hiring Requests",
@@ -1968,7 +1995,11 @@
       "viewDetail": "View Detail",
       "pause": "Pause",
       "activate": "Activate",
-      "delete": "Delete"
+      "delete": "Delete",
+      "postCreation": {
+        "viewReport": "View Hiring Report"
+      },
+      "goToHiringRequests": "View Hiring Requests"
     },
     "talent": {
       "title": "Talent Hub",
@@ -1978,7 +2009,11 @@
       "empty": "No candidates yet",
       "emptyDesc": "Upload resumes to build your talent pool.",
       "yearsExp": "years experience",
-      "viewProfile": "View Profile"
+      "viewProfile": "View Profile",
+      "viewCard": "Card View",
+      "viewList": "List View",
+      "yearsWork": "yrs",
+      "monthsIntern": "mo intern"
     },
     "matching": {
       "title": "Smart Matching",
@@ -2126,7 +2161,27 @@
         "notes": "Notes & Tags"
       },
       "actions": {
+        "regenerateInsights": "Re-generate Insights",
+        "regeneratingInsights": "Regenerating...",
+        "rematchJobs": "Re-match Jobs",
+        "rematchingJobs": "Re-matching...",
+        "inviteInterview": "Invite Interview",
+        "reupload": "Re-upload & Overwrite",
         "archive": "Archive"
+      },
+      "invite": {
+        "title": "Invite to Interview",
+        "selectJob": "Select a job position",
+        "loadingJobs": "Loading jobs...",
+        "noJobs": "No open jobs found. Please create and publish a job first.",
+        "cancel": "Cancel",
+        "sending": "Sending...",
+        "send": "Send Invitation",
+        "success": "Invitation sent successfully!",
+        "position": "Position",
+        "interviewLink": "Interview Link",
+        "qrCode": "WeChat QR Code",
+        "done": "Done"
       },
       "overview": {
         "summary": "Professional Summary",
@@ -2159,6 +2214,7 @@
       "analyze": "Analyze Job Fit",
       "analyzing": "Matching against your hiring requests...",
       "reanalyze": "Re-analyze job fit",
+      "inviteInterview": "Invite to Interview",
       "bestFit": "Best Fit",
       "matchedSkills": "Matched Skills",
       "missingSkills": "Missing Critical",

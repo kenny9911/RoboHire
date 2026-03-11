@@ -685,11 +685,20 @@ router.get('/:id/resume-fits', async (req, res) => {
 
 /**
  * POST /api/v1/hiring-requests/:id/auto-match
- * Screen all user's resumes against this hiring request using ScreeningAgent
+ * Screen all user's resumes against this hiring request using ScreeningAgent.
+ * Uses Server-Sent Events (SSE) to stream real-time progress to the frontend.
  */
 router.post('/:id/auto-match', async (req, res) => {
   const requestId = generateRequestId();
+  const matchStartTime = Date.now();
   logger.startRequest(requestId, `/api/v1/hiring-requests/${req.params.id}/auto-match`, 'POST');
+
+  // Helper to send SSE events
+  const sendSSE = (event: string, data: any) => {
+    if (!res.writableEnded) {
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    }
+  };
 
   try {
     const { id } = req.params;
@@ -706,6 +715,12 @@ router.post('/:id/auto-match', async (req, res) => {
       logger.endRequest(requestId, 'error', 404);
       return res.status(404).json({ success: false, error: 'Hiring request not found' });
     }
+
+    logger.info('AUTO_MATCH', `Starting auto-match for "${hiringRequest.title}"`, {
+      hiringRequestId: id,
+      force,
+      resumeIdsProvided: Array.isArray(resumeIds) ? resumeIds.length : 0,
+    }, requestId);
 
     // Fetch user's active resumes (or subset)
     const resumeWhere: any = { userId, status: 'active' };
@@ -724,6 +739,11 @@ router.post('/:id/auto-match', async (req, res) => {
         experienceYears: true,
       },
     });
+
+    logger.info('AUTO_MATCH', `Found ${resumes.length} resumes in library`, {
+      hiringRequestId: id,
+      resumeCount: resumes.length,
+    }, requestId);
 
     if (resumes.length === 0) {
       logger.endRequest(requestId, 'success', 200);
@@ -746,6 +766,13 @@ router.post('/:id/auto-match', async (req, res) => {
     const resumesToScreen = resumes.filter(r => !existingFitResumeIds.has(r.id));
     const skipped = resumes.length - resumesToScreen.length;
 
+    logger.info('AUTO_MATCH', `Screening plan: ${resumesToScreen.length} to screen, ${skipped} skipped (already matched)`, {
+      hiringRequestId: id,
+      toScreen: resumesToScreen.length,
+      skipped,
+      force,
+    }, requestId);
+
     if (resumesToScreen.length === 0) {
       logger.endRequest(requestId, 'success', 200);
       return res.json({
@@ -761,11 +788,44 @@ router.post('/:id/auto-match', async (req, res) => {
     }
 
     // Check and deduct usage for the batch
+    const usageDeductStart = Date.now();
     const usageCheck = await checkBatchUsage(userId, 'match', resumesToScreen.length);
+    const usageDeductTime = Date.now() - usageDeductStart;
+
     if (!usageCheck.ok) {
+      logger.error('AUTO_MATCH', `Usage check failed: ${usageCheck.error}`, {
+        hiringRequestId: id,
+        requestedCount: resumesToScreen.length,
+        code: usageCheck.code,
+        usageCheckDuration: `${usageDeductTime}ms`,
+      }, requestId);
       logger.endRequest(requestId, 'error', 402);
       return res.status(402).json({ success: false, error: usageCheck.error, code: usageCheck.code, details: usageCheck.details });
     }
+
+    logger.info('AUTO_MATCH', `Usage deducted: ${resumesToScreen.length} match credits`, {
+      hiringRequestId: id,
+      creditsDeducted: resumesToScreen.length,
+      usageCheckDuration: `${usageDeductTime}ms`,
+    }, requestId);
+
+    // --- Switch to SSE mode ---
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    // Send initial progress event
+    sendSSE('progress', {
+      phase: 'started',
+      jobTitle: hiringRequest.title,
+      total: resumesToScreen.length,
+      completed: 0,
+      failed: 0,
+      skipped,
+      currentCandidates: [],
+    });
 
     // Build condensed parsed summaries for each resume
     const screeningResumes = resumesToScreen.map(r => {
@@ -835,9 +895,47 @@ router.post('/:id/auto-match', async (req, res) => {
       jobDescription: hiringRequest.jobDescription || undefined,
     };
 
-    for (const batch of batches) {
+    for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
+      const batch = batches[batchIdx];
+      const batchStartTime = Date.now();
+      const batchNames = batch.map(r => r.name);
+
+      logger.info('AUTO_MATCH', `Batch ${batchIdx + 1}/${batches.length}: screening ${batch.length} candidates`, {
+        hiringRequestId: id,
+        batchIndex: batchIdx + 1,
+        totalBatches: batches.length,
+        candidates: batchNames,
+      }, requestId);
+
+      // Send progress: which candidates are being matched now
+      sendSSE('progress', {
+        phase: 'matching',
+        jobTitle: hiringRequest.title,
+        total: resumesToScreen.length,
+        completed: matchedCount,
+        failed: failedCount,
+        skipped,
+        batchIndex: batchIdx + 1,
+        totalBatches: batches.length,
+        currentCandidates: batchNames,
+      });
+
       try {
         const result = await screeningAgent.screen(hrInput, batch, requestId);
+        const batchDuration = Date.now() - batchStartTime;
+
+        // Collect token/cost info from logger context
+        const usageSnapshot = logger.getRequestContext(requestId);
+
+        logger.info('AUTO_MATCH', `Batch ${batchIdx + 1}/${batches.length} LLM completed`, {
+          hiringRequestId: id,
+          batchIndex: batchIdx + 1,
+          batchDuration: `${batchDuration}ms`,
+          screeningsReturned: result.screenings.length,
+          batchCandidates: batchNames,
+          cumulativeTokens: usageSnapshot?.totalTokens ?? 0,
+          cumulativeCost: usageSnapshot ? `$${usageSnapshot.totalCost.toFixed(6)}` : '$0',
+        }, requestId);
 
         // Upsert ResumeJobFit records for each screening result
         for (const screening of result.screenings) {
@@ -893,6 +991,15 @@ router.post('/:id/auto-match', async (req, res) => {
               cached: false,
             });
             matchedCount++;
+
+            logger.info('AUTO_MATCH', `Matched: ${resumeName} → score=${screening.fitScore}, grade=${screening.fitGrade}, verdict=${screening.verdict}`, {
+              hiringRequestId: id,
+              resumeId: screening.resumeId,
+              resumeName,
+              fitScore: screening.fitScore,
+              fitGrade: screening.fitGrade,
+              verdict: screening.verdict,
+            }, requestId);
           } catch (dbError) {
             const resumeName = batch.find(r => r.resumeId === screening.resumeId)?.name || '';
             allResults.push({
@@ -905,6 +1012,10 @@ router.post('/:id/auto-match', async (req, res) => {
               error: 'Failed to save result',
             });
             failedCount++;
+            logger.error('AUTO_MATCH', `DB upsert failed for ${resumeName}`, {
+              resumeId: screening.resumeId,
+              error: dbError instanceof Error ? dbError.message : String(dbError),
+            }, requestId);
           }
         }
 
@@ -922,9 +1033,33 @@ router.post('/:id/auto-match', async (req, res) => {
               error: 'Not included in screening result',
             });
             failedCount++;
+            logger.warn('AUTO_MATCH', `Resume "${resume.name}" not included in LLM response`, {
+              resumeId: resume.resumeId,
+            }, requestId);
           }
         }
+
+        // Send batch-complete event with per-candidate results
+        sendSSE('progress', {
+          phase: 'batch_complete',
+          jobTitle: hiringRequest.title,
+          total: resumesToScreen.length,
+          completed: matchedCount,
+          failed: failedCount,
+          skipped,
+          batchIndex: batchIdx + 1,
+          totalBatches: batches.length,
+          batchDuration,
+          batchResults: result.screenings.map(s => ({
+            resumeName: batch.find(r => r.resumeId === s.resumeId)?.name || '',
+            fitScore: s.fitScore,
+            fitGrade: s.fitGrade,
+            verdict: s.verdict,
+          })),
+          currentCandidates: [],
+        });
       } catch (batchError) {
+        const batchDuration = Date.now() - batchStartTime;
         // Entire batch failed
         for (const resume of batch) {
           allResults.push({
@@ -938,33 +1073,78 @@ router.post('/:id/auto-match', async (req, res) => {
           });
           failedCount++;
         }
+        logger.error('AUTO_MATCH', `Batch ${batchIdx + 1}/${batches.length} failed entirely`, {
+          hiringRequestId: id,
+          batchDuration: `${batchDuration}ms`,
+          candidates: batchNames,
+          error: batchError instanceof Error ? batchError.message : String(batchError),
+        }, requestId);
+
+        sendSSE('progress', {
+          phase: 'batch_error',
+          jobTitle: hiringRequest.title,
+          total: resumesToScreen.length,
+          completed: matchedCount,
+          failed: failedCount,
+          skipped,
+          batchIndex: batchIdx + 1,
+          totalBatches: batches.length,
+          batchDuration,
+          errorCandidates: batchNames,
+          currentCandidates: [],
+        });
       }
     }
 
+    const totalDuration = Date.now() - matchStartTime;
+    const finalUsage = logger.getRequestContext(requestId);
+
     logger.info('AUTO_MATCH', 'Auto-match completed', {
       hiringRequestId: id,
+      jobTitle: hiringRequest.title,
       total: resumes.length,
       matched: matchedCount,
       skipped,
       failed: failedCount,
+      totalDuration: `${totalDuration}ms`,
+      totalTokens: finalUsage?.totalTokens ?? 0,
+      totalCost: finalUsage ? `$${finalUsage.totalCost.toFixed(6)}` : '$0',
+      llmCalls: finalUsage?.completionTokens !== undefined ? `${finalUsage.promptTokens}in/${finalUsage.completionTokens}out` : 'N/A',
+      creditsDeducted: resumesToScreen.length,
     }, requestId);
 
     logger.endRequest(requestId, 'success', 200);
 
-    return res.json({
+    // Send final completion event
+    sendSSE('complete', {
       success: true,
       data: {
         total: resumes.length,
         matched: matchedCount,
         skipped,
         failed: failedCount,
+        totalDuration,
         results: allResults,
       },
     });
+
+    res.end();
   } catch (error) {
-    console.error('Auto-match error:', error);
+    const totalDuration = Date.now() - matchStartTime;
+    logger.error('AUTO_MATCH', 'Auto-match failed with unexpected error', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      totalDuration: `${totalDuration}ms`,
+    }, requestId);
     logger.endRequest(requestId, 'error', 500);
-    return res.status(500).json({ success: false, error: 'Failed to auto-match resumes' });
+
+    // If we already started SSE, send error event
+    if (res.headersSent) {
+      sendSSE('error', { error: 'Failed to auto-match resumes' });
+      res.end();
+    } else {
+      return res.status(500).json({ success: false, error: 'Failed to auto-match resumes' });
+    }
   }
 });
 

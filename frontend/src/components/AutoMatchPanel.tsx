@@ -90,7 +90,16 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
   const [fits, setFits] = useState<ResumeJobFit[]>([]);
   const [loading, setLoading] = useState(false);
   const [matching, setMatching] = useState(false);
-  const [, setMatchProgress] = useState<{ total: number; matched: number } | null>(null);
+  const [matchProgress, setMatchProgress] = useState<{
+    total: number;
+    completed: number;
+    failed: number;
+    skipped: number;
+    currentCandidates: string[];
+    batchIndex?: number;
+    totalBatches?: number;
+    jobTitle?: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -145,20 +154,83 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
           body: JSON.stringify({ force }),
         }
       );
-      const data = await response.json();
-      if (data.success) {
-        setMatchProgress({ total: data.data.total, matched: data.data.matched });
-        setSuccessMsg(
-          t('dashboard.autoMatch.progressComplete', { matched: data.data.matched })
-        );
+
+      const contentType = response.headers.get('content-type') || '';
+
+      // Handle SSE streaming response
+      if (contentType.includes('text/event-stream') && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          let currentEvent = '';
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              currentEvent = line.slice(7).trim();
+            } else if (line.startsWith('data: ') && currentEvent) {
+              try {
+                const eventData = JSON.parse(line.slice(6));
+                if (currentEvent === 'progress') {
+                  setMatchProgress({
+                    total: eventData.total,
+                    completed: eventData.completed,
+                    failed: eventData.failed,
+                    skipped: eventData.skipped,
+                    currentCandidates: eventData.currentCandidates || [],
+                    batchIndex: eventData.batchIndex,
+                    totalBatches: eventData.totalBatches,
+                    jobTitle: eventData.jobTitle,
+                  });
+                } else if (currentEvent === 'complete') {
+                  if (eventData.success) {
+                    setSuccessMsg(
+                      t('dashboard.autoMatch.progressComplete', { matched: eventData.data.matched })
+                    );
+                  }
+                } else if (currentEvent === 'error') {
+                  setError(eventData.error || t('dashboard.autoMatch.matchError'));
+                }
+              } catch {
+                // ignore malformed SSE data
+              }
+              currentEvent = '';
+            }
+          }
+        }
+
         await fetchFits();
       } else {
-        setError(data.error || t('dashboard.autoMatch.matchError'));
+        // Fallback: non-streaming JSON response
+        const data = await response.json();
+        if (data.success) {
+          setMatchProgress({
+            total: data.data.total,
+            completed: data.data.matched,
+            failed: data.data.failed || 0,
+            skipped: data.data.skipped || 0,
+            currentCandidates: [],
+          });
+          setSuccessMsg(
+            t('dashboard.autoMatch.progressComplete', { matched: data.data.matched })
+          );
+          await fetchFits();
+        } else {
+          setError(data.error || t('dashboard.autoMatch.matchError'));
+        }
       }
     } catch {
       setError(t('dashboard.autoMatch.matchError'));
     } finally {
       setMatching(false);
+      setMatchProgress(null);
     }
   };
 
@@ -316,7 +388,13 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                {t('dashboard.autoMatch.buttonMatching')}
+                {matchProgress
+                  ? t('dashboard.autoMatch.buttonMatchingProgress', {
+                      completed: matchProgress.completed + matchProgress.failed,
+                      total: matchProgress.total,
+                    })
+                  : t('dashboard.autoMatch.buttonMatching')
+                }
               </>
             ) : (
               t('dashboard.autoMatch.button')
@@ -336,6 +414,75 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
         <div className="mx-6 mt-4 p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200">
           {successMsg}
           <button onClick={() => setSuccessMsg(null)} className="ml-2 text-emerald-500 hover:text-emerald-700">&times;</button>
+        </div>
+      )}
+
+      {/* Matching Progress Panel */}
+      {matching && matchProgress && (
+        <div className="mx-6 mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+          <div className="flex items-center gap-3 mb-3">
+            <svg className="w-5 h-5 animate-spin text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-indigo-900">
+                {t('dashboard.autoMatch.progressTitle', {
+                  jobTitle: matchProgress.jobTitle || hiringRequest.title,
+                })}
+              </p>
+              <p className="text-xs text-indigo-600 mt-0.5">
+                {t('dashboard.autoMatch.progressStats', {
+                  completed: matchProgress.completed,
+                  failed: matchProgress.failed,
+                  total: matchProgress.total,
+                })}
+                {matchProgress.skipped > 0 && (
+                  <>
+                    {' · '}
+                    {t('dashboard.autoMatch.progressSkipped', { skipped: matchProgress.skipped })}
+                  </>
+                )}
+                {matchProgress.batchIndex && matchProgress.totalBatches && (
+                  <>
+                    {' · '}
+                    {t('dashboard.autoMatch.progressBatch', {
+                      batch: matchProgress.batchIndex,
+                      totalBatches: matchProgress.totalBatches,
+                    })}
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full bg-indigo-200 rounded-full h-2 mb-3">
+            <div
+              className="bg-indigo-600 h-2 rounded-full transition-all duration-500"
+              style={{
+                width: `${matchProgress.total > 0 ? ((matchProgress.completed + matchProgress.failed) / matchProgress.total) * 100 : 0}%`,
+              }}
+            />
+          </div>
+
+          {/* Current candidates being matched */}
+          {matchProgress.currentCandidates.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-indigo-500 shrink-0">
+                {t('dashboard.autoMatch.progressCurrent', 'Matching:')}
+              </span>
+              {matchProgress.currentCandidates.map((name) => (
+                <span
+                  key={name}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white text-xs font-medium text-indigo-700 border border-indigo-200 animate-pulse"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

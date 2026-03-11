@@ -979,7 +979,11 @@ export default function StartHiring() {
                           </p>
                         </div>
                         {isTitleGenerating && (
-                          <span className="text-xs text-blue-600">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 animate-pulse">
+                            <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
                             {t('hiring.titleGenerating', 'Generating a title...')}
                           </span>
                         )}
@@ -1000,7 +1004,7 @@ export default function StartHiring() {
                         }}
                         disabled={isTitleGenerating}
                         placeholder={t('hiring.titlePlaceholder', 'e.g., Senior Full Stack Engineer')}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-400"
+                        className={`w-full rounded-xl border px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 ${isTitleGenerating ? 'border-blue-300 bg-blue-50/50 animate-pulse' : 'border-slate-200 bg-white disabled:bg-slate-100 disabled:text-slate-400'}`}
                       />
                       {titleError && (
                         <p className="mt-2 text-xs text-rose-600">{titleError}</p>
@@ -1122,7 +1126,11 @@ export default function StartHiring() {
                                 </span>
                               </button>
                               {isJdGenerating && (
-                                <span className="text-xs text-blue-600">
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 animate-pulse">
+                                  <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                  </svg>
                                   {t('hiring.jdGenerating', 'Generating job description...')}
                                 </span>
                               )}
@@ -1194,10 +1202,10 @@ export default function StartHiring() {
                 {step === 'complete' && isAuthenticated && !createdRequestId && (
                   <div className="flex justify-center pt-4">
                     <Link
-                      to="/dashboard"
+                      to="/product/hiring"
                       className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_-16px_rgba(37,99,235,0.85)]"
                     >
-                      {t('hiring.goToDashboard', 'Go to Dashboard')}
+                      {t('hiring.goToHiringRequests', 'View Hiring Requests')}
                     </Link>
                   </div>
                 )}

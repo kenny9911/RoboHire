@@ -948,7 +948,13 @@
       "statusInvited": "Invitado",
       "moreSkills": "+{{count}} más",
       "reMatch": "Re-emparejar",
-      "reMatchAll": "Re-emparejar todo"
+      "reMatchAll": "Re-emparejar todo",
+      "buttonMatchingProgress": "Coincidiendo {{completed}}/{{total}}...",
+      "progressTitle": "Comparando candidatos con \"{{jobTitle}}\"",
+      "progressStats": "Completados {{completed}}/{{total}}, fallidos {{failed}}",
+      "progressSkipped": "{{skipped}} omitidos",
+      "progressBatch": "Lote {{batch}}/{{totalBatches}}",
+      "progressCurrent": "Comparando:"
     },
     "intelligence": {
       "title": "Informe de Inteligencia de Reclutamiento",
@@ -1673,7 +1679,28 @@
       "supplyDemand": "Oferta / Demanda",
       "competitors": "Competencia",
       "timeToHire": "Dias para contratar",
-      "trends": "Tendencias del mercado"
+      "trends": "Tendencias del mercado",
+      "view": "Ver"
+    },
+    "jobDetail": {
+      "backToJobs": "Volver a empleos",
+      "edit": "Editar",
+      "created": "Creado",
+      "updated": "Actualizado",
+      "published": "Publicado",
+      "linkedRequest": "Solicitud de contratación vinculada",
+      "description": "Descripción del puesto",
+      "qualifications": "Requisitos",
+      "hardRequirements": "Requisitos obligatorios",
+      "interviewConfig": "Configuración de entrevista",
+      "mode": "Modo",
+      "passingScore": "Puntuación mínima",
+      "language": "Idioma",
+      "duration": "Duración",
+      "interviewRequirements": "Requisitos de entrevista",
+      "evaluationRules": "Reglas de evaluación",
+      "yearly": "año",
+      "monthly": "mes"
     },
     "hiring": {
       "title": "Solicitudes de Contratación",
@@ -1687,7 +1714,11 @@
       "viewDetail": "Ver Detalle",
       "pause": "Pausar",
       "activate": "Activar",
-      "delete": "Eliminar"
+      "delete": "Eliminar",
+      "postCreation": {
+        "viewReport": "Ver informe de contratación"
+      },
+      "goToHiringRequests": "Ver solicitudes de contratación"
     },
     "talent": {
       "title": "Hub de Talento",
@@ -1697,7 +1728,11 @@
       "empty": "Sin candidatos aún",
       "emptyDesc": "Sube currículums para construir tu pool de talento.",
       "yearsExp": "años de experiencia",
-      "viewProfile": "Ver Perfil"
+      "viewProfile": "Ver Perfil",
+      "viewCard": "Vista tarjetas",
+      "viewList": "Vista lista",
+      "yearsWork": "años",
+      "monthsIntern": "meses prácticas"
     },
     "matching": {
       "title": "Coincidencia Inteligente",
@@ -1845,7 +1880,27 @@
         "notes": "Notas y Etiquetas"
       },
       "actions": {
+        "regenerateInsights": "Regenerar análisis",
+        "regeneratingInsights": "Regenerando...",
+        "rematchJobs": "Reasignar empleos",
+        "rematchingJobs": "Reasignando...",
+        "inviteInterview": "Invitar a entrevista",
+        "reupload": "Resubir y sobrescribir",
         "archive": "Archivar"
+      },
+      "invite": {
+        "title": "Invitar a entrevista",
+        "selectJob": "Seleccionar un puesto",
+        "loadingJobs": "Cargando puestos...",
+        "noJobs": "No se encontraron puestos abiertos. Cree y publique un puesto primero.",
+        "cancel": "Cancelar",
+        "sending": "Enviando...",
+        "send": "Enviar invitación",
+        "success": "¡Invitación enviada con éxito!",
+        "position": "Puesto",
+        "interviewLink": "Enlace de entrevista",
+        "qrCode": "Código QR de WeChat",
+        "done": "Hecho"
       },
       "overview": {
         "summary": "Resumen Profesional",
@@ -1878,6 +1933,7 @@
       "analyze": "Analizar Ajuste al Puesto",
       "analyzing": "Comparando con tus solicitudes de contratación...",
       "reanalyze": "Reanalizar ajuste",
+      "inviteInterview": "Invitar a entrevista",
       "bestFit": "Mejor Ajuste",
       "matchedSkills": "Habilidades Coincidentes",
       "missingSkills": "Habilidades Críticas Faltantes",

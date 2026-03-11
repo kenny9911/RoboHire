@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
+import { usePageState } from '../../hooks/usePageState';
 
 interface Job {
   id: string;
@@ -49,16 +50,17 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function SmartMatching() {
   const { t } = useTranslation();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string>('');
-  const [matches, setMatches] = useState<MatchResult[]>([]);
-  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [jobs, setJobs] = usePageState<Job[]>('matching.jobs', []);
+  const [selectedJobId, setSelectedJobId] = usePageState<string>('matching.selectedJobId', '');
+  const [matches, setMatches] = usePageState<MatchResult[]>('matching.matches', []);
+  const [loadingJobs, setLoadingJobs] = useState(jobs.length > 0 ? false : true);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [running, setRunning] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = usePageState<string>('matching.statusFilter', '');
 
-  // Fetch user's jobs
+  // Fetch user's jobs (skip if cached)
   useEffect(() => {
+    if (jobs.length > 0) return;
     (async () => {
       try {
         const res = await axios.get('/api/v1/jobs', { params: { limit: 100 } });
@@ -69,7 +71,7 @@ export default function SmartMatching() {
         setLoadingJobs(false);
       }
     })();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch match results when job is selected
   const fetchMatches = useCallback(async (jobId: string) => {

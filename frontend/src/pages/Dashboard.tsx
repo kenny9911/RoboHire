@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
@@ -238,6 +238,10 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { id: requestId } = useParams();
+  const location = useLocation();
+  const isProductContext = location.pathname.startsWith('/product');
+  const listPath = isProductContext ? '/product/hiring' : '/dashboard';
+  const detailPath = (id: string) => isProductContext ? `/product/hiring/${id}` : `/dashboard/requests/${id}`;
 
   const [hiringRequests, setHiringRequests] = useState<HiringRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -337,7 +341,7 @@ export default function Dashboard() {
       const data = await response.json();
       if (data.success) {
         if (requestId === id) {
-          navigate('/dashboard');
+          navigate(listPath);
         }
         await fetchHiringRequests();
       }
@@ -359,7 +363,7 @@ export default function Dashboard() {
       const data = await response.json();
       if (data.success) {
         if (requestId === id) {
-          navigate('/dashboard');
+          navigate(listPath);
         }
         await fetchHiringRequests();
       }
@@ -434,7 +438,7 @@ export default function Dashboard() {
         <SEO title="Dashboard" noIndex />
         {requestId ? (
           <div>
-            <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-6">
+            <Link to={listPath} className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-6">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -774,7 +778,7 @@ export default function Dashboard() {
                     <div
                       key={request.id}
                       className="p-5 hover:bg-slate-50/80 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/dashboard/requests/${request.id}`)}
+                      onClick={() => navigate(detailPath(request.id))}
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">

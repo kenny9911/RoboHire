@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
+import { usePageState } from '../../hooks/usePageState';
 
 interface Interview {
   id: string;
@@ -33,10 +34,10 @@ const VERDICT_STYLES: Record<string, { bg: string; text: string }> = {
 
 export default function Evaluations() {
   const { t } = useTranslation();
-  const [interviews, setInterviews] = useState<Interview[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [interviews, setInterviews] = usePageState<Interview[]>('evaluations.interviews', []);
+  const [loading, setLoading] = useState(interviews.length > 0 ? false : true);
   const [evaluating, setEvaluating] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = usePageState<string | null>('evaluations.expandedId', null);
 
   const fetchInterviews = async () => {
     try {

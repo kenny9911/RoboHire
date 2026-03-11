@@ -916,7 +916,13 @@
       "statusInvited": "已邀請",
       "moreSkills": "+{{count}} 更多",
       "reMatch": "重新匹配",
-      "reMatchAll": "全部重新匹配"
+      "reMatchAll": "全部重新匹配",
+      "buttonMatchingProgress": "匹配中 {{completed}}/{{total}}...",
+      "progressTitle": "正在匹配候選人與「{{jobTitle}}」",
+      "progressStats": "已完成 {{completed}}/{{total}}，失敗 {{failed}}",
+      "progressSkipped": "跳過 {{skipped}} 個",
+      "progressBatch": "第 {{batch}}/{{totalBatches}} 批",
+      "progressCurrent": "正在匹配："
     },
     "intelligence": {
       "title": "招聘智慧分析報告",
@@ -2096,7 +2102,28 @@
       "supplyDemand": "供需分析",
       "competitors": "競爭分析",
       "timeToHire": "招聘週期（天）",
-      "trends": "市場趨勢"
+      "trends": "市場趨勢",
+      "view": "查看"
+    },
+    "jobDetail": {
+      "backToJobs": "返回職位列表",
+      "edit": "編輯",
+      "created": "建立時間",
+      "updated": "更新時間",
+      "published": "發布時間",
+      "linkedRequest": "關聯招聘需求",
+      "description": "職位描述",
+      "qualifications": "任職資格",
+      "hardRequirements": "硬性要求",
+      "interviewConfig": "面試配置",
+      "mode": "模式",
+      "passingScore": "及格分數",
+      "language": "語言",
+      "duration": "時長",
+      "interviewRequirements": "面試要求",
+      "evaluationRules": "評估規則",
+      "yearly": "年",
+      "monthly": "月"
     },
     "hiring": {
       "title": "招聘需求",
@@ -2110,7 +2137,11 @@
       "viewDetail": "查看詳情",
       "pause": "暫停",
       "activate": "啟用",
-      "delete": "刪除"
+      "delete": "刪除",
+      "postCreation": {
+        "viewReport": "查看招聘報告"
+      },
+      "goToHiringRequests": "查看招聘需求"
     },
     "talent": {
       "title": "人才中心",
@@ -2120,7 +2151,11 @@
       "noTalent": "暫無候選人",
       "empty": "上傳履歷",
       "experience": "年工作經驗",
-      "viewProfile": "查看檔案"
+      "viewProfile": "查看檔案",
+      "viewCard": "卡片檢視",
+      "viewList": "列表檢視",
+      "yearsWork": "年",
+      "monthsIntern": "月實習"
     },
     "matching": {
       "title": "智慧配對",
@@ -2268,7 +2303,27 @@
         "notes": "備註與標籤"
       },
       "actions": {
+        "regenerateInsights": "重新生成洞察",
+        "regeneratingInsights": "生成中...",
+        "rematchJobs": "重新匹配職位",
+        "rematchingJobs": "匹配中...",
+        "inviteInterview": "邀請面試",
+        "reupload": "重新上傳並覆蓋",
         "archive": "歸檔"
+      },
+      "invite": {
+        "title": "邀請面試",
+        "selectJob": "選擇職位",
+        "loadingJobs": "載入職位中...",
+        "noJobs": "暫無已發布的職位，請先建立並發布一個職位。",
+        "cancel": "取消",
+        "sending": "發送中...",
+        "send": "發送邀請",
+        "success": "面試邀請已成功發送！",
+        "position": "職位",
+        "interviewLink": "面試連結",
+        "qrCode": "微信小程式二維碼",
+        "done": "完成"
       },
       "overview": {
         "summary": "職業概述",
@@ -2301,6 +2356,7 @@
       "analyze": "分析崗位匹配度",
       "analyzing": "正在與您的招聘需求進行匹配...",
       "reanalyze": "重新分析匹配度",
+      "inviteInterview": "邀請面試",
       "bestFit": "最佳匹配",
       "matchedSkills": "匹配技能",
       "missingSkills": "缺失關鍵技能",

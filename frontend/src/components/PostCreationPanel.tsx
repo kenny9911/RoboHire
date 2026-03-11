@@ -198,7 +198,7 @@ export default function PostCreationPanel({ hiringRequestId }: PostCreationPanel
                 </div>
               )}
               <Link
-                to="/dashboard"
+                to={`/product/hiring/${hiringRequestId}`}
                 className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
               >
                 {t('hiring.postCreation.viewFullReport')} →
@@ -209,13 +209,13 @@ export default function PostCreationPanel({ hiringRequestId }: PostCreationPanel
         </div>
       </div>
 
-      {/* Go to Dashboard */}
+      {/* Go to Hiring Request */}
       <div className="flex justify-center">
         <Link
-          to="/dashboard"
+          to={`/product/hiring/${hiringRequestId}`}
           className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_-16px_rgba(37,99,235,0.85)]"
         >
-          {t('hiring.postCreation.goToDashboard')}
+          {t('hiring.postCreation.viewReport', 'View Hiring Report')}
         </Link>
       </div>
     </div>

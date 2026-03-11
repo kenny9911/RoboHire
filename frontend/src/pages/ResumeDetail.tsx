@@ -45,6 +45,13 @@ export default function ResumeDetail() {
   const [tagsValue, setTagsValue] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [replaceUploadOpen, setReplaceUploadOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteJobs, setInviteJobs] = useState<Array<{ id: string; title: string; description: string | null }>>([]);
+  const [inviteSelectedJobId, setInviteSelectedJobId] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteJobsLoading, setInviteJobsLoading] = useState(false);
+  const [inviteResult, setInviteResult] = useState<Record<string, unknown> | null>(null);
+  const [inviteError, setInviteError] = useState('');
 
   const fetchResume = useCallback(async () => {
     if (!id) return;
@@ -121,6 +128,77 @@ export default function ResumeDetail() {
     navigate('/product/talent');
   };
 
+  const handleInviteFromFit = async (hiringRequestId: string, title: string) => {
+    if (!resume) return;
+    setInviteModalOpen(true);
+    setInviteResult(null);
+    setInviteError('');
+    setInviteLoading(true);
+    setInviteJobs([]);
+    setInviteSelectedJobId('');
+    try {
+      const hrRes = await axios.get(`/api/v1/hiring-requests/${hiringRequestId}`);
+      const hr = hrRes.data.data;
+      const jdText = hr.jobDescription || hr.requirements || title;
+      const res = await axios.post('/api/v1/invite-candidate', {
+        resume: resume.resumeText,
+        jd: jdText,
+        recruiter_email: resume.email || undefined,
+      });
+      if (res.data.success) {
+        setInviteResult(res.data.data);
+      } else {
+        setInviteError(res.data.error || 'Failed to send invitation');
+      }
+    } catch (err: any) {
+      setInviteError(err?.response?.data?.error || 'Failed to send invitation');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const openInviteModal = async () => {
+    setInviteModalOpen(true);
+    setInviteResult(null);
+    setInviteError('');
+    setInviteSelectedJobId('');
+    setInviteJobsLoading(true);
+    try {
+      const res = await axios.get('/api/v1/jobs', { params: { status: 'open', limit: 50 } });
+      const jobs = (res.data.data || []).map((j: any) => ({ id: j.id, title: j.title, description: j.description }));
+      setInviteJobs(jobs);
+      if (jobs.length > 0) setInviteSelectedJobId(jobs[0].id);
+    } catch {
+      setInviteJobs([]);
+    } finally {
+      setInviteJobsLoading(false);
+    }
+  };
+
+  const handleInvite = async () => {
+    if (!resume || !inviteSelectedJobId) return;
+    const selectedJob = inviteJobs.find(j => j.id === inviteSelectedJobId);
+    if (!selectedJob) return;
+    setInviteLoading(true);
+    setInviteError('');
+    try {
+      const res = await axios.post('/api/v1/invite-candidate', {
+        resume: resume.resumeText,
+        jd: selectedJob.description || selectedJob.title,
+        recruiter_email: resume.email || undefined,
+      });
+      if (res.data.success) {
+        setInviteResult(res.data.data);
+      } else {
+        setInviteError(res.data.error || 'Failed to send invitation');
+      }
+    } catch (err: any) {
+      setInviteError(err?.response?.data?.error || 'Failed to send invitation');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -176,8 +254,11 @@ export default function ResumeDetail() {
             <button
               onClick={() => generateInsights(true)}
               disabled={insightLoading}
-              className="text-xs text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors disabled:opacity-60"
             >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+              </svg>
               {insightLoading
                 ? t('resumeLibrary.detail.actions.regeneratingInsights', 'Regenerating...')
                 : t('resumeLibrary.detail.actions.regenerateInsights', 'Re-generate Insights')}
@@ -185,22 +266,40 @@ export default function ResumeDetail() {
             <button
               onClick={analyzeJobFit}
               disabled={jobFitLoading}
-              className="text-xs text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-60"
             >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+              </svg>
               {jobFitLoading
                 ? t('resumeLibrary.detail.actions.rematchingJobs', 'Re-matching...')
                 : t('resumeLibrary.detail.actions.rematchJobs', 'Re-match Jobs')}
             </button>
             <button
-              onClick={() => setReplaceUploadOpen(true)}
-              className="text-xs text-amber-700 hover:text-amber-800 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors"
+              onClick={openInviteModal}
+              className="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:text-emerald-800 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors"
             >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+              {t('resumeLibrary.detail.actions.inviteInterview', 'Invite Interview')}
+            </button>
+            <button
+              onClick={() => setReplaceUploadOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs text-amber-700 hover:text-amber-800 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
               {t('resumeLibrary.detail.actions.reupload', 'Re-upload & Overwrite')}
             </button>
             <button
               onClick={handleArchive}
-              className="text-xs text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
             >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
               {t('resumeLibrary.detail.actions.archive', 'Archive')}
             </button>
           </div>
@@ -225,7 +324,7 @@ export default function ResumeDetail() {
       {/* Tab content */}
       {tab === 'overview' && <OverviewTab parsed={parsed} t={t} />}
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
-      {tab === 'jobfit' && <JobFitTab data={resume.jobFitData} loading={jobFitLoading} onAnalyze={analyzeJobFit} t={t} />}
+      {tab === 'jobfit' && <JobFitTab data={resume.jobFitData} loading={jobFitLoading} onAnalyze={analyzeJobFit} onInvite={handleInviteFromFit} t={t} />}
       {tab === 'notes' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="mb-6">
@@ -269,6 +368,137 @@ export default function ResumeDetail() {
         }}
         replaceResumeId={resume.id}
       />
+
+      {/* Invite Interview Modal */}
+      {inviteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {t('resumeLibrary.detail.invite.title', 'Invite to Interview')}
+              </h3>
+              <button
+                onClick={() => setInviteModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Candidate info */}
+              <div className="rounded-xl bg-gray-50 p-4">
+                <p className="text-sm font-medium text-gray-900">{resume.name}</p>
+                {resume.currentRole && <p className="text-xs text-gray-500 mt-0.5">{resume.currentRole}</p>}
+                {resume.email && <p className="text-xs text-gray-500">{resume.email}</p>}
+              </div>
+
+              {!inviteResult ? (
+                <>
+                  {/* Job selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      {t('resumeLibrary.detail.invite.selectJob', 'Select a job position')}
+                    </label>
+                    {inviteJobsLoading ? (
+                      <div className="flex items-center gap-2 py-3 text-sm text-gray-500">
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-indigo-600" />
+                        {t('resumeLibrary.detail.invite.loadingJobs', 'Loading jobs...')}
+                      </div>
+                    ) : inviteJobs.length === 0 ? (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+                        {t('resumeLibrary.detail.invite.noJobs', 'No open jobs found. Please create and publish a job first.')}
+                      </div>
+                    ) : (
+                      <select
+                        value={inviteSelectedJobId}
+                        onChange={e => setInviteSelectedJobId(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      >
+                        {inviteJobs.map(j => (
+                          <option key={j.id} value={j.id}>{j.title}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {inviteError && (
+                    <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">{inviteError}</div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      onClick={() => setInviteModalOpen(false)}
+                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      {t('resumeLibrary.detail.invite.cancel', 'Cancel')}
+                    </button>
+                    <button
+                      onClick={handleInvite}
+                      disabled={inviteLoading || !inviteSelectedJobId || inviteJobs.length === 0}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors inline-flex items-center gap-2"
+                    >
+                      {inviteLoading && <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />}
+                      {inviteLoading
+                        ? t('resumeLibrary.detail.invite.sending', 'Sending...')
+                        : t('resumeLibrary.detail.invite.send', 'Send Invitation')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Success result */
+                <div className="space-y-4">
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <span className="text-sm font-semibold text-emerald-800">{t('resumeLibrary.detail.invite.success', 'Invitation sent successfully!')}</span>
+                    </div>
+                    {(inviteResult as any).job_title && (
+                      <p className="text-xs text-emerald-700">{t('resumeLibrary.detail.invite.position', 'Position')}: {(inviteResult as any).job_title}</p>
+                    )}
+                  </div>
+
+                  {(inviteResult as any).login_url && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{t('resumeLibrary.detail.invite.interviewLink', 'Interview Link')}</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          readOnly
+                          value={(inviteResult as any).login_url}
+                          className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 font-mono"
+                        />
+                        <button
+                          onClick={() => { navigator.clipboard.writeText((inviteResult as any).login_url); }}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                        >
+                          {t('actions.copy', 'Copy')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {(inviteResult as any).qrcode_url && (
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mb-2">{t('resumeLibrary.detail.invite.qrCode', 'WeChat QR Code')}</p>
+                      <img src={(inviteResult as any).qrcode_url} alt="QR Code" className="w-32 h-32 mx-auto rounded-lg border border-gray-200" />
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={() => setInviteModalOpen(false)}
+                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                    >
+                      {t('resumeLibrary.detail.invite.done', 'Done')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -655,7 +885,7 @@ function InsightsTab({ data, loading, onGenerate, t }: { data: Record<string, un
 
 // ─── Job Fit Tab ─────────────────────────────────────────────────────────
 
-function JobFitTab({ data, loading, onAnalyze, t }: { data: Record<string, unknown> | null; loading: boolean; onAnalyze: () => void; t: (k: string, f: string) => string }) {
+function JobFitTab({ data, loading, onAnalyze, onInvite, t }: { data: Record<string, unknown> | null; loading: boolean; onAnalyze: () => void; onInvite: (hiringRequestId: string, title: string) => void; t: (k: string, f: string) => string }) {
   if (loading) {
     return (
       <div className="text-center py-16">
@@ -826,6 +1056,18 @@ function JobFitTab({ data, loading, onAnalyze, t }: { data: Record<string, unkno
               <div className="bg-gray-50 rounded-lg px-3 py-2 mt-2">
                 <p className="text-xs text-gray-700"><strong>{t('resumeLibrary.jobFit.recommendation', 'Recommendation')}:</strong> {fit.recommendation as string}</p>
               </div>
+            )}
+
+            {(fit.fitScore as number) > 70 && fit.hiringRequestId && (
+              <button
+                onClick={() => onInvite(fit.hiringRequestId as string, fit.hiringRequestTitle as string)}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+                {t('resumeLibrary.jobFit.inviteInterview', 'Invite to Interview')}
+              </button>
             )}
           </div>
         ))}

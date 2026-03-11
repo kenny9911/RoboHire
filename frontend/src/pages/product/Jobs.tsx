@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import axios from '../../lib/axios';
+import { usePageState } from '../../hooks/usePageState';
 
 interface LocationEntry {
   country: string;
@@ -106,9 +108,10 @@ function AIWandButton({ onClick, loading, hasContent, t }: {
 
 export default function Jobs() {
   const { t } = useTranslation();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const navigate = useNavigate();
+  const [jobs, setJobs] = usePageState<Job[]>('jobs.list', []);
+  const [loading, setLoading] = useState(jobs.length > 0 ? false : true);
+  const [statusFilter, setStatusFilter] = usePageState<string>('jobs.statusFilter', '');
   const [showCreate, setShowCreate] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [saving, setSaving] = useState(false);
@@ -1106,7 +1109,10 @@ export default function Jobs() {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base font-semibold text-slate-900">{job.title}</h3>
+                    <h3
+                      className="text-base font-semibold text-slate-900 hover:text-blue-600 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/product/jobs/${job.id}`)}
+                    >{job.title}</h3>
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[job.status] || STATUS_COLORS.draft}`}>
                       {job.status}
                     </span>
@@ -1174,6 +1180,17 @@ export default function Jobs() {
                       </svg>
                     </button>
                   )}
+
+                  <button
+                    onClick={() => navigate(`/product/jobs/${job.id}`)}
+                    title={t('product.jobs.view', 'View')}
+                    className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
 
                   <button
                     onClick={() => openEdit(job)}

@@ -104,6 +104,7 @@ function getPageTitle(
   t: (key: string, fallback: string) => string,
 ): string {
   if (pathname === '/product/hiring') return t('product.nav.hiringRequests', 'Hiring Requests');
+  if (pathname.startsWith('/product/hiring/')) return t('dashboard.detail.title', 'Request Details');
   if (pathname === '/product/talent') return t('product.nav.talentHub', 'Talent Hub');
   if (pathname.startsWith('/product/talent/')) return t('product.nav.candidateDetail', 'Candidate Detail');
   if (pathname === '/product/jobs') return t('product.nav.jobs', 'Jobs');

@@ -948,7 +948,13 @@
       "statusInvited": "Invité",
       "moreSkills": "+{{count}} de plus",
       "reMatch": "Re-correspondance",
-      "reMatchAll": "Tout re-correspondre"
+      "reMatchAll": "Tout re-correspondre",
+      "buttonMatchingProgress": "Correspondance {{completed}}/{{total}}...",
+      "progressTitle": "Correspondance des candidats avec \"{{jobTitle}}\"",
+      "progressStats": "Terminés {{completed}}/{{total}}, échoués {{failed}}",
+      "progressSkipped": "{{skipped}} ignorés",
+      "progressBatch": "Lot {{batch}}/{{totalBatches}}",
+      "progressCurrent": "En cours :"
     },
     "intelligence": {
       "title": "Rapport d'Intelligence de Recrutement",
@@ -1673,7 +1679,28 @@
       "supplyDemand": "Offre / Demande",
       "competitors": "Concurrence",
       "timeToHire": "Jours pour recruter",
-      "trends": "Tendances du marche"
+      "trends": "Tendances du marche",
+      "view": "Voir"
+    },
+    "jobDetail": {
+      "backToJobs": "Retour aux emplois",
+      "edit": "Modifier",
+      "created": "Créé",
+      "updated": "Mis à jour",
+      "published": "Publié",
+      "linkedRequest": "Demande de recrutement liée",
+      "description": "Description du poste",
+      "qualifications": "Qualifications",
+      "hardRequirements": "Exigences obligatoires",
+      "interviewConfig": "Configuration d'entretien",
+      "mode": "Mode",
+      "passingScore": "Note de passage",
+      "language": "Langue",
+      "duration": "Durée",
+      "interviewRequirements": "Exigences d'entretien",
+      "evaluationRules": "Règles d'évaluation",
+      "yearly": "an",
+      "monthly": "mois"
     },
     "hiring": {
       "title": "Demandes de recrutement",
@@ -1687,7 +1714,11 @@
       "viewDetail": "Voir le détail",
       "pause": "Mettre en pause",
       "activate": "Activer",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "postCreation": {
+        "viewReport": "Voir le rapport de recrutement"
+      },
+      "goToHiringRequests": "Voir les demandes de recrutement"
     },
     "talent": {
       "title": "Hub Talents",
@@ -1697,7 +1728,11 @@
       "empty": "Aucun candidat pour le moment",
       "emptyDesc": "Téléchargez des CV pour construire votre vivier de talents.",
       "yearsExp": "ans d'expérience",
-      "viewProfile": "Voir le profil"
+      "viewProfile": "Voir le profil",
+      "viewCard": "Vue cartes",
+      "viewList": "Vue liste",
+      "yearsWork": "ans",
+      "monthsIntern": "mois stage"
     },
     "matching": {
       "title": "Correspondance intelligente",
@@ -1845,7 +1880,27 @@
         "notes": "Notes et tags"
       },
       "actions": {
+        "regenerateInsights": "Régénérer les analyses",
+        "regeneratingInsights": "Régénération...",
+        "rematchJobs": "Rematching des postes",
+        "rematchingJobs": "Rematching...",
+        "inviteInterview": "Inviter à un entretien",
+        "reupload": "Retélécharger et écraser",
         "archive": "Archiver"
+      },
+      "invite": {
+        "title": "Inviter à un entretien",
+        "selectJob": "Sélectionner un poste",
+        "loadingJobs": "Chargement des postes...",
+        "noJobs": "Aucun poste ouvert trouvé. Veuillez d'abord créer et publier un poste.",
+        "cancel": "Annuler",
+        "sending": "Envoi en cours...",
+        "send": "Envoyer l'invitation",
+        "success": "Invitation envoyée avec succès !",
+        "position": "Poste",
+        "interviewLink": "Lien d'entretien",
+        "qrCode": "Code QR WeChat",
+        "done": "Terminé"
       },
       "overview": {
         "summary": "Résumé professionnel",
@@ -1878,6 +1933,7 @@
       "analyze": "Analyser l'adéquation au poste",
       "analyzing": "Comparaison avec vos offres d'emploi...",
       "reanalyze": "Réanalyser l'adéquation",
+      "inviteInterview": "Inviter à un entretien",
       "bestFit": "Meilleure adéquation",
       "matchedSkills": "Compétences correspondantes",
       "missingSkills": "Compétences critiques manquantes",
