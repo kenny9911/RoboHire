@@ -1908,6 +1908,8 @@
       "quickActions": "クイックアクション",
       "createJob": "求人を作成",
       "createJobDesc": "新しいポジションを公開し、AIに職務記述書の作成を支援してもらいましょう。",
+      "createHiringRequest": "採用リクエスト",
+      "createHiringRequestDesc": "採用ニーズを記述すれば、AIが残りを処理します。",
       "uploadResumes": "履歴書をアップロード",
       "uploadResumesDesc": "候補者をタレントプールに追加してAIマッチングを行います。",
       "runMatching": "AIマッチングを実行",

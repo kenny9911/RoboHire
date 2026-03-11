@@ -77,6 +77,17 @@ export default function ProductDashboard() {
 
   const quickActions = [
     {
+      title: t('product.dashboard.createHiringRequest', 'Hiring Request'),
+      description: t('product.dashboard.createHiringRequestDesc', 'Describe your hiring needs and let AI handle the rest.'),
+      href: '/start-hiring',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      color: 'bg-indigo-50 text-indigo-600',
+    },
+    {
       title: t('product.dashboard.createJob', 'Create a Job'),
       description: t('product.dashboard.createJobDesc', 'Post a new position and let AI help you write the job description.'),
       href: '/product/jobs',
@@ -221,7 +232,7 @@ export default function ProductDashboard() {
         <h3 className="text-lg font-semibold text-slate-900 mb-4">
           {t('product.dashboard.quickActions', 'Quick Actions')}
         </h3>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {quickActions.map((action) => (
             <Link
               key={action.href}

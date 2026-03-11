@@ -1817,6 +1817,8 @@
       "quickActions": "Quick Actions",
       "createJob": "Create a Job",
       "createJobDesc": "Post a new position and let AI help you write the job description.",
+      "createHiringRequest": "Hiring Request",
+      "createHiringRequestDesc": "Describe your hiring needs and let AI handle the rest.",
       "uploadResumes": "Upload Resumes",
       "uploadResumesDesc": "Add candidates to your talent pool for AI matching.",
       "runMatching": "Run AI Matching",

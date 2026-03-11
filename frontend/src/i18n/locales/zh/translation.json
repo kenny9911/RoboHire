@@ -1939,6 +1939,8 @@
       "quickActions": "快捷操作",
       "createJob": "创建职位",
       "createJobDesc": "发布新职位，让AI帮您撰写职位描述。",
+      "createHiringRequest": "招聘需求",
+      "createHiringRequestDesc": "描述您的招聘需求，让AI为您处理后续工作。",
       "uploadResumes": "上传简历",
       "uploadResumesDesc": "将候选人添加到您的人才库以进行AI匹配。",
       "runMatching": "运行AI匹配",

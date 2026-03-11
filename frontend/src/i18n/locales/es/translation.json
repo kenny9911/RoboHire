@@ -1536,6 +1536,8 @@
       "quickActions": "Acciones Rápidas",
       "createJob": "Crear Empleo",
       "createJobDesc": "Publica una nueva posición y deja que la IA te ayude a escribir la descripción.",
+      "createHiringRequest": "Solicitud de contratación",
+      "createHiringRequestDesc": "Describe tus necesidades de contratación y deja que la IA se encargue del resto.",
       "uploadResumes": "Subir Currículums",
       "uploadResumesDesc": "Añade candidatos a tu pool de talento para coincidencia IA.",
       "runMatching": "Ejecutar Coincidencia IA",

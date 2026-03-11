@@ -1960,6 +1960,8 @@
       "quickActions": "快速操作",
       "createJob": "建立職缺",
       "createJobDesc": "發布新職位",
+      "createHiringRequest": "招聘需求",
+      "createHiringRequestDesc": "描述您的招聘需求，讓AI為您處理後續工作。",
       "uploadResumes": "上傳履歷",
       "uploadResumesDesc": "新增候選人",
       "runMatching": "執行AI配對",

@@ -1535,6 +1535,8 @@
       "quickActions": "Schnellaktionen",
       "createJob": "Stelle erstellen",
       "createJobDesc": "Veröffentlichen Sie eine neue Position und lassen Sie KI die Stellenbeschreibung verfassen.",
+      "createHiringRequest": "Stellenanfrage",
+      "createHiringRequestDesc": "Beschreiben Sie Ihren Einstellungsbedarf und lassen Sie die KI den Rest erledigen.",
       "uploadResumes": "Lebensläufe hochladen",
       "uploadResumesDesc": "Fügen Sie Kandidaten zu Ihrem Talentpool für KI-Matching hinzu.",
       "runMatching": "KI-Matching starten",
