@@ -1737,6 +1737,9 @@
       "candidates": "candidatos",
       "totalRequests": "{{count}} solicitudes",
       "createJob": "Crear Empleo",
+      "creatingJob": "Creando...",
+      "jobCreatedSuccess": "Empleo \"{{title}}\" creado con éxito!",
+      "jobOverwriteSuccess": "Empleo \"{{title}}\" actualizado con éxito!",
       "viewDetail": "Ver Detalle",
       "pause": "Pausar",
       "activate": "Activar",
@@ -2351,5 +2354,11 @@
     "ashby": { "description": "Plataforma de reclutamiento todo en uno para equipos en crecimiento" },
     "bamboohr": { "description": "Software de RRHH con capacidades de seguimiento de candidatos" },
     "workable": { "description": "Software de reclutamiento con fuertes integraciones de bolsas de trabajo" }
+  },
+  "common": {
+    "confirmDelete": "Confirmar eliminación",
+    "confirmDeleteMessage": "¿Está seguro de que desea eliminar este elemento? Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "delete": "Eliminar"
   }
 }

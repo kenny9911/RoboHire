@@ -2018,6 +2018,9 @@
       "candidates": "candidates",
       "totalRequests": "{{count}} requests",
       "createJob": "Create Job",
+      "creatingJob": "Creating...",
+      "jobCreatedSuccess": "Job \"{{title}}\" created successfully!",
+      "jobOverwriteSuccess": "Job \"{{title}}\" updated successfully!",
       "viewDetail": "View Detail",
       "pause": "Pause",
       "activate": "Activate",
@@ -2444,5 +2447,11 @@
     "workable": {
       "description": "Recruiting software with strong job board integrations"
     }
+  },
+  "common": {
+    "confirmDelete": "Confirm Delete",
+    "confirmDeleteMessage": "Are you sure you want to delete this item? This action cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete"
   }
 }

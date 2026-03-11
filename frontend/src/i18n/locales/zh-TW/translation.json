@@ -2160,6 +2160,9 @@
       "candidates": "候選人",
       "totalRequests": "共 {{count}} 個需求",
       "createJob": "建立職缺",
+      "creatingJob": "建立中...",
+      "jobCreatedSuccess": "職位「{{title}}」建立成功！",
+      "jobOverwriteSuccess": "職位「{{title}}」更新成功！",
       "viewDetail": "查看詳情",
       "pause": "暫停",
       "activate": "啟用",
@@ -2774,5 +2777,11 @@
     "ashby": { "description": "一站式招聘平台，助力團隊規模化" },
     "bamboohr": { "description": "人力資源軟體，含招聘追蹤功能" },
     "workable": { "description": "招聘軟體，強大的招聘渠道整合" }
+  },
+  "common": {
+    "confirmDelete": "確認刪除",
+    "confirmDeleteMessage": "確定要刪除此項目嗎？此操作無法撤銷。",
+    "cancel": "取消",
+    "delete": "刪除"
   }
 }

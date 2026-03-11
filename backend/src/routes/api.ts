@@ -326,7 +326,7 @@ router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit()
     // Step 2: Extract text from PDF
     const pdfStep = logger.startStep(requestId, 'Extract text from PDF');
     const pdfStartTime = Date.now();
-    const text = await pdfService.extractText(req.file.buffer);
+    const text = await pdfService.extractText(req.file.buffer, requestId);
     const pdfDuration = Date.now() - pdfStartTime;
 
     if (!text || text.trim().length === 0) {
@@ -440,7 +440,7 @@ router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), up
     // Step 2: Extract text from PDF
     const pdfStep = logger.startStep(requestId, 'Extract text from PDF');
     const pdfStartTime = Date.now();
-    const text = await pdfService.extractText(req.file.buffer);
+    const text = await pdfService.extractText(req.file.buffer, requestId);
     const pdfDuration = Date.now() - pdfStartTime;
 
     if (!text || text.trim().length === 0) {

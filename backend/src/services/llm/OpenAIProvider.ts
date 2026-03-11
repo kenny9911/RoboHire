@@ -16,12 +16,12 @@ export class OpenAIProvider implements LLMProvider {
 
   async chat(messages: Message[], options?: LLMOptions): Promise<LLMResponse> {
     const model = options?.model || this.defaultModel;
-    
+
     const response = await this.client.chat.completions.create({
       model,
       messages: messages.map((m) => ({
         role: m.role,
-        content: m.content,
+        content: m.content as any,
       })),
       temperature: options?.temperature ?? 0.7,
       max_tokens: options?.maxTokens,

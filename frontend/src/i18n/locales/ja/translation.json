@@ -2118,6 +2118,9 @@
       "filled": "採用完了",
       "candidates": "候補者",
       "totalRequests": "{{count}} 件のリクエスト",
+      "creatingJob": "作成中...",
+      "jobCreatedSuccess": "求人「{{title}}」が正常に作成されました！",
+      "jobOverwriteSuccess": "求人「{{title}}」が正常に更新されました！",
       "matched": "マッチ済み",
       "interviewed": "面接済み",
       "offered": "オファー済み",
@@ -2770,5 +2773,11 @@
     "ashby": { "description": "スケーリングチーム向けのオールインワン採用プラットフォーム" },
     "bamboohr": { "description": "採用追跡機能を備えた人事ソフトウェア" },
     "workable": { "description": "強力な求人掲示板連携を持つ採用ソフトウェア" }
+  },
+  "common": {
+    "confirmDelete": "削除の確認",
+    "confirmDeleteMessage": "このアイテムを削除してもよろしいですか？この操作は元に戻せません。",
+    "cancel": "キャンセル",
+    "delete": "削除"
   }
 }

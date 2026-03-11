@@ -49,7 +49,7 @@ export class DocumentParsingService {
 
     switch (format) {
       case 'pdf':
-        return pdfService.extractText(buffer);
+        return pdfService.extractText(buffer, undefined);
       case 'docx':
         return this.extractDocx(buffer);
       case 'xlsx':

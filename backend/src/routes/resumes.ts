@@ -44,9 +44,9 @@ function decodeFilename(raw: string): string {
   }
 }
 
-async function extractText(buffer: Buffer, mimetype: string, filename: string): Promise<string> {
+async function extractText(buffer: Buffer, mimetype: string, filename: string, requestId?: string): Promise<string> {
   if (mimetype === 'application/pdf') {
-    return pdfService.extractText(buffer);
+    return pdfService.extractText(buffer, requestId);
   }
   return documentParsingService.extractText(buffer, mimetype, filename);
 }
@@ -133,8 +133,8 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
     const { buffer, mimetype, originalname, size } = req.file;
     const decodedName = decodeFilename(originalname);
 
-    // Extract text
-    const resumeText = await extractText(buffer, mimetype, decodedName);
+    // Extract text (with vision fallback for garbled PDFs)
+    const resumeText = await extractText(buffer, mimetype, decodedName, req.requestId);
     if (!resumeText || resumeText.trim().length < 20) {
       return res.status(400).json({ success: false, error: 'Could not extract meaningful text from the file' });
     }
@@ -285,7 +285,7 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
     const { buffer, mimetype, originalname, size } = req.file;
     const decodedName = decodeFilename(originalname);
 
-    const resumeText = await extractText(buffer, mimetype, decodedName);
+    const resumeText = await extractText(buffer, mimetype, decodedName, req.requestId);
     if (!resumeText || resumeText.trim().length < 20) {
       return res.status(400).json({ success: false, error: 'Could not extract meaningful text from the file' });
     }

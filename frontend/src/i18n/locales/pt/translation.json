@@ -1736,6 +1736,9 @@
       "candidates": "candidatos",
       "totalRequests": "{{count}} solicitações",
       "createJob": "Criar Vaga",
+      "creatingJob": "Criando...",
+      "jobCreatedSuccess": "Vaga \"{{title}}\" criada com sucesso!",
+      "jobOverwriteSuccess": "Vaga \"{{title}}\" atualizada com sucesso!",
       "viewDetail": "Ver Detalhe",
       "pause": "Pausar",
       "activate": "Ativar",
@@ -2350,5 +2353,11 @@
     "ashby": { "description": "Plataforma de recrutamento completa para equipes em crescimento" },
     "bamboohr": { "description": "Software de RH com recursos de rastreamento de candidatos" },
     "workable": { "description": "Software de recrutamento com fortes integrações de vagas de emprego" }
+  },
+  "common": {
+    "confirmDelete": "Confirmar exclusão",
+    "confirmDeleteMessage": "Tem certeza de que deseja excluir este item? Esta ação não pode ser desfeita.",
+    "cancel": "Cancelar",
+    "delete": "Excluir"
   }
 }

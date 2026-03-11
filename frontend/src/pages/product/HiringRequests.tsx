@@ -82,12 +82,14 @@ const HiringRequestCard = memo(function HiringRequestCard({
   onStatusChange,
   onDelete,
   onCreateJob,
+  isCreatingJob,
   t,
 }: {
   req: HiringRequest;
   onStatusChange: (id: string, newStatus: string) => void;
   onDelete: (id: string) => void;
   onCreateJob: (id: string) => void;
+  isCreatingJob: boolean;
   t: (k: string, f: string, opts?: Record<string, unknown>) => string;
 }) {
   return (
@@ -118,12 +120,17 @@ const HiringRequestCard = memo(function HiringRequestCard({
           {/* Create Job from request */}
           <button
             onClick={() => onCreateJob(req.id)}
-            title={t('product.hiring.createJob', 'Create Job')}
-            className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+            disabled={isCreatingJob}
+            title={isCreatingJob ? t('product.hiring.creatingJob', 'Creating...') : t('product.hiring.createJob', 'Create Job')}
+            className={`p-2 rounded-lg transition-colors ${isCreatingJob ? 'text-blue-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'}`}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+            {isCreatingJob ? (
+              <div className="w-4 h-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
+            ) : (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            )}
           </button>
 
           {/* View in dashboard */}
@@ -188,6 +195,7 @@ export default function HiringRequests() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchRequests = useCallback(async (pageNum: number) => {
     try {
@@ -228,14 +236,21 @@ export default function HiringRequests() {
     }
   }, []);
 
-  const handleDelete = useCallback(async (id: string) => {
+  const handleDelete = useCallback((id: string) => {
+    setConfirmDeleteId(id);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!confirmDeleteId) return;
     try {
-      await axios.delete(`/api/v1/hiring-requests/${id}`);
-      setRequests((prev) => prev.filter((r) => r.id !== id));
+      await axios.delete(`/api/v1/hiring-requests/${confirmDeleteId}`);
+      setRequests((prev) => prev.filter((r) => r.id !== confirmDeleteId));
     } catch {
       // handle error
+    } finally {
+      setConfirmDeleteId(null);
     }
-  }, []);
+  }, [confirmDeleteId]);
 
   const [jobDuplicateModal, setJobDuplicateModal] = useState<{
     requestId: string;
@@ -244,16 +259,29 @@ export default function HiringRequests() {
   } | null>(null);
   const [customJobTitle, setCustomJobTitle] = useState('');
   const [showRenameInput, setShowRenameInput] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [creatingJobId, setCreatingJobId] = useState<string | null>(null);
+
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
 
   const doCreateJob = async (requestId: string, title?: string) => {
+    setCreatingJobId(requestId);
     try {
-      await axios.post(`/api/v1/jobs/from-request/${requestId}`, title ? { title } : {});
+      const res = await axios.post(`/api/v1/jobs/from-request/${requestId}`, title ? { title } : {});
+      const jobTitle = res.data?.data?.title || title || '';
+      showSuccess(t('product.hiring.jobCreatedSuccess', 'Job "{{title}}" created successfully!', { title: jobTitle }));
     } catch {
       // handle error
+    } finally {
+      setCreatingJobId(null);
     }
   };
 
   const doOverwriteJob = async (existingJobId: string, requestId: string) => {
+    setCreatingJobId(requestId);
     try {
       const hr = requests.find(r => r.id === requestId);
       if (!hr) return;
@@ -262,17 +290,22 @@ export default function HiringRequests() {
         description: '',
         hiringRequestId: hr.id,
       });
+      showSuccess(t('product.hiring.jobOverwriteSuccess', 'Job "{{title}}" updated successfully!', { title: hr.title }));
     } catch {
       // handle error
+    } finally {
+      setCreatingJobId(null);
     }
   };
 
   const handleCreateJob = useCallback(async (requestId: string) => {
     const hr = requests.find(r => r.id === requestId);
     if (!hr) return;
+    setCreatingJobId(requestId);
     try {
       const checkRes = await axios.get('/api/v1/jobs', { params: { title: hr.title, limit: 1 } });
       if (checkRes.data.data?.length > 0) {
+        setCreatingJobId(null);
         setJobDuplicateModal({ requestId, title: hr.title, existingJobId: checkRes.data.data[0].id });
         setCustomJobTitle('');
         setShowRenameInput(false);
@@ -286,6 +319,16 @@ export default function HiringRequests() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed top-6 right-6 z-[9999] animate-in fade-in slide-in-from-top-2 flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-lg">
+          <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {successMessage}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -348,6 +391,7 @@ export default function HiringRequests() {
               onStatusChange={handleStatusChange}
               onDelete={handleDelete}
               onCreateJob={handleCreateJob}
+              isCreatingJob={creatingJobId === req.id}
               t={t}
             />
           ))}
@@ -423,6 +467,30 @@ export default function HiringRequests() {
                 className="w-full rounded-lg px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 {t('product.hiring.duplicateJob.cancel', 'Cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfirmDeleteId(null)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-slate-900">{t('common.confirmDelete', 'Confirm Delete')}</h3>
+            <p className="mt-2 text-sm text-slate-500">{t('common.confirmDeleteMessage', 'Are you sure you want to delete this item? This action cannot be undone.')}</p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                {t('common.delete', 'Delete')}
               </button>
             </div>
           </div>

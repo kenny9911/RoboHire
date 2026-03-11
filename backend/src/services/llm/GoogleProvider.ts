@@ -39,19 +39,41 @@ export class GoogleProvider implements LLMProvider {
     const systemMessage = messages.find((m) => m.role === 'system');
     const chatMessages = messages.filter((m) => m.role !== 'system');
 
-    // Build the prompt with system message context
-    let prompt = '';
+    // Check if any message has multimodal content (images)
+    const hasImages = chatMessages.some(
+      (m) => Array.isArray(m.content) && m.content.some((p) => p.type === 'image_url')
+    );
+
+    // Build content parts for Gemini
+    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+
     if (systemMessage) {
-      prompt = `System Instructions: ${systemMessage.content}\n\n`;
+      const sysText = typeof systemMessage.content === 'string' ? systemMessage.content : systemMessage.content.filter(p => p.type === 'text').map(p => (p as { type: 'text'; text: string }).text).join('\n');
+      parts.push({ text: `System Instructions: ${sysText}\n\n` });
     }
 
-    // Add conversation history
     for (const msg of chatMessages) {
       const role = msg.role === 'assistant' ? 'Assistant' : 'User';
-      prompt += `${role}: ${msg.content}\n\n`;
+      if (typeof msg.content === 'string') {
+        parts.push({ text: `${role}: ${msg.content}\n\n` });
+      } else {
+        // Multimodal content
+        for (const part of msg.content) {
+          if (part.type === 'text') {
+            parts.push({ text: `${role}: ${part.text}\n\n` });
+          } else if (part.type === 'image_url') {
+            // Extract base64 from data URI: data:image/png;base64,xxxxx
+            const dataUri = part.image_url.url;
+            const match = dataUri.match(/^data:([^;]+);base64,(.+)$/);
+            if (match) {
+              parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+            }
+          }
+        }
+      }
     }
 
-    const result = await this.generateContentWithRetry(model, prompt);
+    const result = await this.generateContentWithRetry(model, hasImages ? parts : parts.map(p => 'text' in p ? p.text : '').join(''));
     const response = result.response;
     const text = response.text();
 
@@ -75,7 +97,7 @@ export class GoogleProvider implements LLMProvider {
 
   private async generateContentWithRetry(
     model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>,
-    prompt: string
+    prompt: string | Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>
   ) {
     const maxAttempts = 2;
 

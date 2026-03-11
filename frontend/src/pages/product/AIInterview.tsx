@@ -96,6 +96,7 @@ export default function AIInterview() {
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [inviteResults, setInviteResults] = useState<InviteResult[]>([]);
   const [sending, setSending] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchInterviews = async () => {
     try {
@@ -258,12 +259,19 @@ export default function AIInterview() {
     fetchInterviews();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
+    setConfirmDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmDeleteId) return;
     try {
-      await axios.delete(`/api/v1/interviews/${id}`);
-      setInterviews((prev) => prev.filter((i) => i.id !== id));
+      await axios.delete(`/api/v1/interviews/${confirmDeleteId}`);
+      setInterviews((prev) => prev.filter((i) => i.id !== confirmDeleteId));
     } catch {
       // silent
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -778,6 +786,30 @@ export default function AIInterview() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfirmDeleteId(null)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-slate-900">{t('common.confirmDelete', 'Confirm Delete')}</h3>
+            <p className="mt-2 text-sm text-slate-500">{t('common.confirmDeleteMessage', 'Are you sure you want to delete this item? This action cannot be undone.')}</p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                {t('common.delete', 'Delete')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

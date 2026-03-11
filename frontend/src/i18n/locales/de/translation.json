@@ -1736,6 +1736,9 @@
       "candidates": "Kandidaten",
       "totalRequests": "{{count}} Anfragen",
       "createJob": "Stelle erstellen",
+      "creatingJob": "Wird erstellt...",
+      "jobCreatedSuccess": "Stelle \"{{title}}\" erfolgreich erstellt!",
+      "jobOverwriteSuccess": "Stelle \"{{title}}\" erfolgreich aktualisiert!",
       "viewDetail": "Detail ansehen",
       "pause": "Pausieren",
       "activate": "Aktivieren",
@@ -2350,5 +2353,11 @@
     "ashby": { "description": "All-in-One-Recruiting-Plattform für wachsende Teams" },
     "bamboohr": { "description": "HR-Software mit Bewerberverfolgungsfunktionen" },
     "workable": { "description": "Recruiting-Software mit starken Jobbörsen-Integrationen" }
+  },
+  "common": {
+    "confirmDelete": "Löschen bestätigen",
+    "confirmDeleteMessage": "Sind Sie sicher, dass Sie dieses Element löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "cancel": "Abbrechen",
+    "delete": "Löschen"
   }
 }

@@ -100,10 +100,11 @@ export class LLMService {
 
   async chat(messages: Message[], options?: LLMOptions): Promise<string> {
     this.ensureInitialized();
-    
+
     const startTime = Date.now();
     const requestId = options?.requestId;
-    const model = options?.model || this.model;
+    // Use visionModel if specified (for multimodal messages), otherwise regular model
+    const model = options?.visionModel || options?.model || this.model;
 
     logger.debug('LLM', `Starting LLM call`, {
       model,

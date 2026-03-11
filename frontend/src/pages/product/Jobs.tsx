@@ -123,6 +123,7 @@ export default function Jobs() {
   const [importingFileName, setImportingFileName] = useState('');
   const [importStageIndex, setImportStageIndex] = useState(0);
   const [locations, setLocations] = useState<LocationEntry[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [newCountry, setNewCountry] = useState('');
   const [newCity, setNewCity] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -217,12 +218,19 @@ export default function Jobs() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
+    setConfirmDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmDeleteId) return;
     try {
-      await axios.delete(`/api/v1/jobs/${id}`);
-      setJobs((prev) => prev.filter((j) => j.id !== id));
+      await axios.delete(`/api/v1/jobs/${confirmDeleteId}`);
+      setJobs((prev) => prev.filter((j) => j.id !== confirmDeleteId));
     } catch {
       // handle error
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -1225,6 +1233,30 @@ export default function Jobs() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfirmDeleteId(null)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-slate-900">{t('common.confirmDelete', 'Confirm Delete')}</h3>
+            <p className="mt-2 text-sm text-slate-500">{t('common.confirmDeleteMessage', 'Are you sure you want to delete this item? This action cannot be undone.')}</p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                {t('common.delete', 'Delete')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

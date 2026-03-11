@@ -1,7 +1,19 @@
 // LLM Types
+export interface TextContentPart {
+  type: 'text';
+  text: string;
+}
+
+export interface ImageContentPart {
+  type: 'image_url';
+  image_url: { url: string }; // data:image/png;base64,...
+}
+
+export type MessageContent = string | (TextContentPart | ImageContentPart)[];
+
 export interface Message {
   role: 'system' | 'user' | 'assistant';
-  content: string;
+  content: MessageContent;
 }
 
 export interface LLMOptions {
@@ -9,6 +21,7 @@ export interface LLMOptions {
   maxTokens?: number;
   model?: string;
   requestId?: string;
+  visionModel?: string; // Override model for vision tasks
 }
 
 export interface LLMUsageInfo {
