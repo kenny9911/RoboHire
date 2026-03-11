@@ -114,7 +114,7 @@ export default function SEO({
           '@type': 'Organization',
           name: 'RoboHire',
           url: SITE_URL,
-          logo: `${SITE_URL}/favicon.svg`,
+          logo: `${SITE_URL}/logo2.png`,
           description: defaultDesc,
           foundingDate: '2024',
           sameAs: [

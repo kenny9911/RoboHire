@@ -87,13 +87,8 @@ export default function Login() {
         <div className="max-w-md w-full">
           {/* Logo and Title */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-indigo-600">
-            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            RoboHire
+          <Link to="/" className="inline-flex items-center transition-opacity hover:opacity-80">
+            <img src="/logo2.png" alt="RoboHire" className="h-9" />
           </Link>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
             {mode === 'login' ? t('auth.welcomeBack', 'Welcome back') : t('auth.createAccount', 'Create your account')}

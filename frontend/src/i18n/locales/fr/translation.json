@@ -1905,9 +1905,22 @@
       "batchTitle": "Téléchargement groupé de CV",
       "dragDrop": "Glissez-déposez les fichiers CV ici",
       "formats": "Formats : PDF, DOCX, TXT, MD, JSON",
-      "maxFiles": "Jusqu'à 10 fichiers à la fois",
+      "maxFiles": "Jusqu'à {{count}} fichiers à la fois",
       "uploading": "Traitement...",
-      "duplicate": "Doublon"
+      "duplicate": "Doublon",
+      "successCount": "{{count}} téléchargés",
+      "duplicateCount": "{{count}} doublons",
+      "failCount": "{{count}} échoués",
+      "uploadCount": "Télécharger {{count}} CV",
+      "metrics": {
+        "title": "Détails du traitement",
+        "time": "Temps",
+        "cost": "Coût",
+        "tokens": "Tokens",
+        "llmCalls": "Appels LLM",
+        "model": "Modèle",
+        "inputOutput": "Entrée / Sortie"
+      }
     },
     "detail": {
       "back": "Retour aux CV",

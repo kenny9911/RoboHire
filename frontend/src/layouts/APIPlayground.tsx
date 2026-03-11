@@ -37,13 +37,8 @@ export default function APIPlayground() {
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-white shadow-lg md:min-h-screen flex flex-col">
         <div className="p-4 sm:p-6 border-b">
-          <Link to="/" className="flex items-center gap-2 text-lg sm:text-xl font-bold text-indigo-600">
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span>{t('app.title')}</span>
+          <Link to="/" className="inline-flex items-center transition-opacity hover:opacity-80">
+            <img src="/logo2.png" alt="RoboHire" className="h-7" />
           </Link>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">{t('apiPlayground.title', 'API Playground')}</p>
         </div>

@@ -50,8 +50,9 @@ export default function Hero() {
             {t('landing.hero.badge', 'AI-Powered Hiring Platform')}
           </div>
 
-          <h1 className="landing-display mt-6 text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
-            {t('landing.hero.headline', 'AI Screens. AI Interviews.')}{' '}
+          <h1 className="landing-display mt-8 text-4xl font-semibold leading-snug tracking-tight text-slate-900 sm:text-5xl sm:leading-snug lg:text-6xl lg:leading-snug">
+            {t('landing.hero.headline', 'AI Screens. AI Interviews.')}
+            <br />
             <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent">
               {t('landing.hero.headlineHighlight', 'You Hire the Best.')}
             </span>

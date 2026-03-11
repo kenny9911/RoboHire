@@ -9,6 +9,7 @@ import { resumeInsightAgent } from '../agents/ResumeInsightAgent.js';
 import { jobFitAgent } from '../agents/JobFitAgent.js';
 import prisma from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
+import { logger } from '../services/LoggerService.js';
 import type { ParsedResume, WorkExperience } from '../types/index.js';
 
 const router = Router();
@@ -24,6 +25,22 @@ const uploadDoc = multer({
     }
   },
 });
+
+function getProcessingMetrics(requestId?: string) {
+  if (!requestId) return undefined;
+  const snapshot = logger.getRequestSnapshot(requestId);
+  if (!snapshot) return undefined;
+  return {
+    durationMs: snapshot.durationMs,
+    promptTokens: snapshot.promptTokens,
+    completionTokens: snapshot.completionTokens,
+    totalTokens: snapshot.totalTokens,
+    totalCost: snapshot.totalCost,
+    model: snapshot.lastModel,
+    provider: snapshot.lastProvider,
+    llmCalls: snapshot.llmCallsCount,
+  };
+}
 
 function computeHash(text: string): string {
   const normalized = text.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -178,7 +195,7 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       },
     });
 
-    return res.json({ success: true, data: resume });
+    return res.json({ success: true, data: resume, metrics: getProcessingMetrics(req.requestId) });
   } catch (error) {
     console.error('Resume upload error:', error);
     return res.status(500).json({
@@ -188,8 +205,10 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
   }
 });
 
-// ─── Batch upload ───────────────────────────────────────────────────────
-router.post('/upload-batch', requireAuth, uploadDoc.array('files', 10), async (req: Request, res: Response) => {
+// ─── Batch upload (concurrent processing) ───────────────────────────────
+const BATCH_CONCURRENCY = 5;
+
+router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (req: Request, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -200,15 +219,15 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 10), async (r
     }
 
     const userId = req.user.id;
-    const results: Array<{ fileName: string; success: boolean; data?: unknown; error?: string; duplicate?: boolean }> = [];
+    const requestId = req.requestId;
 
-    for (const file of files) {
+    // Process a single file
+    async function processFile(file: { buffer: Buffer; mimetype: string; originalname: string; size: number }) {
       const decodedName = decodeFilename(file.originalname);
       try {
-        const resumeText = await extractText(file.buffer, file.mimetype, decodedName);
+        const resumeText = await extractText(file.buffer, file.mimetype, decodedName, requestId);
         if (!resumeText || resumeText.trim().length < 20) {
-          results.push({ fileName: decodedName, success: false, error: 'Could not extract text' });
-          continue;
+          return { fileName: decodedName, success: false as const, error: 'Could not extract text' };
         }
 
         const contentHash = computeHash(resumeText);
@@ -216,11 +235,10 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 10), async (r
           where: { userId_contentHash: { userId, contentHash } },
         });
         if (existing) {
-          results.push({ fileName: decodedName, success: true, data: existing, duplicate: true });
-          continue;
+          return { fileName: decodedName, success: true as const, data: existing, duplicate: true };
         }
 
-        const parsed = await resumeParseAgent.parse(resumeText, req.requestId);
+        const parsed = await resumeParseAgent.parse(resumeText, requestId);
         const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
 
         const resume = await prisma.resume.create({
@@ -241,17 +259,25 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 10), async (r
           },
         });
 
-        results.push({ fileName: decodedName, success: true, data: resume });
+        return { fileName: decodedName, success: true as const, data: resume };
       } catch (err) {
-        results.push({
+        return {
           fileName: decodedName,
-          success: false,
+          success: false as const,
           error: err instanceof Error ? err.message : 'Processing failed',
-        });
+        };
       }
     }
 
-    return res.json({ success: true, data: results });
+    // Process files concurrently with a concurrency limit
+    const results: Array<{ fileName: string; success: boolean; data?: unknown; error?: string; duplicate?: boolean }> = [];
+    for (let i = 0; i < files.length; i += BATCH_CONCURRENCY) {
+      const batch = files.slice(i, i + BATCH_CONCURRENCY);
+      const batchResults = await Promise.all(batch.map(processFile));
+      results.push(...batchResults);
+    }
+
+    return res.json({ success: true, data: results, metrics: getProcessingMetrics(requestId) });
   } catch (error) {
     console.error('Batch upload error:', error);
     return res.status(500).json({
@@ -344,7 +370,7 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
       });
     });
 
-    return res.json({ success: true, data: updated });
+    return res.json({ success: true, data: updated, metrics: getProcessingMetrics(req.requestId) });
   } catch (error) {
     console.error('Resume re-upload error:', error);
     return res.status(500).json({

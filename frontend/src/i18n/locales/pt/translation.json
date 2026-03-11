@@ -1904,9 +1904,22 @@
       "batchTitle": "Envio em Lote de Currículos",
       "dragDrop": "Arraste e solte arquivos de currículos aqui",
       "formats": "Formatos: PDF, DOCX, TXT, MD, JSON",
-      "maxFiles": "Até 10 arquivos de uma vez",
+      "maxFiles": "Até {{count}} arquivos por vez",
       "uploading": "Processando...",
-      "duplicate": "Duplicado"
+      "duplicate": "Duplicado",
+      "successCount": "{{count}} enviados",
+      "duplicateCount": "{{count}} duplicados",
+      "failCount": "{{count}} falharam",
+      "uploadCount": "Enviar {{count}} currículos",
+      "metrics": {
+        "title": "Detalhes do processamento",
+        "time": "Tempo",
+        "cost": "Custo",
+        "tokens": "Tokens",
+        "llmCalls": "Chamadas LLM",
+        "model": "Modelo",
+        "inputOutput": "Entrada / Saída"
+      }
     },
     "detail": {
       "back": "Voltar aos Currículos",

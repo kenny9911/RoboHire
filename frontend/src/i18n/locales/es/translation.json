@@ -1905,9 +1905,22 @@
       "batchTitle": "Subida Masiva de Currículos",
       "dragDrop": "Arrastra y suelta archivos de currículos aquí",
       "formats": "Formatos: PDF, DOCX, TXT, MD, JSON",
-      "maxFiles": "Hasta 10 archivos a la vez",
+      "maxFiles": "Hasta {{count}} archivos a la vez",
       "uploading": "Procesando...",
-      "duplicate": "Duplicado"
+      "duplicate": "Duplicado",
+      "successCount": "{{count}} subidos",
+      "duplicateCount": "{{count}} duplicados",
+      "failCount": "{{count}} fallidos",
+      "uploadCount": "Subir {{count}} currículums",
+      "metrics": {
+        "title": "Detalles del procesamiento",
+        "time": "Tiempo",
+        "cost": "Costo",
+        "tokens": "Tokens",
+        "llmCalls": "Llamadas LLM",
+        "model": "Modelo",
+        "inputOutput": "Entrada / Salida"
+      }
     },
     "detail": {
       "back": "Volver a Currículos",

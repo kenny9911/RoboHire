@@ -831,13 +831,8 @@ export default function StartHiring() {
         {/* Header */}
         <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
           <div className="landing-glass mx-auto flex h-16 w-full max-w-7xl items-center justify-between rounded-2xl border border-slate-200/80 px-4 shadow-[0_24px_48px_-36px_rgba(15,23,42,0.5)] sm:h-[74px] sm:px-6 lg:px-8">
-            <Link to="/" className="flex items-center gap-2 text-xl font-bold text-blue-700 transition-colors hover:text-blue-600">
-              <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="landing-display">RoboHire</span>
+            <Link to="/" className="flex items-center gap-1 transition-opacity hover:opacity-80">
+              <img src="/logo2.png" alt="RoboHire" className="h-8" />
             </Link>
             <div className="flex items-center gap-2 sm:gap-3">
               <button
@@ -1326,13 +1321,8 @@ export default function StartHiring() {
       {/* Header */}
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
         <div className="landing-glass mx-auto flex h-16 w-full max-w-7xl items-center justify-between rounded-2xl border border-slate-200/80 px-4 shadow-[0_24px_48px_-36px_rgba(15,23,42,0.5)] sm:h-[74px] sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-blue-700 transition-colors hover:text-blue-600">
-            <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="landing-display">RoboHire</span>
+          <Link to="/" className="flex items-center gap-1 transition-opacity hover:opacity-80">
+            <img src="/logo2.png" alt="RoboHire" className="h-8" />
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link to="/developers" className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">

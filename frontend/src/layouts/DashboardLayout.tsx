@@ -328,13 +328,8 @@ export default function DashboardLayout() {
     <>
       {/* Logo */}
       <div className="px-5 py-5">
-        <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold text-blue-700">
-          <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="landing-display">RoboHire</span>
+        <Link to="/" className="inline-flex items-center transition-opacity hover:opacity-80">
+          <img src="/logo2.png" alt="RoboHire" className="h-7" />
         </Link>
       </div>
 

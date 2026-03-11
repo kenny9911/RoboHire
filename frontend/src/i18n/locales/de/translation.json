@@ -1904,9 +1904,22 @@
       "batchTitle": "Lebensläufe im Stapel hochladen",
       "dragDrop": "Lebenslauf-Dateien hierher ziehen",
       "formats": "Formate: PDF, DOCX, TXT, MD, JSON",
-      "maxFiles": "Bis zu 10 Dateien gleichzeitig",
+      "maxFiles": "Bis zu {{count}} Dateien gleichzeitig",
       "uploading": "Wird verarbeitet...",
-      "duplicate": "Duplikat"
+      "duplicate": "Duplikat",
+      "successCount": "{{count}} hochgeladen",
+      "duplicateCount": "{{count}} Duplikate",
+      "failCount": "{{count}} fehlgeschlagen",
+      "uploadCount": "{{count}} Lebensläufe hochladen",
+      "metrics": {
+        "title": "Verarbeitungsdetails",
+        "time": "Zeit",
+        "cost": "Kosten",
+        "tokens": "Tokens",
+        "llmCalls": "LLM-Aufrufe",
+        "model": "Modell",
+        "inputOutput": "Eingabe / Ausgabe"
+      }
     },
     "detail": {
       "back": "Zurück zu Lebensläufen",

@@ -2328,9 +2328,22 @@
       "batchTitle": "批次上傳簡歷",
       "dragDrop": "將簡歷檔案拖放到此處",
       "formats": "支援格式：PDF、DOCX、TXT、MD、JSON",
-      "maxFiles": "一次最多10個檔案",
+      "maxFiles": "一次最多 {{count}} 個檔案",
       "uploading": "處理中...",
-      "duplicate": "重複"
+      "duplicate": "重複",
+      "successCount": "{{count}} 個已上傳",
+      "duplicateCount": "{{count}} 個重複",
+      "failCount": "{{count}} 個失敗",
+      "uploadCount": "上傳 {{count}} 份簡歷",
+      "metrics": {
+        "title": "處理詳情",
+        "time": "耗時",
+        "cost": "費用",
+        "tokens": "令牌數",
+        "llmCalls": "LLM 調用",
+        "model": "模型",
+        "inputOutput": "輸入 / 輸出"
+      }
     },
     "detail": {
       "back": "返回簡歷庫",

@@ -2308,9 +2308,22 @@
       "batchTitle": "批量上传简历",
       "dragDrop": "将简历文件拖放到此处",
       "formats": "支持格式：PDF、DOCX、TXT、MD、JSON",
-      "maxFiles": "一次最多10个文件",
+      "maxFiles": "一次最多 {{count}} 个文件",
       "uploading": "处理中...",
-      "duplicate": "重复"
+      "duplicate": "重复",
+      "successCount": "{{count}} 个已上传",
+      "duplicateCount": "{{count}} 个重复",
+      "failCount": "{{count}} 个失败",
+      "uploadCount": "上传 {{count}} 份简历",
+      "metrics": {
+        "title": "处理详情",
+        "time": "耗时",
+        "cost": "费用",
+        "tokens": "令牌数",
+        "llmCalls": "LLM 调用",
+        "model": "模型",
+        "inputOutput": "输入 / 输出"
+      }
     },
     "detail": {
       "back": "返回简历库",

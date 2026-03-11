@@ -2324,9 +2324,22 @@
       "batchTitle": "履歴書を一括アップロード",
       "dragDrop": "履歴書ファイルをここにドラッグ＆ドロップ",
       "formats": "対応形式：PDF、DOCX、TXT、MD、JSON",
-      "maxFiles": "一度に最大10ファイル",
+      "maxFiles": "一度に最大 {{count}} ファイル",
       "uploading": "処理中...",
-      "duplicate": "重複"
+      "duplicate": "重複",
+      "successCount": "{{count}} 件アップロード完了",
+      "duplicateCount": "{{count}} 件重複",
+      "failCount": "{{count}} 件失敗",
+      "uploadCount": "{{count}} 件の履歴書をアップロード",
+      "metrics": {
+        "title": "処理詳細",
+        "time": "処理時間",
+        "cost": "コスト",
+        "tokens": "トークン数",
+        "llmCalls": "LLM呼び出し",
+        "model": "モデル",
+        "inputOutput": "入力 / 出力"
+      }
     },
     "detail": {
       "back": "履歴書一覧に戻る",

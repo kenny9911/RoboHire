@@ -2186,9 +2186,22 @@
       "batchTitle": "Batch Upload Resumes",
       "dragDrop": "Drag & drop resume files here",
       "formats": "Supported: PDF, DOCX, TXT, MD, JSON",
-      "maxFiles": "Up to 10 files at once",
+      "maxFiles": "Up to {{count}} files at once",
       "uploading": "Processing...",
-      "duplicate": "Duplicate"
+      "duplicate": "Duplicate",
+      "successCount": "{{count}} uploaded",
+      "duplicateCount": "{{count}} duplicate",
+      "failCount": "{{count}} failed",
+      "uploadCount": "Upload {{count}} Resumes",
+      "metrics": {
+        "title": "Processing Details",
+        "time": "Time",
+        "cost": "Cost",
+        "tokens": "Tokens",
+        "llmCalls": "LLM Calls",
+        "model": "Model",
+        "inputOutput": "Input / Output"
+      }
     },
     "detail": {
       "back": "Back to Resumes",
