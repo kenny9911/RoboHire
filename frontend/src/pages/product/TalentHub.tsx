@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
@@ -42,6 +42,15 @@ interface Resume {
     education?: Array<{ institution: string; degree?: string; field?: string }>;
   } | null;
 }
+
+type EnrichedResume = Resume & {
+  _topSkills: string[];
+  _highlight: string | null;
+  _workExp: { fullTimeYears: number; internshipMonths: number } | null;
+  _notableCompanies: string[];
+  _industryTags: string[];
+  _jobCategory: string | null;
+};
 
 // ── Notable companies for "Ex-XXX" tags ──
 const NOTABLE_COMPANIES: Array<{ display: string; keywords: string[] }> = [
@@ -145,6 +154,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   Finance: 'bg-lime-100 text-lime-700',
 };
 
+// ── Pre-compiled regex patterns ──
+const INTERN_RE = /intern|实习|インターン|praktik/i;
+const SENTENCE_END_RE = /[.。！!？?]\s|[.。！!？?]$/;
+const YEARS_RE = /(\d+(?:\.\d+)?)\s*(?:year|年|yr)/i;
+const MONTHS_RE = /(\d+)\s*(?:month|月|mo)/i;
+const PRESENT_RE = /present|current|至今|现在/i;
+
 // ── Helper functions ──
 
 function getTopSkills(parsedData: Resume['parsedData'], count = 5): string[] {
@@ -159,15 +175,13 @@ function getTopSkills(parsedData: Resume['parsedData'], count = 5): string[] {
     ...(s.other || []),
     ...(s.soft || []),
   ];
-  // dedupe
   return [...new Set(all)].slice(0, count);
 }
 
 function getHighlight(parsedData: Resume['parsedData']): string | null {
   if (!parsedData?.summary) return null;
   const text = parsedData.summary.trim();
-  // First sentence or first 80 chars
-  const sentenceEnd = text.search(/[.。！!？?]\s|[.。！!？?]$/);
+  const sentenceEnd = text.search(SENTENCE_END_RE);
   if (sentenceEnd > 0 && sentenceEnd <= 100) {
     return text.substring(0, sentenceEnd + 1);
   }
@@ -183,21 +197,19 @@ function getWorkExperience(parsedData: Resume['parsedData']): { fullTimeYears: n
 
   for (const exp of parsedData.experience) {
     const isIntern = exp.employmentType === 'internship' ||
-      /intern|实习|インターン|praktik/i.test(exp.role || '') ||
-      /intern|实习/i.test(exp.company || '');
+      INTERN_RE.test(exp.role || '') ||
+      INTERN_RE.test(exp.company || '');
 
-    // Parse duration string like "1 year 3 months", "6 months", "2 years"
     const durationStr = exp.duration || '';
     let months = 0;
-    const yearMatch = durationStr.match(/(\d+(?:\.\d+)?)\s*(?:year|年|yr)/i);
-    const monthMatch = durationStr.match(/(\d+)\s*(?:month|月|mo)/i);
+    const yearMatch = durationStr.match(YEARS_RE);
+    const monthMatch = durationStr.match(MONTHS_RE);
     if (yearMatch) months += parseFloat(yearMatch[1]) * 12;
     if (monthMatch) months += parseInt(monthMatch[1]);
 
-    // Fallback: try parsing from startDate/endDate
     if (months === 0 && exp.startDate) {
       const start = new Date(exp.startDate);
-      const end = exp.endDate && !/present|current|至今|现在/i.test(exp.endDate)
+      const end = exp.endDate && !PRESENT_RE.test(exp.endDate)
         ? new Date(exp.endDate)
         : new Date();
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
@@ -235,9 +247,8 @@ function getNotableCompanies(parsedData: Resume['parsedData']): string[] {
 
 function getIndustryTags(parsedData: Resume['parsedData']): string[] {
   if (!parsedData?.experience) return [];
-  // Build a combined text from roles and descriptions
   const text = parsedData.experience
-    .map(e => `${e.role || ''} ${e.description || ''} ${(e.technologies || []).join(' ')}`)
+    .map(e => `${e.role || ''} ${(e.technologies || []).join(' ')}`)
     .join(' ')
     .toLowerCase();
 
@@ -252,7 +263,6 @@ function getIndustryTags(parsedData: Resume['parsedData']): string[] {
 
 function getJobCategory(currentRole: string | null, parsedData: Resume['parsedData']): string | null {
   const roleText = (currentRole || '').toLowerCase();
-  // Also check most recent experience role
   const latestRole = parsedData?.experience?.[0]?.role?.toLowerCase() || '';
   const combined = `${roleText} ${latestRole}`;
 
@@ -264,7 +274,267 @@ function getJobCategory(currentRole: string | null, parsedData: Resume['parsedDa
   return null;
 }
 
-// ── Component ──
+// ── Memoized Card Component ──
+const ResumeCard = memo(function ResumeCard({ resume, onDelete, t }: { resume: EnrichedResume; onDelete: (id: string) => void; t: (k: string, f: string) => string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 hover:border-blue-200 transition-colors flex flex-col">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 shrink-0">
+            <span className="text-sm font-bold text-blue-600">
+              {resume.name?.[0]?.toUpperCase() || '?'}
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Link
+                to={`/product/talent/${resume.id}`}
+                className="text-sm font-semibold text-slate-900 hover:text-blue-700 transition-colors truncate"
+              >
+                {resume.name}
+              </Link>
+              {resume._jobCategory && (
+                <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-600'}`}>
+                  {resume._jobCategory}
+                </span>
+              )}
+            </div>
+            {resume.currentRole && (
+              <p className="text-xs text-slate-500 truncate">{resume.currentRole}</p>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => onDelete(resume.id)}
+          className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {resume._highlight && (
+        <p className="mt-2 text-xs text-slate-500 italic line-clamp-2">{resume._highlight}</p>
+      )}
+
+      {resume._topSkills.length > 0 && (
+        <div className="mt-2.5 flex flex-wrap gap-1">
+          {resume._topSkills.map((skill) => (
+            <span key={skill} className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
+              {skill}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-2.5 flex items-center gap-2 flex-wrap text-xs text-slate-500">
+        {resume._workExp ? (
+          <>
+            {resume._workExp.fullTimeYears > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                {resume._workExp.fullTimeYears} {t('product.talent.yearsWork', 'yrs')}
+              </span>
+            )}
+            {resume._workExp.internshipMonths > 0 && (
+              <span className="text-slate-400">
+                + {resume._workExp.internshipMonths} {t('product.talent.monthsIntern', 'mo intern')}
+              </span>
+            )}
+          </>
+        ) : resume.experienceYears ? (
+          <span className="inline-flex items-center gap-1">
+            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            {resume.experienceYears}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-1">
+        {resume._industryTags.map((tag) => (
+          <span key={tag} className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+            {tag}
+          </span>
+        ))}
+        {resume._notableCompanies.map((company) => (
+          <span key={company} className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+            Ex-{company}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-auto pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
+        <span className="text-xs text-slate-400">
+          {new Date(resume.createdAt).toLocaleDateString()}
+        </span>
+        <Link
+          to={`/product/talent/${resume.id}`}
+          className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+        >
+          {t('product.talent.viewProfile', 'View Profile')}
+        </Link>
+      </div>
+    </div>
+  );
+});
+
+// ── Memoized List Row Component ──
+const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, t }: { resume: EnrichedResume; onDelete: (id: string) => void; t: (k: string, f: string) => string }) {
+  return (
+    <div className="px-5 py-3.5 hover:bg-slate-50/50 transition-colors flex items-center gap-4">
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 shrink-0">
+        <span className="text-xs font-bold text-blue-600">
+          {resume.name?.[0]?.toUpperCase() || '?'}
+        </span>
+      </div>
+
+      <div className="min-w-0 w-44 shrink-0">
+        <div className="flex items-center gap-1.5">
+          <Link
+            to={`/product/talent/${resume.id}`}
+            className="text-sm font-semibold text-slate-900 hover:text-blue-700 transition-colors truncate"
+          >
+            {resume.name}
+          </Link>
+          {resume._jobCategory && (
+            <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-semibold shrink-0 ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-600'}`}>
+              {resume._jobCategory}
+            </span>
+          )}
+        </div>
+        {resume.currentRole && (
+          <p className="text-xs text-slate-500 truncate">{resume.currentRole}</p>
+        )}
+      </div>
+
+      <div className="hidden xl:block min-w-0 flex-1">
+        {resume._highlight ? (
+          <p className="text-xs text-slate-400 italic truncate">{resume._highlight}</p>
+        ) : null}
+      </div>
+
+      <div className="hidden lg:flex gap-1 shrink-0 max-w-[200px] flex-wrap">
+        {resume._topSkills.slice(0, 3).map((skill) => (
+          <span key={skill} className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
+            {skill}
+          </span>
+        ))}
+        {resume._topSkills.length > 3 && (
+          <span className="text-[10px] text-slate-400">+{resume._topSkills.length - 3}</span>
+        )}
+      </div>
+
+      <div className="hidden md:block shrink-0 w-24 text-xs text-slate-500">
+        {resume._workExp ? (
+          <div>
+            {resume._workExp.fullTimeYears > 0 && (
+              <span>{resume._workExp.fullTimeYears} {t('product.talent.yearsWork', 'yrs')}</span>
+            )}
+            {resume._workExp.internshipMonths > 0 && (
+              <span className="text-slate-400 block text-[10px]">+ {resume._workExp.internshipMonths} {t('product.talent.monthsIntern', 'mo intern')}</span>
+            )}
+          </div>
+        ) : resume.experienceYears ? (
+          <span>{resume.experienceYears}</span>
+        ) : (
+          <span className="text-slate-300">—</span>
+        )}
+      </div>
+
+      <div className="hidden lg:flex gap-1 shrink-0 max-w-[180px] flex-wrap">
+        {resume._notableCompanies.map((company) => (
+          <span key={company} className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+            Ex-{company}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0 ml-auto">
+        <Link
+          to={`/product/talent/${resume.id}`}
+          className="p-1.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          title={t('product.talent.viewProfile', 'View Profile')}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </Link>
+        <button
+          onClick={() => onDelete(resume.id)}
+          className="p-1.5 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// ── Pagination Component ──
+function Pagination({ page, totalPages, total, onPageChange, t }: {
+  page: number; totalPages: number; total: number;
+  onPageChange: (p: number) => void;
+  t: (k: string, f: string, opts?: Record<string, unknown>) => string;
+}) {
+  if (totalPages <= 1) return null;
+
+  // Show up to 5 page numbers centered around current page
+  const pages: number[] = [];
+  const start = Math.max(1, page - 2);
+  const end = Math.min(totalPages, start + 4);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  return (
+    <div className="flex items-center justify-between pt-4">
+      <span className="text-xs text-slate-500">
+        {t('product.talent.totalCandidates', '{{count}} candidates', { count: total })}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        {pages.map((p) => (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={`min-w-[32px] h-8 rounded-lg text-xs font-semibold transition-colors ${
+              p === page ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ──
+
+const PAGE_SIZE = 20;
 
 export default function TalentHub() {
   const { t } = useTranslation();
@@ -272,16 +542,25 @@ export default function TalentHub() {
   const [loading, setLoading] = useState(resumes.length > 0 ? false : true);
   const [search, setSearch] = usePageState<string>('talent.search', '');
   const [viewMode, setViewMode] = usePageState<'card' | 'list'>('talent.viewMode', 'card');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [showUpload, setShowUpload] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  const fetchResumes = useCallback(async (query?: string) => {
+  const fetchResumes = useCallback(async (query?: string, pageNum = 1) => {
     try {
       setLoading(true);
-      const params: any = { limit: 50 };
+      const params: any = { limit: PAGE_SIZE, page: pageNum };
       if (query) params.search = query;
       const res = await axios.get('/api/v1/resumes', { params });
       setResumes(res.data.data || []);
+      const pag = res.data.pagination;
+      if (pag) {
+        setTotalPages(pag.totalPages || 1);
+        setTotalCount(pag.total || 0);
+      }
+      setPage(pageNum);
     } catch {
       // silently fail
     } finally {
@@ -297,18 +576,24 @@ export default function TalentHub() {
     setSearch(value);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
-      fetchResumes(value);
+      fetchResumes(value, 1);
     }, 300);
   };
 
-  const handleDelete = async (id: string) => {
+  const handlePageChange = useCallback((newPage: number) => {
+    fetchResumes(search || undefined, newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [fetchResumes, search]);
+
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await axios.delete(`/api/v1/resumes/${id}`);
       setResumes((prev) => prev.filter((r) => r.id !== id));
+      setTotalCount((prev) => Math.max(0, prev - 1));
     } catch {
       // handle error
     }
-  };
+  }, []);
 
   // Pre-compute enriched data for each resume
   const enrichedResumes = useMemo(() => {
@@ -386,7 +671,7 @@ export default function TalentHub() {
         onClose={() => setShowUpload(false)}
         onUploaded={() => {
           setShowUpload(false);
-          fetchResumes(search || undefined);
+          fetchResumes(search || undefined, 1);
         }}
         batch
       />
@@ -412,227 +697,24 @@ export default function TalentHub() {
         </div>
       ) : viewMode === 'card' ? (
         /* ── Card View ── */
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {enrichedResumes.map((resume) => (
-            <div
-              key={resume.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 hover:border-blue-200 transition-colors flex flex-col"
-            >
-              {/* Header: Avatar + Name + Category + Delete */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 shrink-0">
-                    <span className="text-sm font-bold text-blue-600">
-                      {resume.name?.[0]?.toUpperCase() || '?'}
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Link
-                        to={`/product/talent/${resume.id}`}
-                        className="text-sm font-semibold text-slate-900 hover:text-blue-700 transition-colors truncate"
-                      >
-                        {resume.name}
-                      </Link>
-                      {resume._jobCategory && (
-                        <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-600'}`}>
-                          {resume._jobCategory}
-                        </span>
-                      )}
-                    </div>
-                    {resume.currentRole && (
-                      <p className="text-xs text-slate-500 truncate">{resume.currentRole}</p>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDelete(resume.id)}
-                  className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Highlight */}
-              {resume._highlight && (
-                <p className="mt-2 text-xs text-slate-500 italic line-clamp-2">{resume._highlight}</p>
-              )}
-
-              {/* Skills */}
-              {resume._topSkills.length > 0 && (
-                <div className="mt-2.5 flex flex-wrap gap-1">
-                  {resume._topSkills.map((skill) => (
-                    <span key={skill} className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Experience */}
-              <div className="mt-2.5 flex items-center gap-2 flex-wrap text-xs text-slate-500">
-                {resume._workExp ? (
-                  <>
-                    {resume._workExp.fullTimeYears > 0 && (
-                      <span className="inline-flex items-center gap-1">
-                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        {resume._workExp.fullTimeYears} {t('product.talent.yearsWork', 'yrs')}
-                      </span>
-                    )}
-                    {resume._workExp.internshipMonths > 0 && (
-                      <span className="text-slate-400">
-                        + {resume._workExp.internshipMonths} {t('product.talent.monthsIntern', 'mo intern')}
-                      </span>
-                    )}
-                  </>
-                ) : resume.experienceYears ? (
-                  <span className="inline-flex items-center gap-1">
-                    <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    {resume.experienceYears}
-                  </span>
-                ) : null}
-              </div>
-
-              {/* Industry + Notable Companies */}
-              <div className="mt-2 flex flex-wrap gap-1">
-                {resume._industryTags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-                    {tag}
-                  </span>
-                ))}
-                {resume._notableCompanies.map((company) => (
-                  <span key={company} className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                    Ex-{company}
-                  </span>
-                ))}
-              </div>
-
-              {/* Footer */}
-              <div className="mt-auto pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-slate-400">
-                  {new Date(resume.createdAt).toLocaleDateString()}
-                </span>
-                <Link
-                  to={`/product/talent/${resume.id}`}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                >
-                  {t('product.talent.viewProfile', 'View Profile')}
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {enrichedResumes.map((resume) => (
+              <ResumeCard key={resume.id} resume={resume} onDelete={handleDelete} t={t} />
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
+        </>
       ) : (
         /* ── List View ── */
-        <div className="rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
-          {enrichedResumes.map((resume) => (
-            <div
-              key={resume.id}
-              className="px-5 py-3.5 hover:bg-slate-50/50 transition-colors flex items-center gap-4"
-            >
-              {/* Avatar */}
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 shrink-0">
-                <span className="text-xs font-bold text-blue-600">
-                  {resume.name?.[0]?.toUpperCase() || '?'}
-                </span>
-              </div>
-
-              {/* Name + Role + Category */}
-              <div className="min-w-0 w-44 shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <Link
-                    to={`/product/talent/${resume.id}`}
-                    className="text-sm font-semibold text-slate-900 hover:text-blue-700 transition-colors truncate"
-                  >
-                    {resume.name}
-                  </Link>
-                  {resume._jobCategory && (
-                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-semibold shrink-0 ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-600'}`}>
-                      {resume._jobCategory}
-                    </span>
-                  )}
-                </div>
-                {resume.currentRole && (
-                  <p className="text-xs text-slate-500 truncate">{resume.currentRole}</p>
-                )}
-              </div>
-
-              {/* Highlight */}
-              <div className="hidden xl:block min-w-0 flex-1">
-                {resume._highlight ? (
-                  <p className="text-xs text-slate-400 italic truncate">{resume._highlight}</p>
-                ) : null}
-              </div>
-
-              {/* Skills */}
-              <div className="hidden lg:flex gap-1 shrink-0 max-w-[200px] flex-wrap">
-                {resume._topSkills.slice(0, 3).map((skill) => (
-                  <span key={skill} className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
-                    {skill}
-                  </span>
-                ))}
-                {resume._topSkills.length > 3 && (
-                  <span className="text-[10px] text-slate-400">+{resume._topSkills.length - 3}</span>
-                )}
-              </div>
-
-              {/* Experience */}
-              <div className="hidden md:block shrink-0 w-24 text-xs text-slate-500">
-                {resume._workExp ? (
-                  <div>
-                    {resume._workExp.fullTimeYears > 0 && (
-                      <span>{resume._workExp.fullTimeYears} {t('product.talent.yearsWork', 'yrs')}</span>
-                    )}
-                    {resume._workExp.internshipMonths > 0 && (
-                      <span className="text-slate-400 block text-[10px]">+ {resume._workExp.internshipMonths} {t('product.talent.monthsIntern', 'mo intern')}</span>
-                    )}
-                  </div>
-                ) : resume.experienceYears ? (
-                  <span>{resume.experienceYears}</span>
-                ) : (
-                  <span className="text-slate-300">—</span>
-                )}
-              </div>
-
-              {/* Notable Companies */}
-              <div className="hidden lg:flex gap-1 shrink-0 max-w-[180px] flex-wrap">
-                {resume._notableCompanies.map((company) => (
-                  <span key={company} className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
-                    Ex-{company}
-                  </span>
-                ))}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-1 shrink-0 ml-auto">
-                <Link
-                  to={`/product/talent/${resume.id}`}
-                  className="p-1.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                  title={t('product.talent.viewProfile', 'View Profile')}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </Link>
-                <button
-                  onClick={() => handleDelete(resume.id)}
-                  className="p-1.5 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+            {enrichedResumes.map((resume) => (
+              <ResumeListRow key={resume.id} resume={resume} onDelete={handleDelete} t={t} />
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
+        </>
       )}
     </div>
   );

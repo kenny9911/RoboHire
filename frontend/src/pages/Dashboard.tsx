@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -627,6 +627,9 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
+
+                {/* Invited Candidates */}
+                <InvitedCandidatesPanel hiringRequestId={selectedRequest.id} t={t} />
               </div>
             ) : (
               <div className="p-12 text-center text-slate-500">
@@ -915,6 +918,98 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+    </div>
+  );
+}
+
+// ─── Invited Candidates Panel ─────────────────────────────────────────
+
+interface InvitedCandidate {
+  id: string;
+  resumeId: string;
+  candidateName: string;
+  candidateEmail: string | null;
+  candidateRole: string | null;
+  invitedAt: string | null;
+  fitScore: number | null;
+  interview: { id: string; status: string; scheduledAt: string | null; completedAt: string | null } | null;
+}
+
+function InvitedCandidatesPanel({ hiringRequestId, t }: { hiringRequestId: string; t: (k: string, f: string, opts?: Record<string, unknown>) => string }) {
+  const [invitedCandidates, setInvitedCandidates] = useState<InvitedCandidate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchInvitations = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`${API_BASE}/api/v1/hiring-requests/${hiringRequestId}/invitations`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.success) setInvitedCandidates(data.data || []);
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }, [hiringRequestId]);
+
+  useEffect(() => {
+    fetchInvitations();
+  }, [fetchInvitations]);
+
+  if (loading) return null;
+  if (invitedCandidates.length === 0) return null;
+
+  const statusColors: Record<string, string> = {
+    scheduled: 'bg-blue-100 text-blue-700',
+    in_progress: 'bg-amber-100 text-amber-700',
+    completed: 'bg-emerald-100 text-emerald-700',
+    cancelled: 'bg-red-100 text-red-700',
+    expired: 'bg-gray-100 text-gray-500',
+  };
+
+  return (
+    <div className="landing-gradient-stroke bg-white rounded-[28px] overflow-hidden shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)]">
+      <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-900">
+          {t('dashboard.detail.invitedCandidates', 'Invited Candidates')}
+        </h2>
+        <span className="text-xs text-slate-500">
+          {invitedCandidates.length} {t('dashboard.detail.invited', 'invited')}
+        </span>
+      </div>
+      <div className="divide-y divide-slate-100">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 text-xs uppercase tracking-wide text-slate-400">
+          <span className="col-span-4">{t('dashboard.detail.candidate', 'Candidate')}</span>
+          <span className="col-span-2">{t('dashboard.detail.invitedDate', 'Invited')}</span>
+          <span className="col-span-3">{t('dashboard.detail.interviewStatus', 'Interview Status')}</span>
+          <span className="col-span-3">{t('dashboard.detail.matchScore', 'Match score')}</span>
+        </div>
+        {invitedCandidates.map((c) => (
+          <div key={c.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4">
+            <div className="md:col-span-4">
+              <p className="text-sm font-medium text-slate-900">{c.candidateName}</p>
+              {c.candidateEmail && <p className="text-xs text-slate-500">{c.candidateEmail}</p>}
+              {c.candidateRole && <p className="text-xs text-slate-400">{c.candidateRole}</p>}
+            </div>
+            <div className="md:col-span-2 text-xs text-slate-500">
+              {c.invitedAt ? new Date(c.invitedAt).toLocaleDateString() : '--'}
+            </div>
+            <div className="md:col-span-3">
+              <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
+                statusColors[c.interview?.status || 'scheduled'] || 'bg-gray-100 text-gray-600'
+              }`}>
+                {t(`dashboard.interviewStatus.${c.interview?.status || 'scheduled'}`, c.interview?.status || 'scheduled')}
+              </span>
+            </div>
+            <div className="md:col-span-3 text-sm text-slate-600">
+              {c.fitScore != null ? c.fitScore : '--'}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

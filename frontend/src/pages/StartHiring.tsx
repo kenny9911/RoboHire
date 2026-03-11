@@ -58,6 +58,8 @@ export default function StartHiring() {
   const [showAllTemplates, setShowAllTemplates] = useState(false);
   const [jdView, setJdView] = useState<'markdown' | 'preview'>('preview');
   const [splitPercent, setSplitPercent] = useState(50);
+  const [duplicateHR, setDuplicateHR] = useState<{ id: string; title: string } | null>(null);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -594,19 +596,35 @@ export default function StartHiring() {
     }
   };
 
-  const createHiringRequest = async () => {
+  const doCreateOrUpdateHR = async (overwriteId?: string) => {
     try {
       const finalJobDescription = jdDraft.trim();
-      const response = await fetch(`${API_BASE}/api/v1/hiring-requests`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        body: JSON.stringify({
-          title: hiringData.title.trim() || t('hiring.defaultTitle', 'New Hiring Request'),
-          requirements: hiringData.requirements,
-          jobDescription: finalJobDescription || undefined,
-        }),
-      });
+      const titleValue = hiringData.title.trim() || t('hiring.defaultTitle', 'New Hiring Request');
+
+      let response: Response;
+      if (overwriteId) {
+        response = await fetch(`${API_BASE}/api/v1/hiring-requests/${overwriteId}`, {
+          method: 'PATCH',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify({
+            title: titleValue,
+            requirements: hiringData.requirements,
+            jobDescription: finalJobDescription || undefined,
+          }),
+        });
+      } else {
+        response = await fetch(`${API_BASE}/api/v1/hiring-requests`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify({
+            title: titleValue,
+            requirements: hiringData.requirements,
+            jobDescription: finalJobDescription || undefined,
+          }),
+        });
+      }
 
       const data = await response.json();
 
@@ -642,6 +660,25 @@ export default function StartHiring() {
       );
       setAssistantSuggestions(buildFollowUpSuggestions());
     }
+  };
+
+  const createHiringRequest = async () => {
+    const titleValue = hiringData.title.trim() || t('hiring.defaultTitle', 'New Hiring Request');
+    try {
+      const checkRes = await fetch(`${API_BASE}/api/v1/hiring-requests?title=${encodeURIComponent(titleValue)}&limit=1`, {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
+      const checkData = await checkRes.json();
+      if (checkData.success && checkData.data?.length > 0) {
+        setDuplicateHR({ id: checkData.data[0].id, title: titleValue });
+        setShowDuplicateModal(true);
+        return;
+      }
+    } catch {
+      // If check fails, proceed with creation
+    }
+    await doCreateOrUpdateHR();
   };
 
   const handleChatAction = useCallback(
@@ -1540,6 +1577,46 @@ export default function StartHiring() {
         </div>
       </footer>
       </div>
+
+      {/* Duplicate Hiring Request Modal */}
+      {showDuplicateModal && duplicateHR && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">{t('hiring.duplicate.title', 'Duplicate Title Found')}</h3>
+            </div>
+            <p className="mb-6 text-sm text-gray-600">
+              {t('hiring.duplicate.message', 'A hiring request with the title "{{title}}" already exists. Would you like to overwrite it or use a different name?', { title: duplicateHR.title })}
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={async () => {
+                  setShowDuplicateModal(false);
+                  await doCreateOrUpdateHR(duplicateHR.id);
+                  setDuplicateHR(null);
+                }}
+                className="w-full rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700 transition-colors"
+              >
+                {t('hiring.duplicate.overwrite', 'Overwrite Existing')}
+              </button>
+              <button
+                onClick={() => {
+                  setShowDuplicateModal(false);
+                  setDuplicateHR(null);
+                }}
+                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {t('hiring.duplicate.rename', 'Use a Different Name')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

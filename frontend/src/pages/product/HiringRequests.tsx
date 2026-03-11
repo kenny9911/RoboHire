@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
@@ -8,7 +8,6 @@ interface HiringRequest {
   id: string;
   title: string;
   requirements: string;
-  jobDescription?: string;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -21,19 +20,187 @@ const STATUS_COLORS: Record<string, string> = {
   closed: 'bg-slate-100 text-slate-700',
 };
 
+const STATUSES = ['', 'active', 'paused', 'closed'];
+const PAGE_SIZE = 20;
+
+// ── Pagination Component ──
+function Pagination({ page, totalPages, total, onPageChange, t }: {
+  page: number; totalPages: number; total: number;
+  onPageChange: (p: number) => void;
+  t: (k: string, f: string, opts?: Record<string, unknown>) => string;
+}) {
+  if (totalPages <= 1) return null;
+
+  const pages: number[] = [];
+  const start = Math.max(1, page - 2);
+  const end = Math.min(totalPages, start + 4);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  return (
+    <div className="flex items-center justify-between pt-4">
+      <span className="text-xs text-slate-500">
+        {t('product.hiring.totalRequests', '{{count}} requests', { count: total })}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        {pages.map((p) => (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={`min-w-[32px] h-8 rounded-lg text-xs font-semibold transition-colors ${
+              p === page ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Memoized Card Component ──
+const HiringRequestCard = memo(function HiringRequestCard({
+  req,
+  onStatusChange,
+  onDelete,
+  onCreateJob,
+  t,
+}: {
+  req: HiringRequest;
+  onStatusChange: (id: string, newStatus: string) => void;
+  onDelete: (id: string) => void;
+  onCreateJob: (id: string) => void;
+  t: (k: string, f: string, opts?: Record<string, unknown>) => string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 hover:border-blue-200 transition-colors">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              to={`/product/hiring/${req.id}`}
+              className="text-base font-semibold text-slate-900 hover:text-blue-700 transition-colors"
+            >
+              {req.title}
+            </Link>
+            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[req.status] || STATUS_COLORS.active}`}>
+              {req.status}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-slate-600 line-clamp-2">{req.requirements?.slice(0, 200)}</p>
+          <div className="mt-2 flex items-center gap-4 text-xs text-slate-400">
+            <span>{new Date(req.createdAt).toLocaleDateString()}</span>
+            {req._count && (
+              <span>{req._count.candidates} {t('product.hiring.candidates', 'candidates')}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Create Job from request */}
+          <button
+            onClick={() => onCreateJob(req.id)}
+            title={t('product.hiring.createJob', 'Create Job')}
+            className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </button>
+
+          {/* View in dashboard */}
+          <Link
+            to={`/product/hiring/${req.id}`}
+            title={t('product.hiring.viewDetail', 'View Detail')}
+            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </Link>
+
+          {/* Status toggle */}
+          {req.status === 'active' && (
+            <button
+              onClick={() => onStatusChange(req.id, 'paused')}
+              title={t('product.hiring.pause', 'Pause')}
+              className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          )}
+          {req.status === 'paused' && (
+            <button
+              onClick={() => onStatusChange(req.id, 'active')}
+              title={t('product.hiring.activate', 'Activate')}
+              className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          )}
+
+          {/* Delete */}
+          <button
+            onClick={() => onDelete(req.id)}
+            title={t('product.hiring.delete', 'Delete')}
+            className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// ── Main Component ──
 export default function HiringRequests() {
   const { t } = useTranslation();
   const [requests, setRequests] = usePageState<HiringRequest[]>('hiring.requests', []);
   const [loading, setLoading] = useState(requests.length > 0 ? false : true);
   const [statusFilter, setStatusFilter] = usePageState<string>('hiring.statusFilter', '');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const fetchRequests = useCallback(async () => {
+  const fetchRequests = useCallback(async (pageNum: number) => {
     try {
       setLoading(true);
-      const params: any = { include_counts: true };
+      const params: any = { limit: PAGE_SIZE, offset: (pageNum - 1) * PAGE_SIZE };
       if (statusFilter) params.status = statusFilter;
       const res = await axios.get('/api/v1/hiring-requests', { params });
       setRequests(res.data.data || []);
+      const pag = res.data.pagination;
+      if (pag) {
+        setTotalCount(pag.total || 0);
+        setTotalPages(Math.ceil((pag.total || 0) / PAGE_SIZE) || 1);
+      }
     } catch {
       // silently fail
     } finally {
@@ -42,36 +209,80 @@ export default function HiringRequests() {
   }, [statusFilter]);
 
   useEffect(() => {
-    fetchRequests();
+    setPage(1);
+    fetchRequests(1);
   }, [fetchRequests]);
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage);
+    fetchRequests(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [fetchRequests]);
+
+  const handleStatusChange = useCallback(async (id: string, newStatus: string) => {
     try {
       const res = await axios.patch(`/api/v1/hiring-requests/${id}`, { status: newStatus });
       setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status: res.data.data.status } : r)));
     } catch {
       // handle error
     }
-  };
+  }, []);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await axios.delete(`/api/v1/hiring-requests/${id}`);
       setRequests((prev) => prev.filter((r) => r.id !== id));
     } catch {
       // handle error
     }
-  };
+  }, []);
 
-  const handleCreateJob = async (requestId: string) => {
+  const [jobDuplicateModal, setJobDuplicateModal] = useState<{
+    requestId: string;
+    title: string;
+    existingJobId: string;
+  } | null>(null);
+  const [customJobTitle, setCustomJobTitle] = useState('');
+  const [showRenameInput, setShowRenameInput] = useState(false);
+
+  const doCreateJob = async (requestId: string, title?: string) => {
     try {
-      await axios.post(`/api/v1/jobs/from-request/${requestId}`);
+      await axios.post(`/api/v1/jobs/from-request/${requestId}`, title ? { title } : {});
     } catch {
       // handle error
     }
   };
 
-  const statuses = ['', 'active', 'paused', 'closed'];
+  const doOverwriteJob = async (existingJobId: string, requestId: string) => {
+    try {
+      const hr = requests.find(r => r.id === requestId);
+      if (!hr) return;
+      await axios.patch(`/api/v1/jobs/${existingJobId}`, {
+        title: hr.title,
+        description: '',
+        hiringRequestId: hr.id,
+      });
+    } catch {
+      // handle error
+    }
+  };
+
+  const handleCreateJob = useCallback(async (requestId: string) => {
+    const hr = requests.find(r => r.id === requestId);
+    if (!hr) return;
+    try {
+      const checkRes = await axios.get('/api/v1/jobs', { params: { title: hr.title, limit: 1 } });
+      if (checkRes.data.data?.length > 0) {
+        setJobDuplicateModal({ requestId, title: hr.title, existingJobId: checkRes.data.data[0].id });
+        setCustomJobTitle('');
+        setShowRenameInput(false);
+        return;
+      }
+    } catch {
+      // If check fails, proceed with creation
+    }
+    await doCreateJob(requestId);
+  }, [requests]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -94,7 +305,7 @@ export default function HiringRequests() {
 
       {/* Status filter */}
       <div className="flex gap-2 flex-wrap">
-        {statuses.map((s) => (
+        {STATUSES.map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -131,95 +342,90 @@ export default function HiringRequests() {
       ) : (
         <div className="space-y-3">
           {requests.map((req) => (
-            <div
+            <HiringRequestCard
               key={req.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 hover:border-blue-200 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Link
-                      to={`/product/hiring/${req.id}`}
-                      className="text-base font-semibold text-slate-900 hover:text-blue-700 transition-colors"
-                    >
-                      {req.title}
-                    </Link>
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[req.status] || STATUS_COLORS.active}`}>
-                      {req.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-slate-600 line-clamp-2">{req.requirements?.slice(0, 200)}</p>
-                  <div className="mt-2 flex items-center gap-4 text-xs text-slate-400">
-                    <span>{new Date(req.createdAt).toLocaleDateString()}</span>
-                    {req._count && (
-                      <span>{req._count.candidates} {t('product.hiring.candidates', 'candidates')}</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 shrink-0">
-                  {/* Create Job from request */}
-                  <button
-                    onClick={() => handleCreateJob(req.id)}
-                    title={t('product.hiring.createJob', 'Create Job')}
-                    className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-
-                  {/* View in dashboard */}
-                  <Link
-                    to={`/product/hiring/${req.id}`}
-                    title={t('product.hiring.viewDetail', 'View Detail')}
-                    className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </Link>
-
-                  {/* Status toggle */}
-                  {req.status === 'active' && (
-                    <button
-                      onClick={() => handleStatusChange(req.id, 'paused')}
-                      title={t('product.hiring.pause', 'Pause')}
-                      className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-                  )}
-                  {req.status === 'paused' && (
-                    <button
-                      onClick={() => handleStatusChange(req.id, 'active')}
-                      title={t('product.hiring.activate', 'Activate')}
-                      className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-                  )}
-
-                  {/* Delete */}
-                  <button
-                    onClick={() => handleDelete(req.id)}
-                    title={t('product.hiring.delete', 'Delete')}
-                    className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
+              req={req}
+              onStatusChange={handleStatusChange}
+              onDelete={handleDelete}
+              onCreateJob={handleCreateJob}
+              t={t}
+            />
           ))}
+          <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
+        </div>
+      )}
+
+      {/* Job Duplicate Modal */}
+      {jobDuplicateModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">{t('product.hiring.duplicateJob.title', 'Duplicate Job Title')}</h3>
+            </div>
+            <p className="mb-6 text-sm text-gray-600">
+              {t('product.hiring.duplicateJob.message', 'A job with the title "{{title}}" already exists. Would you like to overwrite it or create with a different name?', { title: jobDuplicateModal.title })}
+            </p>
+
+            {showRenameInput ? (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('product.hiring.duplicateJob.newTitle', 'New Title')}</label>
+                <input
+                  type="text"
+                  value={customJobTitle}
+                  onChange={(e) => setCustomJobTitle(e.target.value)}
+                  placeholder={jobDuplicateModal.title}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                  autoFocus
+                />
+              </div>
+            ) : null}
+
+            <div className="flex flex-col gap-2">
+              {showRenameInput ? (
+                <button
+                  onClick={async () => {
+                    const title = customJobTitle.trim();
+                    if (!title) return;
+                    await doCreateJob(jobDuplicateModal.requestId, title);
+                    setJobDuplicateModal(null);
+                  }}
+                  disabled={!customJobTitle.trim()}
+                  className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {t('product.hiring.duplicateJob.createNew', 'Create Job')}
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={async () => {
+                      await doOverwriteJob(jobDuplicateModal.existingJobId, jobDuplicateModal.requestId);
+                      setJobDuplicateModal(null);
+                    }}
+                    className="w-full rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700 transition-colors"
+                  >
+                    {t('product.hiring.duplicateJob.overwrite', 'Overwrite Existing')}
+                  </button>
+                  <button
+                    onClick={() => setShowRenameInput(true)}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    {t('product.hiring.duplicateJob.rename', 'Use a Different Name')}
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => setJobDuplicateModal(null)}
+                className="w-full rounded-lg px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                {t('product.hiring.duplicateJob.cancel', 'Cancel')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

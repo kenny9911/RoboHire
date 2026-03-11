@@ -211,7 +211,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
         // Find or create HiringRequest from JD (dedup by exact JD content)
         let hiringRequest = await prisma.hiringRequest.findFirst({
           where: { userId, jobDescription: jd.trim() },
-          select: { id: true },
+          select: { id: true, title: true },
         });
         if (!hiringRequest) {
           hiringRequest = await prisma.hiringRequest.create({
@@ -221,7 +221,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
               requirements: jd.trim(),
               jobDescription: jd.trim(),
             },
-            select: { id: true },
+            select: { id: true, title: true },
           });
         }
         hiringRequestId = hiringRequest.id;
@@ -245,6 +245,25 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
             pipelineStatus: 'invited',
             invitedAt: new Date(),
             inviteData: JSON.parse(JSON.stringify(result)),
+          },
+        });
+
+        // Create Interview record linked to resume & hiring request
+        await prisma.interview.create({
+          data: {
+            userId,
+            hiringRequestId: hiringRequest.id,
+            resumeId: resumeRecord.id,
+            candidateName: parsed.name || result.name || 'Unknown',
+            candidateEmail: parsed.email || result.email || null,
+            jobTitle: result.job_title || hiringRequest.title || 'Interview',
+            status: 'scheduled',
+            type: 'ai_video',
+            metadata: {
+              inviteData: JSON.parse(JSON.stringify(result)),
+              loginUrl: result.login_url,
+              qrcodeUrl: result.qrcode_url,
+            },
           },
         });
 

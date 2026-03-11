@@ -77,7 +77,15 @@
       "signIn": "Se connecter",
       "getStarted": "Commencer",
       "dashboard": "Tableau de bord",
-      "product": "Produit"
+      "product": "Produit",
+      "productMenu": {
+        "requirements": "Analyse des besoins",
+        "resumeScreening": "Tri des CV",
+        "smartMatching": "Matching intelligent",
+        "aiInterview": "Entretien IA",
+        "smartEvaluation": "Évaluation intelligente",
+        "api": "API"
+      }
     },
     "hero": {
       "badge": "Plateforme de recrutement propulsée par l’IA",
@@ -434,6 +442,12 @@
     "jdAiRefine": "Affiner avec l'IA",
     "jdError": "Impossible de générer la description du poste. Veuillez modifier manuellement.",
     "createRequest": "Créer la demande de recrutement",
+    "duplicate": {
+      "title": "Titre en double détecté",
+      "message": "Une demande de recrutement avec le titre \"{{title}}\" existe déjà. Voulez-vous écraser l'existante ou utiliser un autre nom ?",
+      "overwrite": "Écraser l'existant",
+      "rename": "Utiliser un autre nom"
+    },
     "defaultTitle": "Nouvelle demande de recrutement",
     "success": "Votre demande de recrutement a été créée ! 🎉\n\n",
     "nextSteps": "**Et ensuite :**\n",
@@ -877,7 +891,11 @@
       "status": "Statut",
       "lastUpdated": "Dernière mise à jour",
       "notFound": "Demande introuvable",
-      "loadError": "Impossible de charger les détails"
+      "loadError": "Impossible de charger les détails",
+      "invitedCandidates": "Candidats invités",
+      "invited": "invités",
+      "invitedDate": "Date d'invitation",
+      "interviewStatus": "Statut d'entretien"
     },
     "candidateStatus": {
       "pending": "En attente",
@@ -885,6 +903,13 @@
       "interviewed": "Entretien réalisé",
       "shortlisted": "Pré-sélectionné",
       "rejected": "Refusé"
+    },
+    "interviewStatus": {
+      "scheduled": "Planifié",
+      "in_progress": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "expired": "Expiré"
     },
     "autoMatch": {
       "title": "Sélection des CV",
@@ -1710,6 +1735,7 @@
       "empty": "Aucune demande pour le moment",
       "emptyDesc": "Démarrez une nouvelle demande avec notre assistant IA.",
       "candidates": "candidats",
+      "totalRequests": "{{count}} demandes",
       "createJob": "Créer un emploi",
       "viewDetail": "Voir le détail",
       "pause": "Mettre en pause",
@@ -1718,7 +1744,16 @@
       "postCreation": {
         "viewReport": "Voir le rapport de recrutement"
       },
-      "goToHiringRequests": "Voir les demandes de recrutement"
+      "goToHiringRequests": "Voir les demandes de recrutement",
+      "duplicateJob": {
+        "title": "Titre de poste en double",
+        "message": "Un poste avec le titre \"{{title}}\" existe déjà. Voulez-vous écraser l'existant ou créer avec un autre nom ?",
+        "overwrite": "Écraser l'existant",
+        "rename": "Utiliser un autre nom",
+        "newTitle": "Nouveau titre",
+        "createNew": "Créer le poste",
+        "cancel": "Annuler"
+      }
     },
     "talent": {
       "title": "Hub Talents",
@@ -1732,7 +1767,8 @@
       "viewCard": "Vue cartes",
       "viewList": "Vue liste",
       "yearsWork": "ans",
-      "monthsIntern": "mois stage"
+      "monthsIntern": "mois stage",
+      "totalCandidates": "{{count}} candidats"
     },
     "matching": {
       "title": "Correspondance intelligente",
@@ -1877,7 +1913,8 @@
         "overview": "Aperçu",
         "insights": "Analyses IA",
         "jobFit": "Adéquation au poste",
-        "notes": "Notes et tags"
+        "notes": "Notes et tags",
+        "invitations": "Invitations"
       },
       "actions": {
         "regenerateInsights": "Régénérer les analyses",
@@ -1911,6 +1948,18 @@
         "projects": "Projets",
         "showAllSkills": "Afficher les {{count}} compétences",
         "showLess": "Afficher moins"
+      },
+      "invitations": {
+        "noInvitations": "Aucune invitation envoyée",
+        "invitedAt": "Invité",
+        "completedAt": "Terminé",
+        "status": {
+          "scheduled": "Planifié",
+          "in_progress": "En cours",
+          "completed": "Terminé",
+          "cancelled": "Annulé",
+          "expired": "Expiré"
+        }
       }
     },
     "insights": {
@@ -1934,6 +1983,8 @@
       "analyzing": "Comparaison avec vos offres d'emploi...",
       "reanalyze": "Réanalyser l'adéquation",
       "inviteInterview": "Inviter à un entretien",
+      "alreadyInvited": "Invité le {{date}}",
+      "score": "Score",
       "bestFit": "Meilleure adéquation",
       "matchedSkills": "Compétences correspondantes",
       "missingSkills": "Compétences critiques manquantes",

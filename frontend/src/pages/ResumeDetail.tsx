@@ -5,7 +5,24 @@ import axios from '../lib/axios';
 import SEO from '../components/SEO';
 import ResumeUploadModal from '../components/ResumeUploadModal';
 
-type Tab = 'overview' | 'insights' | 'jobfit' | 'notes';
+type Tab = 'overview' | 'insights' | 'jobfit' | 'invitations' | 'notes';
+
+interface InvitationRecord {
+  id: string;
+  hiringRequestId: string;
+  hiringRequestTitle: string;
+  hiringRequestStatus: string;
+  invitedAt: string | null;
+  fitScore: number | null;
+  fitGrade: string | null;
+  interview: {
+    id: string;
+    status: string;
+    scheduledAt: string | null;
+    completedAt: string | null;
+    type: string;
+  } | null;
+}
 
 interface ResumeData {
   id: string;
@@ -52,6 +69,24 @@ export default function ResumeDetail() {
   const [inviteJobsLoading, setInviteJobsLoading] = useState(false);
   const [inviteResult, setInviteResult] = useState<Record<string, unknown> | null>(null);
   const [inviteError, setInviteError] = useState('');
+  const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
+  const [invitationsMap, setInvitationsMap] = useState<Record<string, InvitationRecord>>({});
+
+  const fetchInvitations = useCallback(async () => {
+    if (!id) return;
+    try {
+      const res = await axios.get(`/api/v1/resumes/${id}/invitations`);
+      if (res.data.success) {
+        const list: InvitationRecord[] = res.data.data || [];
+        setInvitations(list);
+        const map: Record<string, InvitationRecord> = {};
+        for (const inv of list) map[inv.hiringRequestId] = inv;
+        setInvitationsMap(map);
+      }
+    } catch {
+      // silently fail
+    }
+  }, [id]);
 
   const fetchResume = useCallback(async () => {
     if (!id) return;
@@ -75,7 +110,8 @@ export default function ResumeDetail() {
 
   useEffect(() => {
     fetchResume();
-  }, [fetchResume]);
+    fetchInvitations();
+  }, [fetchResume, fetchInvitations]);
 
   const generateInsights = async (force = false) => {
     if (!resume) return;
@@ -147,6 +183,7 @@ export default function ResumeDetail() {
       });
       if (res.data.success) {
         setInviteResult(res.data.data);
+        fetchInvitations(); // Refresh invitation status
       } else {
         setInviteError(res.data.error || 'Failed to send invitation');
       }
@@ -189,6 +226,7 @@ export default function ResumeDetail() {
       });
       if (res.data.success) {
         setInviteResult(res.data.data);
+        fetchInvitations(); // Refresh invitation status
       } else {
         setInviteError(res.data.error || 'Failed to send invitation');
       }
@@ -225,6 +263,7 @@ export default function ResumeDetail() {
     { key: 'overview', label: t('resumeLibrary.detail.tabs.overview', 'Overview') },
     { key: 'insights', label: t('resumeLibrary.detail.tabs.insights', 'AI Insights') },
     { key: 'jobfit', label: t('resumeLibrary.detail.tabs.jobFit', 'Job Fit') },
+    { key: 'invitations', label: `${t('resumeLibrary.detail.tabs.invitations', 'Invitations')}${invitations.length > 0 ? ` (${invitations.length})` : ''}` },
     { key: 'notes', label: t('resumeLibrary.detail.tabs.notes', 'Notes & Tags') },
   ];
 
@@ -324,7 +363,8 @@ export default function ResumeDetail() {
       {/* Tab content */}
       {tab === 'overview' && <OverviewTab parsed={parsed} t={t} />}
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
-      {tab === 'jobfit' && <JobFitTab data={resume.jobFitData} loading={jobFitLoading} onAnalyze={analyzeJobFit} onInvite={handleInviteFromFit} t={t} />}
+      {tab === 'jobfit' && <JobFitTab data={resume.jobFitData} loading={jobFitLoading} onAnalyze={analyzeJobFit} onInvite={handleInviteFromFit} invitationsMap={invitationsMap} t={t} />}
+      {tab === 'invitations' && <InvitationsTab invitations={invitations} t={t} />}
       {tab === 'notes' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="mb-6">
@@ -885,7 +925,7 @@ function InsightsTab({ data, loading, onGenerate, t }: { data: Record<string, un
 
 // ─── Job Fit Tab ─────────────────────────────────────────────────────────
 
-function JobFitTab({ data, loading, onAnalyze, onInvite, t }: { data: Record<string, unknown> | null; loading: boolean; onAnalyze: () => void; onInvite: (hiringRequestId: string, title: string) => void; t: (k: string, f: string) => string }) {
+function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { data: Record<string, unknown> | null; loading: boolean; onAnalyze: () => void; onInvite: (hiringRequestId: string, title: string) => void; invitationsMap: Record<string, InvitationRecord>; t: (k: string, f: string, opts?: Record<string, unknown>) => string }) {
   if (loading) {
     return (
       <div className="text-center py-16">
@@ -1058,17 +1098,47 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, t }: { data: Record<str
               </div>
             )}
 
-            {(fit.fitScore as number) > 70 && fit.hiringRequestId && (
-              <button
-                onClick={() => onInvite(fit.hiringRequestId as string, fit.hiringRequestTitle as string)}
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                </svg>
-                {t('resumeLibrary.jobFit.inviteInterview', 'Invite to Interview')}
-              </button>
-            )}
+            {fit.hiringRequestId && (() => {
+              const inv = invitationsMap[fit.hiringRequestId as string];
+              if (inv) {
+                const statusColors: Record<string, string> = {
+                  scheduled: 'bg-blue-100 text-blue-700',
+                  in_progress: 'bg-amber-100 text-amber-700',
+                  completed: 'bg-emerald-100 text-emerald-700',
+                  cancelled: 'bg-red-100 text-red-700',
+                  expired: 'bg-gray-100 text-gray-500',
+                };
+                return (
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {t('resumeLibrary.jobFit.alreadyInvited', 'Invited on {{date}}', { date: inv.invitedAt ? new Date(inv.invitedAt).toLocaleDateString() : '-' })}
+                    </span>
+                    {inv.interview && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[inv.interview.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {inv.interview.status}
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+              if ((fit.fitScore as number) > 70) {
+                return (
+                  <button
+                    onClick={() => onInvite(fit.hiringRequestId as string, fit.hiringRequestTitle as string)}
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    </svg>
+                    {t('resumeLibrary.jobFit.inviteInterview', 'Invite to Interview')}
+                  </button>
+                );
+              }
+              return null;
+            })()}
           </div>
         ))}
       </div>
@@ -1079,6 +1149,65 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, t }: { data: Record<str
           {t('resumeLibrary.jobFit.reanalyze', 'Re-analyze job fit')}
         </button>
       </div>
+    </div>
+  );
+}
+
+// ─── Invitations Tab ──────────────────────────────────────────────────
+
+function InvitationsTab({ invitations, t }: { invitations: InvitationRecord[]; t: (k: string, f: string, opts?: Record<string, unknown>) => string }) {
+  if (invitations.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+        </svg>
+        <p className="text-sm text-gray-500">{t('resumeLibrary.detail.invitations.noInvitations', 'No invitations sent yet')}</p>
+      </div>
+    );
+  }
+
+  const statusColors: Record<string, string> = {
+    scheduled: 'bg-blue-100 text-blue-700',
+    in_progress: 'bg-amber-100 text-amber-700',
+    completed: 'bg-emerald-100 text-emerald-700',
+    cancelled: 'bg-red-100 text-red-700',
+    expired: 'bg-gray-100 text-gray-500',
+  };
+
+  return (
+    <div className="space-y-3">
+      {invitations.map((inv) => (
+        <div key={inv.id} className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h4 className="text-sm font-semibold text-gray-900">{inv.hiringRequestTitle}</h4>
+              <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                <span>{t('resumeLibrary.detail.invitations.invitedAt', 'Invited')}: {inv.invitedAt ? new Date(inv.invitedAt).toLocaleString() : '-'}</span>
+                {inv.fitScore != null && (
+                  <span className="text-indigo-600 font-medium">{t('resumeLibrary.jobFit.score', 'Score')}: {inv.fitScore}</span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {inv.interview ? (
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColors[inv.interview.status] || 'bg-gray-100 text-gray-600'}`}>
+                  {t(`resumeLibrary.detail.invitations.status.${inv.interview.status}`, inv.interview.status)}
+                </span>
+              ) : (
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+                  {t('resumeLibrary.detail.invitations.status.scheduled', 'Scheduled')}
+                </span>
+              )}
+            </div>
+          </div>
+          {inv.interview?.completedAt && (
+            <p className="mt-2 text-xs text-gray-400">
+              {t('resumeLibrary.detail.invitations.completedAt', 'Completed')}: {new Date(inv.interview.completedAt).toLocaleString()}
+            </p>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

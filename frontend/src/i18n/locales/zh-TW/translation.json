@@ -106,7 +106,15 @@
       "signIn": "登入",
       "getStarted": "開始使用",
       "dashboard": "控制面板",
-      "product": "產品"
+      "product": "產品",
+      "productMenu": {
+        "requirements": "需求分析",
+        "resumeScreening": "履歷篩選",
+        "smartMatching": "智慧匹配",
+        "aiInterview": "AI 面試",
+        "smartEvaluation": "智慧評估",
+        "api": "API"
+      }
     },
     "hero": {
       "badge": "AI 驅動的招聘平臺",
@@ -379,6 +387,12 @@
     "jdAiRefine": "AI 最佳化",
     "jdError": "無法生成職位描述，請手動編輯。",
     "createRequest": "建立招聘請求",
+    "duplicate": {
+      "title": "發現重複標題",
+      "message": "標題為「{{title}}」的招聘需求已存在。您想覆蓋現有的還是使用其他名稱？",
+      "overwrite": "覆蓋現有",
+      "rename": "使用其他名稱"
+    },
     "defaultTitle": "新的招聘請求",
     "success": "您的招聘請求已建立！🎉\n\n",
     "nextSteps": "**接下來會發生什麼：**\n",
@@ -845,7 +859,11 @@
       "status": "狀態",
       "lastUpdated": "最近更新",
       "notFound": "未找到該請求",
-      "loadError": "載入請求詳情失敗"
+      "loadError": "載入請求詳情失敗",
+      "invitedCandidates": "已邀約候選人",
+      "invited": "已邀約",
+      "invitedDate": "邀約日期",
+      "interviewStatus": "面試狀態"
     },
     "candidateStatus": {
       "pending": "待篩選",
@@ -853,6 +871,13 @@
       "interviewed": "已面試",
       "shortlisted": "已入圍",
       "rejected": "已淘汰"
+    },
+    "interviewStatus": {
+      "scheduled": "已安排",
+      "in_progress": "進行中",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "expired": "已過期"
     },
     "autoMatch": {
       "title": "簡歷篩選",
@@ -2133,6 +2158,7 @@
       "noRequests": "暫無招聘需求",
       "empty": "開始新招聘需求",
       "candidates": "候選人",
+      "totalRequests": "共 {{count}} 個需求",
       "createJob": "建立職缺",
       "viewDetail": "查看詳情",
       "pause": "暫停",
@@ -2141,7 +2167,16 @@
       "postCreation": {
         "viewReport": "查看招聘報告"
       },
-      "goToHiringRequests": "查看招聘需求"
+      "goToHiringRequests": "查看招聘需求",
+      "duplicateJob": {
+        "title": "職位標題重複",
+        "message": "標題為「{{title}}」的職位已存在。您想覆蓋現有職位還是使用其他名稱建立？",
+        "overwrite": "覆蓋現有職位",
+        "rename": "使用其他名稱",
+        "newTitle": "新標題",
+        "createNew": "建立職位",
+        "cancel": "取消"
+      }
     },
     "talent": {
       "title": "人才中心",
@@ -2155,7 +2190,8 @@
       "viewCard": "卡片檢視",
       "viewList": "列表檢視",
       "yearsWork": "年",
-      "monthsIntern": "月實習"
+      "monthsIntern": "月實習",
+      "totalCandidates": "{{count}} 位候選人"
     },
     "matching": {
       "title": "智慧配對",
@@ -2300,7 +2336,8 @@
         "overview": "概覽",
         "insights": "AI洞察",
         "jobFit": "崗位匹配",
-        "notes": "備註與標籤"
+        "notes": "備註與標籤",
+        "invitations": "面試邀約"
       },
       "actions": {
         "regenerateInsights": "重新生成洞察",
@@ -2334,6 +2371,18 @@
         "projects": "專案經歷",
         "showAllSkills": "顯示全部 {{count}} 項技能",
         "showLess": "收起"
+      },
+      "invitations": {
+        "noInvitations": "尚未發送面試邀約",
+        "invitedAt": "邀約時間",
+        "completedAt": "完成時間",
+        "status": {
+          "scheduled": "已安排",
+          "in_progress": "進行中",
+          "completed": "已完成",
+          "cancelled": "已取消",
+          "expired": "已過期"
+        }
       }
     },
     "insights": {
@@ -2357,6 +2406,8 @@
       "analyzing": "正在與您的招聘需求進行匹配...",
       "reanalyze": "重新分析匹配度",
       "inviteInterview": "邀請面試",
+      "alreadyInvited": "已於 {{date}} 發送邀約",
+      "score": "評分",
       "bestFit": "最佳匹配",
       "matchedSkills": "匹配技能",
       "missingSkills": "缺失關鍵技能",

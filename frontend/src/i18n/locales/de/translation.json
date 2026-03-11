@@ -77,7 +77,15 @@
       "signIn": "Anmelden",
       "getStarted": "Loslegen",
       "dashboard": "Dashboard",
-      "product": "Produkt"
+      "product": "Produkt",
+      "productMenu": {
+        "requirements": "Anforderungsanalyse",
+        "resumeScreening": "Lebenslauf-Screening",
+        "smartMatching": "Intelligentes Matching",
+        "aiInterview": "KI-Interview",
+        "smartEvaluation": "Intelligente Bewertung",
+        "api": "API"
+      }
     },
     "hero": {
       "badge": "KI-gestützte Recruiting-Plattform",
@@ -434,6 +442,12 @@
     "jdAiRefine": "Mit KI optimieren",
     "jdError": "Die Stellenbeschreibung konnte nicht erstellt werden. Bitte manuell bearbeiten.",
     "createRequest": "Einstellungsanfrage erstellen",
+    "duplicate": {
+      "title": "Doppelter Titel gefunden",
+      "message": "Eine Stellenanfrage mit dem Titel \"{{title}}\" existiert bereits. Möchten Sie die bestehende überschreiben oder einen anderen Namen verwenden?",
+      "overwrite": "Bestehende überschreiben",
+      "rename": "Anderen Namen verwenden"
+    },
     "defaultTitle": "Neue Einstellungsanfrage",
     "success": "Ihre Einstellungsanfrage wurde erstellt! 🎉\n\n",
     "nextSteps": "**Nächste Schritte:**\n",
@@ -877,7 +891,11 @@
       "status": "Status",
       "lastUpdated": "Zuletzt aktualisiert",
       "notFound": "Anfrage nicht gefunden",
-      "loadError": "Details konnten nicht geladen werden"
+      "loadError": "Details konnten nicht geladen werden",
+      "invitedCandidates": "Eingeladene Kandidaten",
+      "invited": "eingeladen",
+      "invitedDate": "Einladungsdatum",
+      "interviewStatus": "Interview-Status"
     },
     "candidateStatus": {
       "pending": "Ausstehend",
@@ -885,6 +903,13 @@
       "interviewed": "Interviewt",
       "shortlisted": "In der engeren Auswahl",
       "rejected": "Abgelehnt"
+    },
+    "interviewStatus": {
+      "scheduled": "Geplant",
+      "in_progress": "Laufend",
+      "completed": "Abgeschlossen",
+      "cancelled": "Abgesagt",
+      "expired": "Abgelaufen"
     },
     "autoMatch": {
       "title": "Lebenslauf-Screening",
@@ -1709,6 +1734,7 @@
       "empty": "Noch keine Anfragen",
       "emptyDesc": "Starten Sie eine neue Anfrage mit unserem KI-Assistenten.",
       "candidates": "Kandidaten",
+      "totalRequests": "{{count}} Anfragen",
       "createJob": "Stelle erstellen",
       "viewDetail": "Detail ansehen",
       "pause": "Pausieren",
@@ -1717,7 +1743,16 @@
       "postCreation": {
         "viewReport": "Einstellungsbericht ansehen"
       },
-      "goToHiringRequests": "Einstellungsanfragen ansehen"
+      "goToHiringRequests": "Einstellungsanfragen ansehen",
+      "duplicateJob": {
+        "title": "Doppelter Stellentitel",
+        "message": "Eine Stelle mit dem Titel \"{{title}}\" existiert bereits. Möchten Sie die bestehende überschreiben oder mit einem anderen Namen erstellen?",
+        "overwrite": "Bestehende überschreiben",
+        "rename": "Anderen Namen verwenden",
+        "newTitle": "Neuer Titel",
+        "createNew": "Stelle erstellen",
+        "cancel": "Abbrechen"
+      }
     },
     "talent": {
       "title": "Talent-Hub",
@@ -1731,7 +1766,8 @@
       "viewCard": "Kartenansicht",
       "viewList": "Listenansicht",
       "yearsWork": "Jahre",
-      "monthsIntern": "Mo. Praktikum"
+      "monthsIntern": "Mo. Praktikum",
+      "totalCandidates": "{{count}} Kandidaten"
     },
     "matching": {
       "title": "Intelligentes Matching",
@@ -1876,7 +1912,8 @@
         "overview": "Übersicht",
         "insights": "KI-Analyse",
         "jobFit": "Stelleneignung",
-        "notes": "Notizen & Tags"
+        "notes": "Notizen & Tags",
+        "invitations": "Einladungen"
       },
       "actions": {
         "regenerateInsights": "Einblicke neu generieren",
@@ -1910,6 +1947,18 @@
         "projects": "Projekte",
         "showAllSkills": "Alle {{count}} Fähigkeiten anzeigen",
         "showLess": "Weniger anzeigen"
+      },
+      "invitations": {
+        "noInvitations": "Noch keine Einladungen gesendet",
+        "invitedAt": "Eingeladen",
+        "completedAt": "Abgeschlossen",
+        "status": {
+          "scheduled": "Geplant",
+          "in_progress": "Laufend",
+          "completed": "Abgeschlossen",
+          "cancelled": "Abgesagt",
+          "expired": "Abgelaufen"
+        }
       }
     },
     "insights": {
@@ -1933,6 +1982,8 @@
       "analyzing": "Abgleich mit Ihren Stellenangeboten...",
       "reanalyze": "Eignung neu analysieren",
       "inviteInterview": "Zum Interview einladen",
+      "alreadyInvited": "Eingeladen am {{date}}",
+      "score": "Bewertung",
       "bestFit": "Beste Eignung",
       "matchedSkills": "Übereinstimmende Fähigkeiten",
       "missingSkills": "Fehlende kritische Fähigkeiten",

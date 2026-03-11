@@ -77,7 +77,15 @@
       "signIn": "ログイン",
       "getStarted": "はじめる",
       "dashboard": "ダッシュボード",
-      "product": "プロダクト"
+      "product": "プロダクト",
+      "productMenu": {
+        "requirements": "要件分析",
+        "resumeScreening": "履歴書スクリーニング",
+        "smartMatching": "スマートマッチング",
+        "aiInterview": "AI面接",
+        "smartEvaluation": "スマート評価",
+        "api": "API"
+      }
     },
     "hero": {
       "badge": "AI採用プラットフォーム",
@@ -804,6 +812,12 @@
     "jdAiRefine": "AIで改善",
     "jdError": "職務内容を生成できませんでした。手動で編集してください。",
     "createRequest": "採用リクエストを作成",
+    "duplicate": {
+      "title": "重複タイトル検出",
+      "message": "「{{title}}」というタイトルの採用リクエストが既に存在します。上書きしますか、それとも別の名前を使用しますか？",
+      "overwrite": "既存を上書き",
+      "rename": "別の名前を使用"
+    },
     "defaultTitle": "新規採用リクエスト",
     "success": "採用リクエストを作成しました！ 🎉\n\n",
     "nextSteps": "**次のステップ：**\n",
@@ -1247,7 +1261,11 @@
       "status": "ステータス",
       "lastUpdated": "最終更新",
       "notFound": "リクエストが見つかりません",
-      "loadError": "リクエスト詳細の読み込みに失敗しました"
+      "loadError": "リクエスト詳細の読み込みに失敗しました",
+      "invitedCandidates": "招待済み候補者",
+      "invited": "招待済み",
+      "invitedDate": "招待日",
+      "interviewStatus": "面接ステータス"
     },
     "candidateStatus": {
       "pending": "未対応",
@@ -1255,6 +1273,13 @@
       "interviewed": "面接済み",
       "shortlisted": "最終候補",
       "rejected": "不採用"
+    },
+    "interviewStatus": {
+      "scheduled": "予定",
+      "in_progress": "進行中",
+      "completed": "完了",
+      "cancelled": "キャンセル",
+      "expired": "期限切れ"
     },
     "autoMatch": {
       "title": "レジュメスクリーニング",
@@ -2092,6 +2117,7 @@
       "inProgress": "進行中",
       "filled": "採用完了",
       "candidates": "候補者",
+      "totalRequests": "{{count}} 件のリクエスト",
       "matched": "マッチ済み",
       "interviewed": "面接済み",
       "offered": "オファー済み",
@@ -2099,7 +2125,16 @@
       "postCreation": {
         "viewReport": "採用レポートを見る"
       },
-      "goToHiringRequests": "採用依頼を見る"
+      "goToHiringRequests": "採用依頼を見る",
+      "duplicateJob": {
+        "title": "求人タイトル重複",
+        "message": "「{{title}}」というタイトルの求人が既に存在します。上書きしますか、それとも別の名前で作成しますか？",
+        "overwrite": "既存を上書き",
+        "rename": "別の名前を使用",
+        "newTitle": "新しいタイトル",
+        "createNew": "求人を作成",
+        "cancel": "キャンセル"
+      }
     },
     "talent": {
       "title": "タレントハブ",
@@ -2129,7 +2164,8 @@
       "viewCard": "カード表示",
       "viewList": "リスト表示",
       "yearsWork": "年",
-      "monthsIntern": "ヶ月インターン"
+      "monthsIntern": "ヶ月インターン",
+      "totalCandidates": "{{count}} 人の候補者"
     },
     "matching": {
       "title": "スマートマッチング",
@@ -2296,7 +2332,8 @@
         "overview": "概要",
         "insights": "AIインサイト",
         "jobFit": "職種適性",
-        "notes": "メモ・タグ"
+        "notes": "メモ・タグ",
+        "invitations": "面接招待"
       },
       "actions": {
         "regenerateInsights": "インサイトを再生成",
@@ -2330,6 +2367,18 @@
         "projects": "プロジェクト",
         "showAllSkills": "全{{count}}件のスキルを表示",
         "showLess": "閉じる"
+      },
+      "invitations": {
+        "noInvitations": "まだ招待を送信していません",
+        "invitedAt": "招待日",
+        "completedAt": "完了日",
+        "status": {
+          "scheduled": "予定",
+          "in_progress": "進行中",
+          "completed": "完了",
+          "cancelled": "キャンセル",
+          "expired": "期限切れ"
+        }
       }
     },
     "insights": {
@@ -2353,6 +2402,8 @@
       "analyzing": "求人案件とマッチング中...",
       "reanalyze": "適性を再分析",
       "inviteInterview": "面接に招待",
+      "alreadyInvited": "{{date}} に招待済み",
+      "score": "スコア",
       "bestFit": "最適マッチ",
       "matchedSkills": "一致するスキル",
       "missingSkills": "不足する重要スキル",

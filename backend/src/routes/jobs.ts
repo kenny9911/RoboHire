@@ -189,13 +189,15 @@ router.get('/', requireAuth, async (req, res) => {
   const requestId = generateRequestId();
   try {
     const userId = req.user!.id;
-    const { status, search, page = '1', limit = '20' } = req.query;
+    const { status, search, title, page = '1', limit = '20' } = req.query;
 
     const where: any = { userId };
     if (status && typeof status === 'string') {
       where.status = status;
     }
-    if (search && typeof search === 'string') {
+    if (title && typeof title === 'string') {
+      where.title = title;
+    } else if (search && typeof search === 'string') {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { department: { contains: search, mode: 'insensitive' } },
@@ -658,11 +660,12 @@ router.post('/from-request/:requestId', requireAuth, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Hiring request not found' });
     }
 
+    const customTitle = req.body?.title;
     const job = await prisma.job.create({
       data: {
         userId,
         hiringRequestId: hr.id,
-        title: hr.title,
+        title: (customTitle && typeof customTitle === 'string' && customTitle.trim()) ? customTitle.trim() : hr.title,
         description: hr.jobDescription || '',
         status: 'draft',
       },

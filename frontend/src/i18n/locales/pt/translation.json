@@ -77,7 +77,15 @@
       "signIn": "Entrar",
       "getStarted": "Começar",
       "dashboard": "Painel",
-      "product": "Produto"
+      "product": "Produto",
+      "productMenu": {
+        "requirements": "Análise de requisitos",
+        "resumeScreening": "Triagem de currículos",
+        "smartMatching": "Matching inteligente",
+        "aiInterview": "Entrevista IA",
+        "smartEvaluation": "Avaliação inteligente",
+        "api": "API"
+      }
     },
     "hero": {
       "badge": "Plataforma de contratação com IA",
@@ -434,6 +442,12 @@
     "jdAiRefine": "Aprimorar com IA",
     "jdError": "Não foi possível gerar a descrição da vaga. Edite manualmente.",
     "createRequest": "Criar solicitação de contratação",
+    "duplicate": {
+      "title": "Título duplicado encontrado",
+      "message": "Já existe uma solicitação de contratação com o título \"{{title}}\". Deseja sobrescrever a existente ou usar um nome diferente?",
+      "overwrite": "Sobrescrever existente",
+      "rename": "Usar um nome diferente"
+    },
     "defaultTitle": "Nova solicitação de contratação",
     "success": "Sua solicitação de contratação foi criada! 🎉\n\n",
     "nextSteps": "**Próximos passos:**\n",
@@ -877,7 +891,11 @@
       "status": "Status",
       "lastUpdated": "Última atualização",
       "notFound": "Solicitação não encontrada",
-      "loadError": "Não foi possível carregar os detalhes"
+      "loadError": "Não foi possível carregar os detalhes",
+      "invitedCandidates": "Candidatos convidados",
+      "invited": "convidados",
+      "invitedDate": "Data do convite",
+      "interviewStatus": "Status da entrevista"
     },
     "candidateStatus": {
       "pending": "Pendente",
@@ -885,6 +903,13 @@
       "interviewed": "Entrevistado",
       "shortlisted": "Pré-selecionado",
       "rejected": "Rejeitado"
+    },
+    "interviewStatus": {
+      "scheduled": "Agendada",
+      "in_progress": "Em andamento",
+      "completed": "Concluída",
+      "cancelled": "Cancelada",
+      "expired": "Expirada"
     },
     "autoMatch": {
       "title": "Triagem de Currículos",
@@ -1709,6 +1734,7 @@
       "empty": "Sem solicitações ainda",
       "emptyDesc": "Inicie uma nova solicitação com nosso assistente IA.",
       "candidates": "candidatos",
+      "totalRequests": "{{count}} solicitações",
       "createJob": "Criar Vaga",
       "viewDetail": "Ver Detalhe",
       "pause": "Pausar",
@@ -1717,7 +1743,16 @@
       "postCreation": {
         "viewReport": "Ver relatório de contratação"
       },
-      "goToHiringRequests": "Ver solicitações de contratação"
+      "goToHiringRequests": "Ver solicitações de contratação",
+      "duplicateJob": {
+        "title": "Título de vaga duplicado",
+        "message": "Já existe uma vaga com o título \"{{title}}\". Deseja sobrescrever a existente ou criar com um nome diferente?",
+        "overwrite": "Sobrescrever existente",
+        "rename": "Usar um nome diferente",
+        "newTitle": "Novo título",
+        "createNew": "Criar vaga",
+        "cancel": "Cancelar"
+      }
     },
     "talent": {
       "title": "Hub de Talentos",
@@ -1731,7 +1766,8 @@
       "viewCard": "Visão cartões",
       "viewList": "Visão lista",
       "yearsWork": "anos",
-      "monthsIntern": "meses estágio"
+      "monthsIntern": "meses estágio",
+      "totalCandidates": "{{count}} candidatos"
     },
     "matching": {
       "title": "Matching Inteligente",
@@ -1876,7 +1912,8 @@
         "overview": "Visão Geral",
         "insights": "Análises IA",
         "jobFit": "Adequação à Vaga",
-        "notes": "Notas e Tags"
+        "notes": "Notas e Tags",
+        "invitations": "Convites"
       },
       "actions": {
         "regenerateInsights": "Regenerar análises",
@@ -1910,6 +1947,18 @@
         "projects": "Projetos",
         "showAllSkills": "Mostrar todas as {{count}} habilidades",
         "showLess": "Mostrar menos"
+      },
+      "invitations": {
+        "noInvitations": "Nenhum convite enviado ainda",
+        "invitedAt": "Convidado",
+        "completedAt": "Concluído",
+        "status": {
+          "scheduled": "Agendada",
+          "in_progress": "Em andamento",
+          "completed": "Concluída",
+          "cancelled": "Cancelada",
+          "expired": "Expirada"
+        }
       }
     },
     "insights": {
@@ -1933,6 +1982,8 @@
       "analyzing": "Comparando com suas vagas de contratação...",
       "reanalyze": "Reanalisar adequação",
       "inviteInterview": "Convidar para entrevista",
+      "alreadyInvited": "Convidado em {{date}}",
+      "score": "Pontuação",
       "bestFit": "Melhor Adequação",
       "matchedSkills": "Habilidades Correspondentes",
       "missingSkills": "Habilidades Críticas Ausentes",

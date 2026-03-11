@@ -106,7 +106,15 @@
       "signIn": "登录",
       "getStarted": "开始使用",
       "dashboard": "控制面板",
-      "product": "产品"
+      "product": "产品",
+      "productMenu": {
+        "requirements": "需求分析",
+        "resumeScreening": "简历筛选",
+        "smartMatching": "智能匹配",
+        "aiInterview": "AI 面试",
+        "smartEvaluation": "智能评估",
+        "api": "API"
+      }
     },
     "hero": {
       "badge": "AI 驱动的招聘平台",
@@ -338,6 +346,12 @@
     "jdAiRefine": "AI 优化",
     "jdError": "无法生成职位描述，请手动编辑。",
     "createRequest": "创建招聘请求",
+    "duplicate": {
+      "title": "发现重复标题",
+      "message": "标题为「{{title}}」的招聘需求已存在。您想覆盖现有的还是使用其他名称？",
+      "overwrite": "覆盖现有",
+      "rename": "使用其他名称"
+    },
     "defaultTitle": "新的招聘请求",
     "success": "您的招聘请求已创建！🎉\n\n",
     "nextSteps": "**接下来会发生什么：**\n",
@@ -804,7 +818,11 @@
       "status": "状态",
       "lastUpdated": "最近更新",
       "notFound": "未找到该请求",
-      "loadError": "加载请求详情失败"
+      "loadError": "加载请求详情失败",
+      "invitedCandidates": "已邀约候选人",
+      "invited": "已邀约",
+      "invitedDate": "邀约日期",
+      "interviewStatus": "面试状态"
     },
     "candidateStatus": {
       "pending": "待筛选",
@@ -812,6 +830,13 @@
       "interviewed": "已面试",
       "shortlisted": "已入围",
       "rejected": "已淘汰"
+    },
+    "interviewStatus": {
+      "scheduled": "已安排",
+      "in_progress": "进行中",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "expired": "已过期"
     },
     "autoMatch": {
       "title": "简历筛选",
@@ -2113,6 +2138,7 @@
       "empty": "暂无招聘需求",
       "emptyDesc": "与我们的AI助手开始新的招聘需求。",
       "candidates": "位候选人",
+      "totalRequests": "共 {{count}} 个需求",
       "createJob": "创建职位",
       "viewDetail": "查看详情",
       "pause": "暂停",
@@ -2121,7 +2147,16 @@
       "postCreation": {
         "viewReport": "查看招聘报告"
       },
-      "goToHiringRequests": "查看招聘需求"
+      "goToHiringRequests": "查看招聘需求",
+      "duplicateJob": {
+        "title": "职位标题重复",
+        "message": "标题为「{{title}}」的职位已存在。您想覆盖现有职位还是使用其他名称创建？",
+        "overwrite": "覆盖现有职位",
+        "rename": "使用其他名称",
+        "newTitle": "新标题",
+        "createNew": "创建职位",
+        "cancel": "取消"
+      }
     },
     "talent": {
       "title": "人才库",
@@ -2135,7 +2170,8 @@
       "viewCard": "卡片视图",
       "viewList": "列表视图",
       "yearsWork": "年",
-      "monthsIntern": "月实习"
+      "monthsIntern": "月实习",
+      "totalCandidates": "{{count}} 位候选人"
     },
     "matching": {
       "title": "智能匹配",
@@ -2280,7 +2316,8 @@
         "overview": "概览",
         "insights": "AI洞察",
         "jobFit": "岗位匹配",
-        "notes": "备注与标签"
+        "notes": "备注与标签",
+        "invitations": "面试邀约"
       },
       "actions": {
         "regenerateInsights": "重新生成洞察",
@@ -2314,6 +2351,18 @@
         "projects": "项目经历",
         "showAllSkills": "显示全部 {{count}} 项技能",
         "showLess": "收起"
+      },
+      "invitations": {
+        "noInvitations": "尚未发送面试邀约",
+        "invitedAt": "邀约时间",
+        "completedAt": "完成时间",
+        "status": {
+          "scheduled": "已安排",
+          "in_progress": "进行中",
+          "completed": "已完成",
+          "cancelled": "已取消",
+          "expired": "已过期"
+        }
       }
     },
     "insights": {
@@ -2337,6 +2386,8 @@
       "analyzing": "正在与您的招聘需求进行匹配...",
       "reanalyze": "重新分析匹配度",
       "inviteInterview": "邀请面试",
+      "alreadyInvited": "已于 {{date}} 发送邀约",
+      "score": "评分",
       "bestFit": "最佳匹配",
       "matchedSkills": "匹配技能",
       "missingSkills": "缺失关键技能",

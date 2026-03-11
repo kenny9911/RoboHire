@@ -106,7 +106,15 @@
       "signIn": "Sign In",
       "getStarted": "Get Started",
       "dashboard": "Dashboard",
-      "product": "Product"
+      "product": "Product",
+      "productMenu": {
+        "requirements": "Requirements Analysis",
+        "resumeScreening": "Resume Screening",
+        "smartMatching": "Smart Matching",
+        "aiInterview": "AI Interview",
+        "smartEvaluation": "Smart Evaluation",
+        "api": "API"
+      }
     },
     "hero": {
       "badge": "AI-Powered Hiring Platform",
@@ -338,6 +346,12 @@
     "jdAiRefine": "Refine with AI",
     "jdError": "We couldn't generate a job description. Please edit it manually.",
     "createRequest": "Create hiring request",
+    "duplicate": {
+      "title": "Duplicate Title Found",
+      "message": "A hiring request with the title \"{{title}}\" already exists. Would you like to overwrite it or use a different name?",
+      "overwrite": "Overwrite Existing",
+      "rename": "Use a Different Name"
+    },
     "defaultTitle": "New Hiring Request",
     "success": "Your hiring request has been created! 🎉\n\n",
     "nextSteps": "**What happens next:**\n",
@@ -803,7 +817,11 @@
       "status": "Status",
       "lastUpdated": "Last updated",
       "notFound": "Request not found",
-      "loadError": "Failed to load request details"
+      "loadError": "Failed to load request details",
+      "invitedCandidates": "Invited Candidates",
+      "invited": "invited",
+      "invitedDate": "Invited",
+      "interviewStatus": "Interview Status"
     },
     "candidateStatus": {
       "pending": "Pending",
@@ -811,6 +829,13 @@
       "interviewed": "Interviewed",
       "shortlisted": "Shortlisted",
       "rejected": "Rejected"
+    },
+    "interviewStatus": {
+      "scheduled": "Scheduled",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
     },
     "autoMatch": {
       "title": "Resume Screening",
@@ -1991,6 +2016,7 @@
       "empty": "No hiring requests yet",
       "emptyDesc": "Start a new hiring request with our AI assistant.",
       "candidates": "candidates",
+      "totalRequests": "{{count}} requests",
       "createJob": "Create Job",
       "viewDetail": "View Detail",
       "pause": "Pause",
@@ -1999,7 +2025,16 @@
       "postCreation": {
         "viewReport": "View Hiring Report"
       },
-      "goToHiringRequests": "View Hiring Requests"
+      "goToHiringRequests": "View Hiring Requests",
+      "duplicateJob": {
+        "title": "Duplicate Job Title",
+        "message": "A job with the title \"{{title}}\" already exists. Would you like to overwrite it or create with a different name?",
+        "overwrite": "Overwrite Existing",
+        "rename": "Use a Different Name",
+        "newTitle": "New Title",
+        "createNew": "Create Job",
+        "cancel": "Cancel"
+      }
     },
     "talent": {
       "title": "Talent Hub",
@@ -2013,7 +2048,8 @@
       "viewCard": "Card View",
       "viewList": "List View",
       "yearsWork": "yrs",
-      "monthsIntern": "mo intern"
+      "monthsIntern": "mo intern",
+      "totalCandidates": "{{count}} candidates"
     },
     "matching": {
       "title": "Smart Matching",
@@ -2158,7 +2194,8 @@
         "overview": "Overview",
         "insights": "AI Insights",
         "jobFit": "Job Fit",
-        "notes": "Notes & Tags"
+        "notes": "Notes & Tags",
+        "invitations": "Invitations"
       },
       "actions": {
         "regenerateInsights": "Re-generate Insights",
@@ -2192,6 +2229,18 @@
         "projects": "Projects",
         "showAllSkills": "Show all {{count}} skills",
         "showLess": "Show less"
+      },
+      "invitations": {
+        "noInvitations": "No invitations sent yet",
+        "invitedAt": "Invited",
+        "completedAt": "Completed",
+        "status": {
+          "scheduled": "Scheduled",
+          "in_progress": "In Progress",
+          "completed": "Completed",
+          "cancelled": "Cancelled",
+          "expired": "Expired"
+        }
       }
     },
     "insights": {
@@ -2215,6 +2264,8 @@
       "analyzing": "Matching against your hiring requests...",
       "reanalyze": "Re-analyze job fit",
       "inviteInterview": "Invite to Interview",
+      "alreadyInvited": "Invited on {{date}}",
+      "score": "Score",
       "bestFit": "Best Fit",
       "matchedSkills": "Matched Skills",
       "missingSkills": "Missing Critical",

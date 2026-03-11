@@ -432,9 +432,24 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       prisma.resume.count({ where }),
     ]);
 
+    // Trim parsedData to only fields needed by the list view
+    const trimmedResumes = resumes.map((r: any) => ({
+      ...r,
+      parsedData: r.parsedData ? {
+        skills: r.parsedData.skills,
+        summary: r.parsedData.summary,
+        experience: Array.isArray(r.parsedData.experience)
+          ? r.parsedData.experience.map((e: any) => ({
+              company: e.company, title: e.title, employmentType: e.employmentType,
+              startDate: e.startDate, endDate: e.endDate, duration: e.duration,
+            }))
+          : [],
+      } : null,
+    }));
+
     return res.json({
       success: true,
-      data: resumes,
+      data: trimmedResumes,
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -595,6 +610,61 @@ router.post('/:id/insights', requireAuth, async (req: Request, res: Response) =>
       success: false,
       error: error instanceof Error ? error.message : 'Failed to generate insights',
     });
+  }
+});
+
+// ─── List invitations for a resume ──────────────────────────────────────
+router.get('/:id/invitations', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+      select: { id: true },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const fits = await prisma.resumeJobFit.findMany({
+      where: { resumeId: resume.id, pipelineStatus: 'invited' },
+      include: {
+        hiringRequest: { select: { id: true, title: true, status: true } },
+      },
+      orderBy: { invitedAt: 'desc' },
+    });
+
+    // Fetch linked interviews
+    const hrIds = fits.map(f => f.hiringRequestId);
+    const interviews = await prisma.interview.findMany({
+      where: { resumeId: resume.id, hiringRequestId: { in: hrIds } },
+      select: { id: true, hiringRequestId: true, status: true, scheduledAt: true, completedAt: true, type: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    const interviewByHR = new Map<string, typeof interviews[0]>();
+    for (const iv of interviews) {
+      if (iv.hiringRequestId && !interviewByHR.has(iv.hiringRequestId)) {
+        interviewByHR.set(iv.hiringRequestId, iv);
+      }
+    }
+
+    const data = fits.map(f => ({
+      id: f.id,
+      hiringRequestId: f.hiringRequestId,
+      hiringRequestTitle: f.hiringRequest.title,
+      hiringRequestStatus: f.hiringRequest.status,
+      invitedAt: f.invitedAt,
+      fitScore: f.fitScore,
+      fitGrade: f.fitGrade,
+      interview: interviewByHR.get(f.hiringRequestId) || null,
+    }));
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error('List resume invitations error:', error);
+    return res.status(500).json({ success: false, error: 'Failed to list invitations' });
   }
 });
 

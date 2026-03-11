@@ -77,7 +77,15 @@
       "signIn": "Iniciar sesión",
       "getStarted": "Empezar",
       "dashboard": "Panel",
-      "product": "Producto"
+      "product": "Producto",
+      "productMenu": {
+        "requirements": "Análisis de requisitos",
+        "resumeScreening": "Filtrado de currículos",
+        "smartMatching": "Emparejamiento inteligente",
+        "aiInterview": "Entrevista IA",
+        "smartEvaluation": "Evaluación inteligente",
+        "api": "API"
+      }
     },
     "hero": {
       "badge": "Plataforma de contratación con IA",
@@ -434,6 +442,12 @@
     "jdAiRefine": "Refinar con IA",
     "jdError": "No pudimos generar la descripción del puesto. Edítala manualmente.",
     "createRequest": "Crear solicitud de contratación",
+    "duplicate": {
+      "title": "Título duplicado encontrado",
+      "message": "Ya existe una solicitud de contratación con el título \"{{title}}\". ¿Desea sobrescribir la existente o usar un nombre diferente?",
+      "overwrite": "Sobrescribir existente",
+      "rename": "Usar un nombre diferente"
+    },
     "defaultTitle": "Nueva solicitud de contratación",
     "success": "¡Tu solicitud de contratación ha sido creada! 🎉\n\n",
     "nextSteps": "**Qué sigue:**\n",
@@ -877,7 +891,11 @@
       "status": "Estado",
       "lastUpdated": "Última actualización",
       "notFound": "Solicitud no encontrada",
-      "loadError": "No se pudieron cargar los detalles"
+      "loadError": "No se pudieron cargar los detalles",
+      "invitedCandidates": "Candidatos invitados",
+      "invited": "invitados",
+      "invitedDate": "Fecha de invitación",
+      "interviewStatus": "Estado de entrevista"
     },
     "candidateStatus": {
       "pending": "Pendiente",
@@ -885,6 +903,13 @@
       "interviewed": "Entrevistado",
       "shortlisted": "Preseleccionado",
       "rejected": "Rechazado"
+    },
+    "interviewStatus": {
+      "scheduled": "Programada",
+      "in_progress": "En progreso",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "expired": "Expirada"
     },
     "autoMatch": {
       "title": "Selección de currículos",
@@ -1710,6 +1735,7 @@
       "empty": "Sin solicitudes aún",
       "emptyDesc": "Inicia una nueva solicitud con nuestro asistente IA.",
       "candidates": "candidatos",
+      "totalRequests": "{{count}} solicitudes",
       "createJob": "Crear Empleo",
       "viewDetail": "Ver Detalle",
       "pause": "Pausar",
@@ -1718,7 +1744,16 @@
       "postCreation": {
         "viewReport": "Ver informe de contratación"
       },
-      "goToHiringRequests": "Ver solicitudes de contratación"
+      "goToHiringRequests": "Ver solicitudes de contratación",
+      "duplicateJob": {
+        "title": "Título de empleo duplicado",
+        "message": "Ya existe un empleo con el título \"{{title}}\". ¿Desea sobrescribir el existente o crear con un nombre diferente?",
+        "overwrite": "Sobrescribir existente",
+        "rename": "Usar un nombre diferente",
+        "newTitle": "Nuevo título",
+        "createNew": "Crear empleo",
+        "cancel": "Cancelar"
+      }
     },
     "talent": {
       "title": "Hub de Talento",
@@ -1732,7 +1767,8 @@
       "viewCard": "Vista tarjetas",
       "viewList": "Vista lista",
       "yearsWork": "años",
-      "monthsIntern": "meses prácticas"
+      "monthsIntern": "meses prácticas",
+      "totalCandidates": "{{count}} candidatos"
     },
     "matching": {
       "title": "Coincidencia Inteligente",
@@ -1877,7 +1913,8 @@
         "overview": "Resumen",
         "insights": "Análisis IA",
         "jobFit": "Ajuste al Puesto",
-        "notes": "Notas y Etiquetas"
+        "notes": "Notas y Etiquetas",
+        "invitations": "Invitaciones"
       },
       "actions": {
         "regenerateInsights": "Regenerar análisis",
@@ -1911,6 +1948,18 @@
         "projects": "Proyectos",
         "showAllSkills": "Mostrar las {{count}} habilidades",
         "showLess": "Mostrar menos"
+      },
+      "invitations": {
+        "noInvitations": "Aún no se han enviado invitaciones",
+        "invitedAt": "Invitado",
+        "completedAt": "Completado",
+        "status": {
+          "scheduled": "Programada",
+          "in_progress": "En progreso",
+          "completed": "Completada",
+          "cancelled": "Cancelada",
+          "expired": "Expirada"
+        }
       }
     },
     "insights": {
@@ -1934,6 +1983,8 @@
       "analyzing": "Comparando con tus solicitudes de contratación...",
       "reanalyze": "Reanalizar ajuste",
       "inviteInterview": "Invitar a entrevista",
+      "alreadyInvited": "Invitado el {{date}}",
+      "score": "Puntuación",
       "bestFit": "Mejor Ajuste",
       "matchedSkills": "Habilidades Coincidentes",
       "missingSkills": "Habilidades Críticas Faltantes",

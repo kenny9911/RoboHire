@@ -40,7 +40,7 @@ export default function ServiceCards() {
     },
     {
       id: 'api',
-      title: t('landing.services.api.title', 'RoboHire'),
+      title: 'API',
       subtitle: t('landing.services.api.subtitle', 'For Developers'),
       description: t('landing.services.api.description', 'Integrate powerful AI recruitment capabilities into your existing systems. Parse resumes, match candidates, and evaluate interviews.'),
       features: [

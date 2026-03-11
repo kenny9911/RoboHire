@@ -230,11 +230,16 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const userId = req.user!.id;
-    const { status, limit = 20, offset = 0 } = req.query;
+    const { status, title, limit, offset = 0 } = req.query;
+    const pageSize = Math.min(50, Math.max(1, parseInt(limit as string, 10) || 20));
+    const pageOffset = Math.max(0, parseInt(offset as string, 10) || 0);
 
     const where: any = { userId };
     if (status) {
       where.status = status;
+    }
+    if (title && typeof title === 'string') {
+      where.title = title;
     }
 
     const [hiringRequests, total] = await Promise.all([
@@ -246,19 +251,22 @@ router.get('/', async (req, res) => {
           },
         },
         orderBy: { createdAt: 'desc' },
-        take: Number(limit),
-        skip: Number(offset),
+        take: pageSize,
+        skip: pageOffset,
       }),
       prisma.hiringRequest.count({ where }),
     ]);
 
+    // Trim heavy fields not needed in list view
+    const trimmed = hiringRequests.map(({ jobDescription, intelligenceData, webhookUrl, ...rest }) => rest);
+
     res.json({
       success: true,
-      data: hiringRequests,
+      data: trimmed,
       pagination: {
         total,
-        limit: Number(limit),
-        offset: Number(offset),
+        limit: pageSize,
+        offset: pageOffset,
       },
     });
   } catch (error) {
@@ -1274,7 +1282,30 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
             resumeId: resume.id,
             hiringRequestId: id,
           },
-          data: { pipelineStatus: 'invited' },
+          data: {
+            pipelineStatus: 'invited',
+            invitedAt: new Date(),
+            inviteData: JSON.parse(JSON.stringify(inviteResult)),
+          },
+        });
+
+        // Create Interview record
+        await prisma.interview.create({
+          data: {
+            userId,
+            hiringRequestId: id,
+            resumeId: resume.id,
+            candidateName: resume.name || 'Unknown',
+            candidateEmail: resume.email || null,
+            jobTitle: inviteResult.job_title || hiringRequest.title || 'Interview',
+            status: 'scheduled',
+            type: 'ai_video',
+            metadata: {
+              inviteData: JSON.parse(JSON.stringify(inviteResult)),
+              loginUrl: inviteResult.login_url,
+              qrcodeUrl: inviteResult.qrcode_url,
+            },
+          },
         });
 
         results.push({
@@ -1312,6 +1343,64 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
     console.error('Batch invite from library error:', error);
     logger.endRequest(requestId, 'error', 500);
     return res.status(500).json({ success: false, error: 'Failed to batch invite from library' });
+  }
+});
+
+/**
+ * GET /api/v1/hiring-requests/:id/invitations
+ * List all invited candidates for a hiring request with interview status
+ */
+router.get('/:id/invitations', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    const hiringRequest = await prisma.hiringRequest.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+    if (!hiringRequest) {
+      return res.status(404).json({ success: false, error: 'Hiring request not found' });
+    }
+
+    const fits = await prisma.resumeJobFit.findMany({
+      where: { hiringRequestId: id, pipelineStatus: 'invited' },
+      include: {
+        resume: { select: { id: true, name: true, email: true, currentRole: true } },
+      },
+      orderBy: { invitedAt: 'desc' },
+    });
+
+    // Fetch linked interviews for these resumes
+    const resumeIds = fits.map(f => f.resumeId);
+    const interviews = await prisma.interview.findMany({
+      where: { hiringRequestId: id, resumeId: { in: resumeIds } },
+      select: { id: true, resumeId: true, status: true, scheduledAt: true, completedAt: true, type: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    const interviewByResume = new Map<string, typeof interviews[0]>();
+    for (const iv of interviews) {
+      if (iv.resumeId && !interviewByResume.has(iv.resumeId)) {
+        interviewByResume.set(iv.resumeId, iv);
+      }
+    }
+
+    const data = fits.map(f => ({
+      id: f.id,
+      resumeId: f.resumeId,
+      candidateName: f.resume.name,
+      candidateEmail: f.resume.email,
+      candidateRole: f.resume.currentRole,
+      invitedAt: f.invitedAt,
+      fitScore: f.fitScore,
+      fitGrade: f.fitGrade,
+      interview: interviewByResume.get(f.resumeId) || null,
+    }));
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error('List invitations error:', error);
+    return res.status(500).json({ success: false, error: 'Failed to list invitations' });
   }
 });
 

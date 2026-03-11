@@ -87,6 +87,7 @@ model HiringRequest {
   candidates     Candidate[]
   resumeJobFits  ResumeJobFit[]
   jobs           Job[]
+  interviews     Interview[]
 
   @@index([userId])
   @@index([status])
@@ -334,6 +335,7 @@ model Resume {
   @@unique([userId, contentHash])
   @@index([userId])
   @@index([userId, status])
+  @@index([userId, status, createdAt])
   @@index([name])
   @@index([contentHash])
   @@index([createdAt])
@@ -436,6 +438,7 @@ model Interview {
   userId          String
   jobId           String?
   resumeId        String?
+  hiringRequestId String?
   candidateName   String
   candidateEmail  String?
   jobTitle        String?
@@ -455,7 +458,8 @@ model Interview {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hiringRequest   HiringRequest? @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
   evaluation      InterviewEvaluation?
 
   @@index([userId])
@@ -463,6 +467,8 @@ model Interview {
   @@index([userId, status])
   @@index([accessToken])
   @@index([userId, createdAt])
+  @@index([hiringRequestId])
+  @@index([resumeId])
 }
 
 model InterviewEvaluation {
