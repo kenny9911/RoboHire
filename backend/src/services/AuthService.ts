@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import prisma from '../lib/prisma.js';
 
 // User type matching Prisma schema
@@ -45,6 +46,7 @@ export interface SignupData {
   password: string;
   name?: string;
   company?: string;
+  phone: string;
 }
 
 export interface LoginData {
@@ -221,7 +223,7 @@ class AuthService {
    * Sign up a new user with email and password
    */
   async signup(data: SignupData): Promise<AuthResult> {
-    const { email, password, name, company } = data;
+    const { email, password, name, company, phone } = data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -237,6 +239,11 @@ class AuthService {
       throw new Error('Password must be at least 8 characters long');
     }
 
+    // Validate phone number
+    if (!phone || !isValidPhoneNumber(phone)) {
+      throw new Error('Please enter a valid phone number');
+    }
+
     // Create user
     const passwordHash = await this.hashPassword(password);
     const user = await prisma.user.create({
@@ -245,6 +252,7 @@ class AuthService {
         passwordHash,
         name,
         company,
+        phone,
         provider: 'email',
       },
     });

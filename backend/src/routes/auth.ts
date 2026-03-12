@@ -174,7 +174,7 @@ const authRateLimit = rateLimit(5, 60000);
 router.post('/signup', authRateLimit, async (req, res) => {
   const requestId = generateRequestId();
   try {
-    const { email, password, name, company } = req.body;
+    const { email, password, name, company, phone } = req.body;
     const normalizedEmail = typeof email === 'string' ? email.toLowerCase() : undefined;
     const clientMeta = getClientMeta(req);
 
@@ -195,7 +195,14 @@ router.post('/signup', authRateLimit, async (req, res) => {
       });
     }
 
-    const result = await authService.signup({ email, password, name, company });
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Phone number is required',
+      });
+    }
+
+    const result = await authService.signup({ email, password, name, company, phone });
 
     // Set session cookie
     res.cookie(SESSION_COOKIE_NAME, result.sessionToken, sessionCookieOptions);

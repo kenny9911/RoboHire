@@ -30,7 +30,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name?: string, company?: string) => Promise<void>;
+  signup: (email: string, password: string, name?: string, company?: string, phone?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -137,11 +137,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     name?: string,
-    company?: string
+    company?: string,
+    phone?: string
   ) => {
     const response = await authFetch('/signup', {
       method: 'POST',
-      body: JSON.stringify({ email, password, name, company }),
+      body: JSON.stringify({ email, password, name, company, phone }),
     });
 
     const data = await response.json();

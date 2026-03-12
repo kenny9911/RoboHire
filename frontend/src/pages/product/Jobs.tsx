@@ -439,14 +439,14 @@ export default function Jobs() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">{t('product.jobs.title', 'Jobs')}</h2>
           <p className="mt-1 text-sm text-slate-500">{t('product.jobs.subtitle', 'Create and manage job postings with AI assistance.')}</p>
         </div>
         <button
           onClick={() => { setShowCreate(true); setEditingJob(null); resetForm(); }}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors self-start sm:self-auto shrink-0"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -474,13 +474,13 @@ export default function Jobs() {
 
       {/* Create / Edit Form */}
       {(showCreate || editingJob) && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-6" aria-busy={importing}>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 space-y-6" aria-busy={importing}>
           {/* Form Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-lg font-semibold text-slate-900">
               {editingJob ? t('product.jobs.editJob', 'Edit Job') : t('product.jobs.newJob', 'New Job')}
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Import */}
               <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt" onChange={handleImport} className="hidden" />
               <button
@@ -947,7 +947,7 @@ export default function Jobs() {
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center justify-between border-t border-slate-200 pt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 pt-4">
             <div>
               {editingJob && (
                 <button
@@ -1112,9 +1112,9 @@ export default function Jobs() {
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 hover:border-blue-200 transition-colors"
+              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 hover:border-blue-200 transition-colors"
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3

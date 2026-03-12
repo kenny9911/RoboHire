@@ -286,7 +286,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, t
       className="group flex flex-col rounded-xl border border-slate-200 bg-white hover:border-blue-300 hover:shadow-md transition-all duration-200"
     >
       {/* Header bar */}
-      <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-2">
+      <div className="px-4 sm:px-5 pt-4 pb-3 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
             {resume.name}
@@ -319,7 +319,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, t
       </div>
 
       {/* Meta row: category + experience */}
-      <div className="px-5 pb-3 flex items-center gap-2 text-xs text-slate-500">
+      <div className="px-4 sm:px-5 pb-3 flex items-center gap-2 text-xs text-slate-500">
         {resume._jobCategory && (
           <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-600'}`}>
             {resume._jobCategory}
@@ -343,14 +343,14 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, t
 
       {/* Summary */}
       {resume._highlight && (
-        <div className="px-5 pb-3">
+        <div className="px-4 sm:px-5 pb-3">
           <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{resume._highlight}</p>
         </div>
       )}
 
       {/* Skills + Industry tags */}
       {(resume._topSkills.length > 0 || resume._industryTags.length > 0) && (
-        <div className="px-5 pb-3 flex flex-wrap gap-1">
+        <div className="px-4 sm:px-5 pb-3 flex flex-wrap gap-1">
           {resume._industryTags.map((tag) => (
             <span key={tag} className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
               {tag}
@@ -365,7 +365,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, t
       )}
 
       {/* Footer */}
-      <div className="px-5 py-2.5 border-t border-slate-100 flex items-center justify-between mt-auto">
+      <div className="px-4 sm:px-5 py-2.5 border-t border-slate-100 flex items-center justify-between mt-auto">
         <span className="text-[11px] text-slate-400">
           {new Date(resume.createdAt).toLocaleDateString()}
         </span>
@@ -383,9 +383,9 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
   return (
     <Link
       to={`/product/talent/${resume.id}`}
-      className="group px-5 py-3.5 hover:bg-slate-50/50 transition-colors flex items-center gap-4 block"
+      className="group px-4 sm:px-5 py-3.5 hover:bg-slate-50/50 transition-colors flex items-center gap-3 sm:gap-4 block"
     >
-      <div className="min-w-0 w-44 shrink-0">
+      <div className="min-w-0 w-28 sm:w-44 shrink-0">
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
             {resume.name}
@@ -486,7 +486,7 @@ function Pagination({ page, totalPages, total, onPageChange, t }: {
   for (let i = start; i <= end; i++) pages.push(i);
 
   return (
-    <div className="flex items-center justify-between pt-4">
+    <div className="flex flex-col items-center gap-2 pt-4 sm:flex-row sm:justify-between">
       <span className="text-xs text-slate-500">
         {t('product.talent.totalCandidates', '{{count}} candidates', { count: total })}
       </span>
@@ -617,14 +617,14 @@ export default function TalentHub() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">{t('product.talent.title', 'Talent Hub')}</h2>
           <p className="mt-1 text-sm text-slate-500">{t('product.talent.subtitle', 'Your candidate repository with AI-powered insights.')}</p>
         </div>
         <button
           onClick={() => setShowUpload(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors self-start sm:self-auto shrink-0"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />

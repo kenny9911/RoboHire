@@ -15,6 +15,7 @@ model User {
   email         String    @unique
   passwordHash  String?
   name          String?
+  phone         String?
   company       String?
   avatar        String?
   role          String    @default("user") // 'user' or 'admin'

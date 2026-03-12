@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
@@ -19,6 +20,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,7 +53,19 @@ export default function Login() {
       if (mode === 'login') {
         await login(email, password);
       } else {
-        await signup(email, password, name || undefined, company || undefined);
+        // Validate phone
+        if (!phone.trim()) {
+          setPhoneError(t('auth.phoneRequired', 'Phone number is required'));
+          setIsLoading(false);
+          return;
+        }
+        if (!isValidPhoneNumber(phone)) {
+          setPhoneError(t('auth.phoneInvalid', 'Please enter a valid phone number'));
+          setIsLoading(false);
+          return;
+        }
+        setPhoneError(null);
+        await signup(email, password, name || undefined, company || undefined, phone);
       }
       navigate(from, { replace: true });
     } catch (err) {
@@ -222,6 +237,24 @@ export default function Login() {
                     placeholder={t('auth.companyPlaceholder', 'Acme Inc.')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   />
+                </div>
+
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('auth.phone', 'Phone Number')}
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => { setPhone(e.target.value); setPhoneError(null); }}
+                    placeholder={t('auth.phonePlaceholder', '+1 234 567 8900')}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${phoneError ? 'border-red-400' : 'border-gray-300'}`}
+                  />
+                  {phoneError && (
+                    <p className="mt-1 text-sm text-red-600">{phoneError}</p>
+                  )}
                 </div>
               </>
             )}

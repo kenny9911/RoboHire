@@ -1044,7 +1044,7 @@ export default function StartHiring() {
                       <div className="mt-4 flex flex-col md:flex-row" ref={splitContainerRef}>
                         {/* Left: Requirements summary */}
                         {hiringData.requirements.trim() && (
-                          <div style={{ width: `${splitPercent}%` }} className="flex-shrink-0 md:pr-0">
+                          <div style={{ width: `${splitPercent}%` }} className="max-md:!w-full flex-shrink-0 md:pr-0">
                             <div className="mb-2 flex min-h-[40px] items-end">
                               <label className="block text-xs font-medium uppercase tracking-[0.08em] text-slate-600">
                                 {t('hiring.requirementsLabel', 'Requirements')}

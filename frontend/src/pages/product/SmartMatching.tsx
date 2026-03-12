@@ -416,7 +416,7 @@ export default function SmartMatching() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">{t('product.matching.title', 'Smart Matching')}</h2>
           <p className="mt-1 text-sm text-slate-500">{t('product.matching.subtitle', 'AI-powered candidate-job matching with detailed analysis.')}</p>
@@ -424,7 +424,7 @@ export default function SmartMatching() {
         <button
           onClick={() => setShowPreMatchDialog(true)}
           disabled={selectedJobIds.length === 0 || running}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto shrink-0"
         >
           {running ? (
             <>
@@ -507,7 +507,7 @@ export default function SmartMatching() {
             )}
           </div>
           {selectedJobIds.length > 0 && !jobSelectorExpanded && (
-            <span className="text-xs text-slate-500 truncate max-w-sm">
+            <span className="text-xs text-slate-500 truncate max-w-[150px] sm:max-w-sm hidden sm:inline">
               {selectedJobTitles.join(', ')}
             </span>
           )}
@@ -586,13 +586,13 @@ export default function SmartMatching() {
 
       {/* Viewing session banner */}
       {selectedSessionId && (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 flex items-center justify-between">
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm text-blue-700 font-medium">
             {t('product.matching.viewingSession', 'Viewing saved session results')}
           </span>
           <button
             onClick={() => setSelectedSessionId(null)}
-            className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors self-start sm:self-auto"
           >
             {t('product.matching.backToCurrent', 'Back to current results')}
           </button>
@@ -761,9 +761,9 @@ export default function SmartMatching() {
               {matches.map((match) => (
                 <div
                   key={match.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 hover:border-blue-200 transition-colors"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 hover:border-blue-200 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Avatar */}
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 shrink-0">
@@ -789,10 +789,10 @@ export default function SmartMatching() {
                             {match.status}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500">
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
                           {match.resume.currentRole && <span>{match.resume.currentRole}</span>}
                           {match.resume.experienceYears && <span>{match.resume.experienceYears} {t('product.talent.yearsExp', 'years experience')}</span>}
-                          {match.resume.email && <span>{match.resume.email}</span>}
+                          {match.resume.email && <span className="hidden sm:inline">{match.resume.email}</span>}
                         </div>
                       </div>
                     </div>
