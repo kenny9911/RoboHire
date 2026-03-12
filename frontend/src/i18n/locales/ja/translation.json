@@ -2167,7 +2167,58 @@
       "viewList": "リスト表示",
       "yearsWork": "年",
       "monthsIntern": "ヶ月インターン",
-      "totalCandidates": "{{count}} 人の候補者"
+      "totalCandidates": "{{count}} 人の候補者",
+      "preferences": {
+        "title": "候補者の希望条件",
+        "contactInfo": "連絡先情報",
+        "email": "メール",
+        "phone": "電話番号",
+        "cities": "希望勤務地",
+        "citiesPlaceholder": "例：東京, 大阪, 名古屋",
+        "commaSeparated": "カンマで区切ってください",
+        "workType": "勤務形態",
+        "salary": "希望年収",
+        "salaryMin": "最低",
+        "salaryMax": "最高",
+        "salaryHint": "月給または年収で入力してください",
+        "preferredJobs": "希望職種",
+        "preferredCompanies": "希望企業タイプ",
+        "additionalNotes": "備考",
+        "notesPlaceholder": "その他の希望条件やメモ...",
+        "workTypes": {
+          "fullTime": "正社員",
+          "partTime": "パート",
+          "contract": "契約",
+          "freelance": "フリーランス",
+          "internship": "インターン",
+          "remoteOnly": "フルリモート",
+          "hybrid": "ハイブリッド",
+          "onSite": "出社"
+        },
+        "jobTypes": {
+          "engineering": "エンジニアリング",
+          "aiMl": "AI/ML",
+          "product": "プロダクト",
+          "design": "デザイン",
+          "data": "データ",
+          "marketing": "マーケティング",
+          "operations": "オペレーション",
+          "management": "マネジメント",
+          "sales": "営業",
+          "finance": "財務"
+        },
+        "companyTypes": {
+          "startup": "スタートアップ",
+          "scaleup": "成長企業",
+          "enterprise": "大企業",
+          "bigTech": "ビッグテック",
+          "consulting": "コンサルティング",
+          "agency": "エージェンシー",
+          "government": "官公庁",
+          "nonProfit": "非営利"
+        },
+        "phonePlaceholder": "電話番号を入力"
+      }
     },
     "matching": {
       "title": "スマートマッチング",
@@ -2254,7 +2305,17 @@
       "detailTechnical": "技術",
       "detailBehavioral": "行動",
       "detailExperienceValidation": "経験検証",
-      "detailSuggestedRole": "推奨ロール：{{role}}"
+      "detailSuggestedRole": "推奨ロール：{{role}}",
+      "prefScore": "希望適合",
+      "detailPrefAlignment": "希望条件の適合度",
+      "prefDim": {
+        "location": "勤務地",
+        "workType": "勤務形態",
+        "salary": "給与範囲",
+        "jobType": "職種",
+        "companyType": "企業タイプ"
+      },
+      "prefNoPreferences": "候補者の希望条件が未設定"
     },
     "evaluations": {
       "title": "評価レポート",

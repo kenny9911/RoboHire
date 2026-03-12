@@ -393,6 +393,18 @@ export interface MatchResult {
     redFlagProbing: InterviewQuestionCategory[];
   };
   areasToProbeDeeper: ProbingArea[];
+  preferenceAlignment?: PreferenceAlignment;
+}
+
+export interface PreferenceAlignment {
+  overallScore: number;
+  locationFit: { score: number; assessment: string };
+  workTypeFit: { score: number; assessment: string };
+  salaryFit: { score: number; assessment: string };
+  jobTypeFit: { score: number; assessment: string };
+  companyTypeFit: { score: number; assessment: string };
+  overallAssessment: string;
+  warnings: string[];
 }
 
 export interface InterviewQuestionCategory {
@@ -630,6 +642,8 @@ export interface CheatingIndicator {
 export interface MatchResumeRequest {
   resume: string;
   jd: string;
+  candidatePreferences?: string;
+  jobMetadata?: string;
 }
 
 export interface InviteCandidateRequest {

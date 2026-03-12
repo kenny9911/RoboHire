@@ -1772,7 +1772,58 @@
       "viewList": "Vista lista",
       "yearsWork": "años",
       "monthsIntern": "meses prácticas",
-      "totalCandidates": "{{count}} candidatos"
+      "totalCandidates": "{{count}} candidatos",
+      "preferences": {
+        "title": "Preferencias del candidato",
+        "contactInfo": "Información de contacto",
+        "email": "Correo electrónico",
+        "phone": "Teléfono",
+        "cities": "Ciudades preferidas",
+        "citiesPlaceholder": "Ej: Madrid, Barcelona, Valencia",
+        "commaSeparated": "Separar con comas",
+        "workType": "Tipo de trabajo",
+        "salary": "Rango salarial esperado",
+        "salaryMin": "Mín",
+        "salaryMax": "Máx",
+        "salaryHint": "Mensual o anual — ingrese como prefiera",
+        "preferredJobs": "Tipos de empleo preferidos",
+        "preferredCompanies": "Tipos de empresa preferidos",
+        "additionalNotes": "Notas adicionales",
+        "notesPlaceholder": "Otras preferencias o notas...",
+        "workTypes": {
+          "fullTime": "Tiempo completo",
+          "partTime": "Medio tiempo",
+          "contract": "Contrato",
+          "freelance": "Freelance",
+          "internship": "Prácticas",
+          "remoteOnly": "Solo remoto",
+          "hybrid": "Híbrido",
+          "onSite": "Presencial"
+        },
+        "jobTypes": {
+          "engineering": "Ingeniería",
+          "aiMl": "IA/ML",
+          "product": "Producto",
+          "design": "Diseño",
+          "data": "Datos",
+          "marketing": "Marketing",
+          "operations": "Operaciones",
+          "management": "Gestión",
+          "sales": "Ventas",
+          "finance": "Finanzas"
+        },
+        "companyTypes": {
+          "startup": "Startup",
+          "scaleup": "Scale-up",
+          "enterprise": "Empresa grande",
+          "bigTech": "Big Tech",
+          "consulting": "Consultoría",
+          "agency": "Agencia",
+          "government": "Gobierno",
+          "nonProfit": "Sin ánimo de lucro"
+        },
+        "phonePlaceholder": "Ingrese número de teléfono"
+      }
     },
     "matching": {
       "title": "Coincidencia Inteligente",
@@ -1849,7 +1900,17 @@
       "detailTechnical": "Técnico",
       "detailBehavioral": "Conductual",
       "detailExperienceValidation": "Validación de experiencia",
-      "detailSuggestedRole": "Rol sugerido: {{role}}"
+      "detailSuggestedRole": "Rol sugerido: {{role}}",
+      "prefScore": "pref.",
+      "detailPrefAlignment": "Alineación de Preferencias",
+      "prefDim": {
+        "location": "Ubicación",
+        "workType": "Tipo de Trabajo",
+        "salary": "Rango Salarial",
+        "jobType": "Tipo de Puesto",
+        "companyType": "Tipo de Empresa"
+      },
+      "prefNoPreferences": "Sin preferencias del candidato"
     },
     "evaluations": {
       "title": "Evaluaciones",

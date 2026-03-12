@@ -2094,7 +2094,58 @@
       "viewList": "List View",
       "yearsWork": "yrs",
       "monthsIntern": "mo intern",
-      "totalCandidates": "{{count}} candidates"
+      "totalCandidates": "{{count}} candidates",
+      "preferences": {
+        "title": "Candidate Preferences",
+        "contactInfo": "Contact Information",
+        "email": "Email",
+        "phone": "Phone",
+        "cities": "Preferred Cities",
+        "citiesPlaceholder": "e.g. Beijing, Shanghai, Shenzhen",
+        "commaSeparated": "Separate with commas",
+        "workType": "Work Type",
+        "salary": "Expected Salary Range",
+        "salaryMin": "Min",
+        "salaryMax": "Max",
+        "salaryHint": "Monthly or annual — enter as you prefer",
+        "preferredJobs": "Preferred Job Types",
+        "preferredCompanies": "Preferred Company Types",
+        "additionalNotes": "Additional Notes",
+        "notesPlaceholder": "Any other preferences or notes...",
+        "workTypes": {
+          "fullTime": "Full-time",
+          "partTime": "Part-time",
+          "contract": "Contract",
+          "freelance": "Freelance",
+          "internship": "Internship",
+          "remoteOnly": "Remote Only",
+          "hybrid": "Hybrid",
+          "onSite": "On-site"
+        },
+        "jobTypes": {
+          "engineering": "Engineering",
+          "aiMl": "AI/ML",
+          "product": "Product",
+          "design": "Design",
+          "data": "Data",
+          "marketing": "Marketing",
+          "operations": "Operations",
+          "management": "Management",
+          "sales": "Sales",
+          "finance": "Finance"
+        },
+        "companyTypes": {
+          "startup": "Startup",
+          "scaleup": "Scale-up",
+          "enterprise": "Enterprise",
+          "bigTech": "Big Tech",
+          "consulting": "Consulting",
+          "agency": "Agency",
+          "government": "Government",
+          "nonProfit": "Non-profit"
+        },
+        "phonePlaceholder": "Enter phone number"
+      }
     },
     "matching": {
       "title": "Smart Matching",
@@ -2192,7 +2243,17 @@
       "detailTechnical": "Technical",
       "detailBehavioral": "Behavioral",
       "detailExperienceValidation": "Experience Validation",
-      "detailSuggestedRole": "Suggested role: {{role}}"
+      "detailSuggestedRole": "Suggested role: {{role}}",
+      "prefScore": "pref. fit",
+      "detailPrefAlignment": "Preference Alignment",
+      "prefDim": {
+        "location": "Location",
+        "workType": "Work Type",
+        "salary": "Salary Range",
+        "jobType": "Job Type",
+        "companyType": "Company Type"
+      },
+      "prefNoPreferences": "No candidate preferences on file"
     },
     "evaluations": {
       "title": "Evaluations",

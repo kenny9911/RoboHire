@@ -41,6 +41,17 @@ interface Job {
   hiringRequest?: { id: string; title: string; requirements: string } | null;
 }
 
+const LANG_DISPLAY: Record<string, string> = {
+  en: 'English',
+  zh: '中文',
+  'zh-TW': '繁體中文',
+  ja: '日本語',
+  es: 'Español',
+  fr: 'Français',
+  pt: 'Português',
+  de: 'Deutsch',
+};
+
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-slate-100 text-slate-700',
   open: 'bg-emerald-100 text-emerald-700',
@@ -263,7 +274,7 @@ export default function JobDetail() {
             </div>
             <div className="rounded-xl bg-slate-50 p-3">
               <p className="text-xs text-slate-500">{t('product.jobDetail.language', 'Language')}</p>
-              <p className="text-sm font-medium text-slate-800">{job.interviewLanguage || 'en'}</p>
+              <p className="text-sm font-medium text-slate-800">{LANG_DISPLAY[job.interviewLanguage || 'en'] || job.interviewLanguage || 'English'}</p>
             </div>
             <div className="rounded-xl bg-slate-50 p-3">
               <p className="text-xs text-slate-500">{t('product.jobDetail.duration', 'Duration')}</p>

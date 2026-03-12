@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
 import ResumeUploadModal from '../../components/ResumeUploadModal';
+import CandidatePreferencesModal, { type CandidatePreferences } from '../../components/CandidatePreferencesModal';
 
 interface ExperienceEntry {
   company: string;
@@ -26,6 +27,8 @@ interface Resume {
   fileName: string | null;
   status: string;
   tags: string[];
+  preferences: CandidatePreferences | null;
+  hasInvitations: boolean;
   createdAt: string;
   updatedAt: string;
   parsedData: {
@@ -275,11 +278,12 @@ function getJobCategory(currentRole: string | null, parsedData: Resume['parsedDa
 }
 
 // ── Memoized Card Component ──
-const ResumeCard = memo(function ResumeCard({ resume, onDelete, t }: { resume: EnrichedResume; onDelete: (id: string) => void; t: (k: string, f: string) => string }) {
+const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
+  const hasPrefs = resume.preferences && Object.values(resume.preferences).some(v => v && (Array.isArray(v) ? v.length > 0 : String(v).trim()));
   return (
     <Link
       to={`/product/talent/${resume.id}`}
-      className="group block rounded-xl border border-slate-200 bg-white hover:border-blue-300 hover:shadow-md transition-all duration-200"
+      className="group flex flex-col rounded-xl border border-slate-200 bg-white hover:border-blue-300 hover:shadow-md transition-all duration-200"
     >
       {/* Header bar */}
       <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-2">
@@ -291,14 +295,27 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, t }: { resume: E
             <p className="mt-0.5 text-xs text-slate-500 truncate">{resume.currentRole}</p>
           )}
         </div>
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
-          className="p-1 rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 opacity-0 group-hover:opacity-100"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreferences(resume); }}
+            className={`p-1 rounded transition-colors ${hasPrefs ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50 opacity-0 group-hover:opacity-100'}`}
+            title={t('product.talent.preferences.title', 'Candidate Preferences')}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+            </svg>
+          </button>
+          {!resume.hasInvitations && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
+              className="p-1 rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Meta row: category + experience */}
@@ -348,7 +365,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, t }: { resume: E
       )}
 
       {/* Footer */}
-      <div className="px-5 py-2.5 border-t border-slate-100 flex items-center justify-between">
+      <div className="px-5 py-2.5 border-t border-slate-100 flex items-center justify-between mt-auto">
         <span className="text-[11px] text-slate-400">
           {new Date(resume.createdAt).toLocaleDateString()}
         </span>
@@ -361,7 +378,8 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, t }: { resume: E
 });
 
 // ── Memoized List Row Component ──
-const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, t }: { resume: EnrichedResume; onDelete: (id: string) => void; t: (k: string, f: string) => string }) {
+const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferences, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
+  const hasPrefs = resume.preferences && Object.values(resume.preferences).some(v => v && (Array.isArray(v) ? v.length > 0 : String(v).trim()));
   return (
     <Link
       to={`/product/talent/${resume.id}`}
@@ -430,13 +448,24 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, t }: { res
           {t('product.talent.viewProfile', 'View Profile')}
         </span>
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
-          className="p-1.5 rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreferences(resume); }}
+          className={`p-1.5 rounded transition-colors ${hasPrefs ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50 opacity-0 group-hover:opacity-100'}`}
+          title={t('product.talent.preferences.title', 'Candidate Preferences')}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
           </svg>
         </button>
+        {!resume.hasInvitations && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
+            className="p-1.5 rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
     </Link>
   );
@@ -511,6 +540,7 @@ export default function TalentHub() {
   const [totalCount, setTotalCount] = useState(0);
   const [showUpload, setShowUpload] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [prefsResume, setPrefsResume] = useState<EnrichedResume | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const fetchResumes = useCallback(async (query?: string, pageNum = 1) => {
@@ -552,6 +582,10 @@ export default function TalentHub() {
 
   const handleDelete = useCallback((id: string) => {
     setConfirmDeleteId(id);
+  }, []);
+
+  const handlePreferences = useCallback((resume: EnrichedResume) => {
+    setPrefsResume(resume);
   }, []);
 
   const confirmDelete = useCallback(async () => {
@@ -672,7 +706,7 @@ export default function TalentHub() {
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {enrichedResumes.map((resume) => (
-              <ResumeCard key={resume.id} resume={resume} onDelete={handleDelete} t={t} />
+              <ResumeCard key={resume.id} resume={resume} onDelete={handleDelete} onPreferences={handlePreferences} t={t} />
             ))}
           </div>
           <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
@@ -682,11 +716,27 @@ export default function TalentHub() {
         <>
           <div className="rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
             {enrichedResumes.map((resume) => (
-              <ResumeListRow key={resume.id} resume={resume} onDelete={handleDelete} t={t} />
+              <ResumeListRow key={resume.id} resume={resume} onDelete={handleDelete} onPreferences={handlePreferences} t={t} />
             ))}
           </div>
           <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
         </>
+      )}
+
+      {/* Candidate Preferences Modal */}
+      {prefsResume && (
+        <CandidatePreferencesModal
+          open={!!prefsResume}
+          onClose={() => setPrefsResume(null)}
+          resumeId={prefsResume.id}
+          candidateName={prefsResume.name}
+          initialPreferences={prefsResume.preferences as CandidatePreferences | null}
+          initialEmail={prefsResume.email}
+          initialPhone={prefsResume.phone}
+          onSaved={(prefs) => {
+            setResumes(prev => prev.map(r => r.id === prefsResume.id ? { ...r, preferences: prefs } : r));
+          }}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

@@ -26,6 +26,7 @@ Analyze the following aspects:
 10. **Nice to Have Skills and Experiences**: Analyze JD semantically and extract the nice to have skills and experiences. Nice to have skills are not required, but are a plus for the job.
 11. Calculate the overall match score based on the skill match and experience match.
 12. **Overall Fit**: Assess the overall compatibility between the candidate and the position
+13. **Preference Alignment**: If candidate preferences and/or job structured data are provided, analyze how well the candidate's preferences align with the job's attributes. Consider location match, work type compatibility, salary range overlap, job type alignment, and company type preference. This is a separate analysis from skills/experience — a candidate can be technically perfect but have mismatched preferences (e.g., wants remote but job is onsite, wants startup but company is enterprise).
 
 ## Experience Analysis Rules:
 - When analyzing work experience, classify each position's employment type by looking for keywords in the resume:
@@ -57,6 +58,16 @@ You MUST look beyond exact keyword matches for adjacent/transferable skills:
 Score transferable skills at 60-80% of the value of exact matches (NOT 0%).
 Report each in "transferableSkills" with what candidate has, what's required, and why it transfers.
 **Goal: Do NOT miss high-potential candidates.** Better to flag "Good Match with growth potential" than dismiss as "Weak Match" due to missing exact keywords. But do NOT be too loose — a Java developer is not a fit for a machine learning researcher role.
+
+## Preference Alignment Rules:
+- If NO candidate preferences are provided, set all preferenceAlignment scores to 100 and overallAssessment to "No candidate preferences on file"
+- If candidate has preferences but job lacks corresponding data (e.g., no salary info), score that dimension 100 (neutral — cannot assess)
+- Location: Score 100 if candidate cities overlap with job locations, or if job is remote and candidate wants remote. Score 0 if no overlap at all
+- Work Type: Map candidate preferences (full-time, part-time, remote-only, hybrid, on-site, contract, freelance, internship) against job's workType and employmentType
+- Salary: Compare candidate salary range with job salary range. Same currency required. Score 100 if ranges overlap, 50 if close, 0 if far apart
+- Job Type: Match candidate's preferred job types against job's department and title
+- Company Type: Match candidate's preferred company types against the company name/type if inferrable
+- preferenceAlignment scores do NOT affect overallMatchScore — they are displayed separately
 
 ## CRITICAL SCORING RULES:
 - **Disqualification**: If candidate is missing ANY must-have skill/experience with severity "Dealbreaker", they MUST be disqualified:
@@ -366,7 +377,32 @@ Provide your analysis in the following JSON format (and ONLY this JSON format, n
       ],
       "suggestedApproach": "<how to approach probing this area - tone, technique, etc.>"
     }
-  ]
+  ],
+  "preferenceAlignment": {
+    "overallScore": "<0-100, how well candidate preferences align with job attributes. 100 = perfect alignment or no preferences specified>",
+    "locationFit": {
+      "score": "<0-100>",
+      "assessment": "<brief explanation of location match/mismatch>"
+    },
+    "workTypeFit": {
+      "score": "<0-100>",
+      "assessment": "<brief explanation>"
+    },
+    "salaryFit": {
+      "score": "<0-100>",
+      "assessment": "<brief explanation>"
+    },
+    "jobTypeFit": {
+      "score": "<0-100>",
+      "assessment": "<brief explanation>"
+    },
+    "companyTypeFit": {
+      "score": "<0-100>",
+      "assessment": "<brief explanation>"
+    },
+    "overallAssessment": "<1-2 sentence summary of preference alignment>",
+    "warnings": ["<specific preference mismatches worth flagging, e.g. 'Candidate expects 80k-100k CNY, job offers 50k-70k CNY'>"]
+  }
 }
 \`\`\`
 
@@ -380,13 +416,17 @@ IMPORTANT REMINDERS:
   }
 
   protected formatInput(input: MatchResumeRequest): string {
-    return `## Resume:
-${input.resume}
+    let prompt = `## Resume:\n${input.resume}\n\n## Job Description:\n${input.jd}`;
 
-## Job Description:
-${input.jd}
+    if (input.candidatePreferences) {
+      prompt += `\n\n## Candidate Preferences:\n${input.candidatePreferences}`;
+    }
+    if (input.jobMetadata) {
+      prompt += `\n\n## Job Structured Data:\n${input.jobMetadata}`;
+    }
 
-Please analyze the match between this resume and job description.`;
+    prompt += '\n\nPlease analyze the match between this resume and job description.';
+    return prompt;
   }
 
   protected parseOutput(response: string): MatchResult {
@@ -540,6 +580,16 @@ Please analyze the match between this resume and job description.`;
           redFlagProbing: [],
         },
         areasToProbeDeeper: [],
+        preferenceAlignment: {
+          overallScore: 100,
+          locationFit: { score: 100, assessment: 'Unable to assess' },
+          workTypeFit: { score: 100, assessment: 'Unable to assess' },
+          salaryFit: { score: 100, assessment: 'Unable to assess' },
+          jobTypeFit: { score: 100, assessment: 'Unable to assess' },
+          companyTypeFit: { score: 100, assessment: 'Unable to assess' },
+          overallAssessment: 'Unable to assess preference alignment',
+          warnings: [],
+        },
       };
     }
   }
@@ -547,8 +597,8 @@ Please analyze the match between this resume and job description.`;
   /**
    * Match a resume against a job description
    */
-  async match(resume: string, jd: string, requestId?: string): Promise<MatchResult> {
-    return this.executeWithJsonResponse({ resume, jd }, jd, requestId);
+  async match(input: MatchResumeRequest, requestId?: string): Promise<MatchResult> {
+    return this.executeWithJsonResponse(input, input.jd, requestId);
   }
 }
 

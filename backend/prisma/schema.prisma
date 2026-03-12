@@ -326,6 +326,7 @@ model Resume {
   source          String    @default("upload")
   tags            String[]  @default([])
   notes           String?   @db.Text
+  preferences     Json?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

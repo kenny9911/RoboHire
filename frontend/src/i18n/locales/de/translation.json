@@ -1771,7 +1771,58 @@
       "viewList": "Listenansicht",
       "yearsWork": "Jahre",
       "monthsIntern": "Mo. Praktikum",
-      "totalCandidates": "{{count}} Kandidaten"
+      "totalCandidates": "{{count}} Kandidaten",
+      "preferences": {
+        "title": "Kandidatenpräferenzen",
+        "contactInfo": "Kontaktinformationen",
+        "email": "E-Mail",
+        "phone": "Telefon",
+        "cities": "Bevorzugte Städte",
+        "citiesPlaceholder": "Z.B. Berlin, München, Hamburg",
+        "commaSeparated": "Mit Kommas trennen",
+        "workType": "Arbeitstyp",
+        "salary": "Erwartete Gehaltsspanne",
+        "salaryMin": "Min",
+        "salaryMax": "Max",
+        "salaryHint": "Monatlich oder jährlich — geben Sie ein, wie Sie möchten",
+        "preferredJobs": "Bevorzugte Berufsarten",
+        "preferredCompanies": "Bevorzugte Unternehmenstypen",
+        "additionalNotes": "Zusätzliche Notizen",
+        "notesPlaceholder": "Weitere Präferenzen oder Notizen...",
+        "workTypes": {
+          "fullTime": "Vollzeit",
+          "partTime": "Teilzeit",
+          "contract": "Vertrag",
+          "freelance": "Freiberuflich",
+          "internship": "Praktikum",
+          "remoteOnly": "Remote",
+          "hybrid": "Hybrid",
+          "onSite": "Vor Ort"
+        },
+        "jobTypes": {
+          "engineering": "Engineering",
+          "aiMl": "KI/ML",
+          "product": "Produkt",
+          "design": "Design",
+          "data": "Daten",
+          "marketing": "Marketing",
+          "operations": "Operations",
+          "management": "Management",
+          "sales": "Vertrieb",
+          "finance": "Finanzen"
+        },
+        "companyTypes": {
+          "startup": "Startup",
+          "scaleup": "Scale-up",
+          "enterprise": "Großunternehmen",
+          "bigTech": "Big Tech",
+          "consulting": "Beratung",
+          "agency": "Agentur",
+          "government": "Öffentlicher Dienst",
+          "nonProfit": "Gemeinnützig"
+        },
+        "phonePlaceholder": "Telefonnummer eingeben"
+      }
     },
     "matching": {
       "title": "Intelligentes Matching",
@@ -1848,7 +1899,17 @@
       "detailTechnical": "Technisch",
       "detailBehavioral": "Verhaltensbezogen",
       "detailExperienceValidation": "Erfahrungsvalidierung",
-      "detailSuggestedRole": "Vorgeschlagene Rolle: {{role}}"
+      "detailSuggestedRole": "Vorgeschlagene Rolle: {{role}}",
+      "prefScore": "Präf.",
+      "detailPrefAlignment": "Präferenz-Übereinstimmung",
+      "prefDim": {
+        "location": "Standort",
+        "workType": "Arbeitstyp",
+        "salary": "Gehaltsspanne",
+        "jobType": "Stellentyp",
+        "companyType": "Unternehmenstyp"
+      },
+      "prefNoPreferences": "Keine Kandidatenpräferenzen hinterlegt"
     },
     "evaluations": {
       "title": "Bewertungen",

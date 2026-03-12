@@ -1772,7 +1772,58 @@
       "viewList": "Vue liste",
       "yearsWork": "ans",
       "monthsIntern": "mois stage",
-      "totalCandidates": "{{count}} candidats"
+      "totalCandidates": "{{count}} candidats",
+      "preferences": {
+        "title": "Préférences du candidat",
+        "contactInfo": "Coordonnées",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "cities": "Villes préférées",
+        "citiesPlaceholder": "Ex : Paris, Lyon, Marseille",
+        "commaSeparated": "Séparer par des virgules",
+        "workType": "Type de travail",
+        "salary": "Fourchette salariale souhaitée",
+        "salaryMin": "Min",
+        "salaryMax": "Max",
+        "salaryHint": "Mensuel ou annuel — entrez comme vous préférez",
+        "preferredJobs": "Types de postes préférés",
+        "preferredCompanies": "Types d'entreprises préférés",
+        "additionalNotes": "Notes supplémentaires",
+        "notesPlaceholder": "Autres préférences ou notes...",
+        "workTypes": {
+          "fullTime": "Temps plein",
+          "partTime": "Temps partiel",
+          "contract": "CDD",
+          "freelance": "Freelance",
+          "internship": "Stage",
+          "remoteOnly": "Télétravail",
+          "hybrid": "Hybride",
+          "onSite": "Sur site"
+        },
+        "jobTypes": {
+          "engineering": "Ingénierie",
+          "aiMl": "IA/ML",
+          "product": "Produit",
+          "design": "Design",
+          "data": "Data",
+          "marketing": "Marketing",
+          "operations": "Opérations",
+          "management": "Management",
+          "sales": "Ventes",
+          "finance": "Finance"
+        },
+        "companyTypes": {
+          "startup": "Startup",
+          "scaleup": "Scale-up",
+          "enterprise": "Grande entreprise",
+          "bigTech": "Big Tech",
+          "consulting": "Conseil",
+          "agency": "Agence",
+          "government": "Secteur public",
+          "nonProfit": "Association"
+        },
+        "phonePlaceholder": "Entrez le numéro de téléphone"
+      }
     },
     "matching": {
       "title": "Correspondance intelligente",
@@ -1849,7 +1900,17 @@
       "detailTechnical": "Technique",
       "detailBehavioral": "Comportemental",
       "detailExperienceValidation": "Validation de l'expérience",
-      "detailSuggestedRole": "Rôle suggéré : {{role}}"
+      "detailSuggestedRole": "Rôle suggéré : {{role}}",
+      "prefScore": "préf.",
+      "detailPrefAlignment": "Alignement des Préférences",
+      "prefDim": {
+        "location": "Localisation",
+        "workType": "Type de Travail",
+        "salary": "Fourchette Salariale",
+        "jobType": "Type de Poste",
+        "companyType": "Type d'Entreprise"
+      },
+      "prefNoPreferences": "Aucune préférence du candidat"
     },
     "evaluations": {
       "title": "Évaluations",

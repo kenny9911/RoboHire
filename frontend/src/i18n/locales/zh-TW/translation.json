@@ -2195,7 +2195,58 @@
       "viewList": "列表檢視",
       "yearsWork": "年",
       "monthsIntern": "月實習",
-      "totalCandidates": "{{count}} 位候選人"
+      "totalCandidates": "{{count}} 位候選人",
+      "preferences": {
+        "title": "候選人偏好",
+        "contactInfo": "聯繫方式",
+        "email": "信箱",
+        "phone": "電話",
+        "cities": "意向城市",
+        "citiesPlaceholder": "例如：台北, 新竹, 高雄",
+        "commaSeparated": "用逗號分隔",
+        "workType": "工作類型",
+        "salary": "期望薪資範圍",
+        "salaryMin": "最低",
+        "salaryMax": "最高",
+        "salaryHint": "月薪或年薪——按您偏好輸入",
+        "preferredJobs": "偏好職位類型",
+        "preferredCompanies": "偏好公司類型",
+        "additionalNotes": "備註",
+        "notesPlaceholder": "其他偏好或備註...",
+        "workTypes": {
+          "fullTime": "全職",
+          "partTime": "兼職",
+          "contract": "合約制",
+          "freelance": "自由工作",
+          "internship": "實習",
+          "remoteOnly": "純遠端",
+          "hybrid": "混合辦公",
+          "onSite": "現場辦公"
+        },
+        "jobTypes": {
+          "engineering": "工程",
+          "aiMl": "AI/ML",
+          "product": "產品",
+          "design": "設計",
+          "data": "數據",
+          "marketing": "行銷",
+          "operations": "營運",
+          "management": "管理",
+          "sales": "業務",
+          "finance": "財務"
+        },
+        "companyTypes": {
+          "startup": "新創企業",
+          "scaleup": "成長型企業",
+          "enterprise": "大型企業",
+          "bigTech": "科技大廠",
+          "consulting": "顧問公司",
+          "agency": "代理機構",
+          "government": "政府機構",
+          "nonProfit": "非營利組織"
+        },
+        "phonePlaceholder": "請輸入手機號碼"
+      }
     },
     "matching": {
       "title": "智慧配對",
@@ -2287,7 +2338,17 @@
       "detailTechnical": "技術",
       "detailBehavioral": "行為",
       "detailExperienceValidation": "經驗驗證",
-      "detailSuggestedRole": "建議崗位：{{role}}"
+      "detailSuggestedRole": "建議崗位：{{role}}",
+      "prefScore": "偏好匹配",
+      "detailPrefAlignment": "偏好匹配分析",
+      "prefDim": {
+        "location": "工作地點",
+        "workType": "工作類型",
+        "salary": "薪資範圍",
+        "jobType": "職位類型",
+        "companyType": "公司類型"
+      },
+      "prefNoPreferences": "候選人未設置偏好"
     },
     "evaluations": {
       "title": "評估",

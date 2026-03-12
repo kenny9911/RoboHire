@@ -435,6 +435,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
           id: true,
           name: true,
           email: true,
+          phone: true,
           currentRole: true,
           experienceYears: true,
           fileName: true,
@@ -443,6 +444,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
           source: true,
           tags: true,
           contentHash: true,
+          preferences: true,
           createdAt: true,
           updatedAt: true,
           // Include parsedData for skills display (will be trimmed on the frontend)
@@ -451,7 +453,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
           resumeJobFits: {
             orderBy: { fitScore: 'desc' },
             take: 1,
-            select: { fitScore: true, fitGrade: true, hiringRequest: { select: { title: true } } },
+            select: { fitScore: true, fitGrade: true, pipelineStatus: true, hiringRequest: { select: { title: true } } },
           },
         },
       }),
@@ -461,6 +463,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     // Trim parsedData to only fields needed by the list view
     const trimmedResumes = resumes.map((r: any) => ({
       ...r,
+      hasInvitations: r.resumeJobFits?.some((f: any) => f.pipelineStatus === 'invited') || false,
       parsedData: r.parsedData ? {
         skills: r.parsedData.skills,
         summary: r.parsedData.summary,
@@ -553,11 +556,12 @@ router.patch('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Resume not found' });
     }
 
-    const { tags, notes, status } = req.body;
+    const { tags, notes, status, preferences } = req.body;
     const data: Record<string, unknown> = {};
     if (tags !== undefined) data.tags = tags;
     if (notes !== undefined) data.notes = notes;
     if (status !== undefined && ['active', 'archived'].includes(status)) data.status = status;
+    if (preferences !== undefined) data.preferences = preferences;
 
     const updated = await prisma.resume.update({
       where: { id: req.params.id },
@@ -582,6 +586,14 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     });
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    // Prevent deletion if candidate has been invited for interviews
+    const invitationCount = await prisma.resumeJobFit.count({
+      where: { resumeId: req.params.id, pipelineStatus: 'invited' },
+    });
+    if (invitationCount > 0) {
+      return res.status(400).json({ success: false, error: 'Cannot delete a candidate who has been invited for interviews' });
     }
 
     await prisma.resume.update({

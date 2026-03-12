@@ -812,6 +812,19 @@ export default function SmartMatching() {
                         </div>
                       )}
 
+                      {/* Preference Fit */}
+                      {match.matchData?.preferenceAlignment && match.matchData.preferenceAlignment.overallScore < 100 && (
+                        <div className="text-center">
+                          <div className={`text-lg font-bold ${
+                            match.matchData.preferenceAlignment.overallScore >= 80 ? 'text-emerald-600' :
+                            match.matchData.preferenceAlignment.overallScore >= 50 ? 'text-amber-600' : 'text-red-500'
+                          }`}>
+                            {match.matchData.preferenceAlignment.overallScore}
+                          </div>
+                          <div className="text-[10px] text-slate-400">{t('product.matching.prefScore', 'pref. fit')}</div>
+                        </div>
+                      )}
+
                       {/* Actions */}
                       <div className="flex items-center gap-1">
                         {match.status !== 'shortlisted' && (
@@ -881,6 +894,20 @@ export default function SmartMatching() {
                       <p className="text-xs text-slate-500">
                         {match.matchData.highlights.slice(0, 3).join(' · ')}
                       </p>
+                    </div>
+                  )}
+
+                  {/* Preference warnings */}
+                  {match.matchData?.preferenceAlignment?.warnings?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {match.matchData.preferenceAlignment.warnings.slice(0, 3).map((w: string, i: number) => (
+                        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] text-amber-700">
+                          <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          {w}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>

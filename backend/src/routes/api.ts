@@ -87,7 +87,7 @@ router.post('/match-resume', requireAuth, requireScopes('write'), apiRateLimit()
     });
 
     // Step 2: Execute agent
-    const result = await resumeMatchAgent.match(resume, jd, requestId);
+    const result = await resumeMatchAgent.match({ resume, jd }, requestId);
 
     // Step 3: Save match result
     const saveStep = logger.startStep(requestId, 'Save match result');

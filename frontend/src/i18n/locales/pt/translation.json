@@ -1771,7 +1771,58 @@
       "viewList": "Visão lista",
       "yearsWork": "anos",
       "monthsIntern": "meses estágio",
-      "totalCandidates": "{{count}} candidatos"
+      "totalCandidates": "{{count}} candidatos",
+      "preferences": {
+        "title": "Preferências do candidato",
+        "contactInfo": "Informações de contato",
+        "email": "E-mail",
+        "phone": "Telefone",
+        "cities": "Cidades preferidas",
+        "citiesPlaceholder": "Ex: São Paulo, Rio de Janeiro, Belo Horizonte",
+        "commaSeparated": "Separe com vírgulas",
+        "workType": "Tipo de trabalho",
+        "salary": "Faixa salarial esperada",
+        "salaryMin": "Mín",
+        "salaryMax": "Máx",
+        "salaryHint": "Mensal ou anual — insira como preferir",
+        "preferredJobs": "Tipos de emprego preferidos",
+        "preferredCompanies": "Tipos de empresa preferidos",
+        "additionalNotes": "Notas adicionais",
+        "notesPlaceholder": "Outras preferências ou notas...",
+        "workTypes": {
+          "fullTime": "Integral",
+          "partTime": "Meio período",
+          "contract": "Contrato",
+          "freelance": "Freelancer",
+          "internship": "Estágio",
+          "remoteOnly": "Remoto",
+          "hybrid": "Híbrido",
+          "onSite": "Presencial"
+        },
+        "jobTypes": {
+          "engineering": "Engenharia",
+          "aiMl": "IA/ML",
+          "product": "Produto",
+          "design": "Design",
+          "data": "Dados",
+          "marketing": "Marketing",
+          "operations": "Operações",
+          "management": "Gestão",
+          "sales": "Vendas",
+          "finance": "Finanças"
+        },
+        "companyTypes": {
+          "startup": "Startup",
+          "scaleup": "Scale-up",
+          "enterprise": "Grande empresa",
+          "bigTech": "Big Tech",
+          "consulting": "Consultoria",
+          "agency": "Agência",
+          "government": "Governo",
+          "nonProfit": "ONG"
+        },
+        "phonePlaceholder": "Digite o número de telefone"
+      }
     },
     "matching": {
       "title": "Matching Inteligente",
@@ -1848,7 +1899,17 @@
       "detailTechnical": "Técnico",
       "detailBehavioral": "Comportamental",
       "detailExperienceValidation": "Validação de experiência",
-      "detailSuggestedRole": "Função sugerida: {{role}}"
+      "detailSuggestedRole": "Função sugerida: {{role}}",
+      "prefScore": "pref.",
+      "detailPrefAlignment": "Alinhamento de Preferências",
+      "prefDim": {
+        "location": "Localização",
+        "workType": "Tipo de Trabalho",
+        "salary": "Faixa Salarial",
+        "jobType": "Tipo de Vaga",
+        "companyType": "Tipo de Empresa"
+      },
+      "prefNoPreferences": "Sem preferências do candidato"
     },
     "evaluations": {
       "title": "Avaliações",

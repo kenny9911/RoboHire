@@ -9,6 +9,41 @@ import '../types/auth.js';
 
 const router = Router();
 
+function formatJobMetadata(job: any): string {
+  const parts: string[] = [];
+  if (job.locations && Array.isArray(job.locations) && job.locations.length > 0) {
+    parts.push(`Locations: ${job.locations.map((l: any) => `${l.city}, ${l.country}`).join('; ')}`);
+  } else if (job.location) {
+    parts.push(`Location: ${job.location}`);
+  }
+  if (job.workType) parts.push(`Work Type: ${job.workType}`);
+  if (job.employmentType) parts.push(`Employment Type: ${job.employmentType}`);
+  if (job.salaryMin || job.salaryMax) {
+    const cur = job.salaryCurrency || 'USD';
+    const period = job.salaryPeriod || 'monthly';
+    parts.push(`Salary Range: ${job.salaryMin || '?'}–${job.salaryMax || '?'} ${cur} (${period})`);
+  }
+  if (job.department) parts.push(`Department: ${job.department}`);
+  if (job.companyName) parts.push(`Company: ${job.companyName}`);
+  if (job.experienceLevel) parts.push(`Experience Level: ${job.experienceLevel}`);
+  return parts.length > 0 ? parts.join('\n') : '';
+}
+
+function formatCandidatePreferences(prefs: any): string {
+  if (!prefs) return '';
+  const parts: string[] = [];
+  if (prefs.cities?.length > 0) parts.push(`Preferred Cities: ${prefs.cities.join(', ')}`);
+  if (prefs.workType?.length > 0) parts.push(`Preferred Work Type: ${prefs.workType.join(', ')}`);
+  if (prefs.salaryMin || prefs.salaryMax) {
+    const cur = prefs.salaryCurrency || 'CNY';
+    parts.push(`Expected Salary: ${prefs.salaryMin || '?'}–${prefs.salaryMax || '?'} ${cur}`);
+  }
+  if (prefs.preferredJobTypes?.length > 0) parts.push(`Preferred Job Types: ${prefs.preferredJobTypes.join(', ')}`);
+  if (prefs.preferredCompanyTypes?.length > 0) parts.push(`Preferred Company Types: ${prefs.preferredCompanyTypes.join(', ')}`);
+  if (prefs.notes) parts.push(`Additional Notes: ${prefs.notes}`);
+  return parts.length > 0 ? parts.join('\n') : '';
+}
+
 function getProcessingMetrics(requestId?: string) {
   if (!requestId) return undefined;
   const snapshot = logger.getRequestSnapshot(requestId);
@@ -98,6 +133,9 @@ router.post('/run', requireAuth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Job must have a description to run matching' });
     }
 
+    // Format structured job metadata for LLM context
+    const jobMetadata = formatJobMetadata(job);
+
     // Get resumes to match
     stepStart = Date.now();
     const resumeWhere: any = { userId };
@@ -113,6 +151,7 @@ router.post('/run', requireAuth, async (req, res) => {
         currentRole: true,
         experienceYears: true,
         tags: true,
+        preferences: true,
       },
     });
     logTiming('fetch_resumes', stepStart);
@@ -315,9 +354,16 @@ router.post('/run', requireAuth, async (req, res) => {
       });
 
       try {
+        const candidatePrefs = formatCandidatePreferences((resume as any).preferences);
+
         const llmStart = Date.now();
         const matchResult = await matchAgent.execute(
-          { resume: resume.resumeText, jd: job.description! },
+          {
+            resume: resume.resumeText,
+            jd: job.description!,
+            candidatePreferences: candidatePrefs || undefined,
+            jobMetadata: jobMetadata || undefined,
+          },
           job.description!,
           requestId,
           locale,
@@ -362,6 +408,8 @@ router.post('/run', requireAuth, async (req, res) => {
           score,
           grade,
           status: jobMatch.status,
+          preferenceScore: matchResult?.preferenceAlignment?.overallScore ?? null,
+          preferenceWarnings: matchResult?.preferenceAlignment?.warnings ?? [],
         };
 
         // Update counters immediately as each task completes

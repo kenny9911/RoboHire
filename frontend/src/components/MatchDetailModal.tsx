@@ -167,6 +167,53 @@ export default function MatchDetailModal({ open, onClose, matchData, candidateNa
             </div>
           )}
 
+          {/* Preference Alignment */}
+          {matchData.preferenceAlignment && matchData.preferenceAlignment.overallScore < 100 && (
+            <div>
+              <h4 className="text-sm font-semibold text-slate-900 mb-3">
+                {t('product.matching.detailPrefAlignment', 'Preference Alignment')}
+              </h4>
+              <div className="space-y-3">
+                {([
+                  ['locationFit', t('product.matching.prefDim.location', 'Location')],
+                  ['workTypeFit', t('product.matching.prefDim.workType', 'Work Type')],
+                  ['salaryFit', t('product.matching.prefDim.salary', 'Salary Range')],
+                  ['jobTypeFit', t('product.matching.prefDim.jobType', 'Job Type')],
+                  ['companyTypeFit', t('product.matching.prefDim.companyType', 'Company Type')],
+                ] as [string, string][]).map(([key, label]) => {
+                  const dim = (matchData.preferenceAlignment as any)?.[key];
+                  if (!dim || dim.score === 100) return null;
+                  const color = dim.score >= 80 ? 'bg-emerald-500' : dim.score >= 50 ? 'bg-amber-500' : 'bg-red-500';
+                  return (
+                    <div key={key} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-slate-700">{label}</span>
+                        <span className="text-slate-500">{dim.score}/100</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100">
+                        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${dim.score}%` }} />
+                      </div>
+                      {dim.assessment && <p className="text-[11px] text-slate-400">{dim.assessment}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+              {matchData.preferenceAlignment.overallAssessment && (
+                <p className="mt-3 text-xs text-slate-600">{matchData.preferenceAlignment.overallAssessment}</p>
+              )}
+              {matchData.preferenceAlignment.warnings?.length > 0 && (
+                <div className="mt-3 space-y-1">
+                  {matchData.preferenceAlignment.warnings.map((w: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-amber-700">
+                      <span className="shrink-0 mt-0.5">&#9888;</span>
+                      {w}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Hard Requirement Gaps */}
           {hardGaps && hardGaps.length > 0 && (
             <div>

@@ -2216,7 +2216,58 @@
       "viewList": "列表视图",
       "yearsWork": "年",
       "monthsIntern": "月实习",
-      "totalCandidates": "{{count}} 位候选人"
+      "totalCandidates": "{{count}} 位候选人",
+      "preferences": {
+        "title": "候选人偏好",
+        "contactInfo": "联系方式",
+        "email": "邮箱",
+        "phone": "电话",
+        "cities": "意向城市",
+        "citiesPlaceholder": "例如：北京, 上海, 深圳",
+        "commaSeparated": "用逗号分隔",
+        "workType": "工作类型",
+        "salary": "期望薪资范围",
+        "salaryMin": "最低",
+        "salaryMax": "最高",
+        "salaryHint": "月薪或年薪——按您偏好输入",
+        "preferredJobs": "偏好职位类型",
+        "preferredCompanies": "偏好公司类型",
+        "additionalNotes": "备注",
+        "notesPlaceholder": "其他偏好或备注...",
+        "workTypes": {
+          "fullTime": "全职",
+          "partTime": "兼职",
+          "contract": "合同工",
+          "freelance": "自由职业",
+          "internship": "实习",
+          "remoteOnly": "纯远程",
+          "hybrid": "混合办公",
+          "onSite": "现场办公"
+        },
+        "jobTypes": {
+          "engineering": "工程",
+          "aiMl": "AI/ML",
+          "product": "产品",
+          "design": "设计",
+          "data": "数据",
+          "marketing": "市场",
+          "operations": "运营",
+          "management": "管理",
+          "sales": "销售",
+          "finance": "财务"
+        },
+        "companyTypes": {
+          "startup": "初创企业",
+          "scaleup": "成长型企业",
+          "enterprise": "大型企业",
+          "bigTech": "大厂",
+          "consulting": "咨询公司",
+          "agency": "代理机构",
+          "government": "政府/国企",
+          "nonProfit": "非营利组织"
+        },
+        "phonePlaceholder": "请输入手机号码"
+      }
     },
     "matching": {
       "title": "智能匹配",
@@ -2308,7 +2359,17 @@
       "detailTechnical": "技术",
       "detailBehavioral": "行为",
       "detailExperienceValidation": "经验验证",
-      "detailSuggestedRole": "建议岗位：{{role}}"
+      "detailSuggestedRole": "建议岗位：{{role}}",
+      "prefScore": "偏好匹配",
+      "detailPrefAlignment": "偏好匹配分析",
+      "prefDim": {
+        "location": "工作地点",
+        "workType": "工作类型",
+        "salary": "薪资范围",
+        "jobType": "职位类型",
+        "companyType": "公司类型"
+      },
+      "prefNoPreferences": "候选人未设置偏好"
     },
     "evaluations": {
       "title": "评估报告",
