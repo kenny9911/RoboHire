@@ -113,5 +113,25 @@ export function classifyApiRequest(path: string): ApiClassification {
     return { module: 'system', apiName: normalizeApiName(pathname) };
   }
 
+  // Smart matching
+  if (pathname.startsWith('/api/v1/matching')) {
+    return { module: 'smart_matching', apiName: normalizeApiName(pathname) };
+  }
+
+  // Resumes management
+  if (pathname.startsWith('/api/v1/resumes')) {
+    return { module: 'resumes', apiName: normalizeApiName(pathname) };
+  }
+
+  // Jobs management
+  if (pathname.startsWith('/api/v1/jobs')) {
+    return { module: 'jobs', apiName: normalizeApiName(pathname) };
+  }
+
+  // ATS integrations
+  if (pathname.startsWith('/api/v1/ats')) {
+    return { module: 'ats', apiName: normalizeApiName(pathname) };
+  }
+
   return { module: 'other', apiName: normalizeApiName(pathname) };
 }

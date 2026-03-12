@@ -259,23 +259,64 @@
       "badge": "FAQ",
       "title": "Frequently Asked Questions",
       "items": {
-        "0": { "q": "What is RoboHire?", "a": "RoboHire is an AI-powered recruitment platform that automates resume screening, conducts AI-led interviews, and delivers structured evaluation reports for every candidate." },
-        "1": { "q": "How does AI resume screening work?", "a": "Our AI analyzes resumes against your job requirements, scoring candidates on skills, experience, and fit. It processes hundreds of resumes in minutes, identifying the best matches automatically." },
-        "2": { "q": "What languages does RoboHire support?", "a": "RoboHire supports 7 languages: English, Chinese (Simplified & Traditional), Japanese, Spanish, French, Portuguese, and German. Both the platform interface and AI analysis work in all supported languages." },
-        "3": { "q": "Is there a free trial?", "a": "Yes! You can start with our free Starter plan which includes resume matches and interview evaluations at no cost. No credit card required." },
-        "4": { "q": "How does the AI interview work?", "a": "RoboHire generates customized interview questions based on the job requirements and candidate profile. The AI conducts structured interviews, evaluates responses, and produces detailed assessment reports with scoring." },
-        "5": { "q": "Is my data secure?", "a": "Absolutely. We use industry-standard encryption for data at rest and in transit. Your recruitment data is isolated per account and never shared with third parties. We comply with GDPR and SOC 2 standards." },
-        "6": { "q": "Can I integrate RoboHire with my existing tools?", "a": "Yes, RoboHire provides a comprehensive REST API and webhook support for seamless integration with your existing ATS, HR systems, and workflows. Check our API documentation to get started." }
+        "0": {
+          "q": "What is RoboHire?",
+          "a": "RoboHire is an AI-powered recruitment platform that automates resume screening, conducts AI-led interviews, and delivers structured evaluation reports for every candidate."
+        },
+        "1": {
+          "q": "How does AI resume screening work?",
+          "a": "Our AI analyzes resumes against your job requirements, scoring candidates on skills, experience, and fit. It processes hundreds of resumes in minutes, identifying the best matches automatically."
+        },
+        "2": {
+          "q": "What languages does RoboHire support?",
+          "a": "RoboHire supports 7 languages: English, Chinese (Simplified & Traditional), Japanese, Spanish, French, Portuguese, and German. Both the platform interface and AI analysis work in all supported languages."
+        },
+        "3": {
+          "q": "Is there a free trial?",
+          "a": "Yes! You can start with our free Starter plan which includes resume matches and interview evaluations at no cost. No credit card required."
+        },
+        "4": {
+          "q": "How does the AI interview work?",
+          "a": "RoboHire generates customized interview questions based on the job requirements and candidate profile. The AI conducts structured interviews, evaluates responses, and produces detailed assessment reports with scoring."
+        },
+        "5": {
+          "q": "Is my data secure?",
+          "a": "Absolutely. We use industry-standard encryption for data at rest and in transit. Your recruitment data is isolated per account and never shared with third parties. We comply with GDPR and SOC 2 standards."
+        },
+        "6": {
+          "q": "Can I integrate RoboHire with my existing tools?",
+          "a": "Yes, RoboHire provides a comprehensive REST API and webhook support for seamless integration with your existing ATS, HR systems, and workflows. Check our API documentation to get started."
+        }
       }
     },
     "testimonials": {
       "badge": "Testimonials",
       "title": "Trusted by Hiring Teams Worldwide",
       "items": {
-        "0": { "quote": "RoboHire cut our screening time by 85%. We went from spending 3 days reviewing resumes to getting matched candidates in hours.", "name": "Sarah Chen", "role": "Head of Talent", "company": "TechFlow" },
-        "1": { "quote": "The API integration was seamless. We built AI hiring into our platform in a single sprint. The documentation is excellent.", "name": "Marcus Weber", "role": "CTO", "company": "ScaleUp GmbH" },
-        "2": { "quote": "Multilingual support was a game-changer for our global hiring. The AI conducts interviews in Japanese just as well as English.", "name": "Yuki Tanaka", "role": "HR Director", "company": "NexGen" },
-        "3": { "quote": "The evaluation reports are incredibly detailed. They've helped us make more objective hiring decisions and reduce bias.", "name": "Ana Costa", "role": "Recruitment Lead", "company": "Rapido" }
+        "0": {
+          "quote": "RoboHire cut our screening time by 85%. We went from spending 3 days reviewing resumes to getting matched candidates in hours.",
+          "name": "Sarah Chen",
+          "role": "Head of Talent",
+          "company": "TechFlow"
+        },
+        "1": {
+          "quote": "The API integration was seamless. We built AI hiring into our platform in a single sprint. The documentation is excellent.",
+          "name": "Marcus Weber",
+          "role": "CTO",
+          "company": "ScaleUp GmbH"
+        },
+        "2": {
+          "quote": "Multilingual support was a game-changer for our global hiring. The AI conducts interviews in Japanese just as well as English.",
+          "name": "Yuki Tanaka",
+          "role": "HR Director",
+          "company": "NexGen"
+        },
+        "3": {
+          "quote": "The evaluation reports are incredibly detailed. They've helped us make more objective hiring decisions and reduce bias.",
+          "name": "Ana Costa",
+          "role": "Recruitment Lead",
+          "company": "Rapido"
+        }
       }
     },
     "cta": {
@@ -805,7 +846,7 @@
       "created": "Created",
       "candidatesCount": "{{count}} candidates",
       "matches": "Matches",
-      "invited": "Invitations sent",
+      "invited": "invited",
       "interviewsCompleted": "Interviews completed",
       "requirements": "Requirements",
       "jobDescription": "Job description",
@@ -819,7 +860,6 @@
       "notFound": "Request not found",
       "loadError": "Failed to load request details",
       "invitedCandidates": "Invited Candidates",
-      "invited": "invited",
       "invitedDate": "Invited",
       "interviewStatus": "Interview Status"
     },
@@ -2060,18 +2100,99 @@
       "title": "Smart Matching",
       "subtitle": "AI-powered candidate-job matching with detailed analysis.",
       "selectJob": "Select a Job",
+      "selectJobs": "Select Jobs",
+      "jobsSelectedCount": "{{count}} selected",
+      "searchJobs": "Search jobs...",
+      "progressTitleMulti": "Job {{jobIndex}}/{{jobCount}}: Matching resumes for {{jobTitle}}",
       "noJobs": "No jobs found. Create a job first.",
       "goToJobs": "Go to Jobs",
       "choosePlaceholder": "-- Choose a job --",
       "allStatuses": "All",
       "runMatch": "Run AI Matching",
       "running": "Matching...",
+      "runningProgress": "Matching {{processed}} / {{total}}",
+      "runningEmpty": "Matching is in progress. Results will appear here automatically.",
+      "progressStarting": "Starting...",
+      "progressTitle": "Matching resumes for {{jobTitle}}",
+      "progressStats": "{{processed}} / {{total}} resumes processed",
+      "progressFailed": "{{failed}} failed",
+      "progressCurrentLabel": "Currently matching",
+      "progressCurrent": "{{candidateName}} -> {{jobTitle}}",
+      "progressPreparing": "Preparing the next resume...",
+      "completeSuccess": "Matching finished: {{completed}} of {{total}} resumes completed.",
+      "completePartial": "Matching finished: {{completed}} completed, {{failed}} failed, {{total}} total.",
+      "limitExceeded": "You have used all available matching credits. Upgrade or top up to continue.",
+      "errorGeneric": "Matching failed. Please try again.",
+      "dismissError": "Dismiss error",
+      "dismissSuccess": "Dismiss message",
       "noResults": "No match results yet",
       "noResultsDesc": "Click \"Run AI Matching\" to match candidates against this job.",
       "score": "score",
       "shortlist": "Shortlist",
       "reject": "Reject",
-      "viewProfile": "View Profile"
+      "viewProfile": "View Profile",
+      "configureMatching": "Configure Matching",
+      "configureMatchingFor": "For: {{jobTitle}}",
+      "selectResumes": "Select Resumes",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "searchResumes": "Search by name, role, or tag...",
+      "selectedCount": "{{count}} selected",
+      "noResumesFound": "No resumes found. Upload resumes first.",
+      "advancedFilters": "Advanced Pre-Filters (AI)",
+      "advancedFiltersDesc": "AI will pre-screen resumes before full matching, filtering out clearly irrelevant candidates.",
+      "filterLocations": "Preferred Locations",
+      "filterLocationsPlaceholder": "e.g., San Francisco, Remote, New York",
+      "filterJobTypes": "Job Types",
+      "filterJobType": {
+        "full-time": "Full-time",
+        "part-time": "Part-time",
+        "contract": "Contract",
+        "internship": "Internship"
+      },
+      "filterFreeText": "Custom Filter Instructions",
+      "filterFreeTextPlaceholder": "e.g., Must have 3+ years of Python experience, exclude candidates without a degree",
+      "sessionName": "Session Name",
+      "optional": "optional",
+      "starting": "Starting...",
+      "startMatching": "Start Matching ({{count}} resumes)",
+      "preFilterRunning": "Pre-filtering {{total}} resumes...",
+      "preFilterRunningDesc": "AI is screening candidates to find the best matches for this job.",
+      "preFilterComplete": "Pre-filter complete: {{passed}} passed, {{excluded}} excluded",
+      "preFilteredCount": "({{filtered}} pre-filtered out)",
+      "sessionHistory": "Session History",
+      "currentResults": "Current Results",
+      "viewingSession": "Viewing saved session results",
+      "backToCurrent": "Back to current results",
+      "untitledSession": "Untitled Session",
+      "sessionCompleted": "completed",
+      "sessionRunning": "running",
+      "sessionFailed": "failed",
+      "sessionStats": "{{matched}}/{{total}} matched",
+      "avgScore": "Avg: {{score}}",
+      "topGrade": "Top: {{grade}}",
+      "preFilterSummary": "Pre-filter: {{passed}} passed, {{excluded}} excluded",
+      "deleteSession": "Delete session",
+      "deleteSessionConfirm": "Delete this matching session?",
+      "noSessions": "No matching history yet. Run AI Matching to create your first session.",
+      "viewDetails": "View Details",
+      "detailScore": "Score: {{score}}",
+      "detailConfidence": "Confidence: {{level}}",
+      "detailBreakdown": "Score Breakdown",
+      "detailSkillMatch": "Skill Match",
+      "detailExperience": "Experience",
+      "detailPotential": "Potential",
+      "detailGaps": "Requirement Gaps",
+      "detailRecommendations": "Recommendations",
+      "detailForRecruiter": "For Recruiter",
+      "detailForCandidate": "For Candidate",
+      "detailInterviewQuestions": "Key Interview Questions",
+      "detailInterviewFocus": "Interview Focus Areas",
+      "detailSuggestedQuestions": "Suggested Interview Questions",
+      "detailTechnical": "Technical",
+      "detailBehavioral": "Behavioral",
+      "detailExperienceValidation": "Experience Validation",
+      "detailSuggestedRole": "Suggested role: {{role}}"
     },
     "evaluations": {
       "title": "Evaluations",
@@ -2258,7 +2379,14 @@
           "completed": "Completed",
           "cancelled": "Cancelled",
           "expired": "Expired"
-        }
+        },
+        "viewResult": "View Result",
+        "resendEmail": "Resend Email",
+        "resending": "Sending...",
+        "resendSuccess": "Invitation resent successfully!",
+        "invitationResult": "Invitation Result",
+        "emailMessage": "Email Message",
+        "jobSummary": "Job Summary"
       }
     },
     "insights": {
@@ -2340,35 +2468,105 @@
       "title": "How Our AI Works",
       "subtitle": "RoboHire combines state-of-the-art language models with recruitment expertise to automate every step of the hiring pipeline.",
       "items": {
-        "0": { "title": "Resume Parsing", "description": "Our AI extracts structured data from resumes in any format — PDF, Word, or plain text — understanding context, not just keywords." },
-        "1": { "title": "Matching Algorithms", "description": "Advanced language models compare candidate profiles against job requirements with nuanced understanding of skills, experience, and potential." },
-        "2": { "title": "Automated Interviews", "description": "AI-conducted video interviews adapt in real-time, asking follow-up questions and evaluating responses with human-level comprehension." },
-        "3": { "title": "Evaluation Reports", "description": "Comprehensive scoring reports with detailed breakdowns, cheating analysis, and actionable recommendations for every candidate." }
+        "0": {
+          "title": "Resume Parsing",
+          "description": "Our AI extracts structured data from resumes in any format — PDF, Word, or plain text — understanding context, not just keywords."
+        },
+        "1": {
+          "title": "Matching Algorithms",
+          "description": "Advanced language models compare candidate profiles against job requirements with nuanced understanding of skills, experience, and potential."
+        },
+        "2": {
+          "title": "Automated Interviews",
+          "description": "AI-conducted video interviews adapt in real-time, asking follow-up questions and evaluating responses with human-level comprehension."
+        },
+        "3": {
+          "title": "Evaluation Reports",
+          "description": "Comprehensive scoring reports with detailed breakdowns, cheating analysis, and actionable recommendations for every candidate."
+        }
       }
     },
     "stats": {
-      "companies": { "value": "500+", "label": "Companies" },
-      "languages": { "value": "7", "label": "Languages" },
-      "timeSaved": { "value": "90%", "label": "Time Saved" },
-      "availability": { "value": "24/7", "label": "Availability" }
+      "companies": {
+        "value": "500+",
+        "label": "Companies"
+      },
+      "languages": {
+        "value": "7",
+        "label": "Languages"
+      },
+      "timeSaved": {
+        "value": "90%",
+        "label": "Time Saved"
+      },
+      "availability": {
+        "value": "24/7",
+        "label": "Availability"
+      }
     },
     "comparison": {
       "title": "Why RoboHire vs Alternatives",
       "subtitle": "See how RoboHire compares to manual hiring processes and traditional applicant tracking systems.",
-      "header": { "feature": "Feature", "robohire": "RoboHire", "manual": "Manual Hiring", "ats": "Traditional ATS" },
-      "features": { "setup": "Setup Time", "screening": "Resume Screening", "interviews": "Interview Process", "evaluation": "Candidate Evaluation", "multilingual": "Multilingual Support", "bias": "Bias Reduction", "cost": "Cost" },
-      "robohire": { "setup": "Minutes", "screening": "AI-powered, instant", "interviews": "Automated AI interviews", "evaluation": "Comprehensive AI reports", "multilingual": "7 languages built-in", "bias": "Consistent AI evaluation", "cost": "From $29/mo" },
-      "manual": { "setup": "Weeks", "screening": "Manual, hours per resume", "interviews": "Schedule & conduct manually", "evaluation": "Subjective notes", "multilingual": "Depends on team", "bias": "Prone to unconscious bias", "cost": "High (recruiter hours)" },
-      "ats": { "setup": "Days", "screening": "Keyword-based filtering", "interviews": "Scheduling only", "evaluation": "Basic scorecards", "multilingual": "Limited or none", "bias": "Keyword bias", "cost": "$200-500/mo+" },
+      "header": {
+        "feature": "Feature",
+        "robohire": "RoboHire",
+        "manual": "Manual Hiring",
+        "ats": "Traditional ATS"
+      },
+      "features": {
+        "setup": "Setup Time",
+        "screening": "Resume Screening",
+        "interviews": "Interview Process",
+        "evaluation": "Candidate Evaluation",
+        "multilingual": "Multilingual Support",
+        "bias": "Bias Reduction",
+        "cost": "Cost"
+      },
+      "robohire": {
+        "setup": "Minutes",
+        "screening": "AI-powered, instant",
+        "interviews": "Automated AI interviews",
+        "evaluation": "Comprehensive AI reports",
+        "multilingual": "7 languages built-in",
+        "bias": "Consistent AI evaluation",
+        "cost": "From $29/mo"
+      },
+      "manual": {
+        "setup": "Weeks",
+        "screening": "Manual, hours per resume",
+        "interviews": "Schedule & conduct manually",
+        "evaluation": "Subjective notes",
+        "multilingual": "Depends on team",
+        "bias": "Prone to unconscious bias",
+        "cost": "High (recruiter hours)"
+      },
+      "ats": {
+        "setup": "Days",
+        "screening": "Keyword-based filtering",
+        "interviews": "Scheduling only",
+        "evaluation": "Basic scorecards",
+        "multilingual": "Limited or none",
+        "bias": "Keyword bias",
+        "cost": "$200-500/mo+"
+      },
       "cta": "Start hiring smarter"
     },
     "trust": {
       "title": "Trust & Security",
       "subtitle": "Your data security is our top priority. We employ enterprise-grade security measures to protect every piece of information.",
       "items": {
-        "encryption": { "title": "End-to-End Encryption", "description": "All data is encrypted in transit (TLS 1.3) and at rest (AES-256)." },
-        "privacy": { "title": "Privacy Compliance", "description": "Fully compliant with GDPR, CCPA, and other major privacy regulations." },
-        "soc2": { "title": "SOC 2 Compliant", "description": "Our infrastructure meets SOC 2 Type II standards for security, availability, and confidentiality." }
+        "encryption": {
+          "title": "End-to-End Encryption",
+          "description": "All data is encrypted in transit (TLS 1.3) and at rest (AES-256)."
+        },
+        "privacy": {
+          "title": "Privacy Compliance",
+          "description": "Fully compliant with GDPR, CCPA, and other major privacy regulations."
+        },
+        "soc2": {
+          "title": "SOC 2 Compliant",
+          "description": "Our infrastructure meets SOC 2 Type II standards for security, availability, and confidentiality."
+        }
       }
     },
     "cta": {
@@ -2379,49 +2577,177 @@
     }
   },
   "privacy": {
-    "seo": { "title": "Privacy Policy", "description": "Learn how RoboHire collects, uses, and protects your personal information." },
+    "seo": {
+      "title": "Privacy Policy",
+      "description": "Learn how RoboHire collects, uses, and protects your personal information."
+    },
     "title": "Privacy Policy",
     "lastUpdated": "Last updated: March 2026",
     "sections": {
-      "collect": { "title": "1. Information We Collect", "content": { "p1": "We collect information you provide directly to us, including your name, email address, company name, and any other information you choose to provide.", "p2": "When you use RoboHire to process candidates, we collect resumes, job descriptions, interview recordings, and evaluation data." } },
-      "use": { "title": "2. How We Use Your Information", "content": { "p1": "We use the information to provide, maintain, and improve our services.", "p2": "We also use your information to communicate with you about your account." } },
-      "storage": { "title": "3. Data Storage & Security", "content": { "p1": "Your data is stored on secure servers with enterprise-grade encryption.", "p2": "We retain your personal data only for as long as necessary." } },
-      "thirdParty": { "title": "4. Third-Party Services", "content": { "p1": "We use trusted third-party services to operate our platform.", "p2": "We do not sell your personal information to third parties." } },
-      "rights": { "title": "5. Your Rights (GDPR, CCPA)", "content": { "p1": "You may have certain rights regarding your personal data.", "p2": "These rights may include the right to access, correct, or delete your personal data.", "p3": "To exercise any of these rights, please contact us at privacy@robohire.io." } },
-      "cookies": { "title": "6. Cookies", "content": { "p1": "We use essential cookies to operate our platform.", "p2": "We may also use analytics cookies." } },
-      "contact": { "title": "7. Contact Us", "content": { "p1": "If you have any questions about this Privacy Policy:", "email": "Email: privacy@robohire.io", "address": "RoboHire Inc." } }
+      "collect": {
+        "title": "1. Information We Collect",
+        "content": {
+          "p1": "We collect information you provide directly to us, including your name, email address, company name, and any other information you choose to provide.",
+          "p2": "When you use RoboHire to process candidates, we collect resumes, job descriptions, interview recordings, and evaluation data."
+        }
+      },
+      "use": {
+        "title": "2. How We Use Your Information",
+        "content": {
+          "p1": "We use the information to provide, maintain, and improve our services.",
+          "p2": "We also use your information to communicate with you about your account."
+        }
+      },
+      "storage": {
+        "title": "3. Data Storage & Security",
+        "content": {
+          "p1": "Your data is stored on secure servers with enterprise-grade encryption.",
+          "p2": "We retain your personal data only for as long as necessary."
+        }
+      },
+      "thirdParty": {
+        "title": "4. Third-Party Services",
+        "content": {
+          "p1": "We use trusted third-party services to operate our platform.",
+          "p2": "We do not sell your personal information to third parties."
+        }
+      },
+      "rights": {
+        "title": "5. Your Rights (GDPR, CCPA)",
+        "content": {
+          "p1": "You may have certain rights regarding your personal data.",
+          "p2": "These rights may include the right to access, correct, or delete your personal data.",
+          "p3": "To exercise any of these rights, please contact us at privacy@robohire.io."
+        }
+      },
+      "cookies": {
+        "title": "6. Cookies",
+        "content": {
+          "p1": "We use essential cookies to operate our platform.",
+          "p2": "We may also use analytics cookies."
+        }
+      },
+      "contact": {
+        "title": "7. Contact Us",
+        "content": {
+          "p1": "If you have any questions about this Privacy Policy:",
+          "email": "Email: privacy@robohire.io",
+          "address": "RoboHire Inc."
+        }
+      }
     },
-    "nav": { "terms": "Terms of Service", "home": "Back to Home" }
+    "nav": {
+      "terms": "Terms of Service",
+      "home": "Back to Home"
+    }
   },
   "terms": {
-    "seo": { "title": "Terms of Service", "description": "Read the Terms of Service for RoboHire." },
+    "seo": {
+      "title": "Terms of Service",
+      "description": "Read the Terms of Service for RoboHire."
+    },
     "title": "Terms of Service",
     "lastUpdated": "Last updated: March 2026",
     "sections": {
-      "acceptance": { "title": "1. Acceptance of Terms", "content": { "p1": "By accessing or using RoboHire, you agree to be bound by these Terms.", "p2": "We may update these Terms from time to time." } },
-      "service": { "title": "2. Description of Service", "content": { "p1": "RoboHire is an AI-powered recruitment platform.", "p2": "We reserve the right to modify, suspend, or discontinue any part of the Service." } },
-      "accounts": { "title": "3. User Accounts", "content": { "p1": "You are responsible for maintaining the confidentiality of your account.", "p2": "You must provide accurate and complete information." } },
-      "use": { "title": "4. Acceptable Use", "content": { "p1": "You agree to use the Service only for lawful purposes.", "p2": "You may not attempt to gain unauthorized access." } },
-      "ip": { "title": "5. Intellectual Property", "content": { "p1": "The Service and its original content are owned by RoboHire.", "p2": "You retain ownership of all data you upload." } },
-      "liability": { "title": "6. Limitation of Liability", "content": { "p1": "RoboHire shall not be liable for any indirect damages.", "p2": "AI-generated evaluations are provided as decision-support tools." } },
-      "termination": { "title": "7. Termination", "content": { "p1": "You may terminate your account at any time.", "p2": "Upon termination, your right to use the Service will cease." } },
-      "contact": { "title": "8. Contact", "content": { "p1": "If you have any questions about these Terms:", "email": "Email: legal@robohire.io", "address": "RoboHire Inc." } }
+      "acceptance": {
+        "title": "1. Acceptance of Terms",
+        "content": {
+          "p1": "By accessing or using RoboHire, you agree to be bound by these Terms.",
+          "p2": "We may update these Terms from time to time."
+        }
+      },
+      "service": {
+        "title": "2. Description of Service",
+        "content": {
+          "p1": "RoboHire is an AI-powered recruitment platform.",
+          "p2": "We reserve the right to modify, suspend, or discontinue any part of the Service."
+        }
+      },
+      "accounts": {
+        "title": "3. User Accounts",
+        "content": {
+          "p1": "You are responsible for maintaining the confidentiality of your account.",
+          "p2": "You must provide accurate and complete information."
+        }
+      },
+      "use": {
+        "title": "4. Acceptable Use",
+        "content": {
+          "p1": "You agree to use the Service only for lawful purposes.",
+          "p2": "You may not attempt to gain unauthorized access."
+        }
+      },
+      "ip": {
+        "title": "5. Intellectual Property",
+        "content": {
+          "p1": "The Service and its original content are owned by RoboHire.",
+          "p2": "You retain ownership of all data you upload."
+        }
+      },
+      "liability": {
+        "title": "6. Limitation of Liability",
+        "content": {
+          "p1": "RoboHire shall not be liable for any indirect damages.",
+          "p2": "AI-generated evaluations are provided as decision-support tools."
+        }
+      },
+      "termination": {
+        "title": "7. Termination",
+        "content": {
+          "p1": "You may terminate your account at any time.",
+          "p2": "Upon termination, your right to use the Service will cease."
+        }
+      },
+      "contact": {
+        "title": "8. Contact",
+        "content": {
+          "p1": "If you have any questions about these Terms:",
+          "email": "Email: legal@robohire.io",
+          "address": "RoboHire Inc."
+        }
+      }
     },
-    "nav": { "privacy": "Privacy Policy", "home": "Back to Home" }
+    "nav": {
+      "privacy": "Privacy Policy",
+      "home": "Back to Home"
+    }
   },
   "blog": {
-    "seo": { "title": "Resources & Insights - AI Recruitment Blog", "description": "Expert articles on AI-powered recruitment." },
+    "seo": {
+      "title": "Resources & Insights - AI Recruitment Blog",
+      "description": "Expert articles on AI-powered recruitment."
+    },
     "badge": "Blog",
     "title": "Resources & Insights",
     "subtitle": "Explore articles, guides, and best practices to help you hire smarter with AI-powered recruitment tools.",
     "readTime": "{{time}} read",
     "readMore": "Read more",
     "articles": {
-      "0": { "title": "How AI is Transforming Recruitment in 2026", "description": "AI is reshaping how companies find and hire talent.", "category": "Industry Trends" },
-      "1": { "title": "Resume Screening Best Practices for Growing Teams", "description": "Scaling your hiring process without sacrificing quality.", "category": "Best Practices" },
-      "2": { "title": "Automated Interviews: A Complete Guide", "description": "Everything you need to know about AI-powered interviews.", "category": "Guides" },
-      "3": { "title": "Building with the RoboHire API", "description": "A developer-focused walkthrough of integrating RoboHire.", "category": "Engineering" },
-      "4": { "title": "Multilingual Hiring: Reaching Global Talent", "description": "Hiring across borders means evaluating candidates in multiple languages.", "category": "Global Hiring" }
+      "0": {
+        "title": "How AI is Transforming Recruitment in 2026",
+        "description": "AI is reshaping how companies find and hire talent.",
+        "category": "Industry Trends"
+      },
+      "1": {
+        "title": "Resume Screening Best Practices for Growing Teams",
+        "description": "Scaling your hiring process without sacrificing quality.",
+        "category": "Best Practices"
+      },
+      "2": {
+        "title": "Automated Interviews: A Complete Guide",
+        "description": "Everything you need to know about AI-powered interviews.",
+        "category": "Guides"
+      },
+      "3": {
+        "title": "Building with the RoboHire API",
+        "description": "A developer-focused walkthrough of integrating RoboHire.",
+        "category": "Engineering"
+      },
+      "4": {
+        "title": "Multilingual Hiring: Reaching Global Talent",
+        "description": "Hiring across borders means evaluating candidates in multiple languages.",
+        "category": "Global Hiring"
+      }
     },
     "cta": {
       "title": "Ready to see RoboHire in action?",
@@ -2468,5 +2794,77 @@
     "confirmDeleteMessage": "Are you sure you want to delete this item? This action cannot be undone.",
     "cancel": "Cancel",
     "delete": "Delete"
+  },
+  "admin": {
+    "tabs": {
+      "llmUsage": "LLM Usage",
+      "logs": "Logs"
+    },
+    "llmUsage": {
+      "title": "LLM Usage",
+      "subtitle": "Detailed view of all LLM API calls, costs, and token usage.",
+      "applyFilters": "Apply Filters",
+      "from": "From",
+      "to": "To",
+      "provider": "Provider",
+      "model": "Model",
+      "module": "Module",
+      "user": "User",
+      "loading": "Loading LLM usage data...",
+      "totalCalls": "Total LLM Calls",
+      "totalTokens": "Total Tokens",
+      "totalCost": "Total Cost",
+      "avgCostPerCall": "Avg Cost/Call",
+      "avgLatency": "Avg Latency",
+      "costTrend": "Cost Trend",
+      "tokenTrend": "Token Usage Trend",
+      "costByModel": "Cost by Model",
+      "costByProvider": "Cost by Provider",
+      "inputTokens": "Input",
+      "outputTokens": "Output",
+      "callLog": "LLM Call Log",
+      "time": "Time",
+      "cost": "Cost",
+      "duration": "Duration",
+      "noData": "No LLM calls found for the selected filters.",
+      "showing": "Showing",
+      "of": "of",
+      "prev": "Prev",
+      "next": "Next"
+    },
+    "logs": {
+      "title": "Request Logs",
+      "subtitle": "Monitor all API requests, diagnose issues, and track performance.",
+      "applyFilters": "Apply Filters",
+      "from": "From",
+      "to": "To",
+      "module": "Module",
+      "endpoint": "Endpoint",
+      "status": "Status",
+      "allStatuses": "All",
+      "user": "User",
+      "loading": "Loading request logs...",
+      "totalRequests": "Total Requests",
+      "withLLM": "With LLM (this page)",
+      "pageCost": "Page Cost",
+      "pageErrors": "Page Errors",
+      "time": "Time",
+      "apiName": "API",
+      "method": "Method",
+      "duration": "Duration",
+      "llmCalls": "LLM",
+      "tokens": "Tokens",
+      "cost": "Cost",
+      "noData": "No request logs found for the selected filters.",
+      "llmCallDetails": "LLM Call Details",
+      "provider": "Provider",
+      "model": "Model",
+      "inputTokens": "Input",
+      "outputTokens": "Output",
+      "showing": "Showing",
+      "of": "of",
+      "prev": "Prev",
+      "next": "Next"
+    }
   }
 }

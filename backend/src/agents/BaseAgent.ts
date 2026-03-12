@@ -40,19 +40,30 @@ export abstract class BaseAgent<TInput, TOutput> {
    * Build the system prompt with language detection
    * @param jdContent Optional JD content for language detection
    * @param requestId Optional request ID for logging
+   * @param locale Optional user locale override (e.g. 'zh', 'ja', 'fr')
    */
-  protected buildSystemPrompt(jdContent?: string, requestId?: string): string {
+  protected buildSystemPrompt(jdContent?: string, requestId?: string, locale?: string): string {
     const basePrompt = this.getAgentPrompt();
-    
+
+    // Prefer explicit locale from user's UI language setting
+    if (locale) {
+      const localeInstruction = this.language.getLanguageInstructionFromLocale(locale);
+      if (localeInstruction) {
+        const lang = this.language.getLanguageFromLocale(locale);
+        logger.logLanguageDetection(requestId || '', lang || locale, 'locale');
+        return `${localeInstruction}\n\n${basePrompt}`;
+      }
+    }
+
     if (jdContent) {
       const detectedLanguage = this.language.detectLanguage(jdContent);
       const languageInstruction = this.language.getLanguageInstruction(jdContent);
-      
+
       logger.logLanguageDetection(requestId || '', detectedLanguage, 'auto');
-      
+
       return `${languageInstruction}\n\n${basePrompt}`;
     }
-    
+
     return basePrompt;
   }
 
@@ -61,13 +72,14 @@ export abstract class BaseAgent<TInput, TOutput> {
    * @param input The input to process
    * @param jdContent Optional JD content for language detection
    * @param requestId Optional request ID for logging
+   * @param locale Optional user locale override (e.g. 'zh', 'ja', 'fr')
    */
-  async execute(input: TInput, jdContent?: string, requestId?: string): Promise<TOutput> {
+  async execute(input: TInput, jdContent?: string, requestId?: string, locale?: string, model?: string): Promise<TOutput> {
     const stepNum = requestId ? logger.startStep(requestId, `${this.name}: Execute`) : 0;
-    
-    logger.logAgentStart(requestId || '', this.name, { inputType: typeof input });
-    
-    const systemPrompt = this.buildSystemPrompt(jdContent, requestId);
+
+    logger.logAgentStart(requestId || '', this.name, { inputType: typeof input, model: model || 'default' });
+
+    const systemPrompt = this.buildSystemPrompt(jdContent, requestId, locale);
     const userMessage = this.formatInput(input);
 
     const messages: Message[] = [
@@ -78,12 +90,14 @@ export abstract class BaseAgent<TInput, TOutput> {
     logger.debug('AGENT', `${this.name}: Prepared messages`, {
       systemPromptLength: systemPrompt.length,
       userMessageLength: userMessage.length,
+      model: model || 'default',
     }, requestId);
 
     try {
       const response = await this.llm.chat(messages, {
         temperature: 0.7,
         requestId,
+        ...(model ? { model } : {}),
       });
       
       logger.debug('AGENT', `${this.name}: Parsing response`, {

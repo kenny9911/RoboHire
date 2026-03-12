@@ -1591,4 +1591,235 @@ router.post('/users/:userId/set-role', async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────
+// Request Logs & LLM Call Logs endpoints
+// ──────────────────────────────────────────────────────
+
+/**
+ * GET /api/v1/admin/request-logs
+ * Paginated, filtered request log viewer
+ */
+router.get('/request-logs', async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
+    const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '50'), 10)));
+    const skip = (page - 1) * limit;
+
+    const from = req.query.from ? new Date(String(req.query.from)) : undefined;
+    const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+    const userId = (req.query.userId as string | undefined)?.trim() || undefined;
+    const moduleFilter = (req.query.module as string | undefined)?.trim() || undefined;
+    const endpointFilter = (req.query.endpoint as string | undefined)?.trim() || undefined;
+    const statusCode = req.query.statusCode ? parseInt(String(req.query.statusCode), 10) : undefined;
+    const statusGroup = (req.query.statusGroup as string | undefined)?.trim(); // '2xx','4xx','5xx'
+    const sort = (req.query.sort as string) || 'createdAt';
+    const order = (req.query.order as string) === 'asc' ? 'asc' : 'desc';
+
+    const where: Record<string, unknown> = {};
+    if (from || to) {
+      where.createdAt = {
+        ...(from ? { gte: from } : {}),
+        ...(to ? { lte: to } : {}),
+      };
+    }
+    if (userId) where.userId = userId;
+    if (moduleFilter) where.module = moduleFilter;
+    if (endpointFilter) where.endpoint = { contains: endpointFilter, mode: 'insensitive' };
+    if (statusCode) {
+      where.statusCode = statusCode;
+    } else if (statusGroup === '2xx') {
+      where.statusCode = { gte: 200, lt: 300 };
+    } else if (statusGroup === '4xx') {
+      where.statusCode = { gte: 400, lt: 500 };
+    } else if (statusGroup === '5xx') {
+      where.statusCode = { gte: 500, lt: 600 };
+    }
+
+    const validSortFields = ['createdAt', 'durationMs', 'cost', 'totalTokens', 'llmCalls', 'statusCode'];
+    const orderBy: Record<string, string> = {};
+    orderBy[validSortFields.includes(sort) ? sort : 'createdAt'] = order;
+
+    const [total, records] = await Promise.all([
+      prisma.apiRequestLog.count({ where }),
+      prisma.apiRequestLog.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          user: { select: { id: true, email: true, name: true } },
+          llmCallLog: {
+            select: {
+              id: true,
+              provider: true,
+              model: true,
+              promptTokens: true,
+              completionTokens: true,
+              totalTokens: true,
+              cost: true,
+              durationMs: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      data: records,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error('Admin request-logs error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch request logs' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/llm-calls
+ * Paginated, filtered LLM call log viewer
+ */
+router.get('/llm-calls', async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10));
+    const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '50'), 10)));
+    const skip = (page - 1) * limit;
+
+    const from = req.query.from ? new Date(String(req.query.from)) : undefined;
+    const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+    const userId = (req.query.userId as string | undefined)?.trim() || undefined;
+    const moduleFilter = (req.query.module as string | undefined)?.trim() || undefined;
+    const providerFilter = (req.query.provider as string | undefined)?.trim() || undefined;
+    const modelFilter = (req.query.model as string | undefined)?.trim() || undefined;
+    const sort = (req.query.sort as string) || 'createdAt';
+    const order = (req.query.order as string) === 'asc' ? 'asc' : 'desc';
+
+    const where: Record<string, unknown> = {};
+    if (from || to) {
+      where.createdAt = {
+        ...(from ? { gte: from } : {}),
+        ...(to ? { lte: to } : {}),
+      };
+    }
+    if (userId) where.userId = userId;
+    if (moduleFilter) where.module = moduleFilter;
+    if (providerFilter) where.provider = providerFilter;
+    if (modelFilter) where.model = modelFilter;
+
+    const validSortFields = ['createdAt', 'cost', 'totalTokens', 'durationMs', 'promptTokens', 'completionTokens'];
+    const orderBy: Record<string, string> = {};
+    orderBy[validSortFields.includes(sort) ? sort : 'createdAt'] = order;
+
+    const [total, records, aggregates] = await Promise.all([
+      prisma.lLMCallLog.count({ where }),
+      prisma.lLMCallLog.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          user: { select: { id: true, email: true, name: true } },
+        },
+      }),
+      prisma.lLMCallLog.aggregate({
+        where,
+        _sum: { promptTokens: true, completionTokens: true, totalTokens: true, cost: true, durationMs: true },
+        _avg: { cost: true, durationMs: true },
+        _count: { _all: true },
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      data: records,
+      summary: {
+        totalCalls: aggregates._count._all,
+        totalPromptTokens: aggregates._sum.promptTokens ?? 0,
+        totalCompletionTokens: aggregates._sum.completionTokens ?? 0,
+        totalTokens: aggregates._sum.totalTokens ?? 0,
+        totalCost: aggregates._sum.cost ?? 0,
+        totalDurationMs: aggregates._sum.durationMs ?? 0,
+        avgCostPerCall: aggregates._avg.cost ?? 0,
+        avgDurationMs: aggregates._avg.durationMs ?? 0,
+      },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error('Admin llm-calls error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch LLM call logs' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/llm-calls/summary
+ * Grouped aggregates for charting
+ */
+router.get('/llm-calls/summary', async (req, res) => {
+  try {
+    const now = new Date();
+    const from = req.query.from ? new Date(String(req.query.from)) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const to = req.query.to ? new Date(String(req.query.to)) : now;
+    const groupBy = (req.query.groupBy as string) || 'day';
+
+    const where = { createdAt: { gte: from, lte: to } };
+
+    if (groupBy === 'model' || groupBy === 'provider' || groupBy === 'module') {
+      const groups = await prisma.lLMCallLog.groupBy({
+        by: [groupBy],
+        where,
+        _count: { _all: true },
+        _sum: { promptTokens: true, completionTokens: true, totalTokens: true, cost: true, durationMs: true },
+        _avg: { cost: true, durationMs: true },
+      });
+
+      res.json({
+        success: true,
+        groupBy,
+        data: groups.map((g) => ({
+          key: g[groupBy],
+          calls: g._count._all,
+          promptTokens: g._sum.promptTokens ?? 0,
+          completionTokens: g._sum.completionTokens ?? 0,
+          totalTokens: g._sum.totalTokens ?? 0,
+          cost: g._sum.cost ?? 0,
+          avgCost: g._avg.cost ?? 0,
+          avgDurationMs: g._avg.durationMs ?? 0,
+        })),
+      });
+    } else {
+      // Group by day — fetch raw records and bucket in JS (Prisma doesn't support date_trunc groupBy)
+      const records = await prisma.lLMCallLog.findMany({
+        where,
+        select: { createdAt: true, promptTokens: true, completionTokens: true, totalTokens: true, cost: true },
+        orderBy: { createdAt: 'asc' },
+        take: 100000,
+      });
+
+      const buckets: Record<string, { calls: number; promptTokens: number; completionTokens: number; totalTokens: number; cost: number }> = {};
+      for (const r of records) {
+        const day = r.createdAt.toISOString().slice(0, 10);
+        if (!buckets[day]) {
+          buckets[day] = { calls: 0, promptTokens: 0, completionTokens: 0, totalTokens: 0, cost: 0 };
+        }
+        buckets[day].calls += 1;
+        buckets[day].promptTokens += r.promptTokens;
+        buckets[day].completionTokens += r.completionTokens;
+        buckets[day].totalTokens += r.totalTokens;
+        buckets[day].cost += r.cost;
+      }
+
+      res.json({
+        success: true,
+        groupBy: 'day',
+        data: Object.entries(buckets).map(([day, v]) => ({ key: day, ...v })),
+      });
+    }
+  } catch (error) {
+    console.error('Admin llm-calls/summary error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch LLM call summary' });
+  }
+});
+
 export default router;

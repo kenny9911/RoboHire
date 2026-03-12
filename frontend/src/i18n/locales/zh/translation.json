@@ -259,23 +259,64 @@
       "badge": "常见问题",
       "title": "常见问题解答",
       "items": {
-        "0": { "q": "什么是 RoboHire？", "a": "RoboHire 是一款 AI 驱动的智能招聘平台，能够自动筛选简历、主导 AI 面试，并为每位候选人生成结构化的评估报告。" },
-        "1": { "q": "AI 简历筛选是如何工作的？", "a": "我们的 AI 会根据您的职位要求分析简历，从技能、经验和匹配度等维度为候选人评分。它能在几分钟内处理数百份简历，自动筛选出最佳匹配人选。" },
-        "2": { "q": "RoboHire 支持哪些语言？", "a": "RoboHire 支持 7 种语言：英语、中文（简体和繁体）、日语、西班牙语、法语、葡萄牙语和德语。平台界面和 AI 分析均支持所有语言。" },
-        "3": { "q": "有免费试用吗？", "a": "有！您可以使用我们的免费入门方案，包含简历匹配和面试评估功能，完全免费，无需绑定信用卡。" },
-        "4": { "q": "AI 面试是如何进行的？", "a": "RoboHire 根据职位要求和候选人资料生成定制化面试题目。AI 进行结构化面试，评估候选人回答，并生成包含评分的详细评估报告。" },
-        "5": { "q": "我的数据安全吗？", "a": "绝对安全。我们对静态数据和传输中的数据都采用行业标准加密。您的招聘数据按账户隔离，绝不与第三方共享。我们遵循 GDPR 和 SOC 2 标准。" },
-        "6": { "q": "RoboHire 能与我现有的工具集成吗？", "a": "可以。RoboHire 提供全面的 REST API 和 Webhook 支持，可与您现有的 ATS、HR 系统和工作流无缝集成。请查看我们的 API 文档以开始使用。" }
+        "0": {
+          "q": "什么是 RoboHire？",
+          "a": "RoboHire 是一款 AI 驱动的智能招聘平台，能够自动筛选简历、主导 AI 面试，并为每位候选人生成结构化的评估报告。"
+        },
+        "1": {
+          "q": "AI 简历筛选是如何工作的？",
+          "a": "我们的 AI 会根据您的职位要求分析简历，从技能、经验和匹配度等维度为候选人评分。它能在几分钟内处理数百份简历，自动筛选出最佳匹配人选。"
+        },
+        "2": {
+          "q": "RoboHire 支持哪些语言？",
+          "a": "RoboHire 支持 7 种语言：英语、中文（简体和繁体）、日语、西班牙语、法语、葡萄牙语和德语。平台界面和 AI 分析均支持所有语言。"
+        },
+        "3": {
+          "q": "有免费试用吗？",
+          "a": "有！您可以使用我们的免费入门方案，包含简历匹配和面试评估功能，完全免费，无需绑定信用卡。"
+        },
+        "4": {
+          "q": "AI 面试是如何进行的？",
+          "a": "RoboHire 根据职位要求和候选人资料生成定制化面试题目。AI 进行结构化面试，评估候选人回答，并生成包含评分的详细评估报告。"
+        },
+        "5": {
+          "q": "我的数据安全吗？",
+          "a": "绝对安全。我们对静态数据和传输中的数据都采用行业标准加密。您的招聘数据按账户隔离，绝不与第三方共享。我们遵循 GDPR 和 SOC 2 标准。"
+        },
+        "6": {
+          "q": "RoboHire 能与我现有的工具集成吗？",
+          "a": "可以。RoboHire 提供全面的 REST API 和 Webhook 支持，可与您现有的 ATS、HR 系统和工作流无缝集成。请查看我们的 API 文档以开始使用。"
+        }
       }
     },
     "testimonials": {
       "badge": "客户评价",
       "title": "全球招聘团队的信赖之选",
       "items": {
-        "0": { "quote": "RoboHire 将我们的筛选时间缩短了 85%。过去需要花 3 天审阅简历，现在几小时内就能获得匹配的候选人。", "name": "Sarah Chen", "role": "人才主管", "company": "TechFlow" },
-        "1": { "quote": "API 集成非常顺畅，我们在一个冲刺周期内就将 AI 招聘功能接入了平台。文档写得非常好。", "name": "Marcus Weber", "role": "首席技术官", "company": "ScaleUp GmbH" },
-        "2": { "quote": "多语言支持对我们的全球招聘来说是一个巨大的突破。AI 用日语面试的效果和英语一样出色。", "name": "Yuki Tanaka", "role": "人力资源总监", "company": "NexGen" },
-        "3": { "quote": "评估报告非常详尽，帮助我们做出更客观的招聘决策，减少了偏见。", "name": "Ana Costa", "role": "招聘负责人", "company": "Rapido" }
+        "0": {
+          "quote": "RoboHire 将我们的筛选时间缩短了 85%。过去需要花 3 天审阅简历，现在几小时内就能获得匹配的候选人。",
+          "name": "Sarah Chen",
+          "role": "人才主管",
+          "company": "TechFlow"
+        },
+        "1": {
+          "quote": "API 集成非常顺畅，我们在一个冲刺周期内就将 AI 招聘功能接入了平台。文档写得非常好。",
+          "name": "Marcus Weber",
+          "role": "首席技术官",
+          "company": "ScaleUp GmbH"
+        },
+        "2": {
+          "quote": "多语言支持对我们的全球招聘来说是一个巨大的突破。AI 用日语面试的效果和英语一样出色。",
+          "name": "Yuki Tanaka",
+          "role": "人力资源总监",
+          "company": "NexGen"
+        },
+        "3": {
+          "quote": "评估报告非常详尽，帮助我们做出更客观的招聘决策，减少了偏见。",
+          "name": "Ana Costa",
+          "role": "招聘负责人",
+          "company": "Rapido"
+        }
       }
     },
     "cta": {
@@ -806,7 +847,7 @@
       "created": "创建于",
       "candidatesCount": "{{count}} 位候选人",
       "matches": "匹配数",
-      "invited": "已发送邀请",
+      "invited": "已邀约",
       "interviewsCompleted": "面试已完成",
       "requirements": "岗位要求",
       "jobDescription": "职位描述",
@@ -820,7 +861,6 @@
       "notFound": "未找到该请求",
       "loadError": "加载请求详情失败",
       "invitedCandidates": "已邀约候选人",
-      "invited": "已邀约",
       "invitedDate": "邀约日期",
       "interviewStatus": "面试状态"
     },
@@ -2188,12 +2228,87 @@
       "allStatuses": "全部",
       "runMatch": "运行AI匹配",
       "running": "匹配中...",
+      "runningProgress": "匹配中 {{processed}} / {{total}}",
+      "runningEmpty": "正在进行智能匹配，结果会自动出现在这里。",
+      "progressStarting": "正在启动...",
+      "progressTitle": "正在为 {{jobTitle}} 执行智能匹配",
+      "progressStats": "已处理 {{processed}} / {{total}} 份简历",
+      "progressFailed": "失败 {{failed}} 份",
+      "progressCurrentLabel": "当前匹配中",
+      "progressCurrent": "{{candidateName}} -> {{jobTitle}}",
+      "progressPreparing": "正在准备下一份简历...",
+      "completeSuccess": "智能匹配完成：共完成 {{completed}} / {{total}} 份简历。",
+      "completePartial": "智能匹配完成：成功 {{completed}} 份，失败 {{failed}} 份，共 {{total}} 份。",
+      "limitExceeded": "您的智能匹配次数已用完，请升级套餐或充值后继续。",
+      "errorGeneric": "智能匹配失败，请稍后重试。",
+      "dismissError": "关闭错误提示",
+      "dismissSuccess": "关闭提示",
       "noResults": "暂无匹配结果",
       "noResultsDesc": "点击「运行AI匹配」将候选人与该职位进行匹配。",
       "score": "分数",
       "shortlist": "入围",
       "reject": "淘汰",
-      "viewProfile": "查看简历"
+      "viewProfile": "查看简历",
+      "configureMatching": "配置匹配",
+      "configureMatchingFor": "职位：{{jobTitle}}",
+      "selectResumes": "选择简历",
+      "selectAll": "全选",
+      "deselectAll": "取消全选",
+      "searchResumes": "按姓名、职位或标签搜索...",
+      "selectedCount": "已选 {{count}} 份",
+      "noResumesFound": "未找到简历。请先上传简历。",
+      "advancedFilters": "高级预筛选（AI）",
+      "advancedFiltersDesc": "AI将在进行全面匹配前进行预筛选，排除明显不相关的候选人。",
+      "filterLocations": "首选地点",
+      "filterLocationsPlaceholder": "例如：北京、远程、上海",
+      "filterJobTypes": "岗位类型",
+      "filterJobType": {
+        "full-time": "全职",
+        "part-time": "兼职",
+        "contract": "合同制",
+        "internship": "实习"
+      },
+      "filterFreeText": "自定义筛选说明",
+      "filterFreeTextPlaceholder": "例如：必须具有3年以上Python经验，排除没有学位的候选人",
+      "sessionName": "会话名称",
+      "optional": "可选",
+      "starting": "启动中...",
+      "startMatching": "开始匹配（{{count}} 份简历）",
+      "preFilterRunning": "正在预筛选 {{total}} 份简历...",
+      "preFilterComplete": "预筛选完成：{{passed}} 份通过，{{excluded}} 份被排除",
+      "preFilteredCount": "（{{filtered}} 份被预筛选排除）",
+      "sessionHistory": "匹配历史",
+      "currentResults": "当前结果",
+      "viewingSession": "查看已保存的匹配结果",
+      "backToCurrent": "返回当前结果",
+      "untitledSession": "未命名会话",
+      "sessionCompleted": "已完成",
+      "sessionRunning": "进行中",
+      "sessionFailed": "失败",
+      "sessionStats": "{{matched}}/{{total}} 匹配",
+      "avgScore": "平均：{{score}}",
+      "topGrade": "最高：{{grade}}",
+      "preFilterSummary": "预筛选：{{passed}} 份通过，{{excluded}} 份排除",
+      "deleteSession": "删除会话",
+      "deleteSessionConfirm": "确定删除此匹配会话吗？",
+      "viewDetails": "查看详情",
+      "detailScore": "分数：{{score}}",
+      "detailConfidence": "置信度：{{level}}",
+      "detailBreakdown": "分数明细",
+      "detailSkillMatch": "技能匹配",
+      "detailExperience": "经验",
+      "detailPotential": "潜力",
+      "detailGaps": "需求差距",
+      "detailRecommendations": "建议",
+      "detailForRecruiter": "给招聘官",
+      "detailForCandidate": "给候选人",
+      "detailInterviewQuestions": "关键面试问题",
+      "detailInterviewFocus": "面试重点领域",
+      "detailSuggestedQuestions": "建议面试问题",
+      "detailTechnical": "技术",
+      "detailBehavioral": "行为",
+      "detailExperienceValidation": "经验验证",
+      "detailSuggestedRole": "建议岗位：{{role}}"
     },
     "evaluations": {
       "title": "评估报告",
@@ -2380,7 +2495,14 @@
           "completed": "已完成",
           "cancelled": "已取消",
           "expired": "已过期"
-        }
+        },
+        "viewResult": "查看结果",
+        "resendEmail": "重新发送邮件",
+        "resending": "发送中...",
+        "resendSuccess": "邀请已重新发送！",
+        "invitationResult": "邀请结果",
+        "emailMessage": "邮件内容",
+        "jobSummary": "职位摘要"
       }
     },
     "insights": {
@@ -2462,35 +2584,105 @@
       "title": "我们的 AI 如何运作",
       "subtitle": "RoboHire 将前沿的语言模型与招聘领域的专业知识相结合，自动化招聘流程的每一个环节。",
       "items": {
-        "0": { "title": "简历解析", "description": "我们的 AI 能从任何格式的简历中提取结构化数据——PDF、Word 或纯文本——理解上下文，而非仅匹配关键词。" },
-        "1": { "title": "匹配算法", "description": "先进的语言模型将候选人画像与职位要求进行对比，深入理解技能、经验和发展潜力。" },
-        "2": { "title": "自动化面试", "description": "AI 主导的视频面试可实时调整，追问深入问题，以接近人类水平的理解力评估候选人的回答。" },
-        "3": { "title": "评估报告", "description": "全面的评分报告，包含详细的分项分析、作弊检测以及针对每位候选人的可操作建议。" }
+        "0": {
+          "title": "简历解析",
+          "description": "我们的 AI 能从任何格式的简历中提取结构化数据——PDF、Word 或纯文本——理解上下文，而非仅匹配关键词。"
+        },
+        "1": {
+          "title": "匹配算法",
+          "description": "先进的语言模型将候选人画像与职位要求进行对比，深入理解技能、经验和发展潜力。"
+        },
+        "2": {
+          "title": "自动化面试",
+          "description": "AI 主导的视频面试可实时调整，追问深入问题，以接近人类水平的理解力评估候选人的回答。"
+        },
+        "3": {
+          "title": "评估报告",
+          "description": "全面的评分报告，包含详细的分项分析、作弊检测以及针对每位候选人的可操作建议。"
+        }
       }
     },
     "stats": {
-      "companies": { "value": "500+", "label": "合作企业" },
-      "languages": { "value": "7", "label": "支持语言" },
-      "timeSaved": { "value": "90%", "label": "节省时间" },
-      "availability": { "value": "24/7", "label": "全天候服务" }
+      "companies": {
+        "value": "500+",
+        "label": "合作企业"
+      },
+      "languages": {
+        "value": "7",
+        "label": "支持语言"
+      },
+      "timeSaved": {
+        "value": "90%",
+        "label": "节省时间"
+      },
+      "availability": {
+        "value": "24/7",
+        "label": "全天候服务"
+      }
     },
     "comparison": {
       "title": "为什么选择 RoboHire",
       "subtitle": "对比 RoboHire 与人工招聘流程及传统招聘管理系统的差异。",
-      "header": { "feature": "功能", "robohire": "RoboHire", "manual": "人工招聘", "ats": "传统 ATS" },
-      "features": { "setup": "部署时间", "screening": "简历筛选", "interviews": "面试流程", "evaluation": "候选人评估", "multilingual": "多语言支持", "bias": "偏见控制", "cost": "成本" },
-      "robohire": { "setup": "几分钟", "screening": "AI 驱动，即时完成", "interviews": "自动化 AI 面试", "evaluation": "全面的 AI 评估报告", "multilingual": "内置 7 种语言", "bias": "一致的 AI 评估标准", "cost": "低至 $29/月" },
-      "manual": { "setup": "数周", "screening": "人工审阅，每份简历需数小时", "interviews": "手动安排并进行面试", "evaluation": "主观笔记", "multilingual": "取决于团队能力", "bias": "容易产生无意识偏见", "cost": "高（招聘人员人力成本）" },
-      "ats": { "setup": "数天", "screening": "基于关键词的筛选", "interviews": "仅支持面试安排", "evaluation": "基础评分卡", "multilingual": "有限或不支持", "bias": "关键词偏差", "cost": "$200-500/月以上" },
+      "header": {
+        "feature": "功能",
+        "robohire": "RoboHire",
+        "manual": "人工招聘",
+        "ats": "传统 ATS"
+      },
+      "features": {
+        "setup": "部署时间",
+        "screening": "简历筛选",
+        "interviews": "面试流程",
+        "evaluation": "候选人评估",
+        "multilingual": "多语言支持",
+        "bias": "偏见控制",
+        "cost": "成本"
+      },
+      "robohire": {
+        "setup": "几分钟",
+        "screening": "AI 驱动，即时完成",
+        "interviews": "自动化 AI 面试",
+        "evaluation": "全面的 AI 评估报告",
+        "multilingual": "内置 7 种语言",
+        "bias": "一致的 AI 评估标准",
+        "cost": "低至 $29/月"
+      },
+      "manual": {
+        "setup": "数周",
+        "screening": "人工审阅，每份简历需数小时",
+        "interviews": "手动安排并进行面试",
+        "evaluation": "主观笔记",
+        "multilingual": "取决于团队能力",
+        "bias": "容易产生无意识偏见",
+        "cost": "高（招聘人员人力成本）"
+      },
+      "ats": {
+        "setup": "数天",
+        "screening": "基于关键词的筛选",
+        "interviews": "仅支持面试安排",
+        "evaluation": "基础评分卡",
+        "multilingual": "有限或不支持",
+        "bias": "关键词偏差",
+        "cost": "$200-500/月以上"
+      },
       "cta": "开始智能招聘"
     },
     "trust": {
       "title": "信任与安全",
       "subtitle": "数据安全是我们的首要任务。我们采用企业级安全措施保护每一条信息。",
       "items": {
-        "encryption": { "title": "端到端加密", "description": "所有数据在传输中（TLS 1.3）和静态存储时（AES-256）均进行加密。" },
-        "privacy": { "title": "隐私合规", "description": "完全符合 GDPR、CCPA 及其他主要隐私法规。" },
-        "soc2": { "title": "SOC 2 合规", "description": "我们的基础设施满足 SOC 2 Type II 在安全性、可用性和机密性方面的标准。" }
+        "encryption": {
+          "title": "端到端加密",
+          "description": "所有数据在传输中（TLS 1.3）和静态存储时（AES-256）均进行加密。"
+        },
+        "privacy": {
+          "title": "隐私合规",
+          "description": "完全符合 GDPR、CCPA 及其他主要隐私法规。"
+        },
+        "soc2": {
+          "title": "SOC 2 合规",
+          "description": "我们的基础设施满足 SOC 2 Type II 在安全性、可用性和机密性方面的标准。"
+        }
       }
     },
     "cta": {
@@ -2501,49 +2693,177 @@
     }
   },
   "privacy": {
-    "seo": { "title": "隐私政策", "description": "了解 RoboHire 如何收集、使用和保护您的个人信息。" },
+    "seo": {
+      "title": "隐私政策",
+      "description": "了解 RoboHire 如何收集、使用和保护您的个人信息。"
+    },
     "title": "隐私政策",
     "lastUpdated": "最后更新：2026 年 3 月",
     "sections": {
-      "collect": { "title": "1. 我们收集的信息", "content": { "p1": "我们收集您直接提供给我们的信息，包括您的姓名、电子邮件地址、公司名称以及您选择提供的其他信息。", "p2": "当您使用 RoboHire 处理候选人时，我们会收集简历、职位描述、面试记录和评估数据。" } },
-      "use": { "title": "2. 我们如何使用您的信息", "content": { "p1": "我们使用这些信息来提供、维护和改进我们的服务。", "p2": "我们还会使用您的信息就您的账户与您进行沟通。" } },
-      "storage": { "title": "3. 数据存储与安全", "content": { "p1": "您的数据存储在配备企业级加密的安全服务器上。", "p2": "我们仅在必要期限内保留您的个人数据。" } },
-      "thirdParty": { "title": "4. 第三方服务", "content": { "p1": "我们使用受信任的第三方服务来运营我们的平台。", "p2": "我们不会向第三方出售您的个人信息。" } },
-      "rights": { "title": "5. 您的权利（GDPR、CCPA）", "content": { "p1": "您可能对您的个人数据享有特定权利。", "p2": "这些权利可能包括访问、更正或删除您个人数据的权利。", "p3": "如需行使上述任何权利，请通过 privacy@robohire.io 与我们联系。" } },
-      "cookies": { "title": "6. Cookie", "content": { "p1": "我们使用必要的 Cookie 来运营我们的平台。", "p2": "我们也可能使用分析类 Cookie。" } },
-      "contact": { "title": "7. 联系我们", "content": { "p1": "如果您对本隐私政策有任何疑问：", "email": "邮箱：privacy@robohire.io", "address": "RoboHire Inc." } }
+      "collect": {
+        "title": "1. 我们收集的信息",
+        "content": {
+          "p1": "我们收集您直接提供给我们的信息，包括您的姓名、电子邮件地址、公司名称以及您选择提供的其他信息。",
+          "p2": "当您使用 RoboHire 处理候选人时，我们会收集简历、职位描述、面试记录和评估数据。"
+        }
+      },
+      "use": {
+        "title": "2. 我们如何使用您的信息",
+        "content": {
+          "p1": "我们使用这些信息来提供、维护和改进我们的服务。",
+          "p2": "我们还会使用您的信息就您的账户与您进行沟通。"
+        }
+      },
+      "storage": {
+        "title": "3. 数据存储与安全",
+        "content": {
+          "p1": "您的数据存储在配备企业级加密的安全服务器上。",
+          "p2": "我们仅在必要期限内保留您的个人数据。"
+        }
+      },
+      "thirdParty": {
+        "title": "4. 第三方服务",
+        "content": {
+          "p1": "我们使用受信任的第三方服务来运营我们的平台。",
+          "p2": "我们不会向第三方出售您的个人信息。"
+        }
+      },
+      "rights": {
+        "title": "5. 您的权利（GDPR、CCPA）",
+        "content": {
+          "p1": "您可能对您的个人数据享有特定权利。",
+          "p2": "这些权利可能包括访问、更正或删除您个人数据的权利。",
+          "p3": "如需行使上述任何权利，请通过 privacy@robohire.io 与我们联系。"
+        }
+      },
+      "cookies": {
+        "title": "6. Cookie",
+        "content": {
+          "p1": "我们使用必要的 Cookie 来运营我们的平台。",
+          "p2": "我们也可能使用分析类 Cookie。"
+        }
+      },
+      "contact": {
+        "title": "7. 联系我们",
+        "content": {
+          "p1": "如果您对本隐私政策有任何疑问：",
+          "email": "邮箱：privacy@robohire.io",
+          "address": "RoboHire Inc."
+        }
+      }
     },
-    "nav": { "terms": "服务条款", "home": "返回首页" }
+    "nav": {
+      "terms": "服务条款",
+      "home": "返回首页"
+    }
   },
   "terms": {
-    "seo": { "title": "服务条款", "description": "阅读 RoboHire 的服务条款。" },
+    "seo": {
+      "title": "服务条款",
+      "description": "阅读 RoboHire 的服务条款。"
+    },
     "title": "服务条款",
     "lastUpdated": "最后更新：2026 年 3 月",
     "sections": {
-      "acceptance": { "title": "1. 条款接受", "content": { "p1": "访问或使用 RoboHire 即表示您同意受本条款约束。", "p2": "我们可能会不时更新本条款。" } },
-      "service": { "title": "2. 服务描述", "content": { "p1": "RoboHire 是一款 AI 驱动的智能招聘平台。", "p2": "我们保留修改、暂停或终止服务任何部分的权利。" } },
-      "accounts": { "title": "3. 用户账户", "content": { "p1": "您有责任维护账户的保密性。", "p2": "您必须提供准确和完整的信息。" } },
-      "use": { "title": "4. 合理使用", "content": { "p1": "您同意仅将本服务用于合法目的。", "p2": "您不得试图进行未经授权的访问。" } },
-      "ip": { "title": "5. 知识产权", "content": { "p1": "本服务及其原创内容归 RoboHire 所有。", "p2": "您上传的所有数据的所有权归您所有。" } },
-      "liability": { "title": "6. 责任限制", "content": { "p1": "RoboHire 不对任何间接损失承担责任。", "p2": "AI 生成的评估结果仅作为决策辅助工具提供。" } },
-      "termination": { "title": "7. 终止", "content": { "p1": "您可以随时终止您的账户。", "p2": "账户终止后，您使用本服务的权利将立即终止。" } },
-      "contact": { "title": "8. 联系我们", "content": { "p1": "如果您对本条款有任何疑问：", "email": "邮箱：legal@robohire.io", "address": "RoboHire Inc." } }
+      "acceptance": {
+        "title": "1. 条款接受",
+        "content": {
+          "p1": "访问或使用 RoboHire 即表示您同意受本条款约束。",
+          "p2": "我们可能会不时更新本条款。"
+        }
+      },
+      "service": {
+        "title": "2. 服务描述",
+        "content": {
+          "p1": "RoboHire 是一款 AI 驱动的智能招聘平台。",
+          "p2": "我们保留修改、暂停或终止服务任何部分的权利。"
+        }
+      },
+      "accounts": {
+        "title": "3. 用户账户",
+        "content": {
+          "p1": "您有责任维护账户的保密性。",
+          "p2": "您必须提供准确和完整的信息。"
+        }
+      },
+      "use": {
+        "title": "4. 合理使用",
+        "content": {
+          "p1": "您同意仅将本服务用于合法目的。",
+          "p2": "您不得试图进行未经授权的访问。"
+        }
+      },
+      "ip": {
+        "title": "5. 知识产权",
+        "content": {
+          "p1": "本服务及其原创内容归 RoboHire 所有。",
+          "p2": "您上传的所有数据的所有权归您所有。"
+        }
+      },
+      "liability": {
+        "title": "6. 责任限制",
+        "content": {
+          "p1": "RoboHire 不对任何间接损失承担责任。",
+          "p2": "AI 生成的评估结果仅作为决策辅助工具提供。"
+        }
+      },
+      "termination": {
+        "title": "7. 终止",
+        "content": {
+          "p1": "您可以随时终止您的账户。",
+          "p2": "账户终止后，您使用本服务的权利将立即终止。"
+        }
+      },
+      "contact": {
+        "title": "8. 联系我们",
+        "content": {
+          "p1": "如果您对本条款有任何疑问：",
+          "email": "邮箱：legal@robohire.io",
+          "address": "RoboHire Inc."
+        }
+      }
     },
-    "nav": { "privacy": "隐私政策", "home": "返回首页" }
+    "nav": {
+      "privacy": "隐私政策",
+      "home": "返回首页"
+    }
   },
   "blog": {
-    "seo": { "title": "资源与洞察 - AI 招聘博客", "description": "关于 AI 驱动招聘的专业文章。" },
+    "seo": {
+      "title": "资源与洞察 - AI 招聘博客",
+      "description": "关于 AI 驱动招聘的专业文章。"
+    },
     "badge": "博客",
     "title": "资源与洞察",
     "subtitle": "探索文章、指南和最佳实践，帮助您利用 AI 驱动的招聘工具更智能地招聘。",
     "readTime": "{{time}} 阅读",
     "readMore": "阅读全文",
     "articles": {
-      "0": { "title": "2026 年 AI 如何变革招聘行业", "description": "AI 正在重塑企业发现和录用人才的方式。", "category": "行业趋势" },
-      "1": { "title": "成长型团队的简历筛选最佳实践", "description": "在不牺牲质量的前提下扩展您的招聘流程。", "category": "最佳实践" },
-      "2": { "title": "自动化面试完全指南", "description": "关于 AI 驱动面试你需要知道的一切。", "category": "指南" },
-      "3": { "title": "使用 RoboHire API 进行开发", "description": "面向开发者的 RoboHire 集成实战教程。", "category": "技术工程" },
-      "4": { "title": "多语言招聘：触达全球人才", "description": "跨境招聘意味着需要用多种语言评估候选人。", "category": "全球招聘" }
+      "0": {
+        "title": "2026 年 AI 如何变革招聘行业",
+        "description": "AI 正在重塑企业发现和录用人才的方式。",
+        "category": "行业趋势"
+      },
+      "1": {
+        "title": "成长型团队的简历筛选最佳实践",
+        "description": "在不牺牲质量的前提下扩展您的招聘流程。",
+        "category": "最佳实践"
+      },
+      "2": {
+        "title": "自动化面试完全指南",
+        "description": "关于 AI 驱动面试你需要知道的一切。",
+        "category": "指南"
+      },
+      "3": {
+        "title": "使用 RoboHire API 进行开发",
+        "description": "面向开发者的 RoboHire 集成实战教程。",
+        "category": "技术工程"
+      },
+      "4": {
+        "title": "多语言招聘：触达全球人才",
+        "description": "跨境招聘意味着需要用多种语言评估候选人。",
+        "category": "全球招聘"
+      }
     },
     "cta": {
       "title": "准备好体验 RoboHire 了吗？",
@@ -2569,16 +2889,98 @@
     "logs": "日志",
     "syncHistory": "同步历史",
     "noLogs": "暂无同步记录",
-    "greenhouse": { "description": "企业级招聘管理系统，支持结构化招聘流程" },
-    "lever": { "description": "现代招聘管理系统，基于机会的候选人跟踪" },
-    "ashby": { "description": "一站式招聘平台，助力团队规模化" },
-    "bamboohr": { "description": "人力资源软件，含招聘跟踪功能" },
-    "workable": { "description": "招聘软件，强大的招聘渠道集成" }
+    "greenhouse": {
+      "description": "企业级招聘管理系统，支持结构化招聘流程"
+    },
+    "lever": {
+      "description": "现代招聘管理系统，基于机会的候选人跟踪"
+    },
+    "ashby": {
+      "description": "一站式招聘平台，助力团队规模化"
+    },
+    "bamboohr": {
+      "description": "人力资源软件，含招聘跟踪功能"
+    },
+    "workable": {
+      "description": "招聘软件，强大的招聘渠道集成"
+    }
   },
   "common": {
     "confirmDelete": "确认删除",
     "confirmDeleteMessage": "确定要删除此项目吗？此操作无法撤销。",
     "cancel": "取消",
     "delete": "删除"
+  },
+  "admin": {
+    "tabs": {
+      "llmUsage": "LLM 用量",
+      "logs": "日志"
+    },
+    "llmUsage": {
+      "title": "LLM 用量",
+      "subtitle": "所有 LLM API 调用、费用和 Token 用量的详细视图。",
+      "applyFilters": "应用筛选",
+      "from": "开始日期",
+      "to": "结束日期",
+      "provider": "提供商",
+      "model": "模型",
+      "module": "模块",
+      "user": "用户",
+      "loading": "正在加载 LLM 用量数据...",
+      "totalCalls": "总 LLM 调用次数",
+      "totalTokens": "总 Token 数",
+      "totalCost": "总费用",
+      "avgCostPerCall": "平均每次费用",
+      "avgLatency": "平均延迟",
+      "costTrend": "费用趋势",
+      "tokenTrend": "Token 用量趋势",
+      "costByModel": "按模型费用",
+      "costByProvider": "按提供商费用",
+      "inputTokens": "输入",
+      "outputTokens": "输出",
+      "callLog": "LLM 调用日志",
+      "time": "时间",
+      "cost": "费用",
+      "duration": "耗时",
+      "noData": "未找到符合筛选条件的 LLM 调用。",
+      "showing": "显示",
+      "of": "/",
+      "prev": "上一页",
+      "next": "下一页"
+    },
+    "logs": {
+      "title": "请求日志",
+      "subtitle": "监控所有 API 请求，诊断问题，跟踪性能。",
+      "applyFilters": "应用筛选",
+      "from": "开始日期",
+      "to": "结束日期",
+      "module": "模块",
+      "endpoint": "接口",
+      "status": "状态",
+      "allStatuses": "全部",
+      "user": "用户",
+      "loading": "正在加载请求日志...",
+      "totalRequests": "总请求数",
+      "withLLM": "含 LLM（本页）",
+      "pageCost": "本页费用",
+      "pageErrors": "本页错误",
+      "time": "时间",
+      "apiName": "API",
+      "method": "方法",
+      "duration": "耗时",
+      "llmCalls": "LLM",
+      "tokens": "Token",
+      "cost": "费用",
+      "noData": "未找到符合筛选条件的请求日志。",
+      "llmCallDetails": "LLM 调用详情",
+      "provider": "提供商",
+      "model": "模型",
+      "inputTokens": "输入",
+      "outputTokens": "输出",
+      "showing": "显示",
+      "of": "/",
+      "prev": "上一页",
+      "next": "下一页"
+    }
   }
 }

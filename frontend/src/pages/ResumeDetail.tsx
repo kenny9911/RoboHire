@@ -15,6 +15,7 @@ interface InvitationRecord {
   invitedAt: string | null;
   fitScore: number | null;
   fitGrade: string | null;
+  inviteData: Record<string, any> | null;
   interview: {
     id: string;
     status: string;
@@ -364,7 +365,7 @@ export default function ResumeDetail() {
       {tab === 'overview' && <OverviewTab parsed={parsed} t={t} />}
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
       {tab === 'jobfit' && <JobFitTab data={resume.jobFitData} loading={jobFitLoading} onAnalyze={analyzeJobFit} onInvite={handleInviteFromFit} invitationsMap={invitationsMap} t={t} />}
-      {tab === 'invitations' && <InvitationsTab invitations={invitations} t={t} />}
+      {tab === 'invitations' && <InvitationsTab invitations={invitations} resumeText={resume.resumeText} onRefresh={fetchInvitations} t={t} />}
       {tab === 'notes' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="mb-6">
@@ -1155,7 +1156,38 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { 
 
 // ─── Invitations Tab ──────────────────────────────────────────────────
 
-function InvitationsTab({ invitations, t }: { invitations: InvitationRecord[]; t: (k: string, f: string, opts?: Record<string, unknown>) => string }) {
+function InvitationsTab({ invitations, resumeText, onRefresh, t }: { invitations: InvitationRecord[]; resumeText?: string; onRefresh?: () => void; t: (k: string, f: string, opts?: Record<string, unknown>) => string }) {
+  const [viewingInvite, setViewingInvite] = useState<InvitationRecord | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const [resendResult, setResendResult] = useState<{ id: string; success: boolean; message: string } | null>(null);
+
+  const handleResend = async (inv: InvitationRecord) => {
+    if (!resumeText) return;
+    setResendingId(inv.id);
+    setResendResult(null);
+    try {
+      const hrRes = await axios.get(`/api/v1/hiring-requests/${inv.hiringRequestId}`);
+      const hr = hrRes.data.data;
+      const jdText = hr.jobDescription || hr.requirements || inv.hiringRequestTitle;
+      const candidateEmail = inv.inviteData?.email || undefined;
+      const res = await axios.post('/api/v1/invite-candidate', {
+        resume: resumeText,
+        jd: jdText,
+        recruiter_email: candidateEmail,
+      });
+      if (res.data.success) {
+        setResendResult({ id: inv.id, success: true, message: t('resumeLibrary.detail.invitations.resendSuccess', 'Invitation resent successfully!') });
+        onRefresh?.();
+      } else {
+        setResendResult({ id: inv.id, success: false, message: res.data.error || 'Failed' });
+      }
+    } catch (err: any) {
+      setResendResult({ id: inv.id, success: false, message: err?.response?.data?.error || 'Failed to resend' });
+    } finally {
+      setResendingId(null);
+    }
+  };
+
   if (invitations.length === 0) {
     return (
       <div className="text-center py-16">
@@ -1176,39 +1208,181 @@ function InvitationsTab({ invitations, t }: { invitations: InvitationRecord[]; t
   };
 
   return (
-    <div className="space-y-3">
-      {invitations.map((inv) => (
-        <div key={inv.id} className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h4 className="text-sm font-semibold text-gray-900">{inv.hiringRequestTitle}</h4>
-              <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
-                <span>{t('resumeLibrary.detail.invitations.invitedAt', 'Invited')}: {inv.invitedAt ? new Date(inv.invitedAt).toLocaleString() : '-'}</span>
-                {inv.fitScore != null && (
-                  <span className="text-indigo-600 font-medium">{t('resumeLibrary.jobFit.score', 'Score')}: {inv.fitScore}</span>
+    <>
+      <div className="space-y-3">
+        {invitations.map((inv) => (
+          <div key={inv.id} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm font-semibold text-gray-900">{inv.hiringRequestTitle}</h4>
+                <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                  <span>{t('resumeLibrary.detail.invitations.invitedAt', 'Invited')}: {inv.invitedAt ? new Date(inv.invitedAt).toLocaleString() : '-'}</span>
+                  {inv.fitScore != null && (
+                    <span className="text-indigo-600 font-medium">{t('resumeLibrary.jobFit.score', 'Score')}: {inv.fitScore}</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {inv.interview ? (
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColors[inv.interview.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {t(`resumeLibrary.detail.invitations.status.${inv.interview.status}`, inv.interview.status)}
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+                    {t('resumeLibrary.detail.invitations.status.scheduled', 'Scheduled')}
+                  </span>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {inv.interview ? (
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColors[inv.interview.status] || 'bg-gray-100 text-gray-600'}`}>
-                  {t(`resumeLibrary.detail.invitations.status.${inv.interview.status}`, inv.interview.status)}
-                </span>
-              ) : (
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
-                  {t('resumeLibrary.detail.invitations.status.scheduled', 'Scheduled')}
-                </span>
+            {inv.interview?.completedAt && (
+              <p className="mt-2 text-xs text-gray-400">
+                {t('resumeLibrary.detail.invitations.completedAt', 'Completed')}: {new Date(inv.interview.completedAt).toLocaleString()}
+              </p>
+            )}
+
+            {/* Resend result toast */}
+            {resendResult?.id === inv.id && (
+              <div className={`mt-2 rounded-lg px-3 py-2 text-xs font-medium ${resendResult.success ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                {resendResult.message}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="mt-3 flex items-center gap-2 pt-2 border-t border-gray-100">
+              {inv.inviteData && (
+                <button
+                  onClick={() => setViewingInvite(inv)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {t('resumeLibrary.detail.invitations.viewResult', 'View Result')}
+                </button>
               )}
+              <button
+                onClick={() => handleResend(inv)}
+                disabled={resendingId === inv.id}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50"
+              >
+                {resendingId === inv.id ? (
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-emerald-600" />
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                )}
+                {resendingId === inv.id
+                  ? t('resumeLibrary.detail.invitations.resending', 'Sending...')
+                  : t('resumeLibrary.detail.invitations.resendEmail', 'Resend Email')}
+              </button>
             </div>
           </div>
-          {inv.interview?.completedAt && (
-            <p className="mt-2 text-xs text-gray-400">
-              {t('resumeLibrary.detail.invitations.completedAt', 'Completed')}: {new Date(inv.interview.completedAt).toLocaleString()}
-            </p>
-          )}
+        ))}
+      </div>
+
+      {/* View Invitation Result Modal */}
+      {viewingInvite && viewingInvite.inviteData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setViewingInvite(null)}>
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {t('resumeLibrary.detail.invitations.invitationResult', 'Invitation Result')}
+              </h3>
+              <button
+                onClick={() => setViewingInvite(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Candidate info */}
+              <div className="rounded-xl bg-gray-50 p-4">
+                <p className="text-sm font-medium text-gray-900">{viewingInvite.inviteData.name || viewingInvite.inviteData.display_name || '-'}</p>
+                {viewingInvite.inviteData.email && <p className="text-xs text-gray-500 mt-0.5">{viewingInvite.inviteData.email}</p>}
+                {viewingInvite.inviteData.company_name && <p className="text-xs text-gray-500">{viewingInvite.inviteData.company_name}</p>}
+              </div>
+
+              {/* Success badge */}
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span className="text-sm font-semibold text-emerald-800">{t('resumeLibrary.detail.invite.success', 'Invitation sent successfully!')}</span>
+                </div>
+                {viewingInvite.inviteData.job_title && (
+                  <p className="text-xs text-emerald-700">{t('resumeLibrary.detail.invite.position', 'Position')}: {viewingInvite.inviteData.job_title}</p>
+                )}
+                {viewingInvite.invitedAt && (
+                  <p className="text-xs text-emerald-600 mt-1">{t('resumeLibrary.detail.invitations.invitedAt', 'Invited')}: {new Date(viewingInvite.invitedAt).toLocaleString()}</p>
+                )}
+              </div>
+
+              {/* Interview link */}
+              {viewingInvite.inviteData.login_url && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('resumeLibrary.detail.invite.interviewLink', 'Interview Link')}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={viewingInvite.inviteData.login_url}
+                      className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 font-mono"
+                    />
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(viewingInvite.inviteData!.login_url); }}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      {t('actions.copy', 'Copy')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* QR Code */}
+              {viewingInvite.inviteData.qrcode_url && (
+                <div className="text-center">
+                  <p className="text-xs text-gray-500 mb-2">{t('resumeLibrary.detail.invite.qrCode', 'WeChat QR Code')}</p>
+                  <img src={viewingInvite.inviteData.qrcode_url} alt="QR Code" className="w-32 h-32 mx-auto rounded-lg border border-gray-200" />
+                </div>
+              )}
+
+              {/* Invitation message */}
+              {viewingInvite.inviteData.message && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('resumeLibrary.detail.invitations.emailMessage', 'Email Message')}</label>
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700 whitespace-pre-wrap max-h-40 overflow-y-auto">
+                    {viewingInvite.inviteData.message}
+                  </div>
+                </div>
+              )}
+
+              {/* Job summary */}
+              {viewingInvite.inviteData.job_summary && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('resumeLibrary.detail.invitations.jobSummary', 'Job Summary')}</label>
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                    {viewingInvite.inviteData.job_summary}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={() => setViewingInvite(null)}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                >
+                  {t('resumeLibrary.detail.invite.done', 'Done')}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
+      )}
+    </>
   );
 }
 

@@ -49,7 +49,8 @@ model User {
   adminAdjustmentsMade      AdminAdjustment[] @relation("AdminAdjustmentsMade")
   atsIntegrations ATSIntegration[]
   jobs            Job[]
-  interviews      Interview[]
+  interviews         Interview[]
+  matchingSessions   MatchingSession[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -399,9 +400,10 @@ model Job {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hiringRequest   HiringRequest? @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
-  jobMatches      JobMatch[]
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hiringRequest     HiringRequest?    @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
+  jobMatches        JobMatch[]
+  matchingSessions  MatchingSession[]
 
   @@index([userId])
   @@index([status])
@@ -547,4 +549,42 @@ model WebhookDelivery {
 
   @@index([status, nextRetryAt])
   @@index([hiringRequestId])
+}
+
+model MatchingSession {
+  id              String    @id @default(cuid())
+  userId          String
+  jobId           String
+  title           String?
+  status          String    @default("running") // running, completed, failed
+
+  // Configuration snapshot
+  config          Json      // { resumeIds[], preFilter: { locations?, jobTypes?, freeText? } }
+
+  // Pre-filter results
+  preFilterModel  String?
+  preFilterResult Json?     // { passedIds[], excluded: [{ resumeId, reason }], durationMs }
+
+  // Results summary
+  totalResumes    Int       @default(0)
+  totalFiltered   Int       @default(0)
+  totalMatched    Int       @default(0)
+  totalFailed     Int       @default(0)
+  avgScore        Float?
+  topGrade        String?
+
+  // Cost tracking
+  totalCost       Float     @default(0)
+  totalTokens     Int       @default(0)
+  totalLLMCalls   Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job             Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([jobId])
 }

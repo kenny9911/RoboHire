@@ -684,6 +684,7 @@ router.get('/:id/invitations', requireAuth, async (req: Request, res: Response) 
       invitedAt: f.invitedAt,
       fitScore: f.fitScore,
       fitGrade: f.fitGrade,
+      inviteData: f.inviteData || null,
       interview: interviewByHR.get(f.hiringRequestId) || null,
     }));
 

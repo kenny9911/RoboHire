@@ -581,7 +581,7 @@ class LoggerService extends EventEmitter {
     return usage;
   }
 
-  private calculateCost(model: string, promptTokens: number, completionTokens: number): number {
+  calculateCost(model: string, promptTokens: number, completionTokens: number): number {
     const pricing = MODEL_PRICING[model] || MODEL_PRICING['default'];
     const inputCost = (promptTokens / 1_000_000) * pricing.input;
     const outputCost = (completionTokens / 1_000_000) * pricing.output;

@@ -13,6 +13,8 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
+import LLMUsageTab from './AdminLLMUsageTab';
+import LogsTab from './AdminLogsTab';
 
 // --- Types ---
 interface UserSummary {
@@ -181,7 +183,7 @@ const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
   custom: { interviews: Infinity, matches: Infinity },
 };
 
-const TABS = ['Overview', 'Analytics', 'Users', 'Pricing', 'Settings'] as const;
+const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Pricing', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 
 // --- Badge helpers ---
@@ -1963,6 +1965,8 @@ export default function AdminDashboard() {
       {/* Tab content */}
       {activeTab === 'Overview' && <OverviewTab />}
       {activeTab === 'Analytics' && <UsageAnalyticsTab />}
+      {activeTab === 'LLM Usage' && <LLMUsageTab />}
+      {activeTab === 'Logs' && <LogsTab />}
       {activeTab === 'Users' && <UsersTab />}
       {activeTab === 'Pricing' && <PricingTab />}
       {activeTab === 'Settings' && <SettingsTab />}

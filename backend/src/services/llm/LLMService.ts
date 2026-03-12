@@ -106,10 +106,11 @@ export class LLMService {
     // Use visionModel if specified (for multimodal messages), otherwise regular model
     const model = options?.visionModel || options?.model || this.model;
 
-    logger.debug('LLM', `Starting LLM call`, {
+    const providerName = this.provider!.getProviderName();
+    logger.info('LLM', `→ ${providerName}/${model}`, {
+      provider: providerName,
       model,
-      messagesCount: messages.length,
-      promptLength: messages.reduce((acc, m) => acc + m.content.length, 0),
+      messages: messages.length,
     }, requestId);
 
     try {
@@ -120,28 +121,21 @@ export class LLMService {
 
       const duration = Date.now() - startTime;
 
-      // Log the LLM usage
-      if (requestId) {
-        logger.logLLMCall(
-          requestId,
-          response.model || model,
-          this.provider!.getProviderName(),
-          response.usage.promptTokens,
-          response.usage.completionTokens,
-          duration
-        );
-      } else {
-        logger.info('LLM', `LLM call completed`, {
-          model: response.model || model,
-          tokens: `${response.usage.promptTokens}/${response.usage.completionTokens}/${response.usage.totalTokens}`,
-          duration: `${duration}ms`,
-        });
-      }
+      // Log the LLM usage — always call logLLMCall so it's tracked in globalStats and llm log file
+      logger.logLLMCall(
+        requestId || `untracked_${Date.now()}`,
+        response.model || model,
+        this.provider!.getProviderName(),
+        response.usage.promptTokens,
+        response.usage.completionTokens,
+        duration
+      );
 
       return response.content;
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error('LLM', `LLM call failed`, {
+      logger.error('LLM', `✗ ${providerName}/${model} failed`, {
+        provider: providerName,
         model,
         error: error instanceof Error ? error.message : 'Unknown error',
         duration: `${duration}ms`,
@@ -162,22 +156,14 @@ export class LLMService {
           });
 
           const fallbackDuration = Date.now() - fallbackStart;
-          if (requestId) {
-            logger.logLLMCall(
-              requestId,
-              fallbackResponse.model || fallbackModel,
-              this.provider!.getProviderName(),
-              fallbackResponse.usage.promptTokens,
-              fallbackResponse.usage.completionTokens,
-              fallbackDuration
-            );
-          } else {
-            logger.info('LLM', `Fallback LLM call completed`, {
-              model: fallbackResponse.model || fallbackModel,
-              tokens: `${fallbackResponse.usage.promptTokens}/${fallbackResponse.usage.completionTokens}/${fallbackResponse.usage.totalTokens}`,
-              duration: `${fallbackDuration}ms`,
-            });
-          }
+          logger.logLLMCall(
+            requestId || `untracked_${Date.now()}`,
+            fallbackResponse.model || fallbackModel,
+            this.provider!.getProviderName(),
+            fallbackResponse.usage.promptTokens,
+            fallbackResponse.usage.completionTokens,
+            fallbackDuration
+          );
 
           return fallbackResponse.content;
         } catch (fallbackError) {
