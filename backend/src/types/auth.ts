@@ -61,6 +61,8 @@ declare global {
         requestPayload: Record<string, unknown>;
         responsePayload: Record<string, unknown>;
       };
+      /** Set to true to skip the default middleware audit log (e.g. when creating per-unit entries manually) */
+      skipAudit?: boolean;
     }
   }
 }

@@ -1204,6 +1204,48 @@ router.post('/:id/auto-match', async (req, res) => {
 
     logger.endRequest(requestId, 'success', 200);
 
+    // Create per-resume audit log entries so usage stats count each match individually
+    const snapshot = logger.getRequestSnapshot(requestId);
+    const successResults = allResults.filter(r => r.fitScore !== null && !r.error);
+    if (successResults.length > 0 && snapshot) {
+      req.skipAudit = true; // Prevent the middleware from creating a duplicate aggregate entry
+      const perUnit = {
+        promptTokens: Math.round(snapshot.promptTokens / successResults.length),
+        completionTokens: Math.round(snapshot.completionTokens / successResults.length),
+        totalTokens: Math.round(snapshot.totalTokens / successResults.length),
+        cost: snapshot.totalCost / successResults.length,
+        durationMs: Math.round(totalDuration / successResults.length),
+      };
+      try {
+        await prisma.apiRequestLog.createMany({
+          data: successResults.map((result) => ({
+            requestId: `${requestId}_${result.resumeId}`,
+            userId,
+            apiKeyId: req.apiKeyId ?? null,
+            endpoint: `/api/v1/hiring-requests/${id}/auto-match`,
+            method: 'POST',
+            module: 'smart_matching',
+            apiName: `smart_matching_${result.resumeId}`,
+            statusCode: 200,
+            durationMs: perUnit.durationMs,
+            promptTokens: perUnit.promptTokens,
+            completionTokens: perUnit.completionTokens,
+            totalTokens: perUnit.totalTokens,
+            llmCalls: 1,
+            cost: perUnit.cost,
+            provider: snapshot.lastProvider,
+            model: snapshot.lastModel,
+            ipAddress: null,
+            userAgent: req.get('user-agent') || null,
+          })),
+        });
+      } catch (auditError) {
+        logger.error('AUTO_MATCH', 'Failed to create per-resume audit logs', {
+          error: auditError instanceof Error ? auditError.message : String(auditError),
+        }, requestId);
+      }
+    }
+
     // Send final completion event
     sendSSE('complete', {
       success: true,

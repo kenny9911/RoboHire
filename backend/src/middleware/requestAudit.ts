@@ -39,6 +39,9 @@ export function persistRequestAudit(req: Request, res: Response, next: NextFunct
     if (finalized) return;
     finalized = true;
 
+    // Skip if the handler already created its own audit entries (e.g. auto-match per-resume logs)
+    if (req.skipAudit) return;
+
     const endedAt = Date.now();
     const requestId = req.requestId || null;
     const path = req.path;
