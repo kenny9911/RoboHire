@@ -14,9 +14,8 @@ This guide summarizes the codebase structure, key execution flows, and change-sa
 ## Repository Snapshot
 
 - Monorepo: npm workspaces (`backend`, `frontend`)
-- Total tracked files (repo inventory pass): ~165
 - Source stack:
-  - Backend: Node.js, Express, Prisma, PostgreSQL, Stripe, Passport, multer, pdf-parse
+  - Backend: Node.js, Express, Prisma, PostgreSQL, Stripe, Passport, multer, pdf-parse, mammoth, xlsx
   - Frontend: React 18, Vite, TypeScript, Tailwind, i18next, Axios, Recharts
 - Default local ports:
   - Frontend: `3607`
@@ -72,6 +71,8 @@ Important env groups in `.env.example`:
 - LLM provider/model:
   - `LLM_PROVIDER` (`openai`, `openrouter`, `google`, `kimi`)
   - `LLM_MODEL`
+  - `LLM_FAST` (used by `/api/v1/hiring-requests/generate-brief`)
+  - `LLM_VISION_MODEL` / `PDF_VISION_MODEL` (used for harder PDF extraction paths)
   - Provider API keys (`OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `KIMI_API_KEY`)
 - Database:
   - `DATABASE_URL` (PostgreSQL)
@@ -180,8 +181,8 @@ All AI features follow a `BaseAgent<TInput, TOutput>` pattern:
 - `AuthService.ts`: signup/login/session/JWT/OAuth account linking/profile/password
 - `LoggerService.ts`: JSONL logs, request tracking, token/cost accounting, summaries
 - `DocumentStorageService.ts`: file-based cache of parsed resumes/JDs/match results by content hash
-- `DocumentParsingService.ts`: unified PDF/DOCX/XLSX/TXT extraction
-- `PDFService.ts`: PDF extraction and text cleanup (`pdf-parse`)
+- `DocumentParsingService.ts`: unified PDF/DOCX/XLSX/TXT/MD/JSON extraction with MIME + filename detection; legacy binary `.doc` is rejected and should be resaved as `.docx`
+- `PDFService.ts`: PDF extraction, text cleanup, and multimodal fallback for harder PDFs when needed
 - `LanguageService.ts`: language detection + prompt language hints
 - `pricingConfig.ts`: central pricing matrix + discount config loading/parsing
 
@@ -228,7 +229,8 @@ All AI features follow a `BaseAgent<TInput, TOutput>` pattern:
 - `POST /match-resume`
 - `POST /invite-candidate`
 - `POST /parse-resume` (PDF upload via multer memory storage)
-- `POST /parse-jd` (PDF upload)
+- `POST /parse-jd` (document upload via the unified parser)
+- `POST /extract-document` (raw text extraction for uploads; optional auth)
 - `POST /evaluate-interview`
 - `GET /health`
 - `GET /stats`
@@ -240,6 +242,7 @@ All AI features follow a `BaseAgent<TInput, TOutput>` pattern:
 `backend/src/routes/hiring.ts`
 
 - Title suggestion + JD draft generation (can be optional auth depending on endpoint)
+- `/generate-brief` uses `LLM_FAST` when configured, then falls back to the default model
 - CRUD for hiring requests
 - Candidate status updates/listing under a request
 
@@ -359,12 +362,15 @@ Major route groups:
 - `frontend/src/config.ts`
   - `API_BASE = VITE_API_URL || ''`
   - In dev, Vite proxy handles `/api` to backend
+- `frontend/src/components/ReleaseVersionGuard.tsx`
+  - Mounted from `frontend/src/main.tsx`
+  - Polls `/version.json` with `no-store`, also checks on focus/visibility, and reloads stale tabs after deploys
 
 ### i18n
 
 - `frontend/src/i18n/index.ts`
 - Uses `i18next` + browser language detector
-- Supported locales: `en`, `zh`, `ja`, `es`, `fr`, `pt`, `de`
+- Supported locales: `en`, `zh`, `zh-TW`, `ja`, `es`, `fr`, `pt`, `de`
 
 ### Layouts
 
@@ -390,7 +396,9 @@ Behavior:
 - Optional authenticated persistence via hiring sessions API
 - Unauthenticated mode keeps ephemeral history in local state
 - Supports role templates and quick prompts
-- Supports file attachment reading (`.pdf/.doc/.docx/.txt`) using client-side `file.text()`
+- Supports JD attachment extraction through backend `POST /api/v1/extract-document`
+- JD attachment pickers accept `.pdf`, `.docx`, `.txt`, `.md`, `.markdown`
+- The landing uploader and the composer attachment flow both pass extracted JD text into the hiring chat / request creation flow
 - Detects assistant action markers (`create_request`)
 - Confirmation step lets user edit generated title/JD with markdown + preview modes
 - Thinking state UI is surfaced with localized step-by-step reasoning labels
@@ -432,7 +440,7 @@ Shared output/rendering components:
 - `frontend/src/pages/Account.tsx`
 - `frontend/src/pages/AdminDashboard.tsx`
 
-These pages depend on authenticated backend routes and are tightly coupled to the current response shapes.
+These pages depend on authenticated backend routes and are tightly coupled to the current response shapes. `UsageDashboard.tsx` now shows both API-key usage and website feature usage derived from request-audit logs.
 
 #### Docs Pages
 
@@ -454,6 +462,7 @@ If backend response formats or auth headers change, docs pages and examples may 
 - Vite config in `frontend/vite.config.ts`
   - Dev server port `3607`
   - Proxy `/api` -> `http://localhost:4607`
+  - Emits `version.json` for release detection
 
 ## Deployment
 
@@ -468,6 +477,7 @@ Render blueprint: `render.yaml`
   - Static site build from `frontend/dist`
   - SPA rewrite to `/index.html`
   - `VITE_API_URL` points to backend origin
+  - Cache headers keep `index.html` and `version.json` uncached while `/assets/*` stays immutable
 
 ## Operational / Change Notes
 
@@ -503,6 +513,7 @@ These files have dense logic and higher regression risk:
 - API keys, JWTs, and session tokens all coexist; avoid breaking auth precedence.
 - File uploads use memory storage; large PDF handling changes can affect RAM usage.
 - Document cache keys are based on normalized content hashing; whitespace-only text transforms can change cache behavior.
+- Upload parsing is centralized through `DocumentParsingService`; if you change accepted formats, update the multer filters and the frontend `accept` lists together.
 - Stripe webhook signature validation depends on raw request body path handling.
 - Public pricing is now config-driven (USD/CNY/JPY + discount), and checkout can apply a Stripe coupon when discount is enabled.
 
@@ -513,7 +524,9 @@ These files have dense logic and higher regression risk:
 - `StartHiring` mixes UI state, API orchestration, and action parsing in one file.
 - `/pricing` consumes backend pricing config (no hard-coded localized pricing constants).
 - Usage and statistics pages hide cost data for non-admin users; admin users see cost metrics and call-level details.
+- Website feature usage on `/dashboard/usage` is derived from backend request logs where `apiKeyId` is `null`; it is not raw frontend click analytics.
 - Docs pages contain hardcoded examples; they are not generated from backend schemas.
+- Release freshness relies on `version.json` plus `ReleaseVersionGuard`, not on remotely clearing browser cache.
 
 ## Recommended Workflow for Changes
 
@@ -550,6 +563,7 @@ These files have dense logic and higher regression risk:
 - Frontend routes: `frontend/src/App.tsx`
 - Auth state: `frontend/src/context/AuthContext.tsx`
 - Start Hiring flow: `frontend/src/pages/StartHiring.tsx`
+- Release freshness guard: `frontend/src/components/ReleaseVersionGuard.tsx`, `frontend/src/main.tsx`
 - Pricing UI: `frontend/src/pages/Pricing.tsx`
 - Admin dashboard UI: `frontend/src/pages/AdminDashboard.tsx`
 - Resume dashboard UI: `frontend/src/pages/ResumeLibrary.tsx`, `frontend/src/pages/ResumeDetail.tsx`
@@ -566,5 +580,7 @@ Keep this file current when any of the following change:
 - LLM provider integration behavior
 - Frontend route structure
 - Start Hiring workflow/action marker protocol
+- Upload parsing formats / `extract-document` flow
 - Deployment setup (`render.yaml`)
+- Release version / cache behavior
 - Build/dev commands or environment variables

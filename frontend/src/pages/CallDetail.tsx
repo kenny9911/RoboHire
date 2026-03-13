@@ -80,7 +80,7 @@ export default function CallDetail() {
     return (
       <div className="max-w-4xl mx-auto">
         <button
-          onClick={() => navigate('/dashboard/usage')}
+          onClick={() => navigate('/product/profile/usage')}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-6"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -102,7 +102,7 @@ export default function CallDetail() {
     <div className="max-w-4xl mx-auto">
       {/* Back button */}
       <button
-        onClick={() => navigate('/dashboard/usage')}
+        onClick={() => navigate('/product/profile/usage')}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-6"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

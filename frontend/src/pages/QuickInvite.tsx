@@ -708,7 +708,7 @@ export default function QuickInvite() {
             <LanguageSelector variant="compact" className="rounded-full border border-slate-200 bg-white/90 px-1" />
             {user ? (
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/product')}
                 className="text-sm text-slate-600 hover:text-blue-700 transition-colors"
               >
                 {t('apiPlayground.dashboard', 'Dashboard')}

@@ -8,7 +8,7 @@
   },
   "nav": {
     "matchResume": "简历匹配",
-    "inviteCandidate": "邀请候选人",
+    "inviteCandidate": "邀请候选人面试",
     "evaluateInterview": "面试评估",
     "parseResume": "解析简历",
     "parseJd": "解析JD"
@@ -820,7 +820,7 @@
       "intelReportAction": "生成报告",
       "intelReportGenerating": "正在生成报告...",
       "intelReportDone": "报告已就绪！",
-      "goToDashboard": "前往仪表盘",
+      "goToDashboard": "前往控制面板",
       "viewFullReport": "查看完整报告",
       "viewReport": "查看招聘报告"
     }
@@ -2023,7 +2023,7 @@
   },
   "product": {
     "nav": {
-      "dashboard": "仪表盘",
+      "dashboard": "控制面板",
       "hiringRequests": "招聘需求",
       "talentHub": "人才库",
       "jobs": "职位",
@@ -2119,6 +2119,8 @@
       "empty": "暂无面试",
       "emptyDesc": "安排一场AI面试即可开始。",
       "evaluate": "运行AI评估",
+      "recording": "录像",
+      "viewRecording": "查看录像",
       "arrangeInterview": "安排面试",
       "step": "步骤",
       "selectResumes": "选择简历",

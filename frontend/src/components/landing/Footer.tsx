@@ -21,7 +21,7 @@ export default function Footer() {
         { label: t('landing.footer.docs', 'Documentation'), href: '/docs' },
         { label: t('landing.footer.apiReference', 'API Reference'), href: '/docs/api/match-resume' },
         { label: t('landing.footer.quickStart', 'Quick Start'), href: '/docs/quick-start' },
-        { label: t('landing.footer.apiKeys', 'API Keys'), href: '/dashboard/api-keys' },
+        { label: t('landing.footer.apiKeys', 'API Keys'), href: '/product/profile/api-keys' },
       ],
     },
     resources: {

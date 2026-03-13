@@ -54,14 +54,17 @@ Verify changes manually: smoke test login/auth restore, `/start-hiring`, one API
 
 **Key services:**
 - `AuthService` — signup, login, OAuth, JWT/session management
-- `LoggerService` — JSON Lines logging with per-request cost tracking
+- `LoggerService` — JSON Lines logging with per-request cost tracking; `getRequestSnapshot()` aggregates token/cost data per request
 - `DocumentStorageService` — file-based caching of parsed resumes/JDs/matches by content hash; whitespace-only text transforms can change cache behavior
 - `LanguageService` — auto-detects language from text, adjusts LLM prompts
 - `PDFService` — extraction via `pdf-parse`; uses memory storage (multer), so large PDF changes can affect RAM
+- `WebhookService` — ATS integration webhook delivery
 
-**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`.
+**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`.
 
-**Middleware chain:** CORS → JSON parser → cookie parser → Passport → requestId → auth → rate limit → usage tracking → route handler. Rate limiting is in-memory per-process (resets on restart, not distributed). Usage records are written after response completion.
+**Request audit & analytics** — `middleware/requestAudit.ts` automatically logs every `/api/` request to `ApiRequestLog` after response completion, capturing tokens, cost, duration, and LLM call details. `lib/requestClassification.ts` maps URL paths to module names (e.g. `resume_parse`, `smart_matching`) for analytics grouping. For batch operations (e.g. auto-match processing multiple resumes), set `req.skipAudit = true` and create per-unit `ApiRequestLog` entries manually to get accurate per-item usage counts.
+
+**Middleware chain:** CORS → JSON parser → cookie parser → Passport → requestId → auth → rate limit → request audit → route handler. Rate limiting is in-memory per-process (resets on restart, not distributed). Audit records are written after response completion via `res.on('finish')`.
 
 ### Frontend (`frontend/src/`)
 
@@ -69,7 +72,7 @@ Verify changes manually: smoke test login/auth restore, `/start-hiring`, one API
 
 **Layouts** — `DashboardLayout` (sidebar + nested routes), `APIPlayground` (tabbed API testing), `DocsLayout` (docs sidebar). Routes defined in `App.tsx`. Dashboard routes gated by `ProtectedRoute.tsx`.
 
-**i18n** — 7 languages (en, zh, ja, es, fr, pt, de) via i18next. Translations in `i18n/locales/{lang}/translation.json`. Auto-detects from browser with English fallback.
+**i18n** — 8 languages (en, zh, zh-TW, ja, es, fr, pt, de) via i18next. Translations in `i18n/locales/{lang}/translation.json`. Auto-detects from browser with English fallback.
 
 **HTTP client** — `lib/axios.ts` creates an Axios instance that auto-injects JWT from localStorage into `Authorization` header. In dev, Vite proxies `/api` to backend (`http://localhost:4607`). In prod, `VITE_API_URL` sets the base URL.
 
@@ -79,7 +82,7 @@ Verify changes manually: smoke test login/auth restore, `/start-hiring`, one API
 
 ### Database
 
-PostgreSQL with Prisma ORM. Schema at `backend/prisma/schema.prisma`. Key models: User, Session, HiringRequest, Candidate, HiringSession, ApiKey, ApiUsageRecord. User model tracks subscription tier, Stripe IDs, and usage counters.
+PostgreSQL with Prisma ORM. Schema at `backend/prisma/schema.prisma`. Key models: User, Session, HiringRequest, Candidate, HiringSession, ApiKey, ApiUsageRecord, ApiRequestLog, LLMCallLog, ResumeJobFit, Interview. `ApiRequestLog` is the source of truth for usage analytics (tokens, cost, duration per API call). `LLMCallLog` stores individual LLM invocations linked to their parent request. User model tracks subscription tier, Stripe IDs, and usage counters.
 
 ### Deployment
 
@@ -99,6 +102,10 @@ Copy `.env.example` to `.env` at repo root. Key variable groups: `LLM_PROVIDER`/
 | Hiring chat/sessions | `backend/src/routes/hiringChat.ts`, `hiringSessions.ts` |
 | Auth middleware + service | `backend/src/middleware/auth.ts`, `backend/src/services/AuthService.ts` |
 | LLM provider routing | `backend/src/services/llm/LLMService.ts` |
+| Request audit logging | `backend/src/middleware/requestAudit.ts` |
+| Request classification | `backend/src/lib/requestClassification.ts` |
+| Usage analytics API | `backend/src/routes/usage.ts` |
+| ATS integrations | `backend/src/routes/ats.ts`, `backend/src/services/ats/` |
 | Prisma schema | `backend/prisma/schema.prisma` |
 | Frontend routes | `frontend/src/App.tsx` |
 | Auth state | `frontend/src/context/AuthContext.tsx` |
@@ -117,6 +124,8 @@ These have dense logic and higher regression risk — read carefully before edit
 - `backend/src/services/LoggerService.ts`
 - `backend/src/agents/EvaluationAgent.ts`
 - `backend/src/agents/ResumeMatchAgent.ts`
+- `backend/src/middleware/requestAudit.ts`
+- `backend/src/lib/requestClassification.ts`
 
 ## API Contract Change Checklist
 
@@ -135,4 +144,4 @@ Every user-visible string in the frontend **must** use `t()` from i18next with a
 - Success messages, error messages, and fallback text
 - Chat messages assembled in code (e.g. step-by-step instructions)
 
-When adding or changing any `t()` key, update **all 7 translation files** (`en`, `zh`, `ja`, `es`, `fr`, `pt`, `de`) in `frontend/src/i18n/locales/{lang}/translation.json`. Do not leave keys present only in English with fallback defaults — every key must have a proper translation in every language file.
+When adding or changing any `t()` key, update **all 8 translation files** (`en`, `zh`, `zh-TW`, `ja`, `es`, `fr`, `pt`, `de`) in `frontend/src/i18n/locales/{lang}/translation.json`. Do not leave keys present only in English with fallback defaults — every key must have a proper translation in every language file.

@@ -88,7 +88,7 @@ const getNotificationIcon = (type: NotificationType) => {
 
 const navItems = [
   {
-    path: '/dashboard',
+    path: '/product',
     labelKey: 'dashboard.nav.dashboard',
     fallback: 'Overview',
     exact: true,

@@ -996,7 +996,7 @@ export default function StartHiring() {
                 {t('hiring.newRequest', 'New Request')}
               </button>
               {isAuthenticated ? (
-                <Link to="/dashboard" className="rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
+                <Link to="/product" className="rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
                   {t('landing.nav.dashboard', 'Dashboard')}
                 </Link>
               ) : (
@@ -1473,7 +1473,7 @@ export default function StartHiring() {
               {t('landing.nav.docs', 'Docs')}
             </Link>
             {isAuthenticated ? (
-              <Link to="/dashboard" className="rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
+              <Link to="/product" className="rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
                 {t('landing.nav.dashboard', 'Dashboard')}
               </Link>
             ) : (

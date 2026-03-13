@@ -16,6 +16,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../../.env') });
 config({ path: resolve(__dirname, '../.env') });
 
+// LiveKit agents CLI expects lowercase log level values
+if (process.env.LOG_LEVEL) {
+  process.env.LOG_LEVEL = process.env.LOG_LEVEL.toLowerCase();
+}
+
 import { cli, ServerOptions } from '@livekit/agents';
 
 cli.runApp(

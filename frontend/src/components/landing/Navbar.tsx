@@ -127,7 +127,7 @@ export default function Navbar() {
           <LanguageSelector variant="compact" className="rounded-full border border-slate-200 bg-white/90 px-1" />
           {isAuthenticated ? (
             <Link
-              to="/dashboard"
+              to="/product"
               className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all hover:border-blue-300 hover:text-blue-700"
             >
               {user?.avatar ? (
@@ -240,7 +240,7 @@ export default function Navbar() {
           <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4">
             {isAuthenticated ? (
               <Link
-                to="/dashboard"
+                to="/product"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
               >

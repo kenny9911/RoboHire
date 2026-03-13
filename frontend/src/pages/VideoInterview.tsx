@@ -114,7 +114,13 @@ export default function VideoInterview() {
 
   const handleDisconnect = useCallback(() => {
     setState('ended');
-  }, []);
+    // Notify backend to stop recording + mark completed
+    if (joinData?.interviewId && code) {
+      fetch(`${API_BASE}/api/v1/interviews/finalize/${encodeURIComponent(code)}`, {
+        method: 'POST',
+      }).catch(() => {});
+    }
+  }, [joinData, code]);
 
   // Elapsed timer
   useEffect(() => {
@@ -319,7 +325,9 @@ function DevicePreviewScreen({
     return () => {
       cancelled = true;
       cancelAnimationFrame(animFrameRef.current);
-      audioCtxRef.current?.close();
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -396,7 +404,9 @@ function DevicePreviewScreen({
     // Stop preview stream before LiveKit takes over
     stream?.getTracks().forEach((tr) => tr.stop());
     cancelAnimationFrame(animFrameRef.current);
-    audioCtxRef.current?.close();
+    if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+      audioCtxRef.current.close().catch(() => {});
+    }
     onStart();
   };
 
@@ -539,39 +549,34 @@ function LiveInterviewView({
   return (
     <div className="flex h-screen flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-3">
-        <div className="flex items-center gap-4">
-          <h2 className="font-semibold">{jobTitle || t('videoInterview.title', 'Video Interview')}</h2>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Elapsed */}
-          <span className="font-mono text-sm text-gray-300">{formatTime(elapsed)}</span>
-          {/* Recording */}
-          <div className="flex items-center gap-1.5 text-sm text-gray-400">
+      <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-3 py-2 sm:px-6 sm:py-3">
+        <h2 className="truncate text-sm font-semibold sm:text-base">{jobTitle || t('videoInterview.title', 'Video Interview')}</h2>
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <span className="font-mono text-xs sm:text-sm text-gray-300">{formatTime(elapsed)}</span>
+          <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-400">
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
-            {t('videoInterview.recording', 'Recording')}
+            <span className="hidden sm:inline">{t('videoInterview.recording', 'Recording')}</span>
           </div>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex flex-1 items-center justify-center gap-8 p-8">
+      {/* Main content — stack vertically on mobile, side-by-side on desktop */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 sm:flex-row sm:gap-8 sm:p-8">
         {/* AI Interviewer */}
-        <div className="flex h-72 w-72 flex-col items-center justify-center rounded-2xl border border-gray-700 bg-gray-800/50">
-          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
-            <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="flex h-48 w-48 flex-col items-center justify-center rounded-2xl border border-gray-700 bg-gray-800/50 sm:h-72 sm:w-72">
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 sm:mb-4 sm:h-20 sm:w-20">
+            <svg className="h-7 w-7 text-white sm:h-10 sm:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
             </svg>
           </div>
-          <p className="font-medium">{t('videoInterview.aiInterviewer', 'AI Interviewer')}</p>
+          <p className="text-sm font-medium sm:text-base">{t('videoInterview.aiInterviewer', 'AI Interviewer')}</p>
           <p className="mt-1 text-xs text-gray-400">
             {remoteParticipants.length > 0
               ? t('videoInterview.connected', 'Connected')
               : t('videoInterview.connecting', 'Connecting...')}
           </p>
-          {/* Audio visualizer dots */}
           {remoteParticipants.length > 0 && (
-            <div className="mt-3 flex items-center gap-1">
+            <div className="mt-2 flex items-center gap-1 sm:mt-3">
               {[...Array(5)].map((_, i) => (
                 <div
                   key={i}
@@ -584,16 +589,16 @@ function LiveInterviewView({
         </div>
 
         {/* Candidate Video */}
-        <div className="relative h-72 w-96 overflow-hidden rounded-2xl border border-gray-700 bg-gray-800">
+        <div className="relative h-48 w-64 overflow-hidden rounded-2xl border border-gray-700 bg-gray-800 sm:h-72 sm:w-96">
           {localVideoTrack ? (
             <VideoTrack trackRef={localVideoTrack} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-gray-500">
               <div className="text-center">
-                <svg className="mx-auto mb-2 h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="mx-auto mb-2 h-8 w-8 sm:h-10 sm:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
                 </svg>
-                <p className="text-sm">{t('interview.cameraOff', 'Camera Off')}</p>
+                <p className="text-xs sm:text-sm">{t('interview.cameraOff', 'Camera Off')}</p>
               </div>
             </div>
           )}
@@ -604,8 +609,8 @@ function LiveInterviewView({
       </div>
 
       {/* Controls */}
-      <div className="border-t border-gray-800 bg-gray-900 p-4">
-        <ControlBar variation="minimal" />
+      <div className="border-t border-gray-800 bg-gray-900 p-2 sm:p-4">
+        <ControlBar variation="minimal" saveUserChoices={false} />
       </div>
     </div>
   );

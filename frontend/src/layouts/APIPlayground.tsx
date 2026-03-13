@@ -47,7 +47,7 @@ export default function APIPlayground() {
         <div className="px-4 sm:px-6 py-3 border-b">
           <div className="flex gap-2">
             <Link
-              to="/dashboard"
+              to="/product"
               className="flex-1 text-center px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
             >
               {t('apiPlayground.dashboard', 'Dashboard')}

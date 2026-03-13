@@ -328,7 +328,7 @@ router.get('/', async (req, res) => {
         where,
         include: {
           _count: {
-            select: { candidates: true },
+            select: { candidates: true, resumeJobFits: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -406,7 +406,7 @@ router.get('/stats', async (req, res) => {
         where: { userId },
         include: {
           _count: {
-            select: { candidates: true },
+            select: { candidates: true, resumeJobFits: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -474,8 +474,22 @@ router.get('/:id', async (req, res) => {
         candidates: {
           orderBy: { matchScore: 'desc' },
         },
+        _count: {
+          select: {
+            resumeJobFits: true,
+            interviews: { where: { status: 'completed' } },
+          },
+        },
       },
     });
+
+    // Compute accurate stats from resumeJobFits
+    let invitedCount = 0;
+    if (hiringRequest) {
+      invitedCount = await prisma.resumeJobFit.count({
+        where: { hiringRequestId: id, pipelineStatus: 'invited' },
+      });
+    }
 
     if (!hiringRequest) {
       return res.status(404).json({
@@ -486,7 +500,14 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       success: true,
-      data: hiringRequest,
+      data: {
+        ...hiringRequest,
+        stats: {
+          matches: hiringRequest!._count.resumeJobFits,
+          invited: invitedCount,
+          interviewsCompleted: hiringRequest!._count.interviews,
+        },
+      },
     });
   } catch (error) {
     console.error('Get hiring request error:', error);

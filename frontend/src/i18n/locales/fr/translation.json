@@ -41,7 +41,7 @@
   },
   "nav": {
     "matchResume": "Apparier CV",
-    "inviteCandidate": "Inviter un candidat",
+    "inviteCandidate": "Inviter à un entretien",
     "evaluateInterview": "Evaluer l'entretien",
     "parseResume": "Analyser CV",
     "parseJd": "Analyser JD"
@@ -1699,6 +1699,8 @@
       "empty": "Aucun entretien pour le moment",
       "emptyDesc": "Planifiez un entretien IA pour commencer.",
       "evaluate": "Lancer l'évaluation IA",
+      "recording": "Enregistrement",
+      "viewRecording": "Voir l'enregistrement",
       "arrangeInterview": "Organiser un Entretien",
       "step": "Étape",
       "selectResumes": "Sélectionner les CV",

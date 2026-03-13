@@ -1,20 +1,31 @@
-import { voice, type JobContext, type JobProcess } from '@livekit/agents';
+import { voice, defineAgent, type JobContext, type JobProcess } from '@livekit/agents';
 import { STT, TTS, LLM } from '@livekit/agents-plugin-openai';
 
 /**
  * LiveKit Voice Agent for AI-driven interviews.
  * Reads room metadata for interview instructions and candidate context.
  *
- * This file is dynamically imported by the worker — it must export:
- *   - default: Agent instance
- *   - prewarm (optional): function for process prewarming
+ * This file is dynamically imported by the worker — it must export
+ * a defineAgent({ entry, prewarm }) object as default.
  */
 
-export function prewarm(_proc: JobProcess) {
-  // no-op prewarm; could pre-load models here
+export default defineAgent({
+  prewarm(_proc: JobProcess) {
+    // no-op prewarm; could pre-load models here
+  },
+  entry: entryFn,
+});
+
+async function entryFn(ctx: JobContext) {
+  try {
+    await runInterview(ctx);
+  } catch (err) {
+    console.error('[interview-agent] Fatal error in entry:', err);
+    throw err;
+  }
 }
 
-export default async function entry(ctx: JobContext) {
+async function runInterview(ctx: JobContext) {
   // Parse room metadata for interview config
   const metadata = JSON.parse(ctx.room.metadata || '{}');
 

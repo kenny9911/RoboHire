@@ -41,7 +41,7 @@
   },
   "nav": {
     "matchResume": "Combinar Curriculo",
-    "inviteCandidate": "Convidar Candidato",
+    "inviteCandidate": "Convidar para entrevista",
     "evaluateInterview": "Avaliar Entrevista",
     "parseResume": "Analisar Curriculo",
     "parseJd": "Analisar JD"
@@ -1698,6 +1698,8 @@
       "empty": "Sem entrevistas ainda",
       "emptyDesc": "Agende uma entrevista IA para começar.",
       "evaluate": "Executar Avaliação IA",
+      "recording": "Gravação",
+      "viewRecording": "Ver Gravação",
       "arrangeInterview": "Agendar Entrevista",
       "step": "Passo",
       "selectResumes": "Selecionar Currículos",

@@ -8,7 +8,7 @@
   },
   "nav": {
     "matchResume": "簡歷匹配",
-    "inviteCandidate": "邀請候選人",
+    "inviteCandidate": "邀請候選人面試",
     "evaluateInterview": "面試評估",
     "parseResume": "解析簡歷",
     "parseJd": "解析JD"
@@ -820,7 +820,7 @@
       "intelReportAction": "生成報告",
       "intelReportGenerating": "正在生成報告...",
       "intelReportDone": "報告已就緒！",
-      "goToDashboard": "前往儀表盤",
+      "goToDashboard": "前往控制面板",
       "viewFullReport": "檢視完整報告",
       "viewReport": "查看招聘報告"
     }
@@ -2102,6 +2102,8 @@
       "empty": "排程AI面試",
       "run": "執行AI評估",
       "running": "評估中",
+      "recording": "錄影",
+      "viewRecording": "查看錄影",
       "arrangeInterview": "安排面試",
       "step": "步驟",
       "selectResumes": "選擇履歷",

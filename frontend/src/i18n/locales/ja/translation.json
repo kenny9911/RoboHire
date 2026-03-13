@@ -41,7 +41,7 @@
   },
   "nav": {
     "matchResume": "レジュメ照合",
-    "inviteCandidate": "候補者招待",
+    "inviteCandidate": "候補者を面接に招待",
     "evaluateInterview": "面接評価",
     "parseResume": "レジュメ解析",
     "parseJd": "JD解析"
@@ -2073,6 +2073,8 @@
       "runAIEvaluation": "AI評価を実行",
       "placeholder": "LiveKitによるAIビデオ面接。フェーズ6で実装予定。",
       "evaluate": "AI評価を実行",
+      "recording": "録画",
+      "viewRecording": "録画を見る",
       "arrangeInterview": "面接を手配",
       "step": "ステップ",
       "selectResumes": "履歴書を選択",

@@ -53,6 +53,7 @@ export class InviteAgent {
       jd_content: jd,
       interviewer_requirement: interviewerRequirement || '',
       resume_text: resume,
+      request_source: 'robohire',
     };
 
     logger.info(this.agentName, 'Sending invitation request to RoboHire API', {
