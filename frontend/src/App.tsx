@@ -16,6 +16,8 @@ const StartHiring = lazy(() => import('./pages/StartHiring'));
 const RequestDemo = lazy(() => import('./pages/RequestDemo'));
 const QuickInvite = lazy(() => import('./pages/QuickInvite'));
 const About = lazy(() => import('./pages/About'));
+const InterviewRoom = lazy(() => import('./pages/InterviewRoom'));
+const VideoInterview = lazy(() => import('./pages/VideoInterview'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Blog = lazy(() => import('./pages/Blog'));
@@ -92,6 +94,8 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/interview/:accessToken" element={<InterviewRoom />} />
+            <Route path="/video-interview" element={<VideoInterview />} />
 
             {/* Product App (protected, sidebar layout) */}
             <Route

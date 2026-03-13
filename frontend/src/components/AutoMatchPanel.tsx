@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
+import axios from '../lib/axios';
 
 interface ResumeJobFit {
   id: string;
@@ -111,6 +112,14 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
   const [recruiterEmail, setRecruiterEmail] = useState('');
   const [interviewerReq, setInterviewerReq] = useState('');
 
+  // Resume selection dialog state
+  const [showResumeSelect, setShowResumeSelect] = useState(false);
+  const [resumeSelectForce, setResumeSelectForce] = useState(false);
+  const [allResumes, setAllResumes] = useState<{ id: string; name: string; currentRole: string | null; tags: string[] }[]>([]);
+  const [loadingResumes, setLoadingResumes] = useState(false);
+  const [resumeSelectedIds, setResumeSelectedIds] = useState<Set<string>>(new Set());
+  const [resumeSearch, setResumeSearch] = useState('');
+
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = localStorage.getItem('auth_token');
     return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
@@ -138,7 +147,60 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
     fetchFits();
   }, [fetchFits]);
 
-  const handleAutoMatch = async (force = false) => {
+  // Open resume selection dialog
+  const openResumeSelect = async (force: boolean) => {
+    setResumeSelectForce(force);
+    setShowResumeSelect(true);
+    setResumeSearch('');
+    try {
+      setLoadingResumes(true);
+      const res = await axios.get('/api/v1/resumes', { params: { limit: 500 } });
+      const data = res.data.data || res.data.resumes || [];
+      setAllResumes(data);
+      setResumeSelectedIds(new Set(data.map((r: { id: string }) => r.id)));
+    } catch {
+      setAllResumes([]);
+    } finally {
+      setLoadingResumes(false);
+    }
+  };
+
+  const filteredResumesForSelect = useMemo(() => {
+    if (!resumeSearch.trim()) return allResumes;
+    const q = resumeSearch.toLowerCase();
+    return allResumes.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.currentRole?.toLowerCase().includes(q) ||
+        r.tags?.some((tag) => tag.toLowerCase().includes(q))
+    );
+  }, [allResumes, resumeSearch]);
+
+  const toggleResumeAll = () => {
+    const visible = filteredResumesForSelect;
+    const allSelected = visible.length > 0 && visible.every((r) => resumeSelectedIds.has(r.id));
+    if (allSelected) {
+      const visibleIds = new Set(visible.map((r) => r.id));
+      setResumeSelectedIds((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setResumeSelectedIds((prev) => {
+        const next = new Set(prev);
+        visible.forEach((r) => next.add(r.id));
+        return next;
+      });
+    }
+  };
+
+  const confirmResumeSelect = () => {
+    setShowResumeSelect(false);
+    handleAutoMatch(resumeSelectForce, Array.from(resumeSelectedIds));
+  };
+
+  const handleAutoMatch = async (force = false, resumeIds?: string[]) => {
     try {
       setMatching(true);
       setError(null);
@@ -151,7 +213,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
           method: 'POST',
           headers: getAuthHeaders(),
           credentials: 'include',
-          body: JSON.stringify({ force }),
+          body: JSON.stringify({ force, ...(resumeIds && resumeIds.length > 0 && { resumeIds }) }),
         }
       );
 
@@ -370,7 +432,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
         <div className="flex items-center gap-2">
           {fits.length > 0 && (
             <button
-              onClick={() => handleAutoMatch(true)}
+              onClick={() => openResumeSelect(true)}
               disabled={matching}
               className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
             >
@@ -378,7 +440,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
             </button>
           )}
           <button
-            onClick={() => handleAutoMatch(false)}
+            onClick={() => openResumeSelect(false)}
             disabled={matching}
             className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
           >
@@ -864,6 +926,130 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
                 ) : (
                   t('dashboard.autoMatch.send')
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resume Selection Dialog */}
+      {showResumeSelect && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col mx-4">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  {t('dashboard.autoMatch.selectResumesTitle', 'Select Resumes to Match')}
+                </h3>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  {hiringRequest.title}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowResumeSelect(false)}
+                className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+              {/* Search + Select All */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={resumeSearch}
+                  onChange={(e) => setResumeSearch(e.target.value)}
+                  placeholder={t('dashboard.autoMatch.searchResumesPlaceholder', 'Search by name, role, or tag...')}
+                  className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                />
+                <button
+                  onClick={toggleResumeAll}
+                  className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  {filteredResumesForSelect.length > 0 && filteredResumesForSelect.every((r) => resumeSelectedIds.has(r.id))
+                    ? t('dashboard.autoMatch.deselectAll')
+                    : t('dashboard.autoMatch.selectAll')}
+                </button>
+              </div>
+
+              <div className="text-xs text-slate-500">
+                {t('dashboard.autoMatch.resumeSelectedCount', '{{count}} resumes selected', { count: resumeSelectedIds.size })}
+              </div>
+
+              {/* Resume List */}
+              {loadingResumes ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-indigo-600" />
+                </div>
+              ) : allResumes.length === 0 ? (
+                <div className="text-center py-8 text-sm text-slate-500">
+                  {t('dashboard.autoMatch.noResumesToMatch', 'No resumes found. Upload resumes first in Talent Hub.')}
+                </div>
+              ) : (
+                <div className="border border-slate-200 rounded-lg max-h-64 overflow-y-auto divide-y divide-slate-100">
+                  {filteredResumesForSelect.map((resume) => (
+                    <label
+                      key={resume.id}
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={resumeSelectedIds.has(resume.id)}
+                        onChange={() => {
+                          setResumeSelectedIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(resume.id)) next.delete(resume.id);
+                            else next.add(resume.id);
+                            return next;
+                          });
+                        }}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-slate-900 truncate">{resume.name}</span>
+                          {resume.currentRole && (
+                            <span className="text-xs text-slate-500 truncate">{resume.currentRole}</span>
+                          )}
+                        </div>
+                        {resume.tags && resume.tags.length > 0 && (
+                          <div className="flex gap-1 mt-0.5 flex-wrap">
+                            {resume.tags.slice(0, 4).map((tag) => (
+                              <span key={tag} className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+              <button
+                onClick={() => setShowResumeSelect(false)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={confirmResumeSelect}
+                disabled={resumeSelectedIds.size === 0}
+                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {t('dashboard.autoMatch.startMatchingCount', 'Start Matching ({{count}} resumes)', { count: resumeSelectedIds.size })}
               </button>
             </div>
           </div>

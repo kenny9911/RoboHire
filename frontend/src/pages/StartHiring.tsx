@@ -66,7 +66,50 @@ export default function StartHiring() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const skipLoadSessionId = useRef<string | null>(null);
+  const restoredFromCache = useRef(false);
   const MAX_CHAT_HISTORY = 12;
+
+  // ─── Session-scoped state persistence (survives back/forward navigation) ───
+  const STATE_KEY = 'startHiring_state';
+
+  const saveStateToSession = useCallback(() => {
+    try {
+      sessionStorage.setItem(STATE_KEY, JSON.stringify({
+        step,
+        hiringData,
+        jdDraft,
+        messages,
+        activeSessionId,
+        createdRequestId,
+      }));
+    } catch { /* quota exceeded — ignore */ }
+  }, [step, hiringData, jdDraft, messages, activeSessionId, createdRequestId]);
+
+  // Auto-save on every meaningful state change
+  useEffect(() => {
+    if (restoredFromCache.current || step !== 'initial' || messages.length > 0) {
+      saveStateToSession();
+    }
+  }, [step, hiringData, jdDraft, messages, activeSessionId, createdRequestId, saveStateToSession]);
+
+  // Restore state on mount (before async session load)
+  useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem(STATE_KEY);
+      if (!cached) return;
+      const saved = JSON.parse(cached);
+      if (saved.step && saved.step !== 'initial') {
+        setStep(saved.step);
+        restoredFromCache.current = true;
+      }
+      if (saved.hiringData) setHiringData(saved.hiringData);
+      if (saved.jdDraft) setJdDraft(saved.jdDraft);
+      if (saved.messages?.length) setMessages(saved.messages);
+      if (saved.activeSessionId) setActiveSessionId(saved.activeSessionId);
+      if (saved.createdRequestId) setCreatedRequestId(saved.createdRequestId);
+    } catch { /* corrupt data — ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const CHAT_ERROR_FALLBACK = t(
     'hiring.chatError',
     'Sorry, I ran into an issue while processing that. Please try again.'
@@ -133,11 +176,12 @@ export default function StartHiring() {
     }
   }, [isAuthenticated]);
 
-  // Load session from URL param (skip freshly created local sessions)
+  // Load session from URL param (skip freshly created local sessions and cache-restored ones)
   useEffect(() => {
     const sessionId = searchParams.get('session');
     if (!sessionId || !isAuthenticated) return;
     if (skipLoadSessionId.current === sessionId) return;
+    if (restoredFromCache.current && activeSessionId === sessionId && messages.length > 0) return;
     if (sessionId !== activeSessionId || messages.length === 0) {
       loadSession(sessionId);
     }
@@ -500,9 +544,31 @@ export default function StartHiring() {
     let jdSnippet: string | undefined;
 
     if (attachedFile) {
-      const text = await attachedFile.text();
-      jobDescriptionText = text;
-      jdSnippet = `From JD:\n${text.substring(0, 500)}...`;
+      // Send file to backend for proper parsing (supports PDF, DOCX, CJK, etc.)
+      try {
+        const formData = new FormData();
+        formData.append('file', attachedFile);
+        const token = localStorage.getItem('auth_token');
+        const uploadHeaders: HeadersInit = {};
+        if (token) uploadHeaders.Authorization = `Bearer ${token}`;
+        const extractRes = await fetch(`${API_BASE}/api/v1/extract-document`, {
+          method: 'POST',
+          headers: uploadHeaders,
+          credentials: 'include',
+          body: formData,
+        });
+        const extractData = await extractRes.json();
+        if (extractData.success && extractData.data?.text) {
+          jobDescriptionText = extractData.data.text;
+        } else {
+          // Fallback to raw text read for plain text files
+          jobDescriptionText = await attachedFile.text();
+        }
+      } catch {
+        // Fallback to raw text read
+        jobDescriptionText = await attachedFile.text();
+      }
+      jdSnippet = `From JD:\n${(jobDescriptionText || '').substring(0, 500)}...`;
     }
 
     const normalizeSignal = (value: string) =>
@@ -849,6 +915,8 @@ export default function StartHiring() {
                   setJdError(null);
                   setSearchParams({});
                   setActiveSessionId(null);
+                  setCreatedRequestId(null);
+                  sessionStorage.removeItem(STATE_KEY);
                 }}
                 className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
               >

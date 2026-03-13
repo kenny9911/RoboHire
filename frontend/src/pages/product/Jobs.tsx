@@ -58,28 +58,38 @@ const STATUS_COLORS: Record<string, string> = {
   filled: 'bg-blue-100 text-blue-700',
 };
 
-const INITIAL_FORM = {
-  title: '',
-  companyName: '',
-  department: '',
-  location: '',
-  workType: '',
-  employmentType: '',
-  experienceLevel: '',
-  salaryMin: '',
-  salaryMax: '',
-  salaryCurrency: 'USD',
-  salaryPeriod: 'monthly',
-  description: '',
-  qualifications: '',
-  hardRequirements: '',
-  interviewMode: 'standard',
-  passingScore: '60',
-  interviewLanguage: 'en',
-  interviewDuration: '30',
-  interviewRequirements: '',
-  evaluationRules: '',
+const LANG_CURRENCY_MAP: Record<string, string> = {
+  en: 'USD', zh: 'CNY', 'zh-TW': 'TWD', ja: 'JPY',
+  es: 'EUR', fr: 'EUR', pt: 'EUR', de: 'EUR',
 };
+
+function getInitialForm(lang?: string) {
+  const l = lang || 'en';
+  return {
+    title: '',
+    companyName: '',
+    department: '',
+    location: '',
+    workType: '',
+    employmentType: '',
+    experienceLevel: '',
+    salaryMin: '',
+    salaryMax: '',
+    salaryCurrency: LANG_CURRENCY_MAP[l] || 'USD',
+    salaryPeriod: 'monthly',
+    description: '',
+    qualifications: '',
+    hardRequirements: '',
+    interviewMode: 'standard',
+    passingScore: '60',
+    interviewLanguage: l,
+    interviewDuration: '30',
+    interviewRequirements: '',
+    evaluationRules: '',
+  };
+}
+
+const INITIAL_FORM = getInitialForm();
 
 function AIWandButton({ onClick, loading, hasContent, t }: {
   onClick: () => void;
@@ -107,7 +117,7 @@ function AIWandButton({ onClick, loading, hasContent, t }: {
 }
 
 export default function Jobs() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [jobs, setJobs] = usePageState<Job[]>('jobs.list', []);
   const [loading, setLoading] = useState(jobs.length > 0 ? false : true);
@@ -168,7 +178,7 @@ export default function Jobs() {
   }, [fetchJobs]);
 
   const resetForm = () => {
-    setForm({ ...INITIAL_FORM });
+    setForm(getInitialForm(i18n.language));
     setLocations([]);
     setAnalysisResult(null);
     setImportingFileName('');
@@ -467,7 +477,7 @@ export default function Jobs() {
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            {s || t('product.jobs.allStatuses', 'All')}
+            {s ? t(`product.jobs.status.${s}`, s.charAt(0).toUpperCase() + s.slice(1)) : t('product.jobs.allStatuses', 'All')}
           </button>
         ))}
       </div>
@@ -1122,7 +1132,7 @@ export default function Jobs() {
                       onClick={() => navigate(`/product/jobs/${job.id}`)}
                     >{job.title}</h3>
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[job.status] || STATUS_COLORS.draft}`}>
-                      {job.status}
+                      {t(`product.jobs.status.${job.status}`, job.status.charAt(0).toUpperCase() + job.status.slice(1))}
                     </span>
                   </div>
                   <div className="mt-1 flex items-center gap-3 text-xs text-slate-500 flex-wrap">

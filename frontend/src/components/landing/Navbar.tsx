@@ -150,7 +150,8 @@ export default function Navbar() {
                 {t('landing.nav.signIn', 'Sign In')}
               </Link>
               <Link
-                to="/start-hiring"
+                to="/login"
+                state={{ from: { pathname: '/start-hiring' } }}
                 className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-16px_rgba(37,99,235,0.9)]"
               >
                 {t('landing.nav.getStarted', 'Get Started')}
@@ -255,7 +256,8 @@ export default function Navbar() {
                   {t('landing.nav.signIn', 'Sign In')}
                 </Link>
                 <Link
-                  to="/start-hiring"
+                  to="/login"
+                  state={{ from: { pathname: '/start-hiring' } }}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
                 >

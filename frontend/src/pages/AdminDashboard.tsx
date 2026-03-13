@@ -183,7 +183,7 @@ const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
   custom: { interviews: Infinity, matches: Infinity },
 };
 
-const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Pricing', 'Settings'] as const;
+const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Pricing', 'Interview', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 
 // --- Badge helpers ---
@@ -1816,6 +1816,207 @@ function UsageLimitsSection() {
   );
 }
 
+function InterviewConfigTab() {
+  const [config, setConfig] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminFetch('/interview-config')
+      .then((data) => setConfig(data.data || {}))
+      .catch(() => setMessage('Failed to load config'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const updateField = (key: string, value: string) => {
+    setConfig((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage('');
+    try {
+      await adminFetch('/interview-config', {
+        method: 'PUT',
+        body: JSON.stringify(config),
+      });
+      setMessage('Configuration saved');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-32"><div className="h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600" /></div>;
+  }
+
+  const inputCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500';
+  const labelCls = 'block text-xs font-medium text-gray-600 mb-1';
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      {/* Instructions */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Interview Instructions</h3>
+        <p className="text-sm text-gray-500 mb-4">System prompt for the AI interviewer agent.</p>
+        <textarea
+          value={config['interview.instructions'] || ''}
+          onChange={(e) => updateField('interview.instructions', e.target.value)}
+          rows={8}
+          className={inputCls}
+          placeholder="You are an AI interviewer..."
+        />
+      </div>
+
+      {/* Agent Name */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Agent Name</h3>
+        <p className="text-sm text-gray-500 mb-4">LiveKit Cloud agent name to dispatch.</p>
+        <input
+          type="text"
+          value={config['interview.agentName'] || ''}
+          onChange={(e) => updateField('interview.agentName', e.target.value)}
+          className={inputCls}
+          placeholder="RoboHire-1"
+        />
+      </div>
+
+      {/* STT Config */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Speech-to-Text (STT)</h3>
+        <p className="text-sm text-gray-500 mb-4">Configure the speech recognition provider and model.</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls}>Provider</label>
+            <select
+              value={config['interview.sttProvider'] || 'elevenlabs'}
+              onChange={(e) => updateField('interview.sttProvider', e.target.value)}
+              className={inputCls}
+            >
+              <option value="elevenlabs">ElevenLabs</option>
+              <option value="deepgram">Deepgram</option>
+              <option value="openai">OpenAI Whisper</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Model</label>
+            <input
+              type="text"
+              value={config['interview.sttModel'] || ''}
+              onChange={(e) => updateField('interview.sttModel', e.target.value)}
+              className={inputCls}
+              placeholder="scribe_v2"
+            />
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className={labelCls}>Language</label>
+          <select
+            value={config['interview.language'] || 'en'}
+            onChange={(e) => updateField('interview.language', e.target.value)}
+            className={inputCls}
+          >
+            <option value="en">English</option>
+            <option value="zh-CN">Chinese (Mandarin)</option>
+            <option value="zh-TW">Chinese (Traditional)</option>
+            <option value="ja">Japanese</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="pt">Portuguese</option>
+            <option value="ko">Korean</option>
+          </select>
+        </div>
+      </div>
+
+      {/* LLM Config */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Language Model (LLM)</h3>
+        <p className="text-sm text-gray-500 mb-4">Configure the AI model for the interviewer.</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls}>Provider</label>
+            <select
+              value={config['interview.llmProvider'] || 'openai'}
+              onChange={(e) => updateField('interview.llmProvider', e.target.value)}
+              className={inputCls}
+            >
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Model</label>
+            <input
+              type="text"
+              value={config['interview.llmModel'] || ''}
+              onChange={(e) => updateField('interview.llmModel', e.target.value)}
+              className={inputCls}
+              placeholder="gpt-4o"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* TTS Config */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Text-to-Speech (TTS)</h3>
+        <p className="text-sm text-gray-500 mb-4">Configure the voice synthesis for the interviewer.</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls}>Provider</label>
+            <select
+              value={config['interview.ttsProvider'] || 'cartesia'}
+              onChange={(e) => updateField('interview.ttsProvider', e.target.value)}
+              className={inputCls}
+            >
+              <option value="cartesia">Cartesia</option>
+              <option value="elevenlabs">ElevenLabs</option>
+              <option value="openai">OpenAI</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Model</label>
+            <input
+              type="text"
+              value={config['interview.ttsModel'] || ''}
+              onChange={(e) => updateField('interview.ttsModel', e.target.value)}
+              className={inputCls}
+              placeholder="sonic-3"
+            />
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className={labelCls}>Voice</label>
+          <input
+            type="text"
+            value={config['interview.ttsVoice'] || ''}
+            onChange={(e) => updateField('interview.ttsVoice', e.target.value)}
+            className={inputCls}
+            placeholder="alloy"
+          />
+        </div>
+      </div>
+
+      {/* Save */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {saving ? 'Saving...' : 'Save Configuration'}
+        </button>
+        {message && <p className={`text-sm font-medium ${message.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>{message}</p>}
+      </div>
+    </div>
+  );
+}
+
 function SettingsTab() {
   const { user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
@@ -1969,6 +2170,7 @@ export default function AdminDashboard() {
       {activeTab === 'Logs' && <LogsTab />}
       {activeTab === 'Users' && <UsersTab />}
       {activeTab === 'Pricing' && <PricingTab />}
+      {activeTab === 'Interview' && <InterviewConfigTab />}
       {activeTab === 'Settings' && <SettingsTab />}
     </div>
   );

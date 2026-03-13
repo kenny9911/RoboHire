@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CTA() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <section className="py-20 lg:py-28">
@@ -23,7 +25,7 @@ export default function CTA() {
 
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
-                onClick={() => navigate('/pricing')}
+                onClick={() => navigate(isAuthenticated ? '/start-hiring' : '/login', isAuthenticated ? undefined : { state: { from: { pathname: '/start-hiring' } } })}
                 type="button"
                 className="inline-flex w-full items-center justify-center rounded-full bg-white px-8 py-3.5 text-base font-semibold text-slate-900 transition-all hover:bg-slate-100 sm:w-auto"
               >

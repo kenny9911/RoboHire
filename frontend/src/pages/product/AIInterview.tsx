@@ -97,6 +97,8 @@ export default function AIInterview() {
   const [inviteResults, setInviteResults] = useState<InviteResult[]>([]);
   const [sending, setSending] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
 
   const fetchInterviews = async () => {
     try {
@@ -290,9 +292,183 @@ export default function AIInterview() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const getInviteLink = (accessToken: string) => {
+    return `${window.location.origin}/video-interview?token=${accessToken}`;
+  };
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   const statuses = ['', 'scheduled', 'in_progress', 'completed', 'cancelled'];
   const sentCount = inviteResults.filter((r) => r.status === 'sent').length;
   const errorCount = inviteResults.filter((r) => r.status === 'error').length;
+  const interviewsByNewest = useMemo(
+    () => [...interviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [interviews]
+  );
+  const statusCounts = useMemo(() => {
+    return interviews.reduce<Record<string, number>>((acc, interview) => {
+      acc[interview.status] = (acc[interview.status] || 0) + 1;
+      return acc;
+    }, {});
+  }, [interviews]);
+  const activeRoleCount = useMemo(
+    () => new Set(interviews.map((interview) => interview.jobTitle).filter(Boolean)).size,
+    [interviews]
+  );
+  const scheduledCount = statusCounts.scheduled || 0;
+  const inProgressCount = statusCounts.in_progress || 0;
+  const completedCount = statusCounts.completed || 0;
+  const evaluatedCount = interviews.filter((interview) => Boolean(interview.evaluation)).length;
+  const evaluatedCompletedCount = interviews.filter(
+    (interview) => interview.status === 'completed' && Boolean(interview.evaluation)
+  ).length;
+  const pendingEvaluationCount = Math.max(0, completedCount - evaluatedCompletedCount);
+  const completionRate = interviews.length > 0 ? Math.round((completedCount / interviews.length) * 100) : 0;
+  const evaluationCoverage = completedCount > 0 ? Math.round((evaluatedCompletedCount / completedCount) * 100) : 0;
+  const latestInterviews = interviewsByNewest.slice(0, 4);
+  const pipelineSegments = [
+    { key: 'scheduled', label: 'scheduled', count: scheduledCount, color: 'bg-sky-500' },
+    { key: 'in_progress', label: 'in_progress', count: inProgressCount, color: 'bg-amber-500' },
+    { key: 'completed', label: 'completed', count: completedCount, color: 'bg-emerald-500' },
+  ];
+
+  const todoItems = useMemo(() => {
+    const items: Array<{
+      key: string;
+      title: string;
+      description: string;
+      actionLabel: string;
+      onAction: () => void;
+      tone: string;
+    }> = [];
+
+    if (pendingEvaluationCount > 0) {
+      items.push({
+        key: 'evaluate',
+        title: t('product.interview.todoEvaluateTitle', 'Run pending evaluations'),
+        description: t(
+          'product.interview.todoEvaluateDesc',
+          '{{count}} completed interview(s) still need AI evaluation.',
+          { count: pendingEvaluationCount }
+        ),
+        actionLabel: t('product.interview.todoEvaluateAction', 'Review completed'),
+        onAction: () => setStatusFilter('completed'),
+        tone: 'border-amber-200 bg-amber-50/70 text-amber-700',
+      });
+    }
+
+    if (inProgressCount > 0) {
+      items.push({
+        key: 'monitor',
+        title: t('product.interview.todoInProgressTitle', 'Monitor live interviews'),
+        description: t(
+          'product.interview.todoInProgressDesc',
+          '{{count}} interview(s) are currently in progress.',
+          { count: inProgressCount }
+        ),
+        actionLabel: t('product.interview.todoInProgressAction', 'View live'),
+        onAction: () => setStatusFilter('in_progress'),
+        tone: 'border-blue-200 bg-blue-50/70 text-blue-700',
+      });
+    }
+
+    if (scheduledCount > 0) {
+      items.push({
+        key: 'scheduled',
+        title: t('product.interview.todoScheduledTitle', 'Follow up on scheduled invites'),
+        description: t(
+          'product.interview.todoScheduledDesc',
+          '{{count}} interview(s) are waiting for candidates to start.',
+          { count: scheduledCount }
+        ),
+        actionLabel: t('product.interview.todoScheduledAction', 'View scheduled'),
+        onAction: () => setStatusFilter('scheduled'),
+        tone: 'border-slate-200 bg-slate-50 text-slate-700',
+      });
+    }
+
+    if (items.length === 0) {
+      if (interviews.length === 0) {
+        items.push({
+          key: 'create',
+          title: t('product.interview.todoCreateTitle', 'Create your first interview batch'),
+          description: t(
+            'product.interview.todoCreateDesc',
+            'Select resumes, choose a job, and send AI interview links in one flow.'
+          ),
+          actionLabel: t('product.interview.arrangeInterview', 'Arrange Interview'),
+          onAction: openArrange,
+          tone: 'border-emerald-200 bg-emerald-50/70 text-emerald-700',
+        });
+      } else {
+        items.push({
+          key: 'clear',
+          title: t('product.interview.todoClearTitle', 'Everything is on track'),
+          description: t(
+            'product.interview.todoClearDesc',
+            'No urgent follow-up items right now. Review interview outcomes or arrange a new batch.'
+          ),
+          actionLabel: t('product.interview.todoClearAction', 'View all interviews'),
+          onAction: () => setStatusFilter(''),
+          tone: 'border-emerald-200 bg-emerald-50/70 text-emerald-700',
+        });
+      }
+    }
+
+    return items.slice(0, 3);
+  }, [
+    interviews.length,
+    inProgressCount,
+    openArrange,
+    pendingEvaluationCount,
+    scheduledCount,
+    setStatusFilter,
+    t,
+  ]);
+
+  const getInterviewProgress = (interview: Interview) => {
+    if (interview.status === 'cancelled' || interview.status === 'expired') {
+      return {
+        percent: 100,
+        label: t('product.interview.progressClosed', 'Closed'),
+        tone: 'bg-slate-400',
+      };
+    }
+
+    if (interview.status === 'scheduled') {
+      return {
+        percent: 28,
+        label: t('product.interview.progressScheduled', 'Scheduled'),
+        tone: 'bg-sky-500',
+      };
+    }
+
+    if (interview.status === 'in_progress') {
+      return {
+        percent: 58,
+        label: t('product.interview.progressInProgress', 'Interview in progress'),
+        tone: 'bg-amber-500',
+      };
+    }
+
+    if (interview.status === 'completed' && !interview.evaluation) {
+      return {
+        percent: 82,
+        label: t('product.interview.progressEvaluationPending', 'Evaluation pending'),
+        tone: 'bg-indigo-500',
+      };
+    }
+
+    return {
+      percent: 100,
+      label: t('product.interview.progressReady', 'Review ready'),
+      tone: 'bg-emerald-500',
+    };
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -682,6 +858,261 @@ export default function AIInterview() {
         </div>
       )}
 
+      {!loading && (
+        <>
+          <div className="grid gap-6 xl:grid-cols-[1.05fr,1.45fr]">
+            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_22px_44px_-34px_rgba(15,23,42,0.45)]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    {t('product.interview.overviewEyebrow', 'Overview')}
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                    {t('product.interview.overviewTitle', 'Interview health')}
+                  </h3>
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                  {t('product.interview.totalCount', '{{count}} total', { count: interviews.length })}
+                </span>
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {[
+                  {
+                    label: t('product.interview.metricActiveRoles', 'Active roles'),
+                    value: activeRoleCount,
+                    tone: 'bg-blue-50 text-blue-700',
+                  },
+                  {
+                    label: t('product.interview.metricCompleted', 'Completed interviews'),
+                    value: completedCount,
+                    tone: 'bg-emerald-50 text-emerald-700',
+                  },
+                  {
+                    label: t('product.interview.metricLive', 'Live now'),
+                    value: inProgressCount,
+                    tone: 'bg-amber-50 text-amber-700',
+                  },
+                  {
+                    label: t('product.interview.metricEvaluated', 'Evaluated'),
+                    value: evaluatedCount,
+                    tone: 'bg-indigo-50 text-indigo-700',
+                  },
+                ].map((metric) => (
+                  <div key={metric.label} className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                    <p className="text-xs font-medium text-slate-500">{metric.label}</p>
+                    <p className="mt-2 text-3xl font-semibold text-slate-900">{metric.value}</p>
+                    <span className={`mt-3 inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${metric.tone}`}>
+                      {metric.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_22px_44px_-34px_rgba(15,23,42,0.45)]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    {t('product.interview.progressEyebrow', 'Progress')}
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                    {t('product.interview.progressTitle', 'Pipeline progress')}
+                  </h3>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-semibold text-slate-900">{completionRate}%</p>
+                  <p className="text-xs text-slate-500">
+                    {t('product.interview.progressCompletionRate', 'completion rate')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100">
+                {interviews.length > 0 ? (
+                  <div className="flex h-full w-full">
+                    {pipelineSegments.map((segment) =>
+                      segment.count > 0 ? (
+                        <div
+                          key={segment.key}
+                          className={`${segment.color} h-full`}
+                          style={{ width: `${(segment.count / interviews.length) * 100}%` }}
+                        />
+                      ) : null
+                    )}
+                  </div>
+                ) : (
+                  <div className="h-full w-full bg-slate-100" />
+                )}
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {pipelineSegments.map((segment) => (
+                  <span
+                    key={segment.key}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600"
+                  >
+                    <span className={`h-2 w-2 rounded-full ${segment.color}`} />
+                    <span>{segment.label}</span>
+                    <span className="font-semibold text-slate-900">{segment.count}</span>
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                  <div className="flex items-center justify-between text-sm font-medium text-slate-700">
+                    <span>{t('product.interview.progressEvaluationCoverage', 'Evaluation coverage')}</span>
+                    <span>{evaluationCoverage}%</span>
+                  </div>
+                  <div className="mt-3 h-2 rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full bg-indigo-500 transition-[width] duration-500"
+                      style={{ width: `${evaluationCoverage}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    {t(
+                      'product.interview.progressEvaluationCoverageDesc',
+                      '{{evaluated}} of {{completed}} completed interviews already have evaluations.',
+                      {
+                        evaluated: evaluatedCompletedCount,
+                        completed: completedCount,
+                      }
+                    )}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                  <div className="flex items-center justify-between text-sm font-medium text-slate-700">
+                    <span>{t('product.interview.progressActionQueue', 'Action queue')}</span>
+                    <span>{pendingEvaluationCount + scheduledCount + inProgressCount}</span>
+                  </div>
+                  <div className="mt-3 space-y-2 text-xs text-slate-500">
+                    <p>
+                      {t('product.interview.progressActionQueueCompleted', '{{count}} awaiting evaluation', {
+                        count: pendingEvaluationCount,
+                      })}
+                    </p>
+                    <p>
+                      {t('product.interview.progressActionQueueScheduled', '{{count}} scheduled', {
+                        count: scheduledCount,
+                      })}
+                    </p>
+                    <p>
+                      {t('product.interview.progressActionQueueLive', '{{count}} in progress', {
+                        count: inProgressCount,
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[1.4fr,1fr]">
+            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_22px_44px_-34px_rgba(15,23,42,0.45)]">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    {t('product.interview.latestEyebrow', 'Recent activity')}
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                    {t('product.interview.latestTitle', 'Latest candidates')}
+                  </h3>
+                </div>
+              </div>
+
+              {latestInterviews.length === 0 ? (
+                <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-sm text-slate-500">
+                  {t('product.interview.latestEmpty', 'No candidate activity yet. Arrange an interview to populate this feed.')}
+                </div>
+              ) : (
+                <div className="mt-5 space-y-3">
+                  {latestInterviews.map((interview) => (
+                    <div
+                      key={interview.id}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                          <span className="text-sm font-bold text-blue-700">
+                            {interview.candidateName[0]?.toUpperCase() || '?'}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-900">
+                            {interview.candidateName}
+                          </p>
+                          <p className="truncate text-xs text-slate-500">
+                            {[interview.jobTitle, interview.candidateEmail].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[interview.status] || STATUS_STYLES.scheduled}`}>
+                          {interview.status.replace('_', ' ')}
+                        </span>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {new Date(interview.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_22px_44px_-34px_rgba(15,23,42,0.45)]">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    {t('product.interview.todoEyebrow', 'Focus next')}
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                    {t('product.interview.todoTitle', 'To-do list')}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {todoItems.map((item) => (
+                  <div key={item.key} className={`rounded-2xl border px-4 py-4 ${item.tone}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold">{item.title}</p>
+                        <p className="mt-1 text-xs opacity-80">{item.description}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={item.onAction}
+                        className="shrink-0 rounded-full border border-current/20 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-900 transition-colors hover:bg-white"
+                      >
+                        {item.actionLabel}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </>
+      )}
+
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">
+            {t('product.interview.listTitle', 'Your interviews')}
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            {t('product.interview.listSubtitle', 'Track status, interview progress, and evaluation readiness in one place.')}
+          </p>
+        </div>
+        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+          {t('product.interview.totalCount', '{{count}} total', { count: interviews.length })}
+        </span>
+      </div>
+
       {/* Status filters */}
       <div className="flex gap-2 flex-wrap">
         {statuses.map((s) => (
@@ -719,6 +1150,11 @@ export default function AIInterview() {
               key={interview.id}
               className="rounded-2xl border border-slate-200 bg-white p-5 hover:border-blue-200 transition-colors"
             >
+              {(() => {
+                const progress = getInterviewProgress(interview);
+
+                return (
+                  <>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 shrink-0">
@@ -784,6 +1220,103 @@ export default function AIInterview() {
                   </button>
                 </div>
               </div>
+                    <div className="mt-4">
+                      <div className="mb-1 flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
+                        <span>{t('product.interview.cardProgressLabel', 'Progress')}</span>
+                        <span>{progress.label}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100">
+                        <div
+                          className={`h-full rounded-full transition-[width] duration-500 ${progress.tone}`}
+                          style={{ width: `${progress.percent}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Invite Link & Access Token */}
+                    {interview.accessToken && (
+                      <div className="mt-3">
+                        <button
+                          onClick={() => setExpandedLinkId(expandedLinkId === interview.id ? null : interview.id)}
+                          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                          </svg>
+                          {t('product.interview.inviteLink', 'Invite Link & QR Code')}
+                          <svg className={`w-3 h-3 transition-transform ${expandedLinkId === interview.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        {expandedLinkId === interview.id && (
+                          <div className="mt-2 space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                            {/* Invite Link */}
+                            <div>
+                              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                                {t('product.interview.inviteLinkLabel', 'Interview Link')}
+                              </label>
+                              <div className="mt-1 flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={getInviteLink(interview.accessToken!)}
+                                  className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 font-mono select-all"
+                                />
+                                <button
+                                  onClick={() => copyToClipboard(getInviteLink(interview.accessToken!), `link-${interview.id}`)}
+                                  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                                >
+                                  {copiedId === `link-${interview.id}`
+                                    ? t('common.copied', 'Copied!')
+                                    : t('common.copy', 'Copy')}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Access Token */}
+                            <div>
+                              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                                {t('product.interview.accessTokenLabel', 'Access Token')}
+                              </label>
+                              <div className="mt-1 flex items-center gap-2">
+                                <code className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 font-mono truncate select-all">
+                                  {interview.accessToken}
+                                </code>
+                                <button
+                                  onClick={() => copyToClipboard(interview.accessToken!, `token-${interview.id}`)}
+                                  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                                >
+                                  {copiedId === `token-${interview.id}`
+                                    ? t('common.copied', 'Copied!')
+                                    : t('common.copy', 'Copy')}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* QR Code */}
+                            <div>
+                              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                                {t('product.interview.qrCode', 'QR Code')}
+                              </label>
+                              <div className="mt-1 flex items-center gap-3">
+                                <img
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(getInviteLink(interview.accessToken!))}`}
+                                  alt="QR Code"
+                                  className="h-[120px] w-[120px] rounded-lg border border-slate-200 bg-white p-1"
+                                />
+                                <p className="text-xs text-slate-500">
+                                  {t('product.interview.qrCodeDesc', 'Candidates can scan this QR code to join the interview directly.')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           ))}
         </div>

@@ -522,7 +522,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex flex-col lg:flex-row" ref={splitContainerRef}>
-                  <div style={{ width: `${splitPercent}%` }} className="flex-shrink-0 lg:pr-0">
+                  <div style={{ width: `${splitPercent}%` }} className="max-lg:!w-full flex-shrink-0 lg:pr-0">
                     <RichTextPanel
                       title={t('dashboard.detail.requirements', 'Requirements')}
                       content={selectedRequest.requirements}

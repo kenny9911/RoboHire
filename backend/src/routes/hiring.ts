@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import prisma from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
@@ -1289,6 +1290,8 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
           },
         });
 
+        const accessToken = crypto.randomBytes(32).toString('hex');
+
         // Create Interview record
         await prisma.interview.create({
           data: {
@@ -1300,6 +1303,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
             jobTitle: inviteResult.job_title || hiringRequest.title || 'Interview',
             status: 'scheduled',
             type: 'ai_video',
+            accessToken,
             metadata: {
               inviteData: JSON.parse(JSON.stringify(inviteResult)),
               loginUrl: inviteResult.login_url,

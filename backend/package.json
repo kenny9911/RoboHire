@@ -14,10 +14,14 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "agent:start": "tsx src/interview-worker.ts start",
     "postinstall": "prisma generate"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "@livekit/agents": "^1.0.50",
+    "@livekit/agents-plugin-openai": "^1.0.50",
+    "@livekit/rtc-node": "^0.13.24",
     "@prisma/client": "6.9.0",
     "bcryptjs": "^3.0.3",
     "canvas": "^3.2.1",
@@ -27,6 +31,7 @@
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.3",
     "libphonenumber-js": "^1.12.39",
+    "livekit-server-sdk": "^2.15.0",
     "mammoth": "^1.11.0",
     "multer": "^1.4.5-lts.1",
     "openai": "^4.67.1",

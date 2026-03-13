@@ -4,9 +4,27 @@ import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { generateRequestId, logger } from '../services/LoggerService.js';
 import { EvaluationAgent } from '../agents/EvaluationAgent.js';
+import { liveKitService } from '../services/LiveKitService.js';
 import '../types/auth.js';
 
 const router = Router();
+
+async function findInterviewForJoin(joinCode: string) {
+  return prisma.interview.findFirst({
+    where: {
+      OR: [
+        { accessToken: joinCode },
+        { id: joinCode },
+        {
+          metadata: {
+            path: ['inviteData', 'request_introduction_id'],
+            equals: joinCode,
+          },
+        },
+      ],
+    },
+  });
+}
 
 /**
  * GET /api/v1/interviews
@@ -254,6 +272,209 @@ router.post('/:id/evaluate', requireAuth, async (req, res) => {
   } catch (err: any) {
     logger.error('INTERVIEWS', 'Failed to evaluate interview', { requestId, error: err.message });
     res.status(500).json({ success: false, error: 'Failed to evaluate interview' });
+  }
+});
+
+/**
+ * POST /api/v1/interviews/:id/start
+ * Start LiveKit room + recording for an interview
+ */
+router.post('/:id/start', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const interview = await prisma.interview.findFirst({
+      where: { id: req.params.id, userId },
+    });
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+    if (!liveKitService.isConfigured()) {
+      return res.status(503).json({ success: false, error: 'LiveKit not configured' });
+    }
+    if (interview.status === 'in_progress') {
+      return res.status(400).json({ success: false, error: 'Interview already in progress' });
+    }
+
+    // Load interview config from AppConfig
+    const configRows = await prisma.appConfig.findMany({
+      where: { key: { startsWith: 'interview.' } },
+    });
+    const config: Record<string, string> = {};
+    for (const row of configRows) {
+      config[row.key] = row.value;
+    }
+
+    const roomName = `interview-${interview.id}`;
+    const metadata = {
+      interviewId: interview.id,
+      instructions: config['interview.instructions'] || '',
+      jobTitle: interview.jobTitle || '',
+      jobDescription: interview.jobDescription || '',
+      candidateName: interview.candidateName,
+      resumeText: interview.resumeText || '',
+      language: config['interview.language'] || 'en',
+    };
+
+    // Create room with agent dispatch
+    const agentName = config['interview.agentName'] || 'RoboHire-1';
+    await liveKitService.createRoom(interview.id, metadata, agentName);
+
+    // Start recording
+    let egressId: string | undefined;
+    try {
+      const egress = await liveKitService.startRecording(roomName);
+      egressId = egress.egressId;
+    } catch (err: any) {
+      logger.warn('INTERVIEWS', `Recording start failed (non-fatal): ${err.message}`);
+    }
+
+    // Update interview record
+    const updated = await prisma.interview.update({
+      where: { id: interview.id },
+      data: {
+        status: 'in_progress',
+        roomId: roomName,
+        startedAt: new Date(),
+        metadata: { ...(interview.metadata as any || {}), egressId },
+      },
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    logger.error('INTERVIEWS', 'Failed to start interview', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to start interview' });
+  }
+});
+
+/**
+ * POST /api/v1/interviews/:id/end
+ * Stop recording + close LiveKit room
+ */
+router.post('/:id/end', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const interview = await prisma.interview.findFirst({
+      where: { id: req.params.id, userId },
+    });
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+
+    const meta = (interview.metadata as any) || {};
+
+    // Stop recording if active
+    let recordingUrl: string | undefined;
+    if (meta.egressId) {
+      try {
+        const egress = await liveKitService.stopRecording(meta.egressId);
+        const fileResults = (egress as any).fileResults;
+        if (fileResults && fileResults.length > 0) {
+          recordingUrl = fileResults[0].filename || fileResults[0].location;
+        }
+      } catch (err: any) {
+        logger.warn('INTERVIEWS', `Recording stop failed: ${err.message}`);
+      }
+    }
+
+    // Delete room
+    if (interview.roomId) {
+      await liveKitService.deleteRoom(interview.roomId);
+    }
+
+    const startedAt = interview.startedAt || interview.createdAt;
+    const duration = Math.round((Date.now() - startedAt.getTime()) / 1000);
+
+    const updated = await prisma.interview.update({
+      where: { id: interview.id },
+      data: {
+        status: 'completed',
+        completedAt: new Date(),
+        duration,
+        recordingUrl: recordingUrl || interview.recordingUrl,
+      },
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    logger.error('INTERVIEWS', 'Failed to end interview', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to end interview' });
+  }
+});
+
+/**
+ * GET /api/v1/interviews/join/:accessToken
+ * Public endpoint — candidate uses accessToken or a legacy invite code to get LiveKit connection info
+ */
+router.get('/join/:accessToken', async (req, res) => {
+  try {
+    const interview = await findInterviewForJoin(req.params.accessToken);
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Invalid interview link' });
+    }
+    if (interview.status === 'completed' || interview.status === 'cancelled') {
+      return res.status(410).json({ success: false, error: 'Interview has ended' });
+    }
+    if (!liveKitService.isConfigured()) {
+      return res.status(503).json({ success: false, error: 'LiveKit not configured' });
+    }
+
+    const roomName = interview.roomId || `interview-${interview.id}`;
+
+    // Generate participant token for the candidate
+    const participantToken = await liveKitService.generateToken(
+      roomName,
+      `candidate-${interview.id}`,
+      interview.candidateName,
+    );
+
+    res.json({
+      success: true,
+      data: {
+        token: participantToken,
+        wsUrl: liveKitService.wsUrl,
+        roomName,
+        candidateName: interview.candidateName,
+        jobTitle: interview.jobTitle,
+        interviewId: interview.id,
+        status: interview.status,
+      },
+    });
+  } catch (err: any) {
+    logger.error('INTERVIEWS', 'Failed to join interview', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to join interview' });
+  }
+});
+
+/**
+ * POST /api/v1/interviews/:id/transcript
+ * Agent posts transcript data back to the server
+ */
+router.post('/:id/transcript', async (req, res) => {
+  try {
+    const { transcript, apiKey } = req.body;
+
+    // Simple API key check for agent → backend communication
+    const expectedKey = process.env.LIVEKIT_API_KEY;
+    if (!apiKey || apiKey !== expectedKey) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const interview = await prisma.interview.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+
+    await prisma.interview.update({
+      where: { id: interview.id },
+      data: { transcript },
+    });
+
+    res.json({ success: true });
+  } catch (err: any) {
+    logger.error('INTERVIEWS', 'Failed to save transcript', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to save transcript' });
   }
 });
 

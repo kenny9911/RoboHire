@@ -88,9 +88,13 @@ export default function SmartMatching() {
   const [sessionRefreshTrigger, setSessionRefreshTrigger] = useState(0);
   const [jobSearch, setJobSearch] = useState('');
   const [detailMatch, setDetailMatch] = useState<MatchResult | null>(null);
-  const [jobSelectorExpanded, setJobSelectorExpanded] = useState(selectedJobIds.length === 0);
+  const [showJobSelectorModal, setShowJobSelectorModal] = useState(false);
 
   const selectedJobIdSet = useMemo(() => new Set(selectedJobIds), [selectedJobIds]);
+  const selectedJobs = useMemo(
+    () => jobs.filter((job) => selectedJobIdSet.has(job.id)),
+    [jobs, selectedJobIdSet]
+  );
 
   const filteredJobs = useMemo(() => {
     if (!jobSearch.trim()) return jobs;
@@ -102,11 +106,25 @@ export default function SmartMatching() {
         j.location?.toLowerCase().includes(q)
     );
   }, [jobs, jobSearch]);
+  const sortedFilteredJobs = useMemo(() => {
+    return [...filteredJobs].sort((a, b) => {
+      const selectionRank = Number(selectedJobIdSet.has(b.id)) - Number(selectedJobIdSet.has(a.id));
+      if (selectionRank !== 0) return selectionRank;
+      return a.title.localeCompare(b.title, i18n.language);
+    });
+  }, [filteredJobs, i18n.language, selectedJobIdSet]);
 
   const selectedJobTitles = useMemo(
-    () => jobs.filter((j) => selectedJobIdSet.has(j.id)).map((j) => j.title),
-    [jobs, selectedJobIdSet]
+    () => selectedJobs.map((j) => j.title),
+    [selectedJobs]
   );
+
+  const getJobStatusLabel = useCallback((status: string) => {
+    return t(
+      `product.matching.jobStatus.${status}`,
+      status.replace(/_/g, ' ')
+    );
+  }, [t]);
 
   const getAuthHeaders = useCallback((stream = false): Record<string, string> => {
     const token = localStorage.getItem('auth_token');
@@ -210,6 +228,22 @@ export default function SmartMatching() {
       setMatches([]);
     }
   }, [selectedJobIds, selectedSessionId, fetchMatches, fetchSessionMatches]);
+
+  useEffect(() => {
+    if (!showJobSelectorModal) {
+      setJobSearch('');
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowJobSelectorModal(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showJobSelectorModal]);
 
   const toggleJobSelection = useCallback((jobId: string) => {
     setSelectedJobIds((prev) => {
@@ -482,100 +516,275 @@ export default function SmartMatching() {
         </div>
       )}
 
-      {/* Job Selector — collapsible multi-select with checkboxes */}
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-        <button
-          onClick={() => setJobSelectorExpanded(!jobSelectorExpanded)}
-          className="w-full flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <svg
-              className={`w-4 h-4 text-slate-400 transition-transform ${jobSelectorExpanded ? 'rotate-90' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            <span className="text-sm font-semibold text-slate-700">
-              {t('product.matching.selectJobs', 'Select Jobs')}
-            </span>
-            {selectedJobIds.length > 0 && (
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+      {/* Job Selector */}
+      <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_-34px_rgba(15,23,42,0.35)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+              {t('product.matching.selectJobsLabel', 'Jobs')}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900">
+                {t('product.matching.selectJobs', 'Select Jobs')}
+              </h3>
+              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
                 {t('product.matching.jobsSelectedCount', '{{count}} selected', { count: selectedJobIds.length })}
               </span>
-            )}
+            </div>
+            <p className="text-sm text-slate-500">
+              {selectedJobIds.length > 0
+                ? t('product.matching.jobsSelectedSummary', '{{count}} jobs selected for this matching run.', {
+                    count: selectedJobIds.length,
+                  })
+                : t('product.matching.jobsSelectHint', 'Choose one or more jobs before running AI matching.')}
+            </p>
           </div>
-          {selectedJobIds.length > 0 && !jobSelectorExpanded && (
-            <span className="text-xs text-slate-500 truncate max-w-[150px] sm:max-w-sm hidden sm:inline">
-              {selectedJobTitles.join(', ')}
-            </span>
-          )}
-        </button>
 
-        {jobSelectorExpanded && (
-          <div className="border-t border-slate-200 px-5 pb-4 pt-3">
-            {loadingJobs ? (
-              <div className="flex justify-center py-4">
-                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600" />
-              </div>
-            ) : jobs.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-sm text-slate-500">{t('product.matching.noJobs', 'No jobs found. Create a job first.')}</p>
-                <Link
-                  to="/product/jobs"
-                  className="mt-2 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700"
+          <button
+            type="button"
+            onClick={() => setShowJobSelectorModal(true)}
+            disabled={running}
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            {selectedJobIds.length > 0
+              ? t('product.matching.editJobPicker', 'Edit Selection')
+              : t('product.matching.openJobPicker', 'Choose Jobs')}
+          </button>
+        </div>
+
+        {selectedJobs.length > 0 ? (
+          <div className="mt-5 flex flex-wrap gap-3">
+            {selectedJobs.map((job) => (
+              <button
+                key={job.id}
+                type="button"
+                onClick={() => setShowJobSelectorModal(true)}
+                className="group rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-900">{job.title}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                    job.status === 'open' ? 'bg-emerald-100 text-emerald-700' :
+                    job.status === 'draft' ? 'bg-slate-100 text-slate-500' :
+                    job.status === 'closed' || job.status === 'filled' ? 'bg-rose-100 text-rose-700' :
+                    'bg-amber-100 text-amber-700'
+                  }`}>
+                    {getJobStatusLabel(job.status)}
+                  </span>
+                </div>
+                {(job.department || job.location) && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {[job.department, job.location].filter(Boolean).join(' · ')}
+                  </p>
+                )}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowJobSelectorModal(true)}
+            disabled={running}
+            className="mt-5 flex w-full items-center justify-between rounded-3xl border border-dashed border-slate-300 bg-slate-50/80 px-5 py-5 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                {t('product.matching.openJobPicker', 'Choose Jobs')}
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                {t('product.matching.jobPickerOpenEmpty', 'Open the job picker to choose one or more roles.')}
+              </p>
+            </div>
+            <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {showJobSelectorModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
+          onClick={() => setShowJobSelectorModal(false)}
+        >
+          <div
+            className="flex max-h-[86vh] w-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_36px_90px_-45px_rgba(15,23,42,0.55)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="border-b border-slate-200 px-6 py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    {t('product.matching.selectJobsLabel', 'Jobs')}
+                  </p>
+                  <h3 className="mt-2 text-xl font-semibold text-slate-900">
+                    {t('product.matching.jobPickerTitle', 'Select jobs to match')}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {t('product.matching.jobPickerSubtitle', 'Pick one or more jobs. Matching will run against every selected role.')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowJobSelectorModal(false)}
+                  className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 >
-                  {t('product.matching.goToJobs', 'Go to Jobs')}
-                </Link>
+                  <span className="sr-only">{t('product.matching.jobPickerCancel', 'Cancel')}</span>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-            ) : (
-              <>
-                {jobs.length > 5 && (
+
+              <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                    {t('product.matching.jobsSelectedCount', '{{count}} selected', { count: selectedJobIds.length })}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {t('product.matching.jobPickerResults', '{{count}} jobs', { count: sortedFilteredJobs.length })}
+                  </span>
+                </div>
+                {selectedJobIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedJobIds([])}
+                    disabled={running}
+                    className="text-sm font-semibold text-slate-500 transition-colors hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {t('product.matching.jobPickerClear', 'Clear all')}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {loadingJobs ? (
+                <div className="flex justify-center py-10">
+                  <div className="h-7 w-7 animate-spin rounded-full border-b-2 border-blue-600" />
+                </div>
+              ) : jobs.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
+                  <p className="text-sm text-slate-500">{t('product.matching.noJobs', 'No jobs found. Create a job first.')}</p>
+                  <Link
+                    to="/product/jobs"
+                    className="mt-3 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    {t('product.matching.goToJobs', 'Go to Jobs')}
+                  </Link>
+                </div>
+              ) : (
+                <>
                   <input
                     type="text"
                     value={jobSearch}
                     onChange={(e) => setJobSearch(e.target.value)}
                     placeholder={t('product.matching.searchJobs', 'Search jobs...')}
-                    className="w-full mb-2 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
-                )}
-                <div className="border border-slate-200 rounded-lg max-h-48 overflow-y-auto divide-y divide-slate-100">
-                  {filteredJobs.map((job) => (
-                    <label
-                      key={job.id}
-                      className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
-                        running ? 'opacity-60 pointer-events-none' : 'hover:bg-slate-50'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedJobIdSet.has(job.id)}
-                        onChange={() => toggleJobSelection(job.id)}
-                        disabled={running}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-slate-900">{job.title}</span>
-                        {job.department && (
-                          <span className="text-xs text-slate-500 ml-2">({job.department})</span>
-                        )}
+
+                  {selectedJobs.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {selectedJobs.map((job) => (
+                        <button
+                          key={job.id}
+                          type="button"
+                          onClick={() => toggleJobSelection(job.id)}
+                          disabled={running}
+                          className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <span className="truncate max-w-[220px]">{job.title}</span>
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-5 space-y-3">
+                    {sortedFilteredJobs.length === 0 ? (
+                      <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+                        {t('product.matching.jobPickerEmptySearch', 'No jobs match your search.')}
                       </div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        job.status === 'open' ? 'bg-emerald-100 text-emerald-700' :
-                        job.status === 'draft' ? 'bg-slate-100 text-slate-500' :
-                        'bg-amber-100 text-amber-700'
-                      }`}>
-                        {job.status}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </>
-            )}
+                    ) : (
+                      sortedFilteredJobs.map((job) => {
+                        const selected = selectedJobIdSet.has(job.id);
+
+                        return (
+                          <button
+                            key={job.id}
+                            type="button"
+                            onClick={() => toggleJobSelection(job.id)}
+                            disabled={running}
+                            className={`flex w-full items-start gap-4 rounded-3xl border px-4 py-4 text-left transition-all ${
+                              selected
+                                ? 'border-blue-300 bg-blue-50 shadow-[0_18px_34px_-28px_rgba(59,130,246,0.55)]'
+                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                            } disabled:cursor-not-allowed disabled:opacity-60`}
+                          >
+                            <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border ${
+                              selected
+                                ? 'border-blue-600 bg-blue-600 text-white'
+                                : 'border-slate-300 bg-white text-transparent'
+                            }`}>
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-base font-semibold text-slate-900">{job.title}</span>
+                                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                  job.status === 'open' ? 'bg-emerald-100 text-emerald-700' :
+                                  job.status === 'draft' ? 'bg-slate-100 text-slate-500' :
+                                  job.status === 'closed' || job.status === 'filled' ? 'bg-rose-100 text-rose-700' :
+                                  'bg-amber-100 text-amber-700'
+                                }`}>
+                                  {getJobStatusLabel(job.status)}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-sm text-slate-500">
+                                {[job.department, job.location].filter(Boolean).join(' · ') || t('product.matching.jobPickerNoMeta', 'No department or location provided.')}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-500">
+                {selectedJobIds.length > 0
+                  ? selectedJobTitles.join(', ')
+                  : t('product.matching.jobsSelectHint', 'Choose one or more jobs before running AI matching.')}
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowJobSelectorModal(false)}
+                  className="rounded-2xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                >
+                  {t('product.matching.jobPickerCancel', 'Cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowJobSelectorModal(false)}
+                  className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                >
+                  {t('product.matching.jobPickerDone', 'Done')}
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Session History — always visible */}
       <MatchingSessionHistory

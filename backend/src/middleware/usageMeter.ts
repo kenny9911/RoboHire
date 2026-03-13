@@ -5,7 +5,7 @@ import prisma from '../lib/prisma.js';
  * Default plan limits (fallback when no DB config exists).
  */
 const DEFAULT_PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
-  free: { interviews: 0, matches: 0 },
+  free: { interviews: 2, matches: 10 },
   starter: { interviews: 15, matches: 30 },
   growth: { interviews: 120, matches: 240 },
   business: { interviews: 280, matches: 500 },

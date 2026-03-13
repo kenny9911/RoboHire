@@ -4,7 +4,8 @@ import crypto from 'crypto';
 import { requireAuth } from '../middleware/auth.js';
 import { documentParsingService, DocumentParsingService } from '../services/DocumentParsingService.js';
 import { pdfService } from '../services/PDFService.js';
-import { resumeParseAgent } from '../agents/ResumeParseAgent.js';
+import { getOrParseResume } from '../services/ResumeParsingCache.js';
+import { isParsedResumeLikelyIncomplete } from '../services/ResumeParseValidation.js';
 import { resumeInsightAgent } from '../agents/ResumeInsightAgent.js';
 import { jobFitAgent } from '../agents/JobFitAgent.js';
 import prisma from '../lib/prisma.js';
@@ -161,12 +162,12 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
     const existing = await prisma.resume.findUnique({
       where: { userId_contentHash: { userId, contentHash } },
     });
-    if (existing) {
+    if (existing && !isParsedResumeLikelyIncomplete(existing.parsedData, resumeText)) {
       return res.json({ success: true, data: existing, duplicate: true });
     }
 
-    // Parse resume with AI
-    const parsed = await resumeParseAgent.parse(resumeText, req.requestId);
+    // Parse resume with AI (DB cache first, then LLM)
+    const { parsedData: parsed } = await getOrParseResume(resumeText, userId, req.requestId);
 
     // Extract metadata from parsed data
     const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
@@ -177,25 +178,38 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       ? computeExperienceYears(parsed.experience)
       : null;
 
-    const resume = await prisma.resume.create({
-      data: {
-        userId,
-        name,
-        email,
-        phone,
-        currentRole,
-        experienceYears,
-        resumeText,
-        parsedData: JSON.parse(JSON.stringify(parsed)),
-        fileName: decodedName,
-        fileSize: size,
-        fileType: mimetype,
-        contentHash,
-        source: 'upload',
-      },
-    });
+    const resumeData = {
+      userId,
+      name,
+      email,
+      phone,
+      currentRole,
+      experienceYears,
+      resumeText,
+      parsedData: JSON.parse(JSON.stringify(parsed)),
+      fileName: decodedName,
+      fileSize: size,
+      fileType: mimetype,
+      contentHash,
+      source: existing?.source || 'upload',
+    };
 
-    return res.json({ success: true, data: resume, metrics: getProcessingMetrics(req.requestId) });
+    const resume = existing
+      ? await prisma.resume.update({
+          where: { id: existing.id },
+          data: resumeData,
+        })
+      : await prisma.resume.create({
+          data: resumeData,
+        });
+
+    return res.json({
+      success: true,
+      data: resume,
+      duplicate: Boolean(existing),
+      refreshed: Boolean(existing),
+      metrics: getProcessingMetrics(req.requestId),
+    });
   } catch (error) {
     console.error('Resume upload error:', error);
     return res.status(500).json({
@@ -234,32 +248,38 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
         const existing = await prisma.resume.findUnique({
           where: { userId_contentHash: { userId, contentHash } },
         });
-        if (existing) {
+        if (existing && !isParsedResumeLikelyIncomplete(existing.parsedData, resumeText)) {
           return { fileName: decodedName, success: true as const, data: existing, duplicate: true };
         }
 
-        const parsed = await resumeParseAgent.parse(resumeText, requestId);
+        const { parsedData: parsed } = await getOrParseResume(resumeText, userId, requestId);
         const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
+        const resumeData = {
+          userId,
+          name,
+          email: parsed.email || null,
+          phone: parsed.phone || null,
+          currentRole: parsed.experience?.[0]?.role as string || null,
+          experienceYears: parsed.experience?.length ? computeExperienceYears(parsed.experience) : null,
+          resumeText,
+          parsedData: JSON.parse(JSON.stringify(parsed)),
+          fileName: decodedName,
+          fileSize: file.size,
+          fileType: file.mimetype,
+          contentHash,
+          source: existing?.source || 'upload',
+        };
 
-        const resume = await prisma.resume.create({
-          data: {
-            userId,
-            name,
-            email: parsed.email || null,
-            phone: parsed.phone || null,
-            currentRole: parsed.experience?.[0]?.role as string || null,
-            experienceYears: parsed.experience?.length ? computeExperienceYears(parsed.experience) : null,
-            resumeText,
-            parsedData: JSON.parse(JSON.stringify(parsed)),
-            fileName: decodedName,
-            fileSize: file.size,
-            fileType: file.mimetype,
-            contentHash,
-            source: 'upload',
-          },
-        });
+        const resume = existing
+          ? await prisma.resume.update({
+              where: { id: existing.id },
+              data: resumeData,
+            })
+          : await prisma.resume.create({
+              data: resumeData,
+            });
 
-        return { fileName: decodedName, success: true as const, data: resume };
+        return { fileName: decodedName, success: true as const, data: resume, duplicate: Boolean(existing) };
       } catch (err) {
         return {
           fileName: decodedName,
@@ -334,7 +354,8 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
       });
     }
 
-    const parsed = await resumeParseAgent.parse(resumeText, req.requestId);
+    // For reupload, always re-parse (user explicitly wants new parsing)
+    const { parsedData: parsed } = await getOrParseResume(resumeText, userId, req.requestId);
     const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
     const email = parsed.email || null;
     const phone = parsed.phone || null;

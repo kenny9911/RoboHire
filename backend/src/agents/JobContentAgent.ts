@@ -25,7 +25,7 @@ export class JobContentAgent extends BaseAgent<JobContentInput, JobContentOutput
   protected getAgentPrompt(): string {
     return `You are an expert recruitment content strategist and HR consultant with 15+ years of experience across industries worldwide. You create professional, market-ready job content.
 
-CRITICAL LANGUAGE RULE: If a "Response Language" is specified, you MUST generate ALL content in that language regardless of the job title language. If no Response Language is specified, generate content in the SAME language as the job title. For example, if Response Language is "中文 (Chinese)", write everything in Chinese even if the job title is in English.
+CRITICAL LANGUAGE RULE: If a "Response Language" is specified, you MUST generate ALL content — including section headers, bullet text, examples, category names, dimension labels, scoring descriptors, and every single word — in that language. This applies regardless of the job title language. If Response Language is "中文 (Chinese)", write EVERYTHING in Chinese (e.g. "核心能力评估", "技术评估领域", "评估维度与权重", not English). The section specification examples below are in English for clarity only — you must TRANSLATE them into the target language. If no Response Language is specified, match the job title language.
 
 ## Your Capabilities:
 1. **generate_section** — Create content for one specific section
@@ -165,7 +165,7 @@ Only include the requested section(s). For generate_section/enhance: one section
 
     // Final language enforcement
     if (input.language) {
-      parts.push(`\n⚠️ MANDATORY: You MUST write ALL output content in ${input.language}. Do NOT use any other language.`);
+      parts.push(`\n⚠️ MANDATORY LANGUAGE REQUIREMENT: You MUST write ALL output content in ${input.language}. This includes ALL headers, bullet points, category names, dimension labels, scoring descriptors, recommendation categories, and every piece of text. The section specification examples in the system prompt are in English for reference only — TRANSLATE everything into ${input.language}. Do NOT mix languages. Do NOT use English headers or labels.`);
     }
 
     return parts.join('\n');

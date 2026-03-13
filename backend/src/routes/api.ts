@@ -12,7 +12,8 @@ import { pdfService } from '../services/PDFService.js';
 import { documentParsingService, DocumentParsingService } from '../services/DocumentParsingService.js';
 import { logger } from '../services/LoggerService.js';
 import { documentStorage } from '../services/DocumentStorageService.js';
-import { requireAuth, requireScopes } from '../middleware/auth.js';
+import { getOrParseResume, computeResumeHash } from '../services/ResumeParsingCache.js';
+import { requireAuth, requireScopes, optionalAuth } from '../middleware/auth.js';
 import { trackUsage } from '../middleware/usageTracker.js';
 import { apiRateLimit } from '../middleware/rateLimiter.js';
 import { checkUsageLimit, checkBatchUsage } from '../middleware/usageMeter.js';
@@ -186,8 +187,8 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
         const userId = req.user.id;
         const persistStep = logger.startStep(requestId, 'Persist invitation data');
 
-        // Parse resume with AI
-        const parsed = await resumeParseAgent.parse(resume, requestId);
+        // Parse resume with AI (DB cache first, then LLM)
+        const { parsedData: parsed } = await getOrParseResume(resume, userId, requestId);
 
         // Upsert Resume record (dedup by content hash)
         const contentHash = computeContentHash(resume);
@@ -248,6 +249,8 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
           },
         });
 
+        const accessToken = crypto.randomBytes(32).toString('hex');
+
         // Create Interview record linked to resume & hiring request
         await prisma.interview.create({
           data: {
@@ -259,6 +262,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
             jobTitle: result.job_title || hiringRequest.title || 'Interview',
             status: 'scheduled',
             type: 'ai_video',
+            accessToken,
             metadata: {
               inviteData: JSON.parse(JSON.stringify(result)),
               loginUrl: result.login_url,
@@ -344,40 +348,22 @@ router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit()
       extractedChars: text.length,
     });
 
-    // Step 3: Check if resume already exists in storage
-    const cacheStep = logger.startStep(requestId, 'Check document cache');
-    const existingResume = documentStorage.findExistingResume(text);
-    
-    if (existingResume) {
-      logger.endStep(requestId, cacheStep, 'completed', { cached: true, id: existingResume.id });
-      req.payloadCapture = {
-        requestPayload: {
-          fileName: req.file.originalname,
-          fileSize: req.file.size,
-          extractedTextPreview: text.slice(0, 10000),
-          extractedTextLength: text.length,
-          cached: true,
-        },
-        responsePayload: existingResume.data as unknown as Record<string, unknown>,
-      };
-      logger.endRequest(requestId, 'success', 200);
-      return res.json({
-        success: true,
-        data: existingResume.data,
-        cached: true,
-        documentId: existingResume.id,
-        requestId,
-      });
+    // Step 3: Check DB cache first, then parse via LLM if needed
+    const cacheStep = logger.startStep(requestId, 'Check DB resume cache');
+    const userId = req.user?.id || null;
+    const { parsedData: result, cached } = await getOrParseResume(text, userId, requestId);
+    logger.endStep(requestId, cacheStep, 'completed', { cached });
+
+    // Step 4: Save to file-based storage as well (for backward compat)
+    let documentId: string | undefined;
+    let savedAs: string | undefined;
+    if (!cached) {
+      const saveStep = logger.startStep(requestId, 'Save to document storage');
+      const stored = documentStorage.saveResume(text, result, req.file.originalname, requestId);
+      documentId = stored.id;
+      savedAs = stored.savedFilename;
+      logger.endStep(requestId, saveStep, 'completed', { id: stored.id, filename: stored.savedFilename });
     }
-    logger.endStep(requestId, cacheStep, 'completed', { cached: false });
-
-    // Step 4: Parse the resume text with LLM
-    const result = await resumeParseAgent.parse(text, requestId);
-
-    // Step 5: Save parsed resume to storage
-    const saveStep = logger.startStep(requestId, 'Save to document storage');
-    const stored = documentStorage.saveResume(text, result, req.file.originalname, requestId);
-    logger.endStep(requestId, saveStep, 'completed', { id: stored.id, filename: stored.savedFilename });
 
     req.payloadCapture = {
       requestPayload: {
@@ -385,7 +371,7 @@ router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit()
         fileSize: req.file.size,
         extractedTextPreview: text.slice(0, 10000),
         extractedTextLength: text.length,
-        cached: false,
+        cached,
       },
       responsePayload: result as unknown as Record<string, unknown>,
     };
@@ -394,9 +380,9 @@ router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit()
     return res.json({
       success: true,
       data: result,
-      cached: false,
-      documentId: stored.id,
-      savedAs: stored.savedFilename,
+      cached,
+      ...(documentId && { documentId }),
+      ...(savedAs && { savedAs }),
       requestId,
     });
   } catch (error) {
@@ -951,7 +937,7 @@ router.post('/parse-resume-pdf', requireAuth, requireScopes('read'), apiRateLimi
  * Upload a document (PDF, DOCX, XLSX, TXT), extract text and return it.
  * Used by the Quick Invite flow for JD upload and resume upload with multi-format support.
  */
-router.post('/extract-document', requireAuth, requireScopes('read'), apiRateLimit(), uploadDoc.single('file'), async (req: Request, res: Response) => {
+router.post('/extract-document', optionalAuth, apiRateLimit(), uploadDoc.single('file'), async (req: Request, res: Response) => {
   const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/extract-document', 'POST');
 

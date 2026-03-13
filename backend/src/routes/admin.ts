@@ -1822,4 +1822,76 @@ router.get('/llm-calls/summary', async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────────────
+// Interview Configuration (LiveKit)
+// ──────────────────────────────────────────────────────
+
+const INTERVIEW_CONFIG_KEYS = [
+  'interview.instructions',
+  'interview.agentName',
+  'interview.sttProvider',
+  'interview.sttModel',
+  'interview.llmProvider',
+  'interview.llmModel',
+  'interview.ttsProvider',
+  'interview.ttsModel',
+  'interview.ttsVoice',
+  'interview.language',
+];
+
+/**
+ * GET /api/v1/admin/interview-config
+ * Returns all interview configuration values
+ */
+router.get('/interview-config', async (_req, res) => {
+  try {
+    const configs = await prisma.appConfig.findMany({
+      where: { key: { in: INTERVIEW_CONFIG_KEYS } },
+    });
+    const configMap: Record<string, string> = {};
+    for (const c of configs) {
+      configMap[c.key] = c.value;
+    }
+    res.json({ success: true, data: configMap });
+  } catch (error) {
+    console.error('Admin interview-config error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load interview config' });
+  }
+});
+
+/**
+ * PUT /api/v1/admin/interview-config
+ * Upsert interview configuration values
+ * Body: { "interview.instructions": "...", "interview.llmModel": "...", ... }
+ */
+router.put('/interview-config', async (req, res) => {
+  try {
+    const adminId = req.user!.id;
+    const body = req.body as Record<string, string>;
+
+    const upserts = Object.entries(body)
+      .filter(([key]) => INTERVIEW_CONFIG_KEYS.includes(key))
+      .filter(([, value]) => typeof value === 'string');
+
+    if (upserts.length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid config keys provided' });
+    }
+
+    await prisma.$transaction(
+      upserts.map(([key, value]) =>
+        prisma.appConfig.upsert({
+          where: { key },
+          create: { key, value, updatedBy: adminId },
+          update: { value, updatedBy: adminId },
+        }),
+      ),
+    );
+
+    res.json({ success: true, data: { updated: upserts.length } });
+  } catch (error) {
+    console.error('Admin interview-config update error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update interview config' });
+  }
+});
+
 export default router;

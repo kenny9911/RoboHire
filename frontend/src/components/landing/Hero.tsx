@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Hero() {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
 
   const stats = [
     { value: '90%', label: t('landing.hero.stat1', 'Time Saved'), context: t('landing.hero.stat1Context', 'Average screening time reduction') },
@@ -65,7 +67,8 @@ export default function Hero() {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
-              to="/pricing"
+              to={isAuthenticated ? '/start-hiring' : '/login'}
+              state={isAuthenticated ? undefined : { from: { pathname: '/start-hiring' } }}
               className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 text-base font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(37,99,235,0.95)]"
             >
               {t('landing.hero.ctaPrimary', 'Start Free Trial')}
