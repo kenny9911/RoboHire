@@ -846,6 +846,7 @@
       "processing": "Processing..."
     },
     "detail": {
+      "title": "Request Details",
       "back": "Back to requests",
       "updated": "Updated",
       "created": "Created",

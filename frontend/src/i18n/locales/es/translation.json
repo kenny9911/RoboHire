@@ -908,6 +908,7 @@
       "processing": "Procesando..."
     },
     "detail": {
+      "title": "Detalles de la solicitud",
       "back": "Volver a solicitudes",
       "updated": "Actualizado",
       "created": "Creado",

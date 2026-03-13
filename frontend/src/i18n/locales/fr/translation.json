@@ -908,6 +908,7 @@
       "processing": "Traitement..."
     },
     "detail": {
+      "title": "Détails de la demande",
       "back": "Retour aux demandes",
       "updated": "Mis à jour",
       "created": "Créé",

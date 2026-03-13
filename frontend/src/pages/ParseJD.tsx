@@ -79,7 +79,7 @@ export default function ParseJD() {
       <div className="mb-6 max-w-lg">
         <FileUpload
           onFileSelect={setFile}
-          accept=".pdf,.doc,.docx,.txt,.md,.markdown"
+          accept=".pdf,.docx,.txt,.md,.markdown"
           label={t('pages.parseJd.uploadLabel')}
         />
       </div>

@@ -492,7 +492,7 @@ export default function Jobs() {
             </h3>
             <div className="flex items-center gap-2 flex-wrap">
               {/* Import */}
-              <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.md,.markdown" onChange={handleImport} className="hidden" />
+              <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt,.md,.markdown" onChange={handleImport} className="hidden" />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}

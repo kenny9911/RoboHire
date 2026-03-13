@@ -908,6 +908,7 @@
       "processing": "Wird verarbeitet..."
     },
     "detail": {
+      "title": "Anforderungsdetails",
       "back": "Zurück zu Anfragen",
       "updated": "Aktualisiert",
       "created": "Erstellt",

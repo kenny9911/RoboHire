@@ -1278,6 +1278,7 @@
       "processing": "処理中..."
     },
     "detail": {
+      "title": "リクエスト詳細",
       "back": "リクエスト一覧へ戻る",
       "updated": "更新日",
       "created": "作成日",

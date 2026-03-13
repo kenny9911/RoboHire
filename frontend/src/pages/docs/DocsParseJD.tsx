@@ -7,8 +7,7 @@ export default function DocsParseJD() {
   const { t } = useTranslation();
 
   const requestParams = [
-    { name: 'file', type: 'string (base64)', required: true, description: 'Base64-encoded job description document (PDF, DOCX, TXT, or Markdown)' },
-    { name: 'fileName', type: 'string', description: 'Original filename of the uploaded document' },
+    { name: 'file', type: 'file', required: true, description: 'Job description document (PDF, DOCX, TXT, or Markdown)' },
   ];
 
   const responseParams = [
@@ -26,46 +25,26 @@ export default function DocsParseJD() {
   const exampleRequest = {
     curl: `curl -X POST https://api.robohire.io/v1/parse-jd \\
   -H "Authorization: Bearer rh_your_api_key" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "file": "JVBERi0xLjQKJeLjz9...", 
-    "fileName": "senior_frontend_developer.pdf"
-  }'`,
-    javascript: `// Read a JD document and convert to base64
-const fileBuffer = await fs.readFile('job_description.docx');
-const base64File = fileBuffer.toString('base64');
+  -F "file=@job_description.docx"`,
+    javascript: `const formData = new FormData();
+formData.append('file', file);
 
 const response = await fetch('https://api.robohire.io/v1/parse-jd', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer rh_your_api_key',
-    'Content-Type': 'application/json'
+    'Authorization': 'Bearer rh_your_api_key'
   },
-  body: JSON.stringify({
-    file: base64File,
-    fileName: 'job_description.docx'
-  })
+  body: formData
 });
 
 const result = await response.json();`,
     python: `import requests
-import base64
-
-# Read a JD document and convert to base64
 with open('job_description.docx', 'rb') as f:
-    file_content = base64.b64encode(f.read()).decode('utf-8')
-
-response = requests.post(
-    'https://api.robohire.io/v1/parse-jd',
-    headers={
-        'Authorization': 'Bearer rh_your_api_key',
-        'Content-Type': 'application/json'
-    },
-    json={
-        'file': file_content,
-        'fileName': 'job_description.docx'
-    }
-)
+    response = requests.post(
+        'https://api.robohire.io/v1/parse-jd',
+        headers={'Authorization': 'Bearer rh_your_api_key'},
+        files={'file': ('job_description.docx', f, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
+    )
 
 result = response.json()`,
   };

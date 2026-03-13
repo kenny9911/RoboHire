@@ -847,6 +847,7 @@
       "processing": "处理中..."
     },
     "detail": {
+      "title": "招聘需求详情",
       "back": "返回请求列表",
       "updated": "更新于",
       "created": "创建于",
