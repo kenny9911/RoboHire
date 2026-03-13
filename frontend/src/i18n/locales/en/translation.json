@@ -792,7 +792,8 @@
       "intelReportGenerating": "Generating report...",
       "intelReportDone": "Report ready!",
       "goToDashboard": "Go to Dashboard",
-      "viewFullReport": "View Full Report"
+      "viewFullReport": "View Full Report",
+      "viewReport": "View Hiring Report"
     }
   },
   "dashboard": {
@@ -1216,7 +1217,7 @@
         "parseResume": "Parse Resume",
         "parseResumeDesc": "Extract structured data from resume PDFs.",
         "parseJd": "Parse JD",
-        "parseJdDesc": "Extract structured data from job description PDFs.",
+        "parseJdDesc": "Extract structured data from job description documents.",
         "inviteCandidate": "Invite Candidate",
         "inviteCandidateDesc": "Generate professional interview invitation emails.",
         "evaluateInterview": "Evaluate Interview",
@@ -1343,8 +1344,8 @@
     },
     "parseJD": {
       "title": "Parse Job Description",
-      "intro": "Extract structured data from a job description PDF, including requirements, responsibilities, and benefits.",
-      "endpointDesc": "Parse a job description PDF into structured data",
+      "intro": "Extract structured data from a job description document, including requirements, responsibilities, and benefits.",
+      "endpointDesc": "Parse a job description document into structured data",
       "request": "Request",
       "response": "Response",
       "requirements": {
@@ -1591,11 +1592,11 @@
     },
     "parseJd": {
       "title": "Parse Job Description",
-      "subtitle": "Extract structured data from a JD PDF",
-      "uploadLabel": "Upload JD PDF",
+      "subtitle": "Extract structured data from a JD file",
+      "uploadLabel": "Upload JD file",
       "parseButton": "Parse JD",
       "parsedData": "Parsed Data",
-      "errorMissingFile": "Please upload a job description PDF file"
+      "errorMissingFile": "Please upload a job description file"
     },
     "evaluateInterview": {
       "title": "Evaluate Interview",
@@ -1734,10 +1735,13 @@
       "title": "Profile",
       "name": "Name",
       "company": "Company",
+      "email": "Email",
+      "phone": "Phone",
       "avatar": "Avatar URL",
       "save": "Save Changes",
       "saving": "Saving...",
-      "saved": "Profile updated successfully"
+      "saved": "Profile updated successfully",
+      "joined": "Joined"
     },
     "security": {
       "title": "Security",
@@ -1748,7 +1752,10 @@
       "changing": "Changing...",
       "changed": "Password changed successfully",
       "mismatch": "Passwords do not match",
-      "oauthNote": "Password change is not available for social login accounts."
+      "oauthNote": "Password change is not available for social login accounts.",
+      "changePassword": "Change Password",
+      "emailMethod": "Signed in with email & password",
+      "oauthMethod": "Signed in with {{provider}}"
     },
     "subscription": {
       "title": "Subscription",
@@ -1844,6 +1851,7 @@
       "jobs": "Jobs",
       "aiInterview": "AI Interview",
       "profile": "Profile",
+      "settings": "Settings",
       "devDashboard": "Dev Dashboard",
       "smartMatching": "Smart Matching",
       "evaluations": "Evaluations",
@@ -1890,9 +1898,33 @@
       "usage": "Usage & Billing",
       "integrations": "ATS Integrations"
     },
+    "settings": {
+      "user": "User",
+      "general": "General",
+      "security": "Security",
+      "account": "Account",
+      "usage": "Usage & Billing",
+      "apiKeys": "API Keys",
+      "workspace": "Workspace",
+      "integrations": "ATS Integrations"
+    },
     "interview": {
       "title": "AI Interview",
       "subtitle": "AI-powered interviews with automatic evaluation.",
+      "status": {
+        "scheduled": "Scheduled",
+        "inProgress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      },
+      "verdict": {
+        "strongHire": "Strong Hire",
+        "hire": "Hire",
+        "leanHire": "Lean Hire",
+        "leanNoHire": "Lean No Hire",
+        "noHire": "No Hire"
+      },
       "schedule": "Schedule Interview",
       "newInterview": "New Interview",
       "candidateName": "Candidate Name",
@@ -2158,6 +2190,11 @@
     "hiring": {
       "title": "Hiring Requests",
       "subtitle": "Manage your hiring requests and convert them into job postings.",
+      "status": {
+        "active": "Active",
+        "paused": "Paused",
+        "closed": "Closed"
+      },
       "newRequest": "New Request",
       "allStatuses": "All",
       "empty": "No hiring requests yet",
@@ -2511,6 +2548,20 @@
         "llmCalls": "LLM Calls",
         "model": "Model",
         "inputOutput": "Input / Output"
+      },
+      "personDuplicate": {
+        "title": "Duplicate Candidate Found",
+        "description": "A resume with the same name and contact info already exists.",
+        "existing": "Existing Resume",
+        "new": "New Resume",
+        "role": "Role",
+        "experience": "Exp",
+        "skills": "Skills",
+        "uploadedAt": "Uploaded",
+        "overwrite": "Overwrite",
+        "keepBoth": "Keep Both",
+        "skip": "Skip",
+        "of": "of"
       }
     },
     "detail": {

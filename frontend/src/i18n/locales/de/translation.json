@@ -854,7 +854,8 @@
       "intelReportGenerating": "Bericht wird erstellt...",
       "intelReportDone": "Bericht fertig!",
       "goToDashboard": "Zum Dashboard",
-      "viewFullReport": "Vollständigen Bericht ansehen"
+      "viewFullReport": "Vollständigen Bericht ansehen",
+      "viewReport": "Einstellungsbericht ansehen"
     }
   },
   "dashboard": {
@@ -1440,10 +1441,13 @@
       "title": "Profil",
       "name": "Name",
       "company": "Unternehmen",
+      "email": "E-Mail",
+      "phone": "Telefon",
       "avatar": "Avatar-URL",
       "save": "Änderungen speichern",
       "saving": "Speichern...",
-      "saved": "Profil erfolgreich aktualisiert"
+      "saved": "Profil erfolgreich aktualisiert",
+      "joined": "Beigetreten"
     },
     "security": {
       "title": "Sicherheit",
@@ -1454,7 +1458,10 @@
       "changing": "Wird geändert...",
       "changed": "Passwort erfolgreich geändert",
       "mismatch": "Passwörter stimmen nicht überein",
-      "oauthNote": "Die Passwortänderung ist für Social-Login-Konten nicht verfügbar."
+      "oauthNote": "Die Passwortänderung ist für Social-Login-Konten nicht verfügbar.",
+      "changePassword": "Passwort ändern",
+      "emailMethod": "Angemeldet mit E-Mail und Passwort",
+      "oauthMethod": "Angemeldet mit {{provider}}"
     },
     "subscription": {
       "title": "Abonnement",
@@ -1550,6 +1557,7 @@
       "jobs": "Stellen",
       "aiInterview": "KI-Interview",
       "profile": "Profil",
+      "settings": "Einstellungen",
       "devDashboard": "Entwickler-Dashboard",
       "smartMatching": "Intelligentes Matching",
       "evaluations": "Bewertungen",
@@ -1596,9 +1604,33 @@
       "usage": "Nutzung & Abrechnung",
       "integrations": "ATS-Integrationen"
     },
+    "settings": {
+      "user": "Benutzer",
+      "general": "Allgemein",
+      "security": "Sicherheit",
+      "account": "Konto",
+      "usage": "Nutzung & Abrechnung",
+      "apiKeys": "API-Schlüssel",
+      "workspace": "Arbeitsbereich",
+      "integrations": "ATS-Integrationen"
+    },
     "interview": {
       "title": "KI-Interview",
       "subtitle": "KI-gestützte Interviews mit automatischer Bewertung.",
+      "status": {
+        "scheduled": "Geplant",
+        "inProgress": "Läuft",
+        "completed": "Abgeschlossen",
+        "cancelled": "Abgesagt",
+        "expired": "Abgelaufen"
+      },
+      "verdict": {
+        "strongHire": "Starke Einstellung",
+        "hire": "Einstellen",
+        "leanHire": "Tendenz Einstellen",
+        "leanNoHire": "Tendenz Ablehnen",
+        "noHire": "Nicht einstellen"
+      },
       "schedule": "Interview planen",
       "newInterview": "Neues Interview",
       "candidateName": "Name des Kandidaten",
@@ -1821,6 +1853,11 @@
     "hiring": {
       "title": "Einstellungsanfragen",
       "subtitle": "Verwalten Sie Ihre Einstellungsanfragen und wandeln Sie sie in Stellenausschreibungen um.",
+      "status": {
+        "active": "Aktiv",
+        "paused": "Pausiert",
+        "closed": "Geschlossen"
+      },
       "newRequest": "Neue Anfrage",
       "allStatuses": "Alle",
       "empty": "Noch keine Anfragen",
@@ -2156,6 +2193,20 @@
         "llmCalls": "LLM-Aufrufe",
         "model": "Modell",
         "inputOutput": "Eingabe / Ausgabe"
+      },
+      "personDuplicate": {
+        "title": "Doppelter Kandidat gefunden",
+        "description": "Ein Lebenslauf mit demselben Namen und denselben Kontaktdaten existiert bereits.",
+        "existing": "Vorhandener Lebenslauf",
+        "new": "Neuer Lebenslauf",
+        "role": "Position",
+        "experience": "Erf",
+        "skills": "Fähigkeiten",
+        "uploadedAt": "Hochgeladen",
+        "overwrite": "Überschreiben",
+        "keepBoth": "Beide behalten",
+        "skip": "Überspringen",
+        "of": "von"
       }
     },
     "detail": {

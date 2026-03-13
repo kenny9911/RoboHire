@@ -170,7 +170,7 @@ export default function GeminiInput({
             ref={fileInputRef}
             type="file"
             className="hidden"
-            accept=".pdf,.doc,.docx,.txt"
+            accept=".pdf,.doc,.docx,.txt,.md,.markdown"
             onChange={handleFileSelect}
           />
 

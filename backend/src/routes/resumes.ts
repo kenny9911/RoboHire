@@ -19,7 +19,7 @@ const uploadDoc = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (DocumentParsingService.ACCEPTED_MIMES.has(file.mimetype)) {
+    if (DocumentParsingService.isAcceptedUpload(file.mimetype, file.originalname)) {
       cb(null, true);
     } else {
       cb(new Error('Unsupported file format. Accepted: PDF, DOCX, XLSX, TXT, MD, JSON'));
@@ -178,6 +178,38 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       ? computeExperienceYears(parsed.experience)
       : null;
 
+    // Person-duplicate check: same (name+phone) or (name+email)
+    if (!existing && req.query.skipPersonCheck !== 'true' && name) {
+      const orConds: Array<{ name: string; phone?: string; email?: string; userId: string; status: string }> = [];
+      if (phone) orConds.push({ name, phone, userId, status: 'active' });
+      if (email) orConds.push({ name, email, userId, status: 'active' });
+      if (orConds.length > 0) {
+        const personMatch = await prisma.resume.findFirst({
+          where: { OR: orConds },
+          orderBy: { updatedAt: 'desc' },
+        });
+        if (personMatch) {
+          return res.json({
+            success: true,
+            personDuplicate: true,
+            existingResume: {
+              id: personMatch.id,
+              name: personMatch.name,
+              email: personMatch.email,
+              phone: personMatch.phone,
+              currentRole: personMatch.currentRole,
+              experienceYears: personMatch.experienceYears,
+              fileName: personMatch.fileName,
+              updatedAt: personMatch.updatedAt,
+              parsedData: personMatch.parsedData,
+            },
+            newParsed: { name, email, phone, currentRole, experienceYears, parsedData: parsed, fileName: decodedName },
+            metrics: getProcessingMetrics(req.requestId),
+          });
+        }
+      }
+    }
+
     const resumeData = {
       userId,
       name,
@@ -254,13 +286,46 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
 
         const { parsedData: parsed } = await getOrParseResume(resumeText, userId, requestId);
         const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
+        const email = parsed.email || null;
+        const phone = parsed.phone || null;
+        const currentRole = parsed.experience?.[0]?.role as string || null;
+        const experienceYears = parsed.experience?.length ? computeExperienceYears(parsed.experience) : null;
+
+        // Person-duplicate check
+        if (!existing && name) {
+          const orConds: Array<{ name: string; phone?: string; email?: string; userId: string; status: string }> = [];
+          if (phone) orConds.push({ name, phone, userId, status: 'active' });
+          if (email) orConds.push({ name, email, userId, status: 'active' });
+          if (orConds.length > 0) {
+            const personMatch = await prisma.resume.findFirst({
+              where: { OR: orConds },
+              orderBy: { updatedAt: 'desc' },
+            });
+            if (personMatch) {
+              return {
+                fileName: decodedName,
+                success: true as const,
+                personDuplicate: true as const,
+                existingResume: {
+                  id: personMatch.id, name: personMatch.name,
+                  email: personMatch.email, phone: personMatch.phone,
+                  currentRole: personMatch.currentRole, experienceYears: personMatch.experienceYears,
+                  fileName: personMatch.fileName, updatedAt: personMatch.updatedAt,
+                  parsedData: personMatch.parsedData,
+                },
+                newParsed: { name, email, phone, currentRole, experienceYears, parsedData: parsed, fileName: decodedName },
+              };
+            }
+          }
+        }
+
         const resumeData = {
           userId,
           name,
-          email: parsed.email || null,
-          phone: parsed.phone || null,
-          currentRole: parsed.experience?.[0]?.role as string || null,
-          experienceYears: parsed.experience?.length ? computeExperienceYears(parsed.experience) : null,
+          email,
+          phone,
+          currentRole,
+          experienceYears,
           resumeText,
           parsedData: JSON.parse(JSON.stringify(parsed)),
           fileName: decodedName,

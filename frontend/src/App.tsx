@@ -33,6 +33,8 @@ const ProductSmartMatching = lazy(() => import('./pages/product/SmartMatching'))
 const ProductAIInterview = lazy(() => import('./pages/product/AIInterview'));
 const ProductEvaluations = lazy(() => import('./pages/product/Evaluations'));
 const ProductProfile = lazy(() => import('./pages/product/Profile'));
+const ProfileLayout = lazy(() => import('./layouts/ProfileLayout'));
+const ProfileSecurity = lazy(() => import('./pages/product/ProfileSecurity'));
 
 // Lazy-loaded dashboard
 const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'));
@@ -116,7 +118,15 @@ function App() {
               <Route path="matching" element={<ProductSmartMatching />} />
               <Route path="interview" element={<ProductAIInterview />} />
               <Route path="evaluations" element={<ProductEvaluations />} />
-              <Route path="profile" element={<ProductProfile />} />
+              <Route path="profile" element={<ProfileLayout />}>
+                <Route index element={<ProductProfile />} />
+                <Route path="security" element={<ProfileSecurity />} />
+                <Route path="usage" element={<UsageDashboard />} />
+                <Route path="usage/calls/:id" element={<CallDetail />} />
+                <Route path="api-keys" element={<APIKeys />} />
+                <Route path="integrations" element={<ATSIntegrations />} />
+              </Route>
+              <Route path="admin" element={<AdminDashboard />} />
             </Route>
 
             {/* Dashboard (protected, shared sidebar layout) */}

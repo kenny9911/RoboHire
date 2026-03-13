@@ -52,7 +52,7 @@ const uploadDoc = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (DocumentParsingService.ACCEPTED_MIMES.has(file.mimetype)) {
+    if (DocumentParsingService.isAcceptedUpload(file.mimetype, file.originalname)) {
       cb(null, true);
     } else {
       cb(new Error('Unsupported file format. Accepted: PDF, DOCX, XLSX, TXT, MD, JSON'));
@@ -400,9 +400,9 @@ router.post('/parse-resume', requireAuth, requireScopes('write'), apiRateLimit()
 
 /**
  * POST /api/v1/parse-jd
- * Parse a job description PDF and extract structured data
+ * Parse a job description document and extract structured data
  */
-router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), upload.single('file'), async (req: Request, res: Response) => {
+router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), uploadDoc.single('file'), async (req: Request, res: Response) => {
   const requestId = req.requestId!;
   logger.startRequest(requestId, '/api/v1/parse-jd', 'POST');
 
@@ -414,33 +414,43 @@ router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), up
       logger.endRequest(requestId, 'error', 400);
       return res.status(400).json({
         success: false,
-        error: 'PDF file is required',
+        error: 'A job description file is required. Accepted formats: PDF, DOCX, TXT, MD, JSON, XLSX',
         requestId,
       } as APIResponse<null>);
     }
     logger.endStep(requestId, validateStep, 'completed', {
       fileName: req.file.originalname,
       fileSize: req.file.size,
+      mimetype: req.file.mimetype,
     });
 
-    // Step 2: Extract text from PDF
-    const pdfStep = logger.startStep(requestId, 'Extract text from PDF');
-    const pdfStartTime = Date.now();
-    const text = await pdfService.extractText(req.file.buffer, requestId);
-    const pdfDuration = Date.now() - pdfStartTime;
+    // Step 2: Extract text from document
+    const extractStep = logger.startStep(requestId, 'Extract text from document');
+    const extractStartTime = Date.now();
+    const format = documentParsingService.detectFormat(req.file.mimetype, req.file.originalname);
+    const text = await documentParsingService.extractText(
+      req.file.buffer,
+      req.file.mimetype,
+      req.file.originalname,
+      requestId,
+    );
+    const extractDuration = Date.now() - extractStartTime;
 
     if (!text || text.trim().length === 0) {
-      logger.endStep(requestId, pdfStep, 'failed');
+      logger.endStep(requestId, extractStep, 'failed');
       logger.endRequest(requestId, 'error', 400);
       return res.status(400).json({
         success: false,
-        error: 'Could not extract text from PDF. The file may be empty or corrupted.',
+        error: 'Could not extract text from the uploaded file. The document may be empty, corrupted, or use an unsupported legacy format.',
         requestId,
       } as APIResponse<null>);
     }
-    
-    logger.logPDFParse(requestId, req.file.size, text.length, pdfDuration);
-    logger.endStep(requestId, pdfStep, 'completed', {
+
+    if (format === 'pdf') {
+      logger.logPDFParse(requestId, req.file.size, text.length, extractDuration);
+    }
+    logger.endStep(requestId, extractStep, 'completed', {
+      format,
       extractedChars: text.length,
     });
 
@@ -453,6 +463,7 @@ router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), up
       req.payloadCapture = {
         requestPayload: {
           fileName: req.file!.originalname,
+          fileType: format,
           fileSize: req.file!.size,
           extractedTextPreview: text.slice(0, 10000),
           extractedTextLength: text.length,
@@ -482,6 +493,7 @@ router.post('/parse-jd', requireAuth, requireScopes('write'), apiRateLimit(), up
     req.payloadCapture = {
       requestPayload: {
         fileName: req.file!.originalname,
+        fileType: format,
         fileSize: req.file!.size,
         extractedTextPreview: text.slice(0, 10000),
         extractedTextLength: text.length,

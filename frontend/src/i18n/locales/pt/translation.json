@@ -854,7 +854,8 @@
       "intelReportGenerating": "Gerando relatório...",
       "intelReportDone": "Relatório pronto!",
       "goToDashboard": "Ir para o Painel",
-      "viewFullReport": "Ver Relatório Completo"
+      "viewFullReport": "Ver Relatório Completo",
+      "viewReport": "Ver relatório de contratação"
     }
   },
   "dashboard": {
@@ -1440,10 +1441,13 @@
       "title": "Perfil",
       "name": "Nome",
       "company": "Empresa",
+      "email": "E-mail",
+      "phone": "Telefone",
       "avatar": "URL do avatar",
       "save": "Salvar alterações",
       "saving": "Salvando...",
-      "saved": "Perfil atualizado com sucesso"
+      "saved": "Perfil atualizado com sucesso",
+      "joined": "Entrou"
     },
     "security": {
       "title": "Segurança",
@@ -1454,7 +1458,10 @@
       "changing": "Alterando...",
       "changed": "Senha alterada com sucesso",
       "mismatch": "As senhas não correspondem",
-      "oauthNote": "A alteração de senha não está disponível para contas de login social."
+      "oauthNote": "A alteração de senha não está disponível para contas de login social.",
+      "changePassword": "Alterar senha",
+      "emailMethod": "Conectado com email e senha",
+      "oauthMethod": "Conectado com {{provider}}"
     },
     "subscription": {
       "title": "Assinatura",
@@ -1550,6 +1557,7 @@
       "jobs": "Vagas",
       "aiInterview": "Entrevista IA",
       "profile": "Perfil",
+      "settings": "Configurações",
       "devDashboard": "Painel do Desenvolvedor",
       "smartMatching": "Matching Inteligente",
       "evaluations": "Avaliações",
@@ -1596,9 +1604,33 @@
       "usage": "Uso e Faturamento",
       "integrations": "Integrações ATS"
     },
+    "settings": {
+      "user": "Usuário",
+      "general": "Geral",
+      "security": "Segurança",
+      "account": "Conta",
+      "usage": "Uso e Faturamento",
+      "apiKeys": "Chaves API",
+      "workspace": "Área de trabalho",
+      "integrations": "Integrações ATS"
+    },
     "interview": {
       "title": "Entrevista IA",
       "subtitle": "Entrevistas com IA e avaliação automática.",
+      "status": {
+        "scheduled": "Agendada",
+        "inProgress": "Em andamento",
+        "completed": "Concluída",
+        "cancelled": "Cancelada",
+        "expired": "Expirada"
+      },
+      "verdict": {
+        "strongHire": "Contratar (forte)",
+        "hire": "Contratar",
+        "leanHire": "Inclinado a contratar",
+        "leanNoHire": "Inclinado a não contratar",
+        "noHire": "Não contratar"
+      },
       "schedule": "Agendar Entrevista",
       "newInterview": "Nova Entrevista",
       "candidateName": "Nome do Candidato",
@@ -1821,6 +1853,11 @@
     "hiring": {
       "title": "Solicitações de Contratação",
       "subtitle": "Gerencie suas solicitações e converta-as em publicações de vagas.",
+      "status": {
+        "active": "Ativo",
+        "paused": "Pausado",
+        "closed": "Encerrado"
+      },
       "newRequest": "Nova Solicitação",
       "allStatuses": "Todos",
       "empty": "Sem solicitações ainda",
@@ -2156,6 +2193,20 @@
         "llmCalls": "Chamadas LLM",
         "model": "Modelo",
         "inputOutput": "Entrada / Saída"
+      },
+      "personDuplicate": {
+        "title": "Candidato duplicado encontrado",
+        "description": "Já existe um currículo com o mesmo nome e informações de contato.",
+        "existing": "Currículo existente",
+        "new": "Novo currículo",
+        "role": "Cargo",
+        "experience": "Exp",
+        "skills": "Habilidades",
+        "uploadedAt": "Enviado",
+        "overwrite": "Sobrescrever",
+        "keepBoth": "Manter ambos",
+        "skip": "Pular",
+        "of": "de"
       }
     },
     "detail": {

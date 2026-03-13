@@ -1,66 +1,563 @@
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE } from '../../config';
+import SEO from '../../components/SEO';
+
+const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
+  free: { interviews: 0, matches: 0 },
+  starter: { interviews: 15, matches: 30 },
+  growth: { interviews: 120, matches: 240 },
+  business: { interviews: 280, matches: 500 },
+  custom: { interviews: Infinity, matches: Infinity },
+};
+
+const TOPUP_PRESETS = [10, 25, 50, 100];
+
+interface BillingItem {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  description: string;
+  date: string | null;
+  invoiceUrl?: string | null;
+  pdfUrl?: string | null;
+  receiptUrl?: string | null;
+  type: 'invoice' | 'charge';
+}
+
+function authFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('auth_token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers,
+    credentials: 'include',
+  });
+}
 
 export default function Profile() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Profile state
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileEmail, setProfileEmail] = useState(user?.email || '');
+  const [profilePhone, setProfilePhone] = useState(user?.phone || '');
+  const [profileCompany, setProfileCompany] = useState(user?.company || '');
+  const [profileAvatar, setProfileAvatar] = useState(user?.avatar || '');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Top-up state
+  const [topupLoading, setTopupLoading] = useState<number | null>(null);
+  const [topupMsg, setTopupMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [customAmount, setCustomAmount] = useState('');
+
+  // Sync state
+  const [syncing, setSyncing] = useState(false);
+
+  // Billing history state
+  const [billingItems, setBillingItems] = useState<BillingItem[]>([]);
+  const [billingLoading, setBillingLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.name || '');
+      setProfileEmail(user.email || '');
+      setProfilePhone(user.phone || '');
+      setProfileCompany(user.company || '');
+      setProfileAvatar(user.avatar || '');
+    }
+  }, [user]);
+
+  // Handle top-up success redirect
+  useEffect(() => {
+    if (searchParams.get('topup') !== 'success') return;
+    setSearchParams({}, { replace: true });
+    setTopupMsg({ type: 'success', text: t('account.topup.updating', 'Payment received! Updating your balance...') });
+    let cancelled = false;
+    const poll = async () => {
+      const MAX_ATTEMPTS = 8;
+      const INTERVAL_MS = 2000;
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        if (cancelled) return;
+        try {
+          const res = await authFetch('/api/v1/topup/status');
+          const data = await res.json();
+          if (data.success && data.data?.latestTopup?.status === 'completed') {
+            await refreshUser();
+            if (!cancelled) setTopupMsg({ type: 'success', text: t('account.topup.success', 'Top-up successful! Your balance has been updated.') });
+            return;
+          }
+        } catch { /* ignore */ }
+        await new Promise(r => setTimeout(r, INTERVAL_MS));
+      }
+      await refreshUser();
+      if (!cancelled) setTopupMsg({ type: 'success', text: t('account.topup.successDelayed', 'Payment received! Your balance may take a moment to update.') });
+    };
+    poll();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-sync with Stripe on mount
+  useEffect(() => {
+    authFetch('/api/v1/sync', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && (data.data?.synced?.topups > 0 || data.data?.synced?.subscription)) {
+          refreshUser();
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch billing history
+  useEffect(() => {
+    const fetchBilling = async () => {
+      setBillingLoading(true);
+      try {
+        const res = await authFetch('/api/v1/billing-history');
+        const data = await res.json();
+        if (data.success) {
+          const invoices: BillingItem[] = (data.data.invoices || []).map((inv: any) => ({ ...inv, type: 'invoice' }));
+          const charges: BillingItem[] = (data.data.charges || []).map((ch: any) => ({ ...ch, type: 'charge' }));
+          const combined = [...invoices, ...charges].sort(
+            (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
+          );
+          setBillingItems(combined);
+        }
+      } catch { /* billing may not be configured */ } finally {
+        setBillingLoading(false);
+      }
+    };
+    fetchBilling();
+  }, []);
+
+  const handleProfileSave = async () => {
+    setProfileSaving(true);
+    setProfileMsg(null);
+    try {
+      const res = await authFetch('/api/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ name: profileName, email: profileEmail, phone: profilePhone, company: profileCompany, avatar: profileAvatar }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Update failed');
+      await refreshUser();
+      setProfileMsg({ type: 'success', text: t('account.profile.saved', 'Profile updated successfully') });
+    } catch (err) {
+      setProfileMsg({ type: 'error', text: err instanceof Error ? err.message : 'Update failed' });
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleTopup = async (dollars: number) => {
+    const cents = Math.round(dollars * 100);
+    if (cents < 1000 || cents > 100000) {
+      setTopupMsg({ type: 'error', text: t('account.topup.invalidAmount', 'Amount must be between $10 and $1,000.') });
+      return;
+    }
+    setTopupLoading(cents);
+    setTopupMsg(null);
+    try {
+      const res = await authFetch('/api/v1/topup', {
+        method: 'POST',
+        body: JSON.stringify({ amount: cents }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.url) {
+        window.location.href = data.data.url;
+      } else {
+        throw new Error(data.error || 'Failed to create top-up session');
+      }
+    } catch (err) {
+      setTopupMsg({ type: 'error', text: err instanceof Error ? err.message : 'Top-up failed' });
+      setTopupLoading(null);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await authFetch('/api/v1/sync', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        await refreshUser();
+        const { topups, subscription } = data.data.synced;
+        if (topups > 0 || subscription) {
+          setTopupMsg({ type: 'success', text: t('account.sync.updated', 'Account synced with payment provider.') });
+        }
+      }
+    } catch { /* silently fail */ } finally {
+      setSyncing(false);
+    }
+  };
+
+  const tier = user?.subscriptionTier || 'free';
+  const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+
+  const tierLabel: Record<string, string> = {
+    free: 'Free',
+    starter: 'Starter',
+    growth: 'Growth',
+    business: 'Business',
+    custom: 'Custom',
+  };
+
+  const statusColors: Record<string, string> = {
+    active: 'bg-emerald-100 text-emerald-700',
+    trialing: 'bg-blue-100 text-blue-700',
+    past_due: 'bg-amber-100 text-amber-700',
+    canceled: 'bg-red-100 text-red-700',
+  };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
-        <div className="flex items-center gap-4">
-          {user?.avatar ? (
-            <img src={user.avatar} alt="" className="h-16 w-16 rounded-full" />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-              <span className="text-2xl font-bold text-blue-600">
-                {user?.name?.[0] || user?.email?.[0] || 'U'}
-              </span>
+    <div className="space-y-6 max-w-2xl">
+      <SEO title="Settings" noIndex />
+
+      {/* Profile Section */}
+      <section>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('account.profile.title', 'Profile')}</h2>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          {/* Avatar + basic info */}
+          <div className="flex items-start gap-5 mb-5 pb-5 border-b border-slate-100">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="" className="h-16 w-16 rounded-full" />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 flex-shrink-0">
+                <span className="text-2xl font-bold text-blue-600">
+                  {user?.name?.[0] || user?.email?.[0] || 'U'}
+                </span>
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-base font-semibold text-slate-900">{user?.name || 'User'}</p>
+              <p className="text-sm text-slate-500">{user?.email}</p>
+              <p className="mt-1 text-xs text-slate-400">
+                {t('account.profile.joined', 'Joined')} {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : ''}
+              </p>
             </div>
-          )}
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">{user?.name || 'User'}</h2>
-            <p className="text-sm text-slate-500">{user?.email}</p>
-            <p className="mt-1 text-xs font-semibold text-blue-600 uppercase tracking-wide">
-              {user?.subscriptionTier || 'Free'}
-            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('account.profile.name', 'Name')}</label>
+                <input
+                  type="text"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('account.profile.company', 'Company')}</label>
+                <input
+                  type="text"
+                  value={profileCompany}
+                  onChange={(e) => setProfileCompany(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('account.profile.email', 'Email')}</label>
+                <input
+                  type="email"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('account.profile.phone', 'Phone')}</label>
+                <input
+                  type="tel"
+                  value={profilePhone}
+                  onChange={(e) => setProfilePhone(e.target.value)}
+                  placeholder="+1 (555) 000-0000"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('account.profile.avatar', 'Avatar URL')}</label>
+              <input
+                type="text"
+                value={profileAvatar}
+                onChange={(e) => setProfileAvatar(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+              />
+            </div>
+            {profileMsg && (
+              <p className={`text-sm ${profileMsg.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
+                {profileMsg.text}
+              </p>
+            )}
+            <div className="flex justify-end">
+              <button
+                onClick={handleProfileSave}
+                disabled={profileSaving}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors"
+              >
+                {profileSaving ? t('account.profile.saving', 'Saving...') : t('account.profile.save', 'Save Changes')}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">
-          {t('product.profile.quickLinks', 'Quick Links')}
-        </h3>
-        <div className="space-y-2">
-          <Link to="/dashboard/account" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors">
-            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      {/* Subscription Section */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">{t('account.subscription.title', 'Subscription')}</h2>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
+            title={t('account.sync.title', 'Sync with Stripe')}
+          >
+            <svg className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            {t('product.profile.accountSettings', 'Account Settings')}
-          </Link>
-          <Link to="/dashboard/api-keys" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors">
-            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-            </svg>
-            {t('product.profile.apiKeys', 'API Keys')}
-          </Link>
-          <Link to="/dashboard/usage" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors">
-            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            {t('product.profile.usage', 'Usage & Billing')}
-          </Link>
-          <Link to="/dashboard/integrations" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors">
-            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-            {t('product.profile.integrations', 'ATS Integrations')}
-          </Link>
+            {syncing ? t('account.sync.syncing', 'Syncing...') : t('account.sync.button', 'Sync')}
+          </button>
         </div>
-      </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+          {/* Plan + status */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="text-sm text-slate-600">{t('account.subscription.currentPlan', 'Current Plan')}</span>
+              <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
+                {tierLabel[tier] || tier}
+              </span>
+              {user?.subscriptionStatus && (
+                <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusColors[user.subscriptionStatus] || 'bg-slate-100 text-slate-700'}`}>
+                  {user.subscriptionStatus}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => navigate('/pricing')}
+              className="px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              {t('account.subscription.changePlan', 'Change Plan')}
+            </button>
+          </div>
+
+          {user?.subscriptionStatus === 'trialing' && user?.trialEnd && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-blue-700">
+                {t('account.subscription.trialEnds', 'Free trial ends on')} {new Date(user.trialEnd).toLocaleDateString()}
+              </p>
+            </div>
+          )}
+
+          {user?.currentPeriodEnd && user?.subscriptionStatus !== 'trialing' && (
+            <p className="text-sm text-slate-500">
+              {t('account.subscription.renewsOn', 'Renews on')}: {new Date(user.currentPeriodEnd).toLocaleDateString()}
+            </p>
+          )}
+
+          {/* Usage bars */}
+          <div className="space-y-3 pt-2 border-t border-slate-100">
+            <p className="text-sm font-medium text-slate-700">{t('account.subscription.usage', 'Usage')}</p>
+
+            <div>
+              <div className="flex justify-between text-xs text-slate-500 mb-1">
+                <span>{t('account.subscription.interviews', 'Interviews')}</span>
+                <span>
+                  {user?.interviewsUsed ?? 0} {t('account.subscription.of', 'of')} {limits.interviews === Infinity ? '∞' : limits.interviews}
+                </span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-1.5">
+                <div
+                  className={`rounded-full h-1.5 transition-all ${(user?.interviewsUsed ?? 0) >= limits.interviews && limits.interviews !== Infinity ? 'bg-amber-500' : 'bg-blue-600'}`}
+                  style={{ width: `${limits.interviews === Infinity ? 0 : Math.min(100, ((user?.interviewsUsed ?? 0) / limits.interviews) * 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs text-slate-500 mb-1">
+                <span>{t('account.subscription.matches', 'Resume Matches')}</span>
+                <span>
+                  {user?.resumeMatchesUsed ?? 0} {t('account.subscription.of', 'of')} {limits.matches === Infinity ? '∞' : limits.matches}
+                </span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-1.5">
+                <div
+                  className={`rounded-full h-1.5 transition-all ${(user?.resumeMatchesUsed ?? 0) >= limits.matches && limits.matches !== Infinity ? 'bg-amber-500' : 'bg-blue-600'}`}
+                  style={{ width: `${limits.matches === Infinity ? 0 : Math.min(100, ((user?.resumeMatchesUsed ?? 0) / limits.matches) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Purchase Credits Section */}
+      <section>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('account.topup.title', 'Purchase Credits')}</h2>
+        <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+          <p className="text-sm text-slate-600">
+            {t('account.topup.currentBalance', 'Current Balance')}: <span className="font-semibold text-slate-900">${(user?.topUpBalance ?? 0).toFixed(2)}</span>
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {TOPUP_PRESETS.map((dollars) => (
+              <button
+                key={dollars}
+                onClick={() => setCustomAmount(String(dollars))}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                  customAmount === String(dollars)
+                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                    : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                ${dollars}
+              </button>
+            ))}
+          </div>
+
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm font-medium text-slate-700">{t('account.topup.amount', 'Amount')}</span>
+              <div className="flex items-center">
+                <span className="text-sm text-slate-400 mr-1">$</span>
+                <input
+                  type="number"
+                  min="10"
+                  max="1000"
+                  step="1"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  placeholder="10"
+                  className="w-20 text-right text-base font-medium text-slate-900 outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              const val = parseFloat(customAmount);
+              if (!val || val < 10 || val > 1000) {
+                setTopupMsg({ type: 'error', text: t('account.topup.invalidAmount', 'Amount must be between $10 and $1,000.') });
+                return;
+              }
+              handleTopup(val);
+            }}
+            disabled={topupLoading !== null || !customAmount || parseFloat(customAmount) < 10}
+            className="w-full py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {topupLoading !== null ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {t('account.topup.processing', 'Processing...')}
+              </span>
+            ) : (
+              t('account.topup.purchase', 'Purchase')
+            )}
+          </button>
+
+          {topupMsg && (
+            <p className={`text-sm ${topupMsg.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
+              {topupMsg.text}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Billing History Section */}
+      <section>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('account.billing.title', 'Billing History')}</h2>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          {billingLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-10 bg-slate-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : billingItems.length === 0 ? (
+            <p className="text-sm text-slate-500">{t('account.billing.empty', 'No billing history yet.')}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left">
+                    <th className="pb-2 font-medium text-slate-500">{t('account.billing.date', 'Date')}</th>
+                    <th className="pb-2 font-medium text-slate-500">{t('account.billing.description', 'Description')}</th>
+                    <th className="pb-2 font-medium text-slate-500">{t('account.billing.amount', 'Amount')}</th>
+                    <th className="pb-2 font-medium text-slate-500">{t('account.billing.status', 'Status')}</th>
+                    <th className="pb-2 font-medium text-slate-500">{t('account.billing.action', 'Receipt')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {billingItems.map((item) => {
+                    const link = item.type === 'invoice' ? item.invoiceUrl : item.receiptUrl;
+                    return (
+                      <tr key={item.id} className="text-slate-700">
+                        <td className="py-2.5">{item.date ? new Date(item.date).toLocaleDateString() : '—'}</td>
+                        <td className="py-2.5">{item.description}</td>
+                        <td className="py-2.5 font-medium">${item.amount.toFixed(2)}</td>
+                        <td className="py-2.5">
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                            item.status === 'paid' || item.status === 'succeeded'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : item.status === 'open' || item.status === 'pending'
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="py-2.5">
+                          {link ? (
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                            >
+                              {item.type === 'invoice'
+                                ? t('account.billing.viewInvoice', 'View')
+                                : t('account.billing.viewReceipt', 'Receipt')}
+                            </a>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

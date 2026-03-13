@@ -7,8 +7,8 @@ export default function DocsParseJD() {
   const { t } = useTranslation();
 
   const requestParams = [
-    { name: 'file', type: 'string (base64)', required: true, description: 'Base64-encoded PDF file of the job description' },
-    { name: 'fileName', type: 'string', description: 'Original filename of the PDF' },
+    { name: 'file', type: 'string (base64)', required: true, description: 'Base64-encoded job description document (PDF, DOCX, TXT, or Markdown)' },
+    { name: 'fileName', type: 'string', description: 'Original filename of the uploaded document' },
   ];
 
   const responseParams = [
@@ -31,8 +31,8 @@ export default function DocsParseJD() {
     "file": "JVBERi0xLjQKJeLjz9...", 
     "fileName": "senior_frontend_developer.pdf"
   }'`,
-    javascript: `// Read PDF file and convert to base64
-const fileBuffer = await fs.readFile('job_description.pdf');
+    javascript: `// Read a JD document and convert to base64
+const fileBuffer = await fs.readFile('job_description.docx');
 const base64File = fileBuffer.toString('base64');
 
 const response = await fetch('https://api.robohire.io/v1/parse-jd', {
@@ -43,7 +43,7 @@ const response = await fetch('https://api.robohire.io/v1/parse-jd', {
   },
   body: JSON.stringify({
     file: base64File,
-    fileName: 'job_description.pdf'
+    fileName: 'job_description.docx'
   })
 });
 
@@ -51,8 +51,8 @@ const result = await response.json();`,
     python: `import requests
 import base64
 
-# Read PDF file and convert to base64
-with open('job_description.pdf', 'rb') as f:
+# Read a JD document and convert to base64
+with open('job_description.docx', 'rb') as f:
     file_content = base64.b64encode(f.read()).decode('utf-8')
 
 response = requests.post(
@@ -63,7 +63,7 @@ response = requests.post(
     },
     json={
         'file': file_content,
-        'fileName': 'job_description.pdf'
+        'fileName': 'job_description.docx'
     }
 )
 
@@ -123,13 +123,13 @@ result = response.json()`,
         {t('docs.parseJD.title', 'Parse Job Description')}
       </h1>
       <p className="text-lg text-slate-600 mb-8">
-        {t('docs.parseJD.intro', 'Extract structured data from a job description PDF, including requirements, responsibilities, and benefits.')}
+        {t('docs.parseJD.intro', 'Extract structured data from a job description document, including requirements, responsibilities, and benefits.')}
       </p>
 
       <EndpointCard
         method="POST"
         path="/v1/parse-jd"
-        description={t('docs.parseJD.endpointDesc', 'Parse a job description PDF into structured data')}
+        description={t('docs.parseJD.endpointDesc', 'Parse a job description document into structured data')}
       />
 
       {/* Request */}

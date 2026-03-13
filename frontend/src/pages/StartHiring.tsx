@@ -383,10 +383,13 @@ export default function StartHiring() {
     ]
   );
 
-  const fetchTitleSuggestion = useCallback(async () => {
+  const fetchTitleSuggestion = useCallback(async (jobDescriptionOverride?: string) => {
     const role = hiringData.title.trim();
     const requirements = hiringData.requirements.trim();
-    const jobDescription = hiringData.jobDescription.trim();
+    const jobDescription =
+      typeof jobDescriptionOverride === 'string'
+        ? jobDescriptionOverride.trim()
+        : hiringData.jobDescription.trim();
 
     if (!role && !requirements && !jobDescription) {
       return '';
@@ -479,6 +482,65 @@ export default function StartHiring() {
     }
   }, [fetchJdDraft, isJdGenerating, jdDraft, t, isAuthenticated, navigate, location]);
 
+  const handleChatAction = useCallback(
+    async (action?: string, jobDescriptionOverride?: string) => {
+      if (action !== 'create_request') return;
+
+      if (!isAuthenticated) {
+        setStep('complete');
+        return;
+      }
+
+      setStep('confirm');
+      setJdView('preview');
+      setTitleError(null);
+      setJdError(null);
+      setIsTitleGenerating(true);
+      setIsJdGenerating(true);
+      const effectiveJobDescription =
+        typeof jobDescriptionOverride === 'string'
+          ? jobDescriptionOverride.trim()
+          : hiringData.jobDescription.trim();
+      setJdDraft(effectiveJobDescription);
+
+      const [titleResult, jdResult] = await Promise.allSettled([
+        fetchTitleSuggestion(effectiveJobDescription),
+        fetchJdDraft(effectiveJobDescription),
+      ]);
+
+      if (titleResult.status === 'fulfilled') {
+        const suggestedTitle = titleResult.value;
+        if (suggestedTitle) {
+          setHiringData((prev) => ({
+            ...prev,
+            title: suggestedTitle,
+          }));
+        }
+      } else {
+        console.error('Failed to generate title suggestion:', titleResult.reason);
+        setTitleError(
+          t('hiring.titleError', "We couldn't generate a title. Please edit it manually.")
+        );
+      }
+
+      if (jdResult.status === 'fulfilled') {
+        const generatedDraft = jdResult.value;
+        if (generatedDraft) {
+          setJdDraft(generatedDraft);
+        }
+      } else {
+        console.error('Failed to generate JD draft:', jdResult.reason);
+        setJdError(
+          t('hiring.jdError', "We couldn't generate a job description. Please edit it manually.")
+        );
+      }
+
+      setIsTitleGenerating(false);
+      setIsJdGenerating(false);
+    },
+    [fetchJdDraft, fetchTitleSuggestion, hiringData.jobDescription, isAuthenticated, t]
+  );
+
   const handleTemplateSelect = async (template: HiringTemplate) => {
     if (!requireAuth()) return;
     if (!activeSessionId && isAuthenticated) {
@@ -526,10 +588,14 @@ export default function StartHiring() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmitHiringInput = useCallback(async (
+    messageTextOverride?: string,
+    fileOverride?: File | null,
+  ) => {
     if (!requireAuth()) return;
-    const messageText = input.trim();
-    if (!messageText && !attachedFile) return;
+    const messageText = typeof messageTextOverride === 'string' ? messageTextOverride.trim() : input.trim();
+    const fileToUse = fileOverride ?? attachedFile;
+    if (!messageText && !fileToUse) return;
 
     let sessionId = activeSessionId;
     if (!sessionId && isAuthenticated && step === 'initial') {
@@ -543,8 +609,8 @@ export default function StartHiring() {
     let jobDescriptionText: string | undefined;
     let jdSnippet: string | undefined;
 
-    if (attachedFile) {
-      const isPlainText = attachedFile.type === 'text/plain' || attachedFile.name.endsWith('.txt');
+    if (fileToUse) {
+      const isPlainText = fileToUse.type === 'text/plain' || fileToUse.name.endsWith('.txt');
 
       // Show processing indicator during extraction (LLM extraction can take 10-30s)
       setIsProcessing(true);
@@ -552,12 +618,12 @@ export default function StartHiring() {
       // Send file to backend for parsing (uses LLM for PDFs with CJK content)
       try {
         const formData = new FormData();
-        formData.append('file', attachedFile);
+        formData.append('file', fileToUse);
         const token = localStorage.getItem('auth_token');
         const uploadHeaders: HeadersInit = {};
         if (token) uploadHeaders.Authorization = `Bearer ${token}`;
 
-        console.log(`[StartHiring] Uploading file for extraction: ${attachedFile.name} (${attachedFile.type}, ${Math.round(attachedFile.size / 1024)}KB)`);
+        console.log(`[StartHiring] Uploading file for extraction: ${fileToUse.name} (${fileToUse.type}, ${Math.round(fileToUse.size / 1024)}KB)`);
 
         const extractRes = await fetch(`${API_BASE}/api/v1/extract-document`, {
           method: 'POST',
@@ -572,7 +638,7 @@ export default function StartHiring() {
           const errorBody = await extractRes.text();
           console.error(`[StartHiring] extract-document HTTP ${extractRes.status}: ${errorBody}`);
           if (isPlainText) {
-            jobDescriptionText = await attachedFile.text();
+            jobDescriptionText = await fileToUse.text();
           }
         } else {
           const extractData = await extractRes.json();
@@ -587,14 +653,14 @@ export default function StartHiring() {
           } else {
             console.error('[StartHiring] extract-document returned success=false:', extractData.error);
             if (isPlainText) {
-              jobDescriptionText = await attachedFile.text();
+              jobDescriptionText = await fileToUse.text();
             }
           }
         }
       } catch (err) {
         console.error('[StartHiring] extract-document network error:', err);
         if (isPlainText) {
-          jobDescriptionText = await attachedFile.text();
+          jobDescriptionText = await fileToUse.text();
         }
       } finally {
         setIsProcessing(false);
@@ -604,7 +670,7 @@ export default function StartHiring() {
         jdSnippet = `From JD:\n${jobDescriptionText.substring(0, 500)}...`;
         console.log(`[StartHiring] JD extracted successfully: ${jobDescriptionText.length} chars`);
       } else {
-        console.error(`[StartHiring] FAILED to extract text from ${attachedFile.name}`);
+        console.error(`[StartHiring] FAILED to extract text from ${fileToUse.name}`);
       }
     }
 
@@ -669,10 +735,10 @@ export default function StartHiring() {
       };
     });
 
-    const userContent = attachedFile
+    const userContent = fileToUse
       ? messageText
-        ? `${messageText}\n\n[Attached: ${attachedFile.name}]`
-        : `[Attached: ${attachedFile.name}]`
+        ? `${messageText}\n\n[Attached: ${fileToUse.name}]`
+        : `[Attached: ${fileToUse.name}]`
       : messageText;
 
     await addMessage('user', userContent);
@@ -689,7 +755,7 @@ export default function StartHiring() {
         await addMessage('assistant', result.message.content);
         setAssistantSuggestions(buildFollowUpSuggestions(result?.action));
       }
-      await handleChatAction(result?.action);
+      await handleChatAction(result?.action, jobDescriptionText);
     } catch (error) {
       console.error('Failed to process chat message:', error);
       await addMessage('assistant', CHAT_ERROR_FALLBACK);
@@ -697,7 +763,24 @@ export default function StartHiring() {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [
+    CHAT_ERROR_FALLBACK,
+    activeSessionId,
+    addMessage,
+    attachedFile,
+    buildFollowUpSuggestions,
+    createSession,
+    handleChatAction,
+    input,
+    isAuthenticated,
+    requireAuth,
+    sendChatMessage,
+    step,
+  ]);
+
+  const handleSubmit = useCallback(async () => {
+    await handleSubmitHiringInput();
+  }, [handleSubmitHiringInput]);
 
   const doCreateOrUpdateHR = async (overwriteId?: string) => {
     try {
@@ -783,61 +866,6 @@ export default function StartHiring() {
     }
     await doCreateOrUpdateHR();
   };
-
-  const handleChatAction = useCallback(
-    async (action?: string) => {
-      if (action !== 'create_request') return;
-
-      if (!isAuthenticated) {
-        setStep('complete');
-        return;
-      }
-
-      setStep('confirm');
-      setJdView('preview');
-      setTitleError(null);
-      setJdError(null);
-      setIsTitleGenerating(true);
-      setIsJdGenerating(true);
-      setJdDraft(hiringData.jobDescription);
-
-      const [titleResult, jdResult] = await Promise.allSettled([
-        fetchTitleSuggestion(),
-        fetchJdDraft(),
-      ]);
-
-      if (titleResult.status === 'fulfilled') {
-        const suggestedTitle = titleResult.value;
-        if (suggestedTitle) {
-          setHiringData((prev) => ({
-            ...prev,
-            title: suggestedTitle,
-          }));
-        }
-      } else {
-        console.error('Failed to generate title suggestion:', titleResult.reason);
-        setTitleError(
-          t('hiring.titleError', "We couldn't generate a title. Please edit it manually.")
-        );
-      }
-
-      if (jdResult.status === 'fulfilled') {
-        const generatedDraft = jdResult.value;
-        if (generatedDraft) {
-          setJdDraft(generatedDraft);
-        }
-      } else {
-        console.error('Failed to generate JD draft:', jdResult.reason);
-        setJdError(
-          t('hiring.jdError', "We couldn't generate a job description. Please edit it manually.")
-        );
-      }
-
-      setIsTitleGenerating(false);
-      setIsJdGenerating(false);
-    },
-    [fetchJdDraft, fetchTitleSuggestion, hiringData.jobDescription, isAuthenticated, t]
-  );
 
   const inferTitle = (text: string): string => {
     const combined = text.toLowerCase();
@@ -1374,7 +1402,7 @@ export default function StartHiring() {
                     ref={fileInputRef}
                     type="file"
                     className="hidden"
-                    accept=".pdf,.doc,.docx,.txt"
+                    accept=".pdf,.doc,.docx,.txt,.md,.markdown"
                     onChange={(e) => setAttachedFile(e.target.files?.[0] || null)}
                   />
                   <button
@@ -1479,13 +1507,15 @@ export default function StartHiring() {
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                accept=".pdf,.doc,.docx,.txt"
+                accept=".pdf,.doc,.docx,.txt,.md,.markdown"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
                     setAttachedFile(file);
-                    handleQuickStart(t('hiring.quickStartFromJd', 'candidate based on job description'));
+                    const initialPrompt = input.trim() || t('hiring.quickStartFromJd', 'candidate based on job description');
+                    void handleSubmitHiringInput(initialPrompt, file);
                   }
+                  e.target.value = '';
                 }}
               />
               <textarea

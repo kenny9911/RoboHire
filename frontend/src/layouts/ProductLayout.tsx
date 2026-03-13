@@ -83,11 +83,12 @@ const navItems = [
   },
   {
     path: '/product/profile',
-    labelKey: 'product.nav.profile',
-    fallback: 'Profile',
+    labelKey: 'product.nav.settings',
+    fallback: 'Settings',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
   },
@@ -111,7 +112,8 @@ function getPageTitle(
   if (pathname.startsWith('/product/jobs/')) return t('product.nav.jobDetail', 'Job Detail');
   if (pathname === '/product/interview') return t('product.nav.aiInterview', 'AI Interview');
   if (pathname.startsWith('/product/interview/')) return t('product.nav.interviewRoom', 'Interview Room');
-  if (pathname === '/product/profile') return t('product.nav.profile', 'Profile');
+  if (pathname.startsWith('/product/profile')) return t('product.nav.settings', 'Settings');
+  if (pathname === '/product/admin') return t('product.nav.admin', 'Admin');
   if (pathname === '/product/matching') return t('product.nav.smartMatching', 'Smart Matching');
   if (pathname === '/product/evaluations') return t('product.nav.evaluations', 'Evaluations');
   return t('product.nav.dashboard', 'Dashboard');
@@ -174,6 +176,27 @@ export default function ProductLayout() {
             );
           })}
         </div>
+
+        {/* Admin link (admin only) */}
+        {user?.role === 'admin' && (
+          <div className="mt-1">
+            <Link
+              to="/product/admin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/product/admin')
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <span className={isActive('/product/admin') ? 'text-blue-600' : 'text-slate-400'}>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </span>
+              <span className="flex-1">{t('product.nav.admin', 'Admin')}</span>
+            </Link>
+          </div>
+        )}
 
         {/* Separator */}
         <div className="my-4 border-t border-slate-200" />

@@ -69,7 +69,7 @@ export default function ParseJD() {
         endpoint="/api/v1/parse-jd"
         method="POST"
         isFileUpload
-        fileName={file?.name || 'job_description.pdf'}
+        fileName={file?.name || 'job_description.docx'}
         responseStatus={responseStatus}
         responseTime={responseTime}
         requestId={result?.requestId}
@@ -79,7 +79,7 @@ export default function ParseJD() {
       <div className="mb-6 max-w-lg">
         <FileUpload
           onFileSelect={setFile}
-          accept=".pdf"
+          accept=".pdf,.doc,.docx,.txt,.md,.markdown"
           label={t('pages.parseJd.uploadLabel')}
         />
       </div>
@@ -96,7 +96,7 @@ export default function ParseJD() {
           data={result} 
           loading={loading} 
           error={error} 
-          title={file ? `parsed-jd-${file.name.replace('.pdf', '')}` : 'parsed-jd'}
+          title={file ? `parsed-jd-${file.name.replace(/\.[^.]+$/, '')}` : 'parsed-jd'}
         />
       </div>
     </div>

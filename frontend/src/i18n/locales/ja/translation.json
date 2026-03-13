@@ -1224,7 +1224,8 @@
       "intelReportGenerating": "レポートを生成中...",
       "intelReportDone": "レポート完成！",
       "goToDashboard": "ダッシュボードへ",
-      "viewFullReport": "完全なレポートを見る"
+      "viewFullReport": "完全なレポートを見る",
+      "viewReport": "採用レポートを見る"
     }
   },
   "dashboard": {
@@ -1813,10 +1814,13 @@
       "title": "プロフィール",
       "name": "名前",
       "company": "会社",
+      "email": "メール",
+      "phone": "電話番号",
       "avatar": "アバター URL",
       "save": "変更を保存",
       "saving": "保存中...",
-      "saved": "プロフィールが更新されました"
+      "saved": "プロフィールが更新されました",
+      "joined": "登録日"
     },
     "security": {
       "title": "セキュリティ",
@@ -1827,7 +1831,10 @@
       "changing": "変更中...",
       "changed": "パスワードが変更されました",
       "mismatch": "パスワードが一致しません",
-      "oauthNote": "ソーシャルログインアカウントではパスワード変更はできません。"
+      "oauthNote": "ソーシャルログインアカウントではパスワード変更はできません。",
+      "changePassword": "パスワード変更",
+      "emailMethod": "メールとパスワードでサインイン",
+      "oauthMethod": "{{provider}} でサインイン"
     },
     "subscription": {
       "title": "サブスクリプション",
@@ -1923,6 +1930,7 @@
       "jobs": "求人",
       "aiInterview": "AI面接",
       "profile": "プロフィール",
+      "settings": "設定",
       "devDashboard": "開発者ダッシュボード",
       "smartMatching": "スマートマッチング",
       "evaluations": "評価レポート",
@@ -1969,9 +1977,33 @@
       "usage": "利用状況・請求",
       "integrations": "ATS連携"
     },
+    "settings": {
+      "user": "ユーザー",
+      "general": "一般",
+      "security": "セキュリティ",
+      "account": "アカウント",
+      "usage": "利用状況と請求",
+      "apiKeys": "APIキー",
+      "workspace": "ワークスペース",
+      "integrations": "ATS連携"
+    },
     "interview": {
       "title": "AI面接",
       "subtitle": "LiveKitによるAIビデオ・オーディオ・テキスト面接",
+      "status": {
+        "scheduled": "予定済み",
+        "inProgress": "進行中",
+        "completed": "完了",
+        "cancelled": "キャンセル",
+        "expired": "期限切れ"
+      },
+      "verdict": {
+        "strongHire": "強く採用推奨",
+        "hire": "採用推奨",
+        "leanHire": "採用寄り",
+        "leanNoHire": "不採用寄り",
+        "noHire": "不採用推奨"
+      },
       "scheduleInterview": "面接をスケジュール",
       "newInterview": "新規面接",
       "candidateName": "候補者名",
@@ -2188,6 +2220,11 @@
     },
     "hiring": {
       "title": "採用リクエスト",
+      "status": {
+        "active": "進行中",
+        "paused": "一時停止",
+        "closed": "終了"
+      },
       "allRequests": "すべてのリクエスト",
       "createRequest": "リクエストを作成",
       "editRequest": "リクエストを編集",
@@ -2604,6 +2641,20 @@
         "llmCalls": "LLM呼び出し",
         "model": "モデル",
         "inputOutput": "入力 / 出力"
+      },
+      "personDuplicate": {
+        "title": "重複する候補者が見つかりました",
+        "description": "同じ名前と連絡先情報の履歴書が既に存在します。",
+        "existing": "既存の履歴書",
+        "new": "新しい履歴書",
+        "role": "役職",
+        "experience": "経験",
+        "skills": "スキル",
+        "uploadedAt": "アップロード日",
+        "overwrite": "上書き",
+        "keepBoth": "両方保持",
+        "skip": "スキップ",
+        "of": "/"
       }
     },
     "detail": {

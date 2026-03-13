@@ -418,7 +418,7 @@ class AuthService {
    */
   async updateProfile(
     userId: string,
-    data: { name?: string; company?: string; avatar?: string }
+    data: { name?: string; company?: string; avatar?: string; email?: string; phone?: string }
   ): Promise<PublicUser> {
     const user = await prisma.user.update({
       where: { id: userId },

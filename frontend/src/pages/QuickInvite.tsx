@@ -6,7 +6,7 @@ import axios from '../lib/axios';
 import LanguageSelector from '../components/LanguageSelector';
 import SEO from '../components/SEO';
 
-const DOC_ACCEPT = '.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.json';
+const DOC_ACCEPT = '.pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.markdown,.json';
 
 interface FormattedResume {
   name: string;

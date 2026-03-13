@@ -359,8 +359,8 @@ router.get('/me', requireAuth, async (req, res) => {
  */
 router.patch('/profile', requireAuth, async (req, res) => {
   try {
-    const { name, company, avatar } = req.body;
-    const user = await authService.updateProfile(req.user!.id, { name, company, avatar });
+    const { name, company, avatar, email, phone } = req.body;
+    const user = await authService.updateProfile(req.user!.id, { name, company, avatar, email, phone });
 
     res.json({
       success: true,

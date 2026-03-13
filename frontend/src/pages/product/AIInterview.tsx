@@ -78,6 +78,29 @@ const VERDICT_STYLES: Record<string, string> = {
 export default function AIInterview() {
   const { t } = useTranslation();
   const { user } = useAuth();
+
+  const statusLabel = (status: string) => {
+    const map: Record<string, string> = {
+      scheduled: t('product.interview.status.scheduled', 'Scheduled'),
+      in_progress: t('product.interview.status.inProgress', 'In Progress'),
+      completed: t('product.interview.status.completed', 'Completed'),
+      cancelled: t('product.interview.status.cancelled', 'Cancelled'),
+      expired: t('product.interview.status.expired', 'Expired'),
+    };
+    return map[status] || status;
+  };
+
+  const verdictLabel = (verdict: string) => {
+    const map: Record<string, string> = {
+      strong_hire: t('product.interview.verdict.strongHire', 'Strong Hire'),
+      hire: t('product.interview.verdict.hire', 'Hire'),
+      lean_hire: t('product.interview.verdict.leanHire', 'Lean Hire'),
+      lean_no_hire: t('product.interview.verdict.leanNoHire', 'Lean No Hire'),
+      no_hire: t('product.interview.verdict.noHire', 'No Hire'),
+    };
+    return map[verdict] || verdict;
+  };
+
   const [interviews, setInterviews] = usePageState<Interview[]>('interview.list', []);
   const [loading, setLoading] = useState(interviews.length > 0 ? false : true);
   const [statusFilter, setStatusFilter] = usePageState<string>('interview.statusFilter', '');
@@ -98,7 +121,6 @@ export default function AIInterview() {
   const [sending, setSending] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
 
   const fetchInterviews = async () => {
     try {
@@ -331,9 +353,9 @@ export default function AIInterview() {
   const evaluationCoverage = completedCount > 0 ? Math.round((evaluatedCompletedCount / completedCount) * 100) : 0;
   const latestInterviews = interviewsByNewest.slice(0, 4);
   const pipelineSegments = [
-    { key: 'scheduled', label: 'scheduled', count: scheduledCount, color: 'bg-sky-500' },
-    { key: 'in_progress', label: 'in_progress', count: inProgressCount, color: 'bg-amber-500' },
-    { key: 'completed', label: 'completed', count: completedCount, color: 'bg-emerald-500' },
+    { key: 'scheduled', label: statusLabel('scheduled'), count: scheduledCount, color: 'bg-sky-500' },
+    { key: 'in_progress', label: statusLabel('in_progress'), count: inProgressCount, color: 'bg-amber-500' },
+    { key: 'completed', label: statusLabel('completed'), count: completedCount, color: 'bg-emerald-500' },
   ];
 
   const todoItems = useMemo(() => {
@@ -1051,7 +1073,7 @@ export default function AIInterview() {
                       </div>
                       <div className="text-right">
                         <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[interview.status] || STATUS_STYLES.scheduled}`}>
-                          {interview.status.replace('_', ' ')}
+                          {statusLabel(interview.status)}
                         </span>
                         <p className="mt-1 text-xs text-slate-400">
                           {new Date(interview.createdAt).toLocaleDateString()}
@@ -1125,7 +1147,7 @@ export default function AIInterview() {
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            {s || t('product.interview.allStatuses', 'All')}
+            {s ? statusLabel(s) : t('product.interview.allStatuses', 'All')}
           </button>
         ))}
       </div>
@@ -1166,11 +1188,11 @@ export default function AIInterview() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold text-slate-900">{interview.candidateName}</span>
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[interview.status] || STATUS_STYLES.scheduled}`}>
-                        {interview.status.replace('_', ' ')}
+                        {statusLabel(interview.status)}
                       </span>
                       {interview.evaluation?.verdict && (
                         <span className={`text-xs font-bold ${VERDICT_STYLES[interview.evaluation.verdict] || 'text-slate-600'}`}>
-                          {interview.evaluation.verdict.replace(/_/g, ' ')}
+                          {verdictLabel(interview.evaluation.verdict)}
                         </span>
                       )}
                     </div>
@@ -1233,39 +1255,32 @@ export default function AIInterview() {
                       </div>
                     </div>
 
-                    {/* Invite Link & Access Token */}
+                    {/* Invite Link & QR Code — always visible */}
                     {interview.accessToken && (
-                      <div className="mt-3">
-                        <button
-                          onClick={() => setExpandedLinkId(expandedLinkId === interview.id ? null : interview.id)}
-                          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                          </svg>
-                          {t('product.interview.inviteLink', 'Invite Link & QR Code')}
-                          <svg className={`w-3 h-3 transition-transform ${expandedLinkId === interview.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-
-                        {expandedLinkId === interview.id && (
-                          <div className="mt-2 space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                            {/* Invite Link */}
+                      <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                        <div className="flex items-start gap-3">
+                          {/* QR Code */}
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(getInviteLink(interview.accessToken!))}`}
+                            alt="QR Code"
+                            className="h-[72px] w-[72px] rounded-lg border border-slate-200 bg-white p-0.5 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            {/* Interview Link */}
                             <div>
-                              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                              <label className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
                                 {t('product.interview.inviteLinkLabel', 'Interview Link')}
                               </label>
-                              <div className="mt-1 flex items-center gap-2">
+                              <div className="mt-0.5 flex items-center gap-1.5">
                                 <input
                                   type="text"
                                   readOnly
                                   value={getInviteLink(interview.accessToken!)}
-                                  className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 font-mono select-all"
+                                  className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 font-mono select-all"
                                 />
                                 <button
                                   onClick={() => copyToClipboard(getInviteLink(interview.accessToken!), `link-${interview.id}`)}
-                                  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                                  className="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors"
                                 >
                                   {copiedId === `link-${interview.id}`
                                     ? t('common.copied', 'Copied!')
@@ -1273,19 +1288,18 @@ export default function AIInterview() {
                                 </button>
                               </div>
                             </div>
-
                             {/* Access Token */}
                             <div>
-                              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                              <label className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
                                 {t('product.interview.accessTokenLabel', 'Access Token')}
                               </label>
-                              <div className="mt-1 flex items-center gap-2">
-                                <code className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 font-mono truncate select-all">
+                              <div className="mt-0.5 flex items-center gap-1.5">
+                                <code className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-600 font-mono truncate select-all">
                                   {interview.accessToken}
                                 </code>
                                 <button
                                   onClick={() => copyToClipboard(interview.accessToken!, `token-${interview.id}`)}
-                                  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                                  className="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors"
                                 >
                                   {copiedId === `token-${interview.id}`
                                     ? t('common.copied', 'Copied!')
@@ -1293,25 +1307,8 @@ export default function AIInterview() {
                                 </button>
                               </div>
                             </div>
-
-                            {/* QR Code */}
-                            <div>
-                              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-                                {t('product.interview.qrCode', 'QR Code')}
-                              </label>
-                              <div className="mt-1 flex items-center gap-3">
-                                <img
-                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(getInviteLink(interview.accessToken!))}`}
-                                  alt="QR Code"
-                                  className="h-[120px] w-[120px] rounded-lg border border-slate-200 bg-white p-1"
-                                />
-                                <p className="text-xs text-slate-500">
-                                  {t('product.interview.qrCodeDesc', 'Candidates can scan this QR code to join the interview directly.')}
-                                </p>
-                              </div>
-                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     )}
                   </>

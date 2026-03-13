@@ -793,7 +793,8 @@
       "intelReportGenerating": "正在生成报告...",
       "intelReportDone": "报告已就绪！",
       "goToDashboard": "前往仪表盘",
-      "viewFullReport": "查看完整报告"
+      "viewFullReport": "查看完整报告",
+      "viewReport": "查看招聘报告"
     }
   },
   "dashboard": {
@@ -1217,7 +1218,7 @@
         "parseResume": "解析简历",
         "parseResumeDesc": "从简历PDF中提取结构化数据。",
         "parseJd": "解析JD",
-        "parseJdDesc": "从职位描述PDF中提取结构化数据。",
+        "parseJdDesc": "从职位描述文档中提取结构化数据。",
         "inviteCandidate": "邀请候选人",
         "inviteCandidateDesc": "生成专业的面试邀请邮件。",
         "evaluateInterview": "面试评估",
@@ -1344,8 +1345,8 @@
     },
     "parseJD": {
       "title": "解析职位描述",
-      "intro": "从职位描述PDF中提取结构化数据，包括岗位要求、职责和福利。",
-      "endpointDesc": "将职位描述PDF解析为结构化数据",
+      "intro": "从职位描述文档中提取结构化数据，包括岗位要求、职责和福利。",
+      "endpointDesc": "将职位描述文档解析为结构化数据",
       "request": "请求",
       "response": "响应",
       "requirements": {
@@ -1592,11 +1593,11 @@
     },
     "parseJd": {
       "title": "解析职位描述",
-      "subtitle": "从 JD PDF 中提取结构化数据",
-      "uploadLabel": "上传 JD PDF",
+      "subtitle": "从 JD 文件中提取结构化数据",
+      "uploadLabel": "上传 JD 文件",
       "parseButton": "解析 JD",
       "parsedData": "解析结果",
-      "errorMissingFile": "请上传职位描述 PDF 文件"
+      "errorMissingFile": "请上传职位描述文件"
     },
     "evaluateInterview": {
       "title": "面试评估",
@@ -1856,10 +1857,13 @@
       "title": "个人资料",
       "name": "姓名",
       "company": "公司",
+      "email": "邮箱",
+      "phone": "电话",
       "avatar": "头像 URL",
       "save": "保存更改",
       "saving": "保存中...",
-      "saved": "个人资料更新成功"
+      "saved": "个人资料更新成功",
+      "joined": "加入于"
     },
     "security": {
       "title": "安全",
@@ -1870,7 +1874,10 @@
       "changing": "修改中...",
       "changed": "密码修改成功",
       "mismatch": "密码不匹配",
-      "oauthNote": "社交登录账户无法修改密码。"
+      "oauthNote": "社交登录账户无法修改密码。",
+      "changePassword": "修改密码",
+      "emailMethod": "通过邮箱和密码登录",
+      "oauthMethod": "通过 {{provider}} 登录"
     },
     "subscription": {
       "title": "订阅",
@@ -1966,6 +1973,7 @@
       "jobs": "职位",
       "aiInterview": "AI 面试",
       "profile": "个人资料",
+      "settings": "设置",
       "devDashboard": "开发者控制台",
       "smartMatching": "智能匹配",
       "evaluations": "评估报告",
@@ -2012,9 +2020,33 @@
       "usage": "用量与计费",
       "integrations": "ATS 集成"
     },
+    "settings": {
+      "user": "用户",
+      "general": "基本信息",
+      "security": "安全",
+      "account": "账户",
+      "usage": "用量与计费",
+      "apiKeys": "API 密钥",
+      "workspace": "工作区",
+      "integrations": "ATS 集成"
+    },
     "interview": {
       "title": "AI 面试",
       "subtitle": "AI驱动的面试与自动评估。",
+      "status": {
+        "scheduled": "已安排",
+        "inProgress": "进行中",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "expired": "已过期"
+      },
+      "verdict": {
+        "strongHire": "强烈推荐录用",
+        "hire": "推荐录用",
+        "leanHire": "倾向录用",
+        "leanNoHire": "倾向不录用",
+        "noHire": "不推荐录用"
+      },
       "schedule": "安排面试",
       "newInterview": "新建面试",
       "candidateName": "候选人姓名",
@@ -2280,6 +2312,11 @@
     "hiring": {
       "title": "招聘需求",
       "subtitle": "管理您的招聘需求并将其转化为职位发布。",
+      "status": {
+        "active": "进行中",
+        "paused": "已暂停",
+        "closed": "已关闭"
+      },
       "newRequest": "新建需求",
       "allStatuses": "全部",
       "empty": "暂无招聘需求",
@@ -2630,6 +2667,20 @@
         "llmCalls": "LLM 调用",
         "model": "模型",
         "inputOutput": "输入 / 输出"
+      },
+      "personDuplicate": {
+        "title": "发现重复候选人",
+        "description": "已存在相同姓名和联系方式的简历。",
+        "existing": "现有简历",
+        "new": "新简历",
+        "role": "职位",
+        "experience": "经验",
+        "skills": "技能",
+        "uploadedAt": "上传时间",
+        "overwrite": "覆盖旧的",
+        "keepBoth": "保留两份",
+        "skip": "跳过",
+        "of": "/"
       }
     },
     "detail": {

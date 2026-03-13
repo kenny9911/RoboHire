@@ -104,7 +104,7 @@ const HiringRequestCard = memo(function HiringRequestCard({
               {req.title}
             </Link>
             <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[req.status] || STATUS_COLORS.active}`}>
-              {req.status}
+              {hiringStatusLabel(req.status, t)}
             </span>
           </div>
           <p className="mt-1 text-sm text-slate-600 line-clamp-2">{req.requirements?.slice(0, 200)}</p>
@@ -185,6 +185,15 @@ const HiringRequestCard = memo(function HiringRequestCard({
     </div>
   );
 });
+
+const hiringStatusLabel = (status: string, t: (k: string, f: string) => string) => {
+  const map: Record<string, string> = {
+    active: t('product.hiring.status.active', 'Active'),
+    paused: t('product.hiring.status.paused', 'Paused'),
+    closed: t('product.hiring.status.closed', 'Closed'),
+  };
+  return map[status] || status;
+};
 
 // ── Main Component ──
 export default function HiringRequests() {
@@ -358,7 +367,7 @@ export default function HiringRequests() {
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            {s || t('product.hiring.allStatuses', 'All')}
+            {s ? hiringStatusLabel(s, t) : t('product.hiring.allStatuses', 'All')}
           </button>
         ))}
       </div>

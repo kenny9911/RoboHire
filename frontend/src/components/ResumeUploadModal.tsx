@@ -25,6 +25,31 @@ type ProcessingMetrics = {
   llmCalls: number;
 };
 
+type PersonDuplicate = {
+  file: File;
+  existingResume: {
+    id: string;
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    currentRole?: string | null;
+    experienceYears?: string | null;
+    fileName?: string | null;
+    updatedAt?: string;
+    parsedData?: any;
+  };
+  newParsed: {
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    currentRole?: string | null;
+    experienceYears?: string | null;
+    parsedData?: any;
+    fileName?: string | null;
+  };
+  metrics?: ProcessingMetrics;
+};
+
 export default function ResumeUploadModal({ open, onClose, onUploaded, batch = false, replaceResumeId }: ResumeUploadModalProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,6 +60,8 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
   const [results, setResults] = useState<FileResult[]>([]);
   const [fileStatuses, setFileStatuses] = useState<Map<number, FileStatus>>(new Map());
   const [metrics, setMetrics] = useState<ProcessingMetrics | null>(null);
+  const [personDuplicates, setPersonDuplicates] = useState<PersonDuplicate[]>([]);
+  const [resolvingDuplicate, setResolvingDuplicate] = useState(false);
   const isReplaceMode = Boolean(replaceResumeId);
   const effectiveBatch = batch && !isReplaceMode;
 
@@ -49,6 +76,7 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
     setResults([]);
     setFileStatuses(new Map());
     setMetrics(null);
+    setPersonDuplicates([]);
   };
 
   const handleRemoveFile = (index: number) => {
@@ -78,12 +106,12 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
     setUploading(true);
     setResults([]);
 
-    // Set all files to pending
     const statuses = new Map<number, FileStatus>();
     selectedFiles.forEach((_, i) => statuses.set(i, 'uploading'));
     setFileStatuses(new Map(statuses));
 
     let uploaded = false;
+    const pendingDuplicates: PersonDuplicate[] = [];
 
     try {
       if (isReplaceMode) {
@@ -105,15 +133,30 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         if (res.data.success) {
-          const fileResults = res.data.data.map((r: { fileName: string; success: boolean; error?: string; duplicate?: boolean }) => ({
-            name: r.fileName,
-            success: r.success,
-            error: r.error,
-            duplicate: r.duplicate,
-          }));
-          setResults(fileResults);
+          const fileResults: FileResult[] = [];
           const doneStatuses = new Map<number, FileStatus>();
-          fileResults.forEach((r: FileResult, i: number) => doneStatuses.set(i, r.success ? 'done' : 'error'));
+
+          res.data.data.forEach((r: any, i: number) => {
+            if (r.personDuplicate) {
+              pendingDuplicates.push({
+                file: selectedFiles[i],
+                existingResume: r.existingResume,
+                newParsed: r.newParsed,
+              });
+              fileResults.push({ name: r.fileName, success: true, duplicate: true });
+              doneStatuses.set(i, 'done');
+            } else {
+              fileResults.push({
+                name: r.fileName,
+                success: r.success,
+                error: r.error,
+                duplicate: r.duplicate,
+              });
+              doneStatuses.set(i, r.success ? 'done' : 'error');
+            }
+          });
+
+          setResults(fileResults);
           setFileStatuses(doneStatuses);
           if (res.data.metrics) setMetrics(res.data.metrics);
           uploaded = true;
@@ -125,13 +168,29 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         if (res.data.success) {
-          setResults([{ name: selectedFiles[0].name, success: true, duplicate: res.data.duplicate }]);
-          setFileStatuses(new Map([[0, 'done']]));
+          if (res.data.personDuplicate) {
+            pendingDuplicates.push({
+              file: selectedFiles[0],
+              existingResume: res.data.existingResume,
+              newParsed: res.data.newParsed,
+              metrics: res.data.metrics,
+            });
+            setResults([{ name: selectedFiles[0].name, success: true, duplicate: true }]);
+            setFileStatuses(new Map([[0, 'done']]));
+          } else {
+            setResults([{ name: selectedFiles[0].name, success: true, duplicate: res.data.duplicate }]);
+            setFileStatuses(new Map([[0, 'done']]));
+          }
           if (res.data.metrics) setMetrics(res.data.metrics);
           uploaded = true;
         }
       }
-      if (uploaded) onUploaded();
+
+      if (pendingDuplicates.length > 0) {
+        setPersonDuplicates(pendingDuplicates);
+      }
+
+      if (uploaded && pendingDuplicates.length === 0) onUploaded();
     } catch (err) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.error || err.message : 'Upload failed';
       setResults(selectedFiles.map(f => ({ name: f.name, success: false, error: msg })));
@@ -143,11 +202,195 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
     }
   };
 
-  const allDone = results.length > 0;
+  const handleDuplicateAction = async (action: 'overwrite' | 'keep_both' | 'skip') => {
+    if (personDuplicates.length === 0) return;
+    const current = personDuplicates[0];
+    setResolvingDuplicate(true);
+
+    try {
+      if (action === 'overwrite') {
+        const formData = new FormData();
+        formData.append('file', current.file);
+        await axios.post(`/api/v1/resumes/${current.existingResume.id}/reupload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } else if (action === 'keep_both') {
+        const formData = new FormData();
+        formData.append('file', current.file);
+        await axios.post('/api/v1/resumes/upload?skipPersonCheck=true', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+      // 'skip' → do nothing
+    } catch (err) {
+      console.error('Failed to resolve person duplicate:', err);
+    } finally {
+      setResolvingDuplicate(false);
+      const remaining = personDuplicates.slice(1);
+      setPersonDuplicates(remaining);
+      if (remaining.length === 0) {
+        onUploaded();
+      }
+    }
+  };
+
+  const allDone = results.length > 0 && personDuplicates.length === 0;
   const successCount = results.filter(r => r.success && !r.duplicate).length;
   const duplicateCount = results.filter(r => r.duplicate).length;
   const failCount = results.filter(r => !r.success).length;
 
+  // Helper to extract top skills from parsedData
+  const getSkills = (parsedData: any): string[] => {
+    if (!parsedData?.skills) return [];
+    const skills = Array.isArray(parsedData.skills) ? parsedData.skills : [];
+    return skills.slice(0, 6).map((s: any) => typeof s === 'string' ? s : s.name || s.skill || '').filter(Boolean);
+  };
+
+  // ─── Person duplicate comparison dialog ──────────────────────────
+  if (personDuplicates.length > 0) {
+    const dup = personDuplicates[0];
+    const existingSkills = getSkills(dup.existingResume.parsedData);
+    const newSkills = getSkills(dup.newParsed.parsedData);
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 p-6" onClick={e => e.stopPropagation()}>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-bold text-gray-900">
+              {t('resumeLibrary.uploadModal.personDuplicate.title', 'Duplicate Candidate Found')}
+            </h3>
+            {personDuplicates.length > 1 && (
+              <span className="text-xs text-gray-500">
+                1 {t('resumeLibrary.uploadModal.personDuplicate.of', 'of')} {personDuplicates.length}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-500 mb-4">
+            {t('resumeLibrary.uploadModal.personDuplicate.description', 'A resume with the same name and contact info already exists.')}
+          </p>
+
+          {/* Side-by-side comparison */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Existing resume */}
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                {t('resumeLibrary.uploadModal.personDuplicate.existing', 'Existing Resume')}
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="font-semibold text-gray-900 text-base">{dup.existingResume.name}</div>
+                {dup.existingResume.phone && <div className="text-gray-600">{dup.existingResume.phone}</div>}
+                {dup.existingResume.email && <div className="text-gray-600 truncate">{dup.existingResume.email}</div>}
+                {dup.existingResume.currentRole && (
+                  <div className="text-gray-700">
+                    <span className="text-gray-400 text-xs">{t('resumeLibrary.uploadModal.personDuplicate.role', 'Role')}: </span>
+                    {dup.existingResume.currentRole}
+                  </div>
+                )}
+                {dup.existingResume.experienceYears && (
+                  <div className="text-gray-700">
+                    <span className="text-gray-400 text-xs">{t('resumeLibrary.uploadModal.personDuplicate.experience', 'Exp')}: </span>
+                    {dup.existingResume.experienceYears}
+                  </div>
+                )}
+                {existingSkills.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {existingSkills.map((s, i) => (
+                      <span key={i} className="px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded text-xs">{s}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="pt-2 border-t border-gray-200 text-xs text-gray-400">
+                  {dup.existingResume.fileName && <div className="truncate">{dup.existingResume.fileName}</div>}
+                  {dup.existingResume.updatedAt && (
+                    <div>
+                      {t('resumeLibrary.uploadModal.personDuplicate.uploadedAt', 'Uploaded')}: {new Date(dup.existingResume.updatedAt).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* New resume */}
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3">
+                {t('resumeLibrary.uploadModal.personDuplicate.new', 'New Resume')}
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="font-semibold text-gray-900 text-base">{dup.newParsed.name}</div>
+                {dup.newParsed.phone && <div className="text-gray-600">{dup.newParsed.phone}</div>}
+                {dup.newParsed.email && <div className="text-gray-600 truncate">{dup.newParsed.email}</div>}
+                {dup.newParsed.currentRole && (
+                  <div className="text-gray-700">
+                    <span className="text-blue-400 text-xs">{t('resumeLibrary.uploadModal.personDuplicate.role', 'Role')}: </span>
+                    {dup.newParsed.currentRole}
+                  </div>
+                )}
+                {dup.newParsed.experienceYears && (
+                  <div className="text-gray-700">
+                    <span className="text-blue-400 text-xs">{t('resumeLibrary.uploadModal.personDuplicate.experience', 'Exp')}: </span>
+                    {dup.newParsed.experienceYears}
+                  </div>
+                )}
+                {newSkills.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {newSkills.map((s, i) => (
+                      <span key={i} className="px-1.5 py-0.5 bg-blue-200 text-blue-700 rounded text-xs">{s}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="pt-2 border-t border-blue-200 text-xs text-gray-400">
+                  {dup.newParsed.fileName && <div className="truncate">{dup.newParsed.fileName}</div>}
+                  <div>{dup.file.name}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              onClick={() => handleDuplicateAction('skip')}
+              disabled={resolvingDuplicate}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
+            >
+              {t('resumeLibrary.uploadModal.personDuplicate.skip', 'Skip')}
+            </button>
+            <button
+              onClick={() => handleDuplicateAction('keep_both')}
+              disabled={resolvingDuplicate}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+            >
+              {resolvingDuplicate ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-gray-500 border-t-transparent" />
+                  ...
+                </span>
+              ) : (
+                t('resumeLibrary.uploadModal.personDuplicate.keepBoth', 'Keep Both')
+              )}
+            </button>
+            <button
+              onClick={() => handleDuplicateAction('overwrite')}
+              disabled={resolvingDuplicate}
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {resolvingDuplicate ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
+                  ...
+                </span>
+              ) : (
+                t('resumeLibrary.uploadModal.personDuplicate.overwrite', 'Overwrite')
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Normal upload UI ───────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6" onClick={e => e.stopPropagation()}>
@@ -211,7 +454,6 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
               const status = fileStatuses.get(i);
               const result = results[i];
 
-              // Determine row style based on status
               let rowClass = 'bg-gray-50 text-gray-700';
               if (result?.success) rowClass = 'bg-emerald-50 text-emerald-700';
               else if (result && !result.success) rowClass = 'bg-red-50 text-red-700';
@@ -219,7 +461,6 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
 
               return (
                 <div key={i} className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 ${rowClass}`}>
-                  {/* Status icon */}
                   {status === 'uploading' && !result ? (
                     <div className="w-4 h-4 flex-shrink-0 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
                   ) : result?.success ? (
@@ -234,7 +475,6 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
 
                   <span className="truncate flex-1">{f.name}</span>
 
-                  {/* Status labels */}
                   {result?.duplicate && <span className="text-xs text-amber-600 shrink-0">{t('resumeLibrary.uploadModal.duplicate', 'Duplicate')}</span>}
                   {result?.error && <span className="text-xs shrink-0">{result.error}</span>}
                   {!result && !uploading && (

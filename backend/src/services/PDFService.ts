@@ -1,12 +1,75 @@
 import pdf from 'pdf-parse';
 import { llmService } from './llm/LLMService.js';
+import { GoogleProvider } from './llm/GoogleProvider.js';
 import { logger } from './LoggerService.js';
 import type { Message, MessageContent } from '../types/index.js';
 
 // Vision model for PDF extraction - prefer capable vision models
 const VISION_MODEL = process.env.PDF_VISION_MODEL || process.env.LLM_VISION_MODEL || '';
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || '';
+const PDF_LLM_MAX_TOKENS = 8000;
 
 export class PDFService {
+  private getPreferredVisionModel(): string | undefined {
+    return VISION_MODEL || process.env.LLM_MODEL || undefined;
+  }
+
+  private getDirectGoogleVisionProvider(model?: string): GoogleProvider | null {
+    const resolvedModel = (model || this.getPreferredVisionModel() || '').trim();
+    if (!GOOGLE_API_KEY || !resolvedModel) {
+      return null;
+    }
+
+    const normalized = resolvedModel.toLowerCase();
+    if (!normalized.startsWith('google/') && !normalized.startsWith('gemini')) {
+      return null;
+    }
+
+    return new GoogleProvider(GOOGLE_API_KEY, resolvedModel);
+  }
+
+  private async runMultimodalExtraction(messages: Message[], requestId: string | undefined, category: string): Promise<string> {
+    const model = this.getPreferredVisionModel();
+    const googleProvider = this.getDirectGoogleVisionProvider(model);
+    const startTime = Date.now();
+
+    if (googleProvider) {
+      logger.info(category, 'Using direct Google multimodal extraction', {
+        model: model || '(default)',
+      }, requestId);
+
+      const response = await googleProvider.chat(messages, {
+        temperature: 0.1,
+        maxTokens: PDF_LLM_MAX_TOKENS,
+        requestId,
+        ...(model ? { model } : {}),
+      });
+
+      logger.logLLMCall(
+        requestId || `untracked_${Date.now()}`,
+        response.model || model || 'gemini',
+        googleProvider.getProviderName(),
+        response.usage.promptTokens,
+        response.usage.completionTokens,
+        Date.now() - startTime,
+      );
+
+      return response.content;
+    }
+
+    logger.info(category, 'Using configured generic multimodal provider', {
+      provider: llmService.getProvider(),
+      model: model || '(default)',
+    }, requestId);
+
+    return llmService.chat(messages, {
+      temperature: 0.1,
+      maxTokens: PDF_LLM_MAX_TOKENS,
+      requestId,
+      ...(model ? { visionModel: model } : {}),
+    });
+  }
+
   /**
    * Check if a string looks like a hash/encoded garbage
    */
@@ -163,11 +226,15 @@ export class PDFService {
   }
 
   /**
-   * PRIMARY: Extract text from PDF by sending raw PDF base64 directly to LLM.
-   * This is the most reliable method — no image conversion needed.
-   * Works with Google Gemini and other models that accept PDF data URLs.
+   * Extract text from a PDF by sending the raw PDF only when we can talk to
+   * Gemini directly. Generic OpenAI-style chat providers do not reliably
+   * support PDF data URIs, so this path is provider-aware by design.
    */
   async extractTextWithDirectLLM(buffer: Buffer, requestId?: string): Promise<string> {
+    if (!this.getDirectGoogleVisionProvider()) {
+      throw new Error('Direct PDF extraction requires direct Google Gemini access');
+    }
+
     const base64Pdf = buffer.toString('base64');
     const sizeKB = Math.round(buffer.length / 1024);
 
@@ -196,15 +263,9 @@ Do NOT translate, summarize, or omit any content. Output plain text only.`,
     ];
 
     const startTime = Date.now();
-    const visionModel = VISION_MODEL || undefined;
 
     try {
-      const extractedText = await llmService.chat(messages, {
-        temperature: 0.1,
-        maxTokens: 8000,
-        requestId,
-        visionModel,
-      });
+      const extractedText = await this.runMultimodalExtraction(messages, requestId, 'PDF_LLM');
 
       const elapsedMs = Date.now() - startTime;
       logger.info('PDF_LLM', `Direct LLM extraction completed`, {
@@ -226,8 +287,9 @@ Do NOT translate, summarize, or omit any content. Output plain text only.`,
   }
 
   /**
-   * FALLBACK: Convert PDF to images and send to LLM vision.
-   * Used when direct PDF sending isn't supported by the model.
+   * Convert PDF pages to images and OCR them page-by-page.
+   * Page-scoped extraction is slower than one giant multimodal request,
+   * but it is substantially more reliable for long hiring/JD attachments.
    */
   async extractTextWithVision(buffer: Buffer, requestId?: string): Promise<string> {
     logger.info('PDF_VISION', 'Converting PDF pages to images for vision extraction...', {}, requestId);
@@ -255,43 +317,55 @@ Do NOT translate, summarize, or omit any content. Output plain text only.`,
       throw new Error('PDF has no pages to extract');
     }
 
-    const contentParts: MessageContent = [
-      {
-        type: 'text' as const,
-        text: `Extract ALL text content from these document page images.
+    const startTime = Date.now();
+    const pageTexts: string[] = [];
+
+    for (const [index, img] of images.entries()) {
+      const pageNumber = index + 1;
+      const contentParts: MessageContent = [
+        {
+          type: 'text' as const,
+          text: `Extract ALL text content from page ${pageNumber} of ${images.length} of this document.
 Output the text EXACTLY as it appears, preserving the original language (Chinese, Japanese, English, etc.).
 Maintain the document structure with sections, headings, and bullet points.
-Include ALL details. Do NOT translate, summarize, or omit any content. Output plain text only.`,
-      },
-    ];
+Include ALL details from this page only. Do NOT translate, summarize, or omit any content. Output plain text only.`,
+        },
+        {
+          type: 'image_url' as const,
+          image_url: { url: `data:image/png;base64,${img.toString('base64')}` },
+        },
+      ];
 
-    for (const img of images) {
-      contentParts.push({
-        type: 'image_url' as const,
-        image_url: { url: `data:image/png;base64,${img.toString('base64')}` },
-      });
+      const messages: Message[] = [{ role: 'user', content: contentParts }];
+
+      try {
+        const pageText = await this.runMultimodalExtraction(messages, requestId, 'PDF_VISION');
+        if (pageText.trim()) {
+          pageTexts.push(pageText.trim());
+        }
+        logger.info('PDF_VISION', `Extracted page ${pageNumber}/${images.length}`, {
+          pageNumber,
+          chars: pageText.length,
+        }, requestId);
+      } catch (error) {
+        const errMsg = error instanceof Error ? error.message : 'Unknown error';
+        logger.warn('PDF_VISION', `Page ${pageNumber}/${images.length} extraction failed: ${errMsg}`, {
+          pageNumber,
+        }, requestId);
+      }
     }
 
-    const messages: Message[] = [{ role: 'user', content: contentParts }];
-    const startTime = Date.now();
-    const visionModel = VISION_MODEL || undefined;
-
-    try {
-      const extractedText = await llmService.chat(messages, {
-        temperature: 0.1,
-        maxTokens: 8000,
-        requestId,
-        visionModel,
-      });
-
-      const elapsedMs = Date.now() - startTime;
-      logger.info('PDF_VISION', `Vision extraction completed: ${extractedText.length} chars in ${elapsedMs}ms`, {}, requestId);
-      return extractedText;
-    } catch (error) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('PDF_VISION', `Vision LLM call failed: ${errMsg}`, {}, requestId);
-      throw error;
+    if (pageTexts.length === 0) {
+      throw new Error('Vision OCR returned no text for any PDF page');
     }
+
+    const extractedText = pageTexts.join('\n\n');
+    const elapsedMs = Date.now() - startTime;
+    logger.info('PDF_VISION', `Vision extraction completed: ${extractedText.length} chars in ${elapsedMs}ms`, {
+      pagesAttempted: images.length,
+      pagesExtracted: pageTexts.length,
+    }, requestId);
+    return extractedText;
   }
 
   /**

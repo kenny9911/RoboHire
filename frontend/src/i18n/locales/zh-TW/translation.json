@@ -793,7 +793,8 @@
       "intelReportGenerating": "正在生成報告...",
       "intelReportDone": "報告已就緒！",
       "goToDashboard": "前往儀表盤",
-      "viewFullReport": "檢視完整報告"
+      "viewFullReport": "檢視完整報告",
+      "viewReport": "查看招聘報告"
     }
   },
   "dashboard": {
@@ -1217,7 +1218,7 @@
         "parseResume": "解析簡歷",
         "parseResumeDesc": "從簡歷 PDF 中擷取結構化資料。",
         "parseJd": "解析 JD",
-        "parseJdDesc": "從職位描述 PDF 中擷取結構化資料。",
+        "parseJdDesc": "從職位描述文件中擷取結構化資料。",
         "inviteCandidate": "邀請候選人",
         "inviteCandidateDesc": "產生專業的面試邀請郵件。",
         "evaluateInterview": "面試評估",
@@ -1344,8 +1345,8 @@
     },
     "parseJD": {
       "title": "解析職位描述",
-      "intro": "從職位描述 PDF 中擷取結構化資料，包括要求、職責和福利。",
-      "endpointDesc": "將職位描述 PDF 解析為結構化資料",
+      "intro": "從職位描述文件中擷取結構化資料，包括要求、職責和福利。",
+      "endpointDesc": "將職位描述文件解析為結構化資料",
       "request": "請求",
       "response": "回應",
       "requirements": {
@@ -1592,11 +1593,11 @@
     },
     "parseJd": {
       "title": "解析職位描述",
-      "subtitle": "從 JD PDF 中提取結構化資料",
-      "uploadLabel": "上傳 JD PDF",
+      "subtitle": "從 JD 文件中提取結構化資料",
+      "uploadLabel": "上傳 JD 文件",
       "parseButton": "解析 JD",
       "parsedData": "解析結果",
-      "errorMissingFile": "請上傳職位描述 PDF 檔案"
+      "errorMissingFile": "請上傳職位描述檔案"
     },
     "evaluateInterview": {
       "title": "面試評估",
@@ -1836,10 +1837,13 @@
       "title": "個人資料",
       "name": "姓名",
       "company": "公司",
+      "email": "電子郵件",
+      "phone": "電話",
       "avatar": "頭像 URL",
       "save": "儲存更改",
       "saving": "儲存中...",
-      "saved": "個人資料更新成功"
+      "saved": "個人資料更新成功",
+      "joined": "加入於"
     },
     "security": {
       "title": "安全",
@@ -1850,7 +1854,10 @@
       "changing": "修改中...",
       "changed": "密碼修改成功",
       "mismatch": "密碼不匹配",
-      "oauthNote": "社交登入賬戶無法修改密碼。"
+      "oauthNote": "社交登入賬戶無法修改密碼。",
+      "changePassword": "修改密碼",
+      "emailMethod": "透過電子郵件和密碼登入",
+      "oauthMethod": "透過 {{provider}} 登入"
     },
     "subscription": {
       "title": "訂閱",
@@ -1946,6 +1953,7 @@
       "jobs": "職缺",
       "aiInterview": "AI面試",
       "profile": "個人檔案",
+      "settings": "設定",
       "devDashboard": "開發者控制台",
       "smartMatching": "智慧配對",
       "evaluations": "評估",
@@ -1992,9 +2000,33 @@
       "usage": "使用量與帳單",
       "integrations": "ATS整合"
     },
+    "settings": {
+      "user": "使用者",
+      "general": "基本資訊",
+      "security": "安全",
+      "account": "帳戶",
+      "usage": "用量與計費",
+      "apiKeys": "API 金鑰",
+      "workspace": "工作區",
+      "integrations": "ATS 整合"
+    },
     "interview": {
       "title": "AI面試",
       "description": "具有自動評估功能的AI驅動面試",
+      "status": {
+        "scheduled": "已安排",
+        "inProgress": "進行中",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "expired": "已過期"
+      },
+      "verdict": {
+        "strongHire": "強烈推薦錄用",
+        "hire": "推薦錄用",
+        "leanHire": "傾向錄用",
+        "leanNoHire": "傾向不錄用",
+        "noHire": "不推薦錄用"
+      },
       "schedule": "排程面試",
       "new": "新面試",
       "candidateName": "候選人名稱",
@@ -2260,6 +2292,11 @@
     "hiring": {
       "title": "招聘需求",
       "description": "管理您的招聘需求",
+      "status": {
+        "active": "進行中",
+        "paused": "已暫停",
+        "closed": "已關閉"
+      },
       "new": "新需求",
       "all": "全部",
       "noRequests": "暫無招聘需求",
@@ -2615,6 +2652,20 @@
         "llmCalls": "LLM 調用",
         "model": "模型",
         "inputOutput": "輸入 / 輸出"
+      },
+      "personDuplicate": {
+        "title": "發現重複候選人",
+        "description": "已存在相同姓名和聯繫方式的履歷。",
+        "existing": "現有履歷",
+        "new": "新履歷",
+        "role": "職位",
+        "experience": "經驗",
+        "skills": "技能",
+        "uploadedAt": "上傳時間",
+        "overwrite": "覆蓋舊的",
+        "keepBoth": "保留兩份",
+        "skip": "跳過",
+        "of": "/"
       }
     },
     "detail": {

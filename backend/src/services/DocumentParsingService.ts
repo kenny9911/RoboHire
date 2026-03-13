@@ -15,7 +15,7 @@ export class DocumentParsingService {
    * Detect the format from MIME type or file extension.
    */
   detectFormat(mimetype: string, filename?: string): SupportedFormat {
-    const mime = mimetype.toLowerCase();
+    const mime = (mimetype || '').toLowerCase();
     if (mime === 'application/pdf') return 'pdf';
     if (
       mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
@@ -26,7 +26,7 @@ export class DocumentParsingService {
       mime === 'application/vnd.ms-excel'
     ) return 'xlsx';
     if (mime === 'text/plain') return 'txt';
-    if (mime === 'text/markdown') return 'md';
+    if (mime === 'text/markdown' || mime === 'text/x-markdown' || mime === 'application/x-markdown') return 'md';
     if (mime === 'application/json') return 'json';
 
     // Fallback: check file extension
@@ -41,6 +41,11 @@ export class DocumentParsingService {
     }
 
     return 'unknown';
+  }
+
+  static isAcceptedUpload(mimetype: string, filename?: string): boolean {
+    const parser = new DocumentParsingService();
+    return parser.detectFormat(mimetype, filename) !== 'unknown';
   }
 
   /**
@@ -107,6 +112,11 @@ export class DocumentParsingService {
    */
   private async extractDocx(buffer: Buffer, requestId?: string): Promise<string> {
     logger.info('DOC_PARSE', 'Extracting DOCX with mammoth', {}, requestId);
+
+    if (buffer.length < 2 || buffer[0] !== 0x50 || buffer[1] !== 0x4b) {
+      throw new Error('Legacy .doc files are not supported yet. Please save the Word document as .docx and upload again.');
+    }
+
     const result = await mammoth.extractRawText({ buffer });
     const text = result.value.trim();
 

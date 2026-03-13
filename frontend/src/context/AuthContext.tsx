@@ -6,6 +6,7 @@ export interface User {
   email: string;
   name?: string;
   company?: string;
+  phone?: string;
   avatar?: string;
   role?: string;
   provider?: string;
