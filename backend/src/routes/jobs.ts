@@ -566,6 +566,7 @@ router.post('/import', requireAuth, uploadDoc.single('file'), async (req, res) =
       req.file.buffer,
       req.file.mimetype,
       req.file.originalname,
+      requestId,
     );
 
     if (!text || text.trim().length < 10) {

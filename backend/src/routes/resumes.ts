@@ -66,7 +66,7 @@ async function extractText(buffer: Buffer, mimetype: string, filename: string, r
   if (mimetype === 'application/pdf') {
     return pdfService.extractText(buffer, requestId);
   }
-  return documentParsingService.extractText(buffer, mimetype, filename);
+  return documentParsingService.extractText(buffer, mimetype, filename, requestId);
 }
 
 function parseDate(dateStr: string | undefined): Date | null {

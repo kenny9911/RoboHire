@@ -50,34 +50,23 @@ export class PDFService {
 
     const cjkPattern = '\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\uac00-\ud7af';
 
-    // 1. Remove control characters (except newline, tab, carriage return)
     cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-
-    // 2. Remove zero-width characters and other invisible Unicode
     cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF\u00AD]/g, '');
-
-    // 3. Remove Unicode replacement character
     cleaned = cleaned.replace(/[\uFFFD\uFFFF]/g, '');
-
-    // 4. Remove Private Use Area characters (often garbled fonts)
     cleaned = cleaned.replace(/[\uE000-\uF8FF]/g, '');
 
-    // 5. Remove hash-like garbage strings
     cleaned = cleaned.replace(/[A-Za-z0-9_-]{25,}/g, (match) => {
       if (match.includes(' ') || match.startsWith('http')) return match;
       if (this.isHashLikeGarbage(match)) return '';
       return match;
     });
 
-    // 6. Remove excessive special character sequences
     const safeCharsPattern = new RegExp(`[^\\w\\s${cjkPattern}.,;:!?'"()\\[\\]{}<>@#$%&*+=\\-/]{3,}`, 'g');
     cleaned = cleaned.replace(safeCharsPattern, ' ');
 
-    // 7. Fix common PDF artifacts
     cleaned = cleaned.replace(/\(cid:\d+\)/g, '');
     cleaned = cleaned.replace(/\\u[0-9a-fA-F]{4}/g, '');
 
-    // 8. Remove lines that are garbage
     const alphanumericCjkPattern = new RegExp(`[\\w${cjkPattern}]`, 'g');
     cleaned = cleaned.split('\n').map(line => {
       const trimmed = line.trim();
@@ -88,7 +77,6 @@ export class PDFService {
       return line;
     }).join('\n');
 
-    // 9. Remove repeated identical lines
     const lines = cleaned.split('\n');
     const seenLines = new Set<string>();
     const uniqueLines: string[] = [];
@@ -101,12 +89,10 @@ export class PDFService {
     }
     cleaned = uniqueLines.join('\n');
 
-    // 10. Normalize whitespace
     cleaned = cleaned.replace(/[ \t]+/g, ' ');
     cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
     cleaned = cleaned.replace(/^\s+|\s+$/gm, '');
 
-    // 11. Remove lone bullets and page numbers
     cleaned = cleaned.split('\n').filter(line => {
       const trimmed = line.trim();
       if (trimmed.length === 0) return true;
@@ -115,7 +101,6 @@ export class PDFService {
       return true;
     }).join('\n');
 
-    // 12. Final trim
     cleaned = cleaned.trim();
 
     return cleaned;
@@ -123,19 +108,16 @@ export class PDFService {
 
   /**
    * Detect if extracted text is garbled (poor extraction quality).
-   * Returns a quality score from 0 to 1 (1 = good, 0 = completely garbled).
    */
-  isExtractionQualityGood(text: string): boolean {
-    if (!text || text.length < 20) return false;
+  isExtractionQualityGood(text: string, requestId?: string): boolean {
+    if (!text || text.length < 20) {
+      logger.info('PDF_QUALITY', `Quality check FAIL: text too short (${text?.length ?? 0} chars)`, {}, requestId);
+      return false;
+    }
 
-    // Common CJK range (real Chinese/Japanese/Korean characters)
     const commonCjkRe = /[\u4e00-\u9fff]/g;
-    // Uncommon/rare CJK blocks that pdf-parse often produces for garbled text
-    // These ranges contain valid but extremely rare characters that almost never appear in resumes
     const rareCjkRe = /[\u2E80-\u2EFF\u3400-\u4DBF\uA000-\uA4CF\uA490-\uA4CF\uF900-\uFAFF]/g;
-    // Extended CJK blocks (very rare in normal text)
     const extRareRe = /[\u1200-\u137F\u13A0-\u13FF\u1680-\u169F\u16A0-\u16FF\u1780-\u17FF\u1800-\u18AF\u1900-\u194F\u1950-\u197F\u19E0-\u19FF\u1A00-\u1A1F\u2C00-\u2C5F\u2D00-\u2D2F\u2D80-\u2DDF\uA800-\uA82F\uA840-\uA87F\uAB00-\uAB2F]/g;
-    // Latin/ASCII readable text
     const latinRe = /[a-zA-Z0-9@.]/g;
 
     const commonCjkCount = (text.match(commonCjkRe) || []).length;
@@ -144,151 +126,270 @@ export class PDFService {
     const latinCount = (text.match(latinRe) || []).length;
 
     const totalChars = text.replace(/\s/g, '').length;
-    if (totalChars === 0) return false;
+    if (totalChars === 0) {
+      logger.info('PDF_QUALITY', 'Quality check FAIL: zero non-whitespace chars', {}, requestId);
+      return false;
+    }
 
-    // If text has recognizable ASCII content (email, phone, URLs) but garbled CJK
     const hasEmail = /@\w+\.\w+/.test(text);
     const hasPhone = /\d{3,4}[-\s]?\d{3,4}[-\s]?\d{4}/.test(text);
-
-    // Key indicator: if there are more rare/unusual Unicode chars than common CJK chars,
-    // the extraction is likely garbled (font encoding issue)
     const garbledCharCount = rareCjkCount + extRareCount;
 
-    // If garbled chars make up more than 10% of non-whitespace text, it's bad
+    logger.info('PDF_QUALITY', 'Quality analysis', {
+      totalChars, commonCjkCount, rareCjkCount, extRareCount, garbledCharCount,
+      latinCount, hasEmail, hasPhone,
+      garbledRatio: (garbledCharCount / totalChars).toFixed(3),
+      cjkRatio: (commonCjkCount / totalChars).toFixed(3),
+    }, requestId);
+
     if (garbledCharCount > totalChars * 0.1) {
-      logger.info('PDF_QUALITY', 'Text extraction quality poor: high garbled char ratio', {
-        totalChars, commonCjkCount, garbledCharCount, latinCount,
-      });
+      logger.info('PDF_QUALITY', 'Quality check FAIL: high garbled char ratio', {}, requestId);
       return false;
     }
 
-    // If text appears to be CJK-heavy but has very few common CJK chars, it's garbled
     const nonLatinCount = totalChars - latinCount;
     if (nonLatinCount > 50 && commonCjkCount < nonLatinCount * 0.3) {
-      logger.info('PDF_QUALITY', 'Text extraction quality poor: low common CJK ratio', {
-        totalChars, commonCjkCount, nonLatinCount, latinCount,
-      });
+      logger.info('PDF_QUALITY', 'Quality check FAIL: low common CJK ratio', {}, requestId);
       return false;
     }
 
-    // Check for email/phone but garbled surrounding text (partial extraction)
     if ((hasEmail || hasPhone) && commonCjkCount < 10 && nonLatinCount > 100) {
-      logger.info('PDF_QUALITY', 'Text extraction quality poor: contact info readable but text garbled', {
-        hasEmail, hasPhone, commonCjkCount, nonLatinCount,
-      });
+      logger.info('PDF_QUALITY', 'Quality check FAIL: contact info readable but text garbled', {}, requestId);
       return false;
     }
 
+    logger.info('PDF_QUALITY', 'Quality check PASS', { totalChars, commonCjkCount, latinCount }, requestId);
     return true;
   }
 
   /**
-   * Convert PDF buffer to PNG images (one per page)
+   * PRIMARY: Extract text from PDF by sending raw PDF base64 directly to LLM.
+   * This is the most reliable method — no image conversion needed.
+   * Works with Google Gemini and other models that accept PDF data URLs.
    */
-  async convertToImages(buffer: Buffer, scale = 2.0): Promise<Buffer[]> {
-    const { pdf: pdfToImg } = await import('pdf-to-img');
-    const images: Buffer[] = [];
-    const document = await pdfToImg(buffer, { scale });
-    for await (const image of document) {
-      images.push(Buffer.from(image));
-    }
-    return images;
-  }
+  async extractTextWithDirectLLM(buffer: Buffer, requestId?: string): Promise<string> {
+    const base64Pdf = buffer.toString('base64');
+    const sizeKB = Math.round(buffer.length / 1024);
 
-  /**
-   * Extract text from PDF using LLM vision (for garbled PDFs).
-   * Converts pages to images and sends to a vision-capable LLM.
-   */
-  async extractTextWithVision(buffer: Buffer, requestId?: string): Promise<string> {
-    const images = await this.convertToImages(buffer, 2.0);
+    logger.info('PDF_LLM', `Sending raw PDF directly to LLM (${sizeKB}KB)`, {
+      sizeKB,
+      visionModel: VISION_MODEL || '(default)',
+    }, requestId);
 
-    logger.info('PDF_VISION', `Converting ${images.length} PDF pages to images for vision extraction`, {}, requestId);
-
-    // Build multimodal message with all page images
     const contentParts: MessageContent = [
       {
         type: 'text' as const,
-        text: `Extract ALL text content from these resume/document page images.
-Output the text exactly as it appears, preserving the original language (Chinese, English, etc.).
+        text: `Extract ALL text content from this PDF document.
+Output the text EXACTLY as it appears, preserving the original language (Chinese, Japanese, English, etc.).
 Maintain the document structure with sections, headings, and bullet points.
-Include ALL details: name, contact info, education, experience, skills, projects, certifications, etc.
+Include ALL details: job title, company name, department, responsibilities, requirements, qualifications, skills, salary, benefits, contact info, etc.
 Do NOT translate, summarize, or omit any content. Output plain text only.`,
+      },
+      {
+        type: 'image_url' as const,
+        image_url: { url: `data:application/pdf;base64,${base64Pdf}` },
+      },
+    ];
+
+    const messages: Message[] = [
+      { role: 'user', content: contentParts },
+    ];
+
+    const startTime = Date.now();
+    const visionModel = VISION_MODEL || undefined;
+
+    try {
+      const extractedText = await llmService.chat(messages, {
+        temperature: 0.1,
+        maxTokens: 8000,
+        requestId,
+        visionModel,
+      });
+
+      const elapsedMs = Date.now() - startTime;
+      logger.info('PDF_LLM', `Direct LLM extraction completed`, {
+        chars: extractedText.length,
+        lines: extractedText.split('\n').length,
+        elapsedMs,
+        preview: extractedText.substring(0, 150),
+      }, requestId);
+
+      return extractedText;
+    } catch (error) {
+      const elapsedMs = Date.now() - startTime;
+      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('PDF_LLM', `Direct LLM extraction failed after ${elapsedMs}ms: ${errMsg}`, {
+        stack: error instanceof Error ? error.stack : undefined,
+      }, requestId);
+      throw error;
+    }
+  }
+
+  /**
+   * FALLBACK: Convert PDF to images and send to LLM vision.
+   * Used when direct PDF sending isn't supported by the model.
+   */
+  async extractTextWithVision(buffer: Buffer, requestId?: string): Promise<string> {
+    logger.info('PDF_VISION', 'Converting PDF pages to images for vision extraction...', {}, requestId);
+
+    let images: Buffer[];
+    try {
+      const { pdf: pdfToImg } = await import('pdf-to-img');
+      images = [];
+      const document = await pdfToImg(buffer, { scale: 2.0 });
+      for await (const image of document) {
+        images.push(Buffer.from(image));
+      }
+      logger.info('PDF_VISION', `Converted ${images.length} pages to images`, {
+        pages: images.length,
+      }, requestId);
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('PDF_VISION', `pdf-to-img conversion failed: ${errMsg}`, {
+        stack: error instanceof Error ? error.stack : undefined,
+      }, requestId);
+      throw new Error(`PDF to image conversion failed: ${errMsg}`);
+    }
+
+    if (images.length === 0) {
+      throw new Error('PDF has no pages to extract');
+    }
+
+    const contentParts: MessageContent = [
+      {
+        type: 'text' as const,
+        text: `Extract ALL text content from these document page images.
+Output the text EXACTLY as it appears, preserving the original language (Chinese, Japanese, English, etc.).
+Maintain the document structure with sections, headings, and bullet points.
+Include ALL details. Do NOT translate, summarize, or omit any content. Output plain text only.`,
       },
     ];
 
     for (const img of images) {
-      const base64 = img.toString('base64');
       contentParts.push({
         type: 'image_url' as const,
-        image_url: { url: `data:image/png;base64,${base64}` },
+        image_url: { url: `data:image/png;base64,${img.toString('base64')}` },
       });
     }
 
-    const messages: Message[] = [
-      {
-        role: 'user',
-        content: contentParts,
-      },
-    ];
-
+    const messages: Message[] = [{ role: 'user', content: contentParts }];
+    const startTime = Date.now();
     const visionModel = VISION_MODEL || undefined;
-    const extractedText = await llmService.chat(messages, {
-      temperature: 0.1,
-      maxTokens: 8000,
-      requestId,
-      visionModel: visionModel,
-    });
 
-    logger.info('PDF_VISION', `Vision extraction completed: ${extractedText.length} chars`, {}, requestId);
+    try {
+      const extractedText = await llmService.chat(messages, {
+        temperature: 0.1,
+        maxTokens: 8000,
+        requestId,
+        visionModel,
+      });
 
-    return extractedText;
+      const elapsedMs = Date.now() - startTime;
+      logger.info('PDF_VISION', `Vision extraction completed: ${extractedText.length} chars in ${elapsedMs}ms`, {}, requestId);
+      return extractedText;
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('PDF_VISION', `Vision LLM call failed: ${errMsg}`, {}, requestId);
+      throw error;
+    }
   }
 
   /**
    * Extract text content from a PDF buffer.
-   * First tries direct text extraction; if quality is poor (garbled), falls back to LLM vision.
+   * Strategy:
+   *   1. Try pdf-parse for quick text extraction
+   *   2. If quality is good → return immediately (fastest path)
+   *   3. If quality is poor → send raw PDF base64 directly to LLM (most reliable)
+   *   4. If direct LLM fails → try converting to images + LLM vision (fallback)
+   *   5. If all LLM methods fail → return poor-quality text as last resort
    */
   async extractText(buffer: Buffer, requestId?: string): Promise<string> {
+    logger.info('PDF_EXTRACT', `Starting PDF extraction (${Math.round(buffer.length / 1024)}KB)`, {
+      bufferSizeKB: Math.round(buffer.length / 1024),
+    }, requestId);
+
+    // Step 1: Try pdf-parse for quick text extraction
+    let rawText = '';
+    let pdfParseSuccess = false;
+
     try {
-      // Suppress noisy warnings from pdf-parse
       const originalWarn = console.warn;
       console.warn = (...args: unknown[]) => {
         if (typeof args[0] === 'string' && args[0].includes('private use area')) return;
         originalWarn.apply(console, args);
       };
 
-      let rawText: string;
       try {
+        const startTime = Date.now();
         const data = await pdf(buffer);
         rawText = this.cleanText(data.text);
+        const elapsedMs = Date.now() - startTime;
+
+        logger.info('PDF_EXTRACT', `pdf-parse completed in ${elapsedMs}ms`, {
+          rawChars: data.text.length,
+          cleanedChars: rawText.length,
+          pages: data.numpages,
+          preview: rawText.substring(0, 150),
+        }, requestId);
+
+        pdfParseSuccess = true;
       } finally {
         console.warn = originalWarn;
       }
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.warn('PDF_EXTRACT', `pdf-parse failed: ${errMsg}`, {}, requestId);
+    }
 
-      // Check extraction quality
-      if (this.isExtractionQualityGood(rawText)) {
+    // Step 2: If pdf-parse succeeded with good quality, return immediately
+    if (pdfParseSuccess && rawText.length > 0) {
+      const qualityGood = this.isExtractionQualityGood(rawText, requestId);
+      if (qualityGood) {
+        logger.info('PDF_EXTRACT', 'Using pdf-parse result (quality OK)', { chars: rawText.length }, requestId);
         return rawText;
       }
-
-      // Text extraction is garbled — fall back to vision
-      logger.info('PDF_EXTRACT', 'Text extraction garbled, falling back to LLM vision', {
+      logger.info('PDF_EXTRACT', 'pdf-parse quality poor, using LLM extraction', {
         rawTextLength: rawText.length,
-        rawTextPreview: rawText.substring(0, 200),
+        preview: rawText.substring(0, 200),
       }, requestId);
-
-      return await this.extractTextWithVision(buffer, requestId);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-
-      // If pdf-parse fails entirely, try vision extraction
-      logger.warn('PDF_EXTRACT', `pdf-parse failed: ${message}, trying vision extraction`, {}, requestId);
-      try {
-        return await this.extractTextWithVision(buffer, requestId);
-      } catch (visionError) {
-        const visionMessage = visionError instanceof Error ? visionError.message : 'Unknown error';
-        throw new Error(`Failed to parse PDF (text: ${message}, vision: ${visionMessage})`);
-      }
     }
+
+    // Step 3: Send raw PDF directly to LLM (most reliable for CJK documents)
+    try {
+      const directText = await this.extractTextWithDirectLLM(buffer, requestId);
+      if (directText && directText.trim().length > 20) {
+        logger.info('PDF_EXTRACT', 'Direct LLM extraction succeeded', { chars: directText.length }, requestId);
+        return directText;
+      }
+      logger.warn('PDF_EXTRACT', 'Direct LLM returned too-short text, trying image fallback', {
+        chars: directText?.length ?? 0,
+      }, requestId);
+    } catch (directError) {
+      const errMsg = directError instanceof Error ? directError.message : 'Unknown';
+      logger.warn('PDF_EXTRACT', `Direct LLM failed: ${errMsg}, trying image fallback`, {}, requestId);
+    }
+
+    // Step 4: Fallback — convert to images + LLM vision
+    try {
+      const visionText = await this.extractTextWithVision(buffer, requestId);
+      if (visionText && visionText.trim().length > 20) {
+        logger.info('PDF_EXTRACT', 'Vision extraction succeeded', { chars: visionText.length }, requestId);
+        return visionText;
+      }
+    } catch (visionError) {
+      const errMsg = visionError instanceof Error ? visionError.message : 'Unknown';
+      logger.error('PDF_EXTRACT', `Vision extraction also failed: ${errMsg}`, {}, requestId);
+    }
+
+    // Step 5: Last resort — return poor-quality pdf-parse text if we have anything
+    if (rawText.length > 0) {
+      logger.warn('PDF_EXTRACT', 'All LLM methods failed, returning poor-quality pdf-parse text', {
+        chars: rawText.length,
+      }, requestId);
+      return rawText;
+    }
+
+    throw new Error('PDF extraction failed: no text could be extracted by any method');
   }
 
   /**
@@ -315,11 +416,18 @@ Do NOT translate, summarize, or omit any content. Output plain text only.`,
 
       const cleanedText = this.cleanText(data.text);
 
-      // Check extraction quality — if garbled, use vision
       let finalText = cleanedText;
-      if (!this.isExtractionQualityGood(cleanedText)) {
-        logger.info('PDF_EXTRACT', 'Text extraction garbled in extractWithMetadata, falling back to vision', {}, requestId);
-        finalText = await this.extractTextWithVision(buffer, requestId);
+      if (!this.isExtractionQualityGood(cleanedText, requestId)) {
+        logger.info('PDF_EXTRACT', 'Quality poor in extractWithMetadata, using LLM', {}, requestId);
+        try {
+          finalText = await this.extractTextWithDirectLLM(buffer, requestId);
+        } catch {
+          try {
+            finalText = await this.extractTextWithVision(buffer, requestId);
+          } catch {
+            // Keep cleaned pdf-parse text
+          }
+        }
       }
 
       return {

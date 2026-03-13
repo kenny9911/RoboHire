@@ -898,6 +898,7 @@ router.post('/parse-resume-pdf', requireAuth, requireScopes('read'), apiRateLimi
       req.file.buffer,
       req.file.mimetype,
       req.file.originalname,
+      requestId,
     );
 
     if (!text || !text.trim()) {
@@ -935,7 +936,7 @@ router.post('/parse-resume-pdf', requireAuth, requireScopes('read'), apiRateLimi
 /**
  * POST /api/v1/extract-document
  * Upload a document (PDF, DOCX, XLSX, TXT), extract text and return it.
- * Used by the Quick Invite flow for JD upload and resume upload with multi-format support.
+ * Uses LLM vision as primary extraction for PDFs, with thorough logging at every step.
  */
 router.post('/extract-document', optionalAuth, apiRateLimit(), uploadDoc.single('file'), async (req: Request, res: Response) => {
   const requestId = req.requestId!;
@@ -943,6 +944,7 @@ router.post('/extract-document', optionalAuth, apiRateLimit(), uploadDoc.single(
 
   try {
     if (!req.file) {
+      logger.warn('EXTRACT_DOC', 'No file in request', {}, requestId);
       logger.endRequest(requestId, 'error', 400);
       return res.status(400).json({
         success: false,
@@ -951,14 +953,25 @@ router.post('/extract-document', optionalAuth, apiRateLimit(), uploadDoc.single(
       });
     }
 
-    const format = documentParsingService.detectFormat(req.file.mimetype, req.file.originalname);
-    const text = await documentParsingService.extractText(
-      req.file.buffer,
-      req.file.mimetype,
-      req.file.originalname,
-    );
+    const { originalname, mimetype, size, buffer } = req.file;
+    const format = documentParsingService.detectFormat(mimetype, originalname);
+
+    logger.info('EXTRACT_DOC', 'File received', {
+      fileName: originalname,
+      mimetype,
+      format,
+      sizeBytes: size,
+      sizeKB: Math.round(size / 1024),
+    }, requestId);
+
+    const startTime = Date.now();
+    const text = await documentParsingService.extractText(buffer, mimetype, originalname, requestId);
+    const elapsedMs = Date.now() - startTime;
 
     if (!text || !text.trim()) {
+      logger.warn('EXTRACT_DOC', 'Extraction returned empty text', {
+        fileName: originalname, format, elapsedMs,
+      }, requestId);
       logger.endRequest(requestId, 'error', 422);
       return res.status(422).json({
         success: false,
@@ -967,25 +980,40 @@ router.post('/extract-document', optionalAuth, apiRateLimit(), uploadDoc.single(
       });
     }
 
+    logger.info('EXTRACT_DOC', 'Extraction successful', {
+      fileName: originalname,
+      format,
+      extractedChars: text.length,
+      extractedLines: text.split('\n').length,
+      elapsedMs,
+      preview: text.substring(0, 150),
+    }, requestId);
+
     logger.endRequest(requestId, 'success', 200);
     return res.json({
       success: true,
       data: {
         text,
-        fileName: req.file.originalname,
+        fileName: originalname,
         format,
-        size: req.file.size,
+        size,
       },
       requestId,
     });
   } catch (error) {
-    logger.error('API', 'extract-document failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    const errStack = error instanceof Error ? error.stack : undefined;
+    logger.error('EXTRACT_DOC', 'extract-document failed', {
+      error: errMsg,
+      stack: errStack,
+      fileName: req.file?.originalname,
+      mimetype: req.file?.mimetype,
+      sizeBytes: req.file?.size,
     }, requestId);
     logger.endRequest(requestId, 'error', 500);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
+      error: errMsg,
       requestId,
     });
   }

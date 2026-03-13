@@ -544,31 +544,68 @@ export default function StartHiring() {
     let jdSnippet: string | undefined;
 
     if (attachedFile) {
-      // Send file to backend for proper parsing (supports PDF, DOCX, CJK, etc.)
+      const isPlainText = attachedFile.type === 'text/plain' || attachedFile.name.endsWith('.txt');
+
+      // Show processing indicator during extraction (LLM extraction can take 10-30s)
+      setIsProcessing(true);
+
+      // Send file to backend for parsing (uses LLM for PDFs with CJK content)
       try {
         const formData = new FormData();
         formData.append('file', attachedFile);
         const token = localStorage.getItem('auth_token');
         const uploadHeaders: HeadersInit = {};
         if (token) uploadHeaders.Authorization = `Bearer ${token}`;
+
+        console.log(`[StartHiring] Uploading file for extraction: ${attachedFile.name} (${attachedFile.type}, ${Math.round(attachedFile.size / 1024)}KB)`);
+
         const extractRes = await fetch(`${API_BASE}/api/v1/extract-document`, {
           method: 'POST',
           headers: uploadHeaders,
           credentials: 'include',
           body: formData,
         });
-        const extractData = await extractRes.json();
-        if (extractData.success && extractData.data?.text) {
-          jobDescriptionText = extractData.data.text;
+
+        console.log(`[StartHiring] extract-document response: HTTP ${extractRes.status}`);
+
+        if (!extractRes.ok) {
+          const errorBody = await extractRes.text();
+          console.error(`[StartHiring] extract-document HTTP ${extractRes.status}: ${errorBody}`);
+          if (isPlainText) {
+            jobDescriptionText = await attachedFile.text();
+          }
         } else {
-          // Fallback to raw text read for plain text files
+          const extractData = await extractRes.json();
+          console.log(`[StartHiring] extract-document result:`, {
+            success: extractData.success,
+            format: extractData.data?.format,
+            chars: extractData.data?.text?.length,
+            error: extractData.error,
+          });
+          if (extractData.success && extractData.data?.text) {
+            jobDescriptionText = extractData.data.text;
+          } else {
+            console.error('[StartHiring] extract-document returned success=false:', extractData.error);
+            if (isPlainText) {
+              jobDescriptionText = await attachedFile.text();
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[StartHiring] extract-document network error:', err);
+        if (isPlainText) {
           jobDescriptionText = await attachedFile.text();
         }
-      } catch {
-        // Fallback to raw text read
-        jobDescriptionText = await attachedFile.text();
+      } finally {
+        setIsProcessing(false);
       }
-      jdSnippet = `From JD:\n${(jobDescriptionText || '').substring(0, 500)}...`;
+
+      if (jobDescriptionText) {
+        jdSnippet = `From JD:\n${jobDescriptionText.substring(0, 500)}...`;
+        console.log(`[StartHiring] JD extracted successfully: ${jobDescriptionText.length} chars`);
+      } else {
+        console.error(`[StartHiring] FAILED to extract text from ${attachedFile.name}`);
+      }
     }
 
     const normalizeSignal = (value: string) =>
