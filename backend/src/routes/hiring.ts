@@ -116,6 +116,86 @@ Rules:
 });
 
 /**
+ * POST /api/v1/hiring-requests/generate-brief
+ * Generate a realistic, varied hiring brief for a given role using LLM
+ */
+router.post('/generate-brief', optionalAuth, async (req, res) => {
+  const requestId = generateRequestId();
+  logger.startRequest(requestId, '/api/v1/hiring-requests/generate-brief', 'POST');
+
+  try {
+    const { role, language } = req.body || {};
+    const roleText = typeof role === 'string' ? role.trim() : '';
+    const preferredLocale = typeof language === 'string' ? language.trim() : '';
+
+    if (!roleText) {
+      logger.endRequest(requestId, 'error', 400);
+      return res.status(400).json({ success: false, error: 'Role is required' });
+    }
+
+    const preferredLanguage = preferredLocale
+      ? languageService.getLanguageFromLocale(preferredLocale)
+      : null;
+    const resolvedLanguage = preferredLanguage || 'English';
+    const languageInstruction = preferredLanguage
+      ? languageService.getLanguageInstructionForLanguage(preferredLanguage)
+      : '';
+
+    const systemPrompt = `${languageInstruction}
+User selected language: ${resolvedLanguage}.
+
+You are a hiring manager writing a realistic hiring request to a recruitment consultant.
+Generate a concrete, specific hiring brief for the role "${roleText}".
+
+Rules:
+- Write in first person as the hiring manager (e.g. "I'm looking for..." / "我们需要招聘...")
+- Include ALL of these details with specific, realistic values (not generic):
+  * Industry/company context (e.g. fintech startup, enterprise SaaS, autonomous driving, semiconductor)
+  * Specific sub-specialty or focus area (e.g. backend, full-stack, NLP, computer vision, analog IC)
+  * Employment type (full-time, contract, part-time)
+  * Work location & remote policy (e.g. "San Francisco, hybrid 3 days/week" or "北京海淀，可弹性办公")
+  * Team size and reporting line
+  * Salary/compensation range (use realistic numbers for the role and market)
+  * 3-5 must-have skills/qualifications
+  * 2-3 nice-to-have skills
+  * Key responsibilities (2-3 sentences)
+  * Urgency or timeline (e.g. "need to fill within 6 weeks")
+- Vary the details each time — different industries, locations, salary ranges, company stages
+- Keep it 150-250 words, natural and conversational
+- Do NOT use bullet points or structured format — write it as a natural paragraph or two
+- End by asking the consultant to help refine requirements and create a job posting
+
+Output ONLY the hiring brief text. No titles, headers, or meta-commentary.`;
+    const briefModel = (process.env.LLM_FAST || '').trim() || llmService.getModel();
+
+    const response = await llmService.chat(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Generate a hiring brief for: ${roleText}` },
+      ],
+      { temperature: 0.9, requestId, model: briefModel }
+    );
+
+    const brief = response.trim();
+
+    logger.info('HIRING_BRIEF', 'Generated hiring brief', {
+      role: roleText,
+      briefLength: brief.length,
+      language: resolvedLanguage,
+      model: briefModel,
+    }, requestId);
+    logger.endRequest(requestId, 'success', 200);
+
+    return res.json({ success: true, data: { brief } });
+  } catch (error) {
+    logger.error('HIRING_BRIEF', 'Brief generation failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, requestId);
+    logger.endRequest(requestId, 'error', 500);
+    return res.status(500).json({ success: false, error: 'Failed to generate brief' });
+  }
+});
+/**
  * POST /api/v1/hiring-requests/jd-draft
  * Generate a JD draft using LLM
  */

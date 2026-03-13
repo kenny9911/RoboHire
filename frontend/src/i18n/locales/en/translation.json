@@ -385,6 +385,7 @@
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "Draft will appear here...",
     "jdGenerating": "Generating job description...",
+    "generatingBrief": "Generating hiring brief...",
     "jdPreview": "Preview",
     "jdPreviewEmpty": "Preview will appear here...",
     "jdAiGenerate": "Generate with AI",
@@ -424,6 +425,7 @@
     "goToDashboard": "Go to Dashboard",
     "uploadJd": "Upload Job Description",
     "inputPlaceholder": "Describe your ideal candidate...",
+    "inputPlaceholderWithFile": "Add instructions for this JD, or press send...",
     "helperText": "Press Enter to send, Shift+Enter for new line. Upload a JD file for more detailed matching.",
     "inputHelperText": "Press Enter to send, Shift+Enter for new line. Upload JD files for faster setup.",
     "heroTitle": "Start hiring with AI",
@@ -452,6 +454,7 @@
     "newRequest": "New Request",
     "quickStartSelected": "I want to hire a {{role}}",
     "quickStartFromJd": "candidate based on job description",
+    "quickStartPrompt": "I want to hire a {{role}}. Please help me define the requirements, must-have skills, nice-to-have skills, responsibilities, and any other relevant details for this position.",
     "defaultRoleLabel": "this role",
     "suggestions": {
       "title": "Try asking",
@@ -466,7 +469,11 @@
       "engineer": "Software Engineer",
       "pm": "Product Manager",
       "designer": "UX Designer",
-      "data": "Data Scientist"
+      "data": "Data Scientist",
+      "aiLlm": "AI & LLM Engineer",
+      "architect": "Software/System Architect",
+      "quantum": "Quantum Algorithm Engineer",
+      "chip": "Chip Design Engineer (SoC/IC)"
     },
     "history": "History",
     "expandSidebar": "Expand sidebar",
@@ -591,6 +598,27 @@
           "TensorFlow",
           "Statistics"
         ]
+      },
+      "softwareArchitect": {
+        "title": "Software/System Architect",
+        "description": "Design and own the technical architecture for scalable, reliable systems",
+        "experienceLevel": "8+ years",
+        "requirements": "We are looking for a Software/System Architect to design and oversee the technical architecture of our platform.\n\nResponsibilities:\n- Define system architecture, technology stack, and design patterns\n- Lead technical design reviews and ensure architectural consistency\n- Evaluate trade-offs in scalability, reliability, and performance\n- Mentor senior engineers on architecture best practices\n- Collaborate with product and engineering leadership on technical roadmap\n\nMust-haves:\n- 8+ years software engineering, 3+ years in architect/lead roles\n- Deep expertise in distributed systems, microservices, and cloud-native architecture\n- Proficiency in at least two of: Java, Go, Python, TypeScript\n- Experience with AWS/GCP/Azure at scale\n- Strong communication skills for technical and non-technical audiences\n\nNice-to-haves:\n- Experience with event-driven architecture (Kafka, RabbitMQ)\n- Familiarity with infrastructure as code (Terraform, Pulumi)\n- Background in high-traffic consumer or SaaS platforms",
+        "skills": ["Distributed Systems", "Microservices", "Cloud Architecture", "System Design", "Technical Leadership"]
+      },
+      "quantumAlgorithmEngineer": {
+        "title": "Quantum Algorithm Engineer",
+        "description": "Research and implement quantum algorithms for real-world computational problems",
+        "experienceLevel": "3+ years",
+        "requirements": "We are looking for a Quantum Algorithm Engineer to design and implement quantum algorithms for optimization, simulation, and machine learning applications.\n\nResponsibilities:\n- Research and develop quantum algorithms (VQE, QAOA, quantum ML)\n- Implement and benchmark algorithms on quantum simulators and real hardware\n- Analyze computational complexity and quantum advantage scenarios\n- Collaborate with domain experts to identify quantum-applicable problems\n- Publish findings and contribute to the quantum computing community\n\nMust-haves:\n- MS/PhD in Physics, Computer Science, Mathematics, or related field\n- 3+ years experience in quantum computing research or engineering\n- Proficiency in Qiskit, Cirq, or PennyLane\n- Strong foundation in linear algebra, probability, and quantum mechanics\n- Experience with Python and scientific computing (NumPy, SciPy)\n\nNice-to-haves:\n- Publications in quantum computing journals or conferences\n- Experience with quantum error correction and fault-tolerant computing\n- Knowledge of quantum hardware (superconducting, trapped ion, photonic)",
+        "skills": ["Quantum Computing", "Qiskit/Cirq", "Linear Algebra", "Python", "Algorithm Design"]
+      },
+      "chipDesignEngineer": {
+        "title": "Chip Design Engineer (SoC/IC)",
+        "description": "Design and verify next-generation SoC/IC chips from RTL to tape-out",
+        "experienceLevel": "5+ years",
+        "requirements": "We are looking for a Chip Design Engineer to contribute to the design, verification, and tape-out of next-generation SoC/IC products.\n\nResponsibilities:\n- Design and implement RTL for digital logic blocks and SoC subsystems\n- Perform logic synthesis, timing analysis, and design-for-test (DFT)\n- Develop and run verification testbenches (UVM/SystemVerilog)\n- Collaborate with physical design, firmware, and validation teams\n- Participate in architecture exploration and micro-architecture definition\n\nMust-haves:\n- BS/MS in Electrical Engineering, Computer Engineering, or related field\n- 5+ years of SoC/IC design experience\n- Proficiency in Verilog/SystemVerilog and RTL design\n- Experience with EDA tools (Synopsys, Cadence, Mentor)\n- Strong understanding of digital design, timing closure, and low-power design\n\nNice-to-haves:\n- Experience with RISC-V or ARM processor design\n- Knowledge of high-speed interfaces (PCIe, DDR, USB)\n- Familiarity with FPGA prototyping and emulation\n- Tape-out experience on advanced process nodes (7nm, 5nm, 3nm)",
+        "skills": ["RTL Design", "SystemVerilog", "SoC Architecture", "EDA Tools", "Verification"]
       },
       "productManager": {
         "title": "Product Manager",
@@ -1792,28 +1820,33 @@
   },
   "usage": {
     "title": "API Usage",
+    "totalRequests": "Total Requests",
     "apiCalls": "API Calls",
+    "websiteActions": "Website Actions",
     "inputTokens": "Input Tokens",
     "outputTokens": "Output Tokens",
     "totalCost": "Total Cost",
-    "empty": "No usage data yet. Make API calls to see data here.",
+    "empty": "No usage data yet. Use the API or web app to see data here.",
     "inactive": "Inactive",
     "range": {
+      "today": "Today",
       "7d": "7 Days",
       "30d": "30 Days",
       "90d": "90 Days",
       "all": "All Time"
     },
     "chart": {
-      "callsOverTime": "API Calls Over Time",
-      "calls": "Calls",
+      "callsOverTime": "Requests Over Time",
+      "calls": "Requests",
       "tokenUsage": "Token Usage (Input vs Output)",
       "input": "Input",
       "output": "Output"
     },
     "table": {
       "byEndpoint": "Usage by Endpoint",
+      "websiteFeatures": "Website Feature Usage",
       "endpoint": "Endpoint",
+      "feature": "Feature",
       "calls": "Calls",
       "tokens": "Tokens",
       "cost": "Cost",
@@ -1842,6 +1875,28 @@
       "model": "Model",
       "apiKey": "API Key",
       "sessionAuth": "Session"
+    },
+    "features": {
+      "hiring_chat": "Hiring Chat",
+      "hiring_sessions": "Hiring Sessions",
+      "hiring_title_suggestion": "Title Suggestions",
+      "hiring_jd_draft": "JD Draft Generation",
+      "hiring_requests": "Hiring Requests",
+      "resume_match": "Resume Match",
+      "smart_matching": "Smart Matching",
+      "jobs": "Jobs",
+      "resumes": "Resume Library",
+      "interview_invite": "Interview Invite",
+      "interview_evaluation": "Interview Evaluation",
+      "resume_parse": "Resume Parse",
+      "jd_parse": "JD Parse",
+      "document_extract": "Document Extract",
+      "resume_format": "Resume Formatting",
+      "jd_format": "JD Formatting",
+      "ats": "ATS Integrations",
+      "hiring_intelligence": "Hiring Intelligence",
+      "hiring_brief": "Brief Generation",
+      "other": "Other"
     }
   },
   "product": {

@@ -15,13 +15,17 @@ type UsageFilters = {
   to?: string;
 };
 
-function buildRequestLogWhere(filters: UsageFilters): Record<string, unknown> {
-  const { userId, apiKeyId, endpoint, from, to } = filters;
+function buildRequestLogWhere(filters: UsageFilters & { requirePayload?: boolean }): Record<string, unknown> {
+  const { userId, apiKeyId, endpoint, from, to, requirePayload } = filters;
   const where: Record<string, unknown> = {
     userId,
-    // Keep usage analytics aligned with "real API calls" that have captured payloads.
-    requestPayload: { not: null },
+    // Only count requests that actually consumed LLM tokens
+    totalTokens: { gt: 0 },
   };
+  // For call detail views, optionally require captured payloads
+  if (requirePayload) {
+    where.requestPayload = { not: null };
+  }
   if (apiKeyId) where.apiKeyId = apiKeyId;
   if (endpoint) where.endpoint = { contains: endpoint };
   if (from || to) {
@@ -243,6 +247,9 @@ router.get('/summary', async (req: Request, res: Response) => {
         where,
         select: {
           createdAt: true,
+          apiKeyId: true,
+          module: true,
+          apiName: true,
           promptTokens: true,
           completionTokens: true,
           totalTokens: true,
@@ -262,6 +269,16 @@ router.get('/summary', async (req: Request, res: Response) => {
       totalTokens: number;
       cost: number;
     }>();
+    const websiteFeatureMap = new Map<string, {
+      module: string;
+      calls: number;
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      cost: number;
+    }>();
+    let apiCalls = 0;
+    let websiteCalls = 0;
     for (const r of records) {
       const day = r.createdAt.toISOString().split('T')[0];
       const entry = dailyMap.get(day) ?? {
@@ -278,6 +295,26 @@ router.get('/summary', async (req: Request, res: Response) => {
       entry.totalTokens += r.totalTokens;
       entry.cost += r.cost;
       dailyMap.set(day, entry);
+
+      if (r.apiKeyId) {
+        apiCalls += 1;
+      } else {
+        websiteCalls += 1;
+        const feature = websiteFeatureMap.get(r.module) ?? {
+          module: r.module,
+          calls: 0,
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+          cost: 0,
+        };
+        feature.calls += 1;
+        feature.promptTokens += r.promptTokens;
+        feature.completionTokens += r.completionTokens;
+        feature.totalTokens += r.totalTokens;
+        feature.cost += r.cost;
+        websiteFeatureMap.set(r.module, feature);
+      }
     }
 
     // Group by endpoint
@@ -292,12 +329,15 @@ router.get('/summary', async (req: Request, res: Response) => {
 
     const daily = Array.from(dailyMap.values());
     const byEndpoint = Array.from(endpointMap.values()).sort((a, b) => b.calls - a.calls);
+    const websiteFeatures = Array.from(websiteFeatureMap.values()).sort((a, b) => b.calls - a.calls);
 
     return res.json({
       success: true,
       data: {
         totals: {
           calls: totalCalls,
+          apiCalls,
+          websiteCalls,
           promptTokens: agg._sum.promptTokens ?? 0,
           completionTokens: agg._sum.completionTokens ?? 0,
           totalTokens: agg._sum.totalTokens ?? 0,
@@ -305,6 +345,7 @@ router.get('/summary', async (req: Request, res: Response) => {
         },
         daily: showCost ? daily : daily.map(({ cost: _cost, ...rest }) => rest),
         byEndpoint: showCost ? byEndpoint : byEndpoint.map(({ cost: _cost, ...rest }) => rest),
+        websiteFeatures: showCost ? websiteFeatures : websiteFeatures.map(({ cost: _cost, ...rest }) => rest),
       },
     });
   } catch (error) {

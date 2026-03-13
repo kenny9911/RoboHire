@@ -67,6 +67,21 @@ export function classifyApiRequest(path: string): ApiClassification {
   if (pathname.includes('/hiring-requests/jd-draft')) {
     return { module: 'hiring_jd_draft', apiName: normalizeApiName(pathname) };
   }
+  if (pathname.includes('/hiring-requests/generate-brief')) {
+    return { module: 'hiring_brief', apiName: normalizeApiName(pathname) };
+  }
+  // Auto-match is the smart matching feature
+  if (/\/hiring-requests\/[^/]+\/auto-match/.test(pathname)) {
+    return { module: 'smart_matching', apiName: normalizeApiName(pathname) };
+  }
+  // Intelligence report generation
+  if (/\/hiring-requests\/[^/]+\/intelligence/.test(pathname)) {
+    return { module: 'hiring_intelligence', apiName: normalizeApiName(pathname) };
+  }
+  // Batch invite from library
+  if (/\/hiring-requests\/[^/]+\/batch-invite-from-library/.test(pathname)) {
+    return { module: 'interview_invite', apiName: normalizeApiName(pathname) };
+  }
   if (pathname.startsWith('/api/v1/hiring-requests')) {
     return { module: 'hiring_requests', apiName: normalizeApiName(pathname) };
   }
@@ -118,7 +133,11 @@ export function classifyApiRequest(path: string): ApiClassification {
     return { module: 'smart_matching', apiName: normalizeApiName(pathname) };
   }
 
-  // Resumes management
+  // Resume upload/reupload triggers parsing — classify as resume_parse
+  if (/\/resumes\/(upload|upload-batch|[^/]+\/reupload)/.test(pathname)) {
+    return { module: 'resume_parse', apiName: normalizeApiName(pathname) };
+  }
+  // Resumes management (CRUD, list, etc.)
   if (pathname.startsWith('/api/v1/resumes')) {
     return { module: 'resumes', apiName: normalizeApiName(pathname) };
   }

@@ -447,6 +447,7 @@
     "experienceLevel": "Nivel de experiencia",
     "customizePrompt": "¿Quieres personalizar estos requisitos o comenzar con esta plantilla? Puedes:\n\n- Escribir 'yes' para continuar con esta plantilla\n- Agregar requisitos o modificaciones específicas\n- Subir una descripción de puesto detallada",
     "quickStartSelected": "Quiero contratar a {{role}}",
+    "quickStartPrompt": "Quiero contratar un/a {{role}}. Por favor, ayúdame a definir los requisitos, habilidades imprescindibles, habilidades deseables, responsabilidades y otros detalles relevantes para este puesto.",
     "requiredSkills": "Habilidades requeridas",
     "teamContext": "Contexto del equipo",
     "keyResponsibilities": "Responsabilidades clave",
@@ -469,6 +470,7 @@
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "El borrador aparecerá aquí...",
     "jdGenerating": "Generando la descripción del puesto...",
+    "generatingBrief": "Generando resumen de contratación...",
     "jdPreview": "Vista previa",
     "jdPreviewEmpty": "La vista previa aparecerá aquí...",
     "jdAiGenerate": "Generar con IA",
@@ -505,12 +507,17 @@
       "engineer": "Ingeniero de Software",
       "pm": "Gerente de Producto",
       "designer": "Diseñador UX",
-      "data": "Científico de Datos"
+      "data": "Científico de Datos",
+      "aiLlm": "Ingeniero de IA y LLM",
+      "architect": "Arquitecto de Software/Sistemas",
+      "quantum": "Ingeniero de Algoritmos Cuánticos",
+      "chip": "Ingeniero de Diseño de Chips (SoC/IC)"
     },
     "newRequest": "Nueva solicitud",
     "signInToContinue": "Iniciar sesión para continuar",
     "goToDashboard": "Ir al panel",
     "inputPlaceholder": "Describe a tu candidato ideal...",
+    "inputPlaceholderWithFile": "Añade instrucciones para esta JD, o pulsa enviar...",
     "uploadJd": "Subir descripción del puesto",
     "quickStartFromJd": "candidato basado en la descripción del puesto",
     "defaultRoleLabel": "este rol",
@@ -653,6 +660,27 @@
           "TensorFlow",
           "Estadística"
         ]
+      },
+      "softwareArchitect": {
+        "title": "Arquitecto de Software/Sistemas",
+        "description": "Diseñar y dirigir la arquitectura técnica de sistemas escalables y confiables",
+        "experienceLevel": "8+ años",
+        "requirements": "Buscamos un Arquitecto de Software/Sistemas para diseñar y supervisar la arquitectura técnica de nuestra plataforma.\n\nResponsabilidades:\n- Definir arquitectura de sistemas, stack tecnológico y patrones de diseño\n- Liderar revisiones técnicas y asegurar consistencia arquitectónica\n- Evaluar compromisos en escalabilidad, confiabilidad y rendimiento\n- Mentorizar ingenieros senior en mejores prácticas de arquitectura\n- Colaborar con liderazgo de producto e ingeniería en la hoja de ruta técnica\n\nRequisitos:\n- 8+ años en ingeniería de software, 3+ años en roles de arquitecto/líder\n- Experiencia profunda en sistemas distribuidos, microservicios y arquitectura cloud-native\n- Dominio de al menos dos de: Java, Go, Python, TypeScript\n- Experiencia con AWS/GCP/Azure a escala\n- Excelentes habilidades de comunicación\n\nDeseables:\n- Experiencia con arquitectura dirigida por eventos (Kafka, RabbitMQ)\n- Familiaridad con infraestructura como código (Terraform, Pulumi)\n- Experiencia en plataformas de alto tráfico o SaaS",
+        "skills": ["Sistemas Distribuidos", "Microservicios", "Arquitectura Cloud", "Diseño de Sistemas", "Liderazgo Técnico"]
+      },
+      "quantumAlgorithmEngineer": {
+        "title": "Ingeniero de Algoritmos Cuánticos",
+        "description": "Investigar e implementar algoritmos cuánticos para problemas computacionales reales",
+        "experienceLevel": "3+ años",
+        "requirements": "Buscamos un Ingeniero de Algoritmos Cuánticos para diseñar e implementar algoritmos cuánticos para aplicaciones de optimización, simulación y aprendizaje automático.\n\nResponsabilidades:\n- Investigar y desarrollar algoritmos cuánticos (VQE, QAOA, ML cuántico)\n- Implementar y evaluar algoritmos en simuladores y hardware cuántico real\n- Analizar complejidad computacional y escenarios de ventaja cuántica\n- Colaborar con expertos de dominio para identificar problemas aplicables\n- Publicar hallazgos y contribuir a la comunidad de computación cuántica\n\nRequisitos:\n- Máster/Doctorado en Física, Informática, Matemáticas o campo relacionado\n- 3+ años de experiencia en investigación o ingeniería cuántica\n- Dominio de Qiskit, Cirq o PennyLane\n- Sólida base en álgebra lineal, probabilidad y mecánica cuántica\n- Experiencia con Python y computación científica (NumPy, SciPy)\n\nDeseables:\n- Publicaciones en revistas o conferencias de computación cuántica\n- Experiencia con corrección de errores cuánticos\n- Conocimiento de hardware cuántico (superconductor, iones atrapados, fotónico)",
+        "skills": ["Computación Cuántica", "Qiskit/Cirq", "Álgebra Lineal", "Python", "Diseño de Algoritmos"]
+      },
+      "chipDesignEngineer": {
+        "title": "Ingeniero de Diseño de Chips (SoC/IC)",
+        "description": "Diseñar y verificar chips SoC/IC de próxima generación desde RTL hasta tape-out",
+        "experienceLevel": "5+ años",
+        "requirements": "Buscamos un Ingeniero de Diseño de Chips para contribuir al diseño, verificación y tape-out de productos SoC/IC de próxima generación.\n\nResponsabilidades:\n- Diseñar e implementar RTL para bloques lógicos digitales y subsistemas SoC\n- Realizar síntesis lógica, análisis de timing y diseño para test (DFT)\n- Desarrollar y ejecutar bancos de prueba de verificación (UVM/SystemVerilog)\n- Colaborar con equipos de diseño físico, firmware y validación\n- Participar en exploración de arquitectura y definición de microarquitectura\n\nRequisitos:\n- Grado/Máster en Ingeniería Eléctrica, Informática o campo relacionado\n- 5+ años de experiencia en diseño SoC/IC\n- Dominio de Verilog/SystemVerilog y diseño RTL\n- Experiencia con herramientas EDA (Synopsys, Cadence, Mentor)\n- Sólido conocimiento de diseño digital, cierre de timing y diseño de bajo consumo\n\nDeseables:\n- Experiencia con diseño de procesadores RISC-V o ARM\n- Conocimiento de interfaces de alta velocidad (PCIe, DDR, USB)\n- Familiaridad con prototipado FPGA y emulación\n- Experiencia de tape-out en nodos de proceso avanzados (7nm, 5nm, 3nm)",
+        "skills": ["Diseño RTL", "SystemVerilog", "Arquitectura SoC", "Herramientas EDA", "Verificación"]
       },
       "productManager": {
         "title": "Product Manager",
@@ -1549,6 +1577,28 @@
       "model": "Modelo",
       "apiKey": "Clave API",
       "sessionAuth": "Sesión"
+    },
+    "features": {
+      "hiring_chat": "Chat de Contratación",
+      "hiring_sessions": "Sesiones de Contratación",
+      "hiring_title_suggestion": "Sugerencias de Título",
+      "hiring_jd_draft": "Generación de Borrador JD",
+      "hiring_requests": "Solicitudes de Contratación",
+      "resume_match": "Coincidencia de Currículum",
+      "smart_matching": "Coincidencia Inteligente",
+      "jobs": "Empleos",
+      "resumes": "Librería de Currículums",
+      "interview_invite": "Invitación a Entrevista",
+      "interview_evaluation": "Evaluación de Entrevista",
+      "resume_parse": "Análisis de Currículum",
+      "jd_parse": "Análisis JD",
+      "document_extract": "Extracción de Documentos",
+      "resume_format": "Formato de Currículum",
+      "jd_format": "Formato JD",
+      "ats": "Integraciones ATS",
+      "hiring_intelligence": "Inteligencia de Contratación",
+      "hiring_brief": "Generación de Brief",
+      "other": "Otros"
     }
   },
   "product": {

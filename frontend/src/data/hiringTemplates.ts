@@ -47,6 +47,9 @@ const templateDefinitions: TemplateDefinition[] = [
   { id: 'frontend-developer', category: 'engineering', icon: '🖥️', key: 'hiring.templates.frontendDeveloper' },
   { id: 'devops-engineer', category: 'engineering', icon: '🔧', key: 'hiring.templates.devopsEngineer' },
   { id: 'data-scientist', category: 'engineering', icon: '📊', key: 'hiring.templates.dataScientist' },
+  { id: 'software-architect', category: 'engineering', icon: '🏗️', key: 'hiring.templates.softwareArchitect' },
+  { id: 'quantum-algorithm-engineer', category: 'engineering', icon: '⚛️', key: 'hiring.templates.quantumAlgorithmEngineer' },
+  { id: 'chip-design-engineer', category: 'engineering', icon: '🔬', key: 'hiring.templates.chipDesignEngineer' },
 
   // Product
   { id: 'product-manager', category: 'product', icon: '🎯', key: 'hiring.templates.productManager' },

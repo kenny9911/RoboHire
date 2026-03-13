@@ -385,6 +385,7 @@
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "草稿将显示在这里...",
     "jdGenerating": "正在生成职位描述...",
+    "generatingBrief": "正在生成招聘需求...",
     "jdPreview": "预览",
     "jdPreviewEmpty": "预览将显示在这里...",
     "jdAiGenerate": "AI 生成",
@@ -424,6 +425,7 @@
     "goToDashboard": "前往控制面板",
     "uploadJd": "上传职位描述",
     "inputPlaceholder": "描述您理想的候选人...",
+    "inputPlaceholderWithFile": "输入对此JD的补充说明，或直接按发送...",
     "helperText": "按 Enter 发送，Shift+Enter 换行。上传 JD 文件可获得更详细的匹配。",
     "inputHelperText": "按 Enter 发送，Shift+Enter 换行。上传 JD 文件可更快设置。",
     "heroTitle": "开始使用 AI 招聘",
@@ -453,6 +455,7 @@
     "templateSelected": "我想招聘：{{title}}",
     "quickStartSelected": "我想招聘一名{{role}}",
     "quickStartFromJd": "基于职位描述的候选人",
+    "quickStartPrompt": "我想招聘一位{{role}}。请帮我梳理该岗位的招聘需求，包括必备技能、加分项、岗位职责以及其他相关要求。",
     "defaultRoleLabel": "该岗位",
     "suggestions": {
       "title": "试着这样问",
@@ -467,7 +470,11 @@
       "engineer": "软件工程师",
       "pm": "产品经理",
       "designer": "UX 设计师",
-      "data": "数据科学家"
+      "data": "数据科学家",
+      "aiLlm": "人工智能与大模型工程师",
+      "architect": "软件/系统架构师",
+      "quantum": "量子算法工程师",
+      "chip": "芯片设计工程师（SoC/IC）"
     },
     "history": "历史记录",
     "expandSidebar": "展开侧边栏",
@@ -592,6 +599,27 @@
           "TensorFlow",
           "统计学"
         ]
+      },
+      "softwareArchitect": {
+        "title": "软件/系统架构师",
+        "description": "设计并负责可扩展、高可靠系统的技术架构",
+        "experienceLevel": "8年以上",
+        "requirements": "我们正在寻找一位软件/系统架构师，负责设计和管理平台的技术架构。\n\n岗位职责：\n- 定义系统架构、技术选型和设计模式\n- 主导技术方案评审，确保架构一致性\n- 评估可扩展性、可靠性和性能的技术权衡\n- 指导高级工程师的架构能力提升\n- 与产品和技术领导层协作制定技术路线图\n\n必备条件：\n- 8年以上软件工程经验，3年以上架构师/技术负责人经验\n- 精通分布式系统、微服务和云原生架构\n- 至少精通以下两种语言：Java、Go、Python、TypeScript\n- 具备AWS/GCP/Azure大规模使用经验\n- 优秀的沟通能力，能面对技术和非技术受众\n\n加分项：\n- 有事件驱动架构经验（Kafka、RabbitMQ）\n- 熟悉基础设施即代码（Terraform、Pulumi）\n- 有高流量消费级或SaaS平台背景",
+        "skills": ["分布式系统", "微服务", "云架构", "系统设计", "技术领导力"]
+      },
+      "quantumAlgorithmEngineer": {
+        "title": "量子算法工程师",
+        "description": "研究并实现面向实际计算问题的量子算法",
+        "experienceLevel": "3年以上",
+        "requirements": "我们正在寻找一位量子算法工程师，负责设计和实现面向优化、仿真和机器学习应用的量子算法。\n\n岗位职责：\n- 研究和开发量子算法（VQE、QAOA、量子机器学习）\n- 在量子模拟器和真实硬件上实现和基准测试算法\n- 分析计算复杂度和量子优势场景\n- 与领域专家合作，识别适合量子计算的问题\n- 发表研究成果，为量子计算社区做贡献\n\n必备条件：\n- 物理学、计算机科学、数学或相关领域硕士/博士学位\n- 3年以上量子计算研究或工程经验\n- 精通Qiskit、Cirq或PennyLane\n- 扎实的线性代数、概率论和量子力学基础\n- 熟练使用Python和科学计算库（NumPy、SciPy）\n\n加分项：\n- 有量子计算期刊或会议论文发表\n- 有量子纠错和容错量子计算经验\n- 了解量子硬件（超导、离子阱、光量子）",
+        "skills": ["量子计算", "Qiskit/Cirq", "线性代数", "Python", "算法设计"]
+      },
+      "chipDesignEngineer": {
+        "title": "芯片设计工程师（SoC/IC）",
+        "description": "从RTL到流片，设计和验证下一代SoC/IC芯片",
+        "experienceLevel": "5年以上",
+        "requirements": "我们正在寻找一位芯片设计工程师，参与下一代SoC/IC产品的设计、验证和流片工作。\n\n岗位职责：\n- 设计和实现数字逻辑模块和SoC子系统的RTL\n- 进行逻辑综合、时序分析和可测试性设计（DFT）\n- 开发和运行验证测试平台（UVM/SystemVerilog）\n- 与物理设计、固件和验证团队协作\n- 参与架构探索和微架构定义\n\n必备条件：\n- 电子工程、计算机工程或相关领域本科/硕士学位\n- 5年以上SoC/IC设计经验\n- 精通Verilog/SystemVerilog和RTL设计\n- 熟悉EDA工具（Synopsys、Cadence、Mentor）\n- 深入理解数字设计、时序收敛和低功耗设计\n\n加分项：\n- 有RISC-V或ARM处理器设计经验\n- 了解高速接口（PCIe、DDR、USB）\n- 熟悉FPGA原型验证和仿真\n- 有先进制程节点（7nm、5nm、3nm）流片经验",
+        "skills": ["RTL设计", "SystemVerilog", "SoC架构", "EDA工具", "芯片验证"]
       },
       "productManager": {
         "title": "产品经理",
@@ -1914,28 +1942,33 @@
   },
   "usage": {
     "title": "API 用量",
+    "totalRequests": "总请求数",
     "apiCalls": "API 调用",
+    "websiteActions": "网站功能操作",
     "inputTokens": "输入 Tokens",
     "outputTokens": "输出 Tokens",
     "totalCost": "总费用",
-    "empty": "暂无用量数据。调用 API 后数据将显示在此处。",
+    "empty": "暂无用量数据。使用 API 或网站功能后数据将显示在此处。",
     "inactive": "已停用",
     "range": {
+      "today": "今日",
       "7d": "7 天",
       "30d": "30 天",
       "90d": "90 天",
       "all": "全部"
     },
     "chart": {
-      "callsOverTime": "API 调用趋势",
-      "calls": "调用次数",
+      "callsOverTime": "请求趋势",
+      "calls": "请求次数",
       "tokenUsage": "Token 用量（输入 vs 输出）",
       "input": "输入",
       "output": "输出"
     },
     "table": {
       "byEndpoint": "按接口统计",
+      "websiteFeatures": "按网站功能统计",
       "endpoint": "接口",
+      "feature": "功能",
       "calls": "调用次数",
       "tokens": "Tokens",
       "cost": "费用",
@@ -1964,6 +1997,28 @@
       "model": "模型",
       "apiKey": "API 密钥",
       "sessionAuth": "会话"
+    },
+    "features": {
+      "hiring_chat": "招聘对话",
+      "hiring_sessions": "招聘会话",
+      "hiring_title_suggestion": "职位标题建议",
+      "hiring_jd_draft": "JD 草稿生成",
+      "hiring_requests": "招聘需求",
+      "resume_match": "简历匹配",
+      "smart_matching": "智能匹配",
+      "jobs": "职位管理",
+      "resumes": "简历库",
+      "interview_invite": "面试邀约",
+      "interview_evaluation": "面试评估",
+      "resume_parse": "简历解析",
+      "jd_parse": "JD 解析",
+      "document_extract": "文档提取",
+      "resume_format": "简历格式化",
+      "jd_format": "JD 格式化",
+      "ats": "ATS 集成",
+      "hiring_intelligence": "招聘情报",
+      "hiring_brief": "需求生成",
+      "other": "其他"
     }
   },
   "product": {

@@ -839,6 +839,7 @@
     "jdMarkdownLabel": "Markdown",
     "jdPlaceholder": "ドラフトがここに表示されます...",
     "jdGenerating": "職務内容を生成しています...",
+    "generatingBrief": "採用ブリーフを生成中...",
     "jdPreview": "プレビュー",
     "jdPreviewEmpty": "プレビューがここに表示されます...",
     "jdAiGenerate": "AIで生成",
@@ -875,14 +876,20 @@
       "engineer": "ソフトウェアエンジニア",
       "pm": "プロダクトマネージャー",
       "designer": "UXデザイナー",
-      "data": "データサイエンティスト"
+      "data": "データサイエンティスト",
+      "aiLlm": "AI・LLMエンジニア",
+      "architect": "ソフトウェア/システムアーキテクト",
+      "quantum": "量子アルゴリズムエンジニア",
+      "chip": "チップ設計エンジニア（SoC/IC）"
     },
     "newRequest": "新規リクエスト",
     "signInToContinue": "サインインして続行",
     "goToDashboard": "ダッシュボードへ",
     "inputPlaceholder": "理想の候補者について教えてください...",
+    "inputPlaceholderWithFile": "このJDへの指示を入力、または送信を押してください...",
     "uploadJd": "職務記述をアップロード",
     "quickStartFromJd": "職務記述に基づく候補者",
+    "quickStartPrompt": "{{role}}を採用したいです。必須スキル、あれば望ましいスキル、職務内容、その他の要件を整理してください。",
     "defaultRoleLabel": "この職種",
     "suggestions": {
       "title": "こんな質問を試してください",
@@ -1023,6 +1030,27 @@
           "TensorFlow",
           "統計"
         ]
+      },
+      "softwareArchitect": {
+        "title": "ソフトウェア/システムアーキテクト",
+        "description": "スケーラブルで信頼性の高いシステムの技術アーキテクチャを設計・統括",
+        "experienceLevel": "8年以上",
+        "requirements": "プラットフォームの技術アーキテクチャを設計・管理するソフトウェア/システムアーキテクトを募集しています。\n\n職務内容：\n- システムアーキテクチャ、技術スタック、設計パターンの定義\n- 技術設計レビューの主導とアーキテクチャの一貫性確保\n- スケーラビリティ、信頼性、パフォーマンスのトレードオフ評価\n- シニアエンジニアへのアーキテクチャ指導\n- プロダクト・エンジニアリングリーダーとの技術ロードマップ策定\n\n必須条件：\n- ソフトウェアエンジニアリング8年以上、アーキテクト/リード3年以上\n- 分散システム、マイクロサービス、クラウドネイティブアーキテクチャの深い専門知識\n- Java、Go、Python、TypeScriptのうち2つ以上に精通\n- AWS/GCP/Azureの大規模利用経験\n- 技術・非技術の両方の聴衆に対する優れたコミュニケーション力\n\n歓迎条件：\n- イベント駆動アーキテクチャの経験（Kafka、RabbitMQ）\n- IaCの知識（Terraform、Pulumi）\n- 高トラフィックの消費者向けまたはSaaSプラットフォームの経験",
+        "skills": ["分散システム", "マイクロサービス", "クラウドアーキテクチャ", "システム設計", "テクニカルリーダーシップ"]
+      },
+      "quantumAlgorithmEngineer": {
+        "title": "量子アルゴリズムエンジニア",
+        "description": "実世界の計算問題に対する量子アルゴリズムを研究・実装",
+        "experienceLevel": "3年以上",
+        "requirements": "最適化、シミュレーション、機械学習向けの量子アルゴリズムを設計・実装する量子アルゴリズムエンジニアを募集しています。\n\n職務内容：\n- 量子アルゴリズムの研究・開発（VQE、QAOA、量子ML）\n- 量子シミュレータおよび実機でのアルゴリズム実装・ベンチマーク\n- 計算量と量子優位性シナリオの分析\n- ドメインエキスパートとの協業による量子適用可能な問題の特定\n- 研究成果の発表と量子コンピューティングコミュニティへの貢献\n\n必須条件：\n- 物理学、計算機科学、数学または関連分野の修士/博士号\n- 量子コンピューティングの研究またはエンジニアリング3年以上\n- Qiskit、Cirq、またはPennyLaneに精通\n- 線形代数、確率論、量子力学の堅固な基礎\n- Pythonおよび科学計算ライブラリ（NumPy、SciPy）の経験\n\n歓迎条件：\n- 量子コンピューティング学術誌・学会での論文発表\n- 量子誤り訂正とフォールトトレラント計算の経験\n- 量子ハードウェアの知識（超伝導、イオントラップ、フォトニクス）",
+        "skills": ["量子コンピューティング", "Qiskit/Cirq", "線形代数", "Python", "アルゴリズム設計"]
+      },
+      "chipDesignEngineer": {
+        "title": "チップ設計エンジニア（SoC/IC）",
+        "description": "RTLからテープアウトまで、次世代SoC/ICチップの設計と検証",
+        "experienceLevel": "5年以上",
+        "requirements": "次世代SoC/IC製品の設計、検証、テープアウトに貢献するチップ設計エンジニアを募集しています。\n\n職務内容：\n- デジタルロジックブロックとSoCサブシステムのRTL設計・実装\n- 論理合成、タイミング解析、テスト容易化設計（DFT）の実施\n- 検証テストベンチの開発・実行（UVM/SystemVerilog）\n- 物理設計、ファームウェア、バリデーションチームとの協業\n- アーキテクチャ探索とマイクロアーキテクチャ定義への参画\n\n必須条件：\n- 電子工学、コンピュータ工学または関連分野の学士/修士号\n- SoC/IC設計5年以上の経験\n- Verilog/SystemVerilogとRTL設計に精通\n- EDAツール（Synopsys、Cadence、Mentor）の使用経験\n- デジタル設計、タイミングクロージャ、低消費電力設計の深い理解\n\n歓迎条件：\n- RISC-VまたはARMプロセッサ設計の経験\n- 高速インターフェース（PCIe、DDR、USB）の知識\n- FPGAプロトタイピングとエミュレーションの知識\n- 先端プロセスノード（7nm、5nm、3nm）でのテープアウト経験",
+        "skills": ["RTL設計", "SystemVerilog", "SoCアーキテクチャ", "EDAツール", "チップ検証"]
       },
       "productManager": {
         "title": "プロダクトマネージャー",
@@ -1921,6 +1949,28 @@
       "model": "モデル",
       "apiKey": "API キー",
       "sessionAuth": "セッション"
+    },
+    "features": {
+      "hiring_chat": "採用チャット",
+      "hiring_sessions": "採用セッション",
+      "hiring_title_suggestion": "職位タイトル提案",
+      "hiring_jd_draft": "JD ドラフト生成",
+      "hiring_requests": "採用リクエスト",
+      "resume_match": "簡歴マッチ",
+      "smart_matching": "スマートマッチング",
+      "jobs": "求人",
+      "resumes": "簡歴ライブラリ",
+      "interview_invite": "面接招待",
+      "interview_evaluation": "面接評価",
+      "resume_parse": "簡歴解析",
+      "jd_parse": "JD 解析",
+      "document_extract": "ドキュメント抽出",
+      "resume_format": "簡歴フォーマット",
+      "jd_format": "JD フォーマット",
+      "ats": "ATS 連携",
+      "hiring_intelligence": "採用インテリジェンス",
+      "hiring_brief": "ブリーフ生成",
+      "other": "その他"
     }
   },
   "product": {

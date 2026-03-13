@@ -559,32 +559,36 @@ export default function StartHiring() {
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
+  const [isBriefGenerating, setIsBriefGenerating] = useState(false);
+
   const handleQuickStart = async (role: string) => {
-    if (!requireAuth()) return;
-    let sessionId = activeSessionId;
-    if (!sessionId && isAuthenticated) {
-      sessionId = await createSession();
-    }
+    setIsBriefGenerating(true);
+    // Set a static fallback immediately so the user sees something
+    const fallback = t('hiring.quickStartPrompt', 'I want to hire a {{role}}. Please help me define the requirements, must-have skills, nice-to-have skills, responsibilities, and any other relevant details for this position.', { role });
+    setInput(fallback);
 
-    setStep('requirements');
-    setHiringData((prev) => ({ ...prev, title: role }));
-    const userPrompt = t('hiring.quickStartSelected', 'I want to hire a {{role}}', { role });
-    await addMessage('user', userPrompt);
-
-    setIsProcessing(true);
     try {
-      const result = await sendChatMessage(userPrompt, sessionId, { role });
-      if (result?.message?.content) {
-        await addMessage('assistant', result.message.content);
-        setAssistantSuggestions(buildFollowUpSuggestions(result?.action));
+      const resp = await fetch(`${API_BASE}/api/v1/hiring-requests/generate-brief`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, language: i18n.language }),
+      });
+      const data = await resp.json();
+      if (data.success && data.data?.brief) {
+        setInput(data.data.brief);
       }
-      await handleChatAction(result?.action);
-    } catch (error) {
-      console.error('Failed to process chat message:', error);
-      await addMessage('assistant', CHAT_ERROR_FALLBACK);
-      setAssistantSuggestions(buildFollowUpSuggestions());
+    } catch {
+      // Keep fallback text on error
     } finally {
-      setIsProcessing(false);
+      setIsBriefGenerating(false);
+      setTimeout(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+          textarea.focus();
+          textarea.style.height = 'auto';
+          textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
+        }
+      }, 50);
     }
   };
 
@@ -898,6 +902,10 @@ export default function StartHiring() {
     { id: 'pm', label: t('hiring.quickRoles.pm', 'Product Manager') },
     { id: 'designer', label: t('hiring.quickRoles.designer', 'UX Designer') },
     { id: 'data', label: t('hiring.quickRoles.data', 'Data Scientist') },
+    { id: 'ai-llm', label: t('hiring.quickRoles.aiLlm', 'AI & LLM Engineer') },
+    { id: 'architect', label: t('hiring.quickRoles.architect', 'Software/System Architect') },
+    { id: 'quantum', label: t('hiring.quickRoles.quantum', 'Quantum Algorithm Engineer') },
+    { id: 'chip', label: t('hiring.quickRoles.chip', 'Chip Design Engineer (SoC/IC)') },
   ];
 
   const localizedTemplates = getLocalizedTemplates(t);
@@ -1493,6 +1501,19 @@ export default function StartHiring() {
 
           {/* Main Input */}
           <div className="mb-8 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-[0_32px_64px_-42px_rgba(15,23,42,0.65)]">
+            {attachedFile && (
+              <div className="mx-2 mt-1 mb-1 flex items-center gap-2 text-sm text-slate-600">
+                <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                <span className="truncate">{attachedFile.name}</span>
+                <button onClick={() => setAttachedFile(null)} className="text-slate-400 transition-colors hover:text-slate-600 flex-shrink-0">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/70 p-1.5">
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -1512,8 +1533,6 @@ export default function StartHiring() {
                   const file = e.target.files?.[0];
                   if (file) {
                     setAttachedFile(file);
-                    const initialPrompt = input.trim() || t('hiring.quickStartFromJd', 'candidate based on job description');
-                    void handleSubmitHiringInput(initialPrompt, file);
                   }
                   e.target.value = '';
                 }}
@@ -1523,14 +1542,14 @@ export default function StartHiring() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={t('hiring.inputPlaceholder', 'Describe your ideal candidate...')}
+                placeholder={attachedFile ? t('hiring.inputPlaceholderWithFile', 'Add instructions for this JD, or press send...') : t('hiring.inputPlaceholder', 'Describe your ideal candidate...')}
                 rows={1}
                 className="flex-1 resize-none bg-transparent px-2 py-3 text-slate-900 placeholder-slate-400 focus:outline-none"
                 style={{ minHeight: '48px', maxHeight: '120px' }}
               />
               <button
                 onClick={handleSubmit}
-                disabled={!input.trim()}
+                disabled={!input.trim() && !attachedFile}
                 className="self-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1546,12 +1565,18 @@ export default function StartHiring() {
               <button
                 key={role.id}
                 onClick={() => handleQuickStart(role.label)}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                disabled={isBriefGenerating}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-wait disabled:opacity-50"
               >
                 {role.label}
               </button>
             ))}
           </div>
+          {isBriefGenerating && (
+            <p className="mt-2 text-center text-xs text-slate-400 animate-pulse">
+              {t('hiring.generatingBrief', 'Generating hiring brief...')}
+            </p>
+          )}
         </div>
       </section>
 

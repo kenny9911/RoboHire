@@ -25,6 +25,15 @@ interface EndpointData {
   cost?: number;
 }
 
+interface WebsiteFeatureData {
+  module: string;
+  calls: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  cost?: number;
+}
+
 interface KeyUsage {
   apiKeyId: string | null;
   keyName: string;
@@ -40,6 +49,8 @@ interface KeyUsage {
 interface UsageSummary {
   totals: {
     calls: number;
+    apiCalls?: number;
+    websiteCalls?: number;
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;
@@ -47,6 +58,7 @@ interface UsageSummary {
   };
   daily: DailyData[];
   byEndpoint: EndpointData[];
+  websiteFeatures: WebsiteFeatureData[];
 }
 
 interface CallHistoryRecord {
@@ -65,10 +77,15 @@ interface CallHistoryRecord {
   createdAt: string;
 }
 
-type TimeRange = '7d' | '30d' | '90d' | 'all';
+type TimeRange = 'today' | '7d' | '30d' | '90d' | 'all';
 
 function rangeToDate(range: TimeRange): string | undefined {
   if (range === 'all') return undefined;
+  if (range === 'today') {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }
   const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
   const d = new Date();
   d.setDate(d.getDate() - days);
@@ -76,6 +93,7 @@ function rangeToDate(range: TimeRange): string | undefined {
 }
 
 const RANGE_LABELS: Record<TimeRange, string> = {
+  today: 'Today',
   '7d': '7 Days',
   '30d': '30 Days',
   '90d': '90 Days',
@@ -99,6 +117,7 @@ export default function UsageDashboard() {
   const callHistoryLimit = 10;
 
   const rangeLabels: Record<TimeRange, string> = {
+    today: t('usage.range.today', RANGE_LABELS.today),
     '7d': t('usage.range.7d', RANGE_LABELS['7d']),
     '30d': t('usage.range.30d', RANGE_LABELS['30d']),
     '90d': t('usage.range.90d', RANGE_LABELS['90d']),
@@ -185,6 +204,14 @@ export default function UsageDashboard() {
 
   const formatCost = (v: number) => `$${v.toFixed(4)}`;
   const formatTokens = (v: number) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${(v / 1_000).toFixed(1)}K` : String(v);
+  const formatFeatureLabel = (module: string) =>
+    t(
+      `usage.features.${module}`,
+      module
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+    );
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -193,7 +220,7 @@ export default function UsageDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">{t('usage.title', 'API Usage')}</h1>
           <div className="flex gap-1 bg-white rounded-lg border border-gray-200 p-1">
-            {(['7d', '30d', '90d', 'all'] as TimeRange[]).map((r) => (
+            {(['today', '7d', '30d', '90d', 'all'] as TimeRange[]).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
@@ -218,12 +245,14 @@ export default function UsageDashboard() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
           </div>
         ) : !summary ? (
-          <div className="text-center py-24 text-gray-500">{t('usage.empty', 'No usage data yet. Make API calls to see data here.')}</div>
+          <div className="text-center py-24 text-gray-500">{t('usage.empty', 'No usage data yet. Use the API or web app to see data here.')}</div>
         ) : (
           <>
             {/* Summary cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <SummaryCard label={t('usage.apiCalls', 'API Calls')} value={String(summary.totals.calls)} />
+            <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+              <SummaryCard label={t('usage.totalRequests', 'Total Requests')} value={String(summary.totals.calls)} />
+              <SummaryCard label={t('usage.apiCalls', 'API Calls')} value={String(summary.totals.apiCalls ?? 0)} />
+              <SummaryCard label={t('usage.websiteActions', 'Website Actions')} value={String(summary.totals.websiteCalls ?? 0)} />
               <SummaryCard label={t('usage.inputTokens', 'Input Tokens')} value={formatTokens(summary.totals.promptTokens)} />
               <SummaryCard label={t('usage.outputTokens', 'Output Tokens')} value={formatTokens(summary.totals.completionTokens)} />
               {showCost && (
@@ -235,14 +264,14 @@ export default function UsageDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* API Calls over time */}
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('usage.chart.callsOverTime', 'API Calls Over Time')}</h2>
+                <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('usage.chart.callsOverTime', 'Requests Over Time')}</h2>
                 <ResponsiveContainer width="100%" height={260}>
                   <AreaChart data={summary.daily}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                     <Tooltip />
-                    <Area type="monotone" dataKey="calls" stroke="#6366f1" fill="#e0e7ff" name={t('usage.chart.calls', 'Calls')} />
+                    <Area type="monotone" dataKey="calls" stroke="#6366f1" fill="#e0e7ff" name={t('usage.chart.calls', 'Requests')} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -285,6 +314,37 @@ export default function UsageDashboard() {
                           <td className="py-2 text-right text-gray-600">{ep.calls}</td>
                           <td className="py-2 text-right text-gray-600">{formatTokens(ep.totalTokens)}</td>
                           {showCost && <td className="py-2 text-right text-gray-600">{formatCost(ep.cost ?? 0)}</td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Website feature breakdown */}
+            {summary.websiteFeatures.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+                <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('usage.table.websiteFeatures', 'Website Feature Usage')}</h2>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-500 border-b border-gray-100">
+                        <th className="pb-2 font-medium">{t('usage.table.feature', 'Feature')}</th>
+                        <th className="pb-2 font-medium text-right">{t('usage.table.calls', 'Calls')}</th>
+                        <th className="pb-2 font-medium text-right">{t('usage.inputTokens', 'Input Tokens')}</th>
+                        <th className="pb-2 font-medium text-right">{t('usage.outputTokens', 'Output Tokens')}</th>
+                        {showCost && <th className="pb-2 font-medium text-right">{t('usage.table.cost', 'Cost')}</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.websiteFeatures.map((feature) => (
+                        <tr key={feature.module} className="border-b border-gray-50">
+                          <td className="py-2 text-gray-800 font-medium">{formatFeatureLabel(feature.module)}</td>
+                          <td className="py-2 text-right text-gray-600">{feature.calls}</td>
+                          <td className="py-2 text-right text-gray-600">{formatTokens(feature.promptTokens)}</td>
+                          <td className="py-2 text-right text-gray-600">{formatTokens(feature.completionTokens)}</td>
+                          {showCost && <td className="py-2 text-right text-gray-600">{formatCost(feature.cost ?? 0)}</td>}
                         </tr>
                       ))}
                     </tbody>
