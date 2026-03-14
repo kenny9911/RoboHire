@@ -95,7 +95,6 @@ const navItems = [
 ];
 
 const secondaryLinks = [
-  { path: '/dashboard', labelKey: 'product.nav.devDashboard', fallback: 'Dev Dashboard' },
   { path: '/api-playground', labelKey: 'dashboard.nav.apiPlayground', fallback: 'API Playground' },
   { path: '/docs', labelKey: 'dashboard.nav.docs', fallback: 'Documentation' },
 ];

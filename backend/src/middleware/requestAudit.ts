@@ -96,6 +96,7 @@ export function persistRequestAudit(req: Request, res: Response, next: NextFunct
             userId: req.user?.id ?? null,
             endpoint: path,
             module: classification.module,
+            status: call.status,
             provider: call.provider,
             model: call.model,
             promptTokens: call.promptTokens,
@@ -103,6 +104,10 @@ export function persistRequestAudit(req: Request, res: Response, next: NextFunct
             totalTokens: call.totalTokens,
             cost: call.cost,
             durationMs: call.duration,
+            requestMessages: (call.requestMessages as Prisma.InputJsonValue) ?? undefined,
+            requestOptions: (call.requestOptions as Prisma.InputJsonValue) ?? undefined,
+            responsePreview: call.responsePreview ?? undefined,
+            errorMessage: call.errorMessage ?? undefined,
           })),
         });
       }

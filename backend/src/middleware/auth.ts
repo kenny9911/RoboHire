@@ -2,8 +2,25 @@ import type { Request, Response, NextFunction } from 'express';
 import authService from '../services/AuthService.js';
 import prisma from '../lib/prisma.js';
 import type { AuthUser, ApiKeyScope } from '../types/auth.js';
+import { withUserUsageLimits } from './usageMeter.js';
 // Import auth types to extend Express
 import '../types/auth.js';
+
+type LimitAwareAuthUser = AuthUser & {
+  customMaxInterviews?: number | null;
+  customMaxMatches?: number | null;
+};
+
+async function toAuthenticatedUser(user: LimitAwareAuthUser): Promise<AuthUser> {
+  const enrichedUser = await withUserUsageLimits(user);
+  const {
+    customMaxInterviews: _customMaxInterviews,
+    customMaxMatches: _customMaxMatches,
+    ...sanitizedUser
+  } = enrichedUser;
+
+  return sanitizedUser as AuthUser;
+}
 
 /**
  * Validate an API key and return the associated user
@@ -22,6 +39,8 @@ async function validateApiKey(apiKey: string): Promise<{
             id: true,
             email: true,
             name: true,
+            phone: true,
+            jobTitle: true,
             company: true,
             avatar: true,
             role: true,
@@ -38,6 +57,8 @@ async function validateApiKey(apiKey: string): Promise<{
             interviewsUsed: true,
             resumeMatchesUsed: true,
             topUpBalance: true,
+            customMaxInterviews: true,
+            customMaxMatches: true,
           },
         },
       },
@@ -197,7 +218,7 @@ export async function requireAuth(
       return;
     }
 
-    req.user = user;
+    req.user = await toAuthenticatedUser(user as LimitAwareAuthUser);
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
@@ -301,7 +322,7 @@ export async function optionalAuth(
       }
 
       if (user) {
-        req.user = user;
+        req.user = await toAuthenticatedUser(user as LimitAwareAuthUser);
       }
     }
 

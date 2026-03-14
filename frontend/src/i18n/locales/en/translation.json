@@ -79,6 +79,8 @@
     "orContinueWith": "or continue with email",
     "name": "Name",
     "namePlaceholder": "John Doe",
+    "jobTitle": "Job Title",
+    "jobTitlePlaceholder": "Recruiter",
     "company": "Company",
     "companyPlaceholder": "Acme Inc.",
     "phone": "Phone Number",
@@ -834,7 +836,9 @@
       "account": "Account",
       "usage": "Usage",
       "resumes": "Resumes",
-      "integrations": "Integrations"
+      "integrations": "Integrations",
+      "docs": "Documentation",
+      "developers": "Developers"
     },
     "welcome": "Welcome back",
     "user": "there",
@@ -1763,6 +1767,7 @@
     "profile": {
       "title": "Profile",
       "name": "Name",
+      "jobTitle": "Job Title",
       "company": "Company",
       "email": "Email",
       "phone": "Phone",
@@ -1888,6 +1893,7 @@
       "resumes": "Resume Library",
       "interview_invite": "Interview Invite",
       "interview_evaluation": "Interview Evaluation",
+      "interview_livekit": "AI Interview Session",
       "resume_parse": "Resume Parse",
       "jd_parse": "JD Parse",
       "document_extract": "Document Extract",
@@ -2096,7 +2102,8 @@
       "thankYou": "Thank You!",
       "thankYouMessage": "Thank you{{name}} for completing the interview. Our team will review your responses and get back to you soon.",
       "backToHome": "Back to Home",
-      "error": "Unable to Join"
+      "error": "Unable to Join",
+      "useSuggestion": "Use suggestion"
     },
     "videoInterview": {
       "title": "Video Interview",
@@ -2121,7 +2128,16 @@
       "thankYouMessage": "Thank you{{name}} for completing the interview. Our team will review your responses and get back to you soon.",
       "duration": "Duration",
       "backToHome": "Back to Home",
-      "connectionError": "Connection error"
+      "connectionError": "Connection error",
+      "agentDisconnected": "Disconnected",
+      "agentConnecting": "Connecting...",
+      "agentInitializing": "Initializing...",
+      "agentListening": "Listening",
+      "agentThinking": "Thinking...",
+      "agentSpeaking": "Speaking",
+      "agentFailed": "Connection Failed",
+      "transcript": "Transcript",
+      "transcriptEmpty": "Transcript will appear here as the interview progresses..."
     },
     "jobs": {
       "title": "Jobs",
@@ -2208,6 +2224,7 @@
       "interviewDuration": "Duration (min)",
       "interviewRequirements": "Interview Requirements",
       "interviewRequirementsPlaceholder": "What to assess during the interview...",
+      "interviewRequirementsSuggestion": "Focus on system design and distributed systems experience. Assess problem-solving ability with real-world scenarios.",
       "evaluationRules": "Evaluation Rules",
       "evaluationRulesPlaceholder": "Scoring criteria, weights, pass/fail thresholds...",
       "autoGenerateAll": "Auto-Generate All",
@@ -2623,7 +2640,7 @@
       }
     },
     "detail": {
-      "back": "Back to Resumes",
+      "back": "Back to Talent Hub",
       "title": "Resume Detail",
       "tabs": {
         "overview": "Overview",
@@ -2639,7 +2656,76 @@
         "rematchingJobs": "Re-matching...",
         "inviteInterview": "Invite Interview",
         "reupload": "Re-upload & Overwrite",
-        "archive": "Archive"
+        "archive": "Archive",
+        "edit": "Edit Resume",
+        "refineForJob": "Refine for Job"
+      },
+      "headerActions": {
+        "interview": "Interview",
+        "edit": "Edit",
+        "upload": "Upload",
+        "insights": "Insights",
+        "insightsLoading": "Loading...",
+        "match": "Match",
+        "matchLoading": "Matching...",
+        "optimize": "Optimize"
+      },
+      "edit": {
+        "editing": "Editing Resume",
+        "versionNamePlaceholder": "Version name (optional)",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "save": "Save Changes",
+        "basicInfo": "Basic Information",
+        "name": "Full Name",
+        "email": "Email",
+        "phone": "Phone",
+        "currentRole": "Current Role",
+        "experienceYears": "Years of Experience",
+        "skillsPlaceholder": "Comma-separated skills...",
+        "role": "Role",
+        "company": "Company",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "description": "Description",
+        "addExperience": "Add Experience",
+        "degree": "Degree",
+        "institution": "Institution",
+        "fieldOfStudy": "Field of Study",
+        "graduationDate": "Graduation Date",
+        "addEducation": "Add Education",
+        "location": "Location",
+        "achievements": "Achievements (one per line)",
+        "achievementsPlaceholder": "One achievement per line...",
+        "technologies": "Technologies (comma-separated)",
+        "technologiesPlaceholder": "React, Node.js, PostgreSQL...",
+        "gpa": "GPA",
+        "certName": "Certification Name",
+        "certIssuer": "Issuer",
+        "certDate": "Date",
+        "addCertification": "Add Certification",
+        "projectName": "Project Name",
+        "projectDescription": "Description",
+        "addProject": "Add Project"
+      },
+      "versions": {
+        "title": "Version History",
+        "autoSave": "Auto-save",
+        "restore": "Restore",
+        "restoring": "Restoring..."
+      },
+      "refine": {
+        "title": "Refine Resume for Job",
+        "description": "Select a job to tailor this resume. The AI will emphasize matching skills and experiences without altering any facts.",
+        "selectJob": "Select a job",
+        "refining": "Refining...",
+        "refine": "Refine Resume",
+        "changes": "Changes Made",
+        "matchedSkills": "Matched Skills",
+        "emphasizedExperiences": "Emphasized Experiences",
+        "discard": "Discard",
+        "applying": "Applying...",
+        "applyAndSave": "Apply & Save"
       },
       "invite": {
         "title": "Invite to Interview",
@@ -3159,6 +3245,37 @@
       "outputTokens": "Output",
       "showing": "Showing",
       "of": "of",
+      "prev": "Prev",
+      "next": "Next"
+    }
+  },
+  "admin": {
+    "activity": {
+      "signups": "Signups",
+      "logins": "Logins",
+      "feed": "Activity Feed",
+      "journey": "User Journey",
+      "time": "Time",
+      "email": "Email",
+      "name": "Name",
+      "company": "Company",
+      "provider": "Provider",
+      "ip": "IP Address",
+      "userAgent": "User Agent",
+      "eventType": "Type",
+      "path": "Path",
+      "element": "Element",
+      "pageView": "Page View",
+      "click": "Click",
+      "selectUser": "Select User",
+      "selectSession": "Select Session",
+      "allUsers": "All Users",
+      "allSessions": "All Sessions",
+      "events": "events",
+      "selectUserPrompt": "Select a user to view their activity journey",
+      "noData": "No data",
+      "loading": "Loading...",
+      "showing": "Showing",
       "prev": "Prev",
       "next": "Next"
     }

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { FormDataProvider } from './context/FormDataContext';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useActivityTracker } from './hooks/useActivityTracker';
 
 // Public Pages (eagerly loaded — critical for SEO & first paint)
 import Landing from './pages/Landing';
@@ -78,10 +79,16 @@ function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ActivityTracker() {
+  useActivityTracker();
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <FormDataProvider>
+        <ActivityTracker />
         <SuspenseWrapper>
           <Routes>
             {/* Public Routes */}

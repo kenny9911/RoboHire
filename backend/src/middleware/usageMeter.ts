@@ -1,6 +1,19 @@
 import type { Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma.js';
 
+type UsageLimitAwareUser = {
+  subscriptionTier?: string | null;
+  customMaxInterviews?: number | null;
+  customMaxMatches?: number | null;
+};
+
+export interface UsageLimitSnapshot {
+  planMaxInterviews: number | null;
+  planMaxMatches: number | null;
+  effectiveMaxInterviews: number | null;
+  effectiveMaxMatches: number | null;
+}
+
 /**
  * Default plan limits (fallback when no DB config exists).
  */
@@ -104,6 +117,41 @@ export async function getPlanLimits(): Promise<Record<string, { interviews: numb
 export async function getPayPerUseRates(): Promise<{ interview: number; match: number }> {
   await loadConfigFromDb();
   return cachedPayPerUse!;
+}
+
+function serializeLimit(limit: number): number | null {
+  return Number.isFinite(limit) ? limit : null;
+}
+
+export function resolveUserUsageLimitsFromPlan(
+  user: UsageLimitAwareUser,
+  planLimits: Record<string, { interviews: number; matches: number }>
+): UsageLimitSnapshot {
+  const tier = (user.subscriptionTier || 'free').toLowerCase();
+  const limits = planLimits[tier] || planLimits.free;
+  const planMaxInterviews = serializeLimit(limits.interviews);
+  const planMaxMatches = serializeLimit(limits.matches);
+
+  return {
+    planMaxInterviews,
+    planMaxMatches,
+    effectiveMaxInterviews: user.customMaxInterviews ?? planMaxInterviews,
+    effectiveMaxMatches: user.customMaxMatches ?? planMaxMatches,
+  };
+}
+
+export async function resolveUserUsageLimits(user: UsageLimitAwareUser): Promise<UsageLimitSnapshot> {
+  const planLimits = await getPlanLimits();
+  return resolveUserUsageLimitsFromPlan(user, planLimits);
+}
+
+export async function withUserUsageLimits<T extends UsageLimitAwareUser>(
+  user: T
+): Promise<T & UsageLimitSnapshot> {
+  return {
+    ...user,
+    ...(await resolveUserUsageLimits(user)),
+  };
 }
 
 type BillableAction = 'interview' | 'match';

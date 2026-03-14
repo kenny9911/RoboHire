@@ -16,6 +16,7 @@ model User {
   passwordHash  String?
   name          String?
   phone         String?
+  jobTitle      String?
   company       String?
   avatar        String?
   role          String    @default("user") // 'user' or 'admin'
@@ -52,6 +53,8 @@ model User {
   jobs            Job[]
   interviews         Interview[]
   matchingSessions   MatchingSession[]
+  activities         UserActivity[]
+  resumeVersions     ResumeVersion[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -236,6 +239,7 @@ model LLMCallLog {
   userId           String?
   endpoint         String
   module           String
+  status           String   @default("success")
   provider         String
   model            String
   promptTokens     Int      @default(0)
@@ -243,6 +247,10 @@ model LLMCallLog {
   totalTokens      Int      @default(0)
   cost             Float    @default(0)
   durationMs       Int      @default(0)
+  requestMessages  Json?
+  requestOptions   Json?
+  responsePreview  String?  @db.Text
+  errorMessage     String?  @db.Text
   createdAt        DateTime @default(now())
 
   apiRequestLog ApiRequestLog? @relation(fields: [apiRequestLogId], references: [id], onDelete: SetNull)
@@ -334,6 +342,7 @@ model Resume {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   resumeJobFits   ResumeJobFit[]
   jobMatches      JobMatch[]
+  resumeVersions  ResumeVersion[]
 
   @@unique([userId, contentHash])
   @@index([userId])
@@ -342,6 +351,28 @@ model Resume {
   @@index([name])
   @@index([contentHash])
   @@index([createdAt])
+}
+
+model ResumeVersion {
+  id              String   @id @default(cuid())
+  resumeId        String
+  userId          String
+  versionName     String?
+  resumeText      String   @db.Text
+  parsedData      Json?
+  name            String
+  email           String?
+  phone           String?
+  currentRole     String?
+  experienceYears String?
+  changeNote      String?
+  createdAt       DateTime @default(now())
+
+  resume          Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([resumeId, createdAt])
+  @@index([userId])
 }
 
 model ResumeJobFit {
@@ -551,6 +582,26 @@ model WebhookDelivery {
 
   @@index([status, nextRetryAt])
   @@index([hiringRequestId])
+}
+
+model UserActivity {
+  id         String   @id @default(cuid())
+  userId     String
+  sessionId  String
+  eventType  String   // "page_view" | "click"
+  path       String
+  element    String?
+  elementTag String?
+  metadata   Json?
+  timestamp  DateTime
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, timestamp])
+  @@index([sessionId])
+  @@index([timestamp])
 }
 
 model MatchingSession {

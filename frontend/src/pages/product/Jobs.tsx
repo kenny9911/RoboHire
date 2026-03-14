@@ -933,6 +933,15 @@ export default function Jobs() {
                 placeholder={t('product.jobs.interviewRequirementsPlaceholder', 'What to assess during the interview...')}
                 className={`${inputCls} font-mono`}
               />
+              {!form.interviewRequirements.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, interviewRequirements: t('product.jobs.interviewRequirementsSuggestion', 'Focus on system design and distributed systems experience. Assess problem-solving ability with real-world scenarios.') }))}
+                  className="mt-1.5 text-xs text-blue-500 hover:text-blue-700 transition-colors"
+                >
+                  {t('product.interview.useSuggestion', 'Use suggestion')}
+                </button>
+              )}
             </div>
 
             {/* Evaluation Rules */}

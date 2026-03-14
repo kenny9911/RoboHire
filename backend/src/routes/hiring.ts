@@ -23,7 +23,7 @@ const router = Router();
  * Generate a suggested position title using LLM
  */
 router.post('/title-suggestion', optionalAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   logger.startRequest(requestId, '/api/v1/hiring-requests/title-suggestion', 'POST');
 
   try {
@@ -120,7 +120,7 @@ Rules:
  * Generate a realistic, varied hiring brief for a given role using LLM
  */
 router.post('/generate-brief', optionalAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   logger.startRequest(requestId, '/api/v1/hiring-requests/generate-brief', 'POST');
 
   try {
@@ -200,7 +200,7 @@ Output ONLY the hiring brief text. No titles, headers, or meta-commentary.`;
  * Generate a JD draft using LLM
  */
 router.post('/jd-draft', optionalAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   logger.startRequest(requestId, '/api/v1/hiring-requests/jd-draft', 'POST');
 
   try {
@@ -799,7 +799,7 @@ router.get('/:id/resume-fits', async (req, res) => {
  * Uses Server-Sent Events (SSE) to stream real-time progress to the frontend.
  */
 router.post('/:id/auto-match', async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   const matchStartTime = Date.now();
   logger.startRequest(requestId, `/api/v1/hiring-requests/${req.params.id}/auto-match`, 'POST');
 
@@ -1357,7 +1357,7 @@ router.patch('/:id/resume-fits/:fitId', async (req, res) => {
  * Invite selected resumes from the library to interview
  */
 router.post('/:id/batch-invite-from-library', async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   logger.startRequest(requestId, `/api/v1/hiring-requests/${req.params.id}/batch-invite-from-library`, 'POST');
 
   try {
@@ -1556,7 +1556,7 @@ router.get('/:id/invitations', async (req, res) => {
  * Generate (or retrieve cached) recruitment intelligence report
  */
 router.post('/:id/intelligence', async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   logger.startRequest(requestId, `/api/v1/hiring-requests/${req.params.id}/intelligence`, 'POST');
 
   try {

@@ -3,7 +3,7 @@ import { OpenAIProvider } from './OpenAIProvider.js';
 import { OpenRouterProvider } from './OpenRouterProvider.js';
 import { GoogleProvider } from './GoogleProvider.js';
 import { KimiProvider } from './KimiProvider.js';
-import { logger } from '../LoggerService.js';
+import { generateRequestId, logger } from '../LoggerService.js';
 
 export class LLMService {
   private provider: LLMProvider | null = null;
@@ -102,9 +102,13 @@ export class LLMService {
     this.ensureInitialized();
 
     const startTime = Date.now();
-    const requestId = options?.requestId;
+    const requestId = options?.requestId || generateRequestId();
     // Use visionModel if specified (for multimodal messages), otherwise regular model
     const model = options?.visionModel || options?.model || this.model;
+    const requestOptions = {
+      ...options,
+      model,
+    };
 
     const providerName = this.provider!.getProviderName();
     logger.info('LLM', `→ ${providerName}/${model}`, {
@@ -121,19 +125,35 @@ export class LLMService {
 
       const duration = Date.now() - startTime;
 
-      // Log the LLM usage — always call logLLMCall so it's tracked in globalStats and llm log file
-      logger.logLLMCall(
-        requestId || `untracked_${Date.now()}`,
-        response.model || model,
-        this.provider!.getProviderName(),
-        response.usage.promptTokens,
-        response.usage.completionTokens,
-        duration
-      );
+      logger.logLLMCall({
+        requestId,
+        model: response.model || model,
+        provider: this.provider!.getProviderName(),
+        promptTokens: response.usage.promptTokens,
+        completionTokens: response.usage.completionTokens,
+        duration,
+        status: 'success',
+        messages,
+        options: requestOptions,
+        responseText: response.content,
+      });
 
       return response.content;
     } catch (error) {
       const duration = Date.now() - startTime;
+      logger.logLLMCall({
+        requestId,
+        model,
+        provider: providerName,
+        promptTokens: 0,
+        completionTokens: 0,
+        duration,
+        status: 'error',
+        messages,
+        options: requestOptions,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+
       logger.error('LLM', `✗ ${providerName}/${model} failed`, {
         provider: providerName,
         model,
@@ -156,18 +176,42 @@ export class LLMService {
           });
 
           const fallbackDuration = Date.now() - fallbackStart;
-          logger.logLLMCall(
-            requestId || `untracked_${Date.now()}`,
-            fallbackResponse.model || fallbackModel,
-            this.provider!.getProviderName(),
-            fallbackResponse.usage.promptTokens,
-            fallbackResponse.usage.completionTokens,
-            fallbackDuration
-          );
+          logger.logLLMCall({
+            requestId,
+            model: fallbackResponse.model || fallbackModel,
+            provider: this.provider!.getProviderName(),
+            promptTokens: fallbackResponse.usage.promptTokens,
+            completionTokens: fallbackResponse.usage.completionTokens,
+            duration: fallbackDuration,
+            status: 'success',
+            messages,
+            options: {
+              ...requestOptions,
+              model: fallbackModel,
+              fallbackFrom: model,
+            },
+            responseText: fallbackResponse.content,
+          });
 
           return fallbackResponse.content;
         } catch (fallbackError) {
           const fallbackDuration = Date.now() - fallbackStart;
+          logger.logLLMCall({
+            requestId,
+            model: fallbackModel,
+            provider: providerName,
+            promptTokens: 0,
+            completionTokens: 0,
+            duration: fallbackDuration,
+            status: 'error',
+            messages,
+            options: {
+              ...requestOptions,
+              model: fallbackModel,
+              fallbackFrom: model,
+            },
+            errorMessage: fallbackError instanceof Error ? fallbackError.message : 'Unknown error',
+          });
           logger.error('LLM', `Fallback LLM call failed`, {
             model: fallbackModel,
             error: fallbackError instanceof Error ? fallbackError.message : 'Unknown error',

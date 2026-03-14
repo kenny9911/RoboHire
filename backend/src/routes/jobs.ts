@@ -186,7 +186,7 @@ function extractJobFields(body: any) {
  * List user's jobs with optional filters
  */
 router.get('/', requireAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   try {
     const userId = req.user!.id;
     const { status, search, title, page = '1', limit = '20' } = req.query;
@@ -267,7 +267,7 @@ router.get('/:id', requireAuth, async (req, res) => {
  * Create a new job
  */
 router.post('/', requireAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   try {
     const userId = req.user!.id;
     const fields = extractJobFields(req.body);
@@ -401,7 +401,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
  * AI-generate a job description (legacy endpoint)
  */
 router.post('/:id/generate-jd', requireAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   try {
     const userId = req.user!.id;
     const job = await prisma.job.findFirst({
@@ -440,7 +440,7 @@ router.post('/:id/generate-jd', requireAuth, async (req, res) => {
  * AI-generate content from form data (no saved job required)
  */
 router.post('/generate-content', requireAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   try {
     const { action = 'generate_section', section, language, jobTitle, companyName, department, locations, experienceLevel, existingContent } = req.body;
     if (!jobTitle) {
@@ -472,7 +472,7 @@ router.post('/generate-content', requireAuth, async (req, res) => {
  * AI-generate content for one or all job sections
  */
 router.post('/:id/generate-content', requireAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   try {
     const userId = req.user!.id;
     const job = await prisma.job.findFirst({ where: { id: req.params.id, userId } });
@@ -556,7 +556,7 @@ router.get('/:id/export', requireAuth, async (req, res) => {
  * Import JD from file upload, parse and return structured data
  */
 router.post('/import', requireAuth, uploadDoc.single('file'), async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No file uploaded' });
@@ -606,7 +606,7 @@ router.post('/import', requireAuth, uploadDoc.single('file'), async (req, res) =
  * Run demand analysis using MarketIntelligenceAgent
  */
 router.post('/:id/analyze', requireAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   try {
     const userId = req.user!.id;
     const job = await prisma.job.findFirst({ where: { id: req.params.id, userId } });
@@ -651,7 +651,7 @@ router.post('/:id/analyze', requireAuth, async (req, res) => {
  * Create a job from an existing hiring request
  */
 router.post('/from-request/:requestId', requireAuth, async (req, res) => {
-  const logRequestId = generateRequestId();
+  const logRequestId = req.requestId || generateRequestId();
   try {
     const userId = req.user!.id;
     const hr = await prisma.hiringRequest.findFirst({

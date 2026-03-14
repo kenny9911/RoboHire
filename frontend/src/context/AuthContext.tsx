@@ -5,6 +5,7 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  jobTitle?: string;
   company?: string;
   phone?: string;
   avatar?: string;
@@ -20,6 +21,10 @@ export interface User {
   interviewsUsed?: number;
   resumeMatchesUsed?: number;
   topUpBalance?: number;
+  planMaxInterviews?: number | null;
+  planMaxMatches?: number | null;
+  effectiveMaxInterviews?: number | null;
+  effectiveMaxMatches?: number | null;
 }
 
 interface AuthState {
@@ -31,7 +36,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name?: string, company?: string, phone?: string) => Promise<void>;
+  signup: (email: string, password: string, name?: string, jobTitle?: string, company?: string, phone?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -138,12 +143,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     name?: string,
+    jobTitle?: string,
     company?: string,
     phone?: string
   ) => {
     const response = await authFetch('/signup', {
       method: 'POST',
-      body: JSON.stringify({ email, password, name, company, phone }),
+      body: JSON.stringify({ email, password, name, jobTitle, company, phone }),
     });
 
     const data = await response.json();

@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getCurrentRequestId } from '../lib/requestContext.js';
+import type { LLMOptions, Message, MessageContent } from '../types/index.js';
 
 // Log levels
 export enum LogLevel {
@@ -32,6 +33,25 @@ export interface LLMUsage {
   provider: string;
   cost: number;
   duration: number;
+  status: 'success' | 'error';
+  requestMessages?: unknown[] | null;
+  requestOptions?: Record<string, unknown> | null;
+  responsePreview?: string | null;
+  errorMessage?: string | null;
+}
+
+interface LogLLMCallInput {
+  requestId?: string;
+  model: string;
+  provider: string;
+  promptTokens: number;
+  completionTokens: number;
+  duration: number;
+  status?: 'success' | 'error';
+  messages?: Message[];
+  options?: LLMOptions | Record<string, unknown>;
+  responseText?: string | null;
+  errorMessage?: string | null;
 }
 
 // Request context for tracking
@@ -112,6 +132,9 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
 };
 
 class LoggerService extends EventEmitter {
+  private readonly maxLoggedPromptChars = 12000;
+  private readonly maxLoggedResponseChars = 12000;
+  private readonly maxLoggedUrlChars = 1000;
   private logLevel: LogLevel;
   private requestContexts: Map<string, RequestContext> = new Map();
   private completedRequestContexts: Map<string, { context: RequestContext; completedAt: number }> = new Map();
@@ -257,6 +280,93 @@ class LoggerService extends EventEmitter {
     if (ms < 1000) return `${ms.toFixed(0)}ms`;
     if (ms < 60000) return `${(ms / 1000).toFixed(2)}s`;
     return `${(ms / 60000).toFixed(2)}min`;
+  }
+
+  private truncateForLog(text: string, maxChars: number): { value: string; truncated: boolean; originalLength: number } {
+    if (text.length <= maxChars) {
+      return { value: text, truncated: false, originalLength: text.length };
+    }
+
+    return {
+      value: `${text.slice(0, maxChars)}\n...[truncated ${text.length - maxChars} chars]`,
+      truncated: true,
+      originalLength: text.length,
+    };
+  }
+
+  private sanitizeMessageContent(content: MessageContent): unknown[] {
+    const parts = Array.isArray(content)
+      ? content
+      : [{ type: 'text' as const, text: content }];
+
+    return parts.map((part) => {
+      if (part.type === 'text') {
+        const truncated = this.truncateForLog(part.text, this.maxLoggedPromptChars);
+        return {
+          type: 'text',
+          text: truncated.value,
+          originalLength: truncated.originalLength,
+          truncated: truncated.truncated,
+        };
+      }
+
+      const url = part.image_url.url || '';
+      if (url.startsWith('data:')) {
+        const mimeType = url.match(/^data:([^;,]+)/)?.[1] || 'application/octet-stream';
+        return {
+          type: 'image_url',
+          image_url: {
+            url: `[redacted data URI: ${mimeType}]`,
+            mimeType,
+            originalLength: url.length,
+            redacted: true,
+          },
+        };
+      }
+
+      const truncated = this.truncateForLog(url, this.maxLoggedUrlChars);
+      return {
+        type: 'image_url',
+        image_url: {
+          url: truncated.value,
+          originalLength: truncated.originalLength,
+          truncated: truncated.truncated,
+          redacted: false,
+        },
+      };
+    });
+  }
+
+  private sanitizeMessages(messages?: Message[]): unknown[] | null {
+    if (!messages || messages.length === 0) return null;
+
+    return messages.map((message) => ({
+      role: message.role,
+      content: this.sanitizeMessageContent(message.content),
+    }));
+  }
+
+  private sanitizeOptions(options?: LLMOptions | Record<string, unknown>): Record<string, unknown> | null {
+    if (!options) return null;
+
+    const cleanedEntries = Object.entries(options)
+      .filter(([key, value]) => key !== 'requestId' && value !== undefined)
+      .map(([key, value]) => {
+        if (typeof value === 'string') {
+          const truncated = this.truncateForLog(value, this.maxLoggedUrlChars);
+          return [key, truncated.value];
+        }
+        if (typeof value === 'number' || typeof value === 'boolean' || value === null) {
+          return [key, value];
+        }
+        if (Array.isArray(value)) {
+          return [key, value.slice(0, 20)];
+        }
+        return [key, String(value)];
+      });
+
+    if (cleanedEntries.length === 0) return null;
+    return Object.fromEntries(cleanedEntries);
   }
 
   private getLevelName(level: LogLevel): string {
@@ -434,10 +544,13 @@ class LoggerService extends EventEmitter {
     if (context.llmCalls.length > 0) {
       console.log('\n   📈 LLM Usage:');
       context.llmCalls.forEach((call, i) => {
-        console.log(`      [${i + 1}] ${call.model}`);
+        console.log(`      [${i + 1}] ${call.model} (${call.status})`);
         console.log(`          Tokens: ${call.promptTokens} in / ${call.completionTokens} out = ${call.totalTokens} total`);
         console.log(`          Cost:   $${call.cost.toFixed(6)}`);
         console.log(`          Time:   ${this.formatDuration(call.duration)}`);
+        if (call.errorMessage) {
+          console.log(`          Error:  ${call.errorMessage}`);
+        }
       });
       console.log(`\n   💰 Total Cost:   $${context.totalCost.toFixed(6)}`);
       console.log(`   🔢 Total Tokens: ${context.totalTokens}`);
@@ -476,6 +589,7 @@ class LoggerService extends EventEmitter {
         duration: s.duration,
       })),
       llmCalls: context.llmCalls.map(c => ({
+        status: c.status,
         model: c.model,
         provider: c.provider,
         promptTokens: c.promptTokens,
@@ -483,6 +597,7 @@ class LoggerService extends EventEmitter {
         totalTokens: c.totalTokens,
         cost: c.cost,
         duration: c.duration,
+        errorMessage: c.errorMessage,
       })),
     });
   }
@@ -527,55 +642,63 @@ class LoggerService extends EventEmitter {
   }
 
   // LLM call tracking
-  logLLMCall(
-    requestId: string,
-    model: string,
-    provider: string,
-    promptTokens: number,
-    completionTokens: number,
-    duration: number
-  ): LLMUsage {
+  logLLMCall(input: LogLLMCallInput): LLMUsage {
+    const effectiveRequestId = input.requestId || getCurrentRequestId() || `untracked_${Date.now()}`;
+    const status = input.status || 'success';
+    const promptTokens = input.promptTokens;
+    const completionTokens = input.completionTokens;
     const totalTokens = promptTokens + completionTokens;
-    const cost = this.calculateCost(model, promptTokens, completionTokens);
+    const cost = this.calculateCost(input.model, promptTokens, completionTokens);
+    const responsePreview = input.responseText
+      ? this.truncateForLog(input.responseText, this.maxLoggedResponseChars).value
+      : null;
+    const errorMessage = input.errorMessage
+      ? this.truncateForLog(input.errorMessage, this.maxLoggedResponseChars).value
+      : null;
 
     const usage: LLMUsage = {
       promptTokens,
       completionTokens,
       totalTokens,
-      model,
-      provider,
+      model: input.model,
+      provider: input.provider,
       cost,
-      duration,
+      duration: input.duration,
+      status,
+      requestMessages: this.sanitizeMessages(input.messages),
+      requestOptions: this.sanitizeOptions(input.options),
+      responsePreview,
+      errorMessage,
     };
 
-    // Update request context
-    const context = this.requestContexts.get(requestId);
+    const context = this.requestContexts.get(effectiveRequestId);
     if (context) {
       context.llmCalls.push(usage);
       context.totalCost += cost;
       context.totalTokens += totalTokens;
     }
 
-    // Update global stats
     this.globalStats.totalLLMCalls++;
     this.globalStats.totalTokens += totalTokens;
     this.globalStats.totalCost += cost;
 
-    this.info('LLM', `API call completed`, {
-      model,
-      provider,
+    const logMethod = status === 'success' ? 'info' : 'error';
+    this[logMethod]('LLM', status === 'success' ? 'API call completed' : 'API call failed', {
+      model: input.model,
+      provider: input.provider,
+      status,
       tokens: `${promptTokens}/${completionTokens}/${totalTokens}`,
       cost: `$${cost.toFixed(6)}`,
-      duration: this.formatDuration(duration),
-    }, requestId);
+      duration: this.formatDuration(input.duration),
+      error: errorMessage || undefined,
+    }, effectiveRequestId);
 
-    // Write to dedicated LLM log file
     this.writeToFile(this.llmLogStream, {
       timestamp: this.formatTimestamp(),
-      requestId,
+      requestId: effectiveRequestId,
       ...usage,
       formattedCost: `$${cost.toFixed(6)}`,
-      formattedDuration: this.formatDuration(duration),
+      formattedDuration: this.formatDuration(input.duration),
     });
 
     return usage;

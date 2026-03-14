@@ -15,6 +15,8 @@ import { API_BASE } from '../config';
 import SEO from '../components/SEO';
 import LLMUsageTab from './AdminLLMUsageTab';
 import LogsTab from './AdminLogsTab';
+import ActivityTab from './AdminActivityTab';
+import { formatUsageLimit, getPlanInterviewLimit, getPlanMatchLimit } from '../utils/usageLimits';
 
 // --- Types ---
 interface UserSummary {
@@ -34,6 +36,10 @@ interface UserSummary {
   trialEnd?: string | null;
   customMaxInterviews?: number | null;
   customMaxMatches?: number | null;
+  planMaxInterviews?: number | null;
+  planMaxMatches?: number | null;
+  effectiveMaxInterviews?: number | null;
+  effectiveMaxMatches?: number | null;
 }
 
 interface AdjustmentRecord {
@@ -175,15 +181,7 @@ async function authFetch(endpoint: string, options: RequestInit = {}) {
   return data;
 }
 
-const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
-  free: { interviews: 0, matches: 0 },
-  starter: { interviews: 15, matches: 30 },
-  growth: { interviews: 120, matches: 240 },
-  business: { interviews: 280, matches: 500 },
-  custom: { interviews: Infinity, matches: Infinity },
-};
-
-const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Pricing', 'Interview', 'Settings'] as const;
+const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Activity', 'Pricing', 'Interview', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 
 // --- Badge helpers ---
@@ -967,7 +965,6 @@ function UsersTab() {
               </thead>
               <tbody>
                 {users.map((u) => {
-                  const limits = PLAN_LIMITS[u.subscriptionTier] || PLAN_LIMITS.free;
                   return (
                     <tr
                       key={u.id}
@@ -992,13 +989,13 @@ function UsersTab() {
                         {u.interviewsUsed}/
                         {u.customMaxInterviews != null
                           ? <span className="text-amber-600 font-medium" title="Custom override">{u.customMaxInterviews}</span>
-                          : limits.interviews === Infinity ? '∞' : limits.interviews}
+                          : formatUsageLimit(u.effectiveMaxInterviews)}
                       </td>
                       <td className="py-2.5 text-gray-600">
                         {u.resumeMatchesUsed}/
                         {u.customMaxMatches != null
                           ? <span className="text-amber-600 font-medium" title="Custom override">{u.customMaxMatches}</span>
-                          : limits.matches === Infinity ? '∞' : limits.matches}
+                          : formatUsageLimit(u.effectiveMaxMatches)}
                       </td>
                       <td className="py-2.5">
                         <button className="text-indigo-600 hover:text-indigo-800 text-xs font-medium">View</button>
@@ -1068,9 +1065,7 @@ function UsersTab() {
                     <span className="text-sm text-gray-400 font-normal">
                       /{selectedUser.customMaxInterviews != null
                         ? <span className="text-amber-600" title="Custom override">{selectedUser.customMaxInterviews}</span>
-                        : (PLAN_LIMITS[selectedUser.subscriptionTier] || PLAN_LIMITS.free).interviews === Infinity
-                          ? '∞'
-                          : (PLAN_LIMITS[selectedUser.subscriptionTier] || PLAN_LIMITS.free).interviews}
+                        : formatUsageLimit(selectedUser.effectiveMaxInterviews)}
                     </span>
                   </p>
                 </div>
@@ -1081,9 +1076,7 @@ function UsersTab() {
                     <span className="text-sm text-gray-400 font-normal">
                       /{selectedUser.customMaxMatches != null
                         ? <span className="text-amber-600" title="Custom override">{selectedUser.customMaxMatches}</span>
-                        : (PLAN_LIMITS[selectedUser.subscriptionTier] || PLAN_LIMITS.free).matches === Infinity
-                          ? '∞'
-                          : (PLAN_LIMITS[selectedUser.subscriptionTier] || PLAN_LIMITS.free).matches}
+                        : formatUsageLimit(selectedUser.effectiveMaxMatches)}
                     </span>
                   </p>
                 </div>
@@ -1223,7 +1216,7 @@ function UsersTab() {
                                 step="1"
                                 value={actionMaxInterviews}
                                 onChange={(e) => setActionMaxInterviews(e.target.value)}
-                                placeholder={`Plan default: ${(PLAN_LIMITS[selectedUser?.subscriptionTier || 'free'] || PLAN_LIMITS.free).interviews === Infinity ? '∞' : (PLAN_LIMITS[selectedUser?.subscriptionTier || 'free'] || PLAN_LIMITS.free).interviews}`}
+                                placeholder={`Plan default: ${formatUsageLimit(getPlanInterviewLimit(selectedUser))}`}
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
                               />
                               {selectedUser?.customMaxInterviews != null && (
@@ -1251,7 +1244,7 @@ function UsersTab() {
                                 step="1"
                                 value={actionMaxMatches}
                                 onChange={(e) => setActionMaxMatches(e.target.value)}
-                                placeholder={`Plan default: ${(PLAN_LIMITS[selectedUser?.subscriptionTier || 'free'] || PLAN_LIMITS.free).matches === Infinity ? '∞' : (PLAN_LIMITS[selectedUser?.subscriptionTier || 'free'] || PLAN_LIMITS.free).matches}`}
+                                placeholder={`Plan default: ${formatUsageLimit(getPlanMatchLimit(selectedUser))}`}
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
                               />
                               {selectedUser?.customMaxMatches != null && (
@@ -2169,6 +2162,7 @@ export default function AdminDashboard() {
       {activeTab === 'LLM Usage' && <LLMUsageTab />}
       {activeTab === 'Logs' && <LogsTab />}
       {activeTab === 'Users' && <UsersTab />}
+      {activeTab === 'Activity' && <ActivityTab />}
       {activeTab === 'Pricing' && <PricingTab />}
       {activeTab === 'Interview' && <InterviewConfigTab />}
       {activeTab === 'Settings' && <SettingsTab />}

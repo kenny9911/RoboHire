@@ -29,6 +29,7 @@ import atsRouter from './routes/ats.js';
 import jobsRouter from './routes/jobs.js';
 import matchingRouter from './routes/matching.js';
 import interviewsRouter from './routes/interviews.js';
+import activityRouter from './routes/activity.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
 import { logger } from './services/LoggerService.js';
@@ -84,6 +85,7 @@ app.use('/api/v1/ats', atsRouter);
 app.use('/api/v1/jobs', jobsRouter);
 app.use('/api/v1/matching', matchingRouter);
 app.use('/api/v1/interviews', interviewsRouter);
+app.use('/api/v1/activity', activityRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {

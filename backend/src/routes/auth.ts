@@ -6,6 +6,7 @@ import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
 import authService, { type OAuthProfile } from '../services/AuthService.js';
 import { requireAuth, rateLimit } from '../middleware/auth.js';
 import { logger, generateRequestId } from '../services/LoggerService.js';
+import { emailService } from '../services/EmailService.js';
 // Import auth types to extend Express
 import '../types/auth.js';
 
@@ -174,7 +175,7 @@ const authRateLimit = rateLimit(5, 60000);
 router.post('/signup', authRateLimit, async (req, res) => {
   const requestId = generateRequestId();
   try {
-    const { email, password, name, company, phone } = req.body;
+    const { email, password, name, jobTitle, company, phone } = req.body;
     const normalizedEmail = typeof email === 'string' ? email.toLowerCase() : undefined;
     const clientMeta = getClientMeta(req);
 
@@ -202,7 +203,7 @@ router.post('/signup', authRateLimit, async (req, res) => {
       });
     }
 
-    const result = await authService.signup({ email, password, name, company, phone });
+    const result = await authService.signup({ email, password, name, jobTitle, company, phone });
 
     // Set session cookie
     res.cookie(SESSION_COOKIE_NAME, result.sessionToken, sessionCookieOptions);
@@ -221,6 +222,14 @@ router.post('/signup', authRateLimit, async (req, res) => {
       provider: result.user.provider,
       ...clientMeta,
     }, requestId);
+
+    // Notify admin users of new signup (fire-and-forget)
+    emailService.notifyAdminsOfSignup({
+      name: result.user.name,
+      email: result.user.email,
+      company: result.user.company,
+      createdAt: new Date(),
+    }).catch(() => {});
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Signup failed';
     logger.warn('AUTH', 'Signup failed', {
@@ -359,8 +368,8 @@ router.get('/me', requireAuth, async (req, res) => {
  */
 router.patch('/profile', requireAuth, async (req, res) => {
   try {
-    const { name, company, avatar, email, phone } = req.body;
-    const user = await authService.updateProfile(req.user!.id, { name, company, avatar, email, phone });
+    const { name, company, avatar, email, phone, jobTitle } = req.body;
+    const user = await authService.updateProfile(req.user!.id, { name, company, avatar, email, phone, jobTitle });
 
     res.json({
       success: true,
@@ -457,6 +466,15 @@ router.get('/google/callback', (req, res, next) => {
       email: result.user?.email,
       ...clientMeta,
     }, requestId);
+
+    if (result.isNewUser && result.user) {
+      emailService.notifyAdminsOfSignup({
+        name: result.user.name,
+        email: result.user.email,
+        company: result.user.company,
+        createdAt: new Date(),
+      }).catch(() => {});
+    }
   })(req, res, next);
 });
 
@@ -508,6 +526,15 @@ router.get('/github/callback', (req, res, next) => {
       email: result.user?.email,
       ...clientMeta,
     }, requestId);
+
+    if (result.isNewUser && result.user) {
+      emailService.notifyAdminsOfSignup({
+        name: result.user.name,
+        email: result.user.email,
+        company: result.user.company,
+        createdAt: new Date(),
+      }).catch(() => {});
+    }
   })(req, res, next);
 });
 
@@ -559,6 +586,15 @@ router.get('/linkedin/callback', (req, res, next) => {
       email: result.user?.email,
       ...clientMeta,
     }, requestId);
+
+    if (result.isNewUser && result.user) {
+      emailService.notifyAdminsOfSignup({
+        name: result.user.name,
+        email: result.user.email,
+        company: result.user.company,
+        createdAt: new Date(),
+      }).catch(() => {});
+    }
   })(req, res, next);
 });
 

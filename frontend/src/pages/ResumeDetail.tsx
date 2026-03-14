@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
@@ -49,6 +49,54 @@ interface ResumeData {
   }>;
 }
 
+type HeaderActionTone = 'primary' | 'secondary' | 'destructive';
+
+interface HeaderActionButtonProps {
+  label: string;
+  icon: ReactNode;
+  onClick: () => void;
+  tone?: HeaderActionTone;
+  disabled?: boolean;
+}
+
+function HeaderActionButton({
+  label,
+  icon,
+  onClick,
+  tone = 'secondary',
+  disabled = false,
+}: HeaderActionButtonProps) {
+  const toneStyles: Record<HeaderActionTone, { button: string; icon: string }> = {
+    primary: {
+      button: 'border-slate-900 bg-slate-900 text-white shadow-sm hover:border-slate-800 hover:bg-slate-800',
+      icon: 'border-white/10 bg-white/10 text-white',
+    },
+    secondary: {
+      button: 'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50',
+      icon: 'border-slate-200 bg-slate-50 text-slate-500',
+    },
+    destructive: {
+      button: 'border-rose-200 bg-white text-rose-700 hover:border-rose-300 hover:bg-rose-50',
+      icon: 'border-rose-100 bg-rose-50 text-rose-600',
+    },
+  };
+
+  const styles = toneStyles[tone];
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border px-2.5 text-[13px] font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${styles.button}`}
+    >
+      <span className={`flex h-6 w-6 items-center justify-center rounded-md border ${styles.icon}`}>
+        {icon}
+      </span>
+      <span className="whitespace-nowrap">{label}</span>
+    </button>
+  );
+}
+
 export default function ResumeDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -72,6 +120,26 @@ export default function ResumeDetail() {
   const [inviteError, setInviteError] = useState('');
   const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
   const [invitationsMap, setInvitationsMap] = useState<Record<string, InvitationRecord>>({});
+
+  // Edit mode state
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [editSaving, setEditSaving] = useState(false);
+
+  // Version history state
+  const [versions, setVersions] = useState<Array<{ id: string; versionName: string | null; name: string; currentRole: string | null; changeNote: string | null; createdAt: string }>>([]);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState<string | null>(null);
+
+  // Refine resume state
+  const [refineModalOpen, setRefineModalOpen] = useState(false);
+  const [refineJobs, setRefineJobs] = useState<Array<{ id: string; title: string; description: string | null }>>([]);
+  const [refineJobsLoading, setRefineJobsLoading] = useState(false);
+  const [refineSelectedJobId, setRefineSelectedJobId] = useState('');
+  const [refineLoading, setRefineLoading] = useState(false);
+  const [refineResult, setRefineResult] = useState<{ refinedParsedData: any; changes: string[]; matchedSkills: string[]; emphasizedExperiences: string[] } | null>(null);
+  const [refineError, setRefineError] = useState('');
 
   const fetchInvitations = useCallback(async () => {
     if (!id) return;
@@ -109,10 +177,21 @@ export default function ResumeDetail() {
     }
   }, [id]);
 
+  const fetchVersions = useCallback(async () => {
+    if (!id) return;
+    setVersionsLoading(true);
+    try {
+      const res = await axios.get(`/api/v1/resumes/${id}/versions`);
+      if (res.data.success) setVersions(res.data.data || []);
+    } catch { /* silent */ }
+    finally { setVersionsLoading(false); }
+  }, [id]);
+
   useEffect(() => {
     fetchResume();
     fetchInvitations();
-  }, [fetchResume, fetchInvitations]);
+    fetchVersions();
+  }, [fetchResume, fetchInvitations, fetchVersions]);
 
   const generateInsights = async (force = false) => {
     if (!resume) return;
@@ -238,6 +317,172 @@ export default function ResumeDetail() {
     }
   };
 
+  // ─── Edit Mode ─────────────────────────────────────────────────────
+  const enterEditMode = () => {
+    if (!resume) return;
+    const pd = (resume.parsedData || {}) as Record<string, any>;
+    setEditForm({
+      name: resume.name || '',
+      email: resume.email || '',
+      phone: resume.phone || '',
+      currentRole: resume.currentRole || '',
+      experienceYears: resume.experienceYears || '',
+      summary: pd.summary || '',
+      skills: Array.isArray(pd.skills) ? pd.skills.join(', ') : (pd.skills && typeof pd.skills === 'object' ? Object.values(pd.skills).flat().join(', ') : ''),
+      experience: Array.isArray(pd.experience) ? pd.experience.map((e: any) => ({
+        role: e.role || '', company: e.company || '', location: e.location || '',
+        startDate: e.startDate || '', endDate: e.endDate || '',
+        description: e.description || '',
+        achievements: Array.isArray(e.achievements) ? e.achievements.join('\n') : '',
+        technologies: Array.isArray(e.technologies) ? e.technologies.join(', ') : '',
+      })) : [],
+      education: Array.isArray(pd.education) ? pd.education.map((e: any) => ({
+        degree: e.degree || '', institution: e.institution || '', field: e.field || '',
+        endDate: e.endDate || '', gpa: e.gpa || '',
+      })) : [],
+      certifications: Array.isArray(pd.certifications) ? pd.certifications.map((c: any) => ({
+        name: c.name || '', issuer: c.issuer || '', date: c.date || '',
+      })) : [],
+      projects: Array.isArray(pd.projects) ? pd.projects.map((p: any) => ({
+        name: p.name || '', description: p.description || '',
+        technologies: Array.isArray(p.technologies) ? p.technologies.join(', ') : '',
+      })) : [],
+      versionName: '',
+    });
+    setEditMode(true);
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setEditForm({});
+  };
+
+  const saveEdit = async () => {
+    if (!resume) return;
+    setEditSaving(true);
+    try {
+      const skillsArray = typeof editForm.skills === 'string'
+        ? editForm.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : editForm.skills;
+
+      const experienceOut = (editForm.experience || []).map((e: any) => ({
+        ...e,
+        achievements: typeof e.achievements === 'string'
+          ? e.achievements.split('\n').map((a: string) => a.trim()).filter(Boolean)
+          : (e.achievements || []),
+        technologies: typeof e.technologies === 'string'
+          ? e.technologies.split(',').map((t: string) => t.trim()).filter(Boolean)
+          : (e.technologies || []),
+      }));
+
+      const projectsOut = (editForm.projects || []).map((p: any) => ({
+        ...p,
+        technologies: typeof p.technologies === 'string'
+          ? p.technologies.split(',').map((t: string) => t.trim()).filter(Boolean)
+          : (p.technologies || []),
+      }));
+
+      const parsedData = {
+        ...((resume.parsedData || {}) as Record<string, any>),
+        summary: editForm.summary,
+        skills: skillsArray,
+        experience: experienceOut,
+        education: editForm.education,
+        certifications: editForm.certifications,
+        projects: projectsOut,
+      };
+
+      await axios.put(`/api/v1/resumes/${resume.id}`, {
+        name: editForm.name,
+        email: editForm.email || null,
+        phone: editForm.phone || null,
+        currentRole: editForm.currentRole || null,
+        experienceYears: editForm.experienceYears || null,
+        parsedData,
+        versionName: editForm.versionName || undefined,
+      });
+      setEditMode(false);
+      fetchResume();
+      fetchVersions();
+    } catch (err) {
+      console.error('Failed to save resume edit:', err);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const restoreVersion = async (versionId: string) => {
+    if (!resume) return;
+    setRestoreLoading(versionId);
+    try {
+      await axios.post(`/api/v1/resumes/${resume.id}/versions/${versionId}/restore`);
+      fetchResume();
+      fetchVersions();
+    } catch (err) {
+      console.error('Failed to restore version:', err);
+    } finally {
+      setRestoreLoading(null);
+    }
+  };
+
+  // ─── Refine Resume ────────────────────────────────────────────────
+  const openRefineModal = async () => {
+    setRefineModalOpen(true);
+    setRefineResult(null);
+    setRefineError('');
+    setRefineSelectedJobId('');
+    setRefineJobsLoading(true);
+    try {
+      const res = await axios.get('/api/v1/jobs', { params: { status: 'open', limit: 100 } });
+      const jobs = (res.data.data || []).map((j: any) => ({ id: j.id, title: j.title, description: j.description }));
+      setRefineJobs(jobs);
+      if (jobs.length > 0) setRefineSelectedJobId(jobs[0].id);
+    } catch {
+      setRefineJobs([]);
+    } finally {
+      setRefineJobsLoading(false);
+    }
+  };
+
+  const handleRefine = async () => {
+    if (!resume || !refineSelectedJobId) return;
+    setRefineLoading(true);
+    setRefineError('');
+    try {
+      const res = await axios.post(`/api/v1/resumes/${resume.id}/refine`, { jobId: refineSelectedJobId });
+      if (res.data.success) {
+        setRefineResult(res.data.data);
+      } else {
+        setRefineError(res.data.error || 'Refine failed');
+      }
+    } catch (err: any) {
+      setRefineError(err?.response?.data?.error || 'Failed to refine resume');
+    } finally {
+      setRefineLoading(false);
+    }
+  };
+
+  const applyRefine = async () => {
+    if (!resume || !refineResult) return;
+    const selectedJob = refineJobs.find(j => j.id === refineSelectedJobId);
+    setEditSaving(true);
+    try {
+      await axios.put(`/api/v1/resumes/${resume.id}`, {
+        name: resume.name,
+        parsedData: refineResult.refinedParsedData,
+        versionName: selectedJob ? `Refined for ${selectedJob.title}` : 'Refined',
+      });
+      setRefineModalOpen(false);
+      setRefineResult(null);
+      fetchResume();
+      fetchVersions();
+    } catch (err) {
+      console.error('Failed to apply refined resume:', err);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -268,6 +513,18 @@ export default function ResumeDetail() {
     { key: 'notes', label: t('resumeLibrary.detail.tabs.notes', 'Notes & Tags') },
   ];
 
+  const inviteActionLabel = t('resumeLibrary.detail.headerActions.interview', 'Interview');
+  const editActionLabel = t('resumeLibrary.detail.headerActions.edit', 'Edit');
+  const reuploadActionLabel = t('resumeLibrary.detail.headerActions.upload', 'Upload');
+  const regenerateActionLabel = insightLoading
+    ? t('resumeLibrary.detail.headerActions.insightsLoading', 'Loading...')
+    : t('resumeLibrary.detail.headerActions.insights', 'Insights');
+  const rematchActionLabel = jobFitLoading
+    ? t('resumeLibrary.detail.headerActions.matchLoading', 'Matching...')
+    : t('resumeLibrary.detail.headerActions.match', 'Match');
+  const refineActionLabel = t('resumeLibrary.detail.headerActions.optimize', 'Optimize');
+  const archiveActionLabel = t('resumeLibrary.detail.actions.archive', 'Archive');
+
   return (
     <div className="max-w-5xl mx-auto">
       <SEO title={`${resume.name} - Resume`} noIndex />
@@ -280,68 +537,88 @@ export default function ResumeDetail() {
 
       {/* Header */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <div className="flex items-start justify-between">
-          <div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-xl font-bold text-gray-900">{resume.name}</h1>
             {resume.currentRole && <p className="text-sm text-gray-600 mt-1">{resume.currentRole}</p>}
-            <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
               {resume.email && <span>{resume.email}</span>}
               {resume.phone && <span>{resume.phone}</span>}
               {resume.fileName && <span>{resume.fileName}</span>}
             </div>
           </div>
-          <div className="flex flex-wrap justify-end gap-2">
-            <button
-              onClick={() => generateInsights(true)}
-              disabled={insightLoading}
-              className="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors disabled:opacity-60"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-              </svg>
-              {insightLoading
-                ? t('resumeLibrary.detail.actions.regeneratingInsights', 'Regenerating...')
-                : t('resumeLibrary.detail.actions.regenerateInsights', 'Re-generate Insights')}
-            </button>
-            <button
-              onClick={analyzeJobFit}
-              disabled={jobFitLoading}
-              className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-60"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-              </svg>
-              {jobFitLoading
-                ? t('resumeLibrary.detail.actions.rematchingJobs', 'Re-matching...')
-                : t('resumeLibrary.detail.actions.rematchJobs', 'Re-match Jobs')}
-            </button>
-            <button
-              onClick={openInviteModal}
-              className="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:text-emerald-800 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-              </svg>
-              {t('resumeLibrary.detail.actions.inviteInterview', 'Invite Interview')}
-            </button>
-            <button
-              onClick={() => setReplaceUploadOpen(true)}
-              className="inline-flex items-center gap-1.5 text-xs text-amber-700 hover:text-amber-800 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-              </svg>
-              {t('resumeLibrary.detail.actions.reupload', 'Re-upload & Overwrite')}
-            </button>
-            <button
-              onClick={handleArchive}
-              className="inline-flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-              </svg>
-              {t('resumeLibrary.detail.actions.archive', 'Archive')}
-            </button>
+          <div className="w-full lg:w-auto lg:max-w-[58%]">
+            <div className="overflow-x-auto pb-1">
+              <div className="flex min-w-max gap-2 lg:ml-auto">
+                <HeaderActionButton
+                  onClick={openInviteModal}
+                  tone="primary"
+                  label={inviteActionLabel}
+                  icon={(
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6.75A2.25 2.25 0 0013.5 4.5h-6a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 007.5 19.5h6a2.25 2.25 0 002.25-2.25V13.5l4.5 4.5v-12l-4.5 4.5z" />
+                    </svg>
+                  )}
+                />
+                <HeaderActionButton
+                  onClick={enterEditMode}
+                  label={editActionLabel}
+                  icon={(
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    </svg>
+                  )}
+                />
+                <HeaderActionButton
+                  onClick={() => setReplaceUploadOpen(true)}
+                  label={reuploadActionLabel}
+                  icon={(
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V4.5m0 0l-3.75 3.75M12 4.5l3.75 3.75M3.75 15.75v2.25A2.25 2.25 0 006 20.25h12A2.25 2.25 0 0020.25 18v-2.25" />
+                    </svg>
+                  )}
+                />
+                <HeaderActionButton
+                  onClick={() => generateInsights(true)}
+                  disabled={insightLoading}
+                  label={regenerateActionLabel}
+                  icon={(
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 19.5h16.5M6.75 16.5v-4.5m5.25 4.5V9m5.25 7.5V6" />
+                    </svg>
+                  )}
+                />
+                <HeaderActionButton
+                  onClick={analyzeJobFit}
+                  disabled={jobFitLoading}
+                  label={rematchActionLabel}
+                  icon={(
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h9m0 0-2.25-2.25M16.5 7.5l-2.25 2.25M16.5 16.5h-9m0 0 2.25-2.25M7.5 16.5l2.25 2.25" />
+                    </svg>
+                  )}
+                />
+                <HeaderActionButton
+                  onClick={openRefineModal}
+                  label={refineActionLabel}
+                  icon={(
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 7.5h15m-12 4.5h9m-6 4.5h3" />
+                    </svg>
+                  )}
+                />
+                <HeaderActionButton
+                  onClick={handleArchive}
+                  tone="destructive"
+                  label={archiveActionLabel}
+                  icon={(
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5v10.125A2.625 2.625 0 0117.625 20.25H6.375A2.625 2.625 0 013.75 17.625V7.5m16.5 0H3.75m16.5 0-1.06-2.118A1.125 1.125 0 0018.184 4.5H5.816c-.426 0-.815.24-1.006.62L3.75 7.5" />
+                    </svg>
+                  )}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -362,7 +639,62 @@ export default function ResumeDetail() {
       </div>
 
       {/* Tab content */}
-      {tab === 'overview' && <OverviewTab parsed={parsed} t={t} />}
+      {tab === 'overview' && (
+        editMode ? (
+          <EditModeView form={editForm} setForm={setEditForm} saving={editSaving} onSave={saveEdit} onCancel={cancelEdit} t={t} />
+        ) : (
+          <>
+            <OverviewTab parsed={parsed} t={t} />
+            {/* Version History */}
+            {versions.length > 0 && (
+              <div className="mt-6">
+                <button
+                  onClick={() => setVersionsOpen(!versionsOpen)}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors mb-3"
+                >
+                  <svg className={`w-4 h-4 transition-transform ${versionsOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                  {t('resumeLibrary.detail.versions.title', 'Version History')} ({versions.length})
+                </button>
+                {versionsOpen && (
+                  <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                    {versionsLoading ? (
+                      <div className="p-6 text-center">
+                        <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-indigo-600 mx-auto" />
+                      </div>
+                    ) : (
+                      versions.map(v => (
+                        <div key={v.id} className="flex items-center justify-between px-5 py-3">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {v.versionName || v.name || t('resumeLibrary.detail.versions.autoSave', 'Auto-save')}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+                              <span>{new Date(v.createdAt).toLocaleString()}</span>
+                              {v.changeNote && <span className="text-gray-400">— {v.changeNote}</span>}
+                              {v.currentRole && <span>{v.currentRole}</span>}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => restoreVersion(v.id)}
+                            disabled={restoreLoading === v.id}
+                            className="text-xs font-medium text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors disabled:opacity-50"
+                          >
+                            {restoreLoading === v.id
+                              ? t('resumeLibrary.detail.versions.restoring', 'Restoring...')
+                              : t('resumeLibrary.detail.versions.restore', 'Restore')}
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )
+      )}
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
       {tab === 'jobfit' && <JobFitTab data={resume.jobFitData} loading={jobFitLoading} onAnalyze={analyzeJobFit} onInvite={handleInviteFromFit} invitationsMap={invitationsMap} t={t} />}
       {tab === 'invitations' && <InvitationsTab invitations={invitations} resumeText={resume.resumeText} onRefresh={fetchInvitations} t={t} />}
@@ -540,6 +872,468 @@ export default function ResumeDetail() {
           </div>
         </div>
       )}
+
+      {/* Refine Resume Modal */}
+      {refineModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {t('resumeLibrary.detail.refine.title', 'Refine Resume for Job')}
+              </h3>
+              <button onClick={() => { setRefineModalOpen(false); setRefineResult(null); }} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {!refineResult ? (
+                <>
+                  <p className="text-sm text-gray-600">{t('resumeLibrary.detail.refine.description', 'Select a job to tailor this resume. The AI will emphasize matching skills and experiences without altering any facts.')}</p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      {t('resumeLibrary.detail.refine.selectJob', 'Select a job')}
+                    </label>
+                    {refineJobsLoading ? (
+                      <div className="flex items-center gap-2 py-3 text-sm text-gray-500">
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-indigo-600" />
+                        {t('resumeLibrary.detail.invite.loadingJobs', 'Loading jobs...')}
+                      </div>
+                    ) : refineJobs.length === 0 ? (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+                        {t('resumeLibrary.detail.invite.noJobs', 'No open jobs found. Please create and publish a job first.')}
+                      </div>
+                    ) : (
+                      <select
+                        value={refineSelectedJobId}
+                        onChange={e => setRefineSelectedJobId(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      >
+                        {refineJobs.map(j => (
+                          <option key={j.id} value={j.id}>{j.title}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {refineError && (
+                    <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">{refineError}</div>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button onClick={() => setRefineModalOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      {t('resumeLibrary.detail.invite.cancel', 'Cancel')}
+                    </button>
+                    <button
+                      onClick={handleRefine}
+                      disabled={refineLoading || !refineSelectedJobId || refineJobs.length === 0}
+                      className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50 transition-colors inline-flex items-center gap-2"
+                    >
+                      {refineLoading && <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />}
+                      {refineLoading
+                        ? t('resumeLibrary.detail.refine.refining', 'Refining...')
+                        : t('resumeLibrary.detail.refine.refine', 'Refine Resume')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  {/* Changes */}
+                  <div className="rounded-xl bg-cyan-50 border border-cyan-200 p-4">
+                    <h4 className="text-sm font-semibold text-cyan-800 mb-2">{t('resumeLibrary.detail.refine.changes', 'Changes Made')}</h4>
+                    <ul className="space-y-1">
+                      {refineResult.changes.map((c, i) => (
+                        <li key={i} className="text-xs text-cyan-700 flex items-start gap-1.5"><span className="text-cyan-400">•</span>{c}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Matched Skills */}
+                  {refineResult.matchedSkills.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-emerald-700 mb-1.5">{t('resumeLibrary.detail.refine.matchedSkills', 'Matched Skills')}</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {refineResult.matchedSkills.map((s, i) => (
+                          <span key={i} className="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Emphasized Experiences */}
+                  {refineResult.emphasizedExperiences.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-blue-700 mb-1.5">{t('resumeLibrary.detail.refine.emphasizedExperiences', 'Emphasized Experiences')}</h4>
+                      <ul className="space-y-1">
+                        {refineResult.emphasizedExperiences.map((e, i) => (
+                          <li key={i} className="text-xs text-blue-700 flex items-start gap-1.5"><span className="text-blue-400">•</span>{e}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+                    <button onClick={() => { setRefineModalOpen(false); setRefineResult(null); }} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      {t('resumeLibrary.detail.refine.discard', 'Discard')}
+                    </button>
+                    <button
+                      onClick={applyRefine}
+                      disabled={editSaving}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors inline-flex items-center gap-2"
+                    >
+                      {editSaving && <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />}
+                      {editSaving
+                        ? t('resumeLibrary.detail.refine.applying', 'Applying...')
+                        : t('resumeLibrary.detail.refine.applyAndSave', 'Apply & Save')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Edit Mode View ──────────────────────────────────────────────────
+function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
+  form: Record<string, any>;
+  setForm: (fn: (prev: Record<string, any>) => Record<string, any>) => void;
+  saving: boolean;
+  onSave: () => void;
+  onCancel: () => void;
+  t: (k: string, f?: any) => string;
+}) {
+  const updateField = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const updateExperience = (index: number, field: string, value: string) => {
+    setForm(prev => {
+      const exp = [...(prev.experience || [])];
+      exp[index] = { ...exp[index], [field]: value };
+      return { ...prev, experience: exp };
+    });
+  };
+
+  const addExperience = () => {
+    setForm(prev => ({
+      ...prev,
+      experience: [...(prev.experience || []), { role: '', company: '', startDate: '', endDate: '', description: '' }],
+    }));
+  };
+
+  const removeExperience = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      experience: (prev.experience || []).filter((_: any, i: number) => i !== index),
+    }));
+  };
+
+  const updateEducation = (index: number, field: string, value: string) => {
+    setForm(prev => {
+      const edu = [...(prev.education || [])];
+      edu[index] = { ...edu[index], [field]: value };
+      return { ...prev, education: edu };
+    });
+  };
+
+  const addEducation = () => {
+    setForm(prev => ({
+      ...prev,
+      education: [...(prev.education || []), { degree: '', institution: '', field: '', endDate: '' }],
+    }));
+  };
+
+  const removeEducation = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      education: (prev.education || []).filter((_: any, i: number) => i !== index),
+    }));
+  };
+
+  const updateCertification = (index: number, field: string, value: string) => {
+    setForm(prev => {
+      const certs = [...(prev.certifications || [])];
+      certs[index] = { ...certs[index], [field]: value };
+      return { ...prev, certifications: certs };
+    });
+  };
+
+  const addCertification = () => {
+    setForm(prev => ({
+      ...prev,
+      certifications: [...(prev.certifications || []), { name: '', issuer: '', date: '' }],
+    }));
+  };
+
+  const removeCertification = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      certifications: (prev.certifications || []).filter((_: any, i: number) => i !== index),
+    }));
+  };
+
+  const updateProject = (index: number, field: string, value: string) => {
+    setForm(prev => {
+      const projs = [...(prev.projects || [])];
+      projs[index] = { ...projs[index], [field]: value };
+      return { ...prev, projects: projs };
+    });
+  };
+
+  const addProject = () => {
+    setForm(prev => ({
+      ...prev,
+      projects: [...(prev.projects || []), { name: '', description: '', technologies: '' }],
+    }));
+  };
+
+  const removeProject = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      projects: (prev.projects || []).filter((_: any, i: number) => i !== index),
+    }));
+  };
+
+  const inputClass = 'w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500';
+  const labelClass = 'block text-xs font-medium text-gray-600 mb-1';
+
+  return (
+    <div className="space-y-6">
+      {/* Save/Cancel bar */}
+      <div className="flex items-center justify-between bg-violet-50 border border-violet-200 rounded-xl px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-violet-800">{t('resumeLibrary.detail.edit.editing', 'Editing Resume')}</span>
+          <input
+            type="text"
+            value={form.versionName || ''}
+            onChange={e => updateField('versionName', e.target.value)}
+            placeholder={t('resumeLibrary.detail.edit.versionNamePlaceholder', 'Version name (optional)')}
+            className="px-3 py-1.5 text-xs border border-violet-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 w-52"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="px-4 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+            {t('resumeLibrary.detail.edit.cancel', 'Cancel')}
+          </button>
+          <button onClick={onSave} disabled={saving} className="px-4 py-1.5 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 disabled:opacity-50 inline-flex items-center gap-2">
+            {saving && <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-white" />}
+            {saving ? t('resumeLibrary.detail.edit.saving', 'Saving...') : t('resumeLibrary.detail.edit.save', 'Save Changes')}
+          </button>
+        </div>
+      </div>
+
+      {/* Basic Info */}
+      <Section title={t('resumeLibrary.detail.edit.basicInfo', 'Basic Information')}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>{t('resumeLibrary.detail.edit.name', 'Full Name')}</label>
+            <input type="text" value={form.name || ''} onChange={e => updateField('name', e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>{t('resumeLibrary.detail.edit.email', 'Email')}</label>
+            <input type="email" value={form.email || ''} onChange={e => updateField('email', e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>{t('resumeLibrary.detail.edit.phone', 'Phone')}</label>
+            <input type="text" value={form.phone || ''} onChange={e => updateField('phone', e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>{t('resumeLibrary.detail.edit.currentRole', 'Current Role')}</label>
+            <input type="text" value={form.currentRole || ''} onChange={e => updateField('currentRole', e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>{t('resumeLibrary.detail.edit.experienceYears', 'Years of Experience')}</label>
+            <input type="text" value={form.experienceYears || ''} onChange={e => updateField('experienceYears', e.target.value)} className={inputClass} />
+          </div>
+        </div>
+      </Section>
+
+      {/* Summary */}
+      <Section title={t('resumeLibrary.detail.overview.summary', 'Professional Summary')}>
+        <textarea
+          value={form.summary || ''}
+          onChange={e => updateField('summary', e.target.value)}
+          rows={4}
+          className={inputClass + ' resize-y'}
+        />
+      </Section>
+
+      {/* Skills */}
+      <Section title={t('resumeLibrary.detail.overview.skills', 'Skills')}>
+        <textarea
+          value={form.skills || ''}
+          onChange={e => updateField('skills', e.target.value)}
+          rows={3}
+          placeholder={t('resumeLibrary.detail.edit.skillsPlaceholder', 'Comma-separated skills...')}
+          className={inputClass + ' resize-y'}
+        />
+      </Section>
+
+      {/* Experience */}
+      <Section title={t('resumeLibrary.detail.overview.experience', 'Work Experience')}>
+        <div className="space-y-4">
+          {(form.experience || []).map((exp: any, i: number) => (
+            <div key={i} className="relative border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+              <button onClick={() => removeExperience(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.role', 'Role')}</label>
+                  <input type="text" value={exp.role || ''} onChange={e => updateExperience(i, 'role', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.company', 'Company')}</label>
+                  <input type="text" value={exp.company || ''} onChange={e => updateExperience(i, 'company', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.location', 'Location')}</label>
+                  <input type="text" value={exp.location || ''} onChange={e => updateExperience(i, 'location', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.startDate', 'Start Date')}</label>
+                  <input type="text" value={exp.startDate || ''} onChange={e => updateExperience(i, 'startDate', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.endDate', 'End Date')}</label>
+                  <input type="text" value={exp.endDate || ''} onChange={e => updateExperience(i, 'endDate', e.target.value)} className={inputClass} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className={labelClass}>{t('resumeLibrary.detail.edit.description', 'Description')}</label>
+                <textarea value={exp.description || ''} onChange={e => updateExperience(i, 'description', e.target.value)} rows={3} className={inputClass + ' resize-y'} />
+              </div>
+              <div className="mt-3">
+                <label className={labelClass}>{t('resumeLibrary.detail.edit.achievements', 'Achievements (one per line)')}</label>
+                <textarea value={exp.achievements || ''} onChange={e => updateExperience(i, 'achievements', e.target.value)} rows={3} placeholder={t('resumeLibrary.detail.edit.achievementsPlaceholder', 'One achievement per line...')} className={inputClass + ' resize-y'} />
+              </div>
+              <div className="mt-3">
+                <label className={labelClass}>{t('resumeLibrary.detail.edit.technologies', 'Technologies (comma-separated)')}</label>
+                <input type="text" value={exp.technologies || ''} onChange={e => updateExperience(i, 'technologies', e.target.value)} placeholder={t('resumeLibrary.detail.edit.technologiesPlaceholder', 'React, Node.js, PostgreSQL...')} className={inputClass} />
+              </div>
+            </div>
+          ))}
+          <button onClick={addExperience} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            {t('resumeLibrary.detail.edit.addExperience', 'Add Experience')}
+          </button>
+        </div>
+      </Section>
+
+      {/* Education */}
+      <Section title={t('resumeLibrary.detail.overview.education', 'Education')}>
+        <div className="space-y-4">
+          {(form.education || []).map((edu: any, i: number) => (
+            <div key={i} className="relative border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+              <button onClick={() => removeEducation(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.degree', 'Degree')}</label>
+                  <input type="text" value={edu.degree || ''} onChange={e => updateEducation(i, 'degree', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.institution', 'Institution')}</label>
+                  <input type="text" value={edu.institution || ''} onChange={e => updateEducation(i, 'institution', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.fieldOfStudy', 'Field of Study')}</label>
+                  <input type="text" value={edu.field || ''} onChange={e => updateEducation(i, 'field', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.graduationDate', 'Graduation Date')}</label>
+                  <input type="text" value={edu.endDate || ''} onChange={e => updateEducation(i, 'endDate', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.gpa', 'GPA')}</label>
+                  <input type="text" value={edu.gpa || ''} onChange={e => updateEducation(i, 'gpa', e.target.value)} className={inputClass} />
+                </div>
+              </div>
+            </div>
+          ))}
+          <button onClick={addEducation} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            {t('resumeLibrary.detail.edit.addEducation', 'Add Education')}
+          </button>
+        </div>
+      </Section>
+
+      {/* Certifications */}
+      <Section title={t('resumeLibrary.detail.overview.certifications', 'Certifications')}>
+        <div className="space-y-4">
+          {(form.certifications || []).map((cert: any, i: number) => (
+            <div key={i} className="relative border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+              <button onClick={() => removeCertification(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.certName', 'Certification Name')}</label>
+                  <input type="text" value={cert.name || ''} onChange={e => updateCertification(i, 'name', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.certIssuer', 'Issuer')}</label>
+                  <input type="text" value={cert.issuer || ''} onChange={e => updateCertification(i, 'issuer', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.certDate', 'Date')}</label>
+                  <input type="text" value={cert.date || ''} onChange={e => updateCertification(i, 'date', e.target.value)} className={inputClass} />
+                </div>
+              </div>
+            </div>
+          ))}
+          <button onClick={addCertification} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            {t('resumeLibrary.detail.edit.addCertification', 'Add Certification')}
+          </button>
+        </div>
+      </Section>
+
+      {/* Projects */}
+      <Section title={t('resumeLibrary.detail.overview.projects', 'Projects')}>
+        <div className="space-y-4">
+          {(form.projects || []).map((proj: any, i: number) => (
+            <div key={i} className="relative border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+              <button onClick={() => removeProject(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="md:col-span-2">
+                  <label className={labelClass}>{t('resumeLibrary.detail.edit.projectName', 'Project Name')}</label>
+                  <input type="text" value={proj.name || ''} onChange={e => updateProject(i, 'name', e.target.value)} className={inputClass} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className={labelClass}>{t('resumeLibrary.detail.edit.projectDescription', 'Description')}</label>
+                <textarea value={proj.description || ''} onChange={e => updateProject(i, 'description', e.target.value)} rows={3} className={inputClass + ' resize-y'} />
+              </div>
+              <div className="mt-3">
+                <label className={labelClass}>{t('resumeLibrary.detail.edit.technologies', 'Technologies (comma-separated)')}</label>
+                <input type="text" value={proj.technologies || ''} onChange={e => updateProject(i, 'technologies', e.target.value)} placeholder={t('resumeLibrary.detail.edit.technologiesPlaceholder', 'React, Node.js, PostgreSQL...')} className={inputClass} />
+              </div>
+            </div>
+          ))}
+          <button onClick={addProject} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            {t('resumeLibrary.detail.edit.addProject', 'Add Project')}
+          </button>
+        </div>
+      </Section>
+
+      {/* Bottom save bar */}
+      <div className="flex justify-end gap-2 pt-2">
+        <button onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+          {t('resumeLibrary.detail.edit.cancel', 'Cancel')}
+        </button>
+        <button onClick={onSave} disabled={saving} className="px-5 py-2 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 disabled:opacity-50 inline-flex items-center gap-2">
+          {saving && <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-white" />}
+          {saving ? t('resumeLibrary.detail.edit.saving', 'Saving...') : t('resumeLibrary.detail.edit.save', 'Save Changes')}
+        </button>
+      </div>
     </div>
   );
 }

@@ -4,14 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE } from '../../config';
 import SEO from '../../components/SEO';
-
-const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
-  free: { interviews: 0, matches: 0 },
-  starter: { interviews: 15, matches: 30 },
-  growth: { interviews: 120, matches: 240 },
-  business: { interviews: 280, matches: 500 },
-  custom: { interviews: Infinity, matches: Infinity },
-};
+import {
+  formatUsageLimit,
+  getEffectiveInterviewLimit,
+  getEffectiveMatchLimit,
+  getUsagePercentage,
+  isUsageExceeded,
+} from '../../utils/usageLimits';
 
 const TOPUP_PRESETS = [10, 25, 50, 100];
 
@@ -54,6 +53,7 @@ export default function Profile() {
   const [profileName, setProfileName] = useState(user?.name || '');
   const [profileEmail, setProfileEmail] = useState(user?.email || '');
   const [profilePhone, setProfilePhone] = useState(user?.phone || '');
+  const [profileJobTitle, setProfileJobTitle] = useState(user?.jobTitle || '');
   const [profileCompany, setProfileCompany] = useState(user?.company || '');
   const [profileAvatar, setProfileAvatar] = useState(user?.avatar || '');
   const [profileSaving, setProfileSaving] = useState(false);
@@ -76,6 +76,7 @@ export default function Profile() {
       setProfileName(user.name || '');
       setProfileEmail(user.email || '');
       setProfilePhone(user.phone || '');
+      setProfileJobTitle(user.jobTitle || '');
       setProfileCompany(user.company || '');
       setProfileAvatar(user.avatar || '');
     }
@@ -152,7 +153,7 @@ export default function Profile() {
     try {
       const res = await authFetch('/api/auth/profile', {
         method: 'PATCH',
-        body: JSON.stringify({ name: profileName, email: profileEmail, phone: profilePhone, company: profileCompany, avatar: profileAvatar }),
+        body: JSON.stringify({ name: profileName, email: profileEmail, phone: profilePhone, jobTitle: profileJobTitle, company: profileCompany, avatar: profileAvatar }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Update failed');
@@ -208,7 +209,8 @@ export default function Profile() {
   };
 
   const tier = user?.subscriptionTier || 'free';
-  const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+  const interviewLimit = getEffectiveInterviewLimit(user);
+  const matchLimit = getEffectiveMatchLimit(user);
 
   const tierLabel: Record<string, string> = {
     free: 'Free',
@@ -265,6 +267,17 @@ export default function Profile() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('account.profile.jobTitle', 'Job Title')}</label>
+                <input
+                  type="text"
+                  value={profileJobTitle}
+                  onChange={(e) => setProfileJobTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('account.profile.company', 'Company')}</label>
                 <input
                   type="text"
@@ -273,8 +286,6 @@ export default function Profile() {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('account.profile.email', 'Email')}</label>
                 <input
@@ -387,13 +398,13 @@ export default function Profile() {
               <div className="flex justify-between text-xs text-slate-500 mb-1">
                 <span>{t('account.subscription.interviews', 'Interviews')}</span>
                 <span>
-                  {user?.interviewsUsed ?? 0} {t('account.subscription.of', 'of')} {limits.interviews === Infinity ? '∞' : limits.interviews}
+                  {user?.interviewsUsed ?? 0} {t('account.subscription.of', 'of')} {formatUsageLimit(interviewLimit)}
                 </span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-1.5">
                 <div
-                  className={`rounded-full h-1.5 transition-all ${(user?.interviewsUsed ?? 0) >= limits.interviews && limits.interviews !== Infinity ? 'bg-amber-500' : 'bg-blue-600'}`}
-                  style={{ width: `${limits.interviews === Infinity ? 0 : Math.min(100, ((user?.interviewsUsed ?? 0) / limits.interviews) * 100)}%` }}
+                  className={`rounded-full h-1.5 transition-all ${isUsageExceeded(interviewLimit, user?.interviewsUsed ?? 0) ? 'bg-amber-500' : 'bg-blue-600'}`}
+                  style={{ width: `${getUsagePercentage(interviewLimit, user?.interviewsUsed ?? 0)}%` }}
                 />
               </div>
             </div>
@@ -402,13 +413,13 @@ export default function Profile() {
               <div className="flex justify-between text-xs text-slate-500 mb-1">
                 <span>{t('account.subscription.matches', 'Resume Matches')}</span>
                 <span>
-                  {user?.resumeMatchesUsed ?? 0} {t('account.subscription.of', 'of')} {limits.matches === Infinity ? '∞' : limits.matches}
+                  {user?.resumeMatchesUsed ?? 0} {t('account.subscription.of', 'of')} {formatUsageLimit(matchLimit)}
                 </span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-1.5">
                 <div
-                  className={`rounded-full h-1.5 transition-all ${(user?.resumeMatchesUsed ?? 0) >= limits.matches && limits.matches !== Infinity ? 'bg-amber-500' : 'bg-blue-600'}`}
-                  style={{ width: `${limits.matches === Infinity ? 0 : Math.min(100, ((user?.resumeMatchesUsed ?? 0) / limits.matches) * 100)}%` }}
+                  className={`rounded-full h-1.5 transition-all ${isUsageExceeded(matchLimit, user?.resumeMatchesUsed ?? 0) ? 'bg-amber-500' : 'bg-blue-600'}`}
+                  style={{ width: `${getUsagePercentage(matchLimit, user?.resumeMatchesUsed ?? 0)}%` }}
                 />
               </div>
             </div>

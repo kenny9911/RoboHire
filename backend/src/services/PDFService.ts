@@ -1,7 +1,7 @@
 import pdf from 'pdf-parse';
 import { llmService } from './llm/LLMService.js';
 import { GoogleProvider } from './llm/GoogleProvider.js';
-import { logger } from './LoggerService.js';
+import { generateRequestId, logger } from './LoggerService.js';
 import type { Message, MessageContent } from '../types/index.js';
 
 // Vision model for PDF extraction - prefer capable vision models
@@ -31,41 +31,70 @@ export class PDFService {
   private async runMultimodalExtraction(messages: Message[], requestId: string | undefined, category: string): Promise<string> {
     const model = this.getPreferredVisionModel();
     const googleProvider = this.getDirectGoogleVisionProvider(model);
+    const effectiveRequestId = requestId || generateRequestId();
     const startTime = Date.now();
 
     if (googleProvider) {
       logger.info(category, 'Using direct Google multimodal extraction', {
         model: model || '(default)',
-      }, requestId);
+      }, effectiveRequestId);
 
-      const response = await googleProvider.chat(messages, {
-        temperature: 0.1,
-        maxTokens: PDF_LLM_MAX_TOKENS,
-        requestId,
-        ...(model ? { model } : {}),
-      });
+      try {
+        const response = await googleProvider.chat(messages, {
+          temperature: 0.1,
+          maxTokens: PDF_LLM_MAX_TOKENS,
+          requestId: effectiveRequestId,
+          ...(model ? { model } : {}),
+        });
 
-      logger.logLLMCall(
-        requestId || `untracked_${Date.now()}`,
-        response.model || model || 'gemini',
-        googleProvider.getProviderName(),
-        response.usage.promptTokens,
-        response.usage.completionTokens,
-        Date.now() - startTime,
-      );
+        logger.logLLMCall({
+          requestId: effectiveRequestId,
+          model: response.model || model || 'gemini',
+          provider: googleProvider.getProviderName(),
+          promptTokens: response.usage.promptTokens,
+          completionTokens: response.usage.completionTokens,
+          duration: Date.now() - startTime,
+          status: 'success',
+          messages,
+          options: {
+            temperature: 0.1,
+            maxTokens: PDF_LLM_MAX_TOKENS,
+            ...(model ? { model } : {}),
+          },
+          responseText: response.content,
+        });
 
-      return response.content;
+        return response.content;
+      } catch (error) {
+        logger.logLLMCall({
+          requestId: effectiveRequestId,
+          model: model || 'gemini',
+          provider: googleProvider.getProviderName(),
+          promptTokens: 0,
+          completionTokens: 0,
+          duration: Date.now() - startTime,
+          status: 'error',
+          messages,
+          options: {
+            temperature: 0.1,
+            maxTokens: PDF_LLM_MAX_TOKENS,
+            ...(model ? { model } : {}),
+          },
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        });
+        throw error;
+      }
     }
 
     logger.info(category, 'Using configured generic multimodal provider', {
       provider: llmService.getProvider(),
       model: model || '(default)',
-    }, requestId);
+    }, effectiveRequestId);
 
     return llmService.chat(messages, {
       temperature: 0.1,
       maxTokens: PDF_LLM_MAX_TOKENS,
-      requestId,
+      requestId: effectiveRequestId,
       ...(model ? { visionModel: model } : {}),
     });
   }

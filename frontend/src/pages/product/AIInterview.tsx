@@ -691,6 +691,15 @@ export default function AIInterview() {
                     placeholder={t('product.interview.interviewReqsPlaceholder', 'e.g., Focus on system design and distributed systems experience. Assess problem-solving ability with real-world scenarios. Evaluate cultural fit for a fast-paced startup environment.')}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
+                  {!interviewReqs.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setInterviewReqs(t('product.interview.interviewReqsPlaceholder', 'e.g., Focus on system design and distributed systems experience. Assess problem-solving ability with real-world scenarios. Evaluate cultural fit for a fast-paced startup environment.').replace(/^(e\.g\.,?\s*|例如[：:]\s*)/i, ''))}
+                      className="mt-1.5 text-xs text-blue-500 hover:text-blue-700 transition-colors"
+                    >
+                      {t('product.interview.useSuggestion', 'Use suggestion')}
+                    </button>
+                  )}
                 </div>
               )}
 

@@ -1266,7 +1266,9 @@
       "account": "アカウント",
       "usage": "使用状況",
       "resumes": "履歴書ライブラリ",
-      "integrations": "連携"
+      "integrations": "連携",
+      "docs": "ドキュメント",
+      "developers": "開発者"
     },
     "welcome": "おかえりなさい",
     "user": "ユーザー",
@@ -1962,6 +1964,7 @@
       "resumes": "簡歴ライブラリ",
       "interview_invite": "面接招待",
       "interview_evaluation": "面接評価",
+      "interview_livekit": "AI面接セッション",
       "resume_parse": "簡歴解析",
       "jd_parse": "JD 解析",
       "document_extract": "ドキュメント抽出",
@@ -2129,7 +2132,8 @@
       "thankYou": "ありがとうございました！",
       "thankYouMessage": "{{name}}さん、面接を完了していただきありがとうございます。チームが回答を確認し、後日ご連絡いたします。",
       "backToHome": "ホームに戻る",
-      "error": "参加できません"
+      "error": "参加できません",
+      "useSuggestion": "提案を使用"
     },
     "videoInterview": {
       "title": "ビデオ面接",
@@ -2154,7 +2158,16 @@
       "thankYouMessage": "{{name}}面接を完了していただきありがとうございます。チームが回答を確認し、近日中にご連絡いたします。",
       "duration": "所要時間",
       "backToHome": "ホームに戻る",
-      "connectionError": "接続エラー"
+      "connectionError": "接続エラー",
+      "agentDisconnected": "切断済み",
+      "agentConnecting": "接続中...",
+      "agentInitializing": "初期化中...",
+      "agentListening": "聞いています",
+      "agentThinking": "考え中...",
+      "agentSpeaking": "話しています",
+      "agentFailed": "接続失敗",
+      "transcript": "トランスクリプト",
+      "transcriptEmpty": "面接が進むにつれて、トランスクリプトがここに表示されます..."
     },
     "jobs": {
       "title": "求人管理",
@@ -2233,6 +2246,7 @@
       "interviewDuration": "面接時間（分）",
       "interviewRequirements": "面接要件",
       "interviewRequirementsPlaceholder": "面接で評価する内容...",
+      "interviewRequirementsSuggestion": "システム設計と分散システムの経験を重点的に評価。実際のシナリオで問題解決能力を評価。",
       "evaluationRules": "評価ルール",
       "evaluationRulesPlaceholder": "採点基準、配点、合否基準...",
       "autoGenerateAll": "AI一括生成",
@@ -2711,7 +2725,7 @@
       }
     },
     "detail": {
-      "back": "履歴書一覧に戻る",
+      "back": "人材ハブに戻る",
       "title": "履歴書詳細",
       "tabs": {
         "overview": "概要",
@@ -2727,7 +2741,66 @@
         "rematchingJobs": "マッチング中...",
         "inviteInterview": "面接に招待",
         "reupload": "再アップロード＆上書き",
-        "archive": "アーカイブ"
+        "archive": "アーカイブ",
+        "edit": "履歴書を編集",
+        "refineForJob": "求人向けに最適化"
+      },
+      "edit": {
+        "editing": "履歴書を編集中",
+        "versionNamePlaceholder": "バージョン名（任意）",
+        "cancel": "キャンセル",
+        "saving": "保存中...",
+        "save": "変更を保存",
+        "basicInfo": "基本情報",
+        "name": "氏名",
+        "email": "メール",
+        "phone": "電話番号",
+        "currentRole": "現在の役職",
+        "experienceYears": "経験年数",
+        "skillsPlaceholder": "スキルをカンマ区切りで入力...",
+        "role": "役職",
+        "company": "会社",
+        "startDate": "開始日",
+        "endDate": "終了日",
+        "description": "説明",
+        "addExperience": "職歴を追加",
+        "degree": "学位",
+        "institution": "学校",
+        "fieldOfStudy": "専攻",
+        "graduationDate": "卒業日",
+        "addEducation": "学歴を追加",
+        "location": "勤務地",
+        "achievements": "実績（1行につき1つ）",
+        "achievementsPlaceholder": "1行につき1つの実績を入力...",
+        "technologies": "技術スタック（カンマ区切り）",
+        "technologiesPlaceholder": "React, Node.js, PostgreSQL...",
+        "gpa": "GPA",
+        "certName": "資格名",
+        "certIssuer": "発行機関",
+        "certDate": "日付",
+        "addCertification": "資格を追加",
+        "projectName": "プロジェクト名",
+        "projectDescription": "プロジェクト説明",
+        "addProject": "プロジェクトを追加"
+      },
+      "versions": {
+        "title": "バージョン履歴",
+        "autoSave": "自動保存",
+        "restore": "復元",
+        "restoring": "復元中..."
+      },
+      "refine": {
+        "title": "求人向けに履歴書を最適化",
+        "description": "求人を選択して履歴書を最適化します。AIが事実を変更せずに、マッチするスキルや経験を強調します。",
+        "selectJob": "求人を選択",
+        "refining": "最適化中...",
+        "refine": "履歴書を最適化",
+        "changes": "変更内容",
+        "matchedSkills": "マッチしたスキル",
+        "emphasizedExperiences": "強調された経験",
+        "discard": "破棄",
+        "applying": "適用中...",
+        "applyAndSave": "適用して保存"
       },
       "invite": {
         "title": "面接に招待",
@@ -3247,6 +3320,37 @@
       "outputTokens": "出力",
       "showing": "表示中",
       "of": "/",
+      "prev": "前へ",
+      "next": "次へ"
+    }
+  },
+  "admin": {
+    "activity": {
+      "signups": "サインアップ",
+      "logins": "ログイン",
+      "feed": "アクティビティフィード",
+      "journey": "ユーザージャーニー",
+      "time": "時間",
+      "email": "メール",
+      "name": "名前",
+      "company": "会社",
+      "provider": "プロバイダー",
+      "ip": "IPアドレス",
+      "userAgent": "ユーザーエージェント",
+      "eventType": "タイプ",
+      "path": "パス",
+      "element": "要素",
+      "pageView": "ページビュー",
+      "click": "クリック",
+      "selectUser": "ユーザーを選択",
+      "selectSession": "セッションを選択",
+      "allUsers": "すべてのユーザー",
+      "allSessions": "すべてのセッション",
+      "events": "イベント",
+      "selectUserPrompt": "ユーザーを選択してアクティビティジャーニーを表示",
+      "noData": "データなし",
+      "loading": "読み込み中...",
+      "showing": "表示中",
       "prev": "前へ",
       "next": "次へ"
     }

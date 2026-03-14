@@ -1,16 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
   VideoTrack,
   useLocalParticipant,
-  useRemoteParticipants,
   useTracks,
   RoomAudioRenderer,
-  ControlBar,
+  BarVisualizer,
+  useVoiceAssistant,
+  VoiceAssistantControlBar,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { Track } from 'livekit-client';
+import type { AgentState } from '@livekit/components-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
@@ -78,11 +80,13 @@ export default function InterviewRoom() {
             serverUrl={joinData.wsUrl}
             token={joinData.token}
             connect={true}
+            audio={true}
+            video={true}
             onDisconnected={handleDisconnect}
             className="h-screen"
             data-lk-theme="default"
           >
-            <InterviewView candidateName={joinData.candidateName} jobTitle={joinData.jobTitle} />
+            <AgentInterviewView candidateName={joinData.candidateName} jobTitle={joinData.jobTitle} />
             <RoomAudioRenderer />
           </LiveKitRoom>
         )}
@@ -157,66 +161,143 @@ function PreJoinScreen({ joinData, onJoin }: { joinData: JoinData; onJoin: () =>
   );
 }
 
-function InterviewView({ candidateName, jobTitle }: { candidateName: string; jobTitle: string }) {
+/* ─── Agent State Labels ─── */
+const AGENT_STATE_LABELS: Record<AgentState, string> = {
+  disconnected: 'videoInterview.agentDisconnected',
+  connecting: 'videoInterview.agentConnecting',
+  'pre-connect-buffering': 'videoInterview.agentConnecting',
+  initializing: 'videoInterview.agentInitializing',
+  idle: 'videoInterview.agentListening',
+  listening: 'videoInterview.agentListening',
+  thinking: 'videoInterview.agentThinking',
+  speaking: 'videoInterview.agentSpeaking',
+  failed: 'videoInterview.agentFailed',
+};
+
+const AGENT_STATE_COLORS: Record<string, string> = {
+  listening: 'text-green-400',
+  thinking: 'text-yellow-400',
+  speaking: 'text-blue-400',
+  connecting: 'text-gray-400',
+  'pre-connect-buffering': 'text-gray-400',
+  initializing: 'text-gray-400',
+  idle: 'text-green-400',
+  disconnected: 'text-red-400',
+  failed: 'text-red-400',
+};
+
+function AgentInterviewView({ candidateName, jobTitle }: { candidateName: string; jobTitle: string }) {
   const { t } = useTranslation();
   const { localParticipant } = useLocalParticipant();
-  const remoteParticipants = useRemoteParticipants();
   const tracks = useTracks([Track.Source.Camera], { onlySubscribed: true });
+  const { state, audioTrack, agentTranscriptions } = useVoiceAssistant();
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   const localVideoTrack = tracks.find(
     (tr) => tr.participant.sid === localParticipant.sid && tr.source === Track.Source.Camera,
   );
 
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [agentTranscriptions]);
+
   return (
     <div className="flex h-screen flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-3">
+      <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-3 py-2 sm:px-6 sm:py-3">
         <div>
-          <h2 className="font-semibold">{t('interview.inProgress', 'Interview in Progress')}</h2>
-          {jobTitle && <p className="text-sm text-gray-400">{jobTitle}</p>}
+          <h2 className="truncate text-sm font-semibold sm:text-base">
+            {t('interview.inProgress', 'Interview in Progress')}
+          </h2>
+          {jobTitle && <p className="text-xs text-gray-400 sm:text-sm">{jobTitle}</p>}
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-400">
+        <div className="flex items-center gap-2 text-xs text-gray-400 sm:text-sm">
           <span className="inline-block h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-          {t('interview.recording', 'Recording')}
+          <span className="hidden sm:inline">{t('interview.recording', 'Recording')}</span>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex flex-1 items-center justify-center gap-8 p-8">
-        {/* AI Interviewer indicator */}
-        <div className="flex h-64 w-64 flex-col items-center justify-center rounded-2xl bg-gray-800/50 border border-gray-700">
-          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-3xl">
-            🤖
+      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+        {/* Left: Agent visualizer + self video */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 sm:p-6">
+          <div className="flex w-full max-w-md flex-col items-center gap-3">
+            <div className="relative flex h-40 w-full items-center justify-center rounded-2xl border border-gray-700 bg-gray-800/50 sm:h-56">
+              <BarVisualizer
+                state={state}
+                track={audioTrack}
+                barCount={7}
+                className="h-24 w-48 sm:h-32 sm:w-64"
+                style={{
+                  gap: '6px',
+                  '--lk-fg': state === 'speaking' ? '#3b82f6' : state === 'listening' ? '#22c55e' : '#6b7280',
+                } as React.CSSProperties}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`inline-block h-2 w-2 rounded-full ${
+                state === 'speaking' ? 'bg-blue-400 animate-pulse' :
+                state === 'listening' ? 'bg-green-400' :
+                state === 'thinking' ? 'bg-yellow-400 animate-pulse' :
+                'bg-gray-500'
+              }`} />
+              <span className={`text-sm font-medium ${AGENT_STATE_COLORS[state] || 'text-gray-400'}`}>
+                {t(AGENT_STATE_LABELS[state], state)}
+              </span>
+            </div>
           </div>
-          <p className="font-medium">{t('interview.aiInterviewer', 'AI Interviewer')}</p>
-          <p className="mt-1 text-xs text-gray-400">
-            {remoteParticipants.length > 0
-              ? t('interview.connected', 'Connected')
-              : t('interview.connecting', 'Connecting...')}
-          </p>
+
+          <div className="relative h-28 w-40 overflow-hidden rounded-xl border border-gray-700 bg-gray-800 sm:h-36 sm:w-48">
+            {localVideoTrack ? (
+              <VideoTrack trackRef={localVideoTrack} className="h-full w-full object-cover" style={{ transform: 'scaleX(-1)' }} />
+            ) : (
+              <div className="flex h-full items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <svg className="mx-auto mb-1 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                  <p className="text-xs">{t('interview.cameraOff', 'Camera Off')}</p>
+                </div>
+              </div>
+            )}
+            <div className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-xs">
+              {candidateName}
+            </div>
+          </div>
         </div>
 
-        {/* Candidate video */}
-        <div className="relative h-64 w-80 overflow-hidden rounded-2xl bg-gray-800 border border-gray-700">
-          {localVideoTrack ? (
-            <VideoTrack trackRef={localVideoTrack} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-gray-500">
-              <div className="text-center">
-                <div className="mb-2 text-4xl">📷</div>
-                <p className="text-sm">{t('interview.cameraOff', 'Camera Off')}</p>
+        {/* Right: Live Transcript */}
+        <div className="flex w-full flex-col border-t border-gray-800 lg:w-80 lg:border-l lg:border-t-0 xl:w-96">
+          <div className="flex items-center gap-2 border-b border-gray-800 bg-gray-900/50 px-4 py-2">
+            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+            </svg>
+            <span className="text-sm font-medium text-gray-300">
+              {t('videoInterview.transcript', 'Transcript')}
+            </span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 max-h-48 lg:max-h-none">
+            {agentTranscriptions.length === 0 && (
+              <p className="text-center text-xs text-gray-500 py-8">
+                {t('videoInterview.transcriptEmpty', 'Transcript will appear here as the interview progresses...')}
+              </p>
+            )}
+            {agentTranscriptions.map((seg, i) => (
+              <div key={`${seg.id}-${i}`} className="flex gap-2 text-sm">
+                <span className="shrink-0 font-medium text-blue-400">
+                  {t('videoInterview.aiInterviewer', 'AI Interviewer')}:
+                </span>
+                <span className="text-gray-200">{seg.text}</span>
               </div>
-            </div>
-          )}
-          <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 text-xs">
-            {candidateName}
+            ))}
+            <div ref={transcriptEndRef} />
           </div>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="border-t border-gray-800 bg-gray-900 p-4">
-        <ControlBar variation="minimal" />
+      <div className="border-t border-gray-800 bg-gray-900 p-2 sm:p-4">
+        <VoiceAssistantControlBar />
       </div>
     </div>
   );

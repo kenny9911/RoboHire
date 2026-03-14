@@ -896,7 +896,9 @@
       "account": "Konto",
       "usage": "Nutzung",
       "resumes": "Lebenslauf-Bibliothek",
-      "integrations": "Integrationen"
+      "integrations": "Integrationen",
+      "docs": "Dokumentation",
+      "developers": "Entwickler"
     },
     "welcome": "Willkommen zurück",
     "user": "da",
@@ -1589,6 +1591,7 @@
       "resumes": "Lebenslauf-Bibliothek",
       "interview_invite": "Interview-Einladung",
       "interview_evaluation": "Interview-Bewertung",
+      "interview_livekit": "KI-Interview-Sitzung",
       "resume_parse": "Lebenslauf-Analyse",
       "jd_parse": "JD-Analyse",
       "document_extract": "Dokumenten-Extraktion",
@@ -1754,7 +1757,8 @@
       "thankYou": "Vielen Dank!",
       "thankYouMessage": "Vielen Dank{{name}} für die Teilnahme am Interview. Unser Team wird Ihre Antworten prüfen und sich in Kürze bei Ihnen melden.",
       "backToHome": "Zurück zur Startseite",
-      "error": "Beitritt nicht möglich"
+      "error": "Beitritt nicht möglich",
+      "useSuggestion": "Vorschlag verwenden"
     },
     "videoInterview": {
       "title": "Video-Interview",
@@ -1779,7 +1783,16 @@
       "thankYouMessage": "Vielen Dank{{name}} für das Absolvieren des Interviews. Unser Team wird Ihre Antworten prüfen und sich bald bei Ihnen melden.",
       "duration": "Dauer",
       "backToHome": "Zurück zur Startseite",
-      "connectionError": "Verbindungsfehler"
+      "connectionError": "Verbindungsfehler",
+      "agentDisconnected": "Getrennt",
+      "agentConnecting": "Verbindung wird hergestellt...",
+      "agentInitializing": "Initialisierung...",
+      "agentListening": "Hört zu",
+      "agentThinking": "Denkt nach...",
+      "agentSpeaking": "Spricht",
+      "agentFailed": "Verbindung fehlgeschlagen",
+      "transcript": "Transkript",
+      "transcriptEmpty": "Das Transkript wird hier angezeigt, während das Interview fortschreitet..."
     },
     "jobs": {
       "title": "Stellen",
@@ -1866,6 +1879,7 @@
       "interviewDuration": "Dauer (Min.)",
       "interviewRequirements": "Interview-Anforderungen",
       "interviewRequirementsPlaceholder": "Was im Interview bewertet werden soll...",
+      "interviewRequirementsSuggestion": "Schwerpunkt auf Systemdesign und Erfahrung mit verteilten Systemen. Problemlösungsfähigkeit anhand realer Szenarien bewerten.",
       "evaluationRules": "Bewertungsregeln",
       "evaluationRulesPlaceholder": "Bewertungskriterien, Gewichtung, Schwellenwerte...",
       "autoGenerateAll": "Alles mit KI generieren",
@@ -2263,7 +2277,7 @@
       }
     },
     "detail": {
-      "back": "Zurück zu Lebensläufen",
+      "back": "Zurück zum Talent-Hub",
       "title": "Lebenslauf-Details",
       "tabs": {
         "overview": "Übersicht",
@@ -2279,7 +2293,66 @@
         "rematchingJobs": "Abgleich läuft...",
         "inviteInterview": "Zum Interview einladen",
         "reupload": "Erneut hochladen & überschreiben",
-        "archive": "Archivieren"
+        "archive": "Archivieren",
+        "edit": "Lebenslauf bearbeiten",
+        "refineForJob": "Für Stelle optimieren"
+      },
+      "edit": {
+        "editing": "Lebenslauf wird bearbeitet",
+        "versionNamePlaceholder": "Versionsname (optional)",
+        "cancel": "Abbrechen",
+        "saving": "Wird gespeichert...",
+        "save": "Änderungen speichern",
+        "basicInfo": "Grundinformationen",
+        "name": "Vollständiger Name",
+        "email": "E-Mail",
+        "phone": "Telefon",
+        "currentRole": "Aktuelle Position",
+        "experienceYears": "Jahre Berufserfahrung",
+        "skillsPlaceholder": "Fähigkeiten, durch Kommas getrennt...",
+        "role": "Position",
+        "company": "Unternehmen",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "description": "Beschreibung",
+        "addExperience": "Berufserfahrung hinzufügen",
+        "degree": "Abschluss",
+        "institution": "Institution",
+        "fieldOfStudy": "Studienrichtung",
+        "graduationDate": "Abschlussdatum",
+        "addEducation": "Ausbildung hinzufügen",
+        "location": "Standort",
+        "achievements": "Erfolge (einer pro Zeile)",
+        "achievementsPlaceholder": "Ein Erfolg pro Zeile...",
+        "technologies": "Technologien (durch Kommas getrennt)",
+        "technologiesPlaceholder": "React, Node.js, PostgreSQL...",
+        "gpa": "Notendurchschnitt",
+        "certName": "Zertifikatsname",
+        "certIssuer": "Aussteller",
+        "certDate": "Datum",
+        "addCertification": "Zertifizierung hinzufügen",
+        "projectName": "Projektname",
+        "projectDescription": "Projektbeschreibung",
+        "addProject": "Projekt hinzufügen"
+      },
+      "versions": {
+        "title": "Versionshistorie",
+        "autoSave": "Automatisch gespeichert",
+        "restore": "Wiederherstellen",
+        "restoring": "Wird wiederhergestellt..."
+      },
+      "refine": {
+        "title": "Lebenslauf für Stelle optimieren",
+        "description": "Wählen Sie eine Stelle aus, um diesen Lebenslauf zu optimieren. Die KI wird passende Fähigkeiten und Erfahrungen hervorheben, ohne Fakten zu ändern.",
+        "selectJob": "Stelle auswählen",
+        "refining": "Wird optimiert...",
+        "refine": "Lebenslauf optimieren",
+        "changes": "Vorgenommene Änderungen",
+        "matchedSkills": "Übereinstimmende Fähigkeiten",
+        "emphasizedExperiences": "Hervorgehobene Erfahrungen",
+        "discard": "Verwerfen",
+        "applying": "Wird angewendet...",
+        "applyAndSave": "Anwenden und Speichern"
       },
       "invite": {
         "title": "Zum Interview einladen",
@@ -2799,6 +2872,37 @@
       "outputTokens": "Ausgabe",
       "showing": "Anzeige",
       "of": "von",
+      "prev": "Zurück",
+      "next": "Weiter"
+    }
+  },
+  "admin": {
+    "activity": {
+      "signups": "Registrierungen",
+      "logins": "Anmeldungen",
+      "feed": "Aktivitätsfeed",
+      "journey": "Benutzerreise",
+      "time": "Zeit",
+      "email": "E-Mail",
+      "name": "Name",
+      "company": "Unternehmen",
+      "provider": "Anbieter",
+      "ip": "IP-Adresse",
+      "userAgent": "User-Agent",
+      "eventType": "Typ",
+      "path": "Pfad",
+      "element": "Element",
+      "pageView": "Seitenaufruf",
+      "click": "Klick",
+      "selectUser": "Benutzer auswählen",
+      "selectSession": "Sitzung auswählen",
+      "allUsers": "Alle Benutzer",
+      "allSessions": "Alle Sitzungen",
+      "events": "Ereignisse",
+      "selectUserPrompt": "Wählen Sie einen Benutzer aus, um dessen Aktivitätsreise anzuzeigen",
+      "noData": "Keine Daten",
+      "loading": "Wird geladen...",
+      "showing": "Anzeige",
       "prev": "Zurück",
       "next": "Weiter"
     }

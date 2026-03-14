@@ -15,6 +15,32 @@ type UsageFilters = {
   to?: string;
 };
 
+function resolveTimeZone(raw?: string): string {
+  const timeZone = typeof raw === 'string' ? raw.trim() : '';
+  if (!timeZone) return 'UTC';
+
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone }).format(new Date());
+    return timeZone;
+  } catch {
+    return 'UTC';
+  }
+}
+
+function formatDateKey(date: Date, timeZone: string): string {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((part) => part.type === 'year')?.value ?? '0000';
+  const month = parts.find((part) => part.type === 'month')?.value ?? '01';
+  const day = parts.find((part) => part.type === 'day')?.value ?? '01';
+  return `${year}-${month}-${day}`;
+}
+
 function buildRequestLogWhere(filters: UsageFilters & { requirePayload?: boolean }): Record<string, unknown> {
   const { userId, apiKeyId, endpoint, from, to, requirePayload } = filters;
   const where: Record<string, unknown> = {
@@ -228,7 +254,8 @@ router.get('/summary', async (req: Request, res: Response) => {
   try {
     const showCost = canViewCost(req);
     const userId = req.user!.id;
-    const { from, to, apiKeyId } = req.query as Record<string, string | undefined>;
+    const { from, to, apiKeyId, tz } = req.query as Record<string, string | undefined>;
+    const timeZone = resolveTimeZone(tz);
 
     const where = buildRequestLogWhere({ userId, apiKeyId, from, to });
 
@@ -280,7 +307,7 @@ router.get('/summary', async (req: Request, res: Response) => {
     let apiCalls = 0;
     let websiteCalls = 0;
     for (const r of records) {
-      const day = r.createdAt.toISOString().split('T')[0];
+      const day = formatDateKey(r.createdAt, timeZone);
       const entry = dailyMap.get(day) ?? {
         date: day,
         calls: 0,
@@ -327,7 +354,7 @@ router.get('/summary', async (req: Request, res: Response) => {
       endpointMap.set(r.endpoint, entry);
     }
 
-    const daily = Array.from(dailyMap.values());
+    const daily = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
     const byEndpoint = Array.from(endpointMap.values()).sort((a, b) => b.calls - a.calls);
     const websiteFeatures = Array.from(websiteFeatureMap.values()).sort((a, b) => b.calls - a.calls);
 

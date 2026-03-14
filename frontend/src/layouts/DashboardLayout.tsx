@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import LanguageSelector from '../components/LanguageSelector';
+import { getEffectiveInterviewLimit, getEffectiveMatchLimit, getRemainingUsage } from '../utils/usageLimits';
 
 type NotificationType = 'match' | 'invitation' | 'interview';
 
@@ -167,14 +168,6 @@ const secondaryLinks = [
   { path: '/developers', labelKey: 'dashboard.nav.developers', fallback: 'Developers' },
 ];
 
-const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
-  free: { interviews: 0, matches: 0 },
-  starter: { interviews: 15, matches: 30 },
-  growth: { interviews: 120, matches: 240 },
-  business: { interviews: 280, matches: 500 },
-  custom: { interviews: Infinity, matches: Infinity },
-};
-
 const PLAN_LABELS: Record<string, string> = {
   free: 'Free',
   starter: 'Starter',
@@ -308,11 +301,12 @@ export default function DashboardLayout() {
   const hasNotifications = notifications.length > 0;
   const tier = (user?.subscriptionTier || 'free').toLowerCase();
   const tierLabel = PLAN_LABELS[tier] || tier.charAt(0).toUpperCase() + tier.slice(1);
-  const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+  const interviewLimit = getEffectiveInterviewLimit(user);
+  const matchLimit = getEffectiveMatchLimit(user);
   const interviewsUsed = user?.interviewsUsed ?? 0;
   const resumeMatchesUsed = user?.resumeMatchesUsed ?? 0;
-  const interviewRemaining = limits.interviews === Infinity ? '∞' : String(Math.max(0, limits.interviews - interviewsUsed));
-  const resumeMatchRemaining = limits.matches === Infinity ? '∞' : String(Math.max(0, limits.matches - resumeMatchesUsed));
+  const interviewRemaining = getRemainingUsage(interviewLimit, interviewsUsed);
+  const resumeMatchRemaining = getRemainingUsage(matchLimit, resumeMatchesUsed);
   const creditBalance = (user?.topUpBalance ?? 0).toFixed(2);
 
   const isActive = (path: string, exact?: boolean) => {

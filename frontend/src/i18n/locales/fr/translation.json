@@ -896,7 +896,9 @@
       "account": "Compte",
       "usage": "Utilisation",
       "resumes": "Bibliothèque de CV",
-      "integrations": "Intégrations"
+      "integrations": "Intégrations",
+      "docs": "Documentation",
+      "developers": "Développeurs"
     },
     "welcome": "Bon retour",
     "user": "vous",
@@ -1590,6 +1592,7 @@
       "resumes": "Bibliothèque de CV",
       "interview_invite": "Invitation Entretien",
       "interview_evaluation": "Évaluation Entretien",
+      "interview_livekit": "Session d'entretien IA",
       "resume_parse": "Analyse CV",
       "jd_parse": "Analyse JD",
       "document_extract": "Extraction Document",
@@ -1755,7 +1758,8 @@
       "thankYou": "Merci !",
       "thankYouMessage": "Merci{{name}} d'avoir complété l'entretien. Notre équipe examinera vos réponses et vous recontactera bientôt.",
       "backToHome": "Retour à l'Accueil",
-      "error": "Impossible de rejoindre"
+      "error": "Impossible de rejoindre",
+      "useSuggestion": "Utiliser la suggestion"
     },
     "videoInterview": {
       "title": "Entretien Vidéo",
@@ -1780,7 +1784,16 @@
       "thankYouMessage": "Merci{{name}} d'avoir complété l'entretien. Notre équipe examinera vos réponses et vous contactera bientôt.",
       "duration": "Durée",
       "backToHome": "Retour à l'Accueil",
-      "connectionError": "Erreur de connexion"
+      "connectionError": "Erreur de connexion",
+      "agentDisconnected": "Déconnecté",
+      "agentConnecting": "Connexion...",
+      "agentInitializing": "Initialisation...",
+      "agentListening": "À l'écoute",
+      "agentThinking": "Réflexion...",
+      "agentSpeaking": "En train de parler",
+      "agentFailed": "Échec de connexion",
+      "transcript": "Transcription",
+      "transcriptEmpty": "La transcription apparaîtra ici au fur et à mesure de l'entretien..."
     },
     "jobs": {
       "title": "Emplois",
@@ -1867,6 +1880,7 @@
       "interviewDuration": "Duree (min)",
       "interviewRequirements": "Exigences d'entretien",
       "interviewRequirementsPlaceholder": "Points a evaluer lors de l'entretien...",
+      "interviewRequirementsSuggestion": "Se concentrer sur la conception de systèmes et l'expérience des systèmes distribués. Évaluer la capacité de résolution de problèmes avec des scénarios réels.",
       "evaluationRules": "Regles d'evaluation",
       "evaluationRulesPlaceholder": "Criteres de notation, poids, seuils...",
       "autoGenerateAll": "Generer tout avec l'IA",
@@ -2264,7 +2278,7 @@
       }
     },
     "detail": {
-      "back": "Retour aux CV",
+      "back": "Retour au Hub de Talents",
       "title": "Détail du CV",
       "tabs": {
         "overview": "Aperçu",
@@ -2280,7 +2294,66 @@
         "rematchingJobs": "Rematching...",
         "inviteInterview": "Inviter à un entretien",
         "reupload": "Retélécharger et écraser",
-        "archive": "Archiver"
+        "archive": "Archiver",
+        "edit": "Modifier le CV",
+        "refineForJob": "Optimiser pour un Poste"
+      },
+      "edit": {
+        "editing": "Modification du CV",
+        "versionNamePlaceholder": "Nom de version (optionnel)",
+        "cancel": "Annuler",
+        "saving": "Enregistrement...",
+        "save": "Enregistrer les Modifications",
+        "basicInfo": "Informations de Base",
+        "name": "Nom Complet",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "currentRole": "Poste Actuel",
+        "experienceYears": "Années d'Expérience",
+        "skillsPlaceholder": "Compétences séparées par des virgules...",
+        "role": "Poste",
+        "company": "Entreprise",
+        "startDate": "Date de Début",
+        "endDate": "Date de Fin",
+        "description": "Description",
+        "addExperience": "Ajouter une Expérience",
+        "degree": "Diplôme",
+        "institution": "Établissement",
+        "fieldOfStudy": "Domaine d'Études",
+        "graduationDate": "Date de Diplôme",
+        "addEducation": "Ajouter une Formation",
+        "location": "Lieu",
+        "achievements": "Réalisations (une par ligne)",
+        "achievementsPlaceholder": "Une réalisation par ligne...",
+        "technologies": "Technologies (séparées par des virgules)",
+        "technologiesPlaceholder": "React, Node.js, PostgreSQL...",
+        "gpa": "Moyenne",
+        "certName": "Nom de la Certification",
+        "certIssuer": "Organisme",
+        "certDate": "Date",
+        "addCertification": "Ajouter une Certification",
+        "projectName": "Nom du Projet",
+        "projectDescription": "Description du Projet",
+        "addProject": "Ajouter un Projet"
+      },
+      "versions": {
+        "title": "Historique des Versions",
+        "autoSave": "Sauvegarde automatique",
+        "restore": "Restaurer",
+        "restoring": "Restauration..."
+      },
+      "refine": {
+        "title": "Optimiser le CV pour un Poste",
+        "description": "Sélectionnez un poste pour optimiser ce CV. L'IA mettra en valeur les compétences et expériences correspondantes sans modifier les faits.",
+        "selectJob": "Sélectionner un poste",
+        "refining": "Optimisation...",
+        "refine": "Optimiser le CV",
+        "changes": "Modifications Effectuées",
+        "matchedSkills": "Compétences Correspondantes",
+        "emphasizedExperiences": "Expériences Mises en Valeur",
+        "discard": "Annuler",
+        "applying": "Application...",
+        "applyAndSave": "Appliquer et Enregistrer"
       },
       "invite": {
         "title": "Inviter à un entretien",
@@ -2800,6 +2873,37 @@
       "outputTokens": "Sortie",
       "showing": "Affichage",
       "of": "sur",
+      "prev": "Précédent",
+      "next": "Suivant"
+    }
+  },
+  "admin": {
+    "activity": {
+      "signups": "Inscriptions",
+      "logins": "Connexions",
+      "feed": "Fil d'activité",
+      "journey": "Parcours utilisateur",
+      "time": "Heure",
+      "email": "E-mail",
+      "name": "Nom",
+      "company": "Entreprise",
+      "provider": "Fournisseur",
+      "ip": "Adresse IP",
+      "userAgent": "Agent utilisateur",
+      "eventType": "Type",
+      "path": "Chemin",
+      "element": "Élément",
+      "pageView": "Vue de page",
+      "click": "Clic",
+      "selectUser": "Sélectionner un utilisateur",
+      "selectSession": "Sélectionner une session",
+      "allUsers": "Tous les utilisateurs",
+      "allSessions": "Toutes les sessions",
+      "events": "événements",
+      "selectUserPrompt": "Sélectionnez un utilisateur pour voir son parcours d'activité",
+      "noData": "Aucune donnée",
+      "loading": "Chargement...",
+      "showing": "Affichage",
       "prev": "Précédent",
       "next": "Suivant"
     }

@@ -4,13 +4,15 @@ import {
   LiveKitRoom,
   VideoTrack,
   useLocalParticipant,
-  useRemoteParticipants,
   useTracks,
   RoomAudioRenderer,
-  ControlBar,
+  BarVisualizer,
+  useVoiceAssistant,
+  VoiceAssistantControlBar,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { Track } from 'livekit-client';
+import type { AgentState } from '@livekit/components-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
@@ -158,11 +160,13 @@ export default function VideoInterview() {
             serverUrl={joinData.wsUrl}
             token={joinData.token}
             connect={true}
+            audio={true}
+            video={true}
             onDisconnected={handleDisconnect}
             className="h-screen"
             data-lk-theme="default"
           >
-            <LiveInterviewView
+            <AgentInterviewView
               candidateName={joinData.candidateName}
               jobTitle={joinData.jobTitle}
               elapsed={elapsed}
@@ -525,8 +529,33 @@ function DevicePreviewScreen({
   );
 }
 
-/* ─── State 3: Live Interview ─── */
-function LiveInterviewView({
+/* ─── Agent State Labels ─── */
+const AGENT_STATE_LABELS: Record<AgentState, string> = {
+  disconnected: 'videoInterview.agentDisconnected',
+  connecting: 'videoInterview.agentConnecting',
+  'pre-connect-buffering': 'videoInterview.agentConnecting',
+  initializing: 'videoInterview.agentInitializing',
+  idle: 'videoInterview.agentListening',
+  listening: 'videoInterview.agentListening',
+  thinking: 'videoInterview.agentThinking',
+  speaking: 'videoInterview.agentSpeaking',
+  failed: 'videoInterview.agentFailed',
+};
+
+const AGENT_STATE_COLORS: Record<string, string> = {
+  listening: 'text-green-400',
+  thinking: 'text-yellow-400',
+  speaking: 'text-blue-400',
+  connecting: 'text-gray-400',
+  'pre-connect-buffering': 'text-gray-400',
+  initializing: 'text-gray-400',
+  idle: 'text-green-400',
+  disconnected: 'text-red-400',
+  failed: 'text-red-400',
+};
+
+/* ─── State 3: Live Interview (Agent UI) ─── */
+function AgentInterviewView({
   candidateName,
   jobTitle,
   elapsed,
@@ -539,18 +568,26 @@ function LiveInterviewView({
 }) {
   const { t } = useTranslation();
   const { localParticipant } = useLocalParticipant();
-  const remoteParticipants = useRemoteParticipants();
   const tracks = useTracks([Track.Source.Camera], { onlySubscribed: true });
+  const { state, audioTrack, agentTranscriptions } = useVoiceAssistant();
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   const localVideoTrack = tracks.find(
     (tr) => tr.participant.sid === localParticipant.sid && tr.source === Track.Source.Camera,
   );
 
+  // Auto-scroll transcript
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [agentTranscriptions]);
+
   return (
     <div className="flex h-screen flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-3 py-2 sm:px-6 sm:py-3">
-        <h2 className="truncate text-sm font-semibold sm:text-base">{jobTitle || t('videoInterview.title', 'Video Interview')}</h2>
+        <h2 className="truncate text-sm font-semibold sm:text-base">
+          {jobTitle || t('videoInterview.title', 'Video Interview')}
+        </h2>
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <span className="font-mono text-xs sm:text-sm text-gray-300">{formatTime(elapsed)}</span>
           <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-400">
@@ -560,57 +597,91 @@ function LiveInterviewView({
         </div>
       </div>
 
-      {/* Main content — stack vertically on mobile, side-by-side on desktop */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 sm:flex-row sm:gap-8 sm:p-8">
-        {/* AI Interviewer */}
-        <div className="flex h-48 w-48 flex-col items-center justify-center rounded-2xl border border-gray-700 bg-gray-800/50 sm:h-72 sm:w-72">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 sm:mb-4 sm:h-20 sm:w-20">
-            <svg className="h-7 w-7 text-white sm:h-10 sm:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-            </svg>
-          </div>
-          <p className="text-sm font-medium sm:text-base">{t('videoInterview.aiInterviewer', 'AI Interviewer')}</p>
-          <p className="mt-1 text-xs text-gray-400">
-            {remoteParticipants.length > 0
-              ? t('videoInterview.connected', 'Connected')
-              : t('videoInterview.connecting', 'Connecting...')}
-          </p>
-          {remoteParticipants.length > 0 && (
-            <div className="mt-2 flex items-center gap-1 sm:mt-3">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse"
-                  style={{ animationDelay: `${i * 150}ms` }}
-                />
-              ))}
+      {/* Main content */}
+      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+        {/* Left: Agent visualizer + self video */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 sm:p-6">
+          {/* Agent Audio Visualizer */}
+          <div className="flex w-full max-w-md flex-col items-center gap-3">
+            <div className="relative flex h-40 w-full items-center justify-center rounded-2xl border border-gray-700 bg-gray-800/50 sm:h-56">
+              <BarVisualizer
+                state={state}
+                track={audioTrack}
+                barCount={7}
+                className="h-24 w-48 sm:h-32 sm:w-64"
+                style={{
+                  gap: '6px',
+                  '--lk-fg': state === 'speaking' ? '#3b82f6' : state === 'listening' ? '#22c55e' : '#6b7280',
+                } as React.CSSProperties}
+              />
             </div>
-          )}
+
+            {/* Agent State Label */}
+            <div className="flex items-center gap-2">
+              <span className={`inline-block h-2 w-2 rounded-full ${
+                state === 'speaking' ? 'bg-blue-400 animate-pulse' :
+                state === 'listening' ? 'bg-green-400' :
+                state === 'thinking' ? 'bg-yellow-400 animate-pulse' :
+                'bg-gray-500'
+              }`} />
+              <span className={`text-sm font-medium ${AGENT_STATE_COLORS[state] || 'text-gray-400'}`}>
+                {t(AGENT_STATE_LABELS[state], state)}
+              </span>
+            </div>
+          </div>
+
+          {/* Self Video (PiP) */}
+          <div className="relative h-28 w-40 overflow-hidden rounded-xl border border-gray-700 bg-gray-800 sm:h-36 sm:w-48">
+            {localVideoTrack ? (
+              <VideoTrack trackRef={localVideoTrack} className="h-full w-full object-cover" style={{ transform: 'scaleX(-1)' }} />
+            ) : (
+              <div className="flex h-full items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <svg className="mx-auto mb-1 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                  <p className="text-xs">{t('interview.cameraOff', 'Camera Off')}</p>
+                </div>
+              </div>
+            )}
+            <div className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-xs">
+              {candidateName}
+            </div>
+          </div>
         </div>
 
-        {/* Candidate Video */}
-        <div className="relative h-48 w-64 overflow-hidden rounded-2xl border border-gray-700 bg-gray-800 sm:h-72 sm:w-96">
-          {localVideoTrack ? (
-            <VideoTrack trackRef={localVideoTrack} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-gray-500">
-              <div className="text-center">
-                <svg className="mx-auto mb-2 h-8 w-8 sm:h-10 sm:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-                </svg>
-                <p className="text-xs sm:text-sm">{t('interview.cameraOff', 'Camera Off')}</p>
+        {/* Right: Live Transcript */}
+        <div className="flex w-full flex-col border-t border-gray-800 lg:w-80 lg:border-l lg:border-t-0 xl:w-96">
+          <div className="flex items-center gap-2 border-b border-gray-800 bg-gray-900/50 px-4 py-2">
+            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+            </svg>
+            <span className="text-sm font-medium text-gray-300">
+              {t('videoInterview.transcript', 'Transcript')}
+            </span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 max-h-48 lg:max-h-none">
+            {agentTranscriptions.length === 0 && (
+              <p className="text-center text-xs text-gray-500 py-8">
+                {t('videoInterview.transcriptEmpty', 'Transcript will appear here as the interview progresses...')}
+              </p>
+            )}
+            {agentTranscriptions.map((seg, i) => (
+              <div key={`${seg.id}-${i}`} className="flex gap-2 text-sm">
+                <span className="shrink-0 font-medium text-blue-400">
+                  {t('videoInterview.aiInterviewer', 'AI Interviewer')}:
+                </span>
+                <span className="text-gray-200">{seg.text}</span>
               </div>
-            </div>
-          )}
-          <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 text-xs">
-            {candidateName}
+            ))}
+            <div ref={transcriptEndRef} />
           </div>
         </div>
       </div>
 
       {/* Controls */}
       <div className="border-t border-gray-800 bg-gray-900 p-2 sm:p-4">
-        <ControlBar variation="minimal" saveUserChoices={false} />
+        <VoiceAssistantControlBar />
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
   const [company, setCompany] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function Login() {
           return;
         }
         setPhoneError(null);
-        await signup(email, password, name || undefined, company || undefined, phone);
+        await signup(email, password, name || undefined, jobTitle || undefined, company || undefined, phone);
       }
       navigate(from, { replace: true });
     } catch (err) {
@@ -221,6 +222,20 @@ export default function Login() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t('auth.namePlaceholder', 'John Doe')}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('auth.jobTitle', 'Job Title')} <span className="text-gray-400">({t('auth.optional', 'optional')})</span>
+                  </label>
+                  <input
+                    id="jobTitle"
+                    type="text"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                    placeholder={t('auth.jobTitlePlaceholder', 'Recruiter')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   />
                 </div>

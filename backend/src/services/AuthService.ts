@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import prisma from '../lib/prisma.js';
+import { resolveUserUsageLimits, type UsageLimitSnapshot } from '../middleware/usageMeter.js';
 
 // User type matching Prisma schema
 export interface User {
@@ -10,6 +11,8 @@ export interface User {
   email: string;
   passwordHash: string | null;
   name: string | null;
+  phone: string | null;
+  jobTitle: string | null;
   company: string | null;
   avatar: string | null;
   role: string;
@@ -27,6 +30,8 @@ export interface User {
   interviewsUsed: number;
   resumeMatchesUsed: number;
   topUpBalance: number;
+  customMaxInterviews?: number | null;
+  customMaxMatches?: number | null;
 }
 
 export interface Session {
@@ -38,13 +43,14 @@ export interface Session {
 }
 
 // Public user type (without password hash)
-export type PublicUser = Omit<User, 'passwordHash'>;
+export type PublicUser = Omit<User, 'passwordHash' | 'customMaxInterviews' | 'customMaxMatches'> & Partial<UsageLimitSnapshot>;
 
 // Types
 export interface SignupData {
   email: string;
   password: string;
   name?: string;
+  jobTitle?: string;
   company?: string;
   phone: string;
 }
@@ -66,6 +72,7 @@ export interface AuthResult {
   user: PublicUser;
   token: string;
   sessionToken: string;
+  isNewUser?: boolean;
 }
 
 export interface TokenPayload {
@@ -86,6 +93,8 @@ const DEMO_USER: PublicUser = {
   id: 'demo-user-id',
   email: 'demo@robohire.io',
   name: 'Demo User',
+  phone: null,
+  jobTitle: null,
   company: 'RoboHire Demo',
   avatar: null,
   role: 'user',
@@ -106,6 +115,21 @@ const DEMO_USER: PublicUser = {
 const DEMO_PASSWORD = 'demo1234';
 
 class AuthService {
+  private async buildPublicUser(user: User | PublicUser): Promise<PublicUser> {
+    const usageLimits = await resolveUserUsageLimits(user);
+    const {
+      passwordHash: _passwordHash,
+      customMaxInterviews: _customMaxInterviews,
+      customMaxMatches: _customMaxMatches,
+      ...userWithoutPrivateFields
+    } = user as User;
+
+    return {
+      ...userWithoutPrivateFields,
+      ...usageLimits,
+    } as PublicUser;
+  }
+
   /**
    * Hash a password
    */
@@ -223,7 +247,7 @@ class AuthService {
    * Sign up a new user with email and password
    */
   async signup(data: SignupData): Promise<AuthResult> {
-    const { email, password, name, company, phone } = data;
+    const { email, password, name, jobTitle, company, phone } = data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -251,6 +275,7 @@ class AuthService {
         email: email.toLowerCase(),
         passwordHash,
         name,
+        jobTitle,
         company,
         phone,
         provider: 'email',
@@ -263,11 +288,8 @@ class AuthService {
     // Generate JWT
     const token = this.generateToken(user);
 
-    // Remove passwordHash from response
-    const { passwordHash: _, ...userWithoutPassword } = user;
-
     return {
-      user: userWithoutPassword,
+      user: await this.buildPublicUser(user),
       token,
       sessionToken: session.token,
     };
@@ -290,7 +312,7 @@ class AuthService {
       if (email.toLowerCase() === DEMO_USER.email && password === DEMO_PASSWORD) {
         const token = this.generateToken({ ...DEMO_USER, passwordHash: null } as any);
         const sessionToken = this.generateSessionToken();
-        return { user: DEMO_USER, token, sessionToken };
+        return { user: await this.buildPublicUser(DEMO_USER), token, sessionToken };
       }
       throw new Error('Invalid email or password');
     }
@@ -316,11 +338,8 @@ class AuthService {
     // Generate JWT
     const token = this.generateToken(user as any);
 
-    // Remove passwordHash from response
-    const { passwordHash: _, ...userWithoutPassword } = user;
-
     return {
-      user: userWithoutPassword as PublicUser,
+      user: await this.buildPublicUser(user as User),
       token,
       sessionToken: session.token,
     };
@@ -361,6 +380,7 @@ class AuthService {
     }
 
     // If still not found, create new user
+    let isNewUser = false;
     if (!user) {
       user = await prisma.user.create({
         data: {
@@ -371,6 +391,7 @@ class AuthService {
           providerId,
         },
       });
+      isNewUser = true;
     }
 
     // Create session
@@ -379,13 +400,11 @@ class AuthService {
     // Generate JWT
     const token = this.generateToken(user);
 
-    // Remove passwordHash from response
-    const { passwordHash: _, ...userWithoutPassword } = user;
-
     return {
-      user: userWithoutPassword,
+      user: await this.buildPublicUser(user as User),
       token,
       sessionToken: session.token,
+      isNewUser,
     };
   }
 
@@ -400,15 +419,14 @@ class AuthService {
 
       if (!user) {
         // Fallback to demo user if DB has no match
-        if (id === DEMO_USER.id) return DEMO_USER;
+        if (id === DEMO_USER.id) return this.buildPublicUser(DEMO_USER);
         return null;
       }
 
-      const { passwordHash: _, ...userWithoutPassword } = user;
-      return userWithoutPassword as PublicUser;
+      return this.buildPublicUser(user as User);
     } catch {
       // Database not available, fallback to demo user
-      if (id === DEMO_USER.id) return DEMO_USER;
+      if (id === DEMO_USER.id) return this.buildPublicUser(DEMO_USER);
       return null;
     }
   }
@@ -418,15 +436,14 @@ class AuthService {
    */
   async updateProfile(
     userId: string,
-    data: { name?: string; company?: string; avatar?: string; email?: string; phone?: string }
+    data: { name?: string; company?: string; avatar?: string; email?: string; phone?: string; jobTitle?: string }
   ): Promise<PublicUser> {
     const user = await prisma.user.update({
       where: { id: userId },
       data,
     });
 
-    const { passwordHash: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return this.buildPublicUser(user as User);
   }
 
   /**

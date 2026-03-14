@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import prisma from '../lib/prisma.js';
-import { clearLimitsCache } from '../middleware/usageMeter.js';
+import { clearLimitsCache, getPlanLimits, resolveUserUsageLimitsFromPlan } from '../middleware/usageMeter.js';
 import { updatePriceId } from './checkout.js';
 import {
   PRICING_CURRENCIES,
@@ -75,7 +75,7 @@ router.get('/users', async (req, res) => {
         }
       : {};
 
-    const [users, total] = await Promise.all([
+    const [users, total, planLimits] = await Promise.all([
       prisma.user.findMany({
         where,
         select: {
@@ -101,12 +101,18 @@ router.get('/users', async (req, res) => {
         take: limit,
       }),
       prisma.user.count({ where }),
+      getPlanLimits(),
     ]);
+
+    const usersWithLimits = users.map((user) => ({
+      ...user,
+      ...resolveUserUsageLimitsFromPlan(user, planLimits),
+    }));
 
     res.json({
       success: true,
       data: {
-        users,
+        users: usersWithLimits,
         pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       },
     });
@@ -162,7 +168,13 @@ router.get('/users/:userId', async (req, res) => {
       take: 50,
     });
 
-    res.json({ success: true, data: { user, adjustments } });
+    const planLimits = await getPlanLimits();
+    const userWithLimits = {
+      ...user,
+      ...resolveUserUsageLimitsFromPlan(user, planLimits),
+    };
+
+    res.json({ success: true, data: { user: userWithLimits, adjustments } });
   } catch (error) {
     console.error('Admin get user error:', error);
     res.status(500).json({ success: false, error: 'Failed to get user details' });
@@ -1891,6 +1903,153 @@ router.put('/interview-config', async (req, res) => {
   } catch (error) {
     console.error('Admin interview-config update error:', error);
     res.status(500).json({ success: false, error: 'Failed to update interview config' });
+  }
+});
+
+// ── Activity Tracking Endpoints ──────────────────────────────────────
+
+/**
+ * GET /api/v1/admin/activity/signups
+ * Recent user signups
+ */
+router.get('/activity/signups', async (req, res) => {
+  try {
+    const limit = Math.min(100, parseInt(req.query.limit as string) || 50);
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        select: { id: true, email: true, name: true, company: true, provider: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.user.count(),
+    ]);
+
+    res.json({ success: true, data: { users, total } });
+  } catch (error) {
+    console.error('Admin activity/signups error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch signups' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/activity/logins
+ * Recent login events from ApiRequestLog
+ */
+router.get('/activity/logins', async (req, res) => {
+  try {
+    const limit = Math.min(100, parseInt(req.query.limit as string) || 50);
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const logins = await prisma.apiRequestLog.findMany({
+      where: {
+        endpoint: { contains: '/api/auth/login' },
+        statusCode: { in: [200, 201] },
+      },
+      select: {
+        id: true,
+        userId: true,
+        ipAddress: true,
+        userAgent: true,
+        createdAt: true,
+        user: { select: { id: true, email: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
+    });
+
+    res.json({ success: true, data: { logins } });
+  } catch (error) {
+    console.error('Admin activity/logins error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch logins' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/activity/feed
+ * User click/page_view activity feed
+ */
+router.get('/activity/feed', async (req, res) => {
+  try {
+    const limit = Math.min(200, parseInt(req.query.limit as string) || 50);
+    const offset = parseInt(req.query.offset as string) || 0;
+    const userId = req.query.userId as string | undefined;
+
+    const where: any = {};
+    if (userId) where.userId = userId;
+
+    const [activities, total] = await Promise.all([
+      prisma.userActivity.findMany({
+        where,
+        include: { user: { select: { id: true, email: true, name: true } } },
+        orderBy: { timestamp: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.userActivity.count({ where }),
+    ]);
+
+    res.json({ success: true, data: { activities, total } });
+  } catch (error) {
+    console.error('Admin activity/feed error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch activity feed' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/activity/journey/:userId
+ * Per-user click journey timeline with session grouping
+ */
+router.get('/activity/journey/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const sessionId = req.query.sessionId as string | undefined;
+    const limit = Math.min(500, parseInt(req.query.limit as string) || 200);
+
+    const where: any = { userId };
+    if (sessionId) where.sessionId = sessionId;
+
+    const [activities, sessions] = await Promise.all([
+      prisma.userActivity.findMany({
+        where,
+        orderBy: { timestamp: 'asc' },
+        take: limit,
+      }),
+      prisma.userActivity.groupBy({
+        by: ['sessionId'],
+        where: { userId },
+        _min: { timestamp: true },
+        _max: { timestamp: true },
+        _count: true,
+        orderBy: { _min: { timestamp: 'desc' } },
+        take: 50,
+      }),
+    ]);
+
+    res.json({ success: true, data: { activities, sessions } });
+  } catch (error) {
+    console.error('Admin activity/journey error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch user journey' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/activity/users
+ * List users for activity filter dropdowns
+ */
+router.get('/activity/users', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: { id: true, email: true, name: true },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+    res.json({ success: true, data: { users } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch users' });
   }
 });
 

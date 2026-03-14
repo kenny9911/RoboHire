@@ -5,6 +5,8 @@ export interface AuthUser {
   id: string;
   email: string;
   name?: string | null;
+  phone?: string | null;
+  jobTitle?: string | null;
   company?: string | null;
   avatar?: string | null;
   role?: string;
@@ -22,6 +24,10 @@ export interface AuthUser {
   interviewsUsed?: number;
   resumeMatchesUsed?: number;
   topUpBalance?: number;
+  planMaxInterviews?: number | null;
+  planMaxMatches?: number | null;
+  effectiveMaxInterviews?: number | null;
+  effectiveMaxMatches?: number | null;
 }
 
 // API Key scope type
@@ -34,6 +40,8 @@ declare global {
       id: string;
       email: string;
       name?: string | null;
+      phone?: string | null;
+      jobTitle?: string | null;
       company?: string | null;
       avatar?: string | null;
       role?: string;
@@ -51,6 +59,10 @@ declare global {
       interviewsUsed?: number;
       resumeMatchesUsed?: number;
       topUpBalance?: number;
+      planMaxInterviews?: number | null;
+      planMaxMatches?: number | null;
+      effectiveMaxInterviews?: number | null;
+      effectiveMaxMatches?: number | null;
     }
     interface Request {
       requestId?: string;

@@ -873,4 +873,252 @@ router.post('/:id/job-fit', requireAuth, async (req: Request, res: Response) => 
   }
 });
 
+// ─── Full resume edit (with auto-versioning) ─────────────────────────
+router.put('/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const existing = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const { name, email, phone, currentRole, experienceYears, resumeText, parsedData, versionName } = req.body;
+
+    // Auto-snapshot current state before editing
+    await prisma.resumeVersion.create({
+      data: {
+        resumeId: existing.id,
+        userId: req.user.id,
+        versionName: versionName || null,
+        resumeText: existing.resumeText,
+        parsedData: existing.parsedData ?? Prisma.JsonNull,
+        name: existing.name,
+        email: existing.email,
+        phone: existing.phone,
+        currentRole: existing.currentRole,
+        experienceYears: existing.experienceYears,
+        changeNote: 'Before edit',
+      },
+    });
+
+    // Build update payload
+    const data: Record<string, unknown> = {};
+    if (name !== undefined) data.name = name;
+    if (email !== undefined) data.email = email;
+    if (phone !== undefined) data.phone = phone;
+    if (currentRole !== undefined) data.currentRole = currentRole;
+    if (experienceYears !== undefined) data.experienceYears = experienceYears;
+    if (resumeText !== undefined) {
+      data.resumeText = resumeText;
+      data.contentHash = computeHash(resumeText);
+    }
+    if (parsedData !== undefined) data.parsedData = parsedData;
+
+    // Clear stale caches
+    data.insightData = Prisma.JsonNull;
+    data.jobFitData = Prisma.JsonNull;
+
+    const updated = await prisma.resume.update({
+      where: { id: existing.id },
+      data,
+    });
+
+    logger.info('RESUMES', `Resume edited with auto-version`, { resumeId: existing.id });
+
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    logger.error('RESUMES', 'Failed to edit resume', { error: error instanceof Error ? error.message : String(error) });
+    return res.status(500).json({ success: false, error: 'Failed to edit resume' });
+  }
+});
+
+// ─── List resume versions ─────────────────────────────────────────────
+router.get('/:id/versions', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    // Verify ownership
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+      select: { id: true },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const versions = await prisma.resumeVersion.findMany({
+      where: { resumeId: req.params.id },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        versionName: true,
+        name: true,
+        currentRole: true,
+        changeNote: true,
+        createdAt: true,
+      },
+    });
+
+    return res.json({ success: true, data: versions });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: 'Failed to list versions' });
+  }
+});
+
+// ─── Get a specific version's full data ───────────────────────────────
+router.get('/:id/versions/:versionId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const version = await prisma.resumeVersion.findFirst({
+      where: { id: req.params.versionId, resumeId: req.params.id, userId: req.user.id },
+    });
+    if (!version) {
+      return res.status(404).json({ success: false, error: 'Version not found' });
+    }
+
+    return res.json({ success: true, data: version });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: 'Failed to get version' });
+  }
+});
+
+// ─── Restore a version (rollback) ────────────────────────────────────
+router.post('/:id/versions/:versionId/restore', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const existing = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const version = await prisma.resumeVersion.findFirst({
+      where: { id: req.params.versionId, resumeId: req.params.id, userId: req.user.id },
+    });
+    if (!version) {
+      return res.status(404).json({ success: false, error: 'Version not found' });
+    }
+
+    // Snapshot current state before restoring
+    await prisma.resumeVersion.create({
+      data: {
+        resumeId: existing.id,
+        userId: req.user.id,
+        resumeText: existing.resumeText,
+        parsedData: existing.parsedData ?? Prisma.JsonNull,
+        name: existing.name,
+        email: existing.email,
+        phone: existing.phone,
+        currentRole: existing.currentRole,
+        experienceYears: existing.experienceYears,
+        changeNote: 'Before rollback',
+      },
+    });
+
+    // Restore from target version
+    const updated = await prisma.resume.update({
+      where: { id: existing.id },
+      data: {
+        name: version.name,
+        email: version.email,
+        phone: version.phone,
+        currentRole: version.currentRole,
+        experienceYears: version.experienceYears,
+        resumeText: version.resumeText,
+        parsedData: version.parsedData ?? Prisma.JsonNull,
+        contentHash: computeHash(version.resumeText),
+        insightData: Prisma.JsonNull,
+        jobFitData: Prisma.JsonNull,
+      },
+    });
+
+    logger.info('RESUMES', `Resume restored to version ${version.id}`, { resumeId: existing.id, versionId: version.id });
+
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    logger.error('RESUMES', 'Failed to restore version', { error: error instanceof Error ? error.message : String(error) });
+    return res.status(500).json({ success: false, error: 'Failed to restore version' });
+  }
+});
+
+// ─── Refine resume for a job (AI agent) ───────────────────────────────
+router.post('/:id/refine', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const { jobId } = req.body;
+    if (!jobId) {
+      return res.status(400).json({ success: false, error: 'jobId is required' });
+    }
+
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const job = await prisma.job.findFirst({
+      where: { id: jobId, userId: req.user.id },
+      select: {
+        title: true,
+        description: true,
+        requirements: true,
+        qualifications: true,
+        hardRequirements: true,
+        interviewLanguage: true,
+      },
+    });
+    if (!job) {
+      return res.status(404).json({ success: false, error: 'Job not found' });
+    }
+
+    // Determine language: job's interviewLanguage → user's Accept-Language → 'en'
+    const acceptLang = (req.headers['accept-language'] || '').split(',')[0]?.split('-')[0] || '';
+    const language = job.interviewLanguage || acceptLang || 'en';
+
+    const { refineResumeAgent } = await import('../agents/RefineResumeAgent.js');
+
+    const result = await refineResumeAgent.execute(
+      {
+        resumeText: resume.resumeText,
+        parsedData: resume.parsedData,
+        jobTitle: job.title,
+        jobDescription: job.description || '',
+        requirements: job.requirements as any || undefined,
+        qualifications: job.qualifications || undefined,
+        hardRequirements: job.hardRequirements || undefined,
+        language,
+      },
+      job.description || undefined,
+      req.requestId,
+      language,
+    );
+
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('RESUMES', 'Failed to refine resume', { error: error instanceof Error ? error.message : String(error) });
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to refine resume',
+    });
+  }
+});
+
 export default router;

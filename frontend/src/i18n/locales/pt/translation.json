@@ -896,7 +896,9 @@
       "account": "Conta",
       "usage": "Uso",
       "resumes": "Currículos",
-      "integrations": "Integrações"
+      "integrations": "Integrações",
+      "docs": "Documentação",
+      "developers": "Desenvolvedores"
     },
     "welcome": "Bem-vindo de volta",
     "user": "por aqui",
@@ -1589,6 +1591,7 @@
       "resumes": "Biblioteca de Currículos",
       "interview_invite": "Convite para Entrevista",
       "interview_evaluation": "Avaliação de Entrevista",
+      "interview_livekit": "Sessão de entrevista com IA",
       "resume_parse": "Análise de Currículo",
       "jd_parse": "Análise JD",
       "document_extract": "Extração de Documento",
@@ -1754,7 +1757,8 @@
       "thankYou": "Obrigado!",
       "thankYouMessage": "Obrigado{{name}} por concluir a entrevista. Nossa equipe analisará suas respostas e entrará em contato em breve.",
       "backToHome": "Voltar ao Início",
-      "error": "Não foi possível entrar"
+      "error": "Não foi possível entrar",
+      "useSuggestion": "Usar sugestão"
     },
     "videoInterview": {
       "title": "Entrevista em Vídeo",
@@ -1779,7 +1783,16 @@
       "thankYouMessage": "Obrigado{{name}} por completar a entrevista. Nossa equipe analisará suas respostas e entrará em contato em breve.",
       "duration": "Duração",
       "backToHome": "Voltar ao Início",
-      "connectionError": "Erro de conexão"
+      "connectionError": "Erro de conexão",
+      "agentDisconnected": "Desconectado",
+      "agentConnecting": "Conectando...",
+      "agentInitializing": "Inicializando...",
+      "agentListening": "Ouvindo",
+      "agentThinking": "Pensando...",
+      "agentSpeaking": "Falando",
+      "agentFailed": "Falha na conexão",
+      "transcript": "Transcrição",
+      "transcriptEmpty": "A transcrição aparecerá aqui conforme a entrevista avança..."
     },
     "jobs": {
       "title": "Vagas",
@@ -1866,6 +1879,7 @@
       "interviewDuration": "Duracao (min)",
       "interviewRequirements": "Requisitos da entrevista",
       "interviewRequirementsPlaceholder": "O que avaliar durante a entrevista...",
+      "interviewRequirementsSuggestion": "Foco em design de sistemas e experiência com sistemas distribuídos. Avaliar a capacidade de resolução de problemas com cenários reais.",
       "evaluationRules": "Regras de avaliacao",
       "evaluationRulesPlaceholder": "Criterios de pontuacao, pesos, limites...",
       "autoGenerateAll": "Gerar tudo com IA",
@@ -2263,7 +2277,7 @@
       }
     },
     "detail": {
-      "back": "Voltar aos Currículos",
+      "back": "Voltar ao Hub de Talentos",
       "title": "Detalhe do Currículo",
       "tabs": {
         "overview": "Visão Geral",
@@ -2279,7 +2293,66 @@
         "rematchingJobs": "Reavaliando...",
         "inviteInterview": "Convidar para entrevista",
         "reupload": "Reenviar e sobrescrever",
-        "archive": "Arquivar"
+        "archive": "Arquivar",
+        "edit": "Editar Currículo",
+        "refineForJob": "Otimizar para Vaga"
+      },
+      "edit": {
+        "editing": "Editando Currículo",
+        "versionNamePlaceholder": "Nome da versão (opcional)",
+        "cancel": "Cancelar",
+        "saving": "Salvando...",
+        "save": "Salvar Alterações",
+        "basicInfo": "Informações Básicas",
+        "name": "Nome Completo",
+        "email": "E-mail",
+        "phone": "Telefone",
+        "currentRole": "Cargo Atual",
+        "experienceYears": "Anos de Experiência",
+        "skillsPlaceholder": "Habilidades separadas por vírgulas...",
+        "role": "Cargo",
+        "company": "Empresa",
+        "startDate": "Data de Início",
+        "endDate": "Data de Término",
+        "description": "Descrição",
+        "addExperience": "Adicionar Experiência",
+        "degree": "Graduação",
+        "institution": "Instituição",
+        "fieldOfStudy": "Área de Estudo",
+        "graduationDate": "Data de Formatura",
+        "addEducation": "Adicionar Educação",
+        "location": "Localização",
+        "achievements": "Conquistas (uma por linha)",
+        "achievementsPlaceholder": "Uma conquista por linha...",
+        "technologies": "Tecnologias (separadas por vírgulas)",
+        "technologiesPlaceholder": "React, Node.js, PostgreSQL...",
+        "gpa": "Média",
+        "certName": "Nome do Certificado",
+        "certIssuer": "Emissor",
+        "certDate": "Data",
+        "addCertification": "Adicionar Certificação",
+        "projectName": "Nome do Projeto",
+        "projectDescription": "Descrição do Projeto",
+        "addProject": "Adicionar Projeto"
+      },
+      "versions": {
+        "title": "Histórico de Versões",
+        "autoSave": "Salvamento automático",
+        "restore": "Restaurar",
+        "restoring": "Restaurando..."
+      },
+      "refine": {
+        "title": "Otimizar Currículo para Vaga",
+        "description": "Selecione uma vaga para otimizar este currículo. A IA destacará habilidades e experiências correspondentes sem alterar os fatos.",
+        "selectJob": "Selecionar vaga",
+        "refining": "Otimizando...",
+        "refine": "Otimizar Currículo",
+        "changes": "Alterações Realizadas",
+        "matchedSkills": "Habilidades Correspondentes",
+        "emphasizedExperiences": "Experiências Destacadas",
+        "discard": "Descartar",
+        "applying": "Aplicando...",
+        "applyAndSave": "Aplicar e Salvar"
       },
       "invite": {
         "title": "Convidar para entrevista",
@@ -2799,6 +2872,37 @@
       "outputTokens": "Saída",
       "showing": "Exibindo",
       "of": "de",
+      "prev": "Anterior",
+      "next": "Próximo"
+    }
+  },
+  "admin": {
+    "activity": {
+      "signups": "Cadastros",
+      "logins": "Logins",
+      "feed": "Feed de atividades",
+      "journey": "Jornada do usuário",
+      "time": "Hora",
+      "email": "E-mail",
+      "name": "Nome",
+      "company": "Empresa",
+      "provider": "Provedor",
+      "ip": "Endereço IP",
+      "userAgent": "Agente do usuário",
+      "eventType": "Tipo",
+      "path": "Caminho",
+      "element": "Elemento",
+      "pageView": "Visualização de página",
+      "click": "Clique",
+      "selectUser": "Selecionar usuário",
+      "selectSession": "Selecionar sessão",
+      "allUsers": "Todos os usuários",
+      "allSessions": "Todas as sessões",
+      "events": "eventos",
+      "selectUserPrompt": "Selecione um usuário para ver sua jornada de atividade",
+      "noData": "Sem dados",
+      "loading": "Carregando...",
+      "showing": "Exibindo",
       "prev": "Anterior",
       "next": "Próximo"
     }

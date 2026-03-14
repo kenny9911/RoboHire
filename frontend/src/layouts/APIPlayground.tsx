@@ -2,14 +2,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-
-const PLAN_LIMITS: Record<string, { interviews: number; matches: number }> = {
-  free: { interviews: 0, matches: 0 },
-  starter: { interviews: 15, matches: 30 },
-  growth: { interviews: 120, matches: 240 },
-  business: { interviews: 280, matches: 500 },
-  custom: { interviews: Infinity, matches: Infinity },
-};
+import { getEffectiveInterviewLimit, getEffectiveMatchLimit } from '../utils/usageLimits';
 
 type UsageKey = 'matches' | 'interviews';
 
@@ -68,18 +61,18 @@ export default function APIPlayground() {
           </p>
           <ul className="flex flex-row md:flex-col gap-2 md:gap-0 md:space-y-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
             {navItems.map((item) => {
-              const tier = user?.subscriptionTier || 'free';
-              const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
               let usageBadge: React.ReactNode = null;
 
-              if (user && item.usageKey && tier !== 'free') {
-                const limit = limits[item.usageKey];
+              if (user && item.usageKey) {
+                const limit = item.usageKey === 'matches'
+                  ? getEffectiveMatchLimit(user)
+                  : getEffectiveInterviewLimit(user);
                 const used = item.usageKey === 'matches'
                   ? (user.resumeMatchesUsed ?? 0)
                   : (user.interviewsUsed ?? 0);
-                const remaining = Math.max(0, limit - used);
 
-                if (limit !== Infinity) {
+                if (limit != null) {
+                  const remaining = Math.max(0, limit - used);
                   usageBadge = (
                     <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full ${
                       remaining === 0

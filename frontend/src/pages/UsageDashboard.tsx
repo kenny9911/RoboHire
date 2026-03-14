@@ -79,6 +79,14 @@ interface CallHistoryRecord {
 
 type TimeRange = 'today' | '7d' | '30d' | '90d' | 'all';
 
+function getBrowserTimeZone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+}
+
 function rangeToDate(range: TimeRange): string | undefined {
   if (range === 'all') return undefined;
   if (range === 'today') {
@@ -162,7 +170,11 @@ export default function UsageDashboard() {
       setByKey([]);
       const headers = getAuthHeaders();
       const from = rangeToDate(range);
-      const qs = from ? `?from=${from}` : '';
+      const timeZone = getBrowserTimeZone();
+      const params = new URLSearchParams();
+      if (from) params.set('from', from);
+      if (timeZone) params.set('tz', timeZone);
+      const qs = params.toString() ? `?${params.toString()}` : '';
 
       try {
         const [sumRes, keyRes] = await Promise.all([

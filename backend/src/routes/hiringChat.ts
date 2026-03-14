@@ -32,7 +32,7 @@ const MAX_HISTORY_MESSAGES = 16;
 const MAX_JOB_DESCRIPTION_CHARS = 6000;
 
 router.post('/', optionalAuth, async (req, res) => {
-  const requestId = generateRequestId();
+  const requestId = req.requestId || generateRequestId();
   logger.startRequest(requestId, '/api/v1/hiring-chat', 'POST');
 
   try {
