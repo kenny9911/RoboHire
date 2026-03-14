@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { FormDataProvider } from './context/FormDataContext';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -17,7 +17,6 @@ const StartHiring = lazy(() => import('./pages/StartHiring'));
 const RequestDemo = lazy(() => import('./pages/RequestDemo'));
 const QuickInvite = lazy(() => import('./pages/QuickInvite'));
 const About = lazy(() => import('./pages/About'));
-const InterviewRoom = lazy(() => import('./pages/InterviewRoom'));
 const VideoInterview = lazy(() => import('./pages/VideoInterview'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
@@ -84,6 +83,12 @@ function ActivityTracker() {
   return null;
 }
 
+/** Redirect old /interview/:accessToken URLs to the new VideoInterview page */
+function InterviewRedirect() {
+  const { accessToken } = useParams<{ accessToken: string }>();
+  return <Navigate to={`/video-interview?token=${accessToken}`} replace />;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -103,7 +108,7 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/blog" element={<Blog />} />
-            <Route path="/interview/:accessToken" element={<InterviewRoom />} />
+            <Route path="/interview/:accessToken" element={<InterviewRedirect />} />
             <Route path="/video-interview" element={<VideoInterview />} />
 
             {/* Product App (protected, sidebar layout) */}

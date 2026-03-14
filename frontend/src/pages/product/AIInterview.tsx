@@ -49,6 +49,7 @@ interface InviteResult {
   resumeId: string;
   resumeName: string;
   status: 'pending' | 'sending' | 'sent' | 'error';
+  accessToken?: string;
   data?: {
     login_url?: string;
     qrcode_url?: string;
@@ -269,6 +270,7 @@ export default function AIInterview() {
 
         results[i].status = 'sent';
         results[i].data = inviteRes.data.data;
+        results[i].accessToken = inviteRes.data.data?.accessToken;
         setInviteResults([...results]);
       } catch (err: any) {
         results[i].status = 'error';
@@ -798,17 +800,17 @@ export default function AIInterview() {
                                 {r.status === 'pending' && t('product.interview.pending', 'Pending')}
                               </span>
                             </div>
-                            {r.status === 'sent' && r.data?.login_url && (
+                            {r.status === 'sent' && r.accessToken && (
                               <div className="mt-2 flex items-center gap-3">
                                 <a
-                                  href={r.data.login_url}
+                                  href={getInviteLink(r.accessToken)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-xs text-blue-600 hover:underline truncate"
                                 >
                                   {t('product.interview.loginUrl', 'Interview Link')}
                                 </a>
-                                {r.data.qrcode_url && (
+                                {r.data?.qrcode_url && (
                                   <a href={r.data.qrcode_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
                                     {t('product.interview.qrCode', 'QR Code')}
                                   </a>

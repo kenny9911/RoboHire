@@ -182,6 +182,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
     // Step 3: Persist resume, hiring request, and invitation to database
     let resumeId: string | undefined;
     let hiringRequestId: string | undefined;
+    let interviewAccessToken: string | undefined;
     if (req.user?.id) {
       try {
         const userId = req.user.id;
@@ -250,6 +251,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
         });
 
         const accessToken = crypto.randomBytes(32).toString('hex');
+        interviewAccessToken = accessToken;
 
         // Create Interview record linked to resume & hiring request
         await prisma.interview.create({
@@ -286,7 +288,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
     logger.endRequest(requestId, 'success', 200);
     return res.json({
       success: true,
-      data: { ...result, resumeId, hiringRequestId },
+      data: { ...result, resumeId, hiringRequestId, accessToken: interviewAccessToken },
       requestId,
     });
   } catch (error) {

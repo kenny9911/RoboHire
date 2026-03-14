@@ -224,7 +224,12 @@ async function runInterview(ctx: JobContext) {
     turnDetection: 'stt',
   });
 
-  const session = new voice.AgentSession({});
+  const session = new voice.AgentSession({
+    stt,
+    llm,
+    tts,
+    turnDetection: 'stt',
+  });
 
   // Collect transcript
   const transcript: Array<{ role: string; content: string; timestamp: number }> = [];

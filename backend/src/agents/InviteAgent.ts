@@ -161,7 +161,7 @@ export class InviteAgent {
     const jobTitle = this.extractJobTitle(jd) || 'Interview Invitation';
     const companyName = process.env.COMPANY_NAME || 'RoboHire';
     const homeUrl = process.env.ROBOHIRE_HOME_URL || 'https://robohire.io';
-    const loginUrl = process.env.ROBOHIRE_LOGIN_URL || `${homeUrl}/interview`;
+    const loginUrl = process.env.ROBOHIRE_LOGIN_URL || `${homeUrl}/video-interview`;
     const now = Date.now();
 
     const languageInstruction = languageService.getLanguageInstruction(jd || resume);

@@ -1404,6 +1404,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
       resumeName: string;
       success: boolean;
       data?: any;
+      accessToken?: string;
       error?: string;
     }> = [];
 
@@ -1460,6 +1461,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
           resumeName: resume.name,
           success: true,
           data: inviteResult,
+          accessToken,
         });
         sent++;
       } catch (inviteError) {
