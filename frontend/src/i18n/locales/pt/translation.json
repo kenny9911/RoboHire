@@ -2017,7 +2017,8 @@
           "nonProfit": "ONG"
         },
         "phonePlaceholder": "Digite o número de telefone"
-      }
+      },
+      "versions": "{{count}} versões"
     },
     "matching": {
       "title": "Matching Inteligente",
@@ -2339,7 +2340,13 @@
         "title": "Histórico de Versões",
         "autoSave": "Salvamento automático",
         "restore": "Restaurar",
-        "restoring": "Restaurando..."
+        "restoring": "Restaurando...",
+        "current": "Versão Atual",
+        "active": "Ativa",
+        "previewing": "Visualizando",
+        "setActive": "Definir como Ativa",
+        "delete": "Excluir",
+        "backToCurrent": "Voltar para a Atual"
       },
       "refine": {
         "title": "Otimizar Currículo para Vaga",
@@ -2352,7 +2359,11 @@
         "emphasizedExperiences": "Experiências Destacadas",
         "discard": "Descartar",
         "applying": "Aplicando...",
-        "applyAndSave": "Aplicar e Salvar"
+        "applyAndSave": "Aplicar e Salvar",
+        "changesSummary": "Resumo das Alterações",
+        "original": "Original",
+        "refined": "Otimizado",
+        "noChanges": "Sem alterações"
       },
       "invite": {
         "title": "Convidar para entrevista",

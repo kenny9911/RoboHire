@@ -2362,7 +2362,8 @@
           "nonProfit": "Non-profit"
         },
         "phonePlaceholder": "Enter phone number"
-      }
+      },
+      "versions": "{{count}} versions"
     },
     "matching": {
       "title": "Smart Matching",
@@ -2712,7 +2713,13 @@
         "title": "Version History",
         "autoSave": "Auto-save",
         "restore": "Restore",
-        "restoring": "Restoring..."
+        "restoring": "Restoring...",
+        "current": "Current Version",
+        "active": "Active",
+        "previewing": "Previewing",
+        "setActive": "Set as Active",
+        "delete": "Delete",
+        "backToCurrent": "Back to Current"
       },
       "refine": {
         "title": "Refine Resume for Job",
@@ -2725,7 +2732,11 @@
         "emphasizedExperiences": "Emphasized Experiences",
         "discard": "Discard",
         "applying": "Applying...",
-        "applyAndSave": "Apply & Save"
+        "applyAndSave": "Apply & Save",
+        "changesSummary": "Changes Summary",
+        "original": "Original",
+        "refined": "Refined",
+        "noChanges": "No changes"
       },
       "invite": {
         "title": "Invite to Interview",

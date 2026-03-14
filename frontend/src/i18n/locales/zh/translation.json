@@ -2484,7 +2484,8 @@
           "nonProfit": "非营利组织"
         },
         "phonePlaceholder": "请输入手机号码"
-      }
+      },
+      "versions": "{{count}} 个版本"
     },
     "matching": {
       "title": "智能匹配",
@@ -2831,7 +2832,13 @@
         "title": "版本历史",
         "autoSave": "自动保存",
         "restore": "恢复",
-        "restoring": "恢复中..."
+        "restoring": "恢复中...",
+        "current": "当前版本",
+        "active": "使用中",
+        "previewing": "预览中",
+        "setActive": "设为使用版本",
+        "delete": "删除",
+        "backToCurrent": "返回当前版本"
       },
       "refine": {
         "title": "为职位优化简历",
@@ -2844,7 +2851,11 @@
         "emphasizedExperiences": "突出经验",
         "discard": "放弃",
         "applying": "应用中...",
-        "applyAndSave": "应用并保存"
+        "applyAndSave": "应用并保存",
+        "changesSummary": "修改总结",
+        "original": "原始版本",
+        "refined": "优化版本",
+        "noChanges": "无修改"
       },
       "invite": {
         "title": "邀请面试",

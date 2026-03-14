@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
 import SEO from '../components/SEO';
 import ResumeUploadModal from '../components/ResumeUploadModal';
+import RefineDiffView from '../components/RefineDiffView';
 
 type Tab = 'overview' | 'insights' | 'jobfit' | 'invitations' | 'notes';
 
@@ -128,8 +129,6 @@ export default function ResumeDetail() {
 
   // Version history state
   const [versions, setVersions] = useState<Array<{ id: string; versionName: string | null; name: string; currentRole: string | null; changeNote: string | null; createdAt: string }>>([]);
-  const [versionsOpen, setVersionsOpen] = useState(false);
-  const [versionsLoading, setVersionsLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState<string | null>(null);
 
   // Refine resume state
@@ -140,6 +139,14 @@ export default function ResumeDetail() {
   const [refineLoading, setRefineLoading] = useState(false);
   const [refineResult, setRefineResult] = useState<{ refinedParsedData: any; changes: string[]; matchedSkills: string[]; emphasizedExperiences: string[] } | null>(null);
   const [refineError, setRefineError] = useState('');
+
+  // Version selector state
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+  const [versionPreviewData, setVersionPreviewData] = useState<Record<string, any> | null>(null);
+  const [versionPreviewLoading, setVersionPreviewLoading] = useState(false);
+  const [versionDropdownOpen, setVersionDropdownOpen] = useState(false);
+  const [deleteVersionLoading, setDeleteVersionLoading] = useState<string | null>(null);
+  const versionDropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchInvitations = useCallback(async () => {
     if (!id) return;
@@ -179,12 +186,10 @@ export default function ResumeDetail() {
 
   const fetchVersions = useCallback(async () => {
     if (!id) return;
-    setVersionsLoading(true);
     try {
       const res = await axios.get(`/api/v1/resumes/${id}/versions`);
       if (res.data.success) setVersions(res.data.data || []);
     } catch { /* silent */ }
-    finally { setVersionsLoading(false); }
   }, [id]);
 
   useEffect(() => {
@@ -411,19 +416,74 @@ export default function ResumeDetail() {
     }
   };
 
-  const restoreVersion = async (versionId: string) => {
-    if (!resume) return;
-    setRestoreLoading(versionId);
+  // ─── Version Selector ────────────────────────────────────────────
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (versionDropdownRef.current && !versionDropdownRef.current.contains(e.target as Node)) {
+        setVersionDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectVersion = useCallback(async (versionId: string | null) => {
+    setVersionDropdownOpen(false);
+    if (!versionId) {
+      setSelectedVersionId(null);
+      setVersionPreviewData(null);
+      return;
+    }
+    setSelectedVersionId(versionId);
+    setVersionPreviewLoading(true);
     try {
-      await axios.post(`/api/v1/resumes/${resume.id}/versions/${versionId}/restore`);
+      const res = await axios.get(`/api/v1/resumes/${id}/versions/${versionId}`);
+      if (res.data.success) {
+        setVersionPreviewData(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to load version:', err);
+      setSelectedVersionId(null);
+    } finally {
+      setVersionPreviewLoading(false);
+    }
+  }, [id]);
+
+  const setVersionAsActive = async () => {
+    if (!selectedVersionId || !resume) return;
+    setRestoreLoading(selectedVersionId);
+    try {
+      await axios.post(`/api/v1/resumes/${resume.id}/versions/${selectedVersionId}/restore`);
+      setSelectedVersionId(null);
+      setVersionPreviewData(null);
       fetchResume();
       fetchVersions();
     } catch (err) {
-      console.error('Failed to restore version:', err);
+      console.error('Failed to set version as active:', err);
     } finally {
       setRestoreLoading(null);
     }
   };
+
+  const deleteVersion = async (versionId: string) => {
+    if (!resume) return;
+    setDeleteVersionLoading(versionId);
+    try {
+      await axios.delete(`/api/v1/resumes/${resume.id}/versions/${versionId}`);
+      if (selectedVersionId === versionId) {
+        setSelectedVersionId(null);
+        setVersionPreviewData(null);
+      }
+      fetchVersions();
+    } catch (err) {
+      console.error('Failed to delete version:', err);
+    } finally {
+      setDeleteVersionLoading(null);
+    }
+  };
+
+  const isPreviewingVersion = selectedVersionId !== null;
+  const selectedVersionInfo = versions.find(v => v.id === selectedVersionId);
 
   // ─── Refine Resume ────────────────────────────────────────────────
   const openRefineModal = async () => {
@@ -449,7 +509,8 @@ export default function ResumeDetail() {
     setRefineLoading(true);
     setRefineError('');
     try {
-      const res = await axios.post(`/api/v1/resumes/${resume.id}/refine`, { jobId: refineSelectedJobId });
+      const lang = (window.localStorage.getItem('i18nextLng') || navigator.language || 'en').split('-')[0];
+      const res = await axios.post(`/api/v1/resumes/${resume.id}/refine`, { jobId: refineSelectedJobId, language: lang });
       if (res.data.success) {
         setRefineResult(res.data.data);
       } else {
@@ -546,6 +607,91 @@ export default function ResumeDetail() {
               {resume.phone && <span>{resume.phone}</span>}
               {resume.fileName && <span>{resume.fileName}</span>}
             </div>
+            {/* Version selector */}
+            {versions.length > 0 && (
+              <div className="relative mt-3" ref={versionDropdownRef}>
+                <button
+                  onClick={() => setVersionDropdownOpen(!versionDropdownOpen)}
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-colors ${
+                    isPreviewingVersion
+                      ? 'border-blue-300 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                  </svg>
+                  {isPreviewingVersion
+                    ? (selectedVersionInfo?.versionName || selectedVersionInfo?.name || t('resumeLibrary.detail.versions.autoSave', 'Auto-save'))
+                    : t('resumeLibrary.detail.versions.current', 'Current Version')}
+                  <span className="text-[10px] text-gray-400 ml-0.5">({versions.length + 1})</span>
+                  <svg className={`w-3 h-3 transition-transform ${versionDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+
+                {versionDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-1 z-30 w-80 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+                    {/* Current version */}
+                    <button
+                      onClick={() => selectVersion(null)}
+                      className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-b border-gray-100 ${
+                        !isPreviewingVersion ? 'bg-blue-50' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900">{t('resumeLibrary.detail.versions.current', 'Current Version')}</span>
+                        {!isPreviewingVersion && (
+                          <span className="text-[10px] font-semibold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
+                            {t('resumeLibrary.detail.versions.active', 'Active')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{resume.name} — {resume.currentRole || ''}</p>
+                    </button>
+
+                    {/* Version list */}
+                    <div className="max-h-60 overflow-y-auto">
+                      {versions.map(v => (
+                        <div
+                          key={v.id}
+                          className={`flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors ${
+                            selectedVersionId === v.id ? 'bg-blue-50' : ''
+                          }`}
+                        >
+                          <button
+                            onClick={() => selectVersion(v.id)}
+                            className="flex-1 text-left min-w-0"
+                          >
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {v.versionName || v.name || t('resumeLibrary.detail.versions.autoSave', 'Auto-save')}
+                            </p>
+                            <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-0.5">
+                              <span>{new Date(v.createdAt).toLocaleDateString()}</span>
+                              {v.changeNote && <span className="truncate">— {v.changeNote}</span>}
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); deleteVersion(v.id); }}
+                            disabled={deleteVersionLoading === v.id}
+                            className="ml-2 p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-50"
+                            title={t('resumeLibrary.detail.versions.delete', 'Delete')}
+                          >
+                            {deleteVersionLoading === v.id ? (
+                              <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-red-400" />
+                            ) : (
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="w-full lg:w-auto lg:max-w-[58%]">
             <div className="overflow-x-auto pb-1">
@@ -553,6 +699,7 @@ export default function ResumeDetail() {
                 <HeaderActionButton
                   onClick={openInviteModal}
                   tone="primary"
+                  disabled={isPreviewingVersion}
                   label={inviteActionLabel}
                   icon={(
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -562,6 +709,7 @@ export default function ResumeDetail() {
                 />
                 <HeaderActionButton
                   onClick={enterEditMode}
+                  disabled={isPreviewingVersion}
                   label={editActionLabel}
                   icon={(
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -571,6 +719,7 @@ export default function ResumeDetail() {
                 />
                 <HeaderActionButton
                   onClick={() => setReplaceUploadOpen(true)}
+                  disabled={isPreviewingVersion}
                   label={reuploadActionLabel}
                   icon={(
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -580,7 +729,7 @@ export default function ResumeDetail() {
                 />
                 <HeaderActionButton
                   onClick={() => generateInsights(true)}
-                  disabled={insightLoading}
+                  disabled={insightLoading || isPreviewingVersion}
                   label={regenerateActionLabel}
                   icon={(
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -590,7 +739,7 @@ export default function ResumeDetail() {
                 />
                 <HeaderActionButton
                   onClick={analyzeJobFit}
-                  disabled={jobFitLoading}
+                  disabled={jobFitLoading || isPreviewingVersion}
                   label={rematchActionLabel}
                   icon={(
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -600,6 +749,7 @@ export default function ResumeDetail() {
                 />
                 <HeaderActionButton
                   onClick={openRefineModal}
+                  disabled={isPreviewingVersion}
                   label={refineActionLabel}
                   icon={(
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -610,6 +760,7 @@ export default function ResumeDetail() {
                 <HeaderActionButton
                   onClick={handleArchive}
                   tone="destructive"
+                  disabled={isPreviewingVersion}
                   label={archiveActionLabel}
                   icon={(
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -638,61 +789,77 @@ export default function ResumeDetail() {
         ))}
       </div>
 
+      {/* Version preview banner */}
+      {isPreviewingVersion && (
+        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-5 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.007-9.963-7.178z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-sm font-medium text-blue-800">
+              {t('resumeLibrary.detail.versions.previewing', 'Previewing')}: {selectedVersionInfo?.versionName || selectedVersionInfo?.name || t('resumeLibrary.detail.versions.autoSave', 'Auto-save')}
+            </span>
+            {selectedVersionInfo && (
+              <span className="text-xs text-blue-500">— {new Date(selectedVersionInfo.createdAt).toLocaleDateString()}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={setVersionAsActive}
+              disabled={restoreLoading !== null}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-50"
+            >
+              {restoreLoading ? (
+                <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-emerald-600" />
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {t('resumeLibrary.detail.versions.setActive', 'Set as Active')}
+            </button>
+            <button
+              onClick={() => selectedVersionId && deleteVersion(selectedVersionId)}
+              disabled={deleteVersionLoading !== null}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+            >
+              {deleteVersionLoading ? (
+                <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-red-400" />
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+              )}
+              {t('resumeLibrary.detail.versions.delete', 'Delete')}
+            </button>
+            <button
+              onClick={() => selectVersion(null)}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+              </svg>
+              {t('resumeLibrary.detail.versions.backToCurrent', 'Back to Current')}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tab content */}
       {tab === 'overview' && (
-        editMode ? (
+        editMode && !isPreviewingVersion ? (
           <EditModeView form={editForm} setForm={setEditForm} saving={editSaving} onSave={saveEdit} onCancel={cancelEdit} t={t} />
+        ) : isPreviewingVersion ? (
+          versionPreviewLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            </div>
+          ) : versionPreviewData ? (
+            <OverviewTab parsed={versionPreviewData.parsedData as Record<string, unknown> | null} t={t} />
+          ) : null
         ) : (
-          <>
-            <OverviewTab parsed={parsed} t={t} />
-            {/* Version History */}
-            {versions.length > 0 && (
-              <div className="mt-6">
-                <button
-                  onClick={() => setVersionsOpen(!versionsOpen)}
-                  className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors mb-3"
-                >
-                  <svg className={`w-4 h-4 transition-transform ${versionsOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                  {t('resumeLibrary.detail.versions.title', 'Version History')} ({versions.length})
-                </button>
-                {versionsOpen && (
-                  <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-                    {versionsLoading ? (
-                      <div className="p-6 text-center">
-                        <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-indigo-600 mx-auto" />
-                      </div>
-                    ) : (
-                      versions.map(v => (
-                        <div key={v.id} className="flex items-center justify-between px-5 py-3">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {v.versionName || v.name || t('resumeLibrary.detail.versions.autoSave', 'Auto-save')}
-                            </p>
-                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-                              <span>{new Date(v.createdAt).toLocaleString()}</span>
-                              {v.changeNote && <span className="text-gray-400">— {v.changeNote}</span>}
-                              {v.currentRole && <span>{v.currentRole}</span>}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => restoreVersion(v.id)}
-                            disabled={restoreLoading === v.id}
-                            className="text-xs font-medium text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors disabled:opacity-50"
-                          >
-                            {restoreLoading === v.id
-                              ? t('resumeLibrary.detail.versions.restoring', 'Restoring...')
-                              : t('resumeLibrary.detail.versions.restore', 'Restore')}
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </>
+          <OverviewTab parsed={parsed} t={t} />
         )
       )}
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
@@ -876,7 +1043,7 @@ export default function ResumeDetail() {
       {/* Refine Resume Modal */}
       {refineModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+          <div className={`bg-white rounded-2xl shadow-xl w-full ${refineResult ? 'max-w-6xl' : 'max-w-2xl'} mx-4 max-h-[90vh] overflow-y-auto`}>
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
                 {t('resumeLibrary.detail.refine.title', 'Refine Resume for Job')}
@@ -939,39 +1106,14 @@ export default function ResumeDetail() {
                 </>
               ) : (
                 <div className="space-y-4">
-                  {/* Changes */}
-                  <div className="rounded-xl bg-cyan-50 border border-cyan-200 p-4">
-                    <h4 className="text-sm font-semibold text-cyan-800 mb-2">{t('resumeLibrary.detail.refine.changes', 'Changes Made')}</h4>
-                    <ul className="space-y-1">
-                      {refineResult.changes.map((c, i) => (
-                        <li key={i} className="text-xs text-cyan-700 flex items-start gap-1.5"><span className="text-cyan-400">•</span>{c}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Matched Skills */}
-                  {refineResult.matchedSkills.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-semibold text-emerald-700 mb-1.5">{t('resumeLibrary.detail.refine.matchedSkills', 'Matched Skills')}</h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {refineResult.matchedSkills.map((s, i) => (
-                          <span key={i} className="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">{s}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Emphasized Experiences */}
-                  {refineResult.emphasizedExperiences.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-semibold text-blue-700 mb-1.5">{t('resumeLibrary.detail.refine.emphasizedExperiences', 'Emphasized Experiences')}</h4>
-                      <ul className="space-y-1">
-                        {refineResult.emphasizedExperiences.map((e, i) => (
-                          <li key={i} className="text-xs text-blue-700 flex items-start gap-1.5"><span className="text-blue-400">•</span>{e}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  <RefineDiffView
+                    original={parsed}
+                    refined={refineResult.refinedParsedData}
+                    changes={refineResult.changes}
+                    matchedSkills={refineResult.matchedSkills}
+                    emphasizedExperiences={refineResult.emphasizedExperiences}
+                    t={t}
+                  />
 
                   <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                     <button onClick={() => { setRefineModalOpen(false); setRefineResult(null); }} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">

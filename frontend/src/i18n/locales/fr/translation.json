@@ -2018,7 +2018,8 @@
           "nonProfit": "Association"
         },
         "phonePlaceholder": "Entrez le numéro de téléphone"
-      }
+      },
+      "versions": "{{count}} versions"
     },
     "matching": {
       "title": "Correspondance intelligente",
@@ -2340,7 +2341,13 @@
         "title": "Historique des Versions",
         "autoSave": "Sauvegarde automatique",
         "restore": "Restaurer",
-        "restoring": "Restauration..."
+        "restoring": "Restauration...",
+        "current": "Version Actuelle",
+        "active": "Active",
+        "previewing": "Aperçu",
+        "setActive": "Définir comme Active",
+        "delete": "Supprimer",
+        "backToCurrent": "Retour à l'Actuelle"
       },
       "refine": {
         "title": "Optimiser le CV pour un Poste",
@@ -2353,7 +2360,11 @@
         "emphasizedExperiences": "Expériences Mises en Valeur",
         "discard": "Annuler",
         "applying": "Application...",
-        "applyAndSave": "Appliquer et Enregistrer"
+        "applyAndSave": "Appliquer et Enregistrer",
+        "changesSummary": "Résumé des Modifications",
+        "original": "Original",
+        "refined": "Optimisé",
+        "noChanges": "Aucune modification"
       },
       "invite": {
         "title": "Inviter à un entretien",

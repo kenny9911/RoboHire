@@ -541,6 +541,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
             take: 1,
             select: { fitScore: true, fitGrade: true, pipelineStatus: true, hiringRequest: { select: { title: true } } },
           },
+          _count: { select: { resumeVersions: true } },
         },
       }),
       prisma.resume.count({ where }),
@@ -549,6 +550,8 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     // Trim parsedData to only fields needed by the list view
     const trimmedResumes = resumes.map((r: any) => ({
       ...r,
+      _versionCount: r._count?.resumeVersions || 0,
+      _count: undefined,
       hasInvitations: r.resumeJobFits?.some((f: any) => f.pipelineStatus === 'invited') || false,
       parsedData: r.parsedData ? {
         skills: r.parsedData.skills,
@@ -1055,6 +1058,37 @@ router.post('/:id/versions/:versionId/restore', requireAuth, async (req: Request
   }
 });
 
+// ─── Delete a specific version ────────────────────────────────────────
+router.delete('/:id/versions/:versionId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const version = await prisma.resumeVersion.findFirst({
+      where: { id: req.params.versionId, resumeId: resume.id },
+    });
+    if (!version) {
+      return res.status(404).json({ success: false, error: 'Version not found' });
+    }
+
+    await prisma.resumeVersion.delete({ where: { id: version.id } });
+
+    logger.info('RESUMES', `Deleted version ${version.id}`, { resumeId: resume.id });
+    return res.json({ success: true });
+  } catch (error) {
+    logger.error('RESUMES', 'Failed to delete version', { error: error instanceof Error ? error.message : String(error) });
+    return res.status(500).json({ success: false, error: 'Failed to delete version' });
+  }
+});
+
 // ─── Refine resume for a job (AI agent) ───────────────────────────────
 router.post('/:id/refine', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -1062,7 +1096,7 @@ router.post('/:id/refine', requireAuth, async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const { jobId } = req.body;
+    const { jobId, language: reqLanguage } = req.body;
     if (!jobId) {
       return res.status(400).json({ success: false, error: 'jobId is required' });
     }
@@ -1089,9 +1123,9 @@ router.post('/:id/refine', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
 
-    // Determine language: job's interviewLanguage → user's Accept-Language → 'en'
+    // Determine language: explicit request param → job's interviewLanguage → Accept-Language → 'en'
     const acceptLang = (req.headers['accept-language'] || '').split(',')[0]?.split('-')[0] || '';
-    const language = job.interviewLanguage || acceptLang || 'en';
+    const language = reqLanguage || job.interviewLanguage || acceptLang || 'en';
 
     const { refineResumeAgent } = await import('../agents/RefineResumeAgent.js');
 

@@ -2464,7 +2464,8 @@
           "nonProfit": "非營利組織"
         },
         "phonePlaceholder": "請輸入手機號碼"
-      }
+      },
+      "versions": "{{count}} 個版本"
     },
     "matching": {
       "title": "智慧配對",
@@ -2816,7 +2817,13 @@
         "title": "版本歷史",
         "autoSave": "自動儲存",
         "restore": "還原",
-        "restoring": "還原中..."
+        "restoring": "還原中...",
+        "current": "目前版本",
+        "active": "使用中",
+        "previewing": "預覽中",
+        "setActive": "設為使用版本",
+        "delete": "刪除",
+        "backToCurrent": "返回目前版本"
       },
       "refine": {
         "title": "為職位優化簡歷",
@@ -2829,7 +2836,11 @@
         "emphasizedExperiences": "突出經驗",
         "discard": "捨棄",
         "applying": "套用中...",
-        "applyAndSave": "套用並儲存"
+        "applyAndSave": "套用並儲存",
+        "changesSummary": "修改總結",
+        "original": "原始版本",
+        "refined": "優化版本",
+        "noChanges": "無修改"
       },
       "invite": {
         "title": "邀請面試",

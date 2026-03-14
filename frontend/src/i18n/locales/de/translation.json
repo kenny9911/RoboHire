@@ -2017,7 +2017,8 @@
           "nonProfit": "Gemeinnützig"
         },
         "phonePlaceholder": "Telefonnummer eingeben"
-      }
+      },
+      "versions": "{{count}} Versionen"
     },
     "matching": {
       "title": "Intelligentes Matching",
@@ -2339,7 +2340,13 @@
         "title": "Versionshistorie",
         "autoSave": "Automatisch gespeichert",
         "restore": "Wiederherstellen",
-        "restoring": "Wird wiederhergestellt..."
+        "restoring": "Wird wiederhergestellt...",
+        "current": "Aktuelle Version",
+        "active": "Aktiv",
+        "previewing": "Vorschau",
+        "setActive": "Als Aktiv setzen",
+        "delete": "Löschen",
+        "backToCurrent": "Zurück zur Aktuellen"
       },
       "refine": {
         "title": "Lebenslauf für Stelle optimieren",
@@ -2352,7 +2359,11 @@
         "emphasizedExperiences": "Hervorgehobene Erfahrungen",
         "discard": "Verwerfen",
         "applying": "Wird angewendet...",
-        "applyAndSave": "Anwenden und Speichern"
+        "applyAndSave": "Anwenden und Speichern",
+        "changesSummary": "Zusammenfassung der Änderungen",
+        "original": "Original",
+        "refined": "Optimiert",
+        "noChanges": "Keine Änderungen"
       },
       "invite": {
         "title": "Zum Interview einladen",

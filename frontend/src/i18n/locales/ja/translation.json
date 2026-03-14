@@ -2412,7 +2412,8 @@
           "nonProfit": "非営利"
         },
         "phonePlaceholder": "電話番号を入力"
-      }
+      },
+      "versions": "{{count}} バージョン"
     },
     "matching": {
       "title": "スマートマッチング",
@@ -2787,7 +2788,13 @@
         "title": "バージョン履歴",
         "autoSave": "自動保存",
         "restore": "復元",
-        "restoring": "復元中..."
+        "restoring": "復元中...",
+        "current": "現在のバージョン",
+        "active": "有効",
+        "previewing": "プレビュー中",
+        "setActive": "有効に設定",
+        "delete": "削除",
+        "backToCurrent": "現在のバージョンに戻る"
       },
       "refine": {
         "title": "求人向けに履歴書を最適化",
@@ -2800,7 +2807,11 @@
         "emphasizedExperiences": "強調された経験",
         "discard": "破棄",
         "applying": "適用中...",
-        "applyAndSave": "適用して保存"
+        "applyAndSave": "適用して保存",
+        "changesSummary": "変更要約",
+        "original": "オリジナル",
+        "refined": "最適化版",
+        "noChanges": "変更なし"
       },
       "invite": {
         "title": "面接に招待",

@@ -2018,7 +2018,8 @@
           "nonProfit": "Sin ánimo de lucro"
         },
         "phonePlaceholder": "Ingrese número de teléfono"
-      }
+      },
+      "versions": "{{count}} versiones"
     },
     "matching": {
       "title": "Coincidencia Inteligente",
@@ -2340,7 +2341,13 @@
         "title": "Historial de Versiones",
         "autoSave": "Guardado automático",
         "restore": "Restaurar",
-        "restoring": "Restaurando..."
+        "restoring": "Restaurando...",
+        "current": "Versión Actual",
+        "active": "Activa",
+        "previewing": "Vista previa",
+        "setActive": "Establecer como Activa",
+        "delete": "Eliminar",
+        "backToCurrent": "Volver a la Actual"
       },
       "refine": {
         "title": "Optimizar Currículum para Puesto",
@@ -2353,7 +2360,11 @@
         "emphasizedExperiences": "Experiencias Destacadas",
         "discard": "Descartar",
         "applying": "Aplicando...",
-        "applyAndSave": "Aplicar y Guardar"
+        "applyAndSave": "Aplicar y Guardar",
+        "changesSummary": "Resumen de Cambios",
+        "original": "Original",
+        "refined": "Optimizado",
+        "noChanges": "Sin cambios"
       },
       "invite": {
         "title": "Invitar a entrevista",
