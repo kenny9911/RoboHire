@@ -1793,7 +1793,19 @@
       "agentSpeaking": "Hablando",
       "agentFailed": "Error de conexión",
       "transcript": "Transcripción",
-      "transcriptEmpty": "La transcripción aparecerá aquí a medida que avance la entrevista..."
+      "transcriptEmpty": "La transcripción aparecerá aquí a medida que avance la entrevista...",
+      "prejoinTitle": "Aceptar entrevista de RoboHire",
+      "prejoinSubtitle": "Tendrá una entrevista en la que se discutirá su experiencia laboral previa. Relájese, esto no es algo desconocido para usted.",
+      "readyToJoin": "¿Listo para unirse?",
+      "deviceCheckDesc": "Asegúrese de que su dispositivo esté configurado correctamente.",
+      "enableCamera": "Activar cámara",
+      "enableMic": "Activar micrófono",
+      "enableFullscreen": "Activar pantalla completa",
+      "agreeTerms": "He leído y acepto los",
+      "termsOfService": "Términos de servicio",
+      "and": "y",
+      "privacyPolicy": "Política de privacidad",
+      "joinNow": "Unirse ahora"
     },
     "jobs": {
       "title": "Empleos",
@@ -1916,7 +1928,35 @@
       "interviewRequirements": "Requisitos de entrevista",
       "evaluationRules": "Reglas de evaluación",
       "yearly": "año",
-      "monthly": "mes"
+      "monthly": "mes",
+      "tabDetails": "Detalles",
+      "tabApplicants": "Candidatos",
+      "tabOverview": "Resumen",
+      "allStatuses": "Todos",
+      "noApplicants": "Aún no hay candidatos",
+      "noApplicantsDesc": "Ejecuta la coincidencia IA desde Coincidencia Inteligente o aplica candidatos desde el Hub de Talento.",
+      "goToMatching": "Coincidencia Inteligente",
+      "goToTalent": "Hub de Talento",
+      "score": "puntuación",
+      "shortlist": "Preseleccionar",
+      "reject": "Rechazar",
+      "viewDetails": "Ver Detalles",
+      "noStatsYet": "Aún no hay estadísticas disponibles",
+      "totalApplicants": "Total de Candidatos",
+      "avgScore": "Puntuación Promedio",
+      "topGrade": "Mejor Calificación",
+      "pipelineBreakdown": "Desglose del Pipeline",
+      "scoreDistribution": "Distribución de Puntuaciones",
+      "gradeDistribution": "Distribución de Calificaciones",
+      "inviteInterview": "Invitar a entrevista",
+      "inviteSending": "Enviando...",
+      "inviteSent": "Invitado",
+      "inviteRetry": "Reintentar",
+      "copyLink": "Copiar",
+      "confirmInviteTitle": "Invitar a entrevista",
+      "confirmInviteMessage": "¿Enviar una invitación de entrevista con IA a {{name}}?",
+      "confirmInviteSend": "Enviar invitación",
+      "confirmInviteEmail": "Correo"
     },
     "hiring": {
       "title": "Solicitudes de Contratación",
@@ -2019,7 +2059,17 @@
         },
         "phonePlaceholder": "Ingrese número de teléfono"
       },
-      "versions": "{{count}} versiones"
+      "versions": "{{count}} versiones",
+      "applyToJob": "Aplicar a Empleo",
+      "applyModal": {
+        "title": "Aplicar a Empleo",
+        "subtitle": "Selecciona un empleo para hacer coincidencia con {{name}}.",
+        "searchJobs": "Buscar empleos...",
+        "noJobs": "No se encontraron empleos",
+        "runMatching": "Ejecutar Coincidencia",
+        "success": "¡Coincidencia completada con éxito!",
+        "error": "Error al ejecutar la coincidencia. Inténtalo de nuevo."
+      }
     },
     "matching": {
       "title": "Coincidencia Inteligente",

@@ -5,25 +5,24 @@ import {
   type JobContext,
   type JobProcess,
 } from '@livekit/agents';
-import * as google from '@livekit/agents-plugin-google';
-import * as silero from '@livekit/agents-plugin-silero';
 
 /**
  * LiveKit Voice Agent for AI-driven interviews.
  *
  * Ported from the working Python agent in from-Livekit/src/agent.py.
- * Uses LiveKit Cloud inference for STT/TTS and the Google Gemini plugin for LLM.
+ * Uses LiveKit Cloud inference (inference.STT/LLM/TTS) instead of
+ * direct OpenAI plugin calls.
  *
  * This file is dynamically imported by the worker (interview-worker.ts).
  */
 
 class InterviewAgent extends voice.Agent {
-  constructor(metadata: InterviewMetadata) {
-    const language = metadata.language || 'zh';
-    const jobTitle = metadata.jobTitle || '';
-    const jobDescription = metadata.jobDescription || '';
-    const resumeText = metadata.resumeText || '';
-    const customInstructions = metadata.instructions || '';
+  constructor(metadata: Record<string, unknown>) {
+    const language = (metadata.language as string) || 'zh';
+    const jobTitle = (metadata.jobTitle as string) || '';
+    const jobDescription = (metadata.jobDescription as string) || '';
+    const resumeText = (metadata.resumeText as string) || '';
+    const customInstructions = (metadata.instructions as string) || '';
 
     const instructions = customInstructions || buildInstructions({
       language,
@@ -43,25 +42,6 @@ class InterviewAgent extends voice.Agent {
     });
   }
 }
-
-type InterviewMetadata = {
-  language?: string;
-  jobTitle?: string;
-  jobDescription?: string;
-  resumeText?: string;
-  instructions?: string;
-  interviewId?: string;
-};
-
-type InterviewTranscriptEntry = {
-  role: 'candidate' | 'interviewer';
-  content: string;
-  timestamp: number;
-};
-
-type InterviewProcessUserData = {
-  vad?: silero.VAD;
-};
 
 function buildInstructions(opts: {
   language: string;
@@ -129,9 +109,8 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 export default defineAgent({
-  async prewarm(proc: JobProcess) {
-    const userData = getProcessUserData(proc);
-    userData.vad ??= await silero.VAD.load();
+  prewarm(_proc: JobProcess) {
+    // Could pre-load models or VAD here
   },
 
   entry: async (ctx: JobContext) => {
@@ -146,62 +125,37 @@ export default defineAgent({
 
 async function runInterview(ctx: JobContext) {
   await ctx.connect();
-  const participant = await ctx.waitForParticipant();
 
-  const metadata = parseMetadata(ctx.room.metadata);
-  const language = metadata.language || 'zh';
-  const vad = getProcessUserData(ctx.proc).vad ?? (await silero.VAD.load());
-  const sttLanguage = normalizeSttLanguage(language);
-  const ttsLanguage = normalizeTtsLanguage(language);
-
-  console.info('[interview-agent] linked participant', {
-    participantIdentity: participant.identity,
-    language,
-    sttLanguage,
-    ttsLanguage,
-    trackPublicationCount: participant.trackPublications.size,
-  });
+  const metadata = JSON.parse(ctx.room.metadata || '{}');
+  const language = (metadata.language as string) || 'zh';
 
   // Use LiveKit Cloud inference — same models as the working Python agent
   const stt = new inference.STT({
     model: 'elevenlabs/scribe_v2_realtime',
-    language: sttLanguage,
+    language: language === 'zh' ? 'zh-CN' : language,
   });
 
-  const llm = new google.LLM({
-    model: 'gemini-3-flash-preview',
+  const llm = new inference.LLM({
+    model: 'openai/gpt-4o',
   });
 
   const tts = new inference.TTS({
     model: 'cartesia/sonic-3',
     voice: 'e90c6678-f0d3-4767-9883-5d0ecf5894a8',
-    language: ttsLanguage,
+    language,
   });
 
   const session = new voice.AgentSession({
-    vad,
     stt,
     llm,
     tts,
     turnDetection: 'stt',
-    voiceOptions: {
-      preemptiveGeneration: true,
-      minEndpointingDelay: 400,
-      maxEndpointingDelay: 2500,
-    },
   });
 
   // Collect transcript for post-interview evaluation
-  const transcript: InterviewTranscriptEntry[] = [];
+  const transcript: Array<{ role: string; content: string; timestamp: number }> = [];
 
   session.on(voice.AgentSessionEventTypes.UserInputTranscribed, (ev) => {
-    console.info('[interview-agent] user transcription', {
-      participantIdentity: participant.identity,
-      isFinal: ev.isFinal,
-      language: ev.language,
-      transcript: ev.transcript,
-    });
-
     if (ev.isFinal) {
       transcript.push({
         role: 'candidate',
@@ -225,17 +179,6 @@ async function runInterview(ctx: JobContext) {
     }
   });
 
-  session.on(voice.AgentSessionEventTypes.AgentStateChanged, (ev) => {
-    console.info('[interview-agent] state changed', {
-      oldState: ev.oldState,
-      newState: ev.newState,
-    });
-  });
-
-  session.on(voice.AgentSessionEventTypes.Error, (ev) => {
-    console.error('[interview-agent] session error', ev.error);
-  });
-
   // Post transcript back to backend on shutdown
   ctx.addShutdownCallback(async () => {
     if (metadata.interviewId && transcript.length > 0) {
@@ -257,51 +200,5 @@ async function runInterview(ctx: JobContext) {
   await session.start({
     agent: new InterviewAgent(metadata),
     room: ctx.room,
-    inputOptions: {
-      participantIdentity: participant.identity,
-    },
   });
-}
-
-function getProcessUserData(proc: JobProcess): InterviewProcessUserData {
-  return proc.userData as InterviewProcessUserData;
-}
-
-function parseMetadata(rawMetadata: string | undefined): InterviewMetadata {
-  if (!rawMetadata) {
-    return {};
-  }
-
-  try {
-    return JSON.parse(rawMetadata) as InterviewMetadata;
-  } catch (err) {
-    console.warn('[interview-agent] Failed to parse room metadata:', err);
-    return {};
-  }
-}
-
-function normalizeSttLanguage(language: string): string {
-  const normalized = language.trim().toLowerCase();
-
-  if (normalized.startsWith('zh')) return 'zh';
-  if (normalized.startsWith('en')) return 'en';
-  if (normalized.startsWith('ja')) return 'ja';
-  if (normalized.startsWith('es')) return 'es';
-  if (normalized.startsWith('fr')) return 'fr';
-  if (normalized.startsWith('pt')) return 'pt';
-  if (normalized.startsWith('de')) return 'de';
-
-  return 'multi';
-}
-
-function normalizeTtsLanguage(language: string): string {
-  const normalized = language.trim();
-  if (/^zh/i.test(normalized)) return 'zh';
-  if (/^en/i.test(normalized)) return 'en';
-  if (/^ja/i.test(normalized)) return 'ja';
-  if (/^es/i.test(normalized)) return 'es';
-  if (/^fr/i.test(normalized)) return 'fr';
-  if (/^pt/i.test(normalized)) return 'pt';
-  if (/^de/i.test(normalized)) return 'de';
-  return normalized;
 }

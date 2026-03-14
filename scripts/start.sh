@@ -26,8 +26,8 @@ cd "$PROJECT_ROOT"
 echo -e "${BLUE}📁 Project directory: $PROJECT_ROOT${NC}"
 echo ""
 
-# Start both backend and frontend
-echo -e "${BLUE}🚀 Starting backend and frontend...${NC}"
+# Start backend, frontend, and agent worker
+echo -e "${BLUE}🚀 Starting backend, frontend, and agent worker...${NC}"
 npm run dev &
 
 # Wait a moment for services to start
@@ -37,8 +37,9 @@ echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║                 Services Started Successfully              ║${NC}"
 echo -e "${GREEN}╠════════════════════════════════════════════════════════════╣${NC}"
-echo -e "${GREEN}║  Backend:   http://localhost:${BACKEND_PORT}                          ║${NC}"
-echo -e "${GREEN}║  Frontend:  http://localhost:${FRONTEND_PORT}                          ║${NC}"
+echo -e "${GREEN}║  Backend:       http://localhost:${BACKEND_PORT}                      ║${NC}"
+echo -e "${GREEN}║  Frontend:      http://localhost:${FRONTEND_PORT}                      ║${NC}"
+echo -e "${GREEN}║  Agent Worker:  LiveKit interview agent                   ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${BLUE}Press Ctrl+C to stop all services${NC}"

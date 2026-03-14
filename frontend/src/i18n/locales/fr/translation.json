@@ -1793,7 +1793,19 @@
       "agentSpeaking": "En train de parler",
       "agentFailed": "Échec de connexion",
       "transcript": "Transcription",
-      "transcriptEmpty": "La transcription apparaîtra ici au fur et à mesure de l'entretien..."
+      "transcriptEmpty": "La transcription apparaîtra ici au fur et à mesure de l'entretien...",
+      "prejoinTitle": "Accepter l'entretien RoboHire",
+      "prejoinSubtitle": "Vous aurez un entretien portant sur votre expérience professionnelle. Détendez-vous, ce n'est pas quelque chose d'inconnu pour vous.",
+      "readyToJoin": "Prêt à rejoindre ?",
+      "deviceCheckDesc": "Veuillez vous assurer que votre appareil est correctement configuré.",
+      "enableCamera": "Activer la caméra",
+      "enableMic": "Activer le microphone",
+      "enableFullscreen": "Activer le plein écran",
+      "agreeTerms": "J'ai lu et j'accepte les",
+      "termsOfService": "Conditions d'utilisation",
+      "and": "et",
+      "privacyPolicy": "Politique de confidentialité",
+      "joinNow": "Rejoindre maintenant"
     },
     "jobs": {
       "title": "Emplois",
@@ -1916,7 +1928,35 @@
       "interviewRequirements": "Exigences d'entretien",
       "evaluationRules": "Règles d'évaluation",
       "yearly": "an",
-      "monthly": "mois"
+      "monthly": "mois",
+      "tabDetails": "Détails",
+      "tabApplicants": "Candidats",
+      "tabOverview": "Aperçu",
+      "allStatuses": "Tous",
+      "noApplicants": "Aucun candidat pour le moment",
+      "noApplicantsDesc": "Lancez le matching IA depuis Correspondance intelligente ou ajoutez des candidats depuis le Hub de Talents.",
+      "goToMatching": "Correspondance intelligente",
+      "goToTalent": "Hub de Talents",
+      "score": "score",
+      "shortlist": "Présélectionner",
+      "reject": "Rejeter",
+      "viewDetails": "Voir les détails",
+      "noStatsYet": "Aucune statistique disponible pour le moment",
+      "totalApplicants": "Total des candidats",
+      "avgScore": "Score moyen",
+      "topGrade": "Meilleure note",
+      "pipelineBreakdown": "Répartition du pipeline",
+      "scoreDistribution": "Distribution des scores",
+      "gradeDistribution": "Distribution des notes",
+      "inviteInterview": "Inviter à l'entretien",
+      "inviteSending": "Envoi en cours...",
+      "inviteSent": "Invité",
+      "inviteRetry": "Réessayer",
+      "copyLink": "Copier",
+      "confirmInviteTitle": "Inviter à l'entretien",
+      "confirmInviteMessage": "Envoyer une invitation d'entretien IA à {{name}} ?",
+      "confirmInviteSend": "Envoyer l'invitation",
+      "confirmInviteEmail": "E-mail"
     },
     "hiring": {
       "title": "Demandes de recrutement",
@@ -2019,7 +2059,17 @@
         },
         "phonePlaceholder": "Entrez le numéro de téléphone"
       },
-      "versions": "{{count}} versions"
+      "versions": "{{count}} versions",
+      "applyToJob": "Postuler à un emploi",
+      "applyModal": {
+        "title": "Postuler à un emploi",
+        "subtitle": "Sélectionnez un emploi pour faire correspondre {{name}}.",
+        "searchJobs": "Rechercher des emplois...",
+        "noJobs": "Aucun emploi trouvé",
+        "runMatching": "Lancer le matching",
+        "success": "Matching effectué avec succès !",
+        "error": "Échec du matching. Veuillez réessayer."
+      }
     },
     "matching": {
       "title": "Correspondance intelligente",

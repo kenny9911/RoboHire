@@ -2167,7 +2167,19 @@
       "agentSpeaking": "話しています",
       "agentFailed": "接続失敗",
       "transcript": "トランスクリプト",
-      "transcriptEmpty": "面接が進むにつれて、トランスクリプトがここに表示されます..."
+      "transcriptEmpty": "面接が進むにつれて、トランスクリプトがここに表示されます...",
+      "prejoinTitle": "RoboHire面接を受ける",
+      "prejoinSubtitle": "これまでの職務経験についての面接を行います。リラックスしてください。あなたにとって馴染みのないことではありません。",
+      "readyToJoin": "参加する準備はできましたか？",
+      "deviceCheckDesc": "デバイスが正しく設定されていることを確認してください。",
+      "enableCamera": "カメラを有効にする",
+      "enableMic": "マイクを有効にする",
+      "enableFullscreen": "フルスクリーンを有効にする",
+      "agreeTerms": "以下を読み、同意します",
+      "termsOfService": "利用規約",
+      "and": "および",
+      "privacyPolicy": "プライバシーポリシー",
+      "joinNow": "今すぐ参加"
     },
     "jobs": {
       "title": "求人管理",
@@ -2283,7 +2295,35 @@
       "interviewRequirements": "面接要件",
       "evaluationRules": "評価基準",
       "yearly": "年",
-      "monthly": "月"
+      "monthly": "月",
+      "tabDetails": "詳細",
+      "tabApplicants": "応募者",
+      "tabOverview": "概要",
+      "allStatuses": "すべて",
+      "noApplicants": "まだ応募者がいません",
+      "noApplicantsDesc": "スマートマッチングからAIマッチングを実行するか、タレントハブから候補者を追加してください。",
+      "goToMatching": "スマートマッチング",
+      "goToTalent": "タレントハブ",
+      "score": "スコア",
+      "shortlist": "候補リスト",
+      "reject": "不採用",
+      "viewDetails": "詳細を見る",
+      "noStatsYet": "まだ統計データがありません",
+      "totalApplicants": "応募者総数",
+      "avgScore": "平均スコア",
+      "topGrade": "最高グレード",
+      "pipelineBreakdown": "パイプライン内訳",
+      "scoreDistribution": "スコア分布",
+      "gradeDistribution": "グレード分布",
+      "inviteInterview": "面接に招待",
+      "inviteSending": "送信中...",
+      "inviteSent": "招待済み",
+      "inviteRetry": "再試行",
+      "copyLink": "コピー",
+      "confirmInviteTitle": "面接に招待",
+      "confirmInviteMessage": "{{name}} にAI面接の招待を送信しますか？",
+      "confirmInviteSend": "招待を送信",
+      "confirmInviteEmail": "メール"
     },
     "hiring": {
       "title": "採用リクエスト",
@@ -2413,7 +2453,17 @@
         },
         "phonePlaceholder": "電話番号を入力"
       },
-      "versions": "{{count}} バージョン"
+      "versions": "{{count}} バージョン",
+      "applyToJob": "求人に応募",
+      "applyModal": {
+        "title": "求人に応募",
+        "subtitle": "{{name}} をマッチングする求人を選択してください。",
+        "searchJobs": "求人を検索...",
+        "noJobs": "求人が見つかりません",
+        "runMatching": "マッチング実行",
+        "success": "マッチングが正常に完了しました！",
+        "error": "マッチングに失敗しました。もう一度お試しください。"
+      }
     },
     "matching": {
       "title": "スマートマッチング",

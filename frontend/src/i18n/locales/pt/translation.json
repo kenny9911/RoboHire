@@ -1792,7 +1792,19 @@
       "agentSpeaking": "Falando",
       "agentFailed": "Falha na conexão",
       "transcript": "Transcrição",
-      "transcriptEmpty": "A transcrição aparecerá aqui conforme a entrevista avança..."
+      "transcriptEmpty": "A transcrição aparecerá aqui conforme a entrevista avança...",
+      "prejoinTitle": "Aceitar entrevista RoboHire",
+      "prejoinSubtitle": "Você terá uma entrevista sobre sua experiência profissional anterior. Relaxe, isso não é algo desconhecido para você.",
+      "readyToJoin": "Pronto para participar?",
+      "deviceCheckDesc": "Certifique-se de que seu dispositivo está configurado corretamente.",
+      "enableCamera": "Ativar câmera",
+      "enableMic": "Ativar microfone",
+      "enableFullscreen": "Ativar tela cheia",
+      "agreeTerms": "Li e concordo com os",
+      "termsOfService": "Termos de serviço",
+      "and": "e",
+      "privacyPolicy": "Política de privacidade",
+      "joinNow": "Participar agora"
     },
     "jobs": {
       "title": "Vagas",
@@ -1915,7 +1927,35 @@
       "interviewRequirements": "Requisitos da entrevista",
       "evaluationRules": "Regras de avaliação",
       "yearly": "ano",
-      "monthly": "mês"
+      "monthly": "mês",
+      "tabDetails": "Detalhes",
+      "tabApplicants": "Candidatos",
+      "tabOverview": "Visão Geral",
+      "allStatuses": "Todos",
+      "noApplicants": "Ainda não há candidatos",
+      "noApplicantsDesc": "Execute o matching IA pelo Matching Inteligente ou adicione candidatos pelo Hub de Talentos.",
+      "goToMatching": "Matching Inteligente",
+      "goToTalent": "Hub de Talentos",
+      "score": "pontuação",
+      "shortlist": "Pré-selecionar",
+      "reject": "Rejeitar",
+      "viewDetails": "Ver Detalhes",
+      "noStatsYet": "Ainda não há estatísticas disponíveis",
+      "totalApplicants": "Total de Candidatos",
+      "avgScore": "Pontuação Média",
+      "topGrade": "Melhor Nota",
+      "pipelineBreakdown": "Distribuição do Pipeline",
+      "scoreDistribution": "Distribuição de Pontuações",
+      "gradeDistribution": "Distribuição de Notas",
+      "inviteInterview": "Convidar para entrevista",
+      "inviteSending": "Enviando...",
+      "inviteSent": "Convidado",
+      "inviteRetry": "Tentar novamente",
+      "copyLink": "Copiar",
+      "confirmInviteTitle": "Convidar para entrevista",
+      "confirmInviteMessage": "Enviar convite de entrevista com IA para {{name}}?",
+      "confirmInviteSend": "Enviar convite",
+      "confirmInviteEmail": "E-mail"
     },
     "hiring": {
       "title": "Solicitações de Contratação",
@@ -2018,7 +2058,17 @@
         },
         "phonePlaceholder": "Digite o número de telefone"
       },
-      "versions": "{{count}} versões"
+      "versions": "{{count}} versões",
+      "applyToJob": "Candidatar-se a Vaga",
+      "applyModal": {
+        "title": "Candidatar-se a Vaga",
+        "subtitle": "Selecione uma vaga para fazer matching com {{name}}.",
+        "searchJobs": "Buscar vagas...",
+        "noJobs": "Nenhuma vaga encontrada",
+        "runMatching": "Executar Matching",
+        "success": "Matching concluído com sucesso!",
+        "error": "Falha ao executar o matching. Tente novamente."
+      }
     },
     "matching": {
       "title": "Matching Inteligente",

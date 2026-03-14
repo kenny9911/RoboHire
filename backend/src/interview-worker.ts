@@ -23,9 +23,11 @@ if (process.env.LOG_LEVEL) {
 
 import { cli, ServerOptions } from '@livekit/agents';
 
+const agentPath = resolve(__dirname, 'agents/interview-agent.ts');
+
 cli.runApp(
   new ServerOptions({
-    agent: resolve(__dirname, 'agents/interview-agent.ts'),
+    agent: agentPath,
     agentName: 'RoboHire-1',
     wsURL: process.env.LIVEKIT_URL || '',
     apiKey: process.env.LIVEKIT_API_KEY,

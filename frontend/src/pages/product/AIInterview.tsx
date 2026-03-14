@@ -318,7 +318,7 @@ export default function AIInterview() {
   };
 
   const getInviteLink = (accessToken: string) => {
-    return `${window.location.origin}/video-interview?token=${accessToken}`;
+    return `${window.location.origin}/interview-room?token=${accessToken}`;
   };
 
   const copyToClipboard = (text: string, id: string) => {

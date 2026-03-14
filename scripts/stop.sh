@@ -33,10 +33,26 @@ kill_port() {
     fi
 }
 
+# Function to kill agent worker processes
+kill_agent() {
+    local pids=$(pgrep -f "interview-worker" 2>/dev/null)
+    if [ -n "$pids" ]; then
+        echo -e "${YELLOW}⏹  Stopping agent worker (PID: $pids)...${NC}"
+        echo "$pids" | xargs kill -9 2>/dev/null || true
+        sleep 1
+        echo -e "${GREEN}✓  Agent worker stopped${NC}"
+        return 0
+    else
+        echo -e "${GREEN}✓  No agent worker running${NC}"
+        return 1
+    fi
+}
+
 # Kill processes
 stopped=0
 kill_port $BACKEND_PORT && stopped=$((stopped + 1))
 kill_port $FRONTEND_PORT && stopped=$((stopped + 1))
+kill_agent && stopped=$((stopped + 1))
 
 echo ""
 if [ $stopped -gt 0 ]; then

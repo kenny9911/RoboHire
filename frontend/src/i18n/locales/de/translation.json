@@ -1792,7 +1792,19 @@
       "agentSpeaking": "Spricht",
       "agentFailed": "Verbindung fehlgeschlagen",
       "transcript": "Transkript",
-      "transcriptEmpty": "Das Transkript wird hier angezeigt, während das Interview fortschreitet..."
+      "transcriptEmpty": "Das Transkript wird hier angezeigt, während das Interview fortschreitet...",
+      "prejoinTitle": "RoboHire-Interview annehmen",
+      "prejoinSubtitle": "Sie werden ein Interview haben, in dem Ihre bisherige Berufserfahrung besprochen wird. Entspannen Sie sich, das ist nichts Unbekanntes für Sie.",
+      "readyToJoin": "Bereit beizutreten?",
+      "deviceCheckDesc": "Bitte stellen Sie sicher, dass Ihr Gerät korrekt konfiguriert ist.",
+      "enableCamera": "Kamera aktivieren",
+      "enableMic": "Mikrofon aktivieren",
+      "enableFullscreen": "Vollbild aktivieren",
+      "agreeTerms": "Ich habe die folgenden gelesen und stimme zu",
+      "termsOfService": "Nutzungsbedingungen",
+      "and": "und",
+      "privacyPolicy": "Datenschutzrichtlinie",
+      "joinNow": "Jetzt beitreten"
     },
     "jobs": {
       "title": "Stellen",
@@ -1915,7 +1927,35 @@
       "interviewRequirements": "Interview-Anforderungen",
       "evaluationRules": "Bewertungsregeln",
       "yearly": "Jahr",
-      "monthly": "Monat"
+      "monthly": "Monat",
+      "tabDetails": "Details",
+      "tabApplicants": "Bewerber",
+      "tabOverview": "Übersicht",
+      "allStatuses": "Alle",
+      "noApplicants": "Noch keine Bewerber",
+      "noApplicantsDesc": "Führen Sie KI-Matching über Intelligentes Matching durch oder fügen Sie Kandidaten aus dem Talent Hub hinzu.",
+      "goToMatching": "Intelligentes Matching",
+      "goToTalent": "Talent Hub",
+      "score": "Punktzahl",
+      "shortlist": "Vorauswahl",
+      "reject": "Ablehnen",
+      "viewDetails": "Details anzeigen",
+      "noStatsYet": "Noch keine Statistiken verfügbar",
+      "totalApplicants": "Bewerber gesamt",
+      "avgScore": "Durchschnittliche Punktzahl",
+      "topGrade": "Beste Bewertung",
+      "pipelineBreakdown": "Pipeline-Aufschlüsselung",
+      "scoreDistribution": "Punkteverteilung",
+      "gradeDistribution": "Bewertungsverteilung",
+      "inviteInterview": "Zum Interview einladen",
+      "inviteSending": "Wird gesendet...",
+      "inviteSent": "Eingeladen",
+      "inviteRetry": "Erneut versuchen",
+      "copyLink": "Kopieren",
+      "confirmInviteTitle": "Zum Interview einladen",
+      "confirmInviteMessage": "Eine KI-Interview-Einladung an {{name}} senden?",
+      "confirmInviteSend": "Einladung senden",
+      "confirmInviteEmail": "E-Mail"
     },
     "hiring": {
       "title": "Einstellungsanfragen",
@@ -2018,7 +2058,17 @@
         },
         "phonePlaceholder": "Telefonnummer eingeben"
       },
-      "versions": "{{count}} Versionen"
+      "versions": "{{count}} Versionen",
+      "applyToJob": "Auf Stelle bewerben",
+      "applyModal": {
+        "title": "Auf Stelle bewerben",
+        "subtitle": "Wählen Sie eine Stelle aus, um {{name}} abzugleichen.",
+        "searchJobs": "Stellen suchen...",
+        "noJobs": "Keine Stellen gefunden",
+        "runMatching": "Matching ausführen",
+        "success": "Matching erfolgreich abgeschlossen!",
+        "error": "Matching fehlgeschlagen. Bitte versuchen Sie es erneut."
+      }
     },
     "matching": {
       "title": "Intelligentes Matching",

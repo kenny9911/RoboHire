@@ -35,10 +35,24 @@ kill_port() {
     fi
 }
 
+# Function to kill agent worker processes
+kill_agent() {
+    local pids=$(pgrep -f "interview-worker" 2>/dev/null)
+    if [ -n "$pids" ]; then
+        echo -e "${YELLOW}⏹  Stopping agent worker (PID: $pids)...${NC}"
+        echo "$pids" | xargs kill -9 2>/dev/null || true
+        sleep 1
+        echo -e "${GREEN}✓  Agent worker stopped${NC}"
+    else
+        echo -e "${GREEN}✓  No agent worker running${NC}"
+    fi
+}
+
 # Step 1: Stop existing services
 echo -e "${YELLOW}Step 1: Stopping existing services...${NC}"
 kill_port $BACKEND_PORT
 kill_port $FRONTEND_PORT
+kill_agent
 echo ""
 
 # Step 2: Navigate to project root
@@ -53,8 +67,8 @@ echo ""
 echo -e "${YELLOW}Step 3: Starting services...${NC}"
 echo ""
 
-# Start both backend and frontend
-echo -e "${BLUE}🚀 Starting backend and frontend...${NC}"
+# Start backend, frontend, and agent worker
+echo -e "${BLUE}🚀 Starting backend, frontend, and agent worker...${NC}"
 npm run dev &
 
 # Wait a moment for services to start
@@ -64,8 +78,9 @@ echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║                 Services Started Successfully              ║${NC}"
 echo -e "${GREEN}╠════════════════════════════════════════════════════════════╣${NC}"
-echo -e "${GREEN}║  Backend:   http://localhost:${BACKEND_PORT}                          ║${NC}"
-echo -e "${GREEN}║  Frontend:  http://localhost:${FRONTEND_PORT}                          ║${NC}"
+echo -e "${GREEN}║  Backend:       http://localhost:${BACKEND_PORT}                      ║${NC}"
+echo -e "${GREEN}║  Frontend:      http://localhost:${FRONTEND_PORT}                      ║${NC}"
+echo -e "${GREEN}║  Agent Worker:  LiveKit interview agent                   ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${BLUE}Press Ctrl+C to stop all services${NC}"
