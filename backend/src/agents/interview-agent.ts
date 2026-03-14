@@ -258,6 +258,7 @@ async function runInterview(ctx: JobContext) {
     agent: new InterviewAgent(metadata),
     room: ctx.room,
     inputOptions: {
+      closeOnDisconnect: false,
       participantIdentity: participant.identity,
     },
   });

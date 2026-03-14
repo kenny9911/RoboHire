@@ -11,7 +11,14 @@ import {
   VoiceAssistantControlBar,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
-import { Track, createLocalVideoTrack, createLocalAudioTrack, LocalVideoTrack, LocalAudioTrack } from 'livekit-client';
+import {
+  DisconnectReason,
+  Track,
+  createLocalVideoTrack,
+  createLocalAudioTrack,
+  LocalVideoTrack,
+  LocalAudioTrack,
+} from 'livekit-client';
 import type { AgentState } from '@livekit/components-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
@@ -62,19 +69,41 @@ export default function InterviewRoom() {
   }, [resolvedAccessToken]);
 
   const handleJoin = useCallback(() => {
+    setError('');
     setState('connected');
   }, []);
 
-  const handleDisconnect = useCallback(() => {
-    setState('ended');
+  const handleDisconnect = useCallback((reason?: DisconnectReason) => {
+    const message =
+      reason === DisconnectReason.CLIENT_INITIATED
+        ? 'Interview connection was closed locally. You can rejoin to continue.'
+        : 'Interview connection was lost. Please rejoin to continue.';
+
+    setError(message);
+    setState('error');
   }, []);
+
+  const handleReconnect = useCallback(() => {
+    if (!joinData) {
+      return;
+    }
+
+    setError('');
+    setState('connected');
+  }, [joinData]);
 
   return (
     <>
       <SEO title={t('interview.title', 'AI Interview')} noIndex />
       <div className="min-h-screen bg-white text-gray-900">
         {state === 'loading' && <LoadingScreen />}
-        {state === 'error' && <ErrorScreen message={error} />}
+        {state === 'error' && (
+          <ErrorScreen
+            message={error}
+            actionLabel={joinData ? t('interview.rejoin', 'Rejoin Interview') : undefined}
+            onAction={joinData ? handleReconnect : undefined}
+          />
+        )}
         {state === 'pre-join' && joinData && (
           <PreJoinScreen joinData={joinData} onJoin={handleJoin} />
         )}
@@ -112,7 +141,15 @@ function LoadingScreen() {
 /* ─────────────────────────────────────────────────────────────────────────────
  *  Error Screen
  * ─────────────────────────────────────────────────────────────────────────── */
-function ErrorScreen({ message }: { message: string }) {
+function ErrorScreen({
+  message,
+  actionLabel,
+  onAction,
+}: {
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   const { t } = useTranslation();
   return (
     <div className="flex h-screen flex-col items-center justify-center gap-4 bg-gray-50">
@@ -123,6 +160,15 @@ function ErrorScreen({ message }: { message: string }) {
       </div>
       <h1 className="text-xl font-semibold text-gray-900">{t('interview.error', 'Unable to Join')}</h1>
       <p className="text-gray-500">{message}</p>
+      {actionLabel && onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-xl hover:shadow-cyan-500/30"
+        >
+          {actionLabel}
+        </button>
+      )}
     </div>
   );
 }
@@ -697,7 +743,7 @@ function ActiveInterviewView({ candidateName, jobTitle }: { candidateName: strin
           </div>
 
           {/* Self video */}
-          <div className="relative h-28 w-40 overflow-hidden rounded-xl border border-gray-700 bg-gray-800 sm:h-36 sm:w-48">
+          <div className="relative h-[200px] w-full max-w-lg overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 sm:h-[260px]">
             {localVideoTrack ? (
               <VideoTrack trackRef={localVideoTrack} className="h-full w-full object-cover" style={{ transform: 'scaleX(-1)' }} />
             ) : (
