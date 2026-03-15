@@ -52,10 +52,12 @@ model User {
   atsIntegrations ATSIntegration[]
   jobs            Job[]
   interviews         Interview[]
+  interviewDialogTurns InterviewDialogTurn[]
   matchingSessions   MatchingSession[]
   activities         UserActivity[]
   resumeVersions     ResumeVersion[]
   interviewRoomConfigVersionsCreated InterviewRoomConfigVersion[] @relation("InterviewRoomConfigVersionsCreated")
+  agents             Agent[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -117,6 +119,8 @@ model Candidate {
   externalAtsProvider String?
 
   hiringRequest HiringRequest @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
+  interviews    Interview[]
+  dialogTurns   InterviewDialogTurn[]
 
   @@index([hiringRequestId])
   @@index([status])
@@ -363,6 +367,7 @@ model Resume {
   resumeJobFits   ResumeJobFit[]
   jobMatches      JobMatch[]
   resumeVersions  ResumeVersion[]
+  agentCandidates AgentCandidate[]
 
   @@unique([userId, contentHash])
   @@index([userId])
@@ -457,6 +462,7 @@ model Job {
   hiringRequest     HiringRequest?    @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
   jobMatches        JobMatch[]
   matchingSessions  MatchingSession[]
+  agents            Agent[]
 
   @@index([userId])
   @@index([status])
@@ -494,6 +500,7 @@ model Interview {
   jobId           String?
   resumeId        String?
   hiringRequestId String?
+  candidateId     String?
   candidateName   String
   candidateEmail  String?
   jobTitle        String?
@@ -513,9 +520,11 @@ model Interview {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hiringRequest   HiringRequest? @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hiringRequest   HiringRequest?      @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
+  candidate       Candidate?          @relation(fields: [candidateId], references: [id], onDelete: SetNull)
   evaluation      InterviewEvaluation?
+  dialogTurns     InterviewDialogTurn[]
 
   @@index([userId])
   @@index([status])
@@ -523,7 +532,30 @@ model Interview {
   @@index([accessToken])
   @@index([userId, createdAt])
   @@index([hiringRequestId])
+  @@index([candidateId])
   @@index([resumeId])
+}
+
+model InterviewDialogTurn {
+  id          String   @id @default(cuid())
+  interviewId String
+  candidateId String?
+  userId      String
+  role        String
+  speakerName String?
+  content     String   @db.Text
+  timestamp   DateTime
+  sequence    Int
+  createdAt   DateTime @default(now())
+
+  interview Interview  @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  candidate Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, sequence])
+  @@index([interviewId, timestamp])
+  @@index([candidateId, timestamp])
+  @@index([userId, timestamp])
 }
 
 model InterviewEvaluation {
@@ -660,4 +692,56 @@ model MatchingSession {
 
   @@index([userId, createdAt])
   @@index([jobId])
+}
+
+model Agent {
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
+  description     String    // natural-language search criteria
+  status          String    @default("active") // active, paused, completed
+  jobId           String?   // optional linked job
+
+  // Search config snapshot
+  config          Json?     // { location?, skills[], experienceMin?, experienceMax?, keywords? }
+
+  // Stats
+  totalSourced    Int       @default(0)
+  totalApproved   Int       @default(0)
+  totalRejected   Int       @default(0)
+  totalContacted  Int       @default(0)
+
+  lastRunAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job             Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  candidates      AgentCandidate[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model AgentCandidate {
+  id              String    @id @default(cuid())
+  agentId         String
+  resumeId        String?   // linked resume if exists in system
+  name            String
+  email           String?
+  profileUrl      String?   // external profile link
+  headline        String?   // current role / summary
+  matchScore      Float?    // 0-100
+  status          String    @default("pending") // pending, approved, rejected, contacted
+  outreachSentAt  DateTime?
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  agent           Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  resume          Resume?   @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@index([agentId, status])
+  @@index([agentId, createdAt])
 }

@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { API_BASE } from '../../config';
 import { usePageState } from '../../hooks/usePageState';
-import PreMatchDialog from '../../components/PreMatchDialog';
 import MatchingSessionHistory from '../../components/MatchingSessionHistory';
 import MatchDetailModal from '../../components/MatchDetailModal';
 
@@ -14,6 +13,14 @@ interface Job {
   status: string;
   department?: string;
   location?: string;
+}
+
+interface Resume {
+  id: string;
+  name: string;
+  currentRole: string | null;
+  experienceYears: string | null;
+  tags: string[];
 }
 
 interface MatchResult {
@@ -52,6 +59,45 @@ interface PreFilterProgress {
   durationMs?: number;
 }
 
+interface MatchingCriteriaSnapshot {
+  selectedResumeCount: number;
+  locations: string[];
+  jobTypes: string[];
+  freeText: string | null;
+  hasPreFilter: boolean;
+}
+
+interface SessionCriteriaResume {
+  id: string;
+  name: string;
+  currentRole: string | null;
+  experienceYears: string | null;
+  tags: string[];
+}
+
+interface SelectedMatchingSession {
+  id: string;
+  title: string | null;
+  status: string;
+  createdAt: string;
+  completedAt: string | null;
+  preFilterModel: string | null;
+  preFilterResult: any;
+  totalResumes: number;
+  totalFiltered: number;
+  totalMatched: number;
+  totalFailed: number;
+  avgScore: number | null;
+  topGrade: string | null;
+  job: {
+    id: string;
+    title: string;
+    description?: string | null;
+  };
+  criteriaSnapshot?: MatchingCriteriaSnapshot;
+  selectedResumes: SessionCriteriaResume[];
+}
+
 const GRADE_COLORS: Record<string, string> = {
   'A+': 'bg-emerald-100 text-emerald-700',
   A: 'bg-emerald-100 text-emerald-700',
@@ -70,8 +116,11 @@ const STATUS_COLORS: Record<string, string> = {
   invited: 'bg-purple-100 text-purple-700',
 };
 
+const JOB_TYPES = ['full-time', 'part-time', 'contract', 'internship'];
+
 export default function SmartMatching() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [jobs, setJobs] = usePageState<Job[]>('matching.jobs', []);
   const [selectedJobIds, setSelectedJobIds] = usePageState<string[]>('matching.selectedJobIds', []);
   const [matches, setMatches] = usePageState<MatchResult[]>('matching.matches', []);
@@ -83,41 +132,76 @@ export default function SmartMatching() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = usePageState<string>('matching.statusFilter', '');
-  const [showPreMatchDialog, setShowPreMatchDialog] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [sessionRefreshTrigger, setSessionRefreshTrigger] = useState(0);
-  const [jobSearch, setJobSearch] = useState('');
   const [detailMatch, setDetailMatch] = useState<MatchResult | null>(null);
-  const [showJobSelectorModal, setShowJobSelectorModal] = useState(false);
+  const [showAIMatchModal, setShowAIMatchModal] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [showSessionCriteriaModal, setShowSessionCriteriaModal] = useState(false);
+  const [selectedSessionMeta, setSelectedSessionMeta] = useState<SelectedMatchingSession | null>(null);
+  const [resumeCount, setResumeCount] = useState(0);
+  const [savedSessionCount, setSavedSessionCount] = useState(0);
+  const [modalLaunchJobIds, setModalLaunchJobIds] = useState<string[]>([]);
 
-  const selectedJobIdSet = useMemo(() => new Set(selectedJobIds), [selectedJobIds]);
-  const selectedJobs = useMemo(
-    () => jobs.filter((job) => selectedJobIdSet.has(job.id)),
-    [jobs, selectedJobIdSet]
-  );
+  // AI Match modal state
+  const [modalJobIds, setModalJobIds] = useState<Set<string>>(new Set());
+  const [modalJobSearch, setModalJobSearch] = useState('');
+  const [modalResumes, setModalResumes] = useState<Resume[]>([]);
+  const [loadingModalResumes, setLoadingModalResumes] = useState(false);
+  const [modalSelectedResumeIds, setModalSelectedResumeIds] = useState<Set<string>>(new Set());
+  const [modalResumeSearch, setModalResumeSearch] = useState('');
+  const [modalShowFilters, setModalShowFilters] = useState(false);
+  const [modalLocations, setModalLocations] = useState('');
+  const [modalSelectedJobTypes, setModalSelectedJobTypes] = useState<Set<string>>(new Set());
+  const [modalFreeText, setModalFreeText] = useState('');
+  const [modalSessionName, setModalSessionName] = useState('');
+  const [modalMinScore, setModalMinScore] = useState<string>('');
+  const [modalMaxJobMatchesPerResume, setModalMaxJobMatchesPerResume] = useState<string>('');
+  const [modalMaxResumeMatchesPerJob, setModalMaxResumeMatchesPerJob] = useState<string>('');
 
   const filteredJobs = useMemo(() => {
-    if (!jobSearch.trim()) return jobs;
-    const q = jobSearch.toLowerCase();
+    if (!modalJobSearch.trim()) return jobs;
+    const q = modalJobSearch.toLowerCase();
     return jobs.filter(
       (j) =>
         j.title.toLowerCase().includes(q) ||
         j.department?.toLowerCase().includes(q) ||
         j.location?.toLowerCase().includes(q)
     );
-  }, [jobs, jobSearch]);
+  }, [jobs, modalJobSearch]);
   const sortedFilteredJobs = useMemo(() => {
     return [...filteredJobs].sort((a, b) => {
-      const selectionRank = Number(selectedJobIdSet.has(b.id)) - Number(selectedJobIdSet.has(a.id));
+      const selectionRank = Number(modalJobIds.has(b.id)) - Number(modalJobIds.has(a.id));
       if (selectionRank !== 0) return selectionRank;
       return a.title.localeCompare(b.title, i18n.language);
     });
-  }, [filteredJobs, i18n.language, selectedJobIdSet]);
+  }, [filteredJobs, i18n.language, modalJobIds]);
 
-  const selectedJobTitles = useMemo(
-    () => selectedJobs.map((j) => j.title),
-    [selectedJobs]
-  );
+  // Modal resume filtering
+  const filteredModalResumes = useMemo(() => {
+    if (!modalResumeSearch.trim()) return modalResumes;
+    const q = modalResumeSearch.toLowerCase();
+    return modalResumes.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.currentRole?.toLowerCase().includes(q) ||
+        r.tags.some((tag) => tag.toLowerCase().includes(q))
+    );
+  }, [modalResumes, modalResumeSearch]);
+
+  // When search filter narrows the candidate list, restrict selection to visible resumes only
+  useEffect(() => {
+    if (!modalResumeSearch.trim()) return; // No filter active — keep full selection
+    const visibleIds = new Set(filteredModalResumes.map((r) => r.id));
+    setModalSelectedResumeIds((prev) => {
+      const next = new Set<string>();
+      prev.forEach((id) => { if (visibleIds.has(id)) next.add(id); });
+      if (next.size === prev.size) return prev; // no change
+      return next;
+    });
+  }, [filteredModalResumes, modalResumeSearch]);
+
+  const allModalVisibleSelected = filteredModalResumes.length > 0 && filteredModalResumes.every((r) => modalSelectedResumeIds.has(r.id));
 
   const getJobStatusLabel = useCallback((status: string) => {
     return t(
@@ -181,6 +265,68 @@ export default function SmartMatching() {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const [resumesRes, sessionsRes] = await Promise.allSettled([
+        axios.get('/api/v1/resumes', { params: { limit: 1 } }),
+        axios.get('/api/v1/matching/sessions', { params: { limit: 1 } }),
+      ]);
+
+      if (cancelled) return;
+
+      if (resumesRes.status === 'fulfilled') {
+        setResumeCount(resumesRes.value.data.meta?.total || resumesRes.value.data.data?.length || 0);
+      }
+
+      if (sessionsRes.status === 'fulfilled') {
+        setSavedSessionCount(sessionsRes.value.data.meta?.total || sessionsRes.value.data.data?.length || 0);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionRefreshTrigger]);
+
+  // Fetch resumes when AI Match modal opens
+  useEffect(() => {
+    if (!showAIMatchModal) return;
+    (async () => {
+      try {
+        setLoadingModalResumes(true);
+        const res = await axios.get('/api/v1/resumes', { params: { limit: 500 } });
+        const data = res.data.data || res.data.resumes || [];
+        setModalResumes(data);
+        setModalSelectedResumeIds(new Set(data.map((r: Resume) => r.id)));
+      } catch {
+        setModalResumes([]);
+      } finally {
+        setLoadingModalResumes(false);
+      }
+    })();
+  }, [showAIMatchModal]);
+
+  // Reset modal state when opening
+  useEffect(() => {
+    if (showAIMatchModal) {
+      const initialJobIds = modalLaunchJobIds.length > 0 ? modalLaunchJobIds : selectedJobIds;
+      setModalJobIds(new Set(initialJobIds));
+      setModalJobSearch('');
+      setModalResumeSearch('');
+      setModalShowFilters(false);
+      setModalLocations('');
+      setModalSelectedJobTypes(new Set());
+      setModalFreeText('');
+      setModalSessionName('');
+      setModalMinScore('');
+      setModalMaxJobMatchesPerResume('');
+      setModalMaxResumeMatchesPerJob('');
+      setModalLaunchJobIds([]);
+    }
+  }, [showAIMatchModal]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Fetch match results for all selected jobs
   const fetchMatches = useCallback(async (jobIds: string[]) => {
     if (jobIds.length === 0) {
@@ -191,12 +337,10 @@ export default function SmartMatching() {
       setLoadingMatches(true);
       const params: any = { sort: 'score', order: 'desc' };
       if (statusFilter) params.status = statusFilter;
-      // Fetch matches for all selected jobs in parallel
       const results = await Promise.all(
         jobIds.map((jobId) => axios.get(`/api/v1/matching/results/${jobId}`, { params }).catch(() => ({ data: { data: [] } })))
       );
       const allMatches = results.flatMap((res) => res.data.data || []);
-      // Sort by score desc
       allMatches.sort((a: any, b: any) => (b.score ?? 0) - (a.score ?? 0));
       setMatches(allMatches);
     } catch {
@@ -211,15 +355,26 @@ export default function SmartMatching() {
     try {
       setLoadingMatches(true);
       const res = await axios.get(`/api/v1/matching/sessions/${sessionId}`);
+      const session = res.data.data?.session;
       setMatches(res.data.data?.matches || []);
+      setSelectedSessionMeta(
+        session
+          ? {
+              ...session,
+              selectedResumes: res.data.data?.selectedResumes || [],
+            }
+          : null
+      );
     } catch {
       setMatches([]);
+      setSelectedSessionMeta(null);
     } finally {
       setLoadingMatches(false);
     }
   }, []);
 
   useEffect(() => {
+    if (running) return; // Don't fetch while matching is in progress
     if (selectedSessionId) {
       fetchSessionMatches(selectedSessionId);
     } else if (selectedJobIds.length > 0) {
@@ -227,32 +382,64 @@ export default function SmartMatching() {
     } else {
       setMatches([]);
     }
-  }, [selectedJobIds, selectedSessionId, fetchMatches, fetchSessionMatches]);
+  }, [selectedJobIds, selectedSessionId, fetchMatches, fetchSessionMatches, running]);
 
+  // Keyboard handler for modals
   useEffect(() => {
-    if (!showJobSelectorModal) {
-      setJobSearch('');
-      return;
-    }
-
+    if (!showAIMatchModal && !showHistoryDrawer && !showSessionCriteriaModal) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setShowJobSelectorModal(false);
+        if (showAIMatchModal) setShowAIMatchModal(false);
+        if (showHistoryDrawer) setShowHistoryDrawer(false);
+        if (showSessionCriteriaModal) setShowSessionCriteriaModal(false);
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showJobSelectorModal]);
+  }, [showAIMatchModal, showHistoryDrawer, showSessionCriteriaModal]);
 
-  const toggleJobSelection = useCallback((jobId: string) => {
-    setSelectedJobIds((prev) => {
-      if (prev.includes(jobId)) {
-        return prev.filter((id) => id !== jobId);
-      }
-      return [...prev, jobId];
+  const toggleModalJob = useCallback((jobId: string) => {
+    setModalJobIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(jobId)) next.delete(jobId);
+      else next.add(jobId);
+      return next;
     });
-    setSelectedSessionId(null);
+  }, []);
+
+  const toggleModalResume = useCallback((id: string) => {
+    setModalSelectedResumeIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleAllModalResumes = useCallback(() => {
+    if (allModalVisibleSelected) {
+      const visibleIds = new Set(filteredModalResumes.map((r) => r.id));
+      setModalSelectedResumeIds((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setModalSelectedResumeIds((prev) => {
+        const next = new Set(prev);
+        filteredModalResumes.forEach((r) => next.add(r.id));
+        return next;
+      });
+    }
+  }, [filteredModalResumes, allModalVisibleSelected]);
+
+  const toggleModalJobType = useCallback((jt: string) => {
+    setModalSelectedJobTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(jt)) next.delete(jt);
+      else next.add(jt);
+      return next;
+    });
   }, []);
 
   // Run AI matching for each selected job sequentially with SSE
@@ -379,30 +566,53 @@ export default function SmartMatching() {
     return { matched: matchedCount, failed: failedCount, total: totalCount, filtered: filteredCount };
   };
 
-  const handleRunMatching = async (config: {
-    resumeIds: string[];
-    preFilter?: { locations?: string[]; jobTypes?: string[]; freeText?: string };
-    sessionName?: string;
-  }) => {
-    if (selectedJobIds.length === 0) return;
-    setShowPreMatchDialog(false);
+  const handleRunFromModal = async () => {
+    const jobIds = Array.from(modalJobIds);
+    if (jobIds.length === 0) return;
+
+    // Update selected jobs in page state
+    setSelectedJobIds(jobIds);
+    setShowAIMatchModal(false);
+
+    const resumeIds = Array.from(modalSelectedResumeIds);
+    const hasPreFilter = modalLocations.trim() || modalSelectedJobTypes.size > 0 || modalFreeText.trim();
+    const preFilter: any = {};
+    if (modalLocations.trim()) {
+      preFilter.locations = modalLocations.split(',').map((l: string) => l.trim()).filter(Boolean);
+    }
+    if (modalSelectedJobTypes.size > 0) {
+      preFilter.jobTypes = Array.from(modalSelectedJobTypes);
+    }
+    if (modalFreeText.trim()) {
+      preFilter.freeText = modalFreeText.trim();
+    }
+
+    const config = {
+      resumeIds,
+      preFilter: hasPreFilter ? preFilter : undefined,
+      sessionName: modalSessionName.trim() || undefined,
+      minScore: modalMinScore ? Number(modalMinScore) : undefined,
+      maxJobMatchesPerResume: modalMaxJobMatchesPerResume ? Number(modalMaxJobMatchesPerResume) : undefined,
+      maxResumeMatchesPerJob: modalMaxResumeMatchesPerJob ? Number(modalMaxResumeMatchesPerJob) : undefined,
+    };
+
+    const matchJobs = jobs.filter((j) => modalJobIds.has(j.id));
 
     try {
       setRunning(true);
       setError(null);
       setSuccessMessage(null);
+      setMatches([]);
 
       let totalMatched = 0;
       let totalFailed = 0;
       let totalAll = 0;
       let totalFiltered = 0;
 
-      const selectedJobs = jobs.filter((j) => selectedJobIdSet.has(j.id));
-
-      for (let i = 0; i < selectedJobs.length; i++) {
-        const job = selectedJobs[i];
+      for (let i = 0; i < matchJobs.length; i++) {
+        const job = matchJobs[i];
         try {
-          const result = await runMatchingForJob(job.id, job.title, i + 1, selectedJobs.length, config);
+          const result = await runMatchingForJob(job.id, job.title, i + 1, matchJobs.length, config);
           totalMatched += result.matched;
           totalFailed += result.failed;
           totalAll += result.total;
@@ -414,9 +624,10 @@ export default function SmartMatching() {
 
       setSuccessMessage(getCompletionMessage(totalMatched, totalFailed, totalAll, totalFiltered));
 
-      // Refresh matches and sessions
       setSelectedSessionId(null);
-      await fetchMatches(selectedJobIds);
+      setSelectedSessionMeta(null);
+      setShowSessionCriteriaModal(false);
+      await fetchMatches(jobIds);
       setSessionRefreshTrigger((prev) => prev + 1);
     } catch {
       setError(t('product.matching.errorGeneric', 'Matching failed. Please try again.'));
@@ -439,6 +650,28 @@ export default function SmartMatching() {
     }
   };
 
+  const handleSelectSession = useCallback((sessionId: string | null) => {
+    setSelectedSessionId(sessionId);
+    if (!sessionId) {
+      setSelectedSessionMeta(null);
+      setShowSessionCriteriaModal(false);
+    }
+    setShowHistoryDrawer(false);
+  }, []);
+
+  const openAIMatchModal = useCallback((jobIds?: string[]) => {
+    setModalLaunchJobIds(jobIds && jobIds.length > 0 ? jobIds : []);
+    setShowAIMatchModal(true);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/product');
+  }, [navigate]);
+
   const statuses = ['', 'new', 'reviewed', 'shortlisted', 'rejected', 'invited'];
   const processedCount = matchProgress ? matchProgress.completed + matchProgress.failed : 0;
   const progressPercent = matchProgress
@@ -447,45 +680,112 @@ export default function SmartMatching() {
       : 8
     : 0;
 
+
+
+  const selectedSessionSummaryItems = useMemo(() => {
+    if (!selectedSessionMeta) return [];
+
+    const criteria = selectedSessionMeta.criteriaSnapshot;
+    const items = [
+      t('product.matching.sessionSummaryResumeCount', '{{count}} resumes selected', {
+        count: criteria?.selectedResumeCount ?? selectedSessionMeta.selectedResumes.length ?? 0,
+      }),
+    ];
+
+    if (criteria?.locations?.length) {
+      items.push(
+        t('product.matching.sessionSummaryLocations', 'Locations: {{locations}}', {
+          locations: criteria.locations.join(', '),
+        })
+      );
+    }
+
+    if (criteria?.jobTypes?.length) {
+      items.push(
+        t('product.matching.sessionSummaryJobTypes', 'Job types: {{jobTypes}}', {
+          jobTypes: criteria.jobTypes.join(', '),
+        })
+      );
+    }
+
+    return items;
+  }, [selectedSessionMeta, t]);
+
+  const selectedSessionFreeText = selectedSessionMeta?.criteriaSnapshot?.freeText?.trim() || '';
+  const selectedSessionDescription = selectedSessionMeta?.job?.description?.trim() || '';
+  const openJobs = useMemo(() => jobs.filter((job) => job.status === 'open'), [jobs]);
+  const highlightedJobs = useMemo(() => {
+    const source = openJobs.length > 0 ? openJobs : jobs;
+    return [...source]
+      .sort((a, b) => {
+        const statusRank = Number(b.status === 'open') - Number(a.status === 'open');
+        if (statusRank !== 0) return statusRank;
+        return a.title.localeCompare(b.title, i18n.language);
+      })
+      .slice(0, 4);
+  }, [jobs, openJobs, i18n.language]);
+  const showOverview = !running && !selectedSessionId && selectedJobIds.length === 0;
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">{t('product.matching.title', 'Smart Matching')}</h2>
-          <p className="mt-1 text-sm text-slate-500">{t('product.matching.subtitle', 'AI-powered candidate-job matching with detailed analysis.')}</p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
+            title={t('common.back', 'Back')}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>{t('common.back', 'Back')}</span>
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">{t('product.matching.title', 'Smart Matching')}</h2>
+            <p className="text-sm text-slate-500">{t('product.matching.subtitle', 'AI-powered candidate-job matching with detailed analysis.')}</p>
+          </div>
         </div>
-        <button
-          onClick={() => setShowPreMatchDialog(true)}
-          disabled={selectedJobIds.length === 0 || running}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto shrink-0"
-        >
-          {running ? (
-            <>
-              <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-              {matchProgress?.total
-                ? t('product.matching.runningProgress', 'Matching {{processed}} / {{total}}', {
-                    processed: processedCount,
-                    total: matchProgress.total,
-                  })
-                : t('product.matching.running', 'Matching...')}
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              {t('product.matching.runMatch', 'Run AI Matching')}
-              {selectedJobIds.length > 0 && (
-                <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-xs">{selectedJobIds.length}</span>
-              )}
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowHistoryDrawer(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {t('product.matching.history', 'History')}
+          </button>
+          <button
+            onClick={() => openAIMatchModal()}
+            disabled={running}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
+            {running ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
+                {matchProgress?.total
+                  ? t('product.matching.runningProgress', 'Matching {{processed}} / {{total}}', {
+                      processed: processedCount,
+                      total: matchProgress.total,
+                    })
+                  : t('product.matching.running', 'Matching...')}
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {t('product.matching.aiMatch', 'AI Match')}
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <div className="flex items-start justify-between gap-3">
             <p className="whitespace-pre-line">{error}</p>
             <button
@@ -493,7 +793,6 @@ export default function SmartMatching() {
               onClick={() => setError(null)}
               className="text-red-400 transition-colors hover:text-red-600"
             >
-              <span className="sr-only">{t('product.matching.dismissError', 'Dismiss error')}</span>
               &times;
             </button>
           </div>
@@ -501,7 +800,7 @@ export default function SmartMatching() {
       )}
 
       {successMessage && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           <div className="flex items-start justify-between gap-3">
             <p>{successMessage}</p>
             <button
@@ -509,302 +808,205 @@ export default function SmartMatching() {
               onClick={() => setSuccessMessage(null)}
               className="text-emerald-400 transition-colors hover:text-emerald-600"
             >
-              <span className="sr-only">{t('product.matching.dismissSuccess', 'Dismiss message')}</span>
               &times;
             </button>
           </div>
         </div>
       )}
 
-      {/* Job Selector */}
-      <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_40px_-34px_rgba(15,23,42,0.35)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-              {t('product.matching.selectJobsLabel', 'Jobs')}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-lg font-semibold text-slate-900">
-                {t('product.matching.selectJobs', 'Select Jobs')}
-              </h3>
-              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                {t('product.matching.jobsSelectedCount', '{{count}} selected', { count: selectedJobIds.length })}
-              </span>
-            </div>
-            <p className="text-sm text-slate-500">
-              {selectedJobIds.length > 0
-                ? t('product.matching.jobsSelectedSummary', '{{count}} jobs selected for this matching run.', {
-                    count: selectedJobIds.length,
-                  })
-                : t('product.matching.jobsSelectHint', 'Choose one or more jobs before running AI matching.')}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setShowJobSelectorModal(true)}
-            disabled={running}
-            className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            {selectedJobIds.length > 0
-              ? t('product.matching.editJobPicker', 'Edit Selection')
-              : t('product.matching.openJobPicker', 'Choose Jobs')}
-          </button>
-        </div>
-
-        {selectedJobs.length > 0 ? (
-          <div className="mt-5 flex flex-wrap gap-3">
-            {selectedJobs.map((job) => (
-              <button
-                key={job.id}
-                type="button"
-                onClick={() => setShowJobSelectorModal(true)}
-                className="group rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-900">{job.title}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                    job.status === 'open' ? 'bg-emerald-100 text-emerald-700' :
-                    job.status === 'draft' ? 'bg-slate-100 text-slate-500' :
-                    job.status === 'closed' || job.status === 'filled' ? 'bg-rose-100 text-rose-700' :
-                    'bg-amber-100 text-amber-700'
-                  }`}>
-                    {getJobStatusLabel(job.status)}
-                  </span>
-                </div>
-                {(job.department || job.location) && (
-                  <p className="mt-1 text-xs text-slate-500">
-                    {[job.department, job.location].filter(Boolean).join(' · ')}
-                  </p>
-                )}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowJobSelectorModal(true)}
-            disabled={running}
-            className="mt-5 flex w-full items-center justify-between rounded-3xl border border-dashed border-slate-300 bg-slate-50/80 px-5 py-5 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <div>
-              <p className="text-sm font-semibold text-slate-900">
-                {t('product.matching.openJobPicker', 'Choose Jobs')}
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                {t('product.matching.jobPickerOpenEmpty', 'Open the job picker to choose one or more roles.')}
-              </p>
-            </div>
-            <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {showJobSelectorModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
-          onClick={() => setShowJobSelectorModal(false)}
-        >
-          <div
-            className="flex max-h-[86vh] w-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_36px_90px_-45px_rgba(15,23,42,0.55)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="border-b border-slate-200 px-6 py-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    {t('product.matching.selectJobsLabel', 'Jobs')}
-                  </p>
-                  <h3 className="mt-2 text-xl font-semibold text-slate-900">
-                    {t('product.matching.jobPickerTitle', 'Select jobs to match')}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {t('product.matching.jobPickerSubtitle', 'Pick one or more jobs. Matching will run against every selected role.')}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowJobSelectorModal(false)}
-                  className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-                >
-                  <span className="sr-only">{t('product.matching.jobPickerCancel', 'Cancel')}</span>
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      {/* Viewing session banner */}
+      {selectedSessionId && (
+        <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-cyan-50 to-sky-50 px-5 py-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                </button>
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-600">
+                    {t('product.matching.viewingSession', 'Viewing saved session results')}
+                  </p>
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    {selectedSessionMeta?.title || t('product.matching.untitledSession', 'Untitled Session')}
+                  </p>
+                </div>
               </div>
 
-              <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                    {t('product.matching.jobsSelectedCount', '{{count}} selected', { count: selectedJobIds.length })}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {t('product.matching.jobPickerResults', '{{count}} jobs', { count: sortedFilteredJobs.length })}
-                  </span>
+              <div className="mt-3 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                  {selectedSessionMeta?.job?.title && (
+                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 font-semibold text-blue-700">
+                      {selectedSessionMeta.job.title}
+                    </span>
+                  )}
+                  {selectedSessionSummaryItems.map((item) => (
+                    <span key={item} className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
+                      {item}
+                    </span>
+                  ))}
                 </div>
-                {selectedJobIds.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedJobIds([])}
-                    disabled={running}
-                    className="text-sm font-semibold text-slate-500 transition-colors hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {t('product.matching.jobPickerClear', 'Clear all')}
-                  </button>
+
+                {selectedSessionFreeText && (
+                  <p className="mt-3 text-sm text-slate-700">
+                    <span className="font-semibold text-slate-900">
+                      {t('product.matching.sessionRequirements', 'Requirement summary')}:
+                    </span>{' '}
+                    {selectedSessionFreeText}
+                  </p>
+                )}
+
+                {!selectedSessionFreeText && selectedSessionDescription && (
+                  <p className="mt-3 line-clamp-2 text-sm text-slate-600">
+                    <span className="font-semibold text-slate-900">
+                      {t('product.matching.sessionJobDescription', 'Job summary')}:
+                    </span>{' '}
+                    {selectedSessionDescription}
+                  </p>
                 )}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-5">
-              {loadingJobs ? (
-                <div className="flex justify-center py-10">
-                  <div className="h-7 w-7 animate-spin rounded-full border-b-2 border-blue-600" />
-                </div>
-              ) : jobs.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
-                  <p className="text-sm text-slate-500">{t('product.matching.noJobs', 'No jobs found. Create a job first.')}</p>
-                  <Link
-                    to="/product/jobs"
-                    className="mt-3 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700"
-                  >
-                    {t('product.matching.goToJobs', 'Go to Jobs')}
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    value={jobSearch}
-                    onChange={(e) => setJobSearch(e.target.value)}
-                    placeholder={t('product.matching.searchJobs', 'Search jobs...')}
-                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
-
-                  {selectedJobs.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {selectedJobs.map((job) => (
-                        <button
-                          key={job.id}
-                          type="button"
-                          onClick={() => toggleJobSelection(job.id)}
-                          disabled={running}
-                          className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <span className="truncate max-w-[220px]">{job.title}</span>
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="mt-5 space-y-3">
-                    {sortedFilteredJobs.length === 0 ? (
-                      <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-                        {t('product.matching.jobPickerEmptySearch', 'No jobs match your search.')}
-                      </div>
-                    ) : (
-                      sortedFilteredJobs.map((job) => {
-                        const selected = selectedJobIdSet.has(job.id);
-
-                        return (
-                          <button
-                            key={job.id}
-                            type="button"
-                            onClick={() => toggleJobSelection(job.id)}
-                            disabled={running}
-                            className={`flex w-full items-start gap-4 rounded-3xl border px-4 py-4 text-left transition-all ${
-                              selected
-                                ? 'border-blue-300 bg-blue-50 shadow-[0_18px_34px_-28px_rgba(59,130,246,0.55)]'
-                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                            } disabled:cursor-not-allowed disabled:opacity-60`}
-                          >
-                            <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border ${
-                              selected
-                                ? 'border-blue-600 bg-blue-600 text-white'
-                                : 'border-slate-300 bg-white text-transparent'
-                            }`}>
-                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-base font-semibold text-slate-900">{job.title}</span>
-                                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                                  job.status === 'open' ? 'bg-emerald-100 text-emerald-700' :
-                                  job.status === 'draft' ? 'bg-slate-100 text-slate-500' :
-                                  job.status === 'closed' || job.status === 'filled' ? 'bg-rose-100 text-rose-700' :
-                                  'bg-amber-100 text-amber-700'
-                                }`}>
-                                  {getJobStatusLabel(job.status)}
-                                </span>
-                              </div>
-                              <p className="mt-1 text-sm text-slate-500">
-                                {[job.department, job.location].filter(Boolean).join(' · ') || t('product.matching.jobPickerNoMeta', 'No department or location provided.')}
-                              </p>
-                            </div>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-500">
-                {selectedJobIds.length > 0
-                  ? selectedJobTitles.join(', ')
-                  : t('product.matching.jobsSelectHint', 'Choose one or more jobs before running AI matching.')}
-              </p>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowJobSelectorModal(false)}
-                  className="rounded-2xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
-                >
-                  {t('product.matching.jobPickerCancel', 'Cancel')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowJobSelectorModal(false)}
-                  className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                >
-                  {t('product.matching.jobPickerDone', 'Done')}
-                </button>
-              </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <button
+                onClick={() => setShowSessionCriteriaModal(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-white px-3.5 py-2 text-sm font-semibold text-blue-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-6m3 6V7m3 10v-4m4 6H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2z" />
+                </svg>
+                {t('product.matching.viewSelectionsAndCriteria', 'View selections & criteria')}
+              </button>
+              <button
+                onClick={() => handleSelectSession(null)}
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+              >
+                {t('product.matching.backToCurrent', 'Back to current results')}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Session History — always visible */}
-      <MatchingSessionHistory
-        onSelectSession={setSelectedSessionId}
-        selectedSessionId={selectedSessionId}
-        refreshTrigger={sessionRefreshTrigger}
-      />
+      {showOverview && (
+        <div className="space-y-5">
+          {/* Stats Row */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+              <p className="text-xs font-medium text-slate-500">{t('product.matching.overviewOpenRoles', 'Open roles')}</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{openJobs.length}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+              <p className="text-xs font-medium text-slate-500">{t('product.matching.overviewTalentPool', 'Talent pool')}</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{resumeCount}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+              <p className="text-xs font-medium text-slate-500">{t('product.matching.overviewSavedSessions', 'Saved sessions')}</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{savedSessionCount}</p>
+            </div>
+          </div>
 
-      {/* Viewing session banner */}
-      {selectedSessionId && (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-sm text-blue-700 font-medium">
-            {t('product.matching.viewingSession', 'Viewing saved session results')}
-          </span>
-          <button
-            onClick={() => setSelectedSessionId(null)}
-            className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors self-start sm:self-auto"
-          >
-            {t('product.matching.backToCurrent', 'Back to current results')}
-          </button>
+          {/* Quick Start CTA */}
+          {openJobs.length === 0 || resumeCount === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-semibold text-slate-900">
+                {t('product.matching.getStarted', 'Get started with AI Matching')}
+              </h3>
+              <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
+                {t('product.matching.getStartedDesc', 'Create a job and upload candidate resumes to run your first AI match.')}
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <Link
+                  to="/product/jobs"
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                >
+                  {t('product.matching.createJobFirst', 'Create a job')}
+                </Link>
+                <Link
+                  to="/product/talent"
+                  className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  {t('product.matching.addCandidatesFirst', 'Add candidates')}
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {t('product.matching.readyToMatch', 'Ready to match')}
+                  </h3>
+                  <p className="mt-0.5 text-sm text-slate-500">
+                    {t('product.matching.readyToMatchDesc', 'Select jobs and candidates to start a new AI matching session.')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openAIMatchModal()}
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  {t('product.matching.startNewSession', 'Start a matching session')}
+                </button>
+              </div>
+
+              {/* Quick-pick roles */}
+              {highlightedJobs.length > 0 && (
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <p className="mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    {t('product.matching.quickPick', 'Quick pick a role')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {highlightedJobs.map((job) => (
+                      <button
+                        key={job.id}
+                        onClick={() => openAIMatchModal([job.id])}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <span className="truncate max-w-[200px]">{job.title}</span>
+                        <svg className="h-3.5 w-3.5 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Recent Sessions */}
+          <div className="rounded-xl border border-slate-200 bg-white">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-900">
+                {t('product.matching.recentMatches', 'Recent Matches')}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowHistoryDrawer(true)}
+                className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                {t('product.matching.viewAll', 'View all')}
+              </button>
+            </div>
+            <MatchingSessionHistory
+              onSelectSession={handleSelectSession}
+              selectedSessionId={selectedSessionId}
+              refreshTrigger={sessionRefreshTrigger}
+              embedded
+              limit={5}
+            />
+          </div>
         </div>
       )}
 
@@ -829,14 +1031,14 @@ export default function SmartMatching() {
 
       {/* Pre-filter progress */}
       {running && preFilterProgress && (
-        <div className={`rounded-2xl border p-5 ${
+        <div className={`rounded-xl border p-5 ${
           preFilterProgress.status === 'running'
-            ? 'border-purple-200 bg-gradient-to-r from-purple-50 via-violet-50 to-fuchsia-50 shadow-[0_20px_42px_-30px_rgba(147,51,234,0.5)]'
+            ? 'border-purple-200 bg-gradient-to-r from-purple-50 via-violet-50 to-fuchsia-50'
             : 'border-purple-200 bg-purple-50'
         }`}>
           {preFilterProgress.status === 'running' ? (
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-600 text-white shadow-lg shadow-purple-200/80">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
               </div>
               <div>
@@ -866,10 +1068,10 @@ export default function SmartMatching() {
       )}
 
       {running && matchProgress && (!preFilterProgress || preFilterProgress.status === 'completed') && (
-        <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-cyan-50 to-sky-50 p-5 shadow-[0_20px_42px_-30px_rgba(37,99,235,0.6)]">
+        <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 via-cyan-50 to-sky-50 p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200/80">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
               </div>
               <div>
@@ -902,7 +1104,7 @@ export default function SmartMatching() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm">
+            <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600">
                 {t('product.matching.progressCurrentLabel', 'Currently matching')}
               </p>
@@ -945,7 +1147,7 @@ export default function SmartMatching() {
             </div>
           ) : matches.length === 0 ? (
             running ? (
-              <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center">
+              <div className="rounded-xl border border-slate-200 bg-white py-16 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
                 </div>
@@ -957,7 +1159,7 @@ export default function SmartMatching() {
                 </p>
               </div>
             ) : (
-            <div className="text-center py-16 rounded-2xl border border-slate-200 bg-white">
+            <div className="text-center py-16 rounded-xl border border-slate-200 bg-white">
               <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -970,11 +1172,10 @@ export default function SmartMatching() {
               {matches.map((match) => (
                 <div
                   key={match.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 hover:border-blue-200 transition-colors"
+                  className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 hover:border-blue-200 transition-colors"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="flex items-center gap-3 min-w-0">
-                      {/* Avatar */}
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 shrink-0">
                         <span className="text-sm font-bold text-blue-600">
                           {match.resume.name?.[0]?.toUpperCase() || '?'}
@@ -1007,7 +1208,6 @@ export default function SmartMatching() {
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                      {/* Score */}
                       {match.score !== null && (
                         <div className="text-center">
                           <div className={`text-2xl font-bold ${
@@ -1021,7 +1221,6 @@ export default function SmartMatching() {
                         </div>
                       )}
 
-                      {/* Preference Fit */}
                       {match.matchData?.preferenceAlignment && match.matchData.preferenceAlignment.overallScore < 100 && (
                         <div className="text-center">
                           <div className={`text-lg font-bold ${
@@ -1034,7 +1233,6 @@ export default function SmartMatching() {
                         </div>
                       )}
 
-                      {/* Actions */}
                       <div className="flex items-center gap-1">
                         {match.status !== 'shortlisted' && (
                           <button
@@ -1083,7 +1281,6 @@ export default function SmartMatching() {
                     </div>
                   </div>
 
-                  {/* Tags */}
                   {match.resume.tags && match.resume.tags.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1">
                       {match.resume.tags.slice(0, 6).map((tag) => (
@@ -1097,7 +1294,6 @@ export default function SmartMatching() {
                     </div>
                   )}
 
-                  {/* Key highlights from matchData */}
                   {match.matchData?.highlights && Array.isArray(match.matchData.highlights) && match.matchData.highlights.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-slate-100">
                       <p className="text-xs text-slate-500">
@@ -1106,7 +1302,6 @@ export default function SmartMatching() {
                     </div>
                   )}
 
-                  {/* Preference warnings */}
                   {match.matchData?.preferenceAlignment?.warnings?.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {match.matchData.preferenceAlignment.warnings.slice(0, 3).map((w: string, i: number) => (
@@ -1126,14 +1321,633 @@ export default function SmartMatching() {
         </>
       )}
 
-      {/* Pre-match dialog */}
-      <PreMatchDialog
-        open={showPreMatchDialog}
-        onClose={() => setShowPreMatchDialog(false)}
-        onConfirm={handleRunMatching}
-        jobTitle={selectedJobTitles.join(', ')}
-        loading={running}
-      />
+      {/* ============ AI Match Modal ============ */}
+      {showAIMatchModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowAIMatchModal(false)}
+        >
+          <div
+            className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  {t('product.matching.aiMatch', 'AI Match')}
+                </h3>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  {t('product.matching.aiMatchDesc', 'Select jobs and candidates, then configure matching parameters.')}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAIMatchModal(false)}
+                className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Two-Panel Body */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="flex-1 flex divide-x divide-slate-200 overflow-hidden">
+                {/* ---- Left Panel: Jobs ---- */}
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="px-4 pt-4 pb-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-slate-800">
+                        {t('product.matching.selectJobs', 'Select Jobs')}
+                        {modalJobIds.size > 0 && (
+                          <span className="ml-1.5 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                            {modalJobIds.size}
+                          </span>
+                        )}
+                      </h4>
+                      {modalJobIds.size > 0 && (
+                        <button
+                          onClick={() => setModalJobIds(new Set())}
+                          className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          {t('product.matching.jobPickerClear', 'Clear all')}
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={modalJobSearch}
+                      onChange={(e) => setModalJobSearch(e.target.value)}
+                      placeholder={t('product.matching.searchJobs', 'Search jobs...')}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex-1 overflow-y-auto px-4 pb-3">
+                    {loadingJobs ? (
+                      <div className="flex justify-center py-10">
+                        <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-600" />
+                      </div>
+                    ) : jobs.length === 0 ? (
+                      <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
+                        <p className="text-sm text-slate-500">{t('product.matching.noJobs', 'No jobs found. Create a job first.')}</p>
+                        <Link
+                          to="/product/jobs"
+                          className="mt-1 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700"
+                        >
+                          {t('product.matching.goToJobs', 'Go to Jobs')}
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 overflow-hidden">
+                        {sortedFilteredJobs.length === 0 ? (
+                          <div className="px-4 py-6 text-center text-sm text-slate-500">
+                            {t('product.matching.jobPickerEmptySearch', 'No jobs match your search.')}
+                          </div>
+                        ) : (
+                          sortedFilteredJobs.map((job) => {
+                            const selected = modalJobIds.has(job.id);
+                            return (
+                              <label
+                                key={job.id}
+                                className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors ${
+                                  selected ? 'bg-blue-50' : 'hover:bg-slate-50'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selected}
+                                  onChange={() => toggleModalJob(job.id)}
+                                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-slate-900 truncate">{job.title}</span>
+                                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                      job.status === 'open' ? 'bg-emerald-100 text-emerald-700' :
+                                      job.status === 'draft' ? 'bg-slate-100 text-slate-500' :
+                                      job.status === 'closed' || job.status === 'filled' ? 'bg-rose-100 text-rose-700' :
+                                      'bg-amber-100 text-amber-700'
+                                    }`}>
+                                      {getJobStatusLabel(job.status)}
+                                    </span>
+                                  </div>
+                                  {(job.department || job.location) && (
+                                    <p className="text-xs text-slate-500 mt-0.5 truncate">
+                                      {[job.department, job.location].filter(Boolean).join(' · ')}
+                                    </p>
+                                  )}
+                                </div>
+                              </label>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ---- Right Panel: Candidates ---- */}
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="px-4 pt-4 pb-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-slate-800">
+                        {t('product.matching.selectCandidates', 'Select Candidates')}
+                        {modalSelectedResumeIds.size > 0 && (
+                          <span className="ml-1.5 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                            {modalSelectedResumeIds.size}
+                          </span>
+                        )}
+                      </h4>
+                      <button
+                        onClick={toggleAllModalResumes}
+                        className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {allModalVisibleSelected
+                          ? t('product.matching.deselectAll', 'Deselect All')
+                          : t('product.matching.selectAll', 'Select All')}
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={modalResumeSearch}
+                      onChange={(e) => setModalResumeSearch(e.target.value)}
+                      placeholder={t('product.matching.searchResumes', 'Search by name, role, or tag...')}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex-1 overflow-y-auto px-4 pb-3">
+                    {loadingModalResumes ? (
+                      <div className="flex justify-center py-10">
+                        <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-600" />
+                      </div>
+                    ) : modalResumes.length === 0 ? (
+                      <div className="text-center py-10 text-sm text-slate-500">
+                        {t('product.matching.noResumesFound', 'No resumes found. Upload resumes first.')}
+                      </div>
+                    ) : (
+                      <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 overflow-hidden">
+                        {filteredModalResumes.map((resume) => (
+                          <label
+                            key={resume.id}
+                            className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={modalSelectedResumeIds.has(resume.id)}
+                              onChange={() => toggleModalResume(resume.id)}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-slate-900 truncate">{resume.name}</span>
+                                {resume.currentRole && (
+                                  <span className="text-xs text-slate-500 truncate">{resume.currentRole}</span>
+                                )}
+                              </div>
+                              {resume.tags.length > 0 && (
+                                <div className="flex gap-1 mt-0.5 flex-wrap">
+                                  {resume.tags.slice(0, 3).map((tag) => (
+                                    <span key={tag} className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            {resume.experienceYears && (
+                              <span className="text-xs text-slate-400 shrink-0">{resume.experienceYears}y</span>
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ---- Configuration Bar ---- */}
+              <div className="border-t border-slate-200 px-6 py-3 space-y-3 bg-slate-50/50">
+                <div className="flex items-center gap-3">
+                  {/* Session Name */}
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={modalSessionName}
+                      onChange={(e) => setModalSessionName(e.target.value)}
+                      placeholder={t('product.matching.sessionNamePlaceholder', 'Session name (optional)')}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  {/* Min Score */}
+                  <div className="w-28">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={modalMinScore}
+                      onChange={(e) => setModalMinScore(e.target.value)}
+                      placeholder={t('product.matching.minScore', 'Min Score')}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  {/* Max Job Matches Per Resume */}
+                  <div className="w-36">
+                    <input
+                      type="number"
+                      min={1}
+                      value={modalMaxJobMatchesPerResume}
+                      onChange={(e) => setModalMaxJobMatchesPerResume(e.target.value)}
+                      placeholder={t('product.matching.maxJobMatchesPerResume', 'Max Jobs/Resume')}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  {/* Max Resume Matches Per Job */}
+                  <div className="w-40">
+                    <input
+                      type="number"
+                      min={1}
+                      value={modalMaxResumeMatchesPerJob}
+                      onChange={(e) => setModalMaxResumeMatchesPerJob(e.target.value)}
+                      placeholder={t('product.matching.maxResumeMatchesPerJob', 'Max Resumes/Job')}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  {/* Advanced filters toggle */}
+                  <button
+                    onClick={() => setModalShowFilters(!modalShowFilters)}
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      modalShowFilters
+                        ? 'border-blue-300 bg-blue-50 text-blue-700'
+                        : 'border-slate-300 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    {t('product.matching.advancedFilters', 'Advanced Pre-Filters (AI)')}
+                  </button>
+                </div>
+
+                {/* Expandable advanced filters */}
+                {modalShowFilters && (
+                  <div className="space-y-3 pt-2 border-t border-slate-200">
+                    <p className="text-xs text-slate-500">
+                      {t('product.matching.advancedFiltersDesc', 'AI will pre-screen resumes before full matching, filtering out clearly irrelevant candidates.')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          {t('product.matching.filterLocations', 'Preferred Locations')}
+                        </label>
+                        <input
+                          type="text"
+                          value={modalLocations}
+                          onChange={(e) => setModalLocations(e.target.value)}
+                          placeholder={t('product.matching.filterLocationsPlaceholder', 'e.g., San Francisco, Remote, New York')}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          {t('product.matching.filterJobTypes', 'Job Types')}
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {JOB_TYPES.map((jt) => (
+                            <button
+                              key={jt}
+                              onClick={() => toggleModalJobType(jt)}
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                                modalSelectedJobTypes.has(jt)
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              }`}
+                            >
+                              {t(`product.matching.filterJobType.${jt}`, jt)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        {t('product.matching.filterFreeText', 'Custom Filter Instructions')}
+                      </label>
+                      <textarea
+                        value={modalFreeText}
+                        onChange={(e) => setModalFreeText(e.target.value)}
+                        placeholder={t('product.matching.filterFreeTextPlaceholder', 'e.g., Must have 3+ years of Python experience, exclude candidates without a degree')}
+                        rows={2}
+                        className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between px-6 py-3 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+              <button
+                onClick={() => setShowAIMatchModal(false)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={handleRunFromModal}
+                disabled={modalJobIds.size === 0 || modalSelectedResumeIds.size === 0}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {t('product.matching.startMatchingModal', 'Start Matching ({{jobs}} jobs, {{resumes}} resumes)', {
+                  jobs: modalJobIds.size,
+                  resumes: modalSelectedResumeIds.size,
+                })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ History Drawer ============ */}
+      {showHistoryDrawer && (
+        <div className="fixed inset-0 z-50" onClick={() => setShowHistoryDrawer(false)}>
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/30 transition-opacity" />
+          {/* Drawer */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-xl flex flex-col animate-slide-in-right"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: 'slideInRight 0.2s ease-out' }}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+              <h3 className="text-lg font-bold text-slate-900">
+                {t('product.matching.sessionHistory', 'Session History')}
+              </h3>
+              <button
+                onClick={() => setShowHistoryDrawer(false)}
+                className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <MatchingSessionHistory
+                onSelectSession={handleSelectSession}
+                selectedSessionId={selectedSessionId}
+                refreshTrigger={sessionRefreshTrigger}
+                embedded
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ Session Criteria Modal ============ */}
+      {showSessionCriteriaModal && selectedSessionMeta && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4"
+          onClick={() => setShowSessionCriteriaModal(false)}
+        >
+          <div
+            className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-600">
+                  {t('product.matching.savedSessionDetails', 'Saved session details')}
+                </p>
+                <h3 className="mt-1 text-xl font-bold text-slate-900">
+                  {selectedSessionMeta.title || t('product.matching.untitledSession', 'Untitled Session')}
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  {selectedSessionMeta.job?.title || t('product.matching.noJobLinked', 'No linked job')}
+                  {' · '}
+                  {new Date(selectedSessionMeta.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSessionCriteriaModal(false)}
+                className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid flex-1 gap-6 overflow-y-auto px-6 py-5 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="space-y-5">
+                <section className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    {t('product.matching.matchRequirements', 'Match requirements')}
+                  </p>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-white bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.targetJob', 'Target job')}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">
+                        {selectedSessionMeta.job?.title || '-'}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-white bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.selectedResumesLabel', 'Selected resumes')}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">
+                        {t('product.matching.selectedCount', '{{count}} selected', {
+                          count:
+                            selectedSessionMeta.criteriaSnapshot?.selectedResumeCount ??
+                            selectedSessionMeta.selectedResumes.length,
+                        })}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-white bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.filterLocations', 'Preferred Locations')}
+                      </p>
+                      <p className="mt-2 text-sm text-slate-700">
+                        {selectedSessionMeta.criteriaSnapshot?.locations?.length
+                          ? selectedSessionMeta.criteriaSnapshot.locations.join(', ')
+                          : t('product.matching.noneSpecified', 'Not specified')}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-white bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.filterJobTypes', 'Job Types')}
+                      </p>
+                      <p className="mt-2 text-sm text-slate-700">
+                        {selectedSessionMeta.criteriaSnapshot?.jobTypes?.length
+                          ? selectedSessionMeta.criteriaSnapshot.jobTypes.join(', ')
+                          : t('product.matching.noneSpecified', 'Not specified')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-white bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                      {t('product.matching.filterFreeText', 'Custom Filter Instructions')}
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                      {selectedSessionMeta.criteriaSnapshot?.freeText ||
+                        t('product.matching.noneSpecified', 'Not specified')}
+                    </p>
+                  </div>
+
+                  {selectedSessionMeta.job?.description && (
+                    <div className="mt-4 rounded-2xl border border-white bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.sessionJobDescription', 'Job summary')}
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                        {selectedSessionMeta.job.description}
+                      </p>
+                    </div>
+                  )}
+                </section>
+
+                <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        {t('product.matching.selectedResumesLabel', 'Selected resumes')}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {t('product.matching.selectedCount', '{{count}} selected', {
+                          count: selectedSessionMeta.selectedResumes.length,
+                        })}
+                      </p>
+                    </div>
+                    {selectedSessionMeta.preFilterResult && (
+                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                        {t('product.matching.preFilterSummary', 'Pre-filter: {{passed}} passed, {{excluded}} excluded', {
+                          passed: selectedSessionMeta.preFilterResult.passedIds?.length ?? 0,
+                          excluded: selectedSessionMeta.preFilterResult.excluded?.length ?? 0,
+                        })}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4 max-h-[320px] space-y-3 overflow-y-auto pr-1">
+                    {selectedSessionMeta.selectedResumes.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                        {t('product.matching.noSelectedResumesSaved', 'No selected resumes were saved for this session.')}
+                      </div>
+                    ) : (
+                      selectedSessionMeta.selectedResumes.map((resume) => (
+                        <div key={resume.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-slate-900">{resume.name}</p>
+                              {resume.currentRole && (
+                                <p className="mt-0.5 truncate text-xs text-slate-500">{resume.currentRole}</p>
+                              )}
+                            </div>
+                            {resume.experienceYears && (
+                              <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 shadow-sm">
+                                {resume.experienceYears}y
+                              </span>
+                            )}
+                          </div>
+                          {resume.tags.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                              {resume.tags.slice(0, 6).map((tag) => (
+                                <span key={tag} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 shadow-sm">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </section>
+              </div>
+
+              <div className="space-y-5">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    {t('product.matching.sessionMetrics', 'Session metrics')}
+                  </p>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.totalMatchedLabel', 'Matched')}
+                      </p>
+                      <p className="mt-2 text-lg font-bold text-slate-900">{selectedSessionMeta.totalMatched}</p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.totalFilteredLabel', 'Filtered')}
+                      </p>
+                      <p className="mt-2 text-lg font-bold text-slate-900">{selectedSessionMeta.totalFiltered}</p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.avgScoreShort', 'Avg score')}
+                      </p>
+                      <p className="mt-2 text-lg font-bold text-slate-900">
+                        {selectedSessionMeta.avgScore ?? '-'}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.topGradeShort', 'Top grade')}
+                      </p>
+                      <p className="mt-2 text-lg font-bold text-slate-900">
+                        {selectedSessionMeta.topGrade || '-'}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {selectedSessionMeta.preFilterResult?.excluded?.length > 0 && (
+                  <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      {t('product.matching.prefilterExclusions', 'Pre-filter exclusions')}
+                    </p>
+                    <div className="mt-4 max-h-[420px] space-y-3 overflow-y-auto pr-1">
+                      {selectedSessionMeta.preFilterResult.excluded.map((item: any, index: number) => (
+                        <div key={`${item.resumeId || 'excluded'}-${index}`} className="rounded-2xl bg-rose-50 px-4 py-3">
+                          <p className="text-sm font-semibold text-rose-700">{item.resumeName || item.resumeId || t('product.matching.excludedCandidate', 'Excluded candidate')}</p>
+                          {item.reason && (
+                            <p className="mt-1 text-sm leading-6 text-rose-600">{item.reason}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end border-t border-slate-200 bg-slate-50 px-6 py-4">
+              <button
+                onClick={() => setShowSessionCriteriaModal(false)}
+                className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+              >
+                {t('common.close', 'Close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inline CSS for drawer animation */}
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
 
       {/* Match detail modal */}
       <MatchDetailModal

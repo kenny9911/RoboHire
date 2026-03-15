@@ -28,6 +28,17 @@ const navItems = [
     ),
   },
   {
+    path: '/product/agents',
+    labelKey: 'product.nav.agents',
+    fallback: 'Agents',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+      </svg>
+    ),
+    ai: true,
+  },
+  {
     path: '/product/talent',
     labelKey: 'product.nav.talentHub',
     fallback: 'Talent Hub',
@@ -99,24 +110,6 @@ const secondaryLinks = [
   { path: '/docs', labelKey: 'dashboard.nav.docs', fallback: 'Documentation' },
 ];
 
-function getPageTitle(
-  pathname: string,
-  t: (key: string, fallback: string) => string,
-): string {
-  if (pathname === '/product/hiring') return t('product.nav.hiringRequests', 'Hiring Requests');
-  if (pathname.startsWith('/product/hiring/')) return t('dashboard.detail.title', 'Request Details');
-  if (pathname === '/product/talent') return t('product.nav.talentHub', 'Talent Hub');
-  if (pathname.startsWith('/product/talent/')) return t('product.nav.candidateDetail', 'Candidate Detail');
-  if (pathname === '/product/jobs') return t('product.nav.jobs', 'Jobs');
-  if (pathname.startsWith('/product/jobs/')) return t('product.nav.jobDetail', 'Job Detail');
-  if (pathname === '/product/interview') return t('product.nav.aiInterview', 'AI Interview');
-  if (pathname.startsWith('/product/interview/')) return t('product.nav.interviewRoom', 'Interview Room');
-  if (pathname.startsWith('/product/profile')) return t('product.nav.settings', 'Settings');
-  if (pathname === '/product/admin') return t('product.nav.admin', 'Admin');
-  if (pathname === '/product/matching') return t('product.nav.smartMatching', 'Smart Matching');
-  if (pathname === '/product/evaluations') return t('product.nav.evaluations', 'Evaluations');
-  return t('product.nav.dashboard', 'Dashboard');
-}
 
 export default function ProductLayout() {
   const { t } = useTranslation();
@@ -125,6 +118,7 @@ export default function ProductLayout() {
   const location = useLocation();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -140,14 +134,12 @@ export default function ProductLayout() {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  const pageTitle = getPageTitle(location.pathname, t);
-
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="px-5 py-5">
+      <div className={`py-5 ${collapsed ? 'px-3 flex justify-center' : 'px-5'}`}>
         <Link to="/" className="inline-flex items-center transition-opacity hover:opacity-80">
-          <img src="/logo2.png" alt="RoboHire" className="h-7" />
+          <img src="/logo2.png" alt="RoboHire" className={collapsed ? 'h-6' : 'h-7'} />
         </Link>
       </div>
 
@@ -160,15 +152,16 @@ export default function ProductLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                title={collapsed ? t(item.labelKey, item.fallback) : undefined}
+                className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <span className={active ? 'text-blue-600' : 'text-slate-400'}>{item.icon}</span>
-                <span className="flex-1">{t(item.labelKey, item.fallback)}</span>
-                {item.ai && (
+                <span className={`shrink-0 ${active ? 'text-blue-600' : 'text-slate-400'}`}>{item.icon}</span>
+                {!collapsed && <span className="flex-1">{t(item.labelKey, item.fallback)}</span>}
+                {!collapsed && item.ai && (
                   <span className="text-[10px] font-bold tracking-wider text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">AI</span>
                 )}
               </Link>
@@ -181,18 +174,19 @@ export default function ProductLayout() {
           <div className="mt-1">
             <Link
               to="/product/admin"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              title={collapsed ? t('product.nav.admin', 'Admin') : undefined}
+              className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/product/admin')
                   ? 'bg-blue-50 text-blue-700'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
-              <span className={isActive('/product/admin') ? 'text-blue-600' : 'text-slate-400'}>
+              <span className={`shrink-0 ${isActive('/product/admin') ? 'text-blue-600' : 'text-slate-400'}`}>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </span>
-              <span className="flex-1">{t('product.nav.admin', 'Admin')}</span>
+              {!collapsed && <span className="flex-1">{t('product.nav.admin', 'Admin')}</span>}
             </Link>
           </div>
         )}
@@ -201,50 +195,85 @@ export default function ProductLayout() {
         <div className="my-4 border-t border-slate-200" />
 
         {/* Secondary links */}
-        <div className="space-y-1">
-          {secondaryLinks.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-            >
-              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              {t(item.labelKey, item.fallback)}
-            </Link>
-          ))}
-        </div>
+        {!collapsed && (
+          <div className="space-y-1">
+            {secondaryLinks.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+              >
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                {t(item.labelKey, item.fallback)}
+              </Link>
+            ))}
+          </div>
+        )}
+        {collapsed && (
+          <div className="space-y-1">
+            {secondaryLinks.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                title={t(item.labelKey, item.fallback)}
+                className="flex items-center justify-center px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+              >
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        )}
       </nav>
+
+      {/* Collapse toggle (desktop only) */}
+      <div className="hidden lg:flex border-t border-slate-200 px-3 py-2">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={`flex items-center ${collapsed ? 'justify-center w-full' : 'justify-center w-full'} gap-2 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors`}
+          title={collapsed ? t('product.nav.expandSidebar', 'Expand sidebar') : t('product.nav.collapseSidebar', 'Collapse sidebar')}
+        >
+          <svg className={`w-5 h-5 transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+          </svg>
+        </button>
+      </div>
 
       {/* User section */}
       <div className="border-t border-slate-200 px-3 py-4">
         <Link
           to="/product/profile"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 -my-1 transition-colors hover:bg-slate-100"
+          title={collapsed ? (user?.name || 'User') : undefined}
+          className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} rounded-lg px-3 py-2 -my-1 transition-colors hover:bg-slate-100`}
         >
           {user?.avatar ? (
-            <img src={user.avatar} alt="" className="h-9 w-9 rounded-full" />
+            <img src={user.avatar} alt="" className="h-9 w-9 rounded-full shrink-0" />
           ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 shrink-0">
               <span className="text-sm font-medium text-blue-600">
                 {user?.name?.[0] || user?.email?.[0] || 'U'}
               </span>
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-slate-900">{user?.name || 'User'}</p>
-            <p className="truncate text-xs text-slate-500">{user?.email}</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-slate-900">{user?.name || 'User'}</p>
+              <p className="truncate text-xs text-slate-500">{user?.email}</p>
+            </div>
+          )}
         </Link>
         <button
           onClick={handleLogout}
-          className="mt-2 w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+          title={collapsed ? t('dashboard.logout', 'Logout') : undefined}
+          className={`mt-2 w-full flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors`}
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          {t('dashboard.logout', 'Logout')}
+          {!collapsed && t('dashboard.logout', 'Logout')}
         </button>
       </div>
     </>
@@ -262,9 +291,9 @@ export default function ProductLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200/80 flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:sticky lg:top-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200/80 flex flex-col transform transition-all duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:sticky lg:top-0 ${
+          collapsed ? 'lg:w-[4.5rem] w-64' : 'w-64'
+        } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {sidebarContent}
       </aside>
@@ -272,28 +301,23 @@ export default function ProductLayout() {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 landing-glass border-b border-slate-200/80">
-          <div className="flex items-center justify-between h-14 px-4 sm:px-6">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-1.5 -ml-1.5 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <h1 className="text-base font-semibold text-slate-900">{pageTitle}</h1>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <LanguageSelector variant="compact" />
-            </div>
+        {/* Mobile-only top bar */}
+        <header className="sticky top-0 z-30 landing-glass border-b border-slate-200/80 lg:hidden">
+          <div className="flex items-center justify-between h-12 px-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-1.5 -ml-1.5 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <LanguageSelector variant="compact" />
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-auto p-4 sm:p-5 lg:p-6">
           <Outlet />
         </main>
       </div>

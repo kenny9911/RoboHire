@@ -115,6 +115,7 @@
       "product": "Product",
       "productMenu": {
         "requirements": "Requirements Analysis",
+        "agents": "Agents",
         "resumeScreening": "Resume Screening",
         "smartMatching": "Smart Matching",
         "aiInterview": "AI Interview",
@@ -606,21 +607,39 @@
         "description": "Design and own the technical architecture for scalable, reliable systems",
         "experienceLevel": "8+ years",
         "requirements": "We are looking for a Software/System Architect to design and oversee the technical architecture of our platform.\n\nResponsibilities:\n- Define system architecture, technology stack, and design patterns\n- Lead technical design reviews and ensure architectural consistency\n- Evaluate trade-offs in scalability, reliability, and performance\n- Mentor senior engineers on architecture best practices\n- Collaborate with product and engineering leadership on technical roadmap\n\nMust-haves:\n- 8+ years software engineering, 3+ years in architect/lead roles\n- Deep expertise in distributed systems, microservices, and cloud-native architecture\n- Proficiency in at least two of: Java, Go, Python, TypeScript\n- Experience with AWS/GCP/Azure at scale\n- Strong communication skills for technical and non-technical audiences\n\nNice-to-haves:\n- Experience with event-driven architecture (Kafka, RabbitMQ)\n- Familiarity with infrastructure as code (Terraform, Pulumi)\n- Background in high-traffic consumer or SaaS platforms",
-        "skills": ["Distributed Systems", "Microservices", "Cloud Architecture", "System Design", "Technical Leadership"]
+        "skills": [
+          "Distributed Systems",
+          "Microservices",
+          "Cloud Architecture",
+          "System Design",
+          "Technical Leadership"
+        ]
       },
       "quantumAlgorithmEngineer": {
         "title": "Quantum Algorithm Engineer",
         "description": "Research and implement quantum algorithms for real-world computational problems",
         "experienceLevel": "3+ years",
         "requirements": "We are looking for a Quantum Algorithm Engineer to design and implement quantum algorithms for optimization, simulation, and machine learning applications.\n\nResponsibilities:\n- Research and develop quantum algorithms (VQE, QAOA, quantum ML)\n- Implement and benchmark algorithms on quantum simulators and real hardware\n- Analyze computational complexity and quantum advantage scenarios\n- Collaborate with domain experts to identify quantum-applicable problems\n- Publish findings and contribute to the quantum computing community\n\nMust-haves:\n- MS/PhD in Physics, Computer Science, Mathematics, or related field\n- 3+ years experience in quantum computing research or engineering\n- Proficiency in Qiskit, Cirq, or PennyLane\n- Strong foundation in linear algebra, probability, and quantum mechanics\n- Experience with Python and scientific computing (NumPy, SciPy)\n\nNice-to-haves:\n- Publications in quantum computing journals or conferences\n- Experience with quantum error correction and fault-tolerant computing\n- Knowledge of quantum hardware (superconducting, trapped ion, photonic)",
-        "skills": ["Quantum Computing", "Qiskit/Cirq", "Linear Algebra", "Python", "Algorithm Design"]
+        "skills": [
+          "Quantum Computing",
+          "Qiskit/Cirq",
+          "Linear Algebra",
+          "Python",
+          "Algorithm Design"
+        ]
       },
       "chipDesignEngineer": {
         "title": "Chip Design Engineer (SoC/IC)",
         "description": "Design and verify next-generation SoC/IC chips from RTL to tape-out",
         "experienceLevel": "5+ years",
         "requirements": "We are looking for a Chip Design Engineer to contribute to the design, verification, and tape-out of next-generation SoC/IC products.\n\nResponsibilities:\n- Design and implement RTL for digital logic blocks and SoC subsystems\n- Perform logic synthesis, timing analysis, and design-for-test (DFT)\n- Develop and run verification testbenches (UVM/SystemVerilog)\n- Collaborate with physical design, firmware, and validation teams\n- Participate in architecture exploration and micro-architecture definition\n\nMust-haves:\n- BS/MS in Electrical Engineering, Computer Engineering, or related field\n- 5+ years of SoC/IC design experience\n- Proficiency in Verilog/SystemVerilog and RTL design\n- Experience with EDA tools (Synopsys, Cadence, Mentor)\n- Strong understanding of digital design, timing closure, and low-power design\n\nNice-to-haves:\n- Experience with RISC-V or ARM processor design\n- Knowledge of high-speed interfaces (PCIe, DDR, USB)\n- Familiarity with FPGA prototyping and emulation\n- Tape-out experience on advanced process nodes (7nm, 5nm, 3nm)",
-        "skills": ["RTL Design", "SystemVerilog", "SoC Architecture", "EDA Tools", "Verification"]
+        "skills": [
+          "RTL Design",
+          "SystemVerilog",
+          "SoC Architecture",
+          "EDA Tools",
+          "Verification"
+        ]
       },
       "productManager": {
         "title": "Product Manager",
@@ -824,6 +843,13 @@
       "goToDashboard": "Go to Dashboard",
       "viewFullReport": "View Full Report",
       "viewReport": "View Hiring Report"
+    },
+    "searchExamples": {
+      "fullstack": "Full-stack Engineers with 5+ years experience at Series B startups, skilled in Python and Node.js",
+      "marketing": "Marketing Manager in Europe, German-speaking, working at a large enterprise",
+      "scientist": "Senior Data Scientist, 8+ years experience, strong in NLP and recommendation systems",
+      "consultant": "Management Consultant with 2+ years at top consulting firms, MBA preferred",
+      "sales": "Enterprise Sales Manager with experience in SaaS/ERP, proven track record of closing $1M+ deals"
     }
   },
   "dashboard": {
@@ -838,7 +864,8 @@
       "resumes": "Resumes",
       "integrations": "Integrations",
       "docs": "Documentation",
-      "developers": "Developers"
+      "developers": "Developers",
+      "agents": "Agents"
     },
     "welcome": "Welcome back",
     "user": "there",
@@ -1919,7 +1946,9 @@
       "evaluations": "Evaluations",
       "candidateDetail": "Candidate Detail",
       "jobDetail": "Job Detail",
-      "interviewRoom": "Interview Room"
+      "interviewRoom": "Interview Room",
+      "agents": "Agents",
+      "agentDetail": "Agent Detail"
     },
     "dashboard": {
       "welcome": "Welcome back",
@@ -2094,7 +2123,6 @@
       "speakNaturally": "Speak clearly and naturally",
       "joinButton": "Join Interview",
       "inProgress": "Interview in Progress",
-      "recording": "Recording",
       "aiInterviewer": "AI Interviewer",
       "connected": "Connected",
       "connecting": "Connecting...",
@@ -2448,7 +2476,9 @@
       "filterShortlisted": "Shortlisted",
       "filterInvited": "Invited",
       "filterRejected": "Rejected",
-      "filterMore": "More Filters"
+      "filterMore": "More Filters",
+      "addFilter": "Add Filter",
+      "applyFilters": "Apply Filters"
     },
     "matching": {
       "title": "Smart Matching",
@@ -2577,7 +2607,26 @@
         "jobType": "Job Type",
         "companyType": "Company Type"
       },
-      "prefNoPreferences": "No candidate preferences on file"
+      "prefNoPreferences": "No candidate preferences on file",
+      "aiMatch": "AI Match",
+      "history": "History",
+      "matchingFor": "Matching for",
+      "back": "Back",
+      "next": "Next",
+      "startMatchingModal": "Start Matching ({{jobs}} jobs, {{resumes}} resumes)",
+      "selectCandidates": "Select Candidates",
+      "aiMatchDesc": "Select jobs and candidates, then configure matching parameters.",
+      "sessionNamePlaceholder": "Session name (optional)",
+      "minScore": "Min Score",
+      "maxJobMatchesPerResume": "Max Jobs/Resume",
+      "maxResumeMatchesPerJob": "Max Resumes/Job",
+      "getStarted": "Get started with AI Matching",
+      "getStartedDesc": "Create a job and upload candidate resumes to run your first AI match.",
+      "readyToMatch": "Ready to match",
+      "readyToMatchDesc": "Select jobs and candidates to start a new AI matching session.",
+      "quickPick": "Quick pick a role",
+      "recentMatches": "Recent Matches",
+      "viewAll": "View all"
     },
     "evaluations": {
       "title": "Evaluations",
@@ -3251,6 +3300,10 @@
     "logs": "Logs",
     "syncHistory": "Sync History",
     "noLogs": "No sync activity yet",
+    "atsTitle": "Applicant Tracking Systems (ATS)",
+    "atsSubtitle": "ATS integrations help you export candidates from the platform to your ATS.",
+    "connectedLabel": "Connected",
+    "activate": "Activate",
     "greenhouse": {
       "description": "Enterprise ATS with structured hiring pipelines"
     },
@@ -3272,78 +3325,6 @@
     "confirmDeleteMessage": "Are you sure you want to delete this item? This action cannot be undone.",
     "cancel": "Cancel",
     "delete": "Delete"
-  },
-  "admin": {
-    "tabs": {
-      "llmUsage": "LLM Usage",
-      "logs": "Logs"
-    },
-    "llmUsage": {
-      "title": "LLM Usage",
-      "subtitle": "Detailed view of all LLM API calls, costs, and token usage.",
-      "applyFilters": "Apply Filters",
-      "from": "From",
-      "to": "To",
-      "provider": "Provider",
-      "model": "Model",
-      "module": "Module",
-      "user": "User",
-      "loading": "Loading LLM usage data...",
-      "totalCalls": "Total LLM Calls",
-      "totalTokens": "Total Tokens",
-      "totalCost": "Total Cost",
-      "avgCostPerCall": "Avg Cost/Call",
-      "avgLatency": "Avg Latency",
-      "costTrend": "Cost Trend",
-      "tokenTrend": "Token Usage Trend",
-      "costByModel": "Cost by Model",
-      "costByProvider": "Cost by Provider",
-      "inputTokens": "Input",
-      "outputTokens": "Output",
-      "callLog": "LLM Call Log",
-      "time": "Time",
-      "cost": "Cost",
-      "duration": "Duration",
-      "noData": "No LLM calls found for the selected filters.",
-      "showing": "Showing",
-      "of": "of",
-      "prev": "Prev",
-      "next": "Next"
-    },
-    "logs": {
-      "title": "Request Logs",
-      "subtitle": "Monitor all API requests, diagnose issues, and track performance.",
-      "applyFilters": "Apply Filters",
-      "from": "From",
-      "to": "To",
-      "module": "Module",
-      "endpoint": "Endpoint",
-      "status": "Status",
-      "allStatuses": "All",
-      "user": "User",
-      "loading": "Loading request logs...",
-      "totalRequests": "Total Requests",
-      "withLLM": "With LLM (this page)",
-      "pageCost": "Page Cost",
-      "pageErrors": "Page Errors",
-      "time": "Time",
-      "apiName": "API",
-      "method": "Method",
-      "duration": "Duration",
-      "llmCalls": "LLM",
-      "tokens": "Tokens",
-      "cost": "Cost",
-      "noData": "No request logs found for the selected filters.",
-      "llmCallDetails": "LLM Call Details",
-      "provider": "Provider",
-      "model": "Model",
-      "inputTokens": "Input",
-      "outputTokens": "Output",
-      "showing": "Showing",
-      "of": "of",
-      "prev": "Prev",
-      "next": "Next"
-    }
   },
   "admin": {
     "activity": {
@@ -3375,5 +3356,90 @@
       "prev": "Prev",
       "next": "Next"
     }
+  },
+  "agents": {
+    "title": "Agents",
+    "subtitle": "AI sourcing agents that find and contact candidates autonomously.",
+    "create": "Create new agent",
+    "myAgents": "My Agents",
+    "searchPlaceholder": "Search for any agent, owner name, or collaborator name",
+    "filterStatus": "Status",
+    "filterOwner": "Owner",
+    "awaitingApproval": "Awaiting approval",
+    "overview": "Overview",
+    "allTime": "All time",
+    "allUsers": "All Users",
+    "leads": "Leads",
+    "noDataYet": "No data yet",
+    "leadsByAgent": "Leads by Agent",
+    "leadsByAgentDesc": "Top {{count}} agents by pending approval leads. For admins, this is across all agents in the organization.",
+    "createTitle": "Create New Agent",
+    "agentName": "Agent Name",
+    "namePlaceholder": "e.g. Senior Full-stack Sourcer",
+    "searchCriteria": "Search Criteria",
+    "criteriaPlaceholder": "Describe your ideal candidate in detail...",
+    "linkedJob": "Linked Job (optional)",
+    "noJob": "No linked job",
+    "creating": "Creating...",
+    "createBtn": "Create Agent",
+    "empty": "No agents yet",
+    "emptyDesc": "Create your first AI sourcing agent to start finding candidates automatically.",
+    "sourced": "sourced",
+    "approved": "approved",
+    "contacted": "contacted",
+    "created": "Created",
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "pause": "Pause",
+    "resume": "Resume",
+    "approve": "Approve",
+    "reject": "Reject",
+    "contact": "Contact",
+    "viewResume": "View Resume",
+    "viewProfile": "Profile",
+    "noCandidates": "No candidates in this category yet. The agent will source candidates automatically.",
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "completed": "Completed",
+      "configuring": "Configuring",
+      "failed": "Failed",
+      "closed": "Closed",
+      "out_of_leads": "Out of leads"
+    },
+    "tab": {
+      "pending": "Pending Review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "contacted": "Contacted",
+      "all": "All"
+    },
+    "stat": {
+      "sourced": "Sourced",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "contacted": "Contacted"
+    },
+    "candidateStatus": {
+      "contacted": "Contacted",
+      "rejected": "Rejected"
+    },
+    "pending": "Pending",
+    "disapproved": "Disapproved",
+    "cardView": "Card view",
+    "listView": "List view",
+    "colName": "Name",
+    "colPending": "Pending",
+    "colDate": "Created",
+    "editAgent": "Edit Agent",
+    "agentTitle": "Agent Title",
+    "required": "required",
+    "accessLevel": "Access Level",
+    "accessShared": "Shared (visible to everyone in your organization)",
+    "accessPrivate": "Private (only visible to you, your collaborators, and admin)",
+    "collaborators": "Collaborators",
+    "collaboratorsDesc": "These team members will be assigned to this project with you",
+    "noCollaborators": "No collaborators selected",
+    "saveChanges": "Save Changes"
   }
 }

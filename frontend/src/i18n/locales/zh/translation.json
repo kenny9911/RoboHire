@@ -115,6 +115,7 @@
       "product": "产品",
       "productMenu": {
         "requirements": "需求分析",
+        "agents": "智能代理",
         "resumeScreening": "简历筛选",
         "smartMatching": "智能匹配",
         "aiInterview": "AI 面试",
@@ -607,21 +608,39 @@
         "description": "设计并负责可扩展、高可靠系统的技术架构",
         "experienceLevel": "8年以上",
         "requirements": "我们正在寻找一位软件/系统架构师，负责设计和管理平台的技术架构。\n\n岗位职责：\n- 定义系统架构、技术选型和设计模式\n- 主导技术方案评审，确保架构一致性\n- 评估可扩展性、可靠性和性能的技术权衡\n- 指导高级工程师的架构能力提升\n- 与产品和技术领导层协作制定技术路线图\n\n必备条件：\n- 8年以上软件工程经验，3年以上架构师/技术负责人经验\n- 精通分布式系统、微服务和云原生架构\n- 至少精通以下两种语言：Java、Go、Python、TypeScript\n- 具备AWS/GCP/Azure大规模使用经验\n- 优秀的沟通能力，能面对技术和非技术受众\n\n加分项：\n- 有事件驱动架构经验（Kafka、RabbitMQ）\n- 熟悉基础设施即代码（Terraform、Pulumi）\n- 有高流量消费级或SaaS平台背景",
-        "skills": ["分布式系统", "微服务", "云架构", "系统设计", "技术领导力"]
+        "skills": [
+          "分布式系统",
+          "微服务",
+          "云架构",
+          "系统设计",
+          "技术领导力"
+        ]
       },
       "quantumAlgorithmEngineer": {
         "title": "量子算法工程师",
         "description": "研究并实现面向实际计算问题的量子算法",
         "experienceLevel": "3年以上",
         "requirements": "我们正在寻找一位量子算法工程师，负责设计和实现面向优化、仿真和机器学习应用的量子算法。\n\n岗位职责：\n- 研究和开发量子算法（VQE、QAOA、量子机器学习）\n- 在量子模拟器和真实硬件上实现和基准测试算法\n- 分析计算复杂度和量子优势场景\n- 与领域专家合作，识别适合量子计算的问题\n- 发表研究成果，为量子计算社区做贡献\n\n必备条件：\n- 物理学、计算机科学、数学或相关领域硕士/博士学位\n- 3年以上量子计算研究或工程经验\n- 精通Qiskit、Cirq或PennyLane\n- 扎实的线性代数、概率论和量子力学基础\n- 熟练使用Python和科学计算库（NumPy、SciPy）\n\n加分项：\n- 有量子计算期刊或会议论文发表\n- 有量子纠错和容错量子计算经验\n- 了解量子硬件（超导、离子阱、光量子）",
-        "skills": ["量子计算", "Qiskit/Cirq", "线性代数", "Python", "算法设计"]
+        "skills": [
+          "量子计算",
+          "Qiskit/Cirq",
+          "线性代数",
+          "Python",
+          "算法设计"
+        ]
       },
       "chipDesignEngineer": {
         "title": "芯片设计工程师（SoC/IC）",
         "description": "从RTL到流片，设计和验证下一代SoC/IC芯片",
         "experienceLevel": "5年以上",
         "requirements": "我们正在寻找一位芯片设计工程师，参与下一代SoC/IC产品的设计、验证和流片工作。\n\n岗位职责：\n- 设计和实现数字逻辑模块和SoC子系统的RTL\n- 进行逻辑综合、时序分析和可测试性设计（DFT）\n- 开发和运行验证测试平台（UVM/SystemVerilog）\n- 与物理设计、固件和验证团队协作\n- 参与架构探索和微架构定义\n\n必备条件：\n- 电子工程、计算机工程或相关领域本科/硕士学位\n- 5年以上SoC/IC设计经验\n- 精通Verilog/SystemVerilog和RTL设计\n- 熟悉EDA工具（Synopsys、Cadence、Mentor）\n- 深入理解数字设计、时序收敛和低功耗设计\n\n加分项：\n- 有RISC-V或ARM处理器设计经验\n- 了解高速接口（PCIe、DDR、USB）\n- 熟悉FPGA原型验证和仿真\n- 有先进制程节点（7nm、5nm、3nm）流片经验",
-        "skills": ["RTL设计", "SystemVerilog", "SoC架构", "EDA工具", "芯片验证"]
+        "skills": [
+          "RTL设计",
+          "SystemVerilog",
+          "SoC架构",
+          "EDA工具",
+          "芯片验证"
+        ]
       },
       "productManager": {
         "title": "产品经理",
@@ -825,6 +844,13 @@
       "goToDashboard": "前往控制面板",
       "viewFullReport": "查看完整报告",
       "viewReport": "查看招聘报告"
+    },
+    "searchExamples": {
+      "fullstack": "全栈工程师，5年以上经验，曾在B轮创业公司工作，精通Python和Node.js",
+      "marketing": "市场营销经理，在大型企业工作，有跨境营销经验",
+      "scientist": "高级数据科学家，8年以上经验，擅长NLP和推荐系统",
+      "consultant": "管理咨询顾问，2年以上顶尖咨询公司经验，MBA优先",
+      "sales": "企业销售经理，有SaaS/ERP销售经验，成功签约百万级以上订单"
     }
   },
   "dashboard": {
@@ -839,7 +865,8 @@
       "resumes": "简历库",
       "integrations": "集成",
       "docs": "开发文档",
-      "developers": "开发者"
+      "developers": "开发者",
+      "agents": "智能代理"
     },
     "welcome": "欢迎回来",
     "user": "用户",
@@ -2041,7 +2068,9 @@
       "evaluations": "评估报告",
       "candidateDetail": "候选人详情",
       "jobDetail": "职位详情",
-      "interviewRoom": "面试房间"
+      "interviewRoom": "面试房间",
+      "agents": "Agents",
+      "agentDetail": "Agent 详情"
     },
     "dashboard": {
       "welcome": "欢迎回来",
@@ -2125,7 +2154,7 @@
       "empty": "暂无面试",
       "emptyDesc": "安排一场AI面试即可开始。",
       "evaluate": "运行AI评估",
-      "recording": "录像",
+      "recording": "录制中",
       "viewRecording": "查看录像",
       "arrangeInterview": "安排面试",
       "step": "步骤",
@@ -2216,7 +2245,6 @@
       "speakNaturally": "请清晰自然地表达",
       "joinButton": "加入面试",
       "inProgress": "面试进行中",
-      "recording": "录制中",
       "aiInterviewer": "AI面试官",
       "connected": "已连接",
       "connecting": "连接中...",
@@ -2570,7 +2598,9 @@
       "filterShortlisted": "已入选",
       "filterInvited": "已邀请",
       "filterRejected": "已拒绝",
-      "filterMore": "更多筛选"
+      "filterMore": "更多筛选",
+      "addFilter": "添加筛选",
+      "applyFilters": "应用筛选"
     },
     "matching": {
       "title": "智能匹配",
@@ -2696,7 +2726,26 @@
         "jobType": "职位类型",
         "companyType": "公司类型"
       },
-      "prefNoPreferences": "候选人未设置偏好"
+      "prefNoPreferences": "候选人未设置偏好",
+      "aiMatch": "AI 匹配",
+      "history": "历史记录",
+      "matchingFor": "匹配职位",
+      "back": "返回",
+      "next": "下一步",
+      "startMatchingModal": "开始匹配 ({{jobs}} 个职位, {{resumes}} 份简历)",
+      "selectCandidates": "选择候选人",
+      "aiMatchDesc": "选择职位和候选人，然后配置匹配参数。",
+      "sessionNamePlaceholder": "会话名称（可选）",
+      "minScore": "最低分数",
+      "maxJobMatchesPerResume": "每份简历最多匹配职位数",
+      "maxResumeMatchesPerJob": "每个职位最多匹配简历数",
+      "getStarted": "开始使用AI匹配",
+      "getStartedDesc": "创建一个职位并上传候选人简历，运行您的第一次AI匹配。",
+      "readyToMatch": "准备匹配",
+      "readyToMatchDesc": "选择职位和候选人，开始新的AI匹配会话。",
+      "quickPick": "快速选择角色",
+      "recentMatches": "最近的匹配",
+      "viewAll": "查看全部"
     },
     "evaluations": {
       "title": "评估报告",
@@ -3370,6 +3419,10 @@
     "logs": "日志",
     "syncHistory": "同步历史",
     "noLogs": "暂无同步记录",
+    "atsTitle": "招聘管理系统 (ATS)",
+    "atsSubtitle": "ATS集成帮助您将候选人从平台导出到您的招聘管理系统。",
+    "connectedLabel": "已连接",
+    "activate": "激活",
     "greenhouse": {
       "description": "企业级招聘管理系统，支持结构化招聘流程"
     },
@@ -3391,78 +3444,6 @@
     "confirmDeleteMessage": "确定要删除此项目吗？此操作无法撤销。",
     "cancel": "取消",
     "delete": "删除"
-  },
-  "admin": {
-    "tabs": {
-      "llmUsage": "LLM 用量",
-      "logs": "日志"
-    },
-    "llmUsage": {
-      "title": "LLM 用量",
-      "subtitle": "所有 LLM API 调用、费用和 Token 用量的详细视图。",
-      "applyFilters": "应用筛选",
-      "from": "开始日期",
-      "to": "结束日期",
-      "provider": "提供商",
-      "model": "模型",
-      "module": "模块",
-      "user": "用户",
-      "loading": "正在加载 LLM 用量数据...",
-      "totalCalls": "总 LLM 调用次数",
-      "totalTokens": "总 Token 数",
-      "totalCost": "总费用",
-      "avgCostPerCall": "平均每次费用",
-      "avgLatency": "平均延迟",
-      "costTrend": "费用趋势",
-      "tokenTrend": "Token 用量趋势",
-      "costByModel": "按模型费用",
-      "costByProvider": "按提供商费用",
-      "inputTokens": "输入",
-      "outputTokens": "输出",
-      "callLog": "LLM 调用日志",
-      "time": "时间",
-      "cost": "费用",
-      "duration": "耗时",
-      "noData": "未找到符合筛选条件的 LLM 调用。",
-      "showing": "显示",
-      "of": "/",
-      "prev": "上一页",
-      "next": "下一页"
-    },
-    "logs": {
-      "title": "请求日志",
-      "subtitle": "监控所有 API 请求，诊断问题，跟踪性能。",
-      "applyFilters": "应用筛选",
-      "from": "开始日期",
-      "to": "结束日期",
-      "module": "模块",
-      "endpoint": "接口",
-      "status": "状态",
-      "allStatuses": "全部",
-      "user": "用户",
-      "loading": "正在加载请求日志...",
-      "totalRequests": "总请求数",
-      "withLLM": "含 LLM（本页）",
-      "pageCost": "本页费用",
-      "pageErrors": "本页错误",
-      "time": "时间",
-      "apiName": "API",
-      "method": "方法",
-      "duration": "耗时",
-      "llmCalls": "LLM",
-      "tokens": "Token",
-      "cost": "费用",
-      "noData": "未找到符合筛选条件的请求日志。",
-      "llmCallDetails": "LLM 调用详情",
-      "provider": "提供商",
-      "model": "模型",
-      "inputTokens": "输入",
-      "outputTokens": "输出",
-      "showing": "显示",
-      "of": "/",
-      "prev": "上一页",
-      "next": "下一页"
-    }
   },
   "admin": {
     "activity": {
@@ -3494,5 +3475,90 @@
       "prev": "上一页",
       "next": "下一页"
     }
+  },
+  "agents": {
+    "title": "Agents",
+    "subtitle": "AI 招聘 Agent 自动寻找并联系候选人。",
+    "create": "新建 Agent",
+    "myAgents": "我的 Agents",
+    "searchPlaceholder": "搜索 Agent、负责人或协作者名称",
+    "filterStatus": "状态",
+    "filterOwner": "负责人",
+    "awaitingApproval": "待审核",
+    "overview": "概览",
+    "allTime": "全部时间",
+    "allUsers": "所有用户",
+    "leads": "线索",
+    "noDataYet": "暂无数据",
+    "leadsByAgent": "按 Agent 统计",
+    "leadsByAgentDesc": "待审核线索最多的前 {{count}} 个 Agent。管理员可查看组织内所有 Agent。",
+    "createTitle": "创建新 Agent",
+    "agentName": "Agent 名称",
+    "namePlaceholder": "例如：高级全栈工程师猎头",
+    "searchCriteria": "搜索条件",
+    "criteriaPlaceholder": "详细描述您理想的候选人...",
+    "linkedJob": "关联职位（可选）",
+    "noJob": "不关联职位",
+    "creating": "创建中...",
+    "createBtn": "创建 Agent",
+    "empty": "暂无 Agent",
+    "emptyDesc": "创建您的第一个 AI 招聘 Agent，自动寻找候选人。",
+    "sourced": "已发现",
+    "approved": "已通过",
+    "contacted": "已联系",
+    "created": "创建于",
+    "viewDetails": "查看详情",
+    "edit": "编辑",
+    "pause": "暂停",
+    "resume": "恢复",
+    "approve": "通过",
+    "reject": "拒绝",
+    "contact": "联系",
+    "viewResume": "查看简历",
+    "viewProfile": "查看资料",
+    "noCandidates": "此分类暂无候选人。Agent 将自动寻找候选人。",
+    "status": {
+      "active": "运行中",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "configuring": "配置中",
+      "failed": "失败",
+      "closed": "已关闭",
+      "out_of_leads": "线索已用尽"
+    },
+    "tab": {
+      "pending": "待审核",
+      "approved": "已通过",
+      "rejected": "已拒绝",
+      "contacted": "已联系",
+      "all": "全部"
+    },
+    "stat": {
+      "sourced": "已发现",
+      "approved": "已通过",
+      "rejected": "已拒绝",
+      "contacted": "已联系"
+    },
+    "candidateStatus": {
+      "contacted": "已联系",
+      "rejected": "已拒绝"
+    },
+    "pending": "待审核",
+    "disapproved": "未通过",
+    "cardView": "卡片视图",
+    "listView": "列表视图",
+    "colName": "名称",
+    "colPending": "待处理",
+    "colDate": "创建时间",
+    "editAgent": "编辑 Agent",
+    "agentTitle": "Agent 标题",
+    "required": "必填",
+    "accessLevel": "访问级别",
+    "accessShared": "共享（组织内所有人可见）",
+    "accessPrivate": "私有（仅您、协作者和管理员可见）",
+    "collaborators": "协作者",
+    "collaboratorsDesc": "这些团队成员将与您一起参与此项目",
+    "noCollaborators": "未选择协作者",
+    "saveChanges": "保存更改"
   }
 }

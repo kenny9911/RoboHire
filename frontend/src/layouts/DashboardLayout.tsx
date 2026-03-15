@@ -163,6 +163,7 @@ const navItems = [
 
 const secondaryLinks = [
   { path: '/start-hiring', labelKey: 'dashboard.nav.newHiring', fallback: 'Start Hiring' },
+  { path: '/product/agents', labelKey: 'dashboard.nav.agents', fallback: 'Agents' },
   { path: '/api-playground', labelKey: 'dashboard.nav.apiPlayground', fallback: 'API Playground' },
   { path: '/docs', labelKey: 'dashboard.nav.docs', fallback: 'Documentation' },
   { path: '/developers', labelKey: 'dashboard.nav.developers', fallback: 'Developers' },

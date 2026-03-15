@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { generateRequestId, logger } from '../services/LoggerService.js';
@@ -192,6 +192,17 @@ type WorkerSessionUsagePayload = {
   };
   diagnostics?: Record<string, unknown>;
   trace?: Record<string, unknown>;
+};
+
+type InterviewTranscriptRole = 'candidate' | 'interviewer';
+
+type NormalizedInterviewTranscriptEntry = {
+  role: InterviewTranscriptRole;
+  content: string;
+  timestamp: number;
+  sequence: number;
+  speakerName: string;
+  occurredAt: Date;
 };
 
 function toSafeInt(value: unknown): number {
@@ -568,6 +579,217 @@ function normalizeWorkerUsagePayload(raw: unknown): WorkerSessionUsagePayload | 
   };
 }
 
+function normalizeTranscriptRole(value: unknown): InterviewTranscriptRole | null {
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim().toLowerCase();
+  if (['candidate', 'user', 'human'].includes(normalized)) return 'candidate';
+  if (['interviewer', 'assistant', 'agent', 'ai'].includes(normalized)) return 'interviewer';
+  return null;
+}
+
+function parseTranscriptTimestamp(value: unknown, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, Math.round(value));
+  }
+
+  if (typeof value === 'string') {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isFinite(numeric)) {
+      return Math.max(0, numeric);
+    }
+
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return Math.max(0, fallback);
+}
+
+function getTranscriptSpeakerName(role: InterviewTranscriptRole, candidateName: string): string {
+  const trimmedCandidateName = candidateName.trim();
+  return role === 'candidate'
+    ? trimmedCandidateName || 'Candidate'
+    : 'Interviewer';
+}
+
+function normalizeInterviewTranscript(
+  rawTranscript: unknown,
+  candidateName: string,
+): NormalizedInterviewTranscriptEntry[] | null {
+  if (!Array.isArray(rawTranscript)) return null;
+
+  const normalized: NormalizedInterviewTranscriptEntry[] = [];
+  let fallbackTimestamp = Date.now();
+
+  for (const entry of rawTranscript) {
+    if (!isRecord(entry)) continue;
+
+    const role = normalizeTranscriptRole(entry.role);
+    const content = toOptionalString(entry.content);
+    if (!role || !content) continue;
+
+    const timestamp = parseTranscriptTimestamp(entry.timestamp, fallbackTimestamp);
+    fallbackTimestamp = Math.max(fallbackTimestamp + 1, timestamp + 1);
+
+    normalized.push({
+      role,
+      content,
+      timestamp,
+      sequence: normalized.length,
+      speakerName: getTranscriptSpeakerName(role, candidateName),
+      occurredAt: new Date(timestamp),
+    });
+  }
+
+  return normalized;
+}
+
+function buildInterviewTranscriptJson(
+  transcript: NormalizedInterviewTranscriptEntry[],
+): Prisma.InputJsonValue {
+  return transcript.map((entry) => ({
+    role: entry.role,
+    content: entry.content,
+    timestamp: entry.timestamp,
+  })) as Prisma.InputJsonValue;
+}
+
+function buildInterviewDialogTurnRows(
+  interviewId: string,
+  userId: string,
+  candidateId: string | null,
+  transcript: NormalizedInterviewTranscriptEntry[],
+): Prisma.InterviewDialogTurnCreateManyInput[] {
+  return transcript.map((entry) => ({
+    interviewId,
+    userId,
+    candidateId,
+    role: entry.role,
+    speakerName: entry.speakerName,
+    content: entry.content,
+    timestamp: entry.occurredAt,
+    sequence: entry.sequence,
+  }));
+}
+
+type InterviewCandidateLookup = {
+  id: string;
+  userId: string;
+  candidateId?: string | null;
+  hiringRequestId?: string | null;
+  candidateEmail?: string | null;
+  candidateName: string;
+};
+
+async function resolveCandidateIdForInterview(
+  tx: Prisma.TransactionClient,
+  interview: InterviewCandidateLookup,
+): Promise<string | null> {
+  if (interview.candidateId) return interview.candidateId;
+
+  const candidateEmail = interview.candidateEmail?.trim();
+  const candidateName = interview.candidateName.trim();
+
+  if (interview.hiringRequestId) {
+    if (candidateEmail) {
+      const byEmail = await tx.candidate.findFirst({
+        where: {
+          hiringRequestId: interview.hiringRequestId,
+          email: { equals: candidateEmail, mode: 'insensitive' },
+        },
+        select: { id: true },
+        orderBy: { updatedAt: 'desc' },
+      });
+      if (byEmail) return byEmail.id;
+    }
+
+    if (candidateName) {
+      const byName = await tx.candidate.findFirst({
+        where: {
+          hiringRequestId: interview.hiringRequestId,
+          name: { equals: candidateName, mode: 'insensitive' },
+        },
+        select: { id: true },
+        orderBy: { updatedAt: 'desc' },
+      });
+      if (byName) return byName.id;
+    }
+  }
+
+  if (candidateEmail) {
+    const byEmail = await tx.candidate.findFirst({
+      where: {
+        email: { equals: candidateEmail, mode: 'insensitive' },
+        hiringRequest: { userId: interview.userId },
+      },
+      select: { id: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (byEmail) return byEmail.id;
+  }
+
+  if (candidateName) {
+    const byName = await tx.candidate.findFirst({
+      where: {
+        name: { equals: candidateName, mode: 'insensitive' },
+        hiringRequest: { userId: interview.userId },
+      },
+      select: { id: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (byName) return byName.id;
+  }
+
+  return null;
+}
+
+async function syncInterviewTranscriptArtifacts(
+  tx: Prisma.TransactionClient,
+  interview: InterviewCandidateLookup,
+  transcript: unknown,
+): Promise<Record<string, unknown>> {
+  const interviewUpdate: Record<string, unknown> = {};
+  const candidateId = await resolveCandidateIdForInterview(tx, interview);
+
+  if (candidateId && candidateId !== interview.candidateId) {
+    interviewUpdate.candidateId = candidateId;
+  }
+
+  if (transcript === undefined) {
+    return interviewUpdate;
+  }
+
+  if (transcript === null) {
+    await tx.interviewDialogTurn.deleteMany({ where: { interviewId: interview.id } });
+    interviewUpdate.transcript = null;
+    return interviewUpdate;
+  }
+
+  const normalizedTranscript = normalizeInterviewTranscript(transcript, interview.candidateName);
+  if (!normalizedTranscript) {
+    interviewUpdate.transcript = transcript as Prisma.InputJsonValue;
+    return interviewUpdate;
+  }
+
+  await tx.interviewDialogTurn.deleteMany({ where: { interviewId: interview.id } });
+  if (normalizedTranscript.length > 0) {
+    await tx.interviewDialogTurn.createMany({
+      data: buildInterviewDialogTurnRows(
+        interview.id,
+        interview.userId,
+        candidateId,
+        normalizedTranscript,
+      ),
+    });
+  }
+
+  interviewUpdate.transcript = buildInterviewTranscriptJson(normalizedTranscript);
+  return interviewUpdate;
+}
+
 /**
  * Build room metadata for the LiveKit agent, incorporating per-job language,
  * job context fields, and an AI-generated interview prompt when available.
@@ -818,7 +1040,21 @@ router.get('/:id', requireAuth, async (req, res) => {
     const userId = req.user!.id;
     const interview = await prisma.interview.findFirst({
       where: { id: req.params.id, userId },
-      include: { evaluation: true },
+      include: {
+        evaluation: true,
+        candidate: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            status: true,
+            hiringRequestId: true,
+          },
+        },
+        dialogTurns: {
+          orderBy: { sequence: 'asc' },
+        },
+      },
     });
 
     if (!interview) {
@@ -925,14 +1161,34 @@ router.patch('/:id', requireAuth, async (req, res) => {
       if (status === 'in_progress' && !existing.startedAt) data.startedAt = new Date();
       if (status === 'completed' && !existing.completedAt) data.completedAt = new Date();
     }
-    if (transcript !== undefined) data.transcript = transcript;
     if (duration !== undefined) data.duration = duration;
     if (recordingUrl !== undefined) data.recordingUrl = recordingUrl;
 
-    const updated = await prisma.interview.update({
-      where: { id },
-      data,
-      include: { evaluation: { select: { overallScore: true, grade: true, verdict: true } } },
+    const updated = await prisma.$transaction(async (tx) => {
+      const transcriptUpdate = await syncInterviewTranscriptArtifacts(tx, existing, transcript);
+
+      return tx.interview.update({
+        where: { id },
+        data: {
+          ...data,
+          ...transcriptUpdate,
+        },
+        include: {
+          evaluation: { select: { overallScore: true, grade: true, verdict: true } },
+          candidate: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              status: true,
+              hiringRequestId: true,
+            },
+          },
+          dialogTurns: {
+            orderBy: { sequence: 'asc' },
+          },
+        },
+      });
     });
 
     res.json({ success: true, data: updated });
@@ -1541,17 +1797,29 @@ router.post('/:id/transcript', async (req, res) => {
     }
 
     const updateData: Record<string, unknown> = {};
-    if (transcript !== undefined) {
-      updateData.transcript = transcript;
-    }
     if (Object.keys(nextMetadata).length > 0 || livekitUsageRequestLogId) {
       updateData.metadata = nextMetadata;
     }
 
-    if (Object.keys(updateData).length > 0) {
-      await prisma.interview.update({
-        where: { id: interview.id },
-        data: updateData,
+    await prisma.$transaction(async (tx) => {
+      const transcriptUpdate = await syncInterviewTranscriptArtifacts(tx, interview, transcript);
+      const nextUpdateData = {
+        ...updateData,
+        ...transcriptUpdate,
+      };
+
+      if (Object.keys(nextUpdateData).length > 0) {
+        await tx.interview.update({
+          where: { id: interview.id },
+          data: nextUpdateData,
+        });
+      }
+    });
+
+    if (transcript !== undefined) {
+      logger.info('INTERVIEWS', 'Saved interview dialog turns', {
+        interviewId: interview.id,
+        transcriptEntries: Array.isArray(transcript) ? transcript.length : null,
       });
     }
 

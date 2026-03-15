@@ -30,6 +30,7 @@ import jobsRouter from './routes/jobs.js';
 import matchingRouter from './routes/matching.js';
 import interviewsRouter from './routes/interviews.js';
 import activityRouter from './routes/activity.js';
+import agentsRouter from './routes/agents.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
 import prisma from './lib/prisma.js';
@@ -87,6 +88,7 @@ app.use('/api/v1/jobs', jobsRouter);
 app.use('/api/v1/matching', matchingRouter);
 app.use('/api/v1/interviews', interviewsRouter);
 app.use('/api/v1/activity', activityRouter);
+app.use('/api/v1/agents', agentsRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {

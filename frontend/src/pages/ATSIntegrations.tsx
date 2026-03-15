@@ -29,7 +29,13 @@ const ATS_PROVIDERS = [
     description: 'integrations.greenhouse.description',
     descriptionFallback: 'Enterprise ATS with structured hiring pipelines',
     fields: [{ key: 'apiKey', label: 'API Key', type: 'password' }],
-    color: 'bg-green-100 text-green-800',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+        <rect width="24" height="24" rx="6" fill="#24a148" />
+        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="12" fontWeight="700" fontFamily="system-ui">G</text>
+      </svg>
+    ),
+    badge: 'Easy Access',
   },
   {
     id: 'lever',
@@ -37,7 +43,13 @@ const ATS_PROVIDERS = [
     description: 'integrations.lever.description',
     descriptionFallback: 'Modern ATS with opportunity-based candidate tracking',
     fields: [{ key: 'apiKey', label: 'API Key', type: 'password' }],
-    color: 'bg-blue-100 text-blue-800',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+        <rect width="24" height="24" rx="6" fill="#6B7280" />
+        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="12" fontWeight="700" fontFamily="system-ui">L</text>
+      </svg>
+    ),
+    badge: 'Easy Access',
   },
   {
     id: 'ashby',
@@ -45,7 +57,13 @@ const ATS_PROVIDERS = [
     description: 'integrations.ashby.description',
     descriptionFallback: 'All-in-one recruiting platform for scaling teams',
     fields: [{ key: 'apiKey', label: 'API Key', type: 'password' }],
-    color: 'bg-purple-100 text-purple-800',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+        <rect width="24" height="24" rx="6" fill="#F59E0B" />
+        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="12" fontWeight="700" fontFamily="system-ui">A</text>
+      </svg>
+    ),
+    badge: 'Easy Access',
   },
   {
     id: 'bamboohr',
@@ -56,7 +74,13 @@ const ATS_PROVIDERS = [
       { key: 'apiKey', label: 'API Key', type: 'password' },
       { key: 'subdomain', label: 'Subdomain', type: 'text' },
     ],
-    color: 'bg-lime-100 text-lime-800',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+        <rect width="24" height="24" rx="6" fill="#73C41D" />
+        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="12" fontWeight="700" fontFamily="system-ui">B</text>
+      </svg>
+    ),
+    badge: 'Easy Access',
   },
   {
     id: 'workable',
@@ -67,7 +91,13 @@ const ATS_PROVIDERS = [
       { key: 'apiKey', label: 'Access Token', type: 'password' },
       { key: 'subdomain', label: 'Subdomain', type: 'text' },
     ],
-    color: 'bg-cyan-100 text-cyan-800',
+    icon: (
+      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+        <rect width="24" height="24" rx="6" fill="#0EA5E9" />
+        <text x="12" y="16" textAnchor="middle" fill="white" fontSize="12" fontWeight="700" fontFamily="system-ui">W</text>
+      </svg>
+    ),
+    badge: 'Easy Access',
   },
 ];
 
@@ -169,173 +199,196 @@ export default function ATSIntegrations() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto">
+      {/* Page header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {t('integrations.title', 'ATS Integrations')}
+        <h1 className="text-2xl font-bold text-slate-900">
+          {t('integrations.title', 'Integrations Marketplace')}
         </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          {t('integrations.subtitle', 'Connect your Applicant Tracking System to sync candidates automatically.')}
-        </p>
       </div>
 
+      {/* Alerts */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
-          {error}
-          <button onClick={() => setError('')} className="ml-2 text-red-500 hover:text-red-700">&times;</button>
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span>{error}</span>
+          <button onClick={() => setError('')} className="ml-2 text-red-400 hover:text-red-600">&times;</button>
         </div>
       )}
-
       {successMsg && (
-        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 text-sm">
-          {successMsg}
-          <button onClick={() => setSuccessMsg('')} className="ml-2 text-green-500 hover:text-green-700">&times;</button>
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          <span>{successMsg}</span>
+          <button onClick={() => setSuccessMsg('')} className="ml-2 text-green-400 hover:text-green-600">&times;</button>
         </div>
       )}
 
-      <div className="grid gap-4">
-        {ATS_PROVIDERS.map((provider) => {
-          const connected = getIntegration(provider.id);
-          return (
-            <div
-              key={provider.id}
-              className="border border-gray-200 dark:border-gray-700 rounded-xl p-5 bg-white dark:bg-gray-800"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${provider.color}`}>
-                    {provider.name}
-                  </span>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {t(provider.description, provider.descriptionFallback)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {connected ? (
-                    <>
-                      <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                        <span className="w-2 h-2 bg-green-500 rounded-full" />
-                        {t('integrations.connected', 'Connected')}
+      {/* Section: ATS */}
+      <div className="mb-10">
+        <h2 className="text-lg font-bold text-slate-900 mb-1">
+          {t('integrations.atsTitle', 'Applicant Tracking Systems (ATS)')}
+        </h2>
+        <p className="text-sm text-slate-500 mb-6">
+          {t('integrations.atsSubtitle', 'ATS integrations help you export candidates from the platform to your ATS.')}
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {ATS_PROVIDERS.map((provider) => {
+            const connected = getIntegration(provider.id);
+            return (
+              <div
+                key={provider.id}
+                className="rounded-xl border border-slate-200 bg-white p-5"
+              >
+                {/* Card header: icon + name + badge */}
+                <div className="flex items-center gap-3 mb-4">
+                  {provider.icon}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-slate-900">{provider.name}</span>
+                      {connected && (
+                        <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600">
+                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                          {t('integrations.connectedLabel', 'Connected')}
+                        </span>
+                      )}
+                    </div>
+                    {provider.badge && !connected && (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-indigo-600 font-medium mt-0.5">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+                        {provider.badge}
                       </span>
-                      <button
-                        onClick={() => handleTest(connected.id)}
-                        disabled={testingId === connected.id}
-                        className="px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
-                      >
-                        {testingId === connected.id
-                          ? t('integrations.testing', 'Testing...')
-                          : t('integrations.test', 'Test')}
-                      </button>
-                      <button
-                        onClick={() => handleViewLogs(connected.id)}
-                        className="px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                      >
-                        {t('integrations.logs', 'Logs')}
-                      </button>
-                      <button
-                        onClick={() => handleDisconnect(connected.id)}
-                        className="px-3 py-1.5 text-xs text-red-600 border border-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        {t('integrations.disconnect', 'Disconnect')}
-                      </button>
-                    </>
-                  ) : (
+                    )}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-slate-500 mb-5">
+                  {t(provider.description, provider.descriptionFallback)}
+                </p>
+
+                {/* Action buttons */}
+                {connected ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleTest(connected.id)}
+                      disabled={testingId === connected.id}
+                      className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                    >
+                      {testingId === connected.id
+                        ? t('integrations.testing', 'Testing...')
+                        : t('integrations.test', 'Test')}
+                    </button>
+                    <button
+                      onClick={() => handleViewLogs(connected.id)}
+                      className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      {t('integrations.logs', 'Logs')}
+                    </button>
+                    <button
+                      onClick={() => handleDisconnect(connected.id)}
+                      className="flex-1 rounded-lg border border-red-200 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      {t('integrations.disconnect', 'Disconnect')}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
                         setConnectingProvider(connectingProvider === provider.id ? null : provider.id);
                         setCredentials({});
                         setError('');
                       }}
-                      className="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                      className="flex-1 rounded-lg border border-indigo-200 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
                     >
-                      {t('integrations.connect', 'Connect')}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {connected?.lastSyncAt && (
-                <p className="mt-2 text-xs text-gray-500">
-                  {t('integrations.lastSync', 'Last synced')}: {new Date(connected.lastSyncAt).toLocaleString()}
-                </p>
-              )}
-
-              {/* Connect form */}
-              {connectingProvider === provider.id && !connected && (
-                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-3">
-                  {provider.fields.map((field) => (
-                    <div key={field.key}>
-                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {field.label}
-                      </label>
-                      <input
-                        type={field.type}
-                        value={credentials[field.key] || ''}
-                        onChange={(e) => setCredentials({ ...credentials, [field.key]: e.target.value })}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder={`Enter ${field.label.toLowerCase()}`}
-                      />
-                    </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleConnect(provider.id)}
-                      disabled={!credentials.apiKey}
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {t('integrations.connectAndTest', 'Connect & Test')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setConnectingProvider(null);
-                        setCredentials({});
-                      }}
-                      className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800"
-                    >
-                      {t('integrations.cancel', 'Cancel')}
+                      {t('integrations.activate', 'Activate')}
                     </button>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Sync logs */}
-              {logsId === connected?.id && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('integrations.syncHistory', 'Sync History')}
-                  </h4>
-                  {syncLogs.length === 0 ? (
-                    <p className="text-xs text-gray-500">{t('integrations.noLogs', 'No sync activity yet')}</p>
-                  ) : (
-                    <div className="space-y-1 max-h-48 overflow-y-auto">
-                      {syncLogs.map((log) => (
-                        <div
-                          key={log.id}
-                          className="flex items-center justify-between text-xs py-1.5 px-2 bg-gray-100 dark:bg-gray-700 rounded"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${log.status === 'success' ? 'bg-green-500' : log.status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'}`} />
-                            <span className="text-gray-700 dark:text-gray-300">
-                              {log.direction} {log.entityType}
-                            </span>
-                            {log.error && (
-                              <span className="text-red-500 truncate max-w-[200px]" title={log.error}>
-                                {log.error}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-gray-500">
-                            {new Date(log.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                      ))}
+                {/* Last sync info */}
+                {connected?.lastSyncAt && (
+                  <p className="mt-3 text-xs text-slate-400">
+                    {t('integrations.lastSync', 'Last synced')}: {new Date(connected.lastSyncAt).toLocaleString()}
+                  </p>
+                )}
+
+                {/* Connect form */}
+                {connectingProvider === provider.id && !connected && (
+                  <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+                    {provider.fields.map((field) => (
+                      <div key={field.key}>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                          {field.label}
+                        </label>
+                        <input
+                          type={field.type}
+                          value={credentials[field.key] || ''}
+                          onChange={(e) => setCredentials({ ...credentials, [field.key]: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                          placeholder={`Enter ${field.label.toLowerCase()}`}
+                        />
+                      </div>
+                    ))}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => handleConnect(provider.id)}
+                        disabled={!credentials.apiKey}
+                        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {t('integrations.connectAndTest', 'Connect & Test')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setConnectingProvider(null);
+                          setCredentials({});
+                        }}
+                        className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:text-slate-800 transition-colors"
+                      >
+                        {t('integrations.cancel', 'Cancel')}
+                      </button>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                  </div>
+                )}
+
+                {/* Sync logs */}
+                {logsId === connected?.id && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-slate-700 mb-2">
+                      {t('integrations.syncHistory', 'Sync History')}
+                    </h4>
+                    {syncLogs.length === 0 ? (
+                      <p className="text-xs text-slate-400">{t('integrations.noLogs', 'No sync activity yet')}</p>
+                    ) : (
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {syncLogs.map((log) => (
+                          <div
+                            key={log.id}
+                            className="flex items-center justify-between text-xs py-2 px-3 bg-slate-50 rounded-lg"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`w-1.5 h-1.5 rounded-full ${log.status === 'success' ? 'bg-green-500' : log.status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'}`} />
+                              <span className="text-slate-700">
+                                {log.direction} {log.entityType}
+                              </span>
+                              {log.error && (
+                                <span className="text-red-500 truncate max-w-[200px]" title={log.error}>
+                                  {log.error}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-slate-400">
+                              {new Date(log.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

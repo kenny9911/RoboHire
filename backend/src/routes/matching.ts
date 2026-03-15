@@ -60,6 +60,61 @@ function getProcessingMetrics(requestId?: string) {
   };
 }
 
+function getMatchingSessionConfig(config: unknown) {
+  const raw = config && typeof config === 'object' ? (config as Record<string, any>) : {};
+  const rawPreFilter =
+    raw.preFilter && typeof raw.preFilter === 'object'
+      ? (raw.preFilter as Record<string, any>)
+      : null;
+
+  const resumeIds = Array.isArray(raw.resumeIds)
+    ? raw.resumeIds.filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+    : [];
+  const locations = Array.isArray(rawPreFilter?.locations)
+    ? rawPreFilter.locations.filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    : [];
+  const jobTypes = Array.isArray(rawPreFilter?.jobTypes)
+    ? rawPreFilter.jobTypes.filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    : [];
+  const freeText =
+    typeof rawPreFilter?.freeText === 'string' && rawPreFilter.freeText.trim().length > 0
+      ? rawPreFilter.freeText.trim()
+      : null;
+
+  return {
+    resumeIds,
+    preFilter: rawPreFilter
+      ? {
+          locations,
+          jobTypes,
+          freeText,
+        }
+      : null,
+  };
+}
+
+function buildMatchingCriteriaSnapshot(session: { config: unknown; totalResumes?: number }) {
+  const parsedConfig = getMatchingSessionConfig(session.config);
+  const selectedResumeCount =
+    parsedConfig.resumeIds.length > 0
+      ? parsedConfig.resumeIds.length
+      : (session.totalResumes ?? 0);
+
+  return {
+    selectedResumeCount,
+    locations: parsedConfig.preFilter?.locations ?? [],
+    jobTypes: parsedConfig.preFilter?.jobTypes ?? [],
+    freeText: parsedConfig.preFilter?.freeText ?? null,
+    hasPreFilter:
+      !!parsedConfig.preFilter &&
+      (
+        parsedConfig.preFilter.locations.length > 0 ||
+        parsedConfig.preFilter.jobTypes.length > 0 ||
+        !!parsedConfig.preFilter.freeText
+      ),
+  };
+}
+
 /**
  * Run tasks with a concurrency limit
  */
@@ -560,7 +615,12 @@ router.get('/sessions', requireAuth, async (req, res) => {
       prisma.matchingSession.count({ where }),
     ]);
 
-    res.json({ success: true, data: sessions, meta: { total } });
+    const hydratedSessions = sessions.map((session) => ({
+      ...session,
+      criteriaSnapshot: buildMatchingCriteriaSnapshot(session),
+    }));
+
+    res.json({ success: true, data: hydratedSessions, meta: { total } });
   } catch (err: any) {
     logger.error('MATCHING', 'Failed to list sessions', { error: err.message });
     res.status(500).json({ success: false, error: 'Failed to list sessions' });
@@ -588,8 +648,8 @@ router.get('/sessions/:sessionId', requireAuth, async (req, res) => {
     }
 
     // Get match results for this session's job + resume IDs
-    const config = session.config as any;
-    const resumeIds = config?.resumeIds || [];
+    const config = getMatchingSessionConfig(session.config);
+    const resumeIds = config.resumeIds;
 
     const matches = await prisma.jobMatch.findMany({
       where: {
@@ -611,7 +671,40 @@ router.get('/sessions/:sessionId', requireAuth, async (req, res) => {
       },
     });
 
-    res.json({ success: true, data: { session, matches } });
+    const selectedResumeRecords = resumeIds.length > 0
+      ? await prisma.resume.findMany({
+          where: {
+            userId,
+            id: { in: resumeIds },
+          },
+          select: {
+            id: true,
+            name: true,
+            currentRole: true,
+            experienceYears: true,
+            tags: true,
+          },
+        })
+      : [];
+
+    const selectedResumeMap = new Map(selectedResumeRecords.map((resume) => [resume.id, resume]));
+    const selectedResumes = resumeIds.reduce<typeof selectedResumeRecords>((acc, resumeId) => {
+      const resume = selectedResumeMap.get(resumeId);
+      if (resume) acc.push(resume);
+      return acc;
+    }, []);
+
+    res.json({
+      success: true,
+      data: {
+        session: {
+          ...session,
+          criteriaSnapshot: buildMatchingCriteriaSnapshot(session),
+        },
+        matches,
+        selectedResumes,
+      },
+    });
   } catch (err: any) {
     logger.error('MATCHING', 'Failed to get session detail', { error: err.message });
     res.status(500).json({ success: false, error: 'Failed to get session detail' });

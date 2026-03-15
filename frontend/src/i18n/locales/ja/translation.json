@@ -113,6 +113,7 @@
       "product": "プロダクト",
       "productMenu": {
         "requirements": "要件分析",
+        "agents": "エージェント",
         "resumeScreening": "履歴書スクリーニング",
         "smartMatching": "スマートマッチング",
         "aiInterview": "AI面接",
@@ -1036,21 +1037,39 @@
         "description": "スケーラブルで信頼性の高いシステムの技術アーキテクチャを設計・統括",
         "experienceLevel": "8年以上",
         "requirements": "プラットフォームの技術アーキテクチャを設計・管理するソフトウェア/システムアーキテクトを募集しています。\n\n職務内容：\n- システムアーキテクチャ、技術スタック、設計パターンの定義\n- 技術設計レビューの主導とアーキテクチャの一貫性確保\n- スケーラビリティ、信頼性、パフォーマンスのトレードオフ評価\n- シニアエンジニアへのアーキテクチャ指導\n- プロダクト・エンジニアリングリーダーとの技術ロードマップ策定\n\n必須条件：\n- ソフトウェアエンジニアリング8年以上、アーキテクト/リード3年以上\n- 分散システム、マイクロサービス、クラウドネイティブアーキテクチャの深い専門知識\n- Java、Go、Python、TypeScriptのうち2つ以上に精通\n- AWS/GCP/Azureの大規模利用経験\n- 技術・非技術の両方の聴衆に対する優れたコミュニケーション力\n\n歓迎条件：\n- イベント駆動アーキテクチャの経験（Kafka、RabbitMQ）\n- IaCの知識（Terraform、Pulumi）\n- 高トラフィックの消費者向けまたはSaaSプラットフォームの経験",
-        "skills": ["分散システム", "マイクロサービス", "クラウドアーキテクチャ", "システム設計", "テクニカルリーダーシップ"]
+        "skills": [
+          "分散システム",
+          "マイクロサービス",
+          "クラウドアーキテクチャ",
+          "システム設計",
+          "テクニカルリーダーシップ"
+        ]
       },
       "quantumAlgorithmEngineer": {
         "title": "量子アルゴリズムエンジニア",
         "description": "実世界の計算問題に対する量子アルゴリズムを研究・実装",
         "experienceLevel": "3年以上",
         "requirements": "最適化、シミュレーション、機械学習向けの量子アルゴリズムを設計・実装する量子アルゴリズムエンジニアを募集しています。\n\n職務内容：\n- 量子アルゴリズムの研究・開発（VQE、QAOA、量子ML）\n- 量子シミュレータおよび実機でのアルゴリズム実装・ベンチマーク\n- 計算量と量子優位性シナリオの分析\n- ドメインエキスパートとの協業による量子適用可能な問題の特定\n- 研究成果の発表と量子コンピューティングコミュニティへの貢献\n\n必須条件：\n- 物理学、計算機科学、数学または関連分野の修士/博士号\n- 量子コンピューティングの研究またはエンジニアリング3年以上\n- Qiskit、Cirq、またはPennyLaneに精通\n- 線形代数、確率論、量子力学の堅固な基礎\n- Pythonおよび科学計算ライブラリ（NumPy、SciPy）の経験\n\n歓迎条件：\n- 量子コンピューティング学術誌・学会での論文発表\n- 量子誤り訂正とフォールトトレラント計算の経験\n- 量子ハードウェアの知識（超伝導、イオントラップ、フォトニクス）",
-        "skills": ["量子コンピューティング", "Qiskit/Cirq", "線形代数", "Python", "アルゴリズム設計"]
+        "skills": [
+          "量子コンピューティング",
+          "Qiskit/Cirq",
+          "線形代数",
+          "Python",
+          "アルゴリズム設計"
+        ]
       },
       "chipDesignEngineer": {
         "title": "チップ設計エンジニア（SoC/IC）",
         "description": "RTLからテープアウトまで、次世代SoC/ICチップの設計と検証",
         "experienceLevel": "5年以上",
         "requirements": "次世代SoC/IC製品の設計、検証、テープアウトに貢献するチップ設計エンジニアを募集しています。\n\n職務内容：\n- デジタルロジックブロックとSoCサブシステムのRTL設計・実装\n- 論理合成、タイミング解析、テスト容易化設計（DFT）の実施\n- 検証テストベンチの開発・実行（UVM/SystemVerilog）\n- 物理設計、ファームウェア、バリデーションチームとの協業\n- アーキテクチャ探索とマイクロアーキテクチャ定義への参画\n\n必須条件：\n- 電子工学、コンピュータ工学または関連分野の学士/修士号\n- SoC/IC設計5年以上の経験\n- Verilog/SystemVerilogとRTL設計に精通\n- EDAツール（Synopsys、Cadence、Mentor）の使用経験\n- デジタル設計、タイミングクロージャ、低消費電力設計の深い理解\n\n歓迎条件：\n- RISC-VまたはARMプロセッサ設計の経験\n- 高速インターフェース（PCIe、DDR、USB）の知識\n- FPGAプロトタイピングとエミュレーションの知識\n- 先端プロセスノード（7nm、5nm、3nm）でのテープアウト経験",
-        "skills": ["RTL設計", "SystemVerilog", "SoCアーキテクチャ", "EDAツール", "チップ検証"]
+        "skills": [
+          "RTL設計",
+          "SystemVerilog",
+          "SoCアーキテクチャ",
+          "EDAツール",
+          "チップ検証"
+        ]
       },
       "productManager": {
         "title": "プロダクトマネージャー",
@@ -1254,6 +1273,13 @@
       "goToDashboard": "ダッシュボードへ",
       "viewFullReport": "完全なレポートを見る",
       "viewReport": "採用レポートを見る"
+    },
+    "searchExamples": {
+      "fullstack": "フルスタックエンジニア、5年以上の経験、シリーズBスタートアップ出身、PythonとNode.jsに精通",
+      "marketing": "マーケティングマネージャー、大手企業勤務、グローバルマーケティング経験あり",
+      "scientist": "シニアデータサイエンティスト、8年以上の経験、NLPとレコメンドシステムに強み",
+      "consultant": "経営コンサルタント、トップファームで2年以上の経験、MBA優遇",
+      "sales": "エンタープライズ営業マネージャー、SaaS/ERP販売経験、1億円以上の大型案件実績あり"
     }
   },
   "dashboard": {
@@ -1268,7 +1294,8 @@
       "resumes": "履歴書ライブラリ",
       "integrations": "連携",
       "docs": "ドキュメント",
-      "developers": "開発者"
+      "developers": "開発者",
+      "agents": "エージェント"
     },
     "welcome": "おかえりなさい",
     "user": "ユーザー",
@@ -1990,7 +2017,9 @@
       "evaluations": "評価レポート",
       "candidateDetail": "候補者詳細",
       "jobDetail": "求人詳細",
-      "interviewRoom": "面接ルーム"
+      "interviewRoom": "面接ルーム",
+      "agents": "エージェント",
+      "agentDetail": "エージェント詳細"
     },
     "dashboard": {
       "welcome": "おかえりなさい",
@@ -2076,7 +2105,7 @@
       "runAIEvaluation": "AI評価を実行",
       "placeholder": "LiveKitによるAIビデオ面接。フェーズ6で実装予定。",
       "evaluate": "AI評価を実行",
-      "recording": "録画",
+      "recording": "録画中",
       "viewRecording": "録画を見る",
       "arrangeInterview": "面接を手配",
       "step": "ステップ",
@@ -2124,7 +2153,6 @@
       "speakNaturally": "はっきりと自然に話してください",
       "joinButton": "面接に参加",
       "inProgress": "面接進行中",
-      "recording": "録画中",
       "aiInterviewer": "AI面接官",
       "connected": "接続済み",
       "connecting": "接続中...",
@@ -2340,11 +2368,7 @@
     },
     "hiring": {
       "title": "採用リクエスト",
-      "status": {
-        "active": "進行中",
-        "paused": "一時停止",
-        "closed": "終了"
-      },
+      "status": "ステータス",
       "allRequests": "すべてのリクエスト",
       "createRequest": "リクエストを作成",
       "editRequest": "リクエストを編集",
@@ -2358,7 +2382,6 @@
       "high": "高",
       "medium": "中",
       "low": "低",
-      "status": "ステータス",
       "open": "オープン",
       "inProgress": "進行中",
       "filled": "採用完了",
@@ -2490,7 +2513,9 @@
       "filterShortlisted": "候補リスト",
       "filterInvited": "招待済み",
       "filterRejected": "不採用",
-      "filterMore": "その他のフィルター"
+      "filterMore": "その他のフィルター",
+      "addFilter": "フィルター追加",
+      "applyFilters": "フィルター適用"
     },
     "matching": {
       "title": "スマートマッチング",
@@ -2638,7 +2663,26 @@
         "jobType": "職種",
         "companyType": "企業タイプ"
       },
-      "prefNoPreferences": "候補者の希望条件が未設定"
+      "prefNoPreferences": "候補者の希望条件が未設定",
+      "aiMatch": "AIマッチ",
+      "history": "履歴",
+      "matchingFor": "マッチング対象",
+      "back": "戻る",
+      "next": "次へ",
+      "startMatchingModal": "マッチング開始 ({{jobs}}件の求人, {{resumes}}件の履歴書)",
+      "selectCandidates": "候補者を選択",
+      "aiMatchDesc": "求人と候補者を選択し、マッチングパラメータを設定してください。",
+      "sessionNamePlaceholder": "セッション名（任意）",
+      "minScore": "最低スコア",
+      "maxJobMatchesPerResume": "履歴書あたりの最大求人数",
+      "maxResumeMatchesPerJob": "求人あたりの最大履歴書数",
+      "getStarted": "AIマッチングを始める",
+      "getStartedDesc": "求人を作成し、候補者の履歴書をアップロードして、最初のAIマッチングを実行しましょう。",
+      "readyToMatch": "マッチング準備完了",
+      "readyToMatchDesc": "求人と候補者を選択して、新しいAIマッチングセッションを開始します。",
+      "quickPick": "ロールをすばやく選択",
+      "recentMatches": "最近のマッチング",
+      "viewAll": "すべて表示"
     },
     "evaluations": {
       "title": "評価レポート",
@@ -3318,6 +3362,10 @@
     "logs": "ログ",
     "syncHistory": "同期履歴",
     "noLogs": "同期履歴はありません",
+    "atsTitle": "採用管理システム (ATS)",
+    "atsSubtitle": "ATS連携により、プラットフォームから採用管理システムへ候補者をエクスポートできます。",
+    "connectedLabel": "接続済み",
+    "activate": "有効化",
     "greenhouse": {
       "description": "構造化された採用パイプラインを持つエンタープライズATS"
     },
@@ -3339,78 +3387,6 @@
     "confirmDeleteMessage": "このアイテムを削除してもよろしいですか？この操作は元に戻せません。",
     "cancel": "キャンセル",
     "delete": "削除"
-  },
-  "admin": {
-    "tabs": {
-      "llmUsage": "LLM使用量",
-      "logs": "ログ"
-    },
-    "llmUsage": {
-      "title": "LLM使用量",
-      "subtitle": "すべてのLLM APIコール、コスト、トークン使用量の詳細ビュー。",
-      "applyFilters": "フィルター適用",
-      "from": "開始日",
-      "to": "終了日",
-      "provider": "プロバイダー",
-      "model": "モデル",
-      "module": "モジュール",
-      "user": "ユーザー",
-      "loading": "LLM使用量データを読み込み中...",
-      "totalCalls": "総LLMコール数",
-      "totalTokens": "総トークン数",
-      "totalCost": "総コスト",
-      "avgCostPerCall": "平均コスト/コール",
-      "avgLatency": "平均レイテンシ",
-      "costTrend": "コスト推移",
-      "tokenTrend": "トークン使用量推移",
-      "costByModel": "モデル別コスト",
-      "costByProvider": "プロバイダー別コスト",
-      "inputTokens": "入力",
-      "outputTokens": "出力",
-      "callLog": "LLMコールログ",
-      "time": "時間",
-      "cost": "コスト",
-      "duration": "所要時間",
-      "noData": "選択したフィルターに一致するLLMコールが見つかりません。",
-      "showing": "表示中",
-      "of": "/",
-      "prev": "前へ",
-      "next": "次へ"
-    },
-    "logs": {
-      "title": "リクエストログ",
-      "subtitle": "すべてのAPIリクエストを監視し、問題を診断し、パフォーマンスを追跡します。",
-      "applyFilters": "フィルター適用",
-      "from": "開始日",
-      "to": "終了日",
-      "module": "モジュール",
-      "endpoint": "エンドポイント",
-      "status": "ステータス",
-      "allStatuses": "すべて",
-      "user": "ユーザー",
-      "loading": "リクエストログを読み込み中...",
-      "totalRequests": "総リクエスト数",
-      "withLLM": "LLM含む（このページ）",
-      "pageCost": "ページコスト",
-      "pageErrors": "ページエラー",
-      "time": "時間",
-      "apiName": "API",
-      "method": "メソッド",
-      "duration": "所要時間",
-      "llmCalls": "LLM",
-      "tokens": "トークン",
-      "cost": "コスト",
-      "noData": "選択したフィルターに一致するリクエストログが見つかりません。",
-      "llmCallDetails": "LLMコール詳細",
-      "provider": "プロバイダー",
-      "model": "モデル",
-      "inputTokens": "入力",
-      "outputTokens": "出力",
-      "showing": "表示中",
-      "of": "/",
-      "prev": "前へ",
-      "next": "次へ"
-    }
   },
   "admin": {
     "activity": {
@@ -3442,5 +3418,90 @@
       "prev": "前へ",
       "next": "次へ"
     }
+  },
+  "agents": {
+    "title": "エージェント",
+    "subtitle": "AIソーシングエージェントが自動で候補者を発見・連絡します。",
+    "create": "新規エージェント作成",
+    "myAgents": "マイエージェント",
+    "searchPlaceholder": "エージェント名、オーナー名、コラボレーター名で検索",
+    "filterStatus": "ステータス",
+    "filterOwner": "オーナー",
+    "awaitingApproval": "承認待ち",
+    "overview": "概要",
+    "allTime": "全期間",
+    "allUsers": "全ユーザー",
+    "leads": "リード",
+    "noDataYet": "データなし",
+    "leadsByAgent": "エージェント別リード",
+    "leadsByAgentDesc": "承認待ちリードが多い上位 {{count}} エージェント。管理者は組織全体のエージェントを確認できます。",
+    "createTitle": "新規エージェント作成",
+    "agentName": "エージェント名",
+    "namePlaceholder": "例：シニアフルスタックソーサー",
+    "searchCriteria": "検索条件",
+    "criteriaPlaceholder": "理想の候補者を詳しく記述してください...",
+    "linkedJob": "紐付け求人（任意）",
+    "noJob": "求人に紐付けない",
+    "creating": "作成中...",
+    "createBtn": "エージェント作成",
+    "empty": "エージェントがまだありません",
+    "emptyDesc": "最初のAIソーシングエージェントを作成して、自動で候補者を見つけましょう。",
+    "sourced": "発見",
+    "approved": "承認",
+    "contacted": "連絡済",
+    "created": "作成日",
+    "viewDetails": "詳細を見る",
+    "edit": "編集",
+    "pause": "一時停止",
+    "resume": "再開",
+    "approve": "承認",
+    "reject": "却下",
+    "contact": "連絡",
+    "viewResume": "履歴書を見る",
+    "viewProfile": "プロフィール",
+    "noCandidates": "このカテゴリにはまだ候補者がいません。エージェントが自動的に候補者を見つけます。",
+    "status": {
+      "active": "稼働中",
+      "paused": "一時停止",
+      "completed": "完了",
+      "configuring": "設定中",
+      "failed": "失敗",
+      "closed": "終了",
+      "out_of_leads": "リード切れ"
+    },
+    "tab": {
+      "pending": "レビュー待ち",
+      "approved": "承認済",
+      "rejected": "却下済",
+      "contacted": "連絡済",
+      "all": "すべて"
+    },
+    "stat": {
+      "sourced": "発見",
+      "approved": "承認",
+      "rejected": "却下",
+      "contacted": "連絡済"
+    },
+    "candidateStatus": {
+      "contacted": "連絡済",
+      "rejected": "却下済"
+    },
+    "pending": "保留中",
+    "disapproved": "不承認",
+    "cardView": "カード表示",
+    "listView": "リスト表示",
+    "colName": "名前",
+    "colPending": "保留中",
+    "colDate": "作成日",
+    "editAgent": "エージェントを編集",
+    "agentTitle": "エージェントのタイトル",
+    "required": "必須",
+    "accessLevel": "アクセスレベル",
+    "accessShared": "共有（組織内の全員に表示）",
+    "accessPrivate": "プライベート（自分、コラボレーター、管理者のみ表示）",
+    "collaborators": "コラボレーター",
+    "collaboratorsDesc": "これらのチームメンバーがこのプロジェクトに参加します",
+    "noCollaborators": "コラボレーターが選択されていません",
+    "saveChanges": "変更を保存"
   }
 }

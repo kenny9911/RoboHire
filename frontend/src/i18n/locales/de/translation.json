@@ -113,6 +113,7 @@
       "product": "Produkt",
       "productMenu": {
         "requirements": "Anforderungsanalyse",
+        "agents": "Agenten",
         "resumeScreening": "Lebenslauf-Screening",
         "smartMatching": "Intelligentes Matching",
         "aiInterview": "KI-Interview",
@@ -666,21 +667,39 @@
         "description": "Entwurf und Verantwortung für die technische Architektur skalierbarer, zuverlässiger Systeme",
         "experienceLevel": "8+ Jahre",
         "requirements": "Wir suchen einen Software-/Systemarchitekten für den Entwurf und die Betreuung der technischen Architektur unserer Plattform.\n\nAufgaben:\n- Definition der Systemarchitektur, des Technologie-Stacks und der Entwurfsmuster\n- Leitung technischer Design-Reviews und Sicherstellung architektonischer Konsistenz\n- Bewertung von Kompromissen in Skalierbarkeit, Zuverlässigkeit und Performance\n- Mentoring von Senior Engineers in Architektur-Best-Practices\n- Zusammenarbeit mit Produkt- und Engineering-Leitung an der technischen Roadmap\n\nAnforderungen:\n- 8+ Jahre Softwareentwicklung, 3+ Jahre als Architekt/Lead\n- Tiefgehende Expertise in verteilten Systemen, Microservices und Cloud-Native-Architektur\n- Beherrschung von mindestens zwei aus: Java, Go, Python, TypeScript\n- Erfahrung mit AWS/GCP/Azure im großen Maßstab\n- Ausgezeichnete Kommunikationsfähigkeiten\n\nWünschenswert:\n- Erfahrung mit Event-Driven Architecture (Kafka, RabbitMQ)\n- Kenntnisse in Infrastructure as Code (Terraform, Pulumi)\n- Erfahrung mit High-Traffic- oder SaaS-Plattformen",
-        "skills": ["Verteilte Systeme", "Microservices", "Cloud-Architektur", "Systemdesign", "Technische Führung"]
+        "skills": [
+          "Verteilte Systeme",
+          "Microservices",
+          "Cloud-Architektur",
+          "Systemdesign",
+          "Technische Führung"
+        ]
       },
       "quantumAlgorithmEngineer": {
         "title": "Quantenalgorithmus-Ingenieur",
         "description": "Quantenalgorithmen für reale Berechnungsprobleme erforschen und implementieren",
         "experienceLevel": "3+ Jahre",
         "requirements": "Wir suchen einen Quantenalgorithmus-Ingenieur für den Entwurf und die Implementierung von Quantenalgorithmen für Optimierung, Simulation und maschinelles Lernen.\n\nAufgaben:\n- Forschung und Entwicklung von Quantenalgorithmen (VQE, QAOA, Quanten-ML)\n- Implementierung und Benchmarking auf Quantensimulatoren und realer Hardware\n- Analyse der Rechenkomplexität und Quantenvorteil-Szenarien\n- Zusammenarbeit mit Fachexperten zur Identifikation quantengeeigneter Probleme\n- Veröffentlichung von Ergebnissen und Beitrag zur Quantencomputing-Community\n\nAnforderungen:\n- Master/Promotion in Physik, Informatik, Mathematik oder verwandtem Fach\n- 3+ Jahre Erfahrung in Quantencomputing-Forschung oder -Entwicklung\n- Beherrschung von Qiskit, Cirq oder PennyLane\n- Solide Grundlagen in linearer Algebra, Wahrscheinlichkeitstheorie und Quantenmechanik\n- Erfahrung mit Python und wissenschaftlichem Rechnen (NumPy, SciPy)\n\nWünschenswert:\n- Veröffentlichungen in Quantencomputing-Journalen oder -Konferenzen\n- Erfahrung mit Quantenfehlerkorrektur\n- Kenntnisse über Quantenhardware (supraleitend, Ionenfalle, photonisch)",
-        "skills": ["Quantencomputing", "Qiskit/Cirq", "Lineare Algebra", "Python", "Algorithmendesign"]
+        "skills": [
+          "Quantencomputing",
+          "Qiskit/Cirq",
+          "Lineare Algebra",
+          "Python",
+          "Algorithmendesign"
+        ]
       },
       "chipDesignEngineer": {
         "title": "Chipdesign-Ingenieur (SoC/IC)",
         "description": "Entwurf und Verifikation von SoC/IC-Chips der nächsten Generation vom RTL bis zum Tape-out",
         "experienceLevel": "5+ Jahre",
         "requirements": "Wir suchen einen Chipdesign-Ingenieur für den Entwurf, die Verifikation und das Tape-out von SoC/IC-Produkten der nächsten Generation.\n\nAufgaben:\n- Entwurf und Implementierung von RTL für digitale Logikblöcke und SoC-Subsysteme\n- Durchführung von Logiksynthese, Timing-Analyse und Design-for-Test (DFT)\n- Entwicklung und Ausführung von Verifikations-Testbenches (UVM/SystemVerilog)\n- Zusammenarbeit mit Physical-Design-, Firmware- und Validierungsteams\n- Mitwirkung bei Architekturexploration und Mikroarchitektur-Definition\n\nAnforderungen:\n- Bachelor/Master in Elektrotechnik, Technischer Informatik oder verwandtem Fach\n- 5+ Jahre Erfahrung im SoC/IC-Design\n- Beherrschung von Verilog/SystemVerilog und RTL-Design\n- Erfahrung mit EDA-Tools (Synopsys, Cadence, Mentor)\n- Tiefes Verständnis von Digitaldesign, Timing-Closure und Low-Power-Design\n\nWünschenswert:\n- Erfahrung mit RISC-V- oder ARM-Prozessordesign\n- Kenntnisse über Hochgeschwindigkeitsschnittstellen (PCIe, DDR, USB)\n- Vertrautheit mit FPGA-Prototyping und Emulation\n- Tape-out-Erfahrung auf fortschrittlichen Prozessknoten (7nm, 5nm, 3nm)",
-        "skills": ["RTL-Design", "SystemVerilog", "SoC-Architektur", "EDA-Tools", "Chipverifikation"]
+        "skills": [
+          "RTL-Design",
+          "SystemVerilog",
+          "SoC-Architektur",
+          "EDA-Tools",
+          "Chipverifikation"
+        ]
       },
       "productManager": {
         "title": "Product Manager",
@@ -884,6 +903,13 @@
       "goToDashboard": "Zum Dashboard",
       "viewFullReport": "Vollständigen Bericht ansehen",
       "viewReport": "Einstellungsbericht ansehen"
+    },
+    "searchExamples": {
+      "fullstack": "Full-Stack-Ingenieure mit 5+ Jahren Erfahrung bei Series-B-Startups, versiert in Python und Node.js",
+      "marketing": "Marketing Manager in Europa, Erfahrung in einem großen Unternehmen",
+      "scientist": "Senior Data Scientist, 8+ Jahre Erfahrung, stark in NLP und Empfehlungssystemen",
+      "consultant": "Unternehmensberater mit 2+ Jahren bei Top-Beratungsfirmen, MBA bevorzugt",
+      "sales": "Enterprise Sales Manager mit Erfahrung in SaaS/ERP, nachgewiesene Erfolgsbilanz bei Deals über 1 Mio. €"
     }
   },
   "dashboard": {
@@ -898,7 +924,8 @@
       "resumes": "Lebenslauf-Bibliothek",
       "integrations": "Integrationen",
       "docs": "Dokumentation",
-      "developers": "Entwickler"
+      "developers": "Entwickler",
+      "agents": "Agenten"
     },
     "welcome": "Willkommen zurück",
     "user": "da",
@@ -1617,7 +1644,9 @@
       "evaluations": "Bewertungen",
       "candidateDetail": "Kandidatendetail",
       "jobDetail": "Stellendetail",
-      "interviewRoom": "Interviewraum"
+      "interviewRoom": "Interviewraum",
+      "agents": "Agenten",
+      "agentDetail": "Agent-Details"
     },
     "dashboard": {
       "welcome": "Willkommen zurück",
@@ -1749,7 +1778,6 @@
       "speakNaturally": "Sprechen Sie klar und natürlich",
       "joinButton": "Interview beitreten",
       "inProgress": "Interview läuft",
-      "recording": "Aufnahme",
       "aiInterviewer": "KI-Interviewer",
       "connected": "Verbunden",
       "connecting": "Verbindung wird hergestellt...",
@@ -2095,7 +2123,9 @@
       "filterShortlisted": "Vorausgewählt",
       "filterInvited": "Eingeladen",
       "filterRejected": "Abgelehnt",
-      "filterMore": "Weitere Filter"
+      "filterMore": "Weitere Filter",
+      "addFilter": "Filter hinzufügen",
+      "applyFilters": "Filter anwenden"
     },
     "matching": {
       "title": "Intelligentes Matching",
@@ -2206,7 +2236,26 @@
         "jobType": "Stellentyp",
         "companyType": "Unternehmenstyp"
       },
-      "prefNoPreferences": "Keine Kandidatenpräferenzen hinterlegt"
+      "prefNoPreferences": "Keine Kandidatenpräferenzen hinterlegt",
+      "aiMatch": "KI-Matching",
+      "history": "Verlauf",
+      "matchingFor": "Matching für",
+      "back": "Zurück",
+      "next": "Weiter",
+      "startMatchingModal": "Matching starten ({{jobs}} Stellen, {{resumes}} Lebensläufe)",
+      "selectCandidates": "Kandidaten auswählen",
+      "aiMatchDesc": "Wählen Sie Stellen und Kandidaten aus und konfigurieren Sie die Matching-Parameter.",
+      "sessionNamePlaceholder": "Sitzungsname (optional)",
+      "minScore": "Mindestpunktzahl",
+      "maxJobMatchesPerResume": "Max. Stellen/Lebenslauf",
+      "maxResumeMatchesPerJob": "Max. Lebensläufe/Stelle",
+      "getStarted": "Mit KI-Matching starten",
+      "getStartedDesc": "Erstellen Sie eine Stelle und laden Sie Kandidaten-Lebensläufe hoch, um Ihr erstes KI-Matching durchzuführen.",
+      "readyToMatch": "Bereit zum Matchen",
+      "readyToMatchDesc": "Wählen Sie Stellen und Kandidaten aus, um eine neue KI-Matching-Sitzung zu starten.",
+      "quickPick": "Rolle schnell auswählen",
+      "recentMatches": "Neueste Matches",
+      "viewAll": "Alle anzeigen"
     },
     "evaluations": {
       "title": "Bewertungen",
@@ -2870,6 +2919,10 @@
     "logs": "Protokolle",
     "syncHistory": "Synchronisierungsverlauf",
     "noLogs": "Keine Synchronisierungsaktivität",
+    "atsTitle": "Bewerbermanagementsysteme (ATS)",
+    "atsSubtitle": "ATS-Integrationen helfen Ihnen, Kandidaten von der Plattform in Ihr ATS zu exportieren.",
+    "connectedLabel": "Verbunden",
+    "activate": "Aktivieren",
     "greenhouse": {
       "description": "Enterprise-ATS mit strukturierten Einstellungspipelines"
     },
@@ -2891,78 +2944,6 @@
     "confirmDeleteMessage": "Sind Sie sicher, dass Sie dieses Element löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "cancel": "Abbrechen",
     "delete": "Löschen"
-  },
-  "admin": {
-    "tabs": {
-      "llmUsage": "LLM-Nutzung",
-      "logs": "Protokolle"
-    },
-    "llmUsage": {
-      "title": "LLM-Nutzung",
-      "subtitle": "Detaillierte Ansicht aller LLM-API-Aufrufe, Kosten und Token-Nutzung.",
-      "applyFilters": "Filter anwenden",
-      "from": "Von",
-      "to": "Bis",
-      "provider": "Anbieter",
-      "model": "Modell",
-      "module": "Modul",
-      "user": "Benutzer",
-      "loading": "LLM-Nutzungsdaten werden geladen...",
-      "totalCalls": "Gesamt LLM-Aufrufe",
-      "totalTokens": "Gesamt Tokens",
-      "totalCost": "Gesamtkosten",
-      "avgCostPerCall": "Durchschn. Kosten/Aufruf",
-      "avgLatency": "Durchschn. Latenz",
-      "costTrend": "Kostentrend",
-      "tokenTrend": "Token-Nutzungstrend",
-      "costByModel": "Kosten nach Modell",
-      "costByProvider": "Kosten nach Anbieter",
-      "inputTokens": "Eingabe",
-      "outputTokens": "Ausgabe",
-      "callLog": "LLM-Aufrufprotokoll",
-      "time": "Zeit",
-      "cost": "Kosten",
-      "duration": "Dauer",
-      "noData": "Keine LLM-Aufrufe für die ausgewählten Filter gefunden.",
-      "showing": "Anzeige",
-      "of": "von",
-      "prev": "Zurück",
-      "next": "Weiter"
-    },
-    "logs": {
-      "title": "Anforderungsprotokolle",
-      "subtitle": "Überwachen Sie alle API-Anfragen, diagnostizieren Sie Probleme und verfolgen Sie die Leistung.",
-      "applyFilters": "Filter anwenden",
-      "from": "Von",
-      "to": "Bis",
-      "module": "Modul",
-      "endpoint": "Endpunkt",
-      "status": "Status",
-      "allStatuses": "Alle",
-      "user": "Benutzer",
-      "loading": "Anforderungsprotokolle werden geladen...",
-      "totalRequests": "Gesamt Anfragen",
-      "withLLM": "Mit LLM (diese Seite)",
-      "pageCost": "Seitenkosten",
-      "pageErrors": "Seitenfehler",
-      "time": "Zeit",
-      "apiName": "API",
-      "method": "Methode",
-      "duration": "Dauer",
-      "llmCalls": "LLM",
-      "tokens": "Tokens",
-      "cost": "Kosten",
-      "noData": "Keine Anforderungsprotokolle für die ausgewählten Filter gefunden.",
-      "llmCallDetails": "LLM-Aufrufdetails",
-      "provider": "Anbieter",
-      "model": "Modell",
-      "inputTokens": "Eingabe",
-      "outputTokens": "Ausgabe",
-      "showing": "Anzeige",
-      "of": "von",
-      "prev": "Zurück",
-      "next": "Weiter"
-    }
   },
   "admin": {
     "activity": {
@@ -2994,5 +2975,90 @@
       "prev": "Zurück",
       "next": "Weiter"
     }
+  },
+  "agents": {
+    "title": "Agenten",
+    "subtitle": "KI-Agenten, die Kandidaten autonom finden und kontaktieren.",
+    "create": "Neuen Agent erstellen",
+    "myAgents": "Meine Agenten",
+    "searchPlaceholder": "Agent, Eigentümer oder Mitarbeiter suchen",
+    "filterStatus": "Status",
+    "filterOwner": "Eigentümer",
+    "awaitingApproval": "Warten auf Genehmigung",
+    "overview": "Übersicht",
+    "allTime": "Gesamter Zeitraum",
+    "allUsers": "Alle Benutzer",
+    "leads": "Leads",
+    "noDataYet": "Noch keine Daten",
+    "leadsByAgent": "Leads pro Agent",
+    "leadsByAgentDesc": "Top {{count}} Agenten nach ausstehenden Genehmigungen. Für Administratoren umfasst dies alle Agenten der Organisation.",
+    "createTitle": "Neuen Agent erstellen",
+    "agentName": "Agent-Name",
+    "namePlaceholder": "z.B. Senior Full-Stack Sourcer",
+    "searchCriteria": "Suchkriterien",
+    "criteriaPlaceholder": "Beschreiben Sie Ihren idealen Kandidaten im Detail...",
+    "linkedJob": "Verknüpfte Stelle (optional)",
+    "noJob": "Keine verknüpfte Stelle",
+    "creating": "Erstelle...",
+    "createBtn": "Agent erstellen",
+    "empty": "Noch keine Agenten",
+    "emptyDesc": "Erstellen Sie Ihren ersten KI-Agent, um automatisch Kandidaten zu finden.",
+    "sourced": "gefunden",
+    "approved": "genehmigt",
+    "contacted": "kontaktiert",
+    "created": "Erstellt am",
+    "viewDetails": "Details ansehen",
+    "edit": "Bearbeiten",
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "approve": "Genehmigen",
+    "reject": "Ablehnen",
+    "contact": "Kontaktieren",
+    "viewResume": "Lebenslauf ansehen",
+    "viewProfile": "Profil",
+    "noCandidates": "Keine Kandidaten in dieser Kategorie. Der Agent wird automatisch Kandidaten finden.",
+    "status": {
+      "active": "Aktiv",
+      "paused": "Pausiert",
+      "completed": "Abgeschlossen",
+      "configuring": "Konfigurieren",
+      "failed": "Fehlgeschlagen",
+      "closed": "Geschlossen",
+      "out_of_leads": "Keine Leads mehr"
+    },
+    "tab": {
+      "pending": "Ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "contacted": "Kontaktiert",
+      "all": "Alle"
+    },
+    "stat": {
+      "sourced": "Gefunden",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "contacted": "Kontaktiert"
+    },
+    "candidateStatus": {
+      "contacted": "Kontaktiert",
+      "rejected": "Abgelehnt"
+    },
+    "pending": "Ausstehend",
+    "disapproved": "Abgelehnt",
+    "cardView": "Kartenansicht",
+    "listView": "Listenansicht",
+    "colName": "Name",
+    "colPending": "Ausstehend",
+    "colDate": "Erstellt",
+    "editAgent": "Agent bearbeiten",
+    "agentTitle": "Agent-Titel",
+    "required": "erforderlich",
+    "accessLevel": "Zugriffsebene",
+    "accessShared": "Geteilt (für alle in Ihrer Organisation sichtbar)",
+    "accessPrivate": "Privat (nur für Sie, Ihre Mitarbeiter und Administratoren sichtbar)",
+    "collaborators": "Mitarbeiter",
+    "collaboratorsDesc": "Diese Teammitglieder werden diesem Projekt mit Ihnen zugewiesen",
+    "noCollaborators": "Keine Mitarbeiter ausgewählt",
+    "saveChanges": "Änderungen speichern"
   }
 }

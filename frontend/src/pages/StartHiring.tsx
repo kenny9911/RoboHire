@@ -908,9 +908,17 @@ export default function StartHiring() {
     { id: 'chip', label: t('hiring.quickRoles.chip', 'Chip Design Engineer (SoC/IC)') },
   ];
 
+  const searchExamples = [
+    t('hiring.searchExamples.fullstack', 'Full-stack Engineers with 5+ years experience at Series B startups, skilled in Python and Node.js'),
+    t('hiring.searchExamples.marketing', 'Marketing Manager in Europe, German-speaking, working at a large enterprise'),
+    t('hiring.searchExamples.scientist', 'Senior Data Scientist, 8+ years experience, strong in NLP and recommendation systems'),
+    t('hiring.searchExamples.consultant', 'Management Consultant with 2+ years at top consulting firms, MBA preferred'),
+    t('hiring.searchExamples.sales', 'Enterprise Sales Manager with experience in SaaS/ERP, proven track record of closing $1M+ deals'),
+  ];
+
   const localizedTemplates = getLocalizedTemplates(t);
   // Featured templates (just show 6)
-  const featuredTemplates = localizedTemplates.slice(0, 6);
+  const featuredTemplates = localizedTemplates.slice(0, 9);
   const templatesToShow = showAllTemplates ? localizedTemplates : featuredTemplates;
   const markdownComponents: Components = {
     h1: ({ children }) => (
@@ -1483,7 +1491,7 @@ export default function StartHiring() {
 
       <div className="pt-14">
       {/* Hero Section — Juicebox-inspired centered layout */}
-      <section className="flex flex-col items-center justify-center px-5 sm:px-6" style={{ minHeight: 'calc(100vh - 56px)' }}>
+      <section className="flex flex-col items-center justify-center px-5 pt-16 pb-12 sm:px-6 sm:pt-20">
         <div className="mx-auto w-full max-w-3xl text-center">
           {/* Heading */}
           <h1 className="mb-10 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
@@ -1566,14 +1574,14 @@ export default function StartHiring() {
 
           {/* Suggestions list — Juicebox-style clickable examples */}
           <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100 text-left shadow-sm">
-            {quickRoles.map((role) => (
+            {searchExamples.map((example, idx) => (
               <button
-                key={role.id}
-                onClick={() => handleQuickStart(role.label)}
+                key={idx}
+                onClick={() => handleQuickStart(example)}
                 disabled={isBriefGenerating}
                 className="flex w-full items-center px-6 py-3.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50 first:rounded-t-2xl last:rounded-b-2xl"
               >
-                {role.label}
+                {example}
               </button>
             ))}
           </div>
@@ -1587,7 +1595,7 @@ export default function StartHiring() {
       </section>
 
       {/* Templates Section */}
-      <section className="px-5 py-20 sm:px-6">
+      <section className="px-5 py-10 sm:px-6">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
             <h2 className="mb-2 text-2xl font-semibold text-slate-900">

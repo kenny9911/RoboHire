@@ -684,17 +684,19 @@ export default function TalentHub() {
     }));
   }, [resumes]);
 
+  const activeFilterCount = [expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus].filter(Boolean).length;
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto max-w-[1380px] space-y-4">
+      {/* Header row: title + upload */}
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">{t('product.talent.title', 'Talent Hub')}</h2>
-          <p className="mt-1 text-sm text-slate-600">{t('product.talent.subtitle', 'Your candidate repository with AI-powered insights.')}</p>
+          <h2 className="text-xl font-bold text-slate-900">{t('product.talent.title', 'Talent Hub')}</h2>
+          <p className="text-sm text-slate-500">{t('product.talent.subtitle', 'Your candidate repository with AI-powered insights.')}</p>
         </div>
         <button
           onClick={() => setShowUpload(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors self-start sm:self-auto shrink-0"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shrink-0"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -703,155 +705,157 @@ export default function TalentHub() {
         </button>
       </div>
 
-      {/* Search + View Toggle */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      {/* Toolbar: search + filters + view toggle — single row */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[200px]">
+          <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
             type="text"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder={t('product.talent.searchPlaceholder', 'Search by name, role, skills...')}
-            className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            placeholder={t('product.talent.searchPlaceholder', 'Search by name, company, etc.')}
+            className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
+        {/* Sort */}
+        <div className="relative">
+          <select
+            value={filterStatus}
+            onChange={(e) => { setFilterStatus(e.target.value); setTimeout(() => applyFilters(), 0); }}
+            className="h-9 appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">{t('product.talent.filterAllStatus', 'All Status')}</option>
+            <option value="matched">{t('product.talent.filterMatched', 'Matched')}</option>
+            <option value="shortlisted">{t('product.talent.filterShortlisted', 'Shortlisted')}</option>
+            <option value="invited">{t('product.talent.filterInvited', 'Invited')}</option>
+            <option value="rejected">{t('product.talent.filterRejected', 'Rejected')}</option>
+          </select>
+          <svg className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+
+        {/* Add Filter toggle */}
+        <button
+          onClick={() => setShowMoreFilters(!showMoreFilters)}
+          className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${showMoreFilters || activeFilterCount > 0 ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+          </svg>
+          {t('product.talent.addFilter', 'Add Filter')}
+          {activeFilterCount > 0 && (
+            <span className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{activeFilterCount}</span>
+          )}
+        </button>
+
         {/* View toggle */}
-        <div className="flex items-center bg-slate-100 rounded-lg p-1">
+        <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5">
           <button
             onClick={() => setViewMode('card')}
-            className={`p-2 rounded-md transition-all ${viewMode === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${viewMode === 'card' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
             title={t('product.talent.viewCard', 'Card View')}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2.5a2 2 0 012 2v2.5a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM13.5 6a2 2 0 012-2H18a2 2 0 012 2v2.5a2 2 0 01-2 2h-2.5a2 2 0 01-2-2V6zM4 15.5a2 2 0 012-2h2.5a2 2 0 012 2V18a2 2 0 01-2 2H6a2 2 0 01-2-2v-2.5zM13.5 15.5a2 2 0 012-2H18a2 2 0 012 2V18a2 2 0 01-2 2h-2.5a2 2 0 01-2-2v-2.5z" />
             </svg>
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
             title={t('product.talent.viewList', 'List View')}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M5 12h14M5 17h14" />
             </svg>
           </button>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-          {/* Avatar icon + placeholder */}
-          <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100">
-              <svg className="w-4.5 h-4.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
+      {/* Collapsible filter panel */}
+      {showMoreFilters && (
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterWorkYears', 'Work Years')}</label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="0"
+                  value={expYearsMin}
+                  onChange={(e) => setExpYearsMin(e.target.value)}
+                  placeholder={t('product.talent.filterMin', 'Min')}
+                  className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <span className="text-slate-300">—</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={expYearsMax}
+                  onChange={(e) => setExpYearsMax(e.target.value)}
+                  placeholder={t('product.talent.filterMax', 'Max')}
+                  className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
             </div>
-            <span className="text-sm text-slate-500">{t('product.talent.filterHint', 'Please enter the criteria for the candidates you are looking for')}</span>
-          </div>
 
-          {/* Search button */}
-          <button
-            onClick={applyFilters}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-white hover:bg-indigo-600 transition-colors shadow-sm"
-            title={t('common.search', 'Search')}
-          >
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterSalary', 'Expected Salary')}</label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="0"
+                  value={salaryMin}
+                  onChange={(e) => setSalaryMin(e.target.value)}
+                  placeholder={t('product.talent.filterMin', 'Min')}
+                  className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <span className="text-slate-300">—</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={salaryMax}
+                  onChange={(e) => setSalaryMax(e.target.value)}
+                  placeholder={t('product.talent.filterMax', 'Max')}
+                  className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterJob', 'Job')}</label>
+              <div className="relative">
+                <select
+                  value={filterJobId}
+                  onChange={(e) => setFilterJobId(e.target.value)}
+                  className="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">{t('product.talent.filterAllJobs', 'All Jobs')}</option>
+                  {jobs.map((j) => (
+                    <option key={j.id} value={j.id}>{j.title}</option>
+                  ))}
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={applyFilters}
+                className="h-9 w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+              >
+                {t('product.talent.applyFilters', 'Apply Filters')}
+              </button>
+            </div>
+          </div>
         </div>
-
-        {/* Filter row */}
-        <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-3">
-          {/* Work Years */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-700 font-medium whitespace-nowrap">{t('product.talent.filterWorkYears', 'Work Years')}:</span>
-            <input
-              type="number"
-              min="0"
-              value={expYearsMin}
-              onChange={(e) => setExpYearsMin(e.target.value)}
-              placeholder={t('product.talent.filterMin', 'Min')}
-              className="w-18 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-center text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-            <span className="text-slate-400">–</span>
-            <input
-              type="number"
-              min="0"
-              value={expYearsMax}
-              onChange={(e) => setExpYearsMax(e.target.value)}
-              placeholder={t('product.talent.filterMax', 'Max')}
-              className="w-18 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-center text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* Expected Salary */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-700 font-medium whitespace-nowrap">{t('product.talent.filterSalary', 'Expected Salary')}:</span>
-            <input
-              type="number"
-              min="0"
-              value={salaryMin}
-              onChange={(e) => setSalaryMin(e.target.value)}
-              placeholder={t('product.talent.filterMin', 'Min')}
-              className="w-24 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-center text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-            <span className="text-slate-400">–</span>
-            <input
-              type="number"
-              min="0"
-              value={salaryMax}
-              onChange={(e) => setSalaryMax(e.target.value)}
-              placeholder={t('product.talent.filterMax', 'Max')}
-              className="w-24 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-center text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* Job dropdown */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-700 font-medium whitespace-nowrap">{t('product.talent.filterJob', 'Job')}:</span>
-            <select
-              value={filterJobId}
-              onChange={(e) => { setFilterJobId(e.target.value); }}
-              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 min-w-[120px]"
-            >
-              <option value="">{t('product.talent.filterAllJobs', 'All Jobs')}</option>
-              {jobs.map((j) => (
-                <option key={j.id} value={j.id}>{j.title}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status dropdown */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-700 font-medium whitespace-nowrap">{t('product.talent.filterStatusLabel', 'Status')}:</span>
-            <select
-              value={filterStatus}
-              onChange={(e) => { setFilterStatus(e.target.value); }}
-              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 min-w-[120px]"
-            >
-              <option value="">{t('product.talent.filterAllStatus', 'All Status')}</option>
-              <option value="matched">{t('product.talent.filterMatched', 'Matched')}</option>
-              <option value="shortlisted">{t('product.talent.filterShortlisted', 'Shortlisted')}</option>
-              <option value="invited">{t('product.talent.filterInvited', 'Invited')}</option>
-              <option value="rejected">{t('product.talent.filterRejected', 'Rejected')}</option>
-            </select>
-          </div>
-
-          {/* More Filters toggle */}
-          <button
-            onClick={() => setShowMoreFilters(!showMoreFilters)}
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 whitespace-nowrap"
-          >
-            {t('product.talent.filterMore', 'More Filters')}
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Resume Upload Modal */}
       <ResumeUploadModal

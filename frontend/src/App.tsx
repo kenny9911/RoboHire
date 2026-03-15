@@ -26,6 +26,8 @@ const Blog = lazy(() => import('./pages/Blog'));
 const ProductLayout = lazy(() => import('./layouts/ProductLayout'));
 const ProductDashboard = lazy(() => import('./pages/product/ProductDashboard'));
 const ProductHiringRequests = lazy(() => import('./pages/product/HiringRequests'));
+const ProductAgents = lazy(() => import('./pages/product/Agents'));
+const ProductAgentDetail = lazy(() => import('./pages/product/AgentDetail'));
 const ProductTalentHub = lazy(() => import('./pages/product/TalentHub'));
 const ProductJobs = lazy(() => import('./pages/product/Jobs'));
 const ProductJobDetail = lazy(() => import('./pages/product/JobDetail'));
@@ -117,6 +119,8 @@ function App() {
               <Route index element={<ProductDashboard />} />
               <Route path="hiring" element={<ProductHiringRequests />} />
               <Route path="hiring/:id" element={<Dashboard />} />
+              <Route path="agents" element={<ProductAgents />} />
+              <Route path="agents/:id" element={<ProductAgentDetail />} />
               <Route path="talent" element={<ProductTalentHub />} />
               <Route path="talent/:id" element={<ResumeDetail />} />
               <Route path="jobs" element={<ProductJobs />} />

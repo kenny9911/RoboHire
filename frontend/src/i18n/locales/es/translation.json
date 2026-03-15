@@ -113,6 +113,7 @@
       "product": "Producto",
       "productMenu": {
         "requirements": "Análisis de requisitos",
+        "agents": "Agentes",
         "resumeScreening": "Filtrado de currículos",
         "smartMatching": "Emparejamiento inteligente",
         "aiInterview": "Entrevista IA",
@@ -666,21 +667,39 @@
         "description": "Diseñar y dirigir la arquitectura técnica de sistemas escalables y confiables",
         "experienceLevel": "8+ años",
         "requirements": "Buscamos un Arquitecto de Software/Sistemas para diseñar y supervisar la arquitectura técnica de nuestra plataforma.\n\nResponsabilidades:\n- Definir arquitectura de sistemas, stack tecnológico y patrones de diseño\n- Liderar revisiones técnicas y asegurar consistencia arquitectónica\n- Evaluar compromisos en escalabilidad, confiabilidad y rendimiento\n- Mentorizar ingenieros senior en mejores prácticas de arquitectura\n- Colaborar con liderazgo de producto e ingeniería en la hoja de ruta técnica\n\nRequisitos:\n- 8+ años en ingeniería de software, 3+ años en roles de arquitecto/líder\n- Experiencia profunda en sistemas distribuidos, microservicios y arquitectura cloud-native\n- Dominio de al menos dos de: Java, Go, Python, TypeScript\n- Experiencia con AWS/GCP/Azure a escala\n- Excelentes habilidades de comunicación\n\nDeseables:\n- Experiencia con arquitectura dirigida por eventos (Kafka, RabbitMQ)\n- Familiaridad con infraestructura como código (Terraform, Pulumi)\n- Experiencia en plataformas de alto tráfico o SaaS",
-        "skills": ["Sistemas Distribuidos", "Microservicios", "Arquitectura Cloud", "Diseño de Sistemas", "Liderazgo Técnico"]
+        "skills": [
+          "Sistemas Distribuidos",
+          "Microservicios",
+          "Arquitectura Cloud",
+          "Diseño de Sistemas",
+          "Liderazgo Técnico"
+        ]
       },
       "quantumAlgorithmEngineer": {
         "title": "Ingeniero de Algoritmos Cuánticos",
         "description": "Investigar e implementar algoritmos cuánticos para problemas computacionales reales",
         "experienceLevel": "3+ años",
         "requirements": "Buscamos un Ingeniero de Algoritmos Cuánticos para diseñar e implementar algoritmos cuánticos para aplicaciones de optimización, simulación y aprendizaje automático.\n\nResponsabilidades:\n- Investigar y desarrollar algoritmos cuánticos (VQE, QAOA, ML cuántico)\n- Implementar y evaluar algoritmos en simuladores y hardware cuántico real\n- Analizar complejidad computacional y escenarios de ventaja cuántica\n- Colaborar con expertos de dominio para identificar problemas aplicables\n- Publicar hallazgos y contribuir a la comunidad de computación cuántica\n\nRequisitos:\n- Máster/Doctorado en Física, Informática, Matemáticas o campo relacionado\n- 3+ años de experiencia en investigación o ingeniería cuántica\n- Dominio de Qiskit, Cirq o PennyLane\n- Sólida base en álgebra lineal, probabilidad y mecánica cuántica\n- Experiencia con Python y computación científica (NumPy, SciPy)\n\nDeseables:\n- Publicaciones en revistas o conferencias de computación cuántica\n- Experiencia con corrección de errores cuánticos\n- Conocimiento de hardware cuántico (superconductor, iones atrapados, fotónico)",
-        "skills": ["Computación Cuántica", "Qiskit/Cirq", "Álgebra Lineal", "Python", "Diseño de Algoritmos"]
+        "skills": [
+          "Computación Cuántica",
+          "Qiskit/Cirq",
+          "Álgebra Lineal",
+          "Python",
+          "Diseño de Algoritmos"
+        ]
       },
       "chipDesignEngineer": {
         "title": "Ingeniero de Diseño de Chips (SoC/IC)",
         "description": "Diseñar y verificar chips SoC/IC de próxima generación desde RTL hasta tape-out",
         "experienceLevel": "5+ años",
         "requirements": "Buscamos un Ingeniero de Diseño de Chips para contribuir al diseño, verificación y tape-out de productos SoC/IC de próxima generación.\n\nResponsabilidades:\n- Diseñar e implementar RTL para bloques lógicos digitales y subsistemas SoC\n- Realizar síntesis lógica, análisis de timing y diseño para test (DFT)\n- Desarrollar y ejecutar bancos de prueba de verificación (UVM/SystemVerilog)\n- Colaborar con equipos de diseño físico, firmware y validación\n- Participar en exploración de arquitectura y definición de microarquitectura\n\nRequisitos:\n- Grado/Máster en Ingeniería Eléctrica, Informática o campo relacionado\n- 5+ años de experiencia en diseño SoC/IC\n- Dominio de Verilog/SystemVerilog y diseño RTL\n- Experiencia con herramientas EDA (Synopsys, Cadence, Mentor)\n- Sólido conocimiento de diseño digital, cierre de timing y diseño de bajo consumo\n\nDeseables:\n- Experiencia con diseño de procesadores RISC-V o ARM\n- Conocimiento de interfaces de alta velocidad (PCIe, DDR, USB)\n- Familiaridad con prototipado FPGA y emulación\n- Experiencia de tape-out en nodos de proceso avanzados (7nm, 5nm, 3nm)",
-        "skills": ["Diseño RTL", "SystemVerilog", "Arquitectura SoC", "Herramientas EDA", "Verificación"]
+        "skills": [
+          "Diseño RTL",
+          "SystemVerilog",
+          "Arquitectura SoC",
+          "Herramientas EDA",
+          "Verificación"
+        ]
       },
       "productManager": {
         "title": "Product Manager",
@@ -884,6 +903,13 @@
       "goToDashboard": "Ir al Dashboard",
       "viewFullReport": "Ver Informe Completo",
       "viewReport": "Ver informe de contratación"
+    },
+    "searchExamples": {
+      "fullstack": "Ingenieros Full-stack con 5+ años de experiencia en startups Serie B, dominio de Python y Node.js",
+      "marketing": "Director de Marketing en Europa, con experiencia en grandes empresas",
+      "scientist": "Científico de Datos Senior, 8+ años de experiencia, experto en NLP y sistemas de recomendación",
+      "consultant": "Consultor de Gestión con 2+ años en firmas de consultoría top, MBA preferible",
+      "sales": "Gerente de Ventas Empresariales con experiencia en SaaS/ERP, historial probado en cierres de $1M+"
     }
   },
   "dashboard": {
@@ -898,7 +924,8 @@
       "resumes": "Currículos",
       "integrations": "Integraciones",
       "docs": "Documentación",
-      "developers": "Desarrolladores"
+      "developers": "Desarrolladores",
+      "agents": "Agentes"
     },
     "welcome": "Bienvenido de nuevo",
     "user": "ahí",
@@ -1618,7 +1645,9 @@
       "evaluations": "Evaluaciones",
       "candidateDetail": "Detalle del Candidato",
       "jobDetail": "Detalle del Empleo",
-      "interviewRoom": "Sala de Entrevista"
+      "interviewRoom": "Sala de Entrevista",
+      "agents": "Agentes",
+      "agentDetail": "Detalle del Agente"
     },
     "dashboard": {
       "welcome": "Bienvenido de nuevo",
@@ -1702,7 +1731,7 @@
       "empty": "Sin entrevistas aún",
       "emptyDesc": "Programa una entrevista IA para comenzar.",
       "evaluate": "Ejecutar Evaluación IA",
-      "recording": "Grabación",
+      "recording": "Grabando",
       "viewRecording": "Ver Grabación",
       "arrangeInterview": "Programar Entrevista",
       "step": "Paso",
@@ -1750,7 +1779,6 @@
       "speakNaturally": "Habla con claridad y naturalidad",
       "joinButton": "Unirse a la Entrevista",
       "inProgress": "Entrevista en Curso",
-      "recording": "Grabando",
       "aiInterviewer": "Entrevistador IA",
       "connected": "Conectado",
       "connecting": "Conectando...",
@@ -2096,7 +2124,9 @@
       "filterShortlisted": "Preseleccionado",
       "filterInvited": "Invitado",
       "filterRejected": "Rechazado",
-      "filterMore": "Más filtros"
+      "filterMore": "Más filtros",
+      "addFilter": "Añadir Filtro",
+      "applyFilters": "Aplicar Filtros"
     },
     "matching": {
       "title": "Coincidencia Inteligente",
@@ -2207,7 +2237,26 @@
         "jobType": "Tipo de Puesto",
         "companyType": "Tipo de Empresa"
       },
-      "prefNoPreferences": "Sin preferencias del candidato"
+      "prefNoPreferences": "Sin preferencias del candidato",
+      "aiMatch": "Coincidencia IA",
+      "history": "Historial",
+      "matchingFor": "Coincidencia para",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "startMatchingModal": "Iniciar coincidencia ({{jobs}} empleos, {{resumes}} currículums)",
+      "selectCandidates": "Seleccionar candidatos",
+      "aiMatchDesc": "Seleccione empleos y candidatos, luego configure los parámetros de coincidencia.",
+      "sessionNamePlaceholder": "Nombre de sesión (opcional)",
+      "minScore": "Puntuación mínima",
+      "maxJobMatchesPerResume": "Máx. empleos/currículum",
+      "maxResumeMatchesPerJob": "Máx. currículums/empleo",
+      "getStarted": "Comienza con AI Matching",
+      "getStartedDesc": "Crea un empleo y sube currículums de candidatos para ejecutar tu primer matching con IA.",
+      "readyToMatch": "Listo para emparejar",
+      "readyToMatchDesc": "Selecciona empleos y candidatos para iniciar una nueva sesión de matching con IA.",
+      "quickPick": "Selección rápida de rol",
+      "recentMatches": "Coincidencias recientes",
+      "viewAll": "Ver todo"
     },
     "evaluations": {
       "title": "Evaluaciones",
@@ -2871,6 +2920,10 @@
     "logs": "Registros",
     "syncHistory": "Historial de sincronización",
     "noLogs": "Sin actividad de sincronización",
+    "atsTitle": "Sistemas de Seguimiento de Candidatos (ATS)",
+    "atsSubtitle": "Las integraciones ATS le ayudan a exportar candidatos desde la plataforma a su ATS.",
+    "connectedLabel": "Conectado",
+    "activate": "Activar",
     "greenhouse": {
       "description": "ATS empresarial con pipelines de contratación estructurados"
     },
@@ -2892,78 +2945,6 @@
     "confirmDeleteMessage": "¿Está seguro de que desea eliminar este elemento? Esta acción no se puede deshacer.",
     "cancel": "Cancelar",
     "delete": "Eliminar"
-  },
-  "admin": {
-    "tabs": {
-      "llmUsage": "Uso de LLM",
-      "logs": "Registros"
-    },
-    "llmUsage": {
-      "title": "Uso de LLM",
-      "subtitle": "Vista detallada de todas las llamadas a la API de LLM, costos y uso de tokens.",
-      "applyFilters": "Aplicar filtros",
-      "from": "Desde",
-      "to": "Hasta",
-      "provider": "Proveedor",
-      "model": "Modelo",
-      "module": "Módulo",
-      "user": "Usuario",
-      "loading": "Cargando datos de uso de LLM...",
-      "totalCalls": "Total de llamadas LLM",
-      "totalTokens": "Total de tokens",
-      "totalCost": "Costo total",
-      "avgCostPerCall": "Costo prom./llamada",
-      "avgLatency": "Latencia promedio",
-      "costTrend": "Tendencia de costos",
-      "tokenTrend": "Tendencia de uso de tokens",
-      "costByModel": "Costo por modelo",
-      "costByProvider": "Costo por proveedor",
-      "inputTokens": "Entrada",
-      "outputTokens": "Salida",
-      "callLog": "Registro de llamadas LLM",
-      "time": "Hora",
-      "cost": "Costo",
-      "duration": "Duración",
-      "noData": "No se encontraron llamadas LLM para los filtros seleccionados.",
-      "showing": "Mostrando",
-      "of": "de",
-      "prev": "Anterior",
-      "next": "Siguiente"
-    },
-    "logs": {
-      "title": "Registros de solicitudes",
-      "subtitle": "Monitorea todas las solicitudes de API, diagnostica problemas y rastrea el rendimiento.",
-      "applyFilters": "Aplicar filtros",
-      "from": "Desde",
-      "to": "Hasta",
-      "module": "Módulo",
-      "endpoint": "Endpoint",
-      "status": "Estado",
-      "allStatuses": "Todos",
-      "user": "Usuario",
-      "loading": "Cargando registros de solicitudes...",
-      "totalRequests": "Total de solicitudes",
-      "withLLM": "Con LLM (esta página)",
-      "pageCost": "Costo de la página",
-      "pageErrors": "Errores de la página",
-      "time": "Hora",
-      "apiName": "API",
-      "method": "Método",
-      "duration": "Duración",
-      "llmCalls": "LLM",
-      "tokens": "Tokens",
-      "cost": "Costo",
-      "noData": "No se encontraron registros para los filtros seleccionados.",
-      "llmCallDetails": "Detalles de llamadas LLM",
-      "provider": "Proveedor",
-      "model": "Modelo",
-      "inputTokens": "Entrada",
-      "outputTokens": "Salida",
-      "showing": "Mostrando",
-      "of": "de",
-      "prev": "Anterior",
-      "next": "Siguiente"
-    }
   },
   "admin": {
     "activity": {
@@ -2995,5 +2976,90 @@
       "prev": "Anterior",
       "next": "Siguiente"
     }
+  },
+  "agents": {
+    "title": "Agentes",
+    "subtitle": "Agentes de IA que buscan y contactan candidatos de forma autónoma.",
+    "create": "Crear nuevo agente",
+    "myAgents": "Mis Agentes",
+    "searchPlaceholder": "Buscar agente, propietario o colaborador",
+    "filterStatus": "Estado",
+    "filterOwner": "Propietario",
+    "awaitingApproval": "Pendiente de aprobación",
+    "overview": "Resumen",
+    "allTime": "Todo el tiempo",
+    "allUsers": "Todos los usuarios",
+    "leads": "Leads",
+    "noDataYet": "Sin datos aún",
+    "leadsByAgent": "Leads por Agente",
+    "leadsByAgentDesc": "Top {{count}} agentes por leads pendientes de aprobación. Para administradores, esto incluye todos los agentes de la organización.",
+    "createTitle": "Crear Nuevo Agente",
+    "agentName": "Nombre del Agente",
+    "namePlaceholder": "ej. Buscador Senior Full-stack",
+    "searchCriteria": "Criterios de Búsqueda",
+    "criteriaPlaceholder": "Describe tu candidato ideal en detalle...",
+    "linkedJob": "Puesto Vinculado (opcional)",
+    "noJob": "Sin puesto vinculado",
+    "creating": "Creando...",
+    "createBtn": "Crear Agente",
+    "empty": "Sin agentes aún",
+    "emptyDesc": "Crea tu primer agente de IA para empezar a encontrar candidatos automáticamente.",
+    "sourced": "encontrados",
+    "approved": "aprobados",
+    "contacted": "contactados",
+    "created": "Creado",
+    "viewDetails": "Ver Detalles",
+    "edit": "Editar",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "contact": "Contactar",
+    "viewResume": "Ver CV",
+    "viewProfile": "Perfil",
+    "noCandidates": "Sin candidatos en esta categoría. El agente encontrará candidatos automáticamente.",
+    "status": {
+      "active": "Activo",
+      "paused": "Pausado",
+      "completed": "Completado",
+      "configuring": "Configurando",
+      "failed": "Fallido",
+      "closed": "Cerrado",
+      "out_of_leads": "Sin leads disponibles"
+    },
+    "tab": {
+      "pending": "Pendiente",
+      "approved": "Aprobados",
+      "rejected": "Rechazados",
+      "contacted": "Contactados",
+      "all": "Todos"
+    },
+    "stat": {
+      "sourced": "Encontrados",
+      "approved": "Aprobados",
+      "rejected": "Rechazados",
+      "contacted": "Contactados"
+    },
+    "candidateStatus": {
+      "contacted": "Contactado",
+      "rejected": "Rechazado"
+    },
+    "pending": "Pendiente",
+    "disapproved": "Desaprobado",
+    "cardView": "Vista de tarjetas",
+    "listView": "Vista de lista",
+    "colName": "Nombre",
+    "colPending": "Pendiente",
+    "colDate": "Creado",
+    "editAgent": "Editar Agente",
+    "agentTitle": "Título del Agente",
+    "required": "obligatorio",
+    "accessLevel": "Nivel de Acceso",
+    "accessShared": "Compartido (visible para todos en tu organización)",
+    "accessPrivate": "Privado (solo visible para ti, tus colaboradores y administradores)",
+    "collaborators": "Colaboradores",
+    "collaboratorsDesc": "Estos miembros del equipo serán asignados a este proyecto contigo",
+    "noCollaborators": "Sin colaboradores seleccionados",
+    "saveChanges": "Guardar Cambios"
   }
 }
