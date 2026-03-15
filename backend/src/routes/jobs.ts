@@ -480,7 +480,7 @@ router.post('/:id/generate-content', requireAuth, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
 
-    const { action = 'generate_section', section, language } = req.body;
+    const { action = 'generate_section', section, language, instructions } = req.body;
 
     const result = await jobContentAgent.generateContent({
       action,
@@ -498,6 +498,7 @@ router.post('/:id/generate-content', requireAuth, async (req, res) => {
         evaluationRules: job.evaluationRules || '',
       },
       language,
+      instructions: instructions || undefined,
     }, requestId);
 
     // Update job with generated sections

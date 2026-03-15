@@ -1,5 +1,14 @@
 import { useTranslation } from 'react-i18next';
 
+// Define the enriched data structure that the card will now receive
+interface EnrichedResumeJobFit {
+  fitScore: number | null;
+  fitGrade: string | null;
+  hiringRequest: { title: string };
+  hasRedFlags?: boolean;
+  topStrengths?: string[];
+}
+
 interface ResumeCardProps {
   resume: {
     id: string;
@@ -10,11 +19,8 @@ interface ResumeCardProps {
     tags: string[];
     createdAt: string;
     parsedData?: Record<string, unknown> | null;
-    resumeJobFits?: Array<{
-      fitScore: number | null;
-      fitGrade: string | null;
-      hiringRequest: { title: string };
-    }>;
+    // Use the enriched job fit interface
+    resumeJobFits?: EnrichedResumeJobFit[];
   };
   onClick: () => void;
   onRegenerateInsights?: () => void;
@@ -35,7 +41,7 @@ export default function ResumeCard({
 }: ResumeCardProps) {
   const { t } = useTranslation();
 
-  // Extract top skills from parsedData
+  // Extract top skills from parsedData for general display
   const skills: string[] = [];
   if (resume.parsedData) {
     const pd = resume.parsedData as Record<string, unknown>;
@@ -56,6 +62,9 @@ export default function ResumeCard({
 
   const topFit = resume.resumeJobFits?.[0];
 
+  // Condition for the new "Top Candidate" highlight
+  const isTopCandidate = topFit && topFit.fitScore && topFit.fitScore > 85 && !topFit.hasRedFlags;
+
   const fitColor = (score: number | null | undefined) => {
     if (!score) return 'bg-slate-100 text-slate-500';
     if (score >= 80) return 'bg-emerald-100 text-emerald-700';
@@ -66,8 +75,21 @@ export default function ResumeCard({
   return (
     <div
       onClick={onClick}
-      className="landing-gradient-stroke bg-white rounded-2xl p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300 cursor-pointer group"
+      className={`relative landing-gradient-stroke bg-white rounded-2xl p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300 cursor-pointer group ${
+        isTopCandidate ? 'border-2 border-emerald-400 shadow-emerald-200/50' : ''
+      }`}
     >
+      {/* Top Candidate Badge */}
+      {isTopCandidate && (
+        <div title="Top Candidate: Score >85% and no red flags" className="absolute top-0 right-0 mt-3 mr-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 text-white shadow-lg">
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="min-w-0 flex-1">
@@ -93,7 +115,7 @@ export default function ResumeCard({
       </div>
 
       {/* Skills */}
-      {displaySkills.length > 0 && (
+      {displaySkills.length > 0 && !isTopCandidate && (
         <div className="flex flex-wrap gap-1 mb-3">
           {displaySkills.map((skill, i) => (
             <span key={i} className="inline-block bg-blue-50 text-blue-600 text-[11px] px-2 py-0.5 rounded-full">
@@ -107,6 +129,15 @@ export default function ResumeCard({
           )}
         </div>
       )}
+      
+      {/* Top Candidate Summary */}
+      {isTopCandidate && topFit?.topStrengths && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mb-3">
+            <p className="text-xs font-semibold text-emerald-800 mb-1">Highlight</p>
+            <p className="text-xs text-emerald-700">{topFit.topStrengths.join(', ')}.</p>
+        </div>
+      )}
+
 
       {/* Footer */}
       <div className="flex items-center justify-between text-[11px] text-slate-500">

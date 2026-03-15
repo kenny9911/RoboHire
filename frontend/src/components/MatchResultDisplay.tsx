@@ -247,6 +247,55 @@ interface Props {
   requestId?: string;
 }
 
+const RadialProgressBar = ({ score, size = 100 }: { score: number; size?: number; }) => {
+  const getScoreColor = (s: number) => {
+    if (s >= 85) return '#10b981'; // emerald-500
+    if (s >= 70) return '#84cc16'; // lime-500
+    if (s >= 55) return '#facc15'; // yellow-400
+    if (s >= 40) return '#f97316'; // orange-500
+    return '#ef4444'; // red-500
+  };
+
+  const color = getScoreColor(score);
+  const strokeWidth = size / 12;
+  const innerRadius = (size / 2) - strokeWidth;
+  const circumference = innerRadius * 2 * Math.PI;
+  const offset = circumference - (score / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <circle
+          className="text-gray-200"
+          stroke="currentColor"
+          fill="transparent"
+          strokeWidth={strokeWidth}
+          r={innerRadius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+        <circle
+          stroke={color}
+          fill="transparent"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          r={innerRadius}
+          cx={size / 2}
+          cy={size / 2}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center justify-center">
+        <span className="text-3xl font-bold text-gray-800">{score}</span>
+        <span className="text-xs text-gray-500">Fit</span>
+      </div>
+    </div>
+  );
+};
+
+
 // Helper components
 const ScoreCircle = ({ score, size = 'large', label }: { score: number; size?: 'large' | 'medium' | 'small'; label?: string }) => {
   const getScoreColor = (s: number) => {
@@ -345,32 +394,56 @@ const SkillTag = ({ skill, matched = false }: { skill: string; matched?: boolean
   </span>
 );
 
-export default function MatchResultDisplay({ data, requestId }: Props) {
-  const gradeColors = useMemo(() => {
-    const grade = data.overallMatchScore.grade;
-    if (grade.startsWith('A')) return { bg: 'bg-emerald-500', text: 'text-emerald-500' };
-    if (grade.startsWith('B')) return { bg: 'bg-green-500', text: 'text-green-500' };
-    if (grade.startsWith('C')) return { bg: 'bg-yellow-500', text: 'text-yellow-500' };
-    if (grade.startsWith('D')) return { bg: 'bg-orange-500', text: 'text-orange-500' };
-    return { bg: 'bg-red-500', text: 'text-red-500' };
-  }, [data.overallMatchScore.grade]);
+export default function MatchResultDisplay({ data, requestId: _requestId }: Props) {
+  const summaryData = useMemo(() => {
+    const strengths: { text: string }[] = [];
+    const gaps: { text: string; severity: string }[] = [];
 
-  const verdictColors = useMemo(() => {
-    const verdict = data.overallFit.verdict.toLowerCase();
-    if (verdict.includes('strong match')) return 'text-emerald-600 bg-emerald-50';
-    if (verdict.includes('good match')) return 'text-green-600 bg-green-50';
-    if (verdict.includes('moderate')) return 'text-yellow-600 bg-yellow-50';
-    if (verdict.includes('weak')) return 'text-orange-600 bg-orange-50';
-    return 'text-red-600 bg-red-50';
-  }, [data.overallFit.verdict]);
+    // Prioritize Gaps
+    if (data.hardRequirementGaps) {
+      for (const g of data.hardRequirementGaps) {
+        if (gaps.length >= 3) break;
+        gaps.push({ text: `Missing: ${g.requirement}`, severity: g.severity });
+      }
+    }
+    if (gaps.length < 3 && data.mustHaveAnalysis?.disqualified) {
+      for (const reason of data.mustHaveAnalysis.disqualificationReasons) {
+        if (gaps.length >= 3) break;
+        if (!gaps.some(g => g.text.includes(reason))) {
+            gaps.push({ text: reason, severity: 'dealbreaker' });
+        }
+      }
+    }
+    if (gaps.length < 3 && data.mustHaveAnalysis?.candidateEvaluation.missingSkills) {
+      for (const s of data.mustHaveAnalysis.candidateEvaluation.missingSkills) {
+        if (gaps.length >= 3) break;
+        if (!gaps.some(g => g.text.includes(s.skill))) {
+            gaps.push({ text: `Missing Skill: ${s.skill}`, severity: s.severity.toLowerCase() });
+        }
+      }
+    }
 
-  const recommendationColors = useMemo(() => {
-    const rec = data.overallFit.hiringRecommendation.toLowerCase();
-    if (rec.includes('strongly recommend')) return { bg: 'bg-emerald-500', border: 'border-emerald-500' };
-    if (rec.includes('recommend')) return { bg: 'bg-green-500', border: 'border-green-500' };
-    if (rec.includes('consider')) return { bg: 'bg-yellow-500', border: 'border-yellow-500' };
-    return { bg: 'bg-red-500', border: 'border-red-500' };
-  }, [data.overallFit.hiringRecommendation]);
+    // Prioritize Strengths
+    if (data.mustHaveAnalysis?.candidateEvaluation.matchedSkills) {
+        for (const s of data.mustHaveAnalysis.candidateEvaluation.matchedSkills) {
+            if (strengths.length >= 3) break;
+            strengths.push({ text: `Strong in ${s.skill}` });
+        }
+    }
+    if (strengths.length < 3 && data.experienceValidation?.strengths) {
+        for (const s of data.experienceValidation.strengths) {
+            if (strengths.length >= 3) break;
+            if (!strengths.some(st => st.text.includes(s.area))) {
+                strengths.push({ text: s.area });
+            }
+        }
+    }
+    if (strengths.length < 3 && data.experienceMatch.yearsGap && parseFloat(data.experienceMatch.yearsGap) > 0) {
+        strengths.push({ text: `Exceeds experience by ${data.experienceMatch.yearsGap} years`});
+    }
+
+    return { strengths: strengths.slice(0, 3), gaps: gaps.slice(0, 3) };
+  }, [data]);
 
   const niceToHaveExtracted = data.niceToHaveAnalysis?.extractedNiceToHaves ?? {
     skills: [],
@@ -378,71 +451,79 @@ export default function MatchResultDisplay({ data, requestId }: Props) {
     qualifications: [],
   };
 
+  const getSeverityIcon = (severity: string) => {
+    const s = severity.toLowerCase();
+    if (s === 'dealbreaker') return '🚫';
+    if (s === 'critical') return '❌';
+    if (s === 'significant' || s === 'high') return '⚠️';
+    return '🔸';
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* Hero Section - Overall Score */}
-      <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 px-8 py-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            {/* Left - Candidate Info */}
-            <div className="text-white text-center lg:text-left">
-              <p className="text-indigo-200 text-sm uppercase tracking-wider mb-1">Candidate</p>
-              <h1 className="text-3xl font-bold mb-2">{data.resumeAnalysis.candidateName}</h1>
-              <p className="text-indigo-100">{data.resumeAnalysis.currentRole}</p>
-              <p className="text-indigo-200 text-sm mt-1">{data.resumeAnalysis.totalYearsExperience} experience</p>
+      {/* New "Recruiter's At-a-Glance" Header */}
+      <Card>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Candidate Info */}
+            <div className="md:col-span-3">
+              <h1 className="text-2xl font-bold text-gray-800">{data.resumeAnalysis.candidateName}</h1>
+              <p className="text-gray-600">{data.resumeAnalysis.currentRole}</p>
+              <p className="text-sm text-gray-500 mt-1">{data.jdAnalysis.jobTitle}</p>
+            </div>
+            
+            {/* Score */}
+            <div className="md:col-span-2 flex justify-center">
+                <RadialProgressBar score={data.overallMatchScore.score} />
             </div>
 
-            {/* Center - Score */}
-            <div className="flex flex-col items-center">
-              <div className="relative">
-                <div className="w-36 h-36 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center ring-4 ring-white/30">
-                  <div className="text-center">
-                    <div className="text-5xl font-bold text-white">{data.overallMatchScore.score}</div>
-                    <div className="text-indigo-200 text-sm">Match Score</div>
-                  </div>
+            {/* Strengths & Gaps */}
+            <div className="md:col-span-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-sm text-gray-600 mb-2">Top Strengths</h4>
+                  <ul className="space-y-1">
+                    {summaryData.strengths.length > 0 ? summaryData.strengths.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                        <span className="text-emerald-500 mt-1">✅</span>
+                        <span>{s.text}</span>
+                      </li>
+                    )) : <li className="text-sm text-gray-500">None highlighted</li>}
+                  </ul>
                 </div>
-                <div className={`absolute -top-2 -right-2 w-12 h-12 rounded-full ${gradeColors.bg} flex items-center justify-center shadow-lg`}>
-                  <span className="text-white font-bold text-lg">{data.overallMatchScore.grade}</span>
+                <div>
+                  <h4 className="font-semibold text-sm text-gray-600 mb-2">Critical Gaps</h4>
+                  <ul className="space-y-1">
+                    {summaryData.gaps.length > 0 ? summaryData.gaps.map((g, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                        <span className="mt-1">{getSeverityIcon(g.severity)}</span>
+                        <span>{g.text}</span>
+                      </li>
+                    )) : <li className="text-sm text-gray-500">No critical gaps found</li>}
+                  </ul>
                 </div>
               </div>
-              <div className={`mt-4 px-4 py-2 rounded-full ${verdictColors}`}>
-                <span className="font-semibold">{data.overallFit.verdict}</span>
-              </div>
             </div>
 
-            {/* Right - Job Info */}
-            <div className="text-white text-center lg:text-right">
-              <p className="text-indigo-200 text-sm uppercase tracking-wider mb-1">Position</p>
-              <h2 className="text-2xl font-bold mb-2">{data.jdAnalysis.jobTitle}</h2>
-              <p className="text-indigo-100">{data.jdAnalysis.seniorityLevel} Level</p>
-              <p className="text-indigo-200 text-sm mt-1">{data.jdAnalysis.requiredYearsExperience} required</p>
+            {/* Actions */}
+            <div className="md:col-span-3 flex flex-col items-stretch gap-2">
+                <button className="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                    Add to Shortlist
+                </button>
+                <button className="w-full bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+                    Reject
+                </button>
+                 <a href="#full-report" className="w-full text-center text-sm text-indigo-600 hover:underline mt-2">
+                    View Full Report ↓
+                </a>
             </div>
           </div>
-        </div>
-
-        {/* Recommendation Banner */}
-        <div className={`px-8 py-4 ${recommendationColors.bg} text-white flex items-center justify-between`}>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">
-              {data.overallFit.hiringRecommendation.toLowerCase().includes('strongly') ? '🌟' : 
-               data.overallFit.hiringRecommendation.toLowerCase().includes('recommend') ? '✓' :
-               data.overallFit.hiringRecommendation.toLowerCase().includes('consider') ? '🤔' : '✗'}
-            </span>
-            <div>
-              <p className="font-bold text-lg">{data.overallFit.hiringRecommendation}</p>
-              <p className="text-white/80 text-sm">Confidence: {data.overallMatchScore.confidence}</p>
-            </div>
-          </div>
-          {requestId && (
-            <div className="text-white/60 text-xs">
-              Request ID: {requestId}
-            </div>
-          )}
         </div>
       </Card>
 
+
       {/* Score Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div id="full-report" className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="text-center">
             <ScoreCircle score={data.skillMatchScore.score} size="medium" />
@@ -1644,4 +1725,3 @@ const ProbingSubAreaCard = ({ subArea }: { subArea: ProbingSubArea }) => {
     </div>
   );
 };
-

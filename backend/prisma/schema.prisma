@@ -479,9 +479,11 @@ model JobMatch {
   score       Int?
   grade       String?   // A+, A, B+, B, C, D, F
   matchData   Json?     // Full ResumeMatchAgent output
-  status      String    @default("new") // new, reviewed, shortlisted, rejected, invited
+  status      String    @default("new") // new, reviewed, shortlisted, applied, rejected, invited
   reviewedAt  DateTime?
   reviewedBy  String?
+  appliedAt   DateTime?
+  appliedBy   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

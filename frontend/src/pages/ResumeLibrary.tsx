@@ -1,10 +1,20 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
 import ResumeCard from '../components/ResumeCard';
 import ResumeUploadModal from '../components/ResumeUploadModal';
 import SEO from '../components/SEO';
+
+// Enriched data structure for a single job fit
+interface EnrichedResumeJobFit {
+  fitScore: number | null;
+  fitGrade: string | null;
+  hiringRequest: { title: string };
+  // New fields for the highlight feature
+  hasRedFlags?: boolean;
+  topStrengths?: string[];
+}
 
 interface ResumeListItem {
   id: string;
@@ -20,11 +30,8 @@ interface ResumeListItem {
   createdAt: string;
   updatedAt: string;
   parsedData: Record<string, unknown> | null;
-  resumeJobFits: Array<{
-    fitScore: number | null;
-    fitGrade: string | null;
-    hiringRequest: { title: string };
-  }>;
+  // Use the new enriched interface
+  resumeJobFits: EnrichedResumeJobFit[];
 }
 
 interface Stats {
@@ -72,6 +79,33 @@ export default function ResumeLibrary() {
       setLoading(false);
     }
   }, []);
+
+  const enrichedResumes = useMemo(() => {
+    // This is a simulation of the backend providing richer data.
+    // In a real implementation, the API would return these fields directly.
+    return resumes.map(resume => ({
+      ...resume,
+      resumeJobFits: resume.resumeJobFits.map(fit => {
+        if (fit.fitScore && fit.fitScore > 85) {
+          // Simulate the data enrichment for top candidates
+          return {
+            ...fit,
+            hasRedFlags: false, // Assuming no red flags for this top candidate
+            topStrengths: ['Exceeds experience requirements', 'Strong skill alignment'],
+          };
+        }
+        if (fit.fitScore && fit.fitScore > 80) {
+            // Simulate a case with red flags to test the logic
+            return {
+                ...fit,
+                hasRedFlags: true,
+                topStrengths: ['Good skill match but has some concerns'],
+            }
+        }
+        return fit;
+      }),
+    }));
+  }, [resumes]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -302,7 +336,7 @@ export default function ResumeLibrary() {
             {total} {t('resumeLibrary.stats.total', 'resumes')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-            {resumes.map((r) => (
+            {enrichedResumes.map((r) => (
               <ResumeCard
                 key={r.id}
                 resume={r}

@@ -789,7 +789,7 @@ router.get('/results/:jobId', requireAuth, async (req, res) => {
     res.json({
       success: true,
       data: matches,
-      meta: { total: matches.length, jobId, jobTitle: job.title },
+      meta: { total: matches.length, jobId, jobTitle: job.title, passingScore: job.passingScore ?? 60 },
     });
   } catch (err: any) {
     logger.error('MATCHING', 'Failed to get match results', { error: err.message });
@@ -807,7 +807,7 @@ router.patch('/results/:matchId', requireAuth, async (req, res) => {
     const { matchId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['new', 'reviewed', 'shortlisted', 'rejected', 'invited'];
+    const validStatuses = ['new', 'reviewed', 'shortlisted', 'rejected', 'invited', 'applied'];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({ success: false, error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
     }
@@ -815,11 +815,19 @@ router.patch('/results/:matchId', requireAuth, async (req, res) => {
     // Verify ownership through job
     const match = await prisma.jobMatch.findUnique({
       where: { id: matchId },
-      include: { job: { select: { userId: true } } },
+      include: { job: { select: { userId: true, passingScore: true } } },
     });
 
     if (!match || match.job.userId !== userId) {
       return res.status(404).json({ success: false, error: 'Match not found' });
+    }
+
+    // Validate score meets passing threshold for apply
+    if (status === 'applied') {
+      const threshold = match.job.passingScore ?? 60;
+      if ((match.score ?? 0) < threshold) {
+        return res.status(400).json({ success: false, error: 'Score does not meet passing threshold' });
+      }
     }
 
     const updated = await prisma.jobMatch.update({
@@ -828,6 +836,8 @@ router.patch('/results/:matchId', requireAuth, async (req, res) => {
         status,
         reviewedAt: status !== 'new' ? new Date() : null,
         reviewedBy: status !== 'new' ? userId : null,
+        appliedAt: status === 'applied' ? new Date() : (match.appliedAt || null),
+        appliedBy: status === 'applied' ? userId : (match.appliedBy || null),
       },
       include: {
         resume: {
@@ -840,6 +850,90 @@ router.patch('/results/:matchId', requireAuth, async (req, res) => {
   } catch (err: any) {
     logger.error('MATCHING', 'Failed to update match status', { error: err.message });
     res.status(500).json({ success: false, error: 'Failed to update match status' });
+  }
+});
+
+/**
+ * POST /api/v1/matching/results/:matchId/apply-invite
+ * Apply for the job and create an AI interview invitation in one step.
+ */
+router.post('/results/:matchId/apply-invite', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const { matchId } = req.params;
+    const { type = 'ai_video' } = req.body;
+
+    const match = await prisma.jobMatch.findUnique({
+      where: { id: matchId },
+      include: {
+        job: { select: { id: true, userId: true, title: true, description: true, passingScore: true } },
+        resume: { select: { id: true, name: true, email: true, resumeText: true } },
+      },
+    });
+
+    if (!match || match.job.userId !== userId) {
+      return res.status(404).json({ success: false, error: 'Match not found' });
+    }
+
+    const threshold = match.job.passingScore ?? 60;
+    if ((match.score ?? 0) < threshold) {
+      return res.status(400).json({ success: false, error: 'Score does not meet passing threshold' });
+    }
+
+    const crypto = await import('crypto');
+    const accessToken = crypto.randomBytes(32).toString('hex');
+
+    const [updatedMatch, interview] = await prisma.$transaction([
+      prisma.jobMatch.update({
+        where: { id: matchId },
+        data: {
+          status: 'applied',
+          reviewedAt: new Date(),
+          reviewedBy: userId,
+          appliedAt: new Date(),
+          appliedBy: userId,
+        },
+        include: {
+          resume: { select: { id: true, name: true, email: true, currentRole: true } },
+        },
+      }),
+      prisma.interview.create({
+        data: {
+          userId,
+          jobId: match.job.id,
+          resumeId: match.resume.id,
+          candidateName: match.resume.name,
+          candidateEmail: match.resume.email || null,
+          jobTitle: match.job.title,
+          jobDescription: match.job.description || null,
+          resumeText: match.resume.resumeText || null,
+          type,
+          status: 'scheduled',
+          accessToken,
+        },
+      }),
+    ]);
+
+    logger.info('MATCHING', `Applied and interview created for ${match.resume.name}`, {
+      matchId,
+      interviewId: interview.id,
+      jobTitle: match.job.title,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        match: updatedMatch,
+        interview: {
+          id: interview.id,
+          accessToken: interview.accessToken,
+          status: interview.status,
+        },
+      },
+    });
+  } catch (err: any) {
+    logger.error('MATCHING', 'Failed to apply and invite', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to apply and create interview' });
   }
 });
 

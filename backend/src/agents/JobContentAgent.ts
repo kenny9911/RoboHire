@@ -10,6 +10,7 @@ export interface JobContentInput {
   experienceLevel?: string;
   existingContent?: Record<string, string>;
   language?: string;
+  instructions?: string;
 }
 
 export interface JobContentOutput {
@@ -153,7 +154,10 @@ Only include the requested section(s). For generate_section/enhance: one section
     };
 
     if (input.action === 'enhance' && input.section && input.existingContent?.[input.section]) {
-      parts.push(`\nPlease enhance the "${input.section}" section. Make it more professional, add relevant keywords, and improve clarity while preserving the original intent.`);
+      const customInstructions = input.instructions
+        ? `\nUser Instructions: ${input.instructions}`
+        : '';
+      parts.push(`\nPlease enhance the "${input.section}" section. Make it more professional, add relevant keywords, and improve clarity while preserving the original intent.${customInstructions}`);
     } else if (input.action === 'generate_all') {
       parts.push(`\nPlease generate ALL sections (description, qualifications, hardRequirements, interviewRequirements, evaluationRules) based on the company and job title.`);
     } else if (input.action === 'observe_react') {
