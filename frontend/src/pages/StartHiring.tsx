@@ -1453,31 +1453,27 @@ export default function StartHiring() {
 
   // Initial landing view
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/35 to-cyan-50/45">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-20 top-[-10%] h-96 w-96 rounded-full bg-blue-200/30 blur-3xl" />
-        <div className="absolute -right-20 top-[20%] h-80 w-80 rounded-full bg-cyan-200/30 blur-3xl" />
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-white">
       <SEO title={t('seo.startHiring.title', 'AI Hiring Agent')} description={t('seo.startHiring.desc', 'Let AI handle the heavy lifting. Our hiring agent screens resumes, conducts interviews, and delivers evaluation reports automatically.')} url="https://robohire.io/start-hiring" keywords={t('seo.startHiring.keywords', 'AI hiring agent, automated recruitment, resume screening, AI interview, hiring automation')} />
       {/* Header */}
-      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
-        <div className="landing-glass mx-auto flex h-16 w-full max-w-7xl items-center justify-between rounded-2xl border border-slate-200/80 px-4 shadow-[0_24px_48px_-36px_rgba(15,23,42,0.5)] sm:h-[74px] sm:px-6 lg:px-8">
+      <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-5 sm:px-6">
           <Link to="/" className="flex items-center gap-1 transition-opacity hover:opacity-80">
-            <img src="/logo2.png" alt="RoboHire" className="h-8" />
+            <img src="/logo2.png" alt="RoboHire" className="h-7" />
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
-            <Link to="/developers" className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
+            <Link to="/developers" className="px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900">
               {t('landing.nav.api', 'API')}
             </Link>
-            <Link to="/docs" className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
+            <Link to="/docs" className="px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900">
               {t('landing.nav.docs', 'Docs')}
             </Link>
             {isAuthenticated ? (
-              <Link to="/product" className="rounded-full px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
+              <Link to="/product" className="px-3 py-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700">
                 {t('landing.nav.dashboard', 'Dashboard')}
               </Link>
             ) : (
-              <Link to="/login" className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-18px_rgba(37,99,235,0.9)]">
+              <Link to="/login" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800">
                 {t('landing.nav.signIn', 'Sign In')}
               </Link>
             )}
@@ -1485,25 +1481,34 @@ export default function StartHiring() {
         </div>
       </header>
 
-      <div className="pt-[88px] sm:pt-[104px]">
-      {/* Hero Section */}
-      <section className="px-5 pb-16 pt-16 sm:px-6">
-        <div className="mx-auto max-w-4xl text-center">
-          <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 landing-display sm:text-5xl">
-            {t('hiring.heroTitle', 'Start hiring with AI')}
+      <div className="pt-14">
+      {/* Hero Section — Juicebox-inspired centered layout */}
+      <section className="flex flex-col items-center justify-center px-5 sm:px-6" style={{ minHeight: 'calc(100vh - 56px)' }}>
+        <div className="mx-auto w-full max-w-3xl text-center">
+          {/* Heading */}
+          <h1 className="mb-10 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            {t('hiring.heroTitle', 'Hey, who are you looking for?')}
           </h1>
-          <p className="mx-auto mb-12 max-w-2xl text-xl text-slate-600">
-            {t(
-              'hiring.heroSubtitle',
-              "Tell us who you're looking for. Our AI will help you find, screen, and evaluate candidates automatically."
-            )}
-          </p>
 
-          {/* Main Input */}
-          <div className="mb-8 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-[0_32px_64px_-42px_rgba(15,23,42,0.65)]">
+          {/* Quick action pills */}
+          <div className="mb-8 flex flex-wrap justify-center gap-2">
+            {quickRoles.slice(0, 5).map((role) => (
+              <button
+                key={role.id}
+                onClick={() => handleQuickStart(role.label)}
+                disabled={isBriefGenerating}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-wait disabled:opacity-50"
+              >
+                {role.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Main Input — large rounded container with accent border */}
+          <div className="relative mb-6 rounded-3xl border-2 border-indigo-200 bg-white shadow-sm transition-all focus-within:border-indigo-400 focus-within:shadow-[0_0_0_4px_rgba(99,102,241,0.08)]">
             {attachedFile && (
-              <div className="mx-2 mt-1 mb-1 flex items-center gap-2 text-sm text-slate-600">
-                <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="mx-5 mt-4 mb-1 flex items-center gap-2 text-sm text-slate-600">
+                <svg className="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                 </svg>
                 <span className="truncate">{attachedFile.name}</span>
@@ -1514,10 +1519,10 @@ export default function StartHiring() {
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/70 p-1.5">
+            <div className="flex items-end gap-2 px-5 py-4">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="self-center rounded-xl p-3 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                className="mb-0.5 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 title={t('hiring.uploadJd', 'Upload Job Description')}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1542,38 +1547,39 @@ export default function StartHiring() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={attachedFile ? t('hiring.inputPlaceholderWithFile', 'Add instructions for this JD, or press send...') : t('hiring.inputPlaceholder', 'Describe your ideal candidate...')}
-                rows={1}
-                className="flex-1 resize-none bg-transparent px-2 py-3 text-slate-900 placeholder-slate-400 focus:outline-none"
-                style={{ minHeight: '48px', maxHeight: '120px' }}
+                placeholder={attachedFile ? t('hiring.inputPlaceholderWithFile', 'Add instructions for this JD, or press send...') : t('hiring.inputPlaceholder', 'Software Engineers with 5+ yrs of experience at fintech companies...')}
+                rows={2}
+                className="flex-1 resize-none bg-transparent text-base text-slate-900 placeholder-slate-400 focus:outline-none leading-relaxed"
+                style={{ minHeight: '56px', maxHeight: '140px' }}
               />
               <button
                 onClick={handleSubmit}
                 disabled={!input.trim() && !attachedFile}
-                className="self-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+                className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </button>
             </div>
           </div>
 
-          {/* Quick Start Pills */}
-          <div className="flex flex-wrap justify-center gap-2">
+          {/* Suggestions list — Juicebox-style clickable examples */}
+          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100 text-left shadow-sm">
             {quickRoles.map((role) => (
               <button
                 key={role.id}
                 onClick={() => handleQuickStart(role.label)}
                 disabled={isBriefGenerating}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-wait disabled:opacity-50"
+                className="flex w-full items-center px-6 py-3.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50 first:rounded-t-2xl last:rounded-b-2xl"
               >
                 {role.label}
               </button>
             ))}
           </div>
+
           {isBriefGenerating && (
-            <p className="mt-2 text-center text-xs text-slate-400 animate-pulse">
+            <p className="mt-3 text-center text-sm text-slate-500 animate-pulse">
               {t('hiring.generatingBrief', 'Generating hiring brief...')}
             </p>
           )}
@@ -1581,13 +1587,13 @@ export default function StartHiring() {
       </section>
 
       {/* Templates Section */}
-      <section className="px-5 py-16 sm:px-6">
-        <div className="mx-auto max-w-5xl landing-gradient-stroke rounded-[28px] bg-white/80 px-5 py-10 shadow-[0_30px_62px_-44px_rgba(15,23,42,0.65)] backdrop-blur sm:px-8">
+      <section className="px-5 py-20 sm:px-6">
+        <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
-            <h2 className="mb-2 text-2xl font-semibold text-slate-900 landing-display">
+            <h2 className="mb-2 text-2xl font-semibold text-slate-900">
               {t('hiring.templatesTitle', 'Popular role templates')}
             </h2>
-            <p className="text-slate-600">
+            <p className="text-slate-500">
               {t('hiring.templatesSubtitle', 'Start with a pre-built template or describe your own requirements')}
             </p>
           </div>
@@ -1597,9 +1603,9 @@ export default function StartHiring() {
               <button
                 key={template.id}
                 onClick={() => handleTemplateSelect(template)}
-                className="group landing-gradient-stroke rounded-2xl bg-white p-5 text-left transition-all hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)]"
+                className="group rounded-xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-indigo-200 hover:shadow-md"
               >
-                <h3 className="mb-1 font-medium text-slate-900 group-hover:text-blue-600">
+                <h3 className="mb-1.5 font-medium text-slate-900 group-hover:text-indigo-600">
                   {template.title}
                 </h3>
                 <p className="mb-3 line-clamp-2 text-sm text-slate-500">
@@ -1607,7 +1613,7 @@ export default function StartHiring() {
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {template.skills.slice(0, 3).map((skill) => (
-                    <span key={skill} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600">
+                    <span key={skill} className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-600">
                       {skill}
                     </span>
                   ))}
@@ -1621,7 +1627,7 @@ export default function StartHiring() {
               <button
                 type="button"
                 onClick={() => setShowAllTemplates(true)}
-                className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
               >
                 {t('hiring.viewAllTemplates', 'View all templates')}
               </button>
@@ -1630,97 +1636,23 @@ export default function StartHiring() {
         </div>
       </section>
 
-      {/* How it Works */}
-      <section className="px-5 py-20 sm:px-6">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-12 text-center">
-            <h2 className="mb-2 text-2xl font-semibold text-slate-900 landing-display">
-              {t('hiring.howItWorksTitle', 'How it works')}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="landing-gradient-stroke rounded-3xl bg-white/80 p-6 text-center shadow-[0_28px_52px_-40px_rgba(15,23,42,0.62)] backdrop-blur">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900">
-                <span className="text-lg font-semibold text-white">1</span>
-              </div>
-              <h3 className="mb-2 font-medium text-slate-900">
-                {t('hiring.howItWorks.step1.title', 'Describe your role')}
-              </h3>
-              <p className="text-sm text-slate-600">
-                {t(
-                  'hiring.howItWorks.step1.desc',
-                  "Tell us about the skills, experience, and qualities you're looking for."
-                )}
-              </p>
-            </div>
-            <div className="landing-gradient-stroke rounded-3xl bg-white/80 p-6 text-center shadow-[0_28px_52px_-40px_rgba(15,23,42,0.62)] backdrop-blur">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900">
-                <span className="text-lg font-semibold text-white">2</span>
-              </div>
-              <h3 className="mb-2 font-medium text-slate-900">
-                {t('hiring.howItWorks.step2.title', 'AI screens candidates')}
-              </h3>
-              <p className="text-sm text-slate-600">
-                {t(
-                  'hiring.howItWorks.step2.desc',
-                  'Our AI reviews resumes, conducts initial interviews, and evaluates fit.'
-                )}
-              </p>
-            </div>
-            <div className="landing-gradient-stroke rounded-3xl bg-white/80 p-6 text-center shadow-[0_28px_52px_-40px_rgba(15,23,42,0.62)] backdrop-blur">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-900">
-                <span className="text-lg font-semibold text-white">3</span>
-              </div>
-              <h3 className="mb-2 font-medium text-slate-900">
-                {t('hiring.howItWorks.step3.title', 'Review top matches')}
-              </h3>
-              <p className="text-sm text-slate-600">
-                {t(
-                  'hiring.howItWorks.step3.desc',
-                  'Get detailed reports on your best candidates and make faster hiring decisions.'
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="px-5 py-16 sm:px-6">
-        <div className="mx-auto max-w-4xl rounded-[28px] bg-slate-950 px-6 py-14 text-center shadow-[0_40px_70px_-44px_rgba(2,6,23,0.92)] sm:px-10">
-          <h2 className="mb-4 text-2xl font-semibold text-white landing-display">
-            {t('hiring.ctaTitle', 'Ready to streamline your hiring?')}
-          </h2>
-          <p className="mb-8 text-slate-300">
-            {t('hiring.ctaSubtitle', 'Join thousands of companies using AI to hire faster and smarter.')}
-          </p>
-          <button
-            onClick={() => textareaRef.current?.focus()}
-            className="rounded-full bg-white px-6 py-3 font-medium text-slate-900 transition-colors hover:bg-slate-100"
-          >
-            {t('hiring.ctaButton', 'Start hiring now')}
-          </button>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="border-t border-slate-200/80 px-5 py-8 sm:px-6">
+      <footer className="border-t border-slate-100 px-5 py-8 sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-400">
             © 2026 RoboHire. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link to="/developers" className="text-sm text-slate-500 hover:text-slate-700">
+            <Link to="/developers" className="text-sm text-slate-400 hover:text-slate-600">
               {t('landing.nav.api', 'API')}
             </Link>
-            <Link to="/docs" className="text-sm text-slate-500 hover:text-slate-700">
+            <Link to="/docs" className="text-sm text-slate-400 hover:text-slate-600">
               {t('landing.nav.docs', 'Docs')}
             </Link>
-            <Link to="/privacy" className="text-sm text-slate-500 hover:text-slate-700">
+            <Link to="/privacy" className="text-sm text-slate-400 hover:text-slate-600">
               {t('landing.footer.privacy', 'Privacy')}
             </Link>
-            <Link to="/terms" className="text-sm text-slate-500 hover:text-slate-700">
+            <Link to="/terms" className="text-sm text-slate-400 hover:text-slate-600">
               {t('landing.footer.terms', 'Terms')}
             </Link>
           </div>

@@ -32,6 +32,7 @@ import interviewsRouter from './routes/interviews.js';
 import activityRouter from './routes/activity.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
+import prisma from './lib/prisma.js';
 import { logger } from './services/LoggerService.js';
 import { documentStorage } from './services/DocumentStorageService.js';
 
@@ -126,7 +127,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   const logDir = logger.getLogDirectory();
   const docDir = documentStorage.getStorageDirectory();
   const docStats = documentStorage.getStats();
@@ -174,19 +175,43 @@ app.listen(PORT, () => {
   });
 });
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  logger.info('SERVER', 'Shutting down gracefully...');
+let isShuttingDown = false;
+
+async function shutdown(signal: 'SIGINT' | 'SIGTERM'): Promise<void> {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  logger.info('SERVER', `Received ${signal}, shutting down...`);
   logger.printGlobalStats();
-  logger.shutdown();
-  process.exit(0);
+
+  const forceExitTimer = setTimeout(() => {
+    logger.warn('SERVER', 'Forced shutdown after timeout');
+    process.exit(1);
+  }, 10_000);
+  forceExitTimer.unref();
+
+  server.close(async () => {
+    clearTimeout(forceExitTimer);
+
+    try {
+      await prisma.$disconnect();
+    } catch (error) {
+      logger.warn('SERVER', 'Prisma disconnect failed during shutdown', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    logger.shutdown();
+    process.exit(0);
+  });
+}
+
+process.on('SIGINT', () => {
+  void shutdown('SIGINT');
 });
 
 process.on('SIGTERM', () => {
-  logger.info('SERVER', 'Received SIGTERM, shutting down...');
-  logger.printGlobalStats();
-  logger.shutdown();
-  process.exit(0);
+  void shutdown('SIGTERM');
 });
 
 export default app;

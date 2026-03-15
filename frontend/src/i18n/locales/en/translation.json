@@ -2157,7 +2157,20 @@
       "termsOfService": "Terms of Service",
       "and": "and",
       "privacyPolicy": "Privacy Policy",
-      "joinNow": "Join Now"
+      "joinNow": "Join Now",
+      "invalidLink": "Invalid interview link",
+      "failedToLoad": "Failed to load interview",
+      "disconnectedLocal": "Interview connection was closed locally. You can rejoin to continue.",
+      "disconnectedLost": "Interview connection was lost. Please rejoin to continue.",
+      "rejoin": "Rejoin Interview",
+      "defaultDevice": "Default",
+      "unknownDevice": "Unknown Device",
+      "preparingTitle": "Preparing your interview",
+      "preparingSubtitle": "We are setting up room access and loading the interviewer configuration.",
+      "preparingRoomAccess": "Generating secure room access",
+      "preparingAgent": "Loading interview prompts and AI interviewer settings",
+      "preparingNextStep": "Camera and microphone checks will appear next",
+      "preparingHint": "This usually takes a few seconds."
     },
     "jobs": {
       "title": "Jobs",
@@ -2421,7 +2434,21 @@
         "runMatching": "Run Matching",
         "success": "Matching completed successfully!",
         "error": "Failed to run matching. Please try again."
-      }
+      },
+      "filterHint": "Please enter the criteria for the candidates you are looking for",
+      "filterWorkYears": "Work Years",
+      "filterSalary": "Expected Salary",
+      "filterMin": "Min",
+      "filterMax": "Max",
+      "filterJob": "Job",
+      "filterAllJobs": "All Jobs",
+      "filterStatusLabel": "Status",
+      "filterAllStatus": "All Status",
+      "filterMatched": "Matched",
+      "filterShortlisted": "Shortlisted",
+      "filterInvited": "Invited",
+      "filterRejected": "Rejected",
+      "filterMore": "More Filters"
     },
     "matching": {
       "title": "Smart Matching",

@@ -15,17 +15,33 @@ function createPrismaClient(): PrismaClient {
     },
   });
 
-  // Keep connection alive with periodic pings (Neon closes idle connections)
-  const KEEPALIVE_MS = 4 * 60 * 1000; // 4 minutes (Neon idle timeout is ~5 min)
-  setInterval(async () => {
-    try {
-      await client.$queryRaw`SELECT 1`;
-    } catch {
-      // Connection lost — Prisma will auto-reconnect on next real query
-    }
-  }, KEEPALIVE_MS).unref();
+  // Keepalive is useful in production with serverless Postgres, but it adds
+  // noisy reconnect errors during local dev restarts and hot reloads.
+  if (shouldEnableKeepalive()) {
+    const keepaliveMs = parseKeepaliveMs();
+    setInterval(async () => {
+      try {
+        await client.$queryRaw`SELECT 1`;
+      } catch {
+        // Connection lost — Prisma will auto-reconnect on next real query.
+      }
+    }, keepaliveMs).unref();
+  }
 
   return client;
+}
+
+function shouldEnableKeepalive(): boolean {
+  const override = process.env.PRISMA_KEEPALIVE_ENABLED?.trim().toLowerCase();
+  if (override === 'true') return true;
+  if (override === 'false') return false;
+  return process.env.NODE_ENV === 'production';
+}
+
+function parseKeepaliveMs(): number {
+  const fallbackMs = 4 * 60 * 1000;
+  const parsed = Number.parseInt(process.env.PRISMA_KEEPALIVE_MS || '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallbackMs;
 }
 
 function ensureConnectionParams(url: string): string {

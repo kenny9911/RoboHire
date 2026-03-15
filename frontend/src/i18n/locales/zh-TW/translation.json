@@ -2262,7 +2262,20 @@
       "termsOfService": "服務條款",
       "and": "及",
       "privacyPolicy": "隱私權政策",
-      "joinNow": "立即加入"
+      "joinNow": "立即加入",
+      "invalidLink": "無效的面試連結",
+      "failedToLoad": "載入面試失敗",
+      "disconnectedLocal": "面試連線已在本機關閉，您可以重新加入繼續。",
+      "disconnectedLost": "面試連線已中斷，請重新加入繼續。",
+      "rejoin": "重新加入面試",
+      "defaultDevice": "預設",
+      "unknownDevice": "未知裝置",
+      "preparingTitle": "正在準備您的面試",
+      "preparingSubtitle": "我們正在設置房間訪問權限並載入面試官配置。",
+      "preparingRoomAccess": "正在生成安全的房間存取權限",
+      "preparingAgent": "正在載入面試提示和 AI 面試官設定",
+      "preparingNextStep": "攝影機和麥克風檢查將在下一步出現",
+      "preparingHint": "通常只需幾秒鐘。"
     },
     "jobs": {
       "title": "職缺",
@@ -2523,7 +2536,21 @@
         "runMatching": "執行配對",
         "success": "配對成功完成！",
         "error": "配對失敗，請重試。"
-      }
+      },
+      "filterHint": "請輸入您要搜尋的候選人條件",
+      "filterWorkYears": "工作年資",
+      "filterSalary": "期望薪資",
+      "filterMin": "最低",
+      "filterMax": "最高",
+      "filterJob": "職位",
+      "filterAllJobs": "所有職位",
+      "filterStatusLabel": "狀態",
+      "filterAllStatus": "所有狀態",
+      "filterMatched": "已匹配",
+      "filterShortlisted": "已入選",
+      "filterInvited": "已邀請",
+      "filterRejected": "已拒絕",
+      "filterMore": "更多篩選"
     },
     "matching": {
       "title": "智慧配對",

@@ -482,6 +482,12 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       sortOrder = 'desc',
       page = '1',
       limit = '20',
+      expYearsMin,
+      expYearsMax,
+      salaryMin,
+      salaryMax,
+      jobId,
+      pipelineStatus,
     } = req.query as Record<string, string>;
 
     const pageNum = Math.max(1, parseInt(page) || 1);
@@ -503,6 +509,17 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
         { resumeText: { contains: search, mode: 'insensitive' } },
       ];
     }
+    // Filter by associated job (via JobMatch)
+    if (jobId) {
+      where.jobMatches = { some: { jobId } };
+    }
+    // Filter by pipeline status (via ResumeJobFit)
+    if (pipelineStatus) {
+      where.resumeJobFits = { some: { pipelineStatus } };
+    }
+
+    // Post-query filters for experience years and salary (parsed from stored strings/JSON)
+    const needsPostFilter = !!(expYearsMin || expYearsMax || salaryMin || salaryMax);
 
     const orderBy: Record<string, string> = {};
     if (sortBy === 'name') {
@@ -511,41 +528,84 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       orderBy.createdAt = sortOrder === 'asc' ? 'asc' : 'desc';
     }
 
-    const [resumes, total] = await Promise.all([
-      prisma.resume.findMany({
+    const selectFields = {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      currentRole: true,
+      experienceYears: true,
+      fileName: true,
+      fileType: true,
+      status: true,
+      source: true,
+      tags: true,
+      contentHash: true,
+      preferences: true,
+      createdAt: true,
+      updatedAt: true,
+      parsedData: true,
+      resumeJobFits: {
+        orderBy: { fitScore: 'desc' as const },
+        take: 1,
+        select: { fitScore: true, fitGrade: true, pipelineStatus: true, hiringRequest: { select: { title: true } } },
+      },
+      _count: { select: { resumeVersions: true } },
+    };
+
+    let resumes: any[];
+    let total: number;
+
+    if (needsPostFilter) {
+      // Fetch all matching resumes then apply post-filters for experience/salary
+      const allResumes = await prisma.resume.findMany({
         where,
         orderBy,
-        skip,
-        take: limitNum,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          currentRole: true,
-          experienceYears: true,
-          fileName: true,
-          fileType: true,
-          status: true,
-          source: true,
-          tags: true,
-          contentHash: true,
-          preferences: true,
-          createdAt: true,
-          updatedAt: true,
-          // Include parsedData for skills display (will be trimmed on the frontend)
-          parsedData: true,
-          // Include top job fit score
-          resumeJobFits: {
-            orderBy: { fitScore: 'desc' },
-            take: 1,
-            select: { fitScore: true, fitGrade: true, pipelineStatus: true, hiringRequest: { select: { title: true } } },
-          },
-          _count: { select: { resumeVersions: true } },
-        },
-      }),
-      prisma.resume.count({ where }),
-    ]);
+        select: selectFields,
+      });
+
+      const expMin = expYearsMin ? parseFloat(expYearsMin) : null;
+      const expMax = expYearsMax ? parseFloat(expYearsMax) : null;
+      const salMin = salaryMin ? parseFloat(salaryMin) : null;
+      const salMax = salaryMax ? parseFloat(salaryMax) : null;
+
+      const filtered = allResumes.filter((r: any) => {
+        // Experience years filter
+        if (expMin !== null || expMax !== null) {
+          const expStr = r.experienceYears || '';
+          const yearMatch = expStr.match(/(\d+(?:\.\d+)?)\s*(?:year|yr)/i);
+          const years = yearMatch ? parseFloat(yearMatch[1]) : 0;
+          if (expMin !== null && years < expMin) return false;
+          if (expMax !== null && years > expMax) return false;
+        }
+        // Salary filter (from preferences JSON)
+        if (salMin !== null || salMax !== null) {
+          const prefs = r.preferences as any;
+          if (!prefs) return false;
+          const prefMin = prefs.salaryMin ? parseFloat(prefs.salaryMin) : null;
+          const prefMax = prefs.salaryMax ? parseFloat(prefs.salaryMax) : null;
+          const salary = prefMax || prefMin || 0;
+          if (!salary) return false;
+          if (salMin !== null && salary < salMin) return false;
+          if (salMax !== null && salary > salMax) return false;
+        }
+        return true;
+      });
+
+      total = filtered.length;
+      resumes = filtered.slice(skip, skip + limitNum);
+    } else {
+      [resumes, total] = await Promise.all([
+        prisma.resume.findMany({
+          where,
+          orderBy,
+          skip,
+          take: limitNum,
+          select: selectFields,
+        }),
+        prisma.resume.count({ where }),
+      ]);
+    }
 
     // Trim parsedData to only fields needed by the list view
     const trimmedResumes = resumes.map((r: any) => ({

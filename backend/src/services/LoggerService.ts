@@ -350,7 +350,7 @@ class LoggerService extends EventEmitter {
     if (!options) return null;
 
     const cleanedEntries = Object.entries(options)
-      .filter(([key, value]) => key !== 'requestId' && value !== undefined)
+      .filter(([key, value]) => key !== 'requestId' && key !== 'signal' && value !== undefined)
       .map(([key, value]) => {
         if (typeof value === 'string') {
           const truncated = this.truncateForLog(value, this.maxLoggedUrlChars);

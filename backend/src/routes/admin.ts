@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
+import type { Prisma } from '@prisma/client';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import prisma from '../lib/prisma.js';
@@ -1849,22 +1850,187 @@ const INTERVIEW_CONFIG_KEYS = [
   'interview.ttsModel',
   'interview.ttsVoice',
   'interview.language',
+  'interview.turnDetection',
+  'interview.allowInterruptions',
+  'interview.discardAudioIfUninterruptible',
+  'interview.preemptiveGeneration',
+  'interview.minInterruptionDurationMs',
+  'interview.minInterruptionWords',
+  'interview.minEndpointingDelayMs',
+  'interview.maxEndpointingDelayMs',
+  'interview.aecWarmupDurationMs',
+  'interview.useTtsAlignedTranscript',
+  'interview.logInterimTranscripts',
 ];
+const INTERVIEW_CONFIG_VERSION_LIMIT = 20;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function toOptionalTrimmedString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function buildInterviewConfigMap(rows: Array<{ key: string; value: string }>): Record<string, string> {
+  const configMap: Record<string, string> = {};
+  for (const key of INTERVIEW_CONFIG_KEYS) {
+    configMap[key] = '';
+  }
+  for (const row of rows) {
+    if (INTERVIEW_CONFIG_KEYS.includes(row.key)) {
+      configMap[row.key] = row.value;
+    }
+  }
+  return configMap;
+}
+
+function normalizeInterviewConfigSnapshot(source: Record<string, unknown>): Record<string, string> {
+  const snapshot: Record<string, string> = {};
+  for (const key of INTERVIEW_CONFIG_KEYS) {
+    snapshot[key] = typeof source[key] === 'string' ? source[key] : '';
+  }
+  return snapshot;
+}
+
+async function syncInterviewAppConfig(
+  tx: Prisma.TransactionClient,
+  config: Record<string, string>,
+  adminId?: string,
+) {
+  await Promise.all(
+    INTERVIEW_CONFIG_KEYS.map((key) =>
+      tx.appConfig.upsert({
+        where: { key },
+        create: { key, value: config[key] ?? '', updatedBy: adminId },
+        update: { value: config[key] ?? '', updatedBy: adminId },
+      }),
+    ),
+  );
+}
+
+async function ensureInterviewConfigBaselineVersion(adminId?: string) {
+  const existingVersion = await prisma.interviewRoomConfigVersion.findFirst({
+    orderBy: { versionNumber: 'asc' },
+  });
+  if (existingVersion) {
+    return;
+  }
+
+  const existingConfigs = await prisma.appConfig.findMany({
+    where: { key: { in: INTERVIEW_CONFIG_KEYS } },
+  });
+  const baselineConfig = buildInterviewConfigMap(existingConfigs);
+  const now = new Date();
+
+  await prisma.$transaction(async (tx) => {
+    const versionCount = await tx.interviewRoomConfigVersion.count();
+    if (versionCount > 0) {
+      return;
+    }
+
+    await syncInterviewAppConfig(tx, baselineConfig, adminId);
+
+    await tx.interviewRoomConfigVersion.create({
+      data: {
+        versionNumber: 1,
+        versionLabel: 'v1.0',
+        changeNote: 'Baseline snapshot created from the current production interview configuration.',
+        config: baselineConfig as Prisma.InputJsonValue,
+        isActive: true,
+        activatedAt: now,
+        createdById: adminId,
+      },
+    });
+  });
+}
+
+function serializeInterviewConfigVersion(
+  version: {
+    id: string;
+    versionNumber: number;
+    versionLabel: string | null;
+    changeNote: string | null;
+    isActive: boolean;
+    createdAt: Date;
+    activatedAt: Date | null;
+    config: unknown;
+    createdByUser?: { id: string; name: string | null; email: string } | null;
+  },
+) {
+  const config = isRecord(version.config)
+    ? normalizeInterviewConfigSnapshot(version.config)
+    : buildInterviewConfigMap([]);
+
+  return {
+    id: version.id,
+    versionNumber: version.versionNumber,
+    versionLabel: version.versionLabel,
+    changeNote: version.changeNote,
+    isActive: version.isActive,
+    createdAt: version.createdAt.toISOString(),
+    activatedAt: version.activatedAt?.toISOString() || null,
+    createdBy: version.createdByUser
+      ? {
+          id: version.createdByUser.id,
+          name: version.createdByUser.name,
+          email: version.createdByUser.email,
+        }
+      : null,
+    config,
+    populatedKeys: Object.entries(config)
+      .filter(([, value]) => value.trim().length > 0)
+      .map(([key]) => key),
+  };
+}
 
 /**
  * GET /api/v1/admin/interview-config
  * Returns all interview configuration values
  */
-router.get('/interview-config', async (_req, res) => {
+router.get('/interview-config', async (req, res) => {
   try {
-    const configs = await prisma.appConfig.findMany({
-      where: { key: { in: INTERVIEW_CONFIG_KEYS } },
+    await ensureInterviewConfigBaselineVersion(req.user?.id);
+
+    const [configs, activeVersion, versions] = await Promise.all([
+      prisma.appConfig.findMany({
+        where: { key: { in: INTERVIEW_CONFIG_KEYS } },
+      }),
+      prisma.interviewRoomConfigVersion.findFirst({
+        where: { isActive: true },
+        orderBy: { versionNumber: 'desc' },
+        include: {
+          createdByUser: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      }),
+      prisma.interviewRoomConfigVersion.findMany({
+        orderBy: { versionNumber: 'desc' },
+        take: INTERVIEW_CONFIG_VERSION_LIMIT,
+        include: {
+          createdByUser: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      }),
+    ]);
+
+    const configMap = buildInterviewConfigMap(configs);
+
+    res.json({
+      success: true,
+      data: {
+        config: configMap,
+        activeVersion: activeVersion ? serializeInterviewConfigVersion(activeVersion) : null,
+        versions: versions.map(serializeInterviewConfigVersion),
+        productionStatus: {
+          mode: 'immediate_for_new_interviews',
+          note:
+            'Publishing a new version or activating a saved version updates the production config immediately for newly started interview rooms.',
+        },
+      },
     });
-    const configMap: Record<string, string> = {};
-    for (const c of configs) {
-      configMap[c.key] = c.value;
-    }
-    res.json({ success: true, data: configMap });
   } catch (error) {
     console.error('Admin interview-config error:', error);
     res.status(500).json({ success: false, error: 'Failed to load interview config' });
@@ -1879,30 +2045,180 @@ router.get('/interview-config', async (_req, res) => {
 router.put('/interview-config', async (req, res) => {
   try {
     const adminId = req.user!.id;
-    const body = req.body as Record<string, string>;
+    const body = (isRecord(req.body) ? req.body : {}) as Record<string, unknown>;
+    const rawConfig = isRecord(body.config) ? body.config : body;
+    const incomingConfig = Object.fromEntries(
+      Object.entries(rawConfig)
+        .filter(([key]) => INTERVIEW_CONFIG_KEYS.includes(key))
+        .filter(([, value]) => typeof value === 'string'),
+    ) as Record<string, string>;
+    const versionLabel = toOptionalTrimmedString(body.versionLabel);
+    const changeNote = toOptionalTrimmedString(body.changeNote);
 
-    const upserts = Object.entries(body)
-      .filter(([key]) => INTERVIEW_CONFIG_KEYS.includes(key))
-      .filter(([, value]) => typeof value === 'string');
-
-    if (upserts.length === 0) {
+    if (Object.keys(incomingConfig).length === 0) {
       return res.status(400).json({ success: false, error: 'No valid config keys provided' });
     }
 
-    await prisma.$transaction(
-      upserts.map(([key, value]) =>
-        prisma.appConfig.upsert({
-          where: { key },
-          create: { key, value, updatedBy: adminId },
-          update: { value, updatedBy: adminId },
-        }),
-      ),
-    );
+    const [existingConfigs, versionAggregate] = await Promise.all([
+      prisma.appConfig.findMany({
+        where: { key: { in: INTERVIEW_CONFIG_KEYS } },
+      }),
+      prisma.interviewRoomConfigVersion.aggregate({
+        _max: { versionNumber: true },
+      }),
+    ]);
 
-    res.json({ success: true, data: { updated: upserts.length } });
+    const currentConfig = buildInterviewConfigMap(existingConfigs);
+    const nextConfig = {
+      ...currentConfig,
+      ...incomingConfig,
+    };
+    const nextVersionNumber = (versionAggregate._max.versionNumber ?? 0) + 1;
+    const effectiveVersionLabel = versionLabel || (nextVersionNumber === 1 ? 'v1.0' : undefined);
+    const now = new Date();
+
+    const version = await prisma.$transaction(async (tx) => {
+      await tx.interviewRoomConfigVersion.updateMany({
+        where: { isActive: true },
+        data: { isActive: false },
+      });
+
+      await syncInterviewAppConfig(tx, nextConfig, adminId);
+
+      return tx.interviewRoomConfigVersion.create({
+        data: {
+          versionNumber: nextVersionNumber,
+          versionLabel: effectiveVersionLabel,
+          changeNote,
+          config: nextConfig as Prisma.InputJsonValue,
+          isActive: true,
+          activatedAt: now,
+          createdById: adminId,
+        },
+        include: {
+          createdByUser: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+    });
+
+    const latestVersions = await prisma.interviewRoomConfigVersion.findMany({
+      orderBy: { versionNumber: 'desc' },
+      take: INTERVIEW_CONFIG_VERSION_LIMIT,
+      include: {
+        createdByUser: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        updated: Object.keys(incomingConfig).length,
+        config: nextConfig,
+        activeVersion: serializeInterviewConfigVersion(version),
+        versions: latestVersions.map(serializeInterviewConfigVersion),
+        productionEffectiveAt: now.toISOString(),
+        productionStatus: {
+          mode: 'immediate_for_new_interviews',
+          note:
+            'This version is now active for newly started interview rooms in production.',
+        },
+      },
+    });
   } catch (error) {
     console.error('Admin interview-config update error:', error);
     res.status(500).json({ success: false, error: 'Failed to update interview config' });
+  }
+});
+
+/**
+ * POST /api/v1/admin/interview-config/:versionId/activate
+ * Makes a saved config version the active production config.
+ */
+router.post('/interview-config/:versionId/activate', async (req, res) => {
+  try {
+    const adminId = req.user!.id;
+    const versionId = req.params.versionId;
+    const now = new Date();
+
+    const activatedVersion = await prisma.$transaction(async (tx) => {
+      const existingVersion = await tx.interviewRoomConfigVersion.findUnique({
+        where: { id: versionId },
+        include: {
+          createdByUser: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      if (!existingVersion) {
+        return null;
+      }
+
+      const snapshot = isRecord(existingVersion.config)
+        ? normalizeInterviewConfigSnapshot(existingVersion.config)
+        : buildInterviewConfigMap([]);
+
+      await tx.interviewRoomConfigVersion.updateMany({
+        where: { isActive: true, id: { not: versionId } },
+        data: { isActive: false },
+      });
+
+      await syncInterviewAppConfig(tx, snapshot, adminId);
+
+      const updatedVersion = await tx.interviewRoomConfigVersion.update({
+        where: { id: versionId },
+        data: {
+          isActive: true,
+          activatedAt: now,
+        },
+        include: {
+          createdByUser: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      return {
+        config: snapshot,
+        version: updatedVersion,
+      };
+    });
+
+    if (!activatedVersion) {
+      return res.status(404).json({ success: false, error: 'Config version not found' });
+    }
+
+    const latestVersions = await prisma.interviewRoomConfigVersion.findMany({
+      orderBy: { versionNumber: 'desc' },
+      take: INTERVIEW_CONFIG_VERSION_LIMIT,
+      include: {
+        createdByUser: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        config: activatedVersion.config,
+        activeVersion: serializeInterviewConfigVersion(activatedVersion.version),
+        versions: latestVersions.map(serializeInterviewConfigVersion),
+        productionEffectiveAt: now.toISOString(),
+        productionStatus: {
+          mode: 'immediate_for_new_interviews',
+          note:
+            'This saved version is now active for newly started interview rooms in production.',
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Admin interview-config activation error:', error);
+    res.status(500).json({ success: false, error: 'Failed to activate interview config version' });
   }
 });
 

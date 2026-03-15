@@ -74,7 +74,14 @@ export abstract class BaseAgent<TInput, TOutput> {
    * @param requestId Optional request ID for logging
    * @param locale Optional user locale override (e.g. 'zh', 'ja', 'fr')
    */
-  async execute(input: TInput, jdContent?: string, requestId?: string, locale?: string, model?: string): Promise<TOutput> {
+  async execute(
+    input: TInput,
+    jdContent?: string,
+    requestId?: string,
+    locale?: string,
+    model?: string,
+    signal?: AbortSignal,
+  ): Promise<TOutput> {
     const stepNum = requestId ? logger.startStep(requestId, `${this.name}: Execute`) : 0;
 
     logger.logAgentStart(requestId || '', this.name, { inputType: typeof input, model: model || 'default' });
@@ -98,6 +105,7 @@ export abstract class BaseAgent<TInput, TOutput> {
         temperature: 0.7,
         requestId,
         ...(model ? { model } : {}),
+        ...(signal ? { signal } : {}),
       });
       
       logger.debug('AGENT', `${this.name}: Parsing response`, {

@@ -1804,7 +1804,20 @@
       "termsOfService": "Nutzungsbedingungen",
       "and": "und",
       "privacyPolicy": "Datenschutzrichtlinie",
-      "joinNow": "Jetzt beitreten"
+      "joinNow": "Jetzt beitreten",
+      "invalidLink": "Ungültiger Interview-Link",
+      "failedToLoad": "Interview konnte nicht geladen werden",
+      "disconnectedLocal": "Die Interviewverbindung wurde lokal geschlossen. Sie können erneut beitreten, um fortzufahren.",
+      "disconnectedLost": "Die Interviewverbindung wurde unterbrochen. Bitte treten Sie erneut bei.",
+      "rejoin": "Interview erneut beitreten",
+      "defaultDevice": "Standard",
+      "unknownDevice": "Unbekanntes Gerät",
+      "preparingTitle": "Ihr Interview wird vorbereitet",
+      "preparingSubtitle": "Wir richten den Raumzugang ein und laden die Interviewer-Konfiguration.",
+      "preparingRoomAccess": "Sicherer Raumzugang wird generiert",
+      "preparingAgent": "Interview-Prompts und KI-Interviewer-Einstellungen werden geladen",
+      "preparingNextStep": "Kamera- und Mikrofon-Checks erscheinen als Nächstes",
+      "preparingHint": "Dies dauert normalerweise nur wenige Sekunden."
     },
     "jobs": {
       "title": "Stellen",
@@ -2068,7 +2081,21 @@
         "runMatching": "Matching ausführen",
         "success": "Matching erfolgreich abgeschlossen!",
         "error": "Matching fehlgeschlagen. Bitte versuchen Sie es erneut."
-      }
+      },
+      "filterHint": "Geben Sie die Suchkriterien für Kandidaten ein",
+      "filterWorkYears": "Berufserfahrung",
+      "filterSalary": "Gehaltsvorstellung",
+      "filterMin": "Min",
+      "filterMax": "Max",
+      "filterJob": "Stelle",
+      "filterAllJobs": "Alle Stellen",
+      "filterStatusLabel": "Status",
+      "filterAllStatus": "Alle Status",
+      "filterMatched": "Zugeordnet",
+      "filterShortlisted": "Vorausgewählt",
+      "filterInvited": "Eingeladen",
+      "filterRejected": "Abgelehnt",
+      "filterMore": "Weitere Filter"
     },
     "matching": {
       "title": "Intelligentes Matching",

@@ -1805,7 +1805,20 @@
       "termsOfService": "Conditions d'utilisation",
       "and": "et",
       "privacyPolicy": "Politique de confidentialité",
-      "joinNow": "Rejoindre maintenant"
+      "joinNow": "Rejoindre maintenant",
+      "invalidLink": "Lien d'entretien invalide",
+      "failedToLoad": "Échec du chargement de l'entretien",
+      "disconnectedLocal": "La connexion à l'entretien a été fermée localement. Vous pouvez vous reconnecter pour continuer.",
+      "disconnectedLost": "La connexion à l'entretien a été perdue. Veuillez vous reconnecter pour continuer.",
+      "rejoin": "Rejoindre l'entretien",
+      "defaultDevice": "Par défaut",
+      "unknownDevice": "Appareil inconnu",
+      "preparingTitle": "Préparation de votre entretien",
+      "preparingSubtitle": "Nous configurons l'accès à la salle et chargeons la configuration de l'intervieweur.",
+      "preparingRoomAccess": "Génération de l'accès sécurisé à la salle",
+      "preparingAgent": "Chargement des instructions d'entretien et des paramètres de l'intervieweur IA",
+      "preparingNextStep": "Les vérifications de caméra et microphone apparaîtront ensuite",
+      "preparingHint": "Cela ne prend généralement que quelques secondes."
     },
     "jobs": {
       "title": "Emplois",
@@ -2069,7 +2082,21 @@
         "runMatching": "Lancer le matching",
         "success": "Matching effectué avec succès !",
         "error": "Échec du matching. Veuillez réessayer."
-      }
+      },
+      "filterHint": "Entrez les critères de recherche des candidats",
+      "filterWorkYears": "Années d'expérience",
+      "filterSalary": "Salaire souhaité",
+      "filterMin": "Min",
+      "filterMax": "Max",
+      "filterJob": "Poste",
+      "filterAllJobs": "Tous les postes",
+      "filterStatusLabel": "Statut",
+      "filterAllStatus": "Tous les statuts",
+      "filterMatched": "Associé",
+      "filterShortlisted": "Présélectionné",
+      "filterInvited": "Invité",
+      "filterRejected": "Rejeté",
+      "filterMore": "Plus de filtres"
     },
     "matching": {
       "title": "Correspondance intelligente",

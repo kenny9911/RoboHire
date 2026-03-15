@@ -290,20 +290,20 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
       {/* Header bar */}
       <div className="px-4 sm:px-5 pt-4 pb-3 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
+          <h3 className="text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
             {resume.name}
           </h3>
           {resume.currentRole && (
-            <p className="mt-0.5 text-xs text-slate-500 truncate">{resume.currentRole}</p>
+            <p className="mt-0.5 text-sm text-slate-600 truncate">{resume.currentRole}</p>
           )}
         </div>
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onApply(resume); }}
             className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             title={t('product.talent.applyToJob', 'Apply to Job')}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
             </svg>
           </button>
@@ -312,7 +312,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
             className={`p-1 rounded transition-colors ${hasPrefs ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
             title={t('product.talent.preferences.title', 'Candidate Preferences')}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
             </svg>
           </button>
@@ -321,7 +321,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
               className="p-1 rounded text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -330,9 +330,9 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
       </div>
 
       {/* Meta row: category + experience */}
-      <div className="px-4 sm:px-5 pb-3 flex items-center gap-2 text-xs text-slate-500">
+      <div className="px-4 sm:px-5 pb-3 flex items-center gap-2 text-sm text-slate-600">
         {resume._jobCategory && (
-          <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-600'}`}>
+          <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-700'}`}>
             {resume._jobCategory}
           </span>
         )}
@@ -346,7 +346,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
           <span>{resume.experienceYears}</span>
         ) : null}
         {resume._notableCompanies.length > 0 && (
-          <span className="text-slate-400">
+          <span className="text-slate-500">
             {resume._notableCompanies.map(c => `Ex-${c}`).join(', ')}
           </span>
         )}
@@ -355,20 +355,20 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
       {/* Summary */}
       {resume._highlight && (
         <div className="px-4 sm:px-5 pb-3">
-          <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{resume._highlight}</p>
+          <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{resume._highlight}</p>
         </div>
       )}
 
       {/* Skills + Industry tags */}
       {(resume._topSkills.length > 0 || resume._industryTags.length > 0) && (
-        <div className="px-4 sm:px-5 pb-3 flex flex-wrap gap-1">
+        <div className="px-4 sm:px-5 pb-3 flex flex-wrap gap-1.5">
           {resume._industryTags.map((tag) => (
-            <span key={tag} className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+            <span key={tag} className="rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
               {tag}
             </span>
           ))}
           {resume._topSkills.map((skill) => (
-            <span key={skill} className="rounded bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+            <span key={skill} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
               {skill}
             </span>
           ))}
@@ -376,19 +376,19 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
       )}
 
       {/* Footer */}
-      <div className="px-4 sm:px-5 py-2.5 border-t border-slate-100 flex items-center justify-between mt-auto">
+      <div className="px-4 sm:px-5 py-3 border-t border-slate-100 flex items-center justify-between mt-auto">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-400">
+          <span className="text-xs text-slate-500">
             {new Date(resume.createdAt).toLocaleDateString()}
           </span>
           {resume._versionCount != null && resume._versionCount > 0 && (
-            <span className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+            <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" /></svg>
               {resume._versionCount}
             </span>
           )}
         </div>
-        <span className="text-[11px] font-medium text-blue-600 group-hover:text-blue-700">
+        <span className="text-sm font-medium text-blue-600 group-hover:text-blue-700">
           {t('product.talent.viewProfile', 'View Profile')} →
         </span>
       </div>
@@ -402,61 +402,61 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
   return (
     <Link
       to={`/product/talent/${resume.id}`}
-      className="group px-4 sm:px-5 py-3.5 hover:bg-slate-50/50 transition-colors flex items-center gap-3 sm:gap-4 block"
+      className="group px-4 sm:px-5 py-4 hover:bg-slate-50/50 transition-colors flex items-center gap-3 sm:gap-4 block"
     >
-      <div className="min-w-0 w-28 sm:w-44 shrink-0">
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
+      <div className="min-w-0 w-32 sm:w-48 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
             {resume.name}
           </span>
           {resume._jobCategory && (
-            <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-semibold shrink-0 ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-600'}`}>
+            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold shrink-0 ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-700'}`}>
               {resume._jobCategory}
             </span>
           )}
         </div>
         {resume.currentRole && (
-          <p className="text-xs text-slate-500 truncate">{resume.currentRole}</p>
+          <p className="text-sm text-slate-600 truncate">{resume.currentRole}</p>
         )}
       </div>
 
       <div className="hidden xl:block min-w-0 flex-1">
         {resume._highlight ? (
-          <p className="text-xs text-slate-400 truncate">{resume._highlight}</p>
+          <p className="text-sm text-slate-500 truncate">{resume._highlight}</p>
         ) : null}
       </div>
 
-      <div className="hidden lg:flex gap-1 shrink-0 max-w-[200px] flex-wrap">
+      <div className="hidden lg:flex gap-1.5 shrink-0 max-w-[220px] flex-wrap">
         {resume._topSkills.slice(0, 3).map((skill) => (
-          <span key={skill} className="rounded bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+          <span key={skill} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
             {skill}
           </span>
         ))}
         {resume._topSkills.length > 3 && (
-          <span className="text-[10px] text-slate-400">+{resume._topSkills.length - 3}</span>
+          <span className="text-xs text-slate-500">+{resume._topSkills.length - 3}</span>
         )}
       </div>
 
-      <div className="hidden md:block shrink-0 w-24 text-xs text-slate-500">
+      <div className="hidden md:block shrink-0 w-28 text-sm text-slate-600">
         {resume._workExp ? (
           <div>
             {resume._workExp.fullTimeYears > 0 && (
               <span>{resume._workExp.fullTimeYears} {t('product.talent.yearsWork', 'yrs')}</span>
             )}
             {resume._workExp.internshipMonths > 0 && (
-              <span className="text-slate-400 block text-[10px]">+ {resume._workExp.internshipMonths} {t('product.talent.monthsIntern', 'mo intern')}</span>
+              <span className="text-slate-500 block text-xs">+ {resume._workExp.internshipMonths} {t('product.talent.monthsIntern', 'mo intern')}</span>
             )}
           </div>
         ) : resume.experienceYears ? (
           <span>{resume.experienceYears}</span>
         ) : (
-          <span className="text-slate-300">—</span>
+          <span className="text-slate-400">—</span>
         )}
       </div>
 
-      <div className="hidden lg:flex gap-1 shrink-0 max-w-[180px] flex-wrap">
+      <div className="hidden lg:flex gap-1.5 shrink-0 max-w-[200px] flex-wrap">
         {resume._notableCompanies.map((company) => (
-          <span key={company} className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+          <span key={company} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
             Ex-{company}
           </span>
         ))}
@@ -464,12 +464,12 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
 
       <div className="flex items-center gap-1 shrink-0 ml-auto">
         {resume._versionCount != null && resume._versionCount > 0 && (
-          <span className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded flex items-center gap-0.5 mr-1">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
+          <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-0.5 mr-1">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
             {resume._versionCount}
           </span>
         )}
-        <span className="text-xs font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mr-1">
+        <span className="text-sm font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mr-1">
           {t('product.talent.viewProfile', 'View Profile')}
         </span>
         <button
@@ -521,7 +521,7 @@ function Pagination({ page, totalPages, total, onPageChange, t }: {
 
   return (
     <div className="flex flex-col items-center gap-2 pt-4 sm:flex-row sm:justify-between">
-      <span className="text-xs text-slate-500">
+      <span className="text-sm text-slate-600">
         {t('product.talent.totalCandidates', '{{count}} candidates', { count: total })}
       </span>
       <div className="flex items-center gap-1">
@@ -538,8 +538,8 @@ function Pagination({ page, totalPages, total, onPageChange, t }: {
           <button
             key={p}
             onClick={() => onPageChange(p)}
-            className={`min-w-[32px] h-8 rounded-lg text-xs font-semibold transition-colors ${
-              p === page ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+            className={`min-w-[36px] h-9 rounded-lg text-sm font-semibold transition-colors ${
+              p === page ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'
             }`}
           >
             {p}
@@ -578,11 +578,38 @@ export default function TalentHub() {
   const [applyResume, setApplyResume] = useState<EnrichedResume | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
+  // Filters
+  const [expYearsMin, setExpYearsMin] = useState('');
+  const [expYearsMax, setExpYearsMax] = useState('');
+  const [salaryMin, setSalaryMin] = useState('');
+  const [salaryMax, setSalaryMax] = useState('');
+  const [filterJobId, setFilterJobId] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
+
+  // Fetch jobs for the filter dropdown
+  useEffect(() => {
+    axios.get('/api/v1/jobs', { params: { limit: 200 } })
+      .then((res) => setJobs(res.data.data || []))
+      .catch(() => {});
+  }, []);
+
+  const filtersRef = useRef({ expYearsMin: '', expYearsMax: '', salaryMin: '', salaryMax: '', filterJobId: '', filterStatus: '' });
+  filtersRef.current = { expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus };
+
   const fetchResumes = useCallback(async (query?: string, pageNum = 1) => {
     try {
       setLoading(true);
+      const f = filtersRef.current;
       const params: any = { limit: PAGE_SIZE, page: pageNum };
       if (query) params.search = query;
+      if (f.expYearsMin) params.expYearsMin = f.expYearsMin;
+      if (f.expYearsMax) params.expYearsMax = f.expYearsMax;
+      if (f.salaryMin) params.salaryMin = f.salaryMin;
+      if (f.salaryMax) params.salaryMax = f.salaryMax;
+      if (f.filterJobId) params.jobId = f.filterJobId;
+      if (f.filterStatus) params.pipelineStatus = f.filterStatus;
       const res = await axios.get('/api/v1/resumes', { params });
       setResumes(res.data.data || []);
       const pag = res.data.pagination;
@@ -609,6 +636,10 @@ export default function TalentHub() {
       fetchResumes(value, 1);
     }, 300);
   };
+
+  const applyFilters = useCallback(() => {
+    fetchResumes(search || undefined, 1);
+  }, [fetchResumes, search]);
 
   const handlePageChange = useCallback((newPage: number) => {
     fetchResumes(search || undefined, newPage);
@@ -659,7 +690,7 @@ export default function TalentHub() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">{t('product.talent.title', 'Talent Hub')}</h2>
-          <p className="mt-1 text-sm text-slate-500">{t('product.talent.subtitle', 'Your candidate repository with AI-powered insights.')}</p>
+          <p className="mt-1 text-sm text-slate-600">{t('product.talent.subtitle', 'Your candidate repository with AI-powered insights.')}</p>
         </div>
         <button
           onClick={() => setShowUpload(true)}
@@ -710,6 +741,118 @@ export default function TalentHub() {
         </div>
       </div>
 
+      {/* Filter Bar */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          {/* Avatar icon + placeholder */}
+          <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100">
+              <svg className="w-4.5 h-4.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </div>
+            <span className="text-sm text-slate-500">{t('product.talent.filterHint', 'Please enter the criteria for the candidates you are looking for')}</span>
+          </div>
+
+          {/* Search button */}
+          <button
+            onClick={applyFilters}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-white hover:bg-indigo-600 transition-colors shadow-sm"
+            title={t('common.search', 'Search')}
+          >
+            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Filter row */}
+        <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-3">
+          {/* Work Years */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-700 font-medium whitespace-nowrap">{t('product.talent.filterWorkYears', 'Work Years')}:</span>
+            <input
+              type="number"
+              min="0"
+              value={expYearsMin}
+              onChange={(e) => setExpYearsMin(e.target.value)}
+              placeholder={t('product.talent.filterMin', 'Min')}
+              className="w-18 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-center text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+            <span className="text-slate-400">–</span>
+            <input
+              type="number"
+              min="0"
+              value={expYearsMax}
+              onChange={(e) => setExpYearsMax(e.target.value)}
+              placeholder={t('product.talent.filterMax', 'Max')}
+              className="w-18 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-center text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Expected Salary */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-700 font-medium whitespace-nowrap">{t('product.talent.filterSalary', 'Expected Salary')}:</span>
+            <input
+              type="number"
+              min="0"
+              value={salaryMin}
+              onChange={(e) => setSalaryMin(e.target.value)}
+              placeholder={t('product.talent.filterMin', 'Min')}
+              className="w-24 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-center text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+            <span className="text-slate-400">–</span>
+            <input
+              type="number"
+              min="0"
+              value={salaryMax}
+              onChange={(e) => setSalaryMax(e.target.value)}
+              placeholder={t('product.talent.filterMax', 'Max')}
+              className="w-24 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-center text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Job dropdown */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-700 font-medium whitespace-nowrap">{t('product.talent.filterJob', 'Job')}:</span>
+            <select
+              value={filterJobId}
+              onChange={(e) => { setFilterJobId(e.target.value); }}
+              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 min-w-[120px]"
+            >
+              <option value="">{t('product.talent.filterAllJobs', 'All Jobs')}</option>
+              {jobs.map((j) => (
+                <option key={j.id} value={j.id}>{j.title}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status dropdown */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-700 font-medium whitespace-nowrap">{t('product.talent.filterStatusLabel', 'Status')}:</span>
+            <select
+              value={filterStatus}
+              onChange={(e) => { setFilterStatus(e.target.value); }}
+              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 min-w-[120px]"
+            >
+              <option value="">{t('product.talent.filterAllStatus', 'All Status')}</option>
+              <option value="matched">{t('product.talent.filterMatched', 'Matched')}</option>
+              <option value="shortlisted">{t('product.talent.filterShortlisted', 'Shortlisted')}</option>
+              <option value="invited">{t('product.talent.filterInvited', 'Invited')}</option>
+              <option value="rejected">{t('product.talent.filterRejected', 'Rejected')}</option>
+            </select>
+          </div>
+
+          {/* More Filters toggle */}
+          <button
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 whitespace-nowrap"
+          >
+            {t('product.talent.filterMore', 'More Filters')}
+          </button>
+        </div>
+      </div>
+
       {/* Resume Upload Modal */}
       <ResumeUploadModal
         open={showUpload}
@@ -732,7 +875,7 @@ export default function TalentHub() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <h3 className="text-lg font-semibold text-slate-900">{t('product.talent.empty', 'No candidates yet')}</h3>
-          <p className="mt-1 text-sm text-slate-500">{t('product.talent.emptyDesc', 'Upload resumes to build your talent pool.')}</p>
+          <p className="mt-1 text-sm text-slate-600">{t('product.talent.emptyDesc', 'Upload resumes to build your talent pool.')}</p>
           <button
             onClick={() => setShowUpload(true)}
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"

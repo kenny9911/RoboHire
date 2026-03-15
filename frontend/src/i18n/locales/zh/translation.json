@@ -2279,7 +2279,20 @@
       "termsOfService": "服务条款",
       "and": "和",
       "privacyPolicy": "隐私政策",
-      "joinNow": "立即加入"
+      "joinNow": "立即加入",
+      "invalidLink": "无效的面试链接",
+      "failedToLoad": "加载面试失败",
+      "disconnectedLocal": "面试连接已在本地关闭，您可以重新加入继续。",
+      "disconnectedLost": "面试连接已断开，请重新加入继续。",
+      "rejoin": "重新加入面试",
+      "defaultDevice": "默认",
+      "unknownDevice": "未知设备",
+      "preparingTitle": "正在准备您的面试",
+      "preparingSubtitle": "我们正在设置房间访问权限并加载面试官配置。",
+      "preparingRoomAccess": "正在生成安全的房间访问权限",
+      "preparingAgent": "正在加载面试提示和 AI 面试官设置",
+      "preparingNextStep": "摄像头和麦克风检查将在下一步出现",
+      "preparingHint": "通常只需几秒钟。"
     },
     "jobs": {
       "title": "职位管理",
@@ -2543,7 +2556,21 @@
         "runMatching": "运行匹配",
         "success": "匹配成功完成！",
         "error": "匹配失败，请重试。"
-      }
+      },
+      "filterHint": "请输入您要搜索的候选人条件",
+      "filterWorkYears": "工作年限",
+      "filterSalary": "期望薪资",
+      "filterMin": "最低",
+      "filterMax": "最高",
+      "filterJob": "职位",
+      "filterAllJobs": "所有职位",
+      "filterStatusLabel": "状态",
+      "filterAllStatus": "所有状态",
+      "filterMatched": "已匹配",
+      "filterShortlisted": "已入选",
+      "filterInvited": "已邀请",
+      "filterRejected": "已拒绝",
+      "filterMore": "更多筛选"
     },
     "matching": {
       "title": "智能匹配",

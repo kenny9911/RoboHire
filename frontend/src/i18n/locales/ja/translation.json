@@ -2179,7 +2179,20 @@
       "termsOfService": "利用規約",
       "and": "および",
       "privacyPolicy": "プライバシーポリシー",
-      "joinNow": "今すぐ参加"
+      "joinNow": "今すぐ参加",
+      "invalidLink": "無効な面接リンクです",
+      "failedToLoad": "面接の読み込みに失敗しました",
+      "disconnectedLocal": "面接接続がローカルで切断されました。再参加して続けることができます。",
+      "disconnectedLost": "面接接続が切断されました。再参加してください。",
+      "rejoin": "面接に再参加",
+      "defaultDevice": "デフォルト",
+      "unknownDevice": "不明なデバイス",
+      "preparingTitle": "面接を準備しています",
+      "preparingSubtitle": "ルームアクセスの設定とインタビュアーの構成を読み込んでいます。",
+      "preparingRoomAccess": "安全なルームアクセスを生成中",
+      "preparingAgent": "面接プロンプトとAIインタビュアーの設定を読み込み中",
+      "preparingNextStep": "次にカメラとマイクのチェックが表示されます",
+      "preparingHint": "通常、数秒で完了します。"
     },
     "jobs": {
       "title": "求人管理",
@@ -2463,7 +2476,21 @@
         "runMatching": "マッチング実行",
         "success": "マッチングが正常に完了しました！",
         "error": "マッチングに失敗しました。もう一度お試しください。"
-      }
+      },
+      "filterHint": "候補者の検索条件を入力してください",
+      "filterWorkYears": "勤務年数",
+      "filterSalary": "希望給与",
+      "filterMin": "最小",
+      "filterMax": "最大",
+      "filterJob": "職種",
+      "filterAllJobs": "すべての職種",
+      "filterStatusLabel": "ステータス",
+      "filterAllStatus": "すべてのステータス",
+      "filterMatched": "マッチ済み",
+      "filterShortlisted": "候補リスト",
+      "filterInvited": "招待済み",
+      "filterRejected": "不採用",
+      "filterMore": "その他のフィルター"
     },
     "matching": {
       "title": "スマートマッチング",

@@ -15,6 +15,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "agent:start": "tsx src/interview-worker.ts start",
+    "agent:download-files": "tsx src/interview-worker.ts download-files",
     "postinstall": "prisma generate"
   },
   "dependencies": {

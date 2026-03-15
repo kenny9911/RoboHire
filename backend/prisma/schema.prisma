@@ -55,6 +55,7 @@ model User {
   matchingSessions   MatchingSession[]
   activities         UserActivity[]
   resumeVersions     ResumeVersion[]
+  interviewRoomConfigVersionsCreated InterviewRoomConfigVersion[] @relation("InterviewRoomConfigVersionsCreated")
 
   @@index([email])
   @@index([provider, providerId])
@@ -313,6 +314,25 @@ model AppConfig {
   updatedBy String?
 
   @@index([key])
+}
+
+model InterviewRoomConfigVersion {
+  id            String   @id @default(cuid())
+  versionNumber Int      @unique
+  versionLabel  String?
+  changeNote    String?  @db.Text
+  config        Json
+  isActive      Boolean  @default(false)
+  activatedAt   DateTime?
+  createdAt     DateTime @default(now())
+  createdById   String?
+
+  createdByUser User?    @relation("InterviewRoomConfigVersionsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([versionNumber])
+  @@index([isActive, createdAt])
+  @@index([createdById])
+  @@index([createdAt])
 }
 
 model Resume {

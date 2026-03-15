@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
 
@@ -33,6 +33,8 @@ interface RequestLogRecord {
   provider?: string | null;
   model?: string | null;
   createdAt: string;
+  requestPayload?: Record<string, unknown> | null;
+  responsePayload?: Record<string, unknown> | null;
   user?: { id: string; email: string; name?: string | null } | null;
   llmCallLog: LLMCallDetail[];
 }
@@ -84,6 +86,10 @@ function methodBadge(method: string) {
     DELETE: 'bg-rose-100 text-rose-700',
   };
   return colors[method] || 'bg-slate-100 text-slate-700';
+}
+
+function hasExpandableContent(record: RequestLogRecord): boolean {
+  return record.llmCallLog.length > 0 || !!record.requestPayload || !!record.responsePayload;
 }
 
 export default function LogsTab() {
@@ -270,10 +276,10 @@ export default function LogsTab() {
                     </tr>
                   ) : (
                     records.map((r) => (
-                      <>
-                        <tr key={r.id} className={`hover:bg-slate-50/60 ${expandedRow === r.id ? 'bg-slate-50' : ''}`}>
+                      <Fragment key={r.id}>
+                        <tr className={`hover:bg-slate-50/60 ${expandedRow === r.id ? 'bg-slate-50' : ''}`}>
                           <td className="px-4 py-2.5">
-                            {r.llmCallLog.length > 0 && (
+                            {hasExpandableContent(r) && (
                               <button
                                 onClick={() => setExpandedRow(expandedRow === r.id ? null : r.id)}
                                 className="text-slate-400 hover:text-slate-600 text-xs"
@@ -311,39 +317,62 @@ export default function LogsTab() {
                           <td className="px-4 py-2.5 text-xs text-right text-slate-600">{r.totalTokens > 0 ? r.totalTokens.toLocaleString() : '-'}</td>
                           <td className="px-4 py-2.5 text-xs text-right font-medium text-emerald-600">{r.cost > 0 ? formatCost(r.cost) : '-'}</td>
                         </tr>
-                        {/* Expanded LLM call details */}
-                        {expandedRow === r.id && r.llmCallLog.length > 0 && (
-                          <tr key={`${r.id}-detail`}>
+                        {expandedRow === r.id && hasExpandableContent(r) && (
+                          <tr>
                             <td colSpan={11} className="bg-slate-50/70 px-8 py-3">
-                              <p className="text-xs font-medium text-slate-500 mb-2">{t('admin.logs.llmCallDetails', 'LLM Call Details')}</p>
-                              <table className="w-full text-xs">
-                                <thead>
-                                  <tr className="text-left text-slate-400">
-                                    <th className="pb-1 pr-4">{t('admin.logs.provider', 'Provider')}</th>
-                                    <th className="pb-1 pr-4">{t('admin.logs.model', 'Model')}</th>
-                                    <th className="pb-1 pr-4 text-right">{t('admin.logs.inputTokens', 'Input')}</th>
-                                    <th className="pb-1 pr-4 text-right">{t('admin.logs.outputTokens', 'Output')}</th>
-                                    <th className="pb-1 pr-4 text-right">{t('admin.logs.cost', 'Cost')}</th>
-                                    <th className="pb-1 text-right">{t('admin.logs.duration', 'Duration')}</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200/60">
-                                  {r.llmCallLog.map((call) => (
-                                    <tr key={call.id}>
-                                      <td className="py-1 pr-4 text-slate-600">{call.provider}</td>
-                                      <td className="py-1 pr-4 text-slate-600">{call.model}</td>
-                                      <td className="py-1 pr-4 text-right text-slate-600">{call.promptTokens.toLocaleString()}</td>
-                                      <td className="py-1 pr-4 text-right text-slate-600">{call.completionTokens.toLocaleString()}</td>
-                                      <td className="py-1 pr-4 text-right font-medium text-emerald-600">{formatCost(call.cost)}</td>
-                                      <td className="py-1 text-right text-slate-500">{formatDuration(call.durationMs)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                              <div className="space-y-4">
+                                {r.llmCallLog.length > 0 && (
+                                  <div>
+                                    <p className="mb-2 text-xs font-medium text-slate-500">{t('admin.logs.llmCallDetails', 'LLM Call Details')}</p>
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="text-left text-slate-400">
+                                          <th className="pb-1 pr-4">{t('admin.logs.provider', 'Provider')}</th>
+                                          <th className="pb-1 pr-4">{t('admin.logs.model', 'Model')}</th>
+                                          <th className="pb-1 pr-4 text-right">{t('admin.logs.inputTokens', 'Input')}</th>
+                                          <th className="pb-1 pr-4 text-right">{t('admin.logs.outputTokens', 'Output')}</th>
+                                          <th className="pb-1 pr-4 text-right">{t('admin.logs.cost', 'Cost')}</th>
+                                          <th className="pb-1 text-right">{t('admin.logs.duration', 'Duration')}</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-slate-200/60">
+                                        {r.llmCallLog.map((call) => (
+                                          <tr key={call.id}>
+                                            <td className="py-1 pr-4 text-slate-600">{call.provider}</td>
+                                            <td className="py-1 pr-4 text-slate-600">{call.model}</td>
+                                            <td className="py-1 pr-4 text-right text-slate-600">{call.promptTokens.toLocaleString()}</td>
+                                            <td className="py-1 pr-4 text-right text-slate-600">{call.completionTokens.toLocaleString()}</td>
+                                            <td className="py-1 pr-4 text-right font-medium text-emerald-600">{formatCost(call.cost)}</td>
+                                            <td className="py-1 text-right text-slate-500">{formatDuration(call.durationMs)}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+
+                                {r.requestPayload && (
+                                  <div>
+                                    <p className="mb-2 text-xs font-medium text-slate-500">{t('admin.logs.requestPayload', 'Request Payload')}</p>
+                                    <pre className="max-h-[420px] overflow-auto rounded-2xl bg-slate-950 p-4 text-[11px] leading-5 text-slate-100">
+                                      {JSON.stringify(r.requestPayload, null, 2)}
+                                    </pre>
+                                  </div>
+                                )}
+
+                                {r.responsePayload && (
+                                  <div>
+                                    <p className="mb-2 text-xs font-medium text-slate-500">{t('admin.logs.responsePayload', 'Response Payload')}</p>
+                                    <pre className="max-h-[320px] overflow-auto rounded-2xl bg-slate-900 p-4 text-[11px] leading-5 text-slate-100">
+                                      {JSON.stringify(r.responsePayload, null, 2)}
+                                    </pre>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     ))
                   )}
                 </tbody>

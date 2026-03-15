@@ -66,6 +66,23 @@ interface SystemStats {
   totalMatches?: number;
 }
 
+interface InterviewConfigVersionRecord {
+  id: string;
+  versionNumber: number;
+  versionLabel?: string | null;
+  changeNote?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  activatedAt?: string | null;
+  createdBy?: {
+    id: string;
+    email: string;
+    name?: string | null;
+  } | null;
+  config: Record<string, string>;
+  populatedKeys: string[];
+}
+
 type AnalyticsBucket = 'hour' | 'day' | 'week';
 
 interface UsageTimeRow {
@@ -183,6 +200,303 @@ async function authFetch(endpoint: string, options: RequestInit = {}) {
 
 const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Activity', 'Pricing', 'Interview', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
+const INTERVIEW_CONFIG_FIELDS = [
+  'interview.instructions',
+  'interview.agentName',
+  'interview.sttProvider',
+  'interview.sttModel',
+  'interview.llmProvider',
+  'interview.llmModel',
+  'interview.ttsProvider',
+  'interview.ttsModel',
+  'interview.ttsVoice',
+  'interview.language',
+  'interview.turnDetection',
+  'interview.allowInterruptions',
+  'interview.discardAudioIfUninterruptible',
+  'interview.preemptiveGeneration',
+  'interview.minInterruptionDurationMs',
+  'interview.minInterruptionWords',
+  'interview.minEndpointingDelayMs',
+  'interview.maxEndpointingDelayMs',
+  'interview.aecWarmupDurationMs',
+  'interview.useTtsAlignedTranscript',
+  'interview.logInterimTranscripts',
+] as const;
+type InterviewConfigFieldKey = (typeof INTERVIEW_CONFIG_FIELDS)[number];
+const INTERVIEW_CONFIG_DEFAULTS: Record<InterviewConfigFieldKey, string> = {
+  'interview.instructions': '',
+  'interview.agentName': 'RoboHire-1',
+  'interview.sttProvider': 'livekit-inference',
+  'interview.sttModel': 'elevenlabs/scribe_v2_realtime',
+  'interview.llmProvider': 'openai',
+  'interview.llmModel': 'openai/gpt-5.4',
+  'interview.ttsProvider': 'livekit-inference',
+  'interview.ttsModel': 'cartesia/sonic-3',
+  'interview.ttsVoice': 'e90c6678-f0d3-4767-9883-5d0ecf5894a8',
+  'interview.language': 'en',
+  'interview.turnDetection': 'multilingual_eou',
+  'interview.allowInterruptions': 'true',
+  'interview.discardAudioIfUninterruptible': 'true',
+  'interview.preemptiveGeneration': 'false',
+  'interview.minInterruptionDurationMs': '900',
+  'interview.minInterruptionWords': '2',
+  'interview.minEndpointingDelayMs': '900',
+  'interview.maxEndpointingDelayMs': '6000',
+  'interview.aecWarmupDurationMs': '3000',
+  'interview.useTtsAlignedTranscript': 'true',
+  'interview.logInterimTranscripts': 'false',
+};
+
+type ConfigFieldInfo = {
+  title: string;
+  what: string;
+  effect: string;
+  dependencies: string;
+};
+
+const INTERVIEW_CONFIG_FIELD_INFO: Record<InterviewConfigFieldKey, ConfigFieldInfo> = {
+  'interview.instructions': {
+    title: 'Interview Instructions',
+    what: 'The optional system prompt override injected into the interviewer agent before the session starts.',
+    effect: 'If you provide text here, every interview uses this exact prompt. If left blank, the backend generates a tailored prompt per interview from the job, company, language, and resume context.',
+    dependencies: 'Works with `llmProvider`, `llmModel`, and the candidate/job metadata passed into the room. Leaving it blank enables `InterviewPromptAgent` generation.',
+  },
+  'interview.agentName': {
+    title: 'Agent Name',
+    what: 'The LiveKit Cloud agent dispatch name used when creating an interview room.',
+    effect: 'Determines which deployed worker receives the job. A wrong name can send traffic to the wrong agent or fail dispatch.',
+    dependencies: 'Must match the registered LiveKit worker name in production.',
+  },
+  'interview.sttProvider': {
+    title: 'STT Provider',
+    what: 'Selects the speech-to-text backend used to transcribe candidate audio.',
+    effect: 'Changes latency, language coverage, transcript quality, and what model IDs are valid.',
+    dependencies: 'Must be paired with a compatible `sttModel`. Current worker support is `livekit-inference` or `openai`.',
+  },
+  'interview.sttModel': {
+    title: 'STT Model',
+    what: 'The exact recognizer model identifier used by the selected STT provider.',
+    effect: 'Changes recognition quality, supported languages, punctuation behavior, and cost profile.',
+    dependencies: 'Must be valid for the selected `sttProvider`. It also interacts with `language` and turn detection quality.',
+  },
+  'interview.llmProvider': {
+    title: 'LLM Provider',
+    what: 'Chooses the language-model backend that plans the interview and writes responses.',
+    effect: 'Changes reasoning style, response speed, multilingual quality, and token pricing.',
+    dependencies: 'Must be paired with a compatible `llmModel`. Current worker support is `google` or `openai`.',
+  },
+  'interview.llmModel': {
+    title: 'LLM Model',
+    what: 'The exact model name used for interviewer reasoning and response generation.',
+    effect: 'Changes answer quality, latency, instruction-following, and multilingual fluency.',
+    dependencies: 'Must be valid for the selected `llmProvider`. Strongly affected by `instructions` length and structure.',
+  },
+  'interview.ttsProvider': {
+    title: 'TTS Provider',
+    what: 'Selects the text-to-speech backend that renders the interviewer voice.',
+    effect: 'Changes voice quality, streaming latency, alignment support, and valid model/voice IDs.',
+    dependencies: 'Must be paired with a compatible `ttsModel`. Current worker support is `livekit-inference` or `openai`.',
+  },
+  'interview.ttsModel': {
+    title: 'TTS Model',
+    what: 'The exact synthesis model identifier used by the selected TTS provider.',
+    effect: 'Changes timbre, latency, multilingual voice quality, and audio alignment behavior.',
+    dependencies: 'Must be valid for the selected `ttsProvider`. Some models work better with `useTtsAlignedTranscript` than others.',
+  },
+  'interview.ttsVoice': {
+    title: 'TTS Voice',
+    what: 'The default voice ID or preset name for the interviewer.',
+    effect: 'Changes the interviewer’s sound, accent, and personality. Invalid values can break audio generation.',
+    dependencies: 'Must exist for the selected `ttsProvider` and `ttsModel`. Voice availability is provider-specific.',
+  },
+  'interview.language': {
+    title: 'Default Language',
+    what: 'The default interview language used to normalize STT/TTS language codes.',
+    effect: 'Improves multilingual transcription and synthesis defaults, especially when the user language is known ahead of time.',
+    dependencies: 'Affects STT language normalization, TTS language normalization, and prompt wording. Best results also depend on the chosen STT/TTS models.',
+  },
+  'interview.turnDetection': {
+    title: 'Turn Detection',
+    what: 'Controls how the agent decides that the candidate has finished speaking.',
+    effect: 'Has the biggest impact on barge-in stability, pause handling, and multilingual end-of-turn accuracy.',
+    dependencies: 'Interacts with `minEndpointingDelayMs`, `maxEndpointingDelayMs`, `allowInterruptions`, and STT/VAD quality. `multilingual_eou` is usually the safest multilingual option.',
+  },
+  'interview.allowInterruptions': {
+    title: 'Allow Interruptions',
+    what: 'Determines whether the candidate can interrupt the interviewer while the agent is speaking.',
+    effect: 'Makes the conversation feel natural when tuned well, but aggressive settings can cause unstable turn-taking.',
+    dependencies: 'Works with `minInterruptionDurationMs`, `minInterruptionWords`, `aecWarmupDurationMs`, and the active turn-detection mode.',
+  },
+  'interview.discardAudioIfUninterruptible': {
+    title: 'Discard Audio If Uninterruptible',
+    what: 'Controls whether candidate audio is dropped when the current assistant speech segment cannot be interrupted.',
+    effect: 'Prevents buffered echo or stale speech from being processed after protected playback finishes.',
+    dependencies: 'Most relevant when interruptions are disabled globally or a speech segment is temporarily uninterruptible.',
+  },
+  'interview.preemptiveGeneration': {
+    title: 'Preemptive Generation',
+    what: 'Allows the agent to start generating a reply before turn detection fully settles.',
+    effect: 'Can reduce perceived latency, but it also increases the chance of premature or incorrect replies.',
+    dependencies: 'Interacts heavily with `turnDetection` and endpointing delays. Usually needs conservative turn settings to stay stable.',
+  },
+  'interview.minInterruptionDurationMs': {
+    title: 'Min Interruption Duration Ms',
+    what: 'The minimum speech duration the user must sustain before the agent accepts an interruption.',
+    effect: 'Higher values reduce accidental barge-ins from breaths, echo, and filler sounds. Lower values feel more responsive.',
+    dependencies: 'Only matters when `allowInterruptions` is enabled. Also depends on mic quality, echo cancellation, and VAD/STT accuracy.',
+  },
+  'interview.minInterruptionWords': {
+    title: 'Min Interruption Words',
+    what: 'The minimum number of recognized words required before the agent yields to the user.',
+    effect: 'Higher values filter out fillers like “uh” or “嗯”; lower values allow very fast takeovers.',
+    dependencies: 'Only matters when `allowInterruptions` is enabled and STT is producing usable transcripts.',
+  },
+  'interview.minEndpointingDelayMs': {
+    title: 'Min Endpointing Delay Ms',
+    what: 'The shortest silence window the system allows before committing the user turn.',
+    effect: 'Higher values reduce premature cutoffs; lower values make the interview feel faster but more fragile.',
+    dependencies: 'Strongly tied to `turnDetection`, language pacing, and STT quality. Critical for multilingual stability.',
+  },
+  'interview.maxEndpointingDelayMs': {
+    title: 'Max Endpointing Delay Ms',
+    what: 'The longest silence window the system waits before forcing the end of the user turn.',
+    effect: 'Caps how long the agent will wait during long pauses. Too low can interrupt reflective answers; too high can make the session feel sluggish.',
+    dependencies: 'Works with `minEndpointingDelayMs` and the chosen `turnDetection` mode.',
+  },
+  'interview.aecWarmupDurationMs': {
+    title: 'AEC Warmup Duration Ms',
+    what: 'A short protection window after agent playback starts while echo cancellation settles.',
+    effect: 'Reduces false interruptions caused by the interviewer audio leaking back into the candidate mic.',
+    dependencies: 'Most important when `allowInterruptions` is enabled and the user is on speakers instead of headphones.',
+  },
+  'interview.useTtsAlignedTranscript': {
+    title: 'Use TTS Aligned Transcript',
+    what: 'Tells the session to use TTS alignment data when available for transcript/playback synchronization.',
+    effect: 'Improves spoken-word timing, interruption handling, and trace quality for agent responses.',
+    dependencies: 'Depends on the selected TTS provider/model exposing alignment metadata. It is most useful for streaming TTS with barge-in.',
+  },
+  'interview.logInterimTranscripts': {
+    title: 'Log Interim Transcripts',
+    what: 'Stores partial STT hypotheses before the final transcript is committed.',
+    effect: 'Makes diagnostics and multilingual tuning easier, but increases log volume and noise.',
+    dependencies: 'Depends on the STT provider emitting interim results. It does not improve quality by itself; it improves observability.',
+  },
+};
+
+const INTERVIEW_RELEASE_FIELD_INFO: Record<'versionLabel' | 'changeNote', ConfigFieldInfo> = {
+  versionLabel: {
+    title: 'Version Label',
+    what: 'A human-readable release label for this saved interview configuration.',
+    effect: 'Makes it easier for admins to recognize stable tuning milestones such as `v1.0` or a language-specific release.',
+    dependencies: 'Does not change runtime behavior. The immutable numeric version is still tracked separately in the database.',
+  },
+  changeNote: {
+    title: 'Change Note',
+    what: 'A short release note describing what changed in this version.',
+    effect: 'Improves traceability when comparing tuning experiments and production regressions.',
+    dependencies: 'Does not affect runtime behavior, but it is saved with the version history for admin review.',
+  },
+};
+
+function normalizeInterviewConfig(config?: Record<string, string> | null): Record<string, string> {
+  const normalized: Record<string, string> = {};
+  for (const key of INTERVIEW_CONFIG_FIELDS) {
+    const rawValue = config?.[key];
+    normalized[key] =
+      typeof rawValue === 'string' && rawValue.trim().length > 0
+        ? rawValue
+        : INTERVIEW_CONFIG_DEFAULTS[key];
+  }
+  return normalized;
+}
+
+function diffInterviewConfigKeys(
+  current: Record<string, string>,
+  baseline: Record<string, string>,
+): string[] {
+  return INTERVIEW_CONFIG_FIELDS.filter((key) => (current[key] ?? '') !== (baseline[key] ?? ''));
+}
+
+function formatAdminTimestamp(value?: string | null): string {
+  if (!value) return 'N/A';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
+
+function ConfigInfoPopover({ info }: { info: ConfigFieldInfo }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative inline-flex">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-bold text-slate-500 transition hover:border-cyan-400 hover:text-cyan-600"
+        aria-label={`Show information about ${info.title}`}
+        aria-expanded={open}
+      >
+        i
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-2 w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-slate-200 bg-white p-4 text-left shadow-xl">
+          <p className="text-sm font-semibold text-slate-900">{info.title}</p>
+          <div className="mt-3 space-y-3 text-xs leading-5 text-slate-600">
+            <div>
+              <p className="font-semibold uppercase tracking-[0.14em] text-slate-500">What it is</p>
+              <p className="mt-1">{info.what}</p>
+            </div>
+            <div>
+              <p className="font-semibold uppercase tracking-[0.14em] text-slate-500">Effect</p>
+              <p className="mt-1">{info.effect}</p>
+            </div>
+            <div>
+              <p className="font-semibold uppercase tracking-[0.14em] text-slate-500">Dependencies</p>
+              <p className="mt-1">{info.dependencies}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ConfigFieldLabel({ label, info }: { label: string; info: ConfigFieldInfo }) {
+  return (
+    <div className="mb-1 flex items-center gap-1.5">
+      <span className="text-xs font-medium text-gray-600">{label}</span>
+      <ConfigInfoPopover info={info} />
+    </div>
+  );
+}
 
 // --- Badge helpers ---
 function tierBadge(tier: string) {
@@ -1810,34 +2124,125 @@ function UsageLimitsSection() {
 }
 
 function InterviewConfigTab() {
-  const [config, setConfig] = useState<Record<string, string>>({});
+  const [config, setConfig] = useState<Record<string, string>>(normalizeInterviewConfig());
+  const [versions, setVersions] = useState<InterviewConfigVersionRecord[]>([]);
+  const [activeVersion, setActiveVersion] = useState<InterviewConfigVersionRecord | null>(null);
+  const [versionLabel, setVersionLabel] = useState('');
+  const [changeNote, setChangeNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [activatingVersionId, setActivatingVersionId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [productionNote, setProductionNote] = useState('');
+  const baselineConfigRef = useRef<Record<string, string>>(normalizeInterviewConfig());
+
+  const loadConfig = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await adminFetch('/interview-config');
+      const payload = data.data || {};
+      const normalizedConfig = normalizeInterviewConfig(payload.config || {});
+      setConfig(normalizedConfig);
+      baselineConfigRef.current = normalizedConfig;
+      setActiveVersion(payload.activeVersion || null);
+      setVersions(Array.isArray(payload.versions) ? payload.versions : []);
+      setProductionNote(payload.productionStatus?.note || '');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load config');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    adminFetch('/interview-config')
-      .then((data) => setConfig(data.data || {}))
-      .catch(() => setMessage('Failed to load config'))
-      .finally(() => setLoading(false));
-  }, []);
+    loadConfig();
+  }, [loadConfig]);
 
   const updateField = (key: string, value: string) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleLoadVersion = (version: InterviewConfigVersionRecord) => {
+    setConfig(normalizeInterviewConfig(version.config));
+    setVersionLabel(version.versionLabel || `Based on v${version.versionNumber}`);
+    setChangeNote(
+      version.changeNote
+        ? `Loaded from v${version.versionNumber}: ${version.changeNote}`
+        : `Loaded from v${version.versionNumber}`,
+    );
+    setError('');
+    setMessage(`Loaded version v${version.versionNumber} into the editor. Save to publish it.`);
+  };
+
+  const handleActivateVersion = async (version: InterviewConfigVersionRecord) => {
+    setActivatingVersionId(version.id);
+    setMessage('');
+    setError('');
+    try {
+      const data = await adminFetch(`/interview-config/${version.id}/activate`, {
+        method: 'POST',
+      });
+
+      const payload = data.data || {};
+      const normalizedConfig = normalizeInterviewConfig(payload.config || version.config || {});
+      baselineConfigRef.current = normalizedConfig;
+      setConfig(normalizedConfig);
+      setActiveVersion(payload.activeVersion || null);
+      setVersions(Array.isArray(payload.versions) ? payload.versions : []);
+      setProductionNote(payload.productionStatus?.note || productionNote);
+      setVersionLabel('');
+      setChangeNote('');
+      setMessage(`Version v${version.versionNumber} is now active in production.`);
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to activate version');
+    } finally {
+      setActivatingVersionId(null);
+    }
+  };
+
+  const handleResetToActive = () => {
+    const resetConfig = normalizeInterviewConfig(activeVersion?.config || baselineConfigRef.current);
+    setConfig(resetConfig);
+    setVersionLabel('');
+    setChangeNote('');
+    setError('');
+    setMessage('Editor reset to the active production version.');
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setMessage('');
+    setError('');
     try {
-      await adminFetch('/interview-config', {
+      const data = await adminFetch('/interview-config', {
         method: 'PUT',
-        body: JSON.stringify(config),
+        body: JSON.stringify({
+          config,
+          versionLabel,
+          changeNote,
+        }),
       });
-      setMessage('Configuration saved');
+
+      const payload = data.data || {};
+      const normalizedConfig = normalizeInterviewConfig(payload.config || config);
+      baselineConfigRef.current = normalizedConfig;
+      setConfig(normalizedConfig);
+      setActiveVersion(payload.activeVersion || null);
+      setVersions(Array.isArray(payload.versions) ? payload.versions : []);
+      setProductionNote(payload.productionStatus?.note || productionNote);
+      setVersionLabel('');
+      setChangeNote('');
+      setMessage(
+        payload.activeVersion?.versionNumber
+          ? `Version v${payload.activeVersion.versionNumber} is now active in production.`
+          : 'Configuration saved',
+      );
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
       setSaving(false);
     }
@@ -1848,163 +2253,542 @@ function InterviewConfigTab() {
   }
 
   const inputCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500';
-  const labelCls = 'block text-xs font-medium text-gray-600 mb-1';
+  const changedKeys = diffInterviewConfigKeys(config, baselineConfigRef.current);
+  const hasUnsavedChanges = changedKeys.length > 0 || versionLabel.trim().length > 0 || changeNote.trim().length > 0;
+  const llmProviderValue = (config['interview.llmProvider'] || '').trim().toLowerCase();
+  const llmModelValue = (config['interview.llmModel'] || '').trim();
+  const llmConfigWarning =
+    llmProviderValue === 'google' && /^gpt/i.test(llmModelValue)
+      ? 'The current LLM config resolves to Google as the provider, but the model looks like an OpenAI model. This combination is likely invalid at runtime.'
+      : llmProviderValue === 'openai' && /gemini/i.test(llmModelValue)
+        ? 'The current LLM config resolves to OpenAI as the provider, but the model looks like a Google Gemini model. This combination is likely invalid at runtime.'
+        : '';
 
   return (
-    <div className="max-w-2xl space-y-6">
-      {/* Instructions */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Interview Instructions</h3>
-        <p className="text-sm text-gray-500 mb-4">System prompt for the AI interviewer agent.</p>
-        <textarea
-          value={config['interview.instructions'] || ''}
-          onChange={(e) => updateField('interview.instructions', e.target.value)}
-          rows={8}
-          className={inputCls}
-          placeholder="You are an AI interviewer..."
-        />
-      </div>
-
-      {/* Agent Name */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Agent Name</h3>
-        <p className="text-sm text-gray-500 mb-4">LiveKit Cloud agent name to dispatch.</p>
-        <input
-          type="text"
-          value={config['interview.agentName'] || ''}
-          onChange={(e) => updateField('interview.agentName', e.target.value)}
-          className={inputCls}
-          placeholder="RoboHire-1"
-        />
-      </div>
-
-      {/* STT Config */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Speech-to-Text (STT)</h3>
-        <p className="text-sm text-gray-500 mb-4">Configure the speech recognition provider and model.</p>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>Provider</label>
-            <select
-              value={config['interview.sttProvider'] || 'elevenlabs'}
-              onChange={(e) => updateField('interview.sttProvider', e.target.value)}
-              className={inputCls}
-            >
-              <option value="elevenlabs">ElevenLabs</option>
-              <option value="deepgram">Deepgram</option>
-              <option value="openai">OpenAI Whisper</option>
-            </select>
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 text-white shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                Interview Room Config
+              </span>
+              {activeVersion ? (
+                <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
+                  Active v{activeVersion.versionNumber}
+                </span>
+              ) : (
+                <span className="inline-flex rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200">
+                  No saved versions yet
+                </span>
+              )}
+            </div>
+            <div>
+              <h3 className="text-2xl font-semibold tracking-tight">Publish versioned interview-room settings</h3>
+              <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                Changes are stored as immutable versions in the database. Saving creates a new version and makes it live
+                for newly started interview sessions. You can also re-activate any saved version from history.
+              </p>
+            </div>
           </div>
-          <div>
-            <label className={labelCls}>Model</label>
-            <input
-              type="text"
-              value={config['interview.sttModel'] || ''}
-              onChange={(e) => updateField('interview.sttModel', e.target.value)}
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+            <p className="font-medium text-white">
+              {activeVersion ? `Version v${activeVersion.versionNumber}` : 'Draft editor'}
+            </p>
+            <p className="mt-1 text-slate-300">
+              {activeVersion
+                ? `Published ${formatAdminTimestamp(activeVersion.activatedAt || activeVersion.createdAt)}`
+                : 'The next save will create version 1.'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_360px]">
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Interview Instructions</h3>
+            <p className="text-sm text-gray-500 mb-4">System prompt for the AI interviewer agent.</p>
+            <ConfigFieldLabel
+              label="Instructions"
+              info={INTERVIEW_CONFIG_FIELD_INFO['interview.instructions']}
+            />
+            <p className="mb-3 text-xs text-gray-500">
+              Leave this blank to auto-generate a tailored prompt for each interview from the job, company, language,
+              and resume data.
+            </p>
+            <textarea
+              value={config['interview.instructions'] || ''}
+              onChange={(e) => updateField('interview.instructions', e.target.value)}
+              rows={8}
               className={inputCls}
-              placeholder="scribe_v2"
+              placeholder="You are an AI interviewer..."
             />
           </div>
-        </div>
-        <div className="mt-4">
-          <label className={labelCls}>Language</label>
-          <select
-            value={config['interview.language'] || 'en'}
-            onChange={(e) => updateField('interview.language', e.target.value)}
-            className={inputCls}
-          >
-            <option value="en">English</option>
-            <option value="zh-CN">Chinese (Mandarin)</option>
-            <option value="zh-TW">Chinese (Traditional)</option>
-            <option value="ja">Japanese</option>
-            <option value="es">Spanish</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
-            <option value="pt">Portuguese</option>
-            <option value="ko">Korean</option>
-          </select>
-        </div>
-      </div>
 
-      {/* LLM Config */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Language Model (LLM)</h3>
-        <p className="text-sm text-gray-500 mb-4">Configure the AI model for the interviewer.</p>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>Provider</label>
-            <select
-              value={config['interview.llmProvider'] || 'openai'}
-              onChange={(e) => updateField('interview.llmProvider', e.target.value)}
-              className={inputCls}
-            >
-              <option value="openai">OpenAI</option>
-              <option value="anthropic">Anthropic</option>
-            </select>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Agent Dispatch</h3>
+            <p className="text-sm text-gray-500 mb-4">Configure the LiveKit Cloud agent name used when interview rooms are created.</p>
+            <div>
+              <ConfigFieldLabel
+                label="Agent Name"
+                info={INTERVIEW_CONFIG_FIELD_INFO['interview.agentName']}
+              />
+              <input
+                type="text"
+                value={config['interview.agentName'] || ''}
+                onChange={(e) => updateField('interview.agentName', e.target.value)}
+                className={inputCls}
+                placeholder="RoboHire-1"
+              />
+            </div>
           </div>
-          <div>
-            <label className={labelCls}>Model</label>
-            <input
-              type="text"
-              value={config['interview.llmModel'] || ''}
-              onChange={(e) => updateField('interview.llmModel', e.target.value)}
-              className={inputCls}
-              placeholder="gpt-4o"
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* TTS Config */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Text-to-Speech (TTS)</h3>
-        <p className="text-sm text-gray-500 mb-4">Configure the voice synthesis for the interviewer.</p>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>Provider</label>
-            <select
-              value={config['interview.ttsProvider'] || 'cartesia'}
-              onChange={(e) => updateField('interview.ttsProvider', e.target.value)}
-              className={inputCls}
-            >
-              <option value="cartesia">Cartesia</option>
-              <option value="elevenlabs">ElevenLabs</option>
-              <option value="openai">OpenAI</option>
-            </select>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Speech-to-Text</h3>
+            <p className="text-sm text-gray-500 mb-4">Choose the recognizer stack used to capture candidate responses.</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <ConfigFieldLabel
+                  label="Provider"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.sttProvider']}
+                />
+                <select
+                  value={config['interview.sttProvider'] || 'livekit-inference'}
+                  onChange={(e) => updateField('interview.sttProvider', e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="livekit-inference">LiveKit Inference</option>
+                  <option value="openai">OpenAI</option>
+                </select>
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Model"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.sttModel']}
+                />
+                <input
+                  type="text"
+                  value={config['interview.sttModel'] || ''}
+                  onChange={(e) => updateField('interview.sttModel', e.target.value)}
+                  className={inputCls}
+                  placeholder="elevenlabs/scribe_v2_realtime"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <ConfigFieldLabel
+                label="Default Language"
+                info={INTERVIEW_CONFIG_FIELD_INFO['interview.language']}
+              />
+              <select
+                value={config['interview.language'] || 'en'}
+                onChange={(e) => updateField('interview.language', e.target.value)}
+                className={inputCls}
+              >
+                <option value="en">English</option>
+                <option value="zh-CN">Chinese (Mandarin)</option>
+                <option value="zh-TW">Chinese (Traditional)</option>
+                <option value="ja">Japanese</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="pt">Portuguese</option>
+                <option value="ko">Korean</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className={labelCls}>Model</label>
-            <input
-              type="text"
-              value={config['interview.ttsModel'] || ''}
-              onChange={(e) => updateField('interview.ttsModel', e.target.value)}
-              className={inputCls}
-              placeholder="sonic-3"
-            />
-          </div>
-        </div>
-        <div className="mt-4">
-          <label className={labelCls}>Voice</label>
-          <input
-            type="text"
-            value={config['interview.ttsVoice'] || ''}
-            onChange={(e) => updateField('interview.ttsVoice', e.target.value)}
-            className={inputCls}
-            placeholder="alloy"
-          />
-        </div>
-      </div>
 
-      {/* Save */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-        >
-          {saving ? 'Saving...' : 'Save Configuration'}
-        </button>
-        {message && <p className={`text-sm font-medium ${message.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>{message}</p>}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Language Model</h3>
+            <p className="text-sm text-gray-500 mb-4">Configure the model responsible for interview planning and question generation.</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <ConfigFieldLabel
+                  label="Provider"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.llmProvider']}
+                />
+                <select
+                  value={config['interview.llmProvider'] || 'openai'}
+                  onChange={(e) => updateField('interview.llmProvider', e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="google">Google</option>
+                </select>
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Model"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.llmModel']}
+                />
+                <input
+                  type="text"
+                  value={config['interview.llmModel'] || ''}
+                  onChange={(e) => updateField('interview.llmModel', e.target.value)}
+                  className={inputCls}
+                  placeholder="openai/gpt-5.4"
+                />
+              </div>
+            </div>
+            {llmConfigWarning && (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {llmConfigWarning}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Text-to-Speech</h3>
+            <p className="text-sm text-gray-500 mb-4">Choose the synthesis stack and the default interviewer voice.</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <ConfigFieldLabel
+                  label="Provider"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.ttsProvider']}
+                />
+                <select
+                  value={config['interview.ttsProvider'] || 'livekit-inference'}
+                  onChange={(e) => updateField('interview.ttsProvider', e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="livekit-inference">LiveKit Inference</option>
+                  <option value="openai">OpenAI</option>
+                </select>
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Model"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.ttsModel']}
+                />
+                <input
+                  type="text"
+                  value={config['interview.ttsModel'] || ''}
+                  onChange={(e) => updateField('interview.ttsModel', e.target.value)}
+                  className={inputCls}
+                  placeholder="cartesia/sonic-3"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <ConfigFieldLabel
+                label="Voice"
+                info={INTERVIEW_CONFIG_FIELD_INFO['interview.ttsVoice']}
+              />
+              <input
+                type="text"
+                value={config['interview.ttsVoice'] || ''}
+                onChange={(e) => updateField('interview.ttsVoice', e.target.value)}
+                className={inputCls}
+                placeholder="e90c6678-f0d3-4767-9883-5d0ecf5894a8"
+              />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Turn Taking And Telemetry</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Tune barge-in, endpointing, and trace collection for multilingual interview sessions.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <ConfigFieldLabel
+                  label="Turn Detection"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.turnDetection']}
+                />
+                <select
+                  value={config['interview.turnDetection'] || 'multilingual_eou'}
+                  onChange={(e) => updateField('interview.turnDetection', e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="multilingual_eou">Multilingual EOU</option>
+                  <option value="stt">STT Endpointing</option>
+                  <option value="vad">VAD</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Allow Interruptions"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.allowInterruptions']}
+                />
+                <select
+                  value={config['interview.allowInterruptions'] || 'true'}
+                  onChange={(e) => updateField('interview.allowInterruptions', e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="true">Enabled</option>
+                  <option value="false">Disabled</option>
+                </select>
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Discard Audio If Uninterruptible"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.discardAudioIfUninterruptible']}
+                />
+                <select
+                  value={config['interview.discardAudioIfUninterruptible'] || 'true'}
+                  onChange={(e) =>
+                    updateField('interview.discardAudioIfUninterruptible', e.target.value)
+                  }
+                  className={inputCls}
+                >
+                  <option value="true">Enabled</option>
+                  <option value="false">Disabled</option>
+                </select>
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Preemptive Generation"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.preemptiveGeneration']}
+                />
+                <select
+                  value={config['interview.preemptiveGeneration'] || 'false'}
+                  onChange={(e) => updateField('interview.preemptiveGeneration', e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="false">Disabled</option>
+                  <option value="true">Enabled</option>
+                </select>
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Min Interruption Duration Ms"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.minInterruptionDurationMs']}
+                />
+                <input
+                  type="number"
+                  value={config['interview.minInterruptionDurationMs'] || '900'}
+                  onChange={(e) => updateField('interview.minInterruptionDurationMs', e.target.value)}
+                  className={inputCls}
+                  placeholder="900"
+                />
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Min Interruption Words"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.minInterruptionWords']}
+                />
+                <input
+                  type="number"
+                  value={config['interview.minInterruptionWords'] || '2'}
+                  onChange={(e) => updateField('interview.minInterruptionWords', e.target.value)}
+                  className={inputCls}
+                  placeholder="2"
+                />
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Min Endpointing Delay Ms"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.minEndpointingDelayMs']}
+                />
+                <input
+                  type="number"
+                  value={config['interview.minEndpointingDelayMs'] || '900'}
+                  onChange={(e) => updateField('interview.minEndpointingDelayMs', e.target.value)}
+                  className={inputCls}
+                  placeholder="900"
+                />
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Max Endpointing Delay Ms"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.maxEndpointingDelayMs']}
+                />
+                <input
+                  type="number"
+                  value={config['interview.maxEndpointingDelayMs'] || '6000'}
+                  onChange={(e) => updateField('interview.maxEndpointingDelayMs', e.target.value)}
+                  className={inputCls}
+                  placeholder="6000"
+                />
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="AEC Warmup Duration Ms"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.aecWarmupDurationMs']}
+                />
+                <input
+                  type="number"
+                  value={config['interview.aecWarmupDurationMs'] || '3000'}
+                  onChange={(e) => updateField('interview.aecWarmupDurationMs', e.target.value)}
+                  className={inputCls}
+                  placeholder="3000"
+                />
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Use TTS Aligned Transcript"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.useTtsAlignedTranscript']}
+                />
+                <select
+                  value={config['interview.useTtsAlignedTranscript'] || 'true'}
+                  onChange={(e) => updateField('interview.useTtsAlignedTranscript', e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="true">Enabled</option>
+                  <option value="false">Disabled</option>
+                </select>
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Log Interim Transcripts"
+                  info={INTERVIEW_CONFIG_FIELD_INFO['interview.logInterimTranscripts']}
+                />
+                <select
+                  value={config['interview.logInterimTranscripts'] || 'false'}
+                  onChange={(e) => updateField('interview.logInterimTranscripts', e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="false">Disabled</option>
+                  <option value="true">Enabled</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Release This Version</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Every save creates a new immutable version and updates the active production config for new interviews.
+                </p>
+              </div>
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${hasUnsavedChanges ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                {hasUnsavedChanges ? `${changedKeys.length} unsaved field${changedKeys.length === 1 ? '' : 's'}` : 'Editor synced'}
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <ConfigFieldLabel
+                  label="Version Label"
+                  info={INTERVIEW_RELEASE_FIELD_INFO.versionLabel}
+                />
+                <input
+                  type="text"
+                  value={versionLabel}
+                  onChange={(e) => setVersionLabel(e.target.value)}
+                  className={inputCls}
+                  placeholder="Mandarin stability tuning"
+                />
+              </div>
+              <div>
+                <ConfigFieldLabel
+                  label="Change Note"
+                  info={INTERVIEW_RELEASE_FIELD_INFO.changeNote}
+                />
+                <textarea
+                  value={changeNote}
+                  onChange={(e) => setChangeNote(e.target.value)}
+                  rows={4}
+                  className={inputCls}
+                  placeholder="Raised endpointing delay and disabled preemptive generation."
+                />
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                <p className="font-medium text-slate-800">Production behavior</p>
+                <p className="mt-1">
+                  {productionNote || 'Newly started interviews will pick up the active configuration immediately after publish or activation.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {saving ? 'Publishing...' : activeVersion ? 'Publish New Version' : 'Create v1.0'}
+                </button>
+                <button
+                  onClick={handleResetToActive}
+                  disabled={saving}
+                  className="px-4 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Reset Editor
+                </button>
+              </div>
+              {message && <p className="text-sm font-medium text-green-600">{message}</p>}
+              {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Version History</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Load any previous version into the editor for comparison, or activate it directly in production.
+                </p>
+              </div>
+              <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                {versions.length} shown
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {versions.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                  No versions have been saved yet. The first publish will create the initial production version.
+                </div>
+              )}
+
+              {versions.map((version) => (
+                <div
+                  key={version.id}
+                  className={`rounded-xl border p-4 ${version.isActive ? 'border-cyan-200 bg-cyan-50/70' : 'border-slate-200 bg-slate-50/70'}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-slate-900">v{version.versionNumber}</p>
+                        {version.isActive && (
+                          <span className="inline-flex rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-medium text-cyan-700">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-sm text-slate-700">
+                        {version.versionLabel || 'Untitled release'}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {!version.isActive && (
+                        <button
+                          onClick={() => handleActivateVersion(version)}
+                          disabled={saving || activatingVersionId === version.id}
+                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                        >
+                          {activatingVersionId === version.id ? 'Activating...' : 'Use In Production'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleLoadVersion(version)}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-white"
+                      >
+                        Load To Editor
+                      </button>
+                    </div>
+                  </div>
+                  {version.changeNote && (
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{version.changeNote}</p>
+                  )}
+                  <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
+                    <p>Saved: {formatAdminTimestamp(version.createdAt)}</p>
+                    <p>Live: {formatAdminTimestamp(version.activatedAt || version.createdAt)}</p>
+                    <p>
+                      Author: {version.createdBy?.name || version.createdBy?.email || 'Unknown admin'}
+                    </p>
+                    <p>{version.populatedKeys.length} configured fields</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

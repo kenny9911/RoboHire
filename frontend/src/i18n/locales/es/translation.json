@@ -1805,7 +1805,20 @@
       "termsOfService": "Términos de servicio",
       "and": "y",
       "privacyPolicy": "Política de privacidad",
-      "joinNow": "Unirse ahora"
+      "joinNow": "Unirse ahora",
+      "invalidLink": "Enlace de entrevista no válido",
+      "failedToLoad": "Error al cargar la entrevista",
+      "disconnectedLocal": "La conexión de la entrevista se cerró localmente. Puede volver a unirse para continuar.",
+      "disconnectedLost": "Se perdió la conexión de la entrevista. Vuelva a unirse para continuar.",
+      "rejoin": "Volver a la entrevista",
+      "defaultDevice": "Predeterminado",
+      "unknownDevice": "Dispositivo desconocido",
+      "preparingTitle": "Preparando su entrevista",
+      "preparingSubtitle": "Estamos configurando el acceso a la sala y cargando la configuración del entrevistador.",
+      "preparingRoomAccess": "Generando acceso seguro a la sala",
+      "preparingAgent": "Cargando instrucciones de entrevista y configuración del entrevistador IA",
+      "preparingNextStep": "Las verificaciones de cámara y micrófono aparecerán a continuación",
+      "preparingHint": "Esto generalmente toma unos segundos."
     },
     "jobs": {
       "title": "Empleos",
@@ -2069,7 +2082,21 @@
         "runMatching": "Ejecutar Coincidencia",
         "success": "¡Coincidencia completada con éxito!",
         "error": "Error al ejecutar la coincidencia. Inténtalo de nuevo."
-      }
+      },
+      "filterHint": "Ingrese los criterios de búsqueda de candidatos",
+      "filterWorkYears": "Años de experiencia",
+      "filterSalary": "Salario esperado",
+      "filterMin": "Mín",
+      "filterMax": "Máx",
+      "filterJob": "Puesto",
+      "filterAllJobs": "Todos los puestos",
+      "filterStatusLabel": "Estado",
+      "filterAllStatus": "Todos los estados",
+      "filterMatched": "Coincidente",
+      "filterShortlisted": "Preseleccionado",
+      "filterInvited": "Invitado",
+      "filterRejected": "Rechazado",
+      "filterMore": "Más filtros"
     },
     "matching": {
       "title": "Coincidencia Inteligente",

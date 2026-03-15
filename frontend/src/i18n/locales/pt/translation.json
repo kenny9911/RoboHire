@@ -1804,7 +1804,20 @@
       "termsOfService": "Termos de serviço",
       "and": "e",
       "privacyPolicy": "Política de privacidade",
-      "joinNow": "Participar agora"
+      "joinNow": "Participar agora",
+      "invalidLink": "Link de entrevista inválido",
+      "failedToLoad": "Falha ao carregar a entrevista",
+      "disconnectedLocal": "A conexão da entrevista foi encerrada localmente. Você pode entrar novamente para continuar.",
+      "disconnectedLost": "A conexão da entrevista foi perdida. Entre novamente para continuar.",
+      "rejoin": "Reentrar na entrevista",
+      "defaultDevice": "Padrão",
+      "unknownDevice": "Dispositivo desconhecido",
+      "preparingTitle": "Preparando sua entrevista",
+      "preparingSubtitle": "Estamos configurando o acesso à sala e carregando a configuração do entrevistador.",
+      "preparingRoomAccess": "Gerando acesso seguro à sala",
+      "preparingAgent": "Carregando instruções de entrevista e configurações do entrevistador IA",
+      "preparingNextStep": "As verificações de câmera e microfone aparecerão em seguida",
+      "preparingHint": "Isso geralmente leva alguns segundos."
     },
     "jobs": {
       "title": "Vagas",
@@ -2068,7 +2081,21 @@
         "runMatching": "Executar Matching",
         "success": "Matching concluído com sucesso!",
         "error": "Falha ao executar o matching. Tente novamente."
-      }
+      },
+      "filterHint": "Insira os critérios de busca dos candidatos",
+      "filterWorkYears": "Anos de experiência",
+      "filterSalary": "Salário esperado",
+      "filterMin": "Mín",
+      "filterMax": "Máx",
+      "filterJob": "Vaga",
+      "filterAllJobs": "Todas as vagas",
+      "filterStatusLabel": "Status",
+      "filterAllStatus": "Todos os status",
+      "filterMatched": "Correspondido",
+      "filterShortlisted": "Pré-selecionado",
+      "filterInvited": "Convidado",
+      "filterRejected": "Rejeitado",
+      "filterMore": "Mais filtros"
     },
     "matching": {
       "title": "Matching Inteligente",

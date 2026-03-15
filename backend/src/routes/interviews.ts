@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
+import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { generateRequestId, logger } from '../services/LoggerService.js';
@@ -13,8 +14,85 @@ const MIN_INTERVIEW_DURATION_SECONDS = 300; // 5 minutes — interviews shorter 
 const LIVEKIT_USAGE_ENDPOINT = '/api/v1/interviews/live-session';
 const LIVEKIT_USAGE_MODULE = 'interview_livekit';
 const LIVEKIT_USAGE_API_NAME = 'interviews_live_session';
+const DEFAULT_PROMPT_GENERATION_TIMEOUT_MS = 8000;
 
 type WorkerSessionUsagePayload = {
+  sessionConfig?: {
+    roomName?: string;
+    language?: string;
+    configVersionId?: string;
+    configVersionNumber?: number;
+    configVersionLabel?: string;
+    sttLanguage?: string;
+    ttsLanguage?: string;
+    turnDetection?: string;
+    allowInterruptions?: boolean;
+    discardAudioIfUninterruptible?: boolean;
+    preemptiveGeneration?: boolean;
+    minInterruptionDurationMs?: number;
+    minInterruptionWords?: number;
+    minEndpointingDelayMs?: number;
+    maxEndpointingDelayMs?: number;
+    aecWarmupDurationMs?: number;
+    useTtsAlignedTranscript?: boolean;
+    logInterimTranscripts?: boolean;
+    vad?: {
+      provider?: string;
+      model?: string;
+    };
+    llm?: {
+      provider?: string;
+      model?: string;
+    };
+    stt?: {
+      provider?: string;
+      model?: string;
+      label?: string;
+      language?: string;
+    };
+    tts?: {
+      provider?: string;
+      model?: string;
+      label?: string;
+      language?: string;
+      voiceId?: string;
+    };
+  };
+  operational?: {
+    roomName?: string;
+    participantIdentity?: string;
+    participantTrackPublicationCount?: number;
+    participantTracks?: Array<{
+      sid?: string;
+      name?: string;
+      kind?: string;
+      source?: string;
+      subscribed?: boolean;
+      muted?: boolean;
+    }>;
+    startedAt?: string;
+    endedAt?: string;
+    sessionDurationMs?: number;
+    transcriptEntries?: number;
+    candidateTurns?: number;
+    interviewerTurns?: number;
+    closeReason?: string;
+    stateTransitions?: Array<{
+      oldState?: string;
+      newState?: string;
+      at?: string;
+    }>;
+    userStateTransitions?: Array<{
+      oldState?: string;
+      newState?: string;
+      at?: string;
+    }>;
+    errors?: Array<{
+      message?: string;
+      at?: string;
+      source?: string;
+    }>;
+  };
   llm?: {
     provider?: string;
     model?: string;
@@ -23,28 +101,73 @@ type WorkerSessionUsagePayload = {
     completionTokens?: number;
     totalTokens?: number;
     totalDurationMs?: number;
+    estimatedCostUsd?: number | null;
   };
   stt?: {
     provider?: string;
+    model?: string;
     label?: string;
+    language?: string;
     calls?: number;
     totalAudioDurationMs?: number;
     totalDurationMs?: number;
+    estimatedCostUsd?: number | null;
   };
   tts?: {
     provider?: string;
+    model?: string;
     label?: string;
+    language?: string;
+    voiceId?: string;
     calls?: number;
     totalCharacters?: number;
     totalAudioDurationMs?: number;
     totalDurationMs?: number;
+    estimatedCostUsd?: number | null;
   };
   llmMetrics?: Array<{
     requestId?: string;
+    label?: string;
     durationMs?: number;
     promptTokens?: number;
     completionTokens?: number;
     totalTokens?: number;
+    ttftMs?: number;
+    tokensPerSecond?: number;
+    cancelled?: boolean;
+    speechId?: string;
+  }>;
+  sttMetrics?: Array<{
+    requestId?: string;
+    label?: string;
+    durationMs?: number;
+    audioDurationMs?: number;
+    streamed?: boolean;
+  }>;
+  ttsMetrics?: Array<{
+    requestId?: string;
+    label?: string;
+    durationMs?: number;
+    audioDurationMs?: number;
+    charactersCount?: number;
+    streamed?: boolean;
+    speechId?: string;
+    segmentId?: string;
+  }>;
+  vadMetrics?: Array<{
+    label?: string;
+    idleTimeMs?: number;
+    inferenceDurationTotalMs?: number;
+    inferenceCount?: number;
+    timestamp?: number;
+  }>;
+  eouMetrics?: Array<{
+    endOfUtteranceDelayMs?: number;
+    transcriptionDelayMs?: number;
+    onUserTurnCompletedDelayMs?: number;
+    lastSpeakingTimeMs?: number;
+    speechId?: string;
+    timestamp?: number;
   }>;
   promptContext?: {
     instructions?: string;
@@ -52,12 +175,99 @@ type WorkerSessionUsagePayload = {
     language?: string;
     candidateName?: string;
     jobTitle?: string;
+    interviewId?: string;
+    companyName?: string;
+    instructionsSource?: string;
+    configVersionId?: string;
+    configVersionNumber?: number;
+    configVersionLabel?: string;
   };
+  costs?: {
+    llmEstimatedUsd?: number | null;
+    sttEstimatedUsd?: number | null;
+    ttsEstimatedUsd?: number | null;
+    totalEstimatedUsd?: number | null;
+    costSource?: string;
+    notes?: string;
+  };
+  diagnostics?: Record<string, unknown>;
+  trace?: Record<string, unknown>;
 };
 
 function toSafeInt(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
   return Math.max(0, Math.round(value));
+}
+
+function toOptionalSafeInt(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  return Math.max(0, Math.round(value));
+}
+
+function toOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+}
+
+function toOptionalBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+function toOptionalMoney(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  return Math.max(0, Number(value.toFixed(6)));
+}
+
+function parseConfigString(config: Record<string, string>, key: string): string | undefined {
+  const value = config[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function parseConfigBoolean(config: Record<string, string>, key: string): boolean | undefined {
+  const value = config[key];
+  if (typeof value !== 'string') return undefined;
+
+  const normalized = value.trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return undefined;
+}
+
+function parseConfigInt(config: Record<string, string>, key: string): number | undefined {
+  const value = config[key];
+  if (typeof value !== 'string' || value.trim().length === 0) return undefined;
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function buildAgentRuntimeConfig(config: Record<string, string>): Record<string, unknown> | undefined {
+  const agentConfig = Object.fromEntries(
+    Object.entries({
+      sttProvider: parseConfigString(config, 'interview.sttProvider'),
+      sttModel: parseConfigString(config, 'interview.sttModel'),
+      llmProvider: parseConfigString(config, 'interview.llmProvider'),
+      llmModel: parseConfigString(config, 'interview.llmModel'),
+      ttsProvider: parseConfigString(config, 'interview.ttsProvider'),
+      ttsModel: parseConfigString(config, 'interview.ttsModel'),
+      ttsVoice: parseConfigString(config, 'interview.ttsVoice'),
+      turnDetection: parseConfigString(config, 'interview.turnDetection'),
+      allowInterruptions: parseConfigBoolean(config, 'interview.allowInterruptions'),
+      discardAudioIfUninterruptible: parseConfigBoolean(
+        config,
+        'interview.discardAudioIfUninterruptible',
+      ),
+      preemptiveGeneration: parseConfigBoolean(config, 'interview.preemptiveGeneration'),
+      minInterruptionDurationMs: parseConfigInt(config, 'interview.minInterruptionDurationMs'),
+      minInterruptionWords: parseConfigInt(config, 'interview.minInterruptionWords'),
+      minEndpointingDelayMs: parseConfigInt(config, 'interview.minEndpointingDelayMs'),
+      maxEndpointingDelayMs: parseConfigInt(config, 'interview.maxEndpointingDelayMs'),
+      aecWarmupDurationMs: parseConfigInt(config, 'interview.aecWarmupDurationMs'),
+      useTtsAlignedTranscript: parseConfigBoolean(config, 'interview.useTtsAlignedTranscript'),
+      logInterimTranscripts: parseConfigBoolean(config, 'interview.logInterimTranscripts'),
+    }).filter(([, value]) => value !== undefined),
+  );
+
+  return Object.keys(agentConfig).length > 0 ? agentConfig : undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -66,6 +276,114 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function normalizeWorkerUsagePayload(raw: unknown): WorkerSessionUsagePayload | null {
   if (!isRecord(raw)) return null;
+
+  const sessionConfig = isRecord(raw.sessionConfig)
+    ? {
+        roomName: toOptionalString(raw.sessionConfig.roomName),
+        language: toOptionalString(raw.sessionConfig.language),
+        configVersionId: toOptionalString(raw.sessionConfig.configVersionId),
+        configVersionNumber: toOptionalSafeInt(raw.sessionConfig.configVersionNumber),
+        configVersionLabel: toOptionalString(raw.sessionConfig.configVersionLabel),
+        sttLanguage: toOptionalString(raw.sessionConfig.sttLanguage),
+        ttsLanguage: toOptionalString(raw.sessionConfig.ttsLanguage),
+        turnDetection: toOptionalString(raw.sessionConfig.turnDetection),
+        allowInterruptions: toOptionalBoolean(raw.sessionConfig.allowInterruptions),
+        discardAudioIfUninterruptible: toOptionalBoolean(
+          raw.sessionConfig.discardAudioIfUninterruptible,
+        ),
+        preemptiveGeneration: toOptionalBoolean(raw.sessionConfig.preemptiveGeneration),
+        minInterruptionDurationMs: toSafeInt(raw.sessionConfig.minInterruptionDurationMs),
+        minInterruptionWords: toSafeInt(raw.sessionConfig.minInterruptionWords),
+        minEndpointingDelayMs: toSafeInt(raw.sessionConfig.minEndpointingDelayMs),
+        maxEndpointingDelayMs: toSafeInt(raw.sessionConfig.maxEndpointingDelayMs),
+        aecWarmupDurationMs: toSafeInt(raw.sessionConfig.aecWarmupDurationMs),
+        useTtsAlignedTranscript: toOptionalBoolean(raw.sessionConfig.useTtsAlignedTranscript),
+        logInterimTranscripts: toOptionalBoolean(raw.sessionConfig.logInterimTranscripts),
+        vad: isRecord(raw.sessionConfig.vad)
+          ? {
+              provider: toOptionalString(raw.sessionConfig.vad.provider),
+              model: toOptionalString(raw.sessionConfig.vad.model),
+            }
+          : undefined,
+        llm: isRecord(raw.sessionConfig.llm)
+          ? {
+              provider: toOptionalString(raw.sessionConfig.llm.provider),
+              model: toOptionalString(raw.sessionConfig.llm.model),
+            }
+          : undefined,
+        stt: isRecord(raw.sessionConfig.stt)
+          ? {
+              provider: toOptionalString(raw.sessionConfig.stt.provider),
+              model: toOptionalString(raw.sessionConfig.stt.model),
+              label: toOptionalString(raw.sessionConfig.stt.label),
+              language: toOptionalString(raw.sessionConfig.stt.language),
+            }
+          : undefined,
+        tts: isRecord(raw.sessionConfig.tts)
+          ? {
+              provider: toOptionalString(raw.sessionConfig.tts.provider),
+              model: toOptionalString(raw.sessionConfig.tts.model),
+              label: toOptionalString(raw.sessionConfig.tts.label),
+              language: toOptionalString(raw.sessionConfig.tts.language),
+              voiceId: toOptionalString(raw.sessionConfig.tts.voiceId),
+            }
+          : undefined,
+      }
+    : undefined;
+
+  const operational = isRecord(raw.operational)
+    ? {
+        roomName: toOptionalString(raw.operational.roomName),
+        participantIdentity: toOptionalString(raw.operational.participantIdentity),
+        participantTrackPublicationCount: toSafeInt(raw.operational.participantTrackPublicationCount),
+        participantTracks: Array.isArray(raw.operational.participantTracks)
+          ? raw.operational.participantTracks
+              .filter(isRecord)
+              .map((track) => ({
+                sid: toOptionalString(track.sid),
+                name: toOptionalString(track.name),
+                kind: toOptionalString(track.kind),
+                source: toOptionalString(track.source),
+                subscribed: toOptionalBoolean(track.subscribed),
+                muted: toOptionalBoolean(track.muted),
+              }))
+          : [],
+        startedAt: toOptionalString(raw.operational.startedAt),
+        endedAt: toOptionalString(raw.operational.endedAt),
+        sessionDurationMs: toSafeInt(raw.operational.sessionDurationMs),
+        transcriptEntries: toSafeInt(raw.operational.transcriptEntries),
+        candidateTurns: toSafeInt(raw.operational.candidateTurns),
+        interviewerTurns: toSafeInt(raw.operational.interviewerTurns),
+        closeReason: toOptionalString(raw.operational.closeReason),
+        stateTransitions: Array.isArray(raw.operational.stateTransitions)
+          ? raw.operational.stateTransitions
+              .filter(isRecord)
+              .map((transition) => ({
+                oldState: toOptionalString(transition.oldState),
+                newState: toOptionalString(transition.newState),
+                at: toOptionalString(transition.at),
+              }))
+          : [],
+        userStateTransitions: Array.isArray(raw.operational.userStateTransitions)
+          ? raw.operational.userStateTransitions
+              .filter(isRecord)
+              .map((transition) => ({
+                oldState: toOptionalString(transition.oldState),
+                newState: toOptionalString(transition.newState),
+                at: toOptionalString(transition.at),
+              }))
+          : [],
+        errors: Array.isArray(raw.operational.errors)
+          ? raw.operational.errors
+              .filter(isRecord)
+              .map((error) => ({
+                message: toOptionalString(error.message),
+                at: toOptionalString(error.at),
+                source: toOptionalString(error.source),
+              }))
+          : [],
+      }
+    : undefined;
 
   const llm = isRecord(raw.llm)
     ? {
@@ -76,27 +394,35 @@ function normalizeWorkerUsagePayload(raw: unknown): WorkerSessionUsagePayload | 
         completionTokens: toSafeInt(raw.llm.completionTokens),
         totalTokens: toSafeInt(raw.llm.totalTokens),
         totalDurationMs: toSafeInt(raw.llm.totalDurationMs),
+        estimatedCostUsd: toOptionalMoney(raw.llm.estimatedCostUsd),
       }
     : undefined;
 
   const stt = isRecord(raw.stt)
     ? {
         provider: typeof raw.stt.provider === 'string' ? raw.stt.provider : 'openai',
+        model: toOptionalString(raw.stt.model),
         label: typeof raw.stt.label === 'string' ? raw.stt.label : 'STT',
+        language: toOptionalString(raw.stt.language),
         calls: toSafeInt(raw.stt.calls),
         totalAudioDurationMs: toSafeInt(raw.stt.totalAudioDurationMs),
         totalDurationMs: toSafeInt(raw.stt.totalDurationMs),
+        estimatedCostUsd: toOptionalMoney(raw.stt.estimatedCostUsd),
       }
     : undefined;
 
   const tts = isRecord(raw.tts)
     ? {
         provider: typeof raw.tts.provider === 'string' ? raw.tts.provider : 'openai',
+        model: toOptionalString(raw.tts.model),
         label: typeof raw.tts.label === 'string' ? raw.tts.label : 'TTS',
+        language: toOptionalString(raw.tts.language),
+        voiceId: toOptionalString(raw.tts.voiceId),
         calls: toSafeInt(raw.tts.calls),
         totalCharacters: toSafeInt(raw.tts.totalCharacters),
         totalAudioDurationMs: toSafeInt(raw.tts.totalAudioDurationMs),
         totalDurationMs: toSafeInt(raw.tts.totalDurationMs),
+        estimatedCostUsd: toOptionalMoney(raw.tts.estimatedCostUsd),
       }
     : undefined;
 
@@ -105,10 +431,67 @@ function normalizeWorkerUsagePayload(raw: unknown): WorkerSessionUsagePayload | 
         .filter(isRecord)
         .map((metric) => ({
           requestId: typeof metric.requestId === 'string' ? metric.requestId : undefined,
+          label: toOptionalString(metric.label),
           durationMs: toSafeInt(metric.durationMs),
           promptTokens: toSafeInt(metric.promptTokens),
           completionTokens: toSafeInt(metric.completionTokens),
           totalTokens: toSafeInt(metric.totalTokens),
+          ttftMs: toSafeInt(metric.ttftMs),
+          tokensPerSecond: toSafeInt(metric.tokensPerSecond),
+          cancelled: toOptionalBoolean(metric.cancelled),
+          speechId: toOptionalString(metric.speechId),
+        }))
+    : [];
+
+  const sttMetrics = Array.isArray(raw.sttMetrics)
+    ? raw.sttMetrics
+        .filter(isRecord)
+        .map((metric) => ({
+          requestId: toOptionalString(metric.requestId),
+          label: toOptionalString(metric.label),
+          durationMs: toSafeInt(metric.durationMs),
+          audioDurationMs: toSafeInt(metric.audioDurationMs),
+          streamed: toOptionalBoolean(metric.streamed),
+        }))
+    : [];
+
+  const ttsMetrics = Array.isArray(raw.ttsMetrics)
+    ? raw.ttsMetrics
+        .filter(isRecord)
+        .map((metric) => ({
+          requestId: toOptionalString(metric.requestId),
+          label: toOptionalString(metric.label),
+          durationMs: toSafeInt(metric.durationMs),
+          audioDurationMs: toSafeInt(metric.audioDurationMs),
+          charactersCount: toSafeInt(metric.charactersCount),
+          streamed: toOptionalBoolean(metric.streamed),
+          speechId: toOptionalString(metric.speechId),
+          segmentId: toOptionalString(metric.segmentId),
+        }))
+    : [];
+
+  const vadMetrics = Array.isArray(raw.vadMetrics)
+    ? raw.vadMetrics
+        .filter(isRecord)
+        .map((metric) => ({
+          label: toOptionalString(metric.label),
+          idleTimeMs: toSafeInt(metric.idleTimeMs),
+          inferenceDurationTotalMs: toSafeInt(metric.inferenceDurationTotalMs),
+          inferenceCount: toSafeInt(metric.inferenceCount),
+          timestamp: toSafeInt(metric.timestamp),
+        }))
+    : [];
+
+  const eouMetrics = Array.isArray(raw.eouMetrics)
+    ? raw.eouMetrics
+        .filter(isRecord)
+        .map((metric) => ({
+          endOfUtteranceDelayMs: toSafeInt(metric.endOfUtteranceDelayMs),
+          transcriptionDelayMs: toSafeInt(metric.transcriptionDelayMs),
+          onUserTurnCompletedDelayMs: toSafeInt(metric.onUserTurnCompletedDelayMs),
+          lastSpeakingTimeMs: toSafeInt(metric.lastSpeakingTimeMs),
+          speechId: toOptionalString(metric.speechId),
+          timestamp: toSafeInt(metric.timestamp),
         }))
     : [];
 
@@ -119,14 +502,70 @@ function normalizeWorkerUsagePayload(raw: unknown): WorkerSessionUsagePayload | 
         language: typeof raw.promptContext.language === 'string' ? raw.promptContext.language : undefined,
         candidateName: typeof raw.promptContext.candidateName === 'string' ? raw.promptContext.candidateName : undefined,
         jobTitle: typeof raw.promptContext.jobTitle === 'string' ? raw.promptContext.jobTitle : undefined,
+        interviewId: typeof raw.promptContext.interviewId === 'string' ? raw.promptContext.interviewId : undefined,
+        companyName: typeof raw.promptContext.companyName === 'string' ? raw.promptContext.companyName : undefined,
+        instructionsSource: typeof raw.promptContext.instructionsSource === 'string' ? raw.promptContext.instructionsSource : undefined,
+        configVersionId:
+          typeof raw.promptContext.configVersionId === 'string'
+            ? raw.promptContext.configVersionId
+            : undefined,
+        configVersionNumber: toOptionalSafeInt(raw.promptContext.configVersionNumber),
+        configVersionLabel:
+          typeof raw.promptContext.configVersionLabel === 'string'
+            ? raw.promptContext.configVersionLabel
+            : undefined,
       }
     : undefined;
 
-  if (!llm && !stt && !tts && llmMetrics.length === 0 && !promptContext) {
+  const costs = isRecord(raw.costs)
+    ? {
+        llmEstimatedUsd: toOptionalMoney(raw.costs.llmEstimatedUsd),
+        sttEstimatedUsd: toOptionalMoney(raw.costs.sttEstimatedUsd),
+        ttsEstimatedUsd: toOptionalMoney(raw.costs.ttsEstimatedUsd),
+        totalEstimatedUsd: toOptionalMoney(raw.costs.totalEstimatedUsd),
+        costSource: toOptionalString(raw.costs.costSource),
+        notes: toOptionalString(raw.costs.notes),
+      }
+    : undefined;
+
+  const diagnostics = isRecord(raw.diagnostics) ? raw.diagnostics : undefined;
+  const trace = isRecord(raw.trace) ? raw.trace : undefined;
+
+  if (
+    !sessionConfig &&
+    !operational &&
+    !llm &&
+    !stt &&
+    !tts &&
+    llmMetrics.length === 0 &&
+    sttMetrics.length === 0 &&
+    ttsMetrics.length === 0 &&
+    vadMetrics.length === 0 &&
+    eouMetrics.length === 0 &&
+    !promptContext &&
+    !costs &&
+    !diagnostics &&
+    !trace
+  ) {
     return null;
   }
 
-  return { llm, stt, tts, llmMetrics, promptContext };
+  return {
+    sessionConfig,
+    operational,
+    llm,
+    stt,
+    tts,
+    llmMetrics,
+    sttMetrics,
+    ttsMetrics,
+    vadMetrics,
+    eouMetrics,
+    promptContext,
+    costs,
+    diagnostics,
+    trace,
+  };
 }
 
 /**
@@ -184,39 +623,130 @@ async function buildRoomMetadata(
   // Generate tailored interview prompt via InterviewPromptAgent
   if (!config['interview.instructions']) {
     try {
-      const promptResult = await interviewPromptAgent.execute(
-        {
-          jobTitle: (metadata.jobTitle as string) || 'the position',
-          language: (metadata.language as string) || 'en',
-          jobDescription: (metadata.jobDescription as string) || undefined,
-          requirements: job?.requirements as any || undefined,
-          hardRequirements: job?.hardRequirements || undefined,
-          qualifications: job?.qualifications || undefined,
-          companyName: (metadata.companyName as string) || undefined,
-          interviewRequirements: job?.interviewRequirements || undefined,
-          evaluationRules: job?.evaluationRules || undefined,
-          resumeText: (metadata.resumeText as string) || undefined,
-          interviewDuration: job?.interviewDuration || undefined,
-          passingScore: job?.passingScore || undefined,
-        },
-        undefined,
-        `prompt-gen-${interview.id}`,
+      const promptModel = getInterviewPromptModel();
+      const promptTimeoutMs = getInterviewPromptTimeoutMs();
+
+      logger.info('INTERVIEWS', 'Generating interview prompt via agent', {
+        interviewId: interview.id,
+        model: promptModel || process.env.LLM_MODEL || 'default',
+        timeoutMs: promptTimeoutMs,
+      });
+
+      const promptResult = await withTimeout(
+        (signal) =>
+          interviewPromptAgent.execute(
+            {
+              jobTitle: (metadata.jobTitle as string) || 'the position',
+              language: (metadata.language as string) || 'en',
+              jobDescription: (metadata.jobDescription as string) || undefined,
+              requirements: job?.requirements as any || undefined,
+              hardRequirements: job?.hardRequirements || undefined,
+              qualifications: job?.qualifications || undefined,
+              companyName: (metadata.companyName as string) || undefined,
+              interviewRequirements: job?.interviewRequirements || undefined,
+              evaluationRules: job?.evaluationRules || undefined,
+              resumeText: (metadata.resumeText as string) || undefined,
+              interviewDuration: job?.interviewDuration || undefined,
+              passingScore: job?.passingScore || undefined,
+            },
+            undefined,
+            `prompt-gen-${interview.id}`,
+            undefined,
+            promptModel,
+            signal,
+          ),
+        promptTimeoutMs,
       );
       if (promptResult?.systemPrompt) {
         metadata.instructions = promptResult.systemPrompt;
         logger.info('INTERVIEWS', 'Generated interview prompt via agent', {
           interviewId: interview.id,
+          model: promptModel || process.env.LLM_MODEL || 'default',
           questionAreas: promptResult.questionAreas?.length ?? 0,
         });
       }
     } catch (err: any) {
-      logger.warn('INTERVIEWS', `Prompt generation failed (using fallback): ${err.message}`);
+      logger.warn('INTERVIEWS', `Prompt generation failed (using fallback): ${err.message}`, {
+        interviewId: interview.id,
+        model: getInterviewPromptModel() || process.env.LLM_MODEL || 'default',
+      });
     }
   } else {
     metadata.instructions = config['interview.instructions'];
   }
 
+  const agentConfig = buildAgentRuntimeConfig(config);
+  if (agentConfig) {
+    metadata.agentConfig = agentConfig;
+  }
+
+  const activeConfigVersion = await prisma.interviewRoomConfigVersion.findFirst({
+    where: { isActive: true },
+    orderBy: { versionNumber: 'desc' },
+    select: {
+      id: true,
+      versionNumber: true,
+      versionLabel: true,
+      activatedAt: true,
+      createdAt: true,
+    },
+  });
+  if (activeConfigVersion) {
+    metadata.configVersion = {
+      id: activeConfigVersion.id,
+      versionNumber: activeConfigVersion.versionNumber,
+      versionLabel: activeConfigVersion.versionLabel,
+      activatedAt: (activeConfigVersion.activatedAt || activeConfigVersion.createdAt).toISOString(),
+    };
+  }
+
   return metadata;
+}
+
+function getInterviewPromptModel(): string | undefined {
+  const explicit = (process.env.INTERVIEW_PROMPT_MODEL || '').trim();
+  if (explicit) return explicit;
+
+  const fast = (process.env.LLM_FAST || '').trim();
+  if (fast) return fast;
+
+  const primary = (process.env.LLM_MODEL || '').trim();
+  if (/gemini-3(?:\.1)?-pro-preview/i.test(primary)) {
+    return primary.replace(/gemini-3(?:\.1)?-pro-preview/i, 'gemini-3-flash-preview');
+  }
+
+  return undefined;
+}
+
+function getInterviewPromptTimeoutMs(): number {
+  const parsed = Number.parseInt(process.env.INTERVIEW_PROMPT_TIMEOUT_MS || '', 10);
+  return Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_PROMPT_GENERATION_TIMEOUT_MS;
+}
+
+async function withTimeout<T>(
+  operation: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`Timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    operation(controller.signal).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }
 
 async function findInterviewForJoin(joinCode: string) {
@@ -809,36 +1339,74 @@ router.post('/:id/transcript', async (req, res) => {
     const normalizedUsage = normalizeWorkerUsagePayload(usage);
     const existingMetadata = isRecord(interview.metadata) ? interview.metadata : {};
     const nextMetadata: Record<string, unknown> = { ...existingMetadata };
+    const llmEstimatedUsd = normalizedUsage?.llm
+      ? logger.calculateCost(
+          normalizedUsage.llm.model || 'default',
+          normalizedUsage.llm.promptTokens ?? 0,
+          normalizedUsage.llm.completionTokens ?? 0,
+        )
+      : 0;
+    const enrichedUsage = normalizedUsage
+      ? {
+          ...normalizedUsage,
+          llm: normalizedUsage.llm
+            ? {
+                ...normalizedUsage.llm,
+                estimatedCostUsd: llmEstimatedUsd,
+              }
+            : undefined,
+          costs: {
+            llmEstimatedUsd,
+            sttEstimatedUsd: normalizedUsage.costs?.sttEstimatedUsd ?? null,
+            ttsEstimatedUsd: normalizedUsage.costs?.ttsEstimatedUsd ?? null,
+            totalEstimatedUsd: Number(
+              (
+                llmEstimatedUsd +
+                (normalizedUsage.costs?.sttEstimatedUsd ?? 0) +
+                (normalizedUsage.costs?.ttsEstimatedUsd ?? 0)
+              ).toFixed(6),
+            ),
+            costSource: normalizedUsage.costs?.costSource || 'llm_estimated_only',
+            notes:
+              normalizedUsage.costs?.notes ||
+              'LLM cost is estimated from token usage. STT/TTS pricing is not configured in the app yet.',
+          },
+        }
+      : null;
 
-    if (normalizedUsage) {
+    if (enrichedUsage) {
       nextMetadata.livekitUsage = {
-        llm: normalizedUsage.llm,
-        stt: normalizedUsage.stt,
-        tts: normalizedUsage.tts,
-        llmCalls: normalizedUsage.llmMetrics?.length ?? 0,
+        ...enrichedUsage,
+        llmCalls: enrichedUsage.llmMetrics?.length ?? 0,
         receivedAt: new Date().toISOString(),
       };
+
+      logger.info('INTERVIEWS', 'Saved LiveKit interview session record', {
+        interviewId: interview.id,
+        transcriptEntries: Array.isArray(transcript) ? transcript.length : 0,
+        usageRecord: nextMetadata.livekitUsage as Record<string, unknown>,
+      });
     }
 
     let livekitUsageRequestLogId: string | null = null;
     const hasLoggedUsage = typeof existingMetadata.livekitUsageLoggedAt === 'string';
-    const llmTotals = normalizedUsage?.llm;
-    const llmMetrics = normalizedUsage?.llmMetrics ?? [];
+    const llmTotals = enrichedUsage?.llm;
+    const llmMetrics = enrichedUsage?.llmMetrics ?? [];
+    const shouldLogUsage = !hasLoggedUsage && (!!enrichedUsage || Array.isArray(transcript));
 
-    if (!hasLoggedUsage && llmTotals && (llmTotals.totalTokens ?? 0) > 0) {
+    if (shouldLogUsage) {
       const usageRequestId = `livekit-${interview.id}`;
-      const llmCallCount = Math.max(llmTotals.calls ?? 0, llmMetrics.length);
-      const usageCost = logger.calculateCost(
-        llmTotals.model || 'default',
-        llmTotals.promptTokens ?? 0,
-        llmTotals.completionTokens ?? 0,
-      );
+      const llmCallCount = Math.max(llmTotals?.calls ?? 0, llmMetrics.length);
+      const usageCost = enrichedUsage?.costs?.totalEstimatedUsd ?? 0;
       const usageDurationMs = Math.max(
-        llmTotals.totalDurationMs ?? 0,
-        normalizedUsage?.stt?.totalDurationMs ?? 0,
-        normalizedUsage?.tts?.totalDurationMs ?? 0,
+        enrichedUsage?.operational?.sessionDurationMs ?? 0,
+        llmTotals?.totalDurationMs ?? 0,
+        enrichedUsage?.stt?.totalDurationMs ?? 0,
+        enrichedUsage?.tts?.totalDurationMs ?? 0,
         0,
       );
+      const llmProvider = llmTotals?.provider || enrichedUsage?.sessionConfig?.llm?.provider || null;
+      const llmModel = llmTotals?.model || enrichedUsage?.sessionConfig?.llm?.model || null;
 
       const requestLog = await prisma.apiRequestLog.create({
         data: {
@@ -850,49 +1418,53 @@ router.post('/:id/transcript', async (req, res) => {
           apiName: LIVEKIT_USAGE_API_NAME,
           statusCode: 200,
           durationMs: usageDurationMs,
-          promptTokens: llmTotals.promptTokens ?? 0,
-          completionTokens: llmTotals.completionTokens ?? 0,
-          totalTokens: llmTotals.totalTokens ?? 0,
+          promptTokens: llmTotals?.promptTokens ?? 0,
+          completionTokens: llmTotals?.completionTokens ?? 0,
+          totalTokens: llmTotals?.totalTokens ?? 0,
           llmCalls: llmCallCount,
           cost: usageCost,
-          provider: llmTotals.provider || 'openai',
-          model: llmTotals.model || null,
+          provider: llmProvider,
+          model: llmModel,
           userAgent: 'livekit-agent',
           requestPayload: {
             interviewId: interview.id,
             candidateName: interview.candidateName,
             jobTitle: interview.jobTitle,
-            usage: normalizedUsage,
-          },
+            usage: enrichedUsage,
+          } as Prisma.InputJsonValue,
           responsePayload: {
             transcriptEntries: Array.isArray(transcript) ? transcript.length : null,
+            candidateTurns: enrichedUsage?.operational?.candidateTurns ?? null,
+            interviewerTurns: enrichedUsage?.operational?.interviewerTurns ?? null,
+            closeReason: enrichedUsage?.operational?.closeReason ?? null,
             source: 'livekit-worker',
-          },
+            savedAt: new Date().toISOString(),
+          } as Prisma.InputJsonValue,
         },
       });
 
       livekitUsageRequestLogId = requestLog.id;
 
       if (llmMetrics.length > 0) {
-        const promptMessages = normalizedUsage?.promptContext?.instructions
+        const promptMessages = enrichedUsage?.promptContext?.instructions
           ? [
               {
                 role: 'system',
                 content: [
                   {
                     type: 'text',
-                    text: normalizedUsage.promptContext.instructions,
+                    text: enrichedUsage.promptContext.instructions,
                   },
                 ],
               },
-              ...(normalizedUsage.promptContext.greeting
+              ...(enrichedUsage.promptContext.greeting
                 ? [
                     {
                       role: 'assistant',
                       content: [
                         {
                           type: 'text',
-                          text: normalizedUsage.promptContext.greeting,
+                          text: enrichedUsage.promptContext.greeting,
                         },
                       ],
                     },
@@ -909,25 +1481,46 @@ router.post('/:id/transcript', async (req, res) => {
             endpoint: LIVEKIT_USAGE_ENDPOINT,
             module: LIVEKIT_USAGE_MODULE,
             status: 'success',
-            provider: llmTotals.provider || 'openai',
-            model: llmTotals.model || 'unknown',
+            provider: llmProvider || 'unknown',
+            model: llmModel || 'unknown',
             promptTokens: metric.promptTokens ?? 0,
             completionTokens: metric.completionTokens ?? 0,
             totalTokens: metric.totalTokens ?? 0,
             cost: logger.calculateCost(
-              llmTotals.model || 'default',
+              llmModel || 'default',
               metric.promptTokens ?? 0,
               metric.completionTokens ?? 0,
             ),
             durationMs: metric.durationMs ?? 0,
             requestMessages: promptMessages,
-            requestOptions: normalizedUsage?.promptContext
+            requestOptions: enrichedUsage?.promptContext
               ? Object.fromEntries(
                   Object.entries({
                     source: 'livekit-agent',
-                    language: normalizedUsage.promptContext.language,
-                    candidateName: normalizedUsage.promptContext.candidateName,
-                    jobTitle: normalizedUsage.promptContext.jobTitle,
+                    language: enrichedUsage.promptContext.language,
+                    candidateName: enrichedUsage.promptContext.candidateName,
+                    jobTitle: enrichedUsage.promptContext.jobTitle,
+                    llmProvider,
+                    llmModel,
+                    sttModel: enrichedUsage.sessionConfig?.stt?.model,
+                    ttsModel: enrichedUsage.sessionConfig?.tts?.model,
+                    ttsVoiceId: enrichedUsage.sessionConfig?.tts?.voiceId,
+                    turnDetection: enrichedUsage.sessionConfig?.turnDetection,
+                    configVersionId: enrichedUsage.sessionConfig?.configVersionId,
+                    configVersionNumber: enrichedUsage.sessionConfig?.configVersionNumber,
+                    configVersionLabel: enrichedUsage.sessionConfig?.configVersionLabel,
+                    allowInterruptions: enrichedUsage.sessionConfig?.allowInterruptions,
+                    preemptiveGeneration: enrichedUsage.sessionConfig?.preemptiveGeneration,
+                    minInterruptionDurationMs:
+                      enrichedUsage.sessionConfig?.minInterruptionDurationMs,
+                    minInterruptionWords: enrichedUsage.sessionConfig?.minInterruptionWords,
+                    minEndpointingDelayMs: enrichedUsage.sessionConfig?.minEndpointingDelayMs,
+                    maxEndpointingDelayMs: enrichedUsage.sessionConfig?.maxEndpointingDelayMs,
+                    aecWarmupDurationMs: enrichedUsage.sessionConfig?.aecWarmupDurationMs,
+                    useTtsAlignedTranscript:
+                      enrichedUsage.sessionConfig?.useTtsAlignedTranscript,
+                    logInterimTranscripts:
+                      enrichedUsage.sessionConfig?.logInterimTranscripts,
                   }).filter(([, value]) => value !== undefined)
                 )
               : undefined,
@@ -941,8 +1534,9 @@ router.post('/:id/transcript', async (req, res) => {
       logger.info('INTERVIEWS', 'Logged LiveKit interview usage', {
         interviewId: interview.id,
         requestLogId: requestLog.id,
-        totalTokens: llmTotals.totalTokens ?? 0,
+        totalTokens: llmTotals?.totalTokens ?? 0,
         llmCalls: llmCallCount,
+        totalEstimatedUsd: usageCost,
       });
     }
 

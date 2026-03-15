@@ -55,7 +55,10 @@ export class KimiProvider implements LLMProvider {
       params.max_tokens = options.maxTokens;
     }
 
-    const response = await (this.client.chat.completions.create as Function)(params);
+    const response = await (this.client.chat.completions.create as Function)(
+      params,
+      options?.signal ? { signal: options.signal } : undefined,
+    );
 
     const choice = response.choices?.[0];
     const content = choice?.message?.content;

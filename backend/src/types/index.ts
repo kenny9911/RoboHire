@@ -22,6 +22,7 @@ export interface LLMOptions {
   model?: string;
   requestId?: string;
   visionModel?: string; // Override model for vision tasks
+  signal?: AbortSignal;
 }
 
 export interface LLMUsageInfo {

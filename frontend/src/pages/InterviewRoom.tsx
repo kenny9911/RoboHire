@@ -48,7 +48,7 @@ export default function InterviewRoom() {
 
   useEffect(() => {
     if (!resolvedAccessToken) {
-      setError('Invalid interview link');
+      setError(t('videoInterview.invalidLink', 'Invalid interview link'));
       setState('error');
       return;
     }
@@ -57,7 +57,7 @@ export default function InterviewRoom() {
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok || !data.success) {
-          throw new Error(data.error || 'Failed to load interview');
+          throw new Error(data.error || t('videoInterview.failedToLoad', 'Failed to load interview'));
         }
         setJoinData(data.data);
         setState('pre-join');
@@ -66,7 +66,7 @@ export default function InterviewRoom() {
         setError(err.message);
         setState('error');
       });
-  }, [resolvedAccessToken]);
+  }, [resolvedAccessToken, t]);
 
   const handleJoin = useCallback(() => {
     setError('');
@@ -76,12 +76,12 @@ export default function InterviewRoom() {
   const handleDisconnect = useCallback((reason?: DisconnectReason) => {
     const message =
       reason === DisconnectReason.CLIENT_INITIATED
-        ? 'Interview connection was closed locally. You can rejoin to continue.'
-        : 'Interview connection was lost. Please rejoin to continue.';
+        ? t('videoInterview.disconnectedLocal', 'Interview connection was closed locally. You can rejoin to continue.')
+        : t('videoInterview.disconnectedLost', 'Interview connection was lost. Please rejoin to continue.');
 
     setError(message);
     setState('error');
-  }, []);
+  }, [t]);
 
   const handleReconnect = useCallback(() => {
     if (!joinData) {
@@ -100,7 +100,7 @@ export default function InterviewRoom() {
         {state === 'error' && (
           <ErrorScreen
             message={error}
-            actionLabel={joinData ? t('interview.rejoin', 'Rejoin Interview') : undefined}
+            actionLabel={joinData ? t('videoInterview.rejoin', 'Rejoin Interview') : undefined}
             onAction={joinData ? handleReconnect : undefined}
           />
         )}
@@ -131,9 +131,40 @@ export default function InterviewRoom() {
  *  Loading Screen
  * ─────────────────────────────────────────────────────────────────────────── */
 function LoadingScreen() {
+  const { t } = useTranslation();
+
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-cyan-500" />
+    <div className="flex h-screen items-center justify-center bg-gray-50 px-6">
+      <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-[0_32px_70px_-48px_rgba(15,23,42,0.45)]">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-cyan-500" />
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">
+              {t('videoInterview.preparingTitle', 'Preparing your interview')}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {t('videoInterview.preparingSubtitle', 'We are setting up room access and loading the interviewer configuration.')}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-3 rounded-2xl bg-slate-50 p-4">
+          {[
+            t('videoInterview.preparingRoomAccess', 'Generating secure room access'),
+            t('videoInterview.preparingAgent', 'Loading interview prompts and AI interviewer settings'),
+            t('videoInterview.preparingNextStep', 'Camera and microphone checks will appear next'),
+          ].map((item) => (
+            <div key={item} className="flex items-center gap-3 text-sm text-slate-600">
+              <span className="h-2.5 w-2.5 rounded-full bg-cyan-500" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-4 text-xs text-slate-400">
+          {t('videoInterview.preparingHint', 'This usually takes a few seconds.')}
+        </p>
+      </div>
     </div>
   );
 }
@@ -606,6 +637,7 @@ function DeviceSelector({
   selectedId: string;
   onChange: (deviceId: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="relative flex-1">
       <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-600 shadow-sm">
@@ -614,11 +646,11 @@ function DeviceSelector({
           value={selectedId}
           onChange={(e) => onChange(e.target.value)}
           className="flex-1 cursor-pointer appearance-none border-none bg-transparent text-sm text-gray-700 outline-none"
-          title={devices.find((d) => d.deviceId === selectedId)?.label || 'Default'}
+          title={devices.find((d) => d.deviceId === selectedId)?.label || t('videoInterview.defaultDevice', 'Default')}
         >
           {devices.map((d) => (
             <option key={d.deviceId} value={d.deviceId}>
-              {d.label || 'Unknown Device'}
+              {d.label || t('videoInterview.unknownDevice', 'Unknown Device')}
             </option>
           ))}
         </select>
