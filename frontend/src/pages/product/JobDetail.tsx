@@ -35,6 +35,7 @@ interface Job {
   interviewDuration: number | null;
   interviewRequirements: string | null;
   evaluationRules: string | null;
+  notes: string | null;
   status: string;
   publishedAt: string | null;
   createdAt: string;
@@ -228,9 +229,11 @@ export default function JobDetail() {
     ? (job.locations as LocationEntry[]).map((l) => `${l.city}${l.city && l.country ? ', ' : ''}${l.country}`).join(' | ')
     : job.location || null;
 
-  const salaryText = (job.salaryMin || job.salaryMax)
-    ? `${job.salaryCurrency || 'USD'} ${job.salaryMin?.toLocaleString() || '—'} – ${job.salaryMax?.toLocaleString() || '—'} / ${job.salaryPeriod === 'yearly' ? t('product.jobDetail.yearly', 'year') : t('product.jobDetail.monthly', 'month')}`
-    : null;
+  const salaryText = (job.salaryMin === 0 && job.salaryMax === 0)
+    ? t('product.jobs.salaryNegotiable', 'Negotiable')
+    : (job.salaryMin || job.salaryMax)
+      ? `${job.salaryCurrency || 'USD'} ${job.salaryMin?.toLocaleString() || '—'} – ${job.salaryMax?.toLocaleString() || '—'} / ${job.salaryPeriod === 'yearly' ? t('product.jobDetail.yearly', 'year') : t('product.jobDetail.monthly', 'month')}`
+      : null;
 
   const sectionCls = 'rounded-2xl border border-slate-200 bg-white p-6';
   const headingCls = 'text-sm font-semibold text-slate-800 mb-3';
@@ -415,6 +418,18 @@ function HeaderCard({ job, locationText, salaryText, navigate, t }: {
         <span>{t('product.jobDetail.updated', 'Updated')}: {new Date(job.updatedAt).toLocaleDateString()}</span>
         {job.publishedAt && <span>{t('product.jobDetail.published', 'Published')}: {new Date(job.publishedAt).toLocaleDateString()}</span>}
       </div>
+      {job.notes && (
+        <div className="mt-3 rounded-lg bg-amber-50 border border-amber-100 px-4 py-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <svg className="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
+            </svg>
+            <span className="text-xs font-semibold text-amber-700">{t('product.jobs.notes', 'Notes')}</span>
+            <span className="text-xs text-amber-500">({t('product.jobs.notesTooltip', 'Internal notes for the team only, not shown to candidates.')})</span>
+          </div>
+          <p className="text-sm text-amber-800 whitespace-pre-wrap">{job.notes}</p>
+        </div>
+      )}
     </div>
   );
 }

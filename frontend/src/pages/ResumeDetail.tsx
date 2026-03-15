@@ -50,7 +50,7 @@ interface ResumeData {
   }>;
 }
 
-type HeaderActionTone = 'primary' | 'secondary' | 'destructive';
+type HeaderActionTone = 'primary' | 'secondary' | 'success' | 'destructive';
 
 interface HeaderActionButtonProps {
   label: string;
@@ -69,12 +69,16 @@ function HeaderActionButton({
 }: HeaderActionButtonProps) {
   const toneStyles: Record<HeaderActionTone, { button: string; icon: string }> = {
     primary: {
-      button: 'border-slate-900 bg-slate-900 text-white shadow-sm hover:border-slate-800 hover:bg-slate-800',
-      icon: 'border-white/10 bg-white/10 text-white',
+      button: 'border-blue-600 bg-blue-600 text-white shadow-sm hover:border-blue-700 hover:bg-blue-700',
+      icon: 'border-white/15 bg-white/10 text-white',
     },
     secondary: {
-      button: 'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50',
+      button: 'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50/60 hover:text-blue-700',
       icon: 'border-slate-200 bg-slate-50 text-slate-500',
+    },
+    success: {
+      button: 'border-emerald-600 bg-emerald-600 text-white shadow-sm hover:border-emerald-700 hover:bg-emerald-700',
+      icon: 'border-white/15 bg-white/10 text-white',
     },
     destructive: {
       button: 'border-rose-200 bg-white text-rose-700 hover:border-rose-300 hover:bg-rose-50',
@@ -585,6 +589,10 @@ export default function ResumeDetail() {
     : t('resumeLibrary.detail.headerActions.match', 'Match');
   const refineActionLabel = t('resumeLibrary.detail.headerActions.optimize', 'Optimize');
   const archiveActionLabel = t('resumeLibrary.detail.actions.archive', 'Archive');
+  const hasCompletedInterview = invitations.some(
+    (inv) => inv.interview?.status === 'completed' || Boolean(inv.interview?.completedAt)
+  );
+  const interviewActionTone: HeaderActionTone = hasCompletedInterview ? 'success' : 'primary';
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -698,7 +706,7 @@ export default function ResumeDetail() {
               <div className="flex min-w-max gap-2 lg:ml-auto">
                 <HeaderActionButton
                   onClick={openInviteModal}
-                  tone="primary"
+                  tone={interviewActionTone}
                   disabled={isPreviewingVersion}
                   label={inviteActionLabel}
                   icon={(

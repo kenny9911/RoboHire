@@ -974,8 +974,14 @@
       "invited": "eingeladen",
       "interviewsCompleted": "Interviews abgeschlossen",
       "requirements": "Anforderungen",
+      "hiringRequirements": "Stellenanforderungen",
       "jobDescription": "Stellenbeschreibung",
-      "noJobDescription": "Noch keine Stellenbeschreibung.",
+      "noJobDescription": "Noch keine Stellenbeschreibung. Nutzen Sie KI, um eine aus den Anforderungen zu erstellen.",
+      "noRequirements": "Noch keine Stellenanforderungen.",
+      "edit": "Bearbeiten",
+      "addContent": "Inhalt hinzufügen",
+      "aiGenerate": "KI-Generierung",
+      "generateJD": "JD per KI generieren",
       "candidates": "Kandidaten",
       "noCandidates": "Noch keine Kandidaten.",
       "candidate": "Kandidat",
@@ -986,7 +992,14 @@
       "loadError": "Details konnten nicht geladen werden",
       "invitedCandidates": "Eingeladene Kandidaten",
       "invitedDate": "Einladungsdatum",
-      "interviewStatus": "Interview-Status"
+      "interviewStatus": "Interview-Status",
+      "projectName": "Projektname",
+      "clientName": "Kundenname",
+      "clientNamePlaceholder": "Kundennamen eingeben (optional)",
+      "pause": "Pausieren",
+      "activate": "Aktivieren",
+      "close": "Projekt schließen",
+      "reopen": "Wieder öffnen"
     },
     "candidateStatus": {
       "pending": "Ausstehend",
@@ -1634,6 +1647,7 @@
     "nav": {
       "dashboard": "Dashboard",
       "hiringRequests": "Einstellungsanfragen",
+      "projects": "Projekte",
       "talentHub": "Talent-Hub",
       "jobs": "Stellen",
       "aiInterview": "KI-Interview",
@@ -1948,7 +1962,21 @@
       "competitors": "Wettbewerb",
       "timeToHire": "Einstellungstage",
       "trends": "Markttrends",
-      "view": "Ansehen"
+      "view": "Ansehen",
+      "salary": "Gehalt",
+      "salaryTooltip": "Gehaltsbereich inkl. Währung und Zeitraum. Bsp: $150.000 – $200.000 oder ¥30.000 – ¥50.000/Monat",
+      "salaryPlaceholder": "Gehaltsbereich wählen oder eingeben, z.B. 20-30K/Monat",
+      "salaryNegotiable": "Verhandlungsbasis",
+      "perMonth": "Monat",
+      "perYear": "Jahr",
+      "upTo": "Bis zu",
+      "customSalary": "Individueller Bereich...",
+      "salaryMinLabel": "Min",
+      "salaryMaxLabel": "Max",
+      "notes": "Notizen",
+      "notesTooltip": "Interne Notizen nur für das Team, nicht für Kandidaten sichtbar.",
+      "notesPlaceholder": "Z.B. Kunde bevorzugt bestimmte Branche, Budget verhandelbar, etc.",
+      "notesDesc": "Kundenpräferenzen, Einschränkungen oder Genehmigungsmeilensteine erfassen. Wird Kandidaten nicht angezeigt."
     },
     "jobDetail": {
       "backToJobs": "Zurück zu Stellen",
@@ -1999,19 +2027,37 @@
       "confirmInviteEmail": "E-Mail"
     },
     "hiring": {
-      "title": "Einstellungsanfragen",
-      "subtitle": "Verwalten Sie Ihre Einstellungsanfragen und wandeln Sie sie in Stellenausschreibungen um.",
+      "title": "Projekte",
+      "subtitle": "Verwalten Sie Recruiting-Projekte — Anforderungen, Kandidatensuche, Matching und Interviews.",
       "status": {
         "active": "Aktiv",
         "paused": "Pausiert",
         "closed": "Geschlossen"
       },
-      "newRequest": "Neue Anfrage",
+      "newProject": "Neues Projekt",
       "allStatuses": "Alle",
-      "empty": "Noch keine Anfragen",
-      "emptyDesc": "Starten Sie eine neue Anfrage mit unserem KI-Assistenten.",
+      "empty": "Noch keine Projekte",
+      "emptyDesc": "Erstellen Sie Ihr erstes Recruiting-Projekt mit unserem KI-Assistenten.",
       "candidates": "Kandidaten",
-      "totalRequests": "{{count}} Anfragen",
+      "totalProjects": "{{count}} Projekte",
+      "searchPlaceholder": "Projekte suchen...",
+      "noResults": "Keine passenden Projekte gefunden",
+      "noResultsDesc": "Versuchen Sie einen anderen Suchbegriff.",
+      "needsAttention": "Aktion erforderlich",
+      "matchesLabel": "Matches",
+      "interviewsLabel": "Interviews",
+      "pipeline": {
+        "candidates": "{{count}} Kandidaten",
+        "matches": "{{count}} Matches",
+        "interviews": "{{count}} Interviews"
+      },
+      "stats": {
+        "activeProjects": "Aktive Projekte",
+        "totalCandidates": "Kandidaten gesamt",
+        "totalMatches": "KI-Matches",
+        "interviews": "Interviews",
+        "avgScore": "Ø Match-Score"
+      },
       "createJob": "Stelle erstellen",
       "creatingJob": "Wird erstellt...",
       "jobCreatedSuccess": "Stelle \"{{title}}\" erfolgreich erstellt!",
@@ -2943,7 +2989,9 @@
     "confirmDelete": "Löschen bestätigen",
     "confirmDeleteMessage": "Sind Sie sicher, dass Sie dieses Element löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "cancel": "Abbrechen",
-    "delete": "Löschen"
+    "delete": "Löschen",
+    "save": "Speichern",
+    "saving": "Speichern..."
   },
   "admin": {
     "activity": {
@@ -2993,6 +3041,7 @@
     "leadsByAgent": "Leads pro Agent",
     "leadsByAgentDesc": "Top {{count}} Agenten nach ausstehenden Genehmigungen. Für Administratoren umfasst dies alle Agenten der Organisation.",
     "createTitle": "Neuen Agent erstellen",
+    "createDesc": "Automatisieren Sie Ihre Suche mit einem smarten Agenten. Legen Sie die Kriterien einmal fest und lassen Sie Ihren Agenten im Hintergrund arbeiten — kein Wiederholen nötig.",
     "agentName": "Agent-Name",
     "namePlaceholder": "z.B. Senior Full-Stack Sourcer",
     "searchCriteria": "Suchkriterien",

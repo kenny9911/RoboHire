@@ -974,8 +974,14 @@
       "invited": "invitados",
       "interviewsCompleted": "Entrevistas completadas",
       "requirements": "Requisitos",
+      "hiringRequirements": "Requisitos de Contratación",
       "jobDescription": "Descripción del puesto",
-      "noJobDescription": "Aún no hay descripción del puesto.",
+      "noJobDescription": "Sin descripción del puesto aún. Usa IA para generar una desde los requisitos.",
+      "noRequirements": "Sin requisitos de contratación aún.",
+      "edit": "Editar",
+      "addContent": "Agregar contenido",
+      "aiGenerate": "Generar con IA",
+      "generateJD": "Generar JD con IA",
       "candidates": "Candidatos",
       "noCandidates": "Aún no hay candidatos.",
       "candidate": "Candidato",
@@ -986,7 +992,14 @@
       "loadError": "No se pudieron cargar los detalles",
       "invitedCandidates": "Candidatos invitados",
       "invitedDate": "Fecha de invitación",
-      "interviewStatus": "Estado de entrevista"
+      "interviewStatus": "Estado de entrevista",
+      "projectName": "Nombre del Proyecto",
+      "clientName": "Nombre del Cliente",
+      "clientNamePlaceholder": "Ingrese nombre del cliente (opcional)",
+      "pause": "Pausar",
+      "activate": "Activar",
+      "close": "Cerrar Proyecto",
+      "reopen": "Reabrir"
     },
     "candidateStatus": {
       "pending": "Pendiente",
@@ -1635,6 +1648,7 @@
     "nav": {
       "dashboard": "Panel",
       "hiringRequests": "Solicitudes de Contratación",
+      "projects": "Proyectos",
       "talentHub": "Hub de Talento",
       "jobs": "Empleos",
       "aiInterview": "Entrevista IA",
@@ -1949,7 +1963,21 @@
       "competitors": "Competencia",
       "timeToHire": "Dias para contratar",
       "trends": "Tendencias del mercado",
-      "view": "Ver"
+      "view": "Ver",
+      "salary": "Salario",
+      "salaryTooltip": "Rango salarial incluyendo moneda y período. Ej: $150,000 – $200,000 o ¥30,000 – ¥50,000/mes",
+      "salaryPlaceholder": "Seleccionar o ingresar rango salarial, ej: 20-30K/mes",
+      "salaryNegotiable": "Negociable",
+      "perMonth": "mes",
+      "perYear": "año",
+      "upTo": "Hasta",
+      "customSalary": "Rango personalizado...",
+      "salaryMinLabel": "Mín",
+      "salaryMaxLabel": "Máx",
+      "notes": "Notas",
+      "notesTooltip": "Notas internas solo para el equipo, no visibles para candidatos.",
+      "notesPlaceholder": "Ej: Cliente prefiere cierto sector, presupuesto negociable, etc.",
+      "notesDesc": "Registre preferencias del cliente, restricciones o hitos de aprobación. No se muestra a candidatos."
     },
     "jobDetail": {
       "backToJobs": "Volver a empleos",
@@ -2000,19 +2028,37 @@
       "confirmInviteEmail": "Correo"
     },
     "hiring": {
-      "title": "Solicitudes de Contratación",
-      "subtitle": "Gestiona tus solicitudes de contratación y conviértelas en publicaciones.",
+      "title": "Proyectos",
+      "subtitle": "Gestiona proyectos de reclutamiento — requisitos, búsqueda de candidatos, matching y entrevistas.",
       "status": {
         "active": "Activo",
         "paused": "Pausado",
         "closed": "Cerrado"
       },
-      "newRequest": "Nueva Solicitud",
+      "newProject": "Nuevo Proyecto",
       "allStatuses": "Todos",
-      "empty": "Sin solicitudes aún",
-      "emptyDesc": "Inicia una nueva solicitud con nuestro asistente IA.",
+      "empty": "No hay proyectos aún",
+      "emptyDesc": "Crea tu primer proyecto de reclutamiento con nuestro asistente de IA.",
       "candidates": "candidatos",
-      "totalRequests": "{{count}} solicitudes",
+      "totalProjects": "{{count}} proyectos",
+      "searchPlaceholder": "Buscar proyectos...",
+      "noResults": "No se encontraron proyectos",
+      "noResultsDesc": "Intenta con un término de búsqueda diferente.",
+      "needsAttention": "Necesita atención",
+      "matchesLabel": "coincidencias",
+      "interviewsLabel": "entrevistas",
+      "pipeline": {
+        "candidates": "{{count}} candidatos",
+        "matches": "{{count}} coincidencias",
+        "interviews": "{{count}} entrevistas"
+      },
+      "stats": {
+        "activeProjects": "Proyectos Activos",
+        "totalCandidates": "Total de Candidatos",
+        "totalMatches": "Coincidencias IA",
+        "interviews": "Entrevistas",
+        "avgScore": "Puntuación Media"
+      },
       "createJob": "Crear Empleo",
       "creatingJob": "Creando...",
       "jobCreatedSuccess": "Empleo \"{{title}}\" creado con éxito!",
@@ -2944,7 +2990,9 @@
     "confirmDelete": "Confirmar eliminación",
     "confirmDeleteMessage": "¿Está seguro de que desea eliminar este elemento? Esta acción no se puede deshacer.",
     "cancel": "Cancelar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "saving": "Guardando..."
   },
   "admin": {
     "activity": {
@@ -2994,6 +3042,7 @@
     "leadsByAgent": "Leads por Agente",
     "leadsByAgentDesc": "Top {{count}} agentes por leads pendientes de aprobación. Para administradores, esto incluye todos los agentes de la organización.",
     "createTitle": "Crear Nuevo Agente",
+    "createDesc": "Automatiza tu búsqueda con un agente inteligente. Define los criterios una vez y deja que tu agente trabaje en segundo plano, sin necesidad de repetirte.",
     "agentName": "Nombre del Agente",
     "namePlaceholder": "ej. Buscador Senior Full-stack",
     "searchCriteria": "Criterios de Búsqueda",

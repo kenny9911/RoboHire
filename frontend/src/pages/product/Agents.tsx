@@ -615,7 +615,8 @@ export default function Agents() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCreate(false)}>
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-lg w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('agents.createTitle', 'Create New Agent')}</h3>
+            <h3 className="text-lg font-semibold text-slate-900">{t('agents.createTitle', 'Create New Agent')}</h3>
+            <p className="mt-1 mb-5 text-sm text-slate-500 leading-relaxed">{t('agents.createDesc', 'Automate your search with a smart agent. Set criteria once and let your agent keep working in the background—no need to repeat yourself.')}</p>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.agentName', 'Agent Name')}</label>

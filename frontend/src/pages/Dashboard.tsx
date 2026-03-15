@@ -10,6 +10,7 @@ import IntelligenceReportPanel from '../components/IntelligenceReportPanel';
 interface HiringRequest {
   id: string;
   title: string;
+  clientName?: string | null;
   requirements: string;
   jobDescription?: string;
   status: 'active' | 'paused' | 'closed';
@@ -162,12 +163,27 @@ function RichTextPanel({
   content,
   emptyText,
   accent,
+  onSave,
+  saving,
+  onGenerate,
+  generating,
+  generateLabel,
 }: {
   title: string;
   content?: string;
   emptyText: string;
   accent: 'blue' | 'cyan';
+  onSave?: (newContent: string) => Promise<void>;
+  saving?: boolean;
+  onGenerate?: () => void;
+  generating?: boolean;
+  generateLabel?: string;
 }) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const parsed = useMemo(() => parseJobContent(content || ''), [content]);
   const colorClass =
     accent === 'blue'
@@ -186,55 +202,145 @@ function RichTextPanel({
           strip: 'from-cyan-500 to-emerald-500',
         };
 
+  const handleStartEdit = () => {
+    setEditValue(content || '');
+    setEditing(true);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+    setEditValue('');
+  };
+
+  const handleSave = async () => {
+    if (!onSave) return;
+    await onSave(editValue);
+    setEditing(false);
+  };
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${colorClass.strip}`} />
-      <div className="border-b border-slate-100 px-5 py-4">
+      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <h2 className="text-sm font-semibold tracking-wide text-slate-900">{title}</h2>
-      </div>
-      <div className="max-h-[620px] space-y-4 overflow-auto px-5 py-4 text-sm text-slate-700">
-        {!content?.trim() ? (
-          <p className="text-sm text-slate-500">{emptyText}</p>
-        ) : (
-          <>
-            {parsed.intro.length > 0 && (
-              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                {parsed.intro.map((paragraph, index) => (
-                  <p key={`intro-${index}`} className="leading-6 text-slate-700">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
+        {!editing && (
+          <div className="flex items-center gap-1">
+            {onGenerate && (
+              <button
+                onClick={onGenerate}
+                disabled={generating}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {generating ? (
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
+                ) : (
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                  </svg>
+                )}
+                {generateLabel || t('dashboard.detail.aiGenerate', 'AI Generate')}
+              </button>
             )}
-
-            {parsed.sections.map((section, sectionIndex) => (
-              <section key={`${section.title}-${sectionIndex}`} className="space-y-2">
-                <div className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${colorClass.border} ${colorClass.bg} ${colorClass.text}`}>
-                  {section.title}
-                </div>
-                <ul className="space-y-2">
-                  {section.items.map((item, itemIndex) => (
-                    <li key={`${section.title}-${itemIndex}`} className="flex items-start gap-2.5 leading-6 text-slate-700">
-                      <span className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${colorClass.dot}`} />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-
-            {parsed.trailing.length > 0 && (
-              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                {parsed.trailing.map((paragraph, index) => (
-                  <p key={`trailing-${index}`} className="leading-6 text-slate-700">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
+            {onSave && (
+              <button
+                onClick={handleStartEdit}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                </svg>
+                {t('dashboard.detail.edit', 'Edit')}
+              </button>
             )}
-          </>
+          </div>
         )}
       </div>
+
+      {editing ? (
+        <div className="px-5 py-4">
+          <textarea
+            ref={textareaRef}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="w-full min-h-[400px] rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-700 leading-relaxed outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 resize-y font-mono"
+          />
+          <div className="mt-3 flex items-center justify-end gap-2">
+            <button
+              onClick={handleCancel}
+              disabled={saving}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
+            >
+              {t('common.cancel', 'Cancel')}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {saving && <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
+              {saving ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="max-h-[620px] space-y-4 overflow-auto px-5 py-4 text-sm text-slate-700">
+          {!content?.trim() ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-slate-500">{emptyText}</p>
+              {onSave && (
+                <button
+                  onClick={handleStartEdit}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  {t('dashboard.detail.addContent', 'Add content')}
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              {parsed.intro.length > 0 && (
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  {parsed.intro.map((paragraph, index) => (
+                    <p key={`intro-${index}`} className="leading-6 text-slate-700">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {parsed.sections.map((section, sectionIndex) => (
+                <section key={`${section.title}-${sectionIndex}`} className="space-y-2">
+                  <div className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${colorClass.border} ${colorClass.bg} ${colorClass.text}`}>
+                    {section.title}
+                  </div>
+                  <ul className="space-y-2">
+                    {section.items.map((item, itemIndex) => (
+                      <li key={`${section.title}-${itemIndex}`} className="flex items-start gap-2.5 leading-6 text-slate-700">
+                        <span className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${colorClass.dot}`} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+
+              {parsed.trailing.length > 0 && (
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  {parsed.trailing.map((paragraph, index) => (
+                    <p key={`trailing-${index}`} className="leading-6 text-slate-700">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -260,6 +366,13 @@ export default function Dashboard() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ id: string; title: string; action: 'delete' | 'archive' } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [panelSaving, setPanelSaving] = useState(false);
+  const [editingHeader, setEditingHeader] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editClientName, setEditClientName] = useState('');
+  const [headerSaving, setHeaderSaving] = useState(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -331,6 +444,17 @@ export default function Dashboard() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openMenuId]);
 
+  useEffect(() => {
+    if (!showActionsMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(e.target as Node)) {
+        setShowActionsMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showActionsMenu]);
+
   const handleArchive = async (id: string) => {
     setActionLoading(true);
     try {
@@ -378,6 +502,113 @@ export default function Dashboard() {
       setConfirmAction(null);
     }
   };
+
+  const handleUpdateField = useCallback(async (field: 'requirements' | 'jobDescription', value: string) => {
+    if (!selectedRequest) return;
+    setPanelSaving(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/v1/hiring-requests/${selectedRequest.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ [field]: value }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSelectedRequest((prev) => prev ? { ...prev, [field]: value } : prev);
+      }
+    } finally {
+      setPanelSaving(false);
+    }
+  }, [selectedRequest]);
+
+  const handleStartEditHeader = useCallback(() => {
+    if (!selectedRequest) return;
+    setEditTitle(selectedRequest.title);
+    setEditClientName(selectedRequest.clientName || '');
+    setEditingHeader(true);
+  }, [selectedRequest]);
+
+  const handleSaveHeader = useCallback(async () => {
+    if (!selectedRequest || !editTitle.trim()) return;
+    setHeaderSaving(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/v1/hiring-requests/${selectedRequest.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ title: editTitle.trim(), clientName: editClientName.trim() || null }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSelectedRequest((prev) => prev ? { ...prev, title: editTitle.trim(), clientName: editClientName.trim() || null } : prev);
+        setEditingHeader(false);
+      }
+    } finally {
+      setHeaderSaving(false);
+    }
+  }, [selectedRequest, editTitle, editClientName]);
+
+  const handleStatusChange = useCallback(async (newStatus: string) => {
+    if (!selectedRequest) return;
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/v1/hiring-requests/${selectedRequest.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSelectedRequest((prev) => prev ? { ...prev, status: newStatus as 'active' | 'paused' | 'closed' } : prev);
+        await fetchHiringRequests();
+      }
+    } catch {
+      // silent
+    }
+  }, [selectedRequest]);
+
+  const [generatingJD, setGeneratingJD] = useState(false);
+
+  const handleGenerateJD = useCallback(async () => {
+    if (!selectedRequest) return;
+    setGeneratingJD(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_BASE}/api/v1/hiring-requests/jd-draft`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: selectedRequest.title,
+          requirements: selectedRequest.requirements,
+        }),
+      });
+      const data = await response.json();
+      if (data.success && data.data?.jobDescription) {
+        const jd = data.data.jobDescription;
+        // Save the generated JD
+        await handleUpdateField('jobDescription', jd);
+      }
+    } finally {
+      setGeneratingJD(false);
+    }
+  }, [selectedRequest, handleUpdateField]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -469,55 +700,155 @@ export default function Dashboard() {
             ) : selectedRequest ? (
               <div className="space-y-6">
                 <div className="landing-gradient-stroke bg-white rounded-[28px] shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] p-6">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-xl font-semibold text-slate-900">
-                          {selectedRequest.title}
-                        </h1>
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedRequest.status)}`}>
-                          {selectedRequest.status.charAt(0).toUpperCase() + selectedRequest.status.slice(1)}
-                        </span>
+                  {editingHeader ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1.5">{t('dashboard.detail.projectName', 'Project Name')}</label>
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-base font-semibold text-slate-900 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                          autoFocus
+                        />
                       </div>
-                      <p className="text-sm text-slate-500">
-                        {t('dashboard.detail.updated', 'Updated')} {formatDateTime(selectedRequest.updatedAt)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-4 text-sm text-slate-500">
-                        <span>
-                          {t('dashboard.detail.created', 'Created')} {formatDate(selectedRequest.createdAt)}
-                        </span>
-                        <span>
-                          {t('dashboard.detail.candidatesCount', '{{count}} candidates', {
-                            count: selectedRequest.stats?.matches ?? selectedRequest.candidates.length,
-                          })}
-                        </span>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1.5">{t('dashboard.detail.clientName', 'Client Name (optional)')}</label>
+                        <input
+                          type="text"
+                          value={editClientName}
+                          onChange={(e) => setEditClientName(e.target.value)}
+                          placeholder={t('dashboard.detail.clientNamePlaceholder', 'e.g. Acme Corp, Internal')}
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                        />
                       </div>
-                      <div className="flex items-center gap-2">
-                        {selectedRequest.status !== 'closed' && (
-                          <button
-                            onClick={() => setConfirmAction({ id: selectedRequest.id, title: selectedRequest.title, action: 'archive' })}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                            </svg>
-                            {t('dashboard.requests.archive', 'Archive')}
-                          </button>
-                        )}
+                      <div className="flex items-center justify-end gap-2 pt-1">
                         <button
-                          onClick={() => setConfirmAction({ id: selectedRequest.id, title: selectedRequest.title, action: 'delete' })}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-full transition-colors"
+                          onClick={() => setEditingHeader(false)}
+                          disabled={headerSaving}
+                          className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
                         >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          {t('dashboard.requests.delete', 'Delete')}
+                          {t('common.cancel', 'Cancel')}
+                        </button>
+                        <button
+                          onClick={handleSaveHeader}
+                          disabled={headerSaving || !editTitle.trim()}
+                          className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        >
+                          {headerSaving && <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
+                          {headerSaving ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
                         </button>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-3 mb-1 flex-wrap">
+                          <h1 className="text-xl font-semibold text-slate-900 truncate">
+                            {selectedRequest.title}
+                          </h1>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedRequest.status)}`}>
+                            {selectedRequest.status.charAt(0).toUpperCase() + selectedRequest.status.slice(1)}
+                          </span>
+                          <button
+                            onClick={handleStartEditHeader}
+                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                          >
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap text-sm text-slate-500">
+                          {selectedRequest.clientName && (
+                            <span className="inline-flex items-center gap-1.5">
+                              <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21" />
+                              </svg>
+                              {selectedRequest.clientName}
+                            </span>
+                          )}
+                          <span>{t('dashboard.detail.updated', 'Updated')} {formatDateTime(selectedRequest.updatedAt)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap shrink-0">
+                        <div className="flex items-center gap-3 text-xs text-slate-500 mr-2">
+                          <span>{t('dashboard.detail.created', 'Created')} {formatDate(selectedRequest.createdAt)}</span>
+                          <span>{t('dashboard.detail.candidatesCount', '{{count}} candidates', { count: selectedRequest.stats?.matches ?? selectedRequest.candidates.length })}</span>
+                        </div>
+                        {/* Actions dropdown */}
+                        <div className="relative" ref={actionsMenuRef}>
+                          <button
+                            onClick={() => setShowActionsMenu(!showActionsMenu)}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+                            </svg>
+                          </button>
+                          {showActionsMenu && (
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-50">
+                              {selectedRequest.status === 'active' && (
+                                <button
+                                  onClick={() => { handleStatusChange('paused'); setShowActionsMenu(false); }}
+                                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                >
+                                  <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {t('dashboard.detail.pause', 'Pause')}
+                                </button>
+                              )}
+                              {selectedRequest.status === 'paused' && (
+                                <button
+                                  onClick={() => { handleStatusChange('active'); setShowActionsMenu(false); }}
+                                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                >
+                                  <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {t('dashboard.detail.activate', 'Activate')}
+                                </button>
+                              )}
+                              {selectedRequest.status !== 'closed' && (
+                                <button
+                                  onClick={() => { handleStatusChange('closed'); setShowActionsMenu(false); }}
+                                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                >
+                                  <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                  </svg>
+                                  {t('dashboard.detail.close', 'Close Project')}
+                                </button>
+                              )}
+                              {selectedRequest.status === 'closed' && (
+                                <button
+                                  onClick={() => { handleStatusChange('active'); setShowActionsMenu(false); }}
+                                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                >
+                                  <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183" />
+                                  </svg>
+                                  {t('dashboard.detail.reopen', 'Reopen')}
+                                </button>
+                              )}
+                              <div className="border-t border-slate-100 my-1" />
+                              <button
+                                onClick={() => { setConfirmAction({ id: selectedRequest.id, title: selectedRequest.title, action: 'delete' }); setShowActionsMenu(false); }}
+                                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                {t('dashboard.requests.delete', 'Delete')}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -538,10 +869,12 @@ export default function Dashboard() {
                 <div className="flex flex-col lg:flex-row" ref={splitContainerRef}>
                   <div style={{ width: `${splitPercent}%` }} className="max-lg:!w-full flex-shrink-0 lg:pr-0">
                     <RichTextPanel
-                      title={t('dashboard.detail.requirements', 'Requirements')}
+                      title={t('dashboard.detail.hiringRequirements', 'Hiring Requirements')}
                       content={selectedRequest.requirements}
-                      emptyText={t('dashboard.detail.noRequirements', 'No requirements yet.')}
+                      emptyText={t('dashboard.detail.noRequirements', 'No hiring requirements yet.')}
                       accent="blue"
+                      onSave={(v) => handleUpdateField('requirements', v)}
+                      saving={panelSaving}
                     />
                   </div>
                   {/* Draggable divider */}
@@ -575,10 +908,15 @@ export default function Dashboard() {
                   </div>
                   <div className="mt-4 min-w-0 flex-1 lg:mt-0">
                     <RichTextPanel
-                      title={t('dashboard.detail.jobDescription', 'Job description')}
+                      title={t('dashboard.detail.jobDescription', 'Job Description')}
                       content={selectedRequest.jobDescription}
-                      emptyText={t('dashboard.detail.noJobDescription', 'No job description yet.')}
+                      emptyText={t('dashboard.detail.noJobDescription', 'No job description yet. Use AI to generate one from your hiring requirements.')}
                       accent="cyan"
+                      onSave={(v) => handleUpdateField('jobDescription', v)}
+                      saving={panelSaving}
+                      onGenerate={handleGenerateJD}
+                      generating={generatingJD}
+                      generateLabel={t('dashboard.detail.generateJD', 'AI Generate JD')}
                     />
                   </div>
                 </div>
@@ -667,6 +1005,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <Link
                 to="/start-hiring"
+                state={{ fresh: true }}
                 className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-[28px] p-5 text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center gap-4">
@@ -748,6 +1087,7 @@ export default function Dashboard() {
                 </h2>
                 <Link
                   to="/start-hiring"
+                  state={{ fresh: true }}
                   className="text-blue-600 hover:text-blue-700 font-medium text-xs flex items-center gap-1"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -781,6 +1121,7 @@ export default function Dashboard() {
                   </p>
                   <Link
                     to="/start-hiring"
+                    state={{ fresh: true }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] text-white font-medium transition-colors text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

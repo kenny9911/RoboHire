@@ -47,6 +47,7 @@ export default function APIPlayground() {
             </Link>
             <Link
               to="/start-hiring"
+              state={{ fresh: true }}
               className="flex-1 text-center px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
             >
               {t('apiPlayground.startHiring', 'Start Hiring')}

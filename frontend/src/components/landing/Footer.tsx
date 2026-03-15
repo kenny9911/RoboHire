@@ -109,7 +109,7 @@ export default function Footer() {
                         {link.label}
                       </a>
                     ) : (
-                      <Link to={link.href} className="text-sm text-slate-400 transition-colors hover:text-white">
+                      <Link to={link.href} state={link.href === '/start-hiring' ? { fresh: true } : undefined} className="text-sm text-slate-400 transition-colors hover:text-white">
                         {link.label}
                       </Link>
                     )}

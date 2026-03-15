@@ -168,7 +168,7 @@ function extractJobFields(body: any) {
     description, qualifications, hardRequirements, requirements,
     locations, interviewMode, passingScore, interviewLanguage,
     interviewDuration, interviewRequirements, evaluationRules,
-    hiringRequestId, status,
+    notes, hiringRequestId, status,
   } = body;
 
   return {
@@ -177,7 +177,7 @@ function extractJobFields(body: any) {
     description, qualifications, hardRequirements, requirements,
     locations, interviewMode, passingScore, interviewLanguage,
     interviewDuration, interviewRequirements, evaluationRules,
-    hiringRequestId, status,
+    notes, hiringRequestId, status,
   };
 }
 

@@ -132,7 +132,7 @@ export default function ServiceCards() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      navigate(service.href);
+                      navigate(service.href, service.href === '/start-hiring' ? { state: { fresh: true } } : undefined);
                     }}
                     className={`inline-flex items-center gap-2 text-lg font-semibold transition-colors ${tone.cta}`}
                   >

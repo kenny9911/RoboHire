@@ -915,8 +915,14 @@
       "invited": "已邀約",
       "interviewsCompleted": "面試已完成",
       "requirements": "崗位要求",
+      "hiringRequirements": "崗位需求",
       "jobDescription": "職位描述",
-      "noJobDescription": "暫無職位描述。",
+      "noJobDescription": "尚無職位描述。可使用 AI 從崗位需求自動生成。",
+      "noRequirements": "尚無崗位需求。",
+      "edit": "編輯",
+      "addContent": "新增內容",
+      "aiGenerate": "AI 生成",
+      "generateJD": "AI 生成 JD",
       "candidates": "候選人",
       "noCandidates": "暫無候選人。",
       "candidate": "候選人",
@@ -927,7 +933,14 @@
       "loadError": "載入請求詳情失敗",
       "invitedCandidates": "已邀約候選人",
       "invitedDate": "邀約日期",
-      "interviewStatus": "面試狀態"
+      "interviewStatus": "面試狀態",
+      "projectName": "專案名稱",
+      "clientName": "客戶名稱",
+      "clientNamePlaceholder": "輸入客戶名稱（可選）",
+      "pause": "暫停",
+      "activate": "啟用",
+      "close": "關閉專案",
+      "reopen": "重新開啟"
     },
     "candidateStatus": {
       "pending": "待篩選",
@@ -2038,6 +2051,7 @@
     "nav": {
       "dashboard": "控制台",
       "hiringRequests": "招聘需求",
+      "projects": "招聘專案",
       "talentHub": "人才中心",
       "jobs": "職缺",
       "aiInterview": "AI面試",
@@ -2403,7 +2417,21 @@
       "competitors": "競爭分析",
       "timeToHire": "招聘週期（天）",
       "trends": "市場趨勢",
-      "view": "查看"
+      "view": "查看",
+      "salary": "薪資",
+      "salaryTooltip": "薪資範圍，包括貨幣單位和時間週期。格式示例：$150,000 – $200,000 或 ¥30,000 – ¥50,000/月",
+      "salaryPlaceholder": "選擇或輸入薪資範圍，例如：20-30K/月",
+      "salaryNegotiable": "面議",
+      "perMonth": "月",
+      "perYear": "年",
+      "upTo": "最高",
+      "customSalary": "自訂範圍...",
+      "salaryMinLabel": "最低",
+      "salaryMaxLabel": "最高",
+      "notes": "備註",
+      "notesTooltip": "內部備註資訊，僅供內部團隊查看",
+      "notesPlaceholder": "例如：客戶偏好某行業背景、預算可談等",
+      "notesDesc": "記錄客戶偏好、禁忌或審批節點等內部情報，不會展示給候選人。"
     },
     "jobDetail": {
       "backToJobs": "返回職位列表",
@@ -2454,7 +2482,8 @@
       "confirmInviteEmail": "電子郵件"
     },
     "hiring": {
-      "title": "招聘需求",
+      "title": "招聘專案",
+      "subtitle": "管理招聘專案 — 需求、候選人搜尋、匹配和面試。",
       "description": "管理您的招聘需求",
       "status": {
         "active": "進行中",
@@ -2462,10 +2491,31 @@
         "closed": "已關閉"
       },
       "new": "新需求",
+      "newProject": "新建專案",
       "all": "全部",
       "noRequests": "暫無招聘需求",
-      "empty": "開始新招聘需求",
+      "empty": "尚無專案",
+      "emptyDesc": "使用 AI 助手建立您的第一個招聘專案。",
       "candidates": "候選人",
+      "totalProjects": "{{count}} 個專案",
+      "searchPlaceholder": "搜尋專案...",
+      "noResults": "沒有符合的專案",
+      "noResultsDesc": "請嘗試其他搜尋詞。",
+      "needsAttention": "需要關注",
+      "matchesLabel": "匹配",
+      "interviewsLabel": "面試",
+      "pipeline": {
+        "candidates": "{{count}} 位候選人",
+        "matches": "{{count}} 個匹配",
+        "interviews": "{{count}} 次面試"
+      },
+      "stats": {
+        "activeProjects": "活躍專案",
+        "totalCandidates": "候選人總數",
+        "totalMatches": "AI 匹配",
+        "interviews": "面試",
+        "avgScore": "平均匹配分"
+      },
       "totalRequests": "共 {{count}} 個需求",
       "createJob": "建立職缺",
       "creatingJob": "建立中...",
@@ -3428,7 +3478,9 @@
     "confirmDelete": "確認刪除",
     "confirmDeleteMessage": "確定要刪除此項目嗎？此操作無法撤銷。",
     "cancel": "取消",
-    "delete": "刪除"
+    "delete": "刪除",
+    "save": "儲存",
+    "saving": "儲存中..."
   },
   "admin": {
     "activity": {
@@ -3478,6 +3530,7 @@
     "leadsByAgent": "按 Agent 統計",
     "leadsByAgentDesc": "待審核線索最多的前 {{count}} 個 Agent。管理員可查看組織內所有 Agent。",
     "createTitle": "建立新 Agent",
+    "createDesc": "用智能代理自動化搜尋。只需設定條件一次，代理將在背景持續運作——無需重複操作。",
     "agentName": "Agent 名稱",
     "namePlaceholder": "例如：資深全端工程師獵頭",
     "searchCriteria": "搜尋條件",

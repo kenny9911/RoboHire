@@ -683,6 +683,7 @@ export default function Pricing() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/start-hiring"
+                  state={{ fresh: true }}
                   className="px-8 py-3 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-colors"
                 >
                   {t('pricing.cta.primary', 'Start hiring now')}

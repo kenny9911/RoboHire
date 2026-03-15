@@ -30,6 +30,7 @@ interface Resume {
   tags: string[];
   preferences: CandidatePreferences | null;
   hasInvitations: boolean;
+  notes: string | null;
   _versionCount?: number;
   createdAt: string;
   updatedAt: string;
@@ -375,6 +376,18 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
         </div>
       )}
 
+      {/* Notes preview */}
+      {resume.notes && (
+        <div className="px-4 sm:px-5 pb-3">
+          <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-2.5 py-1.5 line-clamp-2 leading-relaxed">
+            <svg className="w-3 h-3 inline-block mr-1 -mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
+            </svg>
+            {resume.notes}
+          </p>
+        </div>
+      )}
+
       {/* Footer */}
       <div className="px-4 sm:px-5 py-3 border-t border-slate-100 flex items-center justify-between mt-auto">
         <div className="flex items-center gap-2">
@@ -424,6 +437,14 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
         {resume._highlight ? (
           <p className="text-sm text-slate-500 truncate">{resume._highlight}</p>
         ) : null}
+        {resume.notes && (
+          <p className="text-xs text-amber-600 truncate mt-0.5">
+            <svg className="w-3 h-3 inline-block mr-0.5 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
+            </svg>
+            {resume.notes.slice(0, 60)}{resume.notes.length > 60 ? '...' : ''}
+          </p>
+        )}
       </div>
 
       <div className="hidden lg:flex gap-1.5 shrink-0 max-w-[220px] flex-wrap">

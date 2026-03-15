@@ -33,6 +33,7 @@ interface Job {
   interviewDuration: number | null;
   interviewRequirements: string | null;
   evaluationRules: string | null;
+  notes: string | null;
   status: string;
   publishedAt: string | null;
   createdAt: string;
@@ -86,6 +87,7 @@ function getInitialForm(lang?: string) {
     interviewDuration: '30',
     interviewRequirements: '',
     evaluationRules: '',
+    notes: '',
   };
 }
 
@@ -136,6 +138,8 @@ export default function Jobs() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [newCountry, setNewCountry] = useState('');
   const [newCity, setNewCity] = useState('');
+  const [showSalaryDropdown, setShowSalaryDropdown] = useState(false);
+  const salaryDropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({ ...INITIAL_FORM });
@@ -183,6 +187,101 @@ export default function Jobs() {
     setAnalysisResult(null);
     setImportingFileName('');
   };
+
+  type SalaryPreset = { label: string; min: number; max: number; period: string };
+
+  // Salary presets by currency
+  const SALARY_PRESETS: Record<string, SalaryPreset[]> = {
+    CNY: [
+      { label: t('product.jobs.salaryNegotiable', 'Negotiable'), min: 0, max: 0, period: 'monthly' },
+      { label: '10-15K/' + t('product.jobs.perMonth', 'mo'), min: 10000, max: 15000, period: 'monthly' },
+      { label: '15-20K/' + t('product.jobs.perMonth', 'mo'), min: 15000, max: 20000, period: 'monthly' },
+      { label: '20-25K/' + t('product.jobs.perMonth', 'mo'), min: 20000, max: 25000, period: 'monthly' },
+      { label: '25-30K/' + t('product.jobs.perMonth', 'mo'), min: 25000, max: 30000, period: 'monthly' },
+      { label: '30-40K/' + t('product.jobs.perMonth', 'mo'), min: 30000, max: 40000, period: 'monthly' },
+      { label: '40-50K/' + t('product.jobs.perMonth', 'mo'), min: 40000, max: 50000, period: 'monthly' },
+      { label: '50-70K/' + t('product.jobs.perMonth', 'mo'), min: 50000, max: 70000, period: 'monthly' },
+      { label: '70-100K/' + t('product.jobs.perMonth', 'mo'), min: 70000, max: 100000, period: 'monthly' },
+    ],
+    USD: [
+      { label: t('product.jobs.salaryNegotiable', 'Negotiable'), min: 0, max: 0, period: 'yearly' },
+      { label: '$50K-$80K/' + t('product.jobs.perYear', 'yr'), min: 50000, max: 80000, period: 'yearly' },
+      { label: '$80K-$100K/' + t('product.jobs.perYear', 'yr'), min: 80000, max: 100000, period: 'yearly' },
+      { label: '$100K-$130K/' + t('product.jobs.perYear', 'yr'), min: 100000, max: 130000, period: 'yearly' },
+      { label: '$130K-$160K/' + t('product.jobs.perYear', 'yr'), min: 130000, max: 160000, period: 'yearly' },
+      { label: '$160K-$200K/' + t('product.jobs.perYear', 'yr'), min: 160000, max: 200000, period: 'yearly' },
+      { label: '$200K-$250K/' + t('product.jobs.perYear', 'yr'), min: 200000, max: 250000, period: 'yearly' },
+      { label: '$250K+/' + t('product.jobs.perYear', 'yr'), min: 250000, max: 0, period: 'yearly' },
+    ],
+    EUR: [
+      { label: t('product.jobs.salaryNegotiable', 'Negotiable'), min: 0, max: 0, period: 'yearly' },
+      { label: '€40K-€60K/' + t('product.jobs.perYear', 'yr'), min: 40000, max: 60000, period: 'yearly' },
+      { label: '€60K-€80K/' + t('product.jobs.perYear', 'yr'), min: 60000, max: 80000, period: 'yearly' },
+      { label: '€80K-€100K/' + t('product.jobs.perYear', 'yr'), min: 80000, max: 100000, period: 'yearly' },
+      { label: '€100K-€130K/' + t('product.jobs.perYear', 'yr'), min: 100000, max: 130000, period: 'yearly' },
+      { label: '€130K-€170K/' + t('product.jobs.perYear', 'yr'), min: 130000, max: 170000, period: 'yearly' },
+    ],
+    JPY: [
+      { label: t('product.jobs.salaryNegotiable', 'Negotiable'), min: 0, max: 0, period: 'yearly' },
+      { label: '¥400万-¥600万/' + t('product.jobs.perYear', 'yr'), min: 4000000, max: 6000000, period: 'yearly' },
+      { label: '¥600万-¥800万/' + t('product.jobs.perYear', 'yr'), min: 6000000, max: 8000000, period: 'yearly' },
+      { label: '¥800万-¥1000万/' + t('product.jobs.perYear', 'yr'), min: 8000000, max: 10000000, period: 'yearly' },
+      { label: '¥1000万-¥1500万/' + t('product.jobs.perYear', 'yr'), min: 10000000, max: 15000000, period: 'yearly' },
+    ],
+  };
+
+  const getSalaryPresets = (): SalaryPreset[] =>
+    SALARY_PRESETS[form.salaryCurrency] || SALARY_PRESETS.USD;
+
+  const getSalaryDisplayValue = (): string => {
+    if (!form.salaryMin && !form.salaryMax) return '';
+    if (form.salaryMin === '0' && form.salaryMax === '0') {
+      return t('product.jobs.salaryNegotiable', 'Negotiable');
+    }
+
+    const currencySymbol =
+      {
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+        CNY: '¥',
+        JPY: '¥',
+        TWD: 'NT$',
+        CAD: 'CA$',
+        AUD: 'A$',
+      }[form.salaryCurrency] || form.salaryCurrency;
+    const period =
+      form.salaryPeriod === 'yearly'
+        ? t('product.jobs.perYear', 'yr')
+        : t('product.jobs.perMonth', 'mo');
+    const formatAmount = (value: string) => {
+      const num = parseInt(value, 10);
+      if (Number.isNaN(num)) return value;
+      if (num >= 10000) return `${(num / 1000).toFixed(0)}K`;
+      return num.toLocaleString();
+    };
+
+    if (form.salaryMin && !form.salaryMax) {
+      return `${currencySymbol}${formatAmount(form.salaryMin)}+/${period}`;
+    }
+    if (!form.salaryMin && form.salaryMax) {
+      return `${t('product.jobs.upTo', 'Up to')} ${currencySymbol}${formatAmount(form.salaryMax)}/${period}`;
+    }
+
+    return `${currencySymbol}${formatAmount(form.salaryMin)} – ${currencySymbol}${formatAmount(form.salaryMax)}/${period}`;
+  };
+
+  // Close salary dropdown on click outside
+  useEffect(() => {
+    if (!showSalaryDropdown) return;
+    const handler = (e: MouseEvent) => {
+      if (salaryDropdownRef.current && !salaryDropdownRef.current.contains(e.target as Node)) {
+        setShowSalaryDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showSalaryDropdown]);
 
   const handleCreate = async () => {
     if (!form.title.trim()) return;
@@ -437,6 +536,7 @@ export default function Jobs() {
       interviewDuration: job.interviewDuration?.toString() || '30',
       interviewRequirements: job.interviewRequirements || '',
       evaluationRules: job.evaluationRules || '',
+      notes: job.notes || '',
     });
     setLocations((job.locations as LocationEntry[]) || []);
   };
@@ -750,34 +850,76 @@ export default function Jobs() {
               </div>
             </div>
 
-            {/* Monthly Salary */}
-            <div className="mt-4 grid sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('product.jobs.monthlySalary', 'Monthly Salary Min')}</label>
-                <input
-                  type="number"
-                  value={form.salaryMin}
-                  onChange={(e) => setForm((p) => ({ ...p, salaryMin: e.target.value }))}
-                  placeholder="e.g. 5000"
-                  className={inputCls}
-                />
+            {/* Salary */}
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-1">
+                <label className="text-sm font-medium text-slate-700">{t('product.jobs.salary', 'Salary')}</label>
+                <div className="group relative">
+                  <svg className="w-3.5 h-3.5 text-slate-400 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                  </svg>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-64 rounded-lg bg-slate-800 px-3 py-2 text-xs text-white shadow-lg z-50">
+                    {t('product.jobs.salaryTooltip', 'Salary range including currency and period. e.g. $150,000 – $200,000 or ¥30,000 – ¥50,000/mo')}
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('product.jobs.salaryMax', 'Monthly Salary Max')}</label>
-                <input
-                  type="number"
-                  value={form.salaryMax}
-                  onChange={(e) => setForm((p) => ({ ...p, salaryMax: e.target.value }))}
-                  placeholder="e.g. 10000"
-                  className={inputCls}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('product.jobs.currency', 'Currency')}</label>
+              <div className="grid sm:grid-cols-[1fr_auto] gap-3">
+                <div className="relative" ref={salaryDropdownRef}>
+                  <input
+                    type="text"
+                    value={getSalaryDisplayValue()}
+                    onFocus={() => setShowSalaryDropdown(true)}
+                    onChange={(e) => {
+                      // Allow free text entry — try to parse
+                      const raw = e.target.value;
+                      if (!raw) {
+                        setForm((p) => ({ ...p, salaryMin: '', salaryMax: '' }));
+                      }
+                    }}
+                    placeholder={t('product.jobs.salaryPlaceholder', 'Select or enter salary range, e.g. 20-30K/mo')}
+                    className={inputCls}
+                    readOnly
+                  />
+                  {showSalaryDropdown && (
+                    <div className="absolute left-0 top-full mt-1 w-full bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-50 max-h-64 overflow-y-auto">
+                      {getSalaryPresets().map((preset, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setForm((p) => ({
+                              ...p,
+                              salaryMin: preset.min.toString(),
+                              salaryMax: preset.max.toString(),
+                              salaryPeriod: preset.period,
+                            }));
+                            setShowSalaryDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                      <div className="border-t border-slate-100 mt-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowSalaryDropdown(false);
+                            // Show manual entry — clear to let user type
+                            setForm((p) => ({ ...p, salaryMin: '', salaryMax: '' }));
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                        >
+                          {t('product.jobs.customSalary', 'Custom range...')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <select
                   value={form.salaryCurrency}
-                  onChange={(e) => setForm((p) => ({ ...p, salaryCurrency: e.target.value }))}
-                  className={inputCls}
+                  onChange={(e) => setForm((p) => ({ ...p, salaryCurrency: e.target.value, salaryMin: '', salaryMax: '' }))}
+                  className={inputCls + ' sm:w-24'}
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -789,6 +931,54 @@ export default function Jobs() {
                   <option value="AUD">AUD</option>
                 </select>
               </div>
+              {/* Manual min/max inputs shown when dropdown is closed and values are set or user wants custom */}
+              {!showSalaryDropdown && (form.salaryMin || form.salaryMax) && form.salaryMin !== '0' && (
+                <div className="mt-2 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">{t('product.jobs.salaryMinLabel', 'Min')}</label>
+                    <input
+                      type="number"
+                      value={form.salaryMin}
+                      onChange={(e) => setForm((p) => ({ ...p, salaryMin: e.target.value }))}
+                      placeholder="e.g. 5000"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">{t('product.jobs.salaryMaxLabel', 'Max')}</label>
+                    <input
+                      type="number"
+                      value={form.salaryMax}
+                      onChange={(e) => setForm((p) => ({ ...p, salaryMax: e.target.value }))}
+                      placeholder="e.g. 10000"
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-1">
+                <label className="text-sm font-medium text-slate-700">{t('product.jobs.notes', 'Notes')}</label>
+                <div className="group relative">
+                  <svg className="w-3.5 h-3.5 text-slate-400 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                  </svg>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-64 rounded-lg bg-slate-800 px-3 py-2 text-xs text-white shadow-lg z-50">
+                    {t('product.jobs.notesTooltip', 'Internal notes for the team only, not shown to candidates.')}
+                  </div>
+                </div>
+              </div>
+              <textarea
+                value={form.notes}
+                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                placeholder={t('product.jobs.notesPlaceholder', 'e.g. Client prefers certain industry background, budget is negotiable, etc.')}
+                rows={3}
+                className={inputCls}
+              />
+              <p className="mt-1 text-xs text-slate-400">{t('product.jobs.notesDesc', 'Record client preferences, restrictions, or approval milestones. Not shown to candidates.')}</p>
             </div>
           </div>
 
@@ -1155,14 +1345,25 @@ export default function Jobs() {
                     {job.workType && <span className="capitalize">{job.workType}</span>}
                     {job.employmentType && <span className="capitalize">{job.employmentType}</span>}
                     {job.experienceLevel && <span className="capitalize">{job.experienceLevel}</span>}
-                    {(job.salaryMin || job.salaryMax) && (
+                    {(job.salaryMin != null || job.salaryMax != null) && (job.salaryMin !== 0 || job.salaryMax !== 0) && (
                       <span>
-                        {job.salaryCurrency || 'USD'} {job.salaryMin?.toLocaleString() || '—'} – {job.salaryMax?.toLocaleString() || '—'}/{job.salaryPeriod === 'yearly' ? 'yr' : 'mo'}
+                        {job.salaryCurrency || 'USD'} {job.salaryMin?.toLocaleString() || '—'} – {job.salaryMax?.toLocaleString() || '—'}/{job.salaryPeriod === 'yearly' ? t('product.jobs.perYear', 'yr') : t('product.jobs.perMonth', 'mo')}
                       </span>
+                    )}
+                    {job.salaryMin === 0 && job.salaryMax === 0 && (
+                      <span>{t('product.jobs.salaryNegotiable', 'Negotiable')}</span>
                     )}
                   </div>
                   {job.description && (
                     <p className="mt-2 text-sm text-slate-600 line-clamp-2">{job.description.slice(0, 200)}</p>
+                  )}
+                  {job.notes && (
+                    <p className="mt-1.5 text-xs text-amber-600 bg-amber-50 rounded-lg px-2.5 py-1.5 inline-flex items-center gap-1.5">
+                      <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
+                      </svg>
+                      {job.notes.slice(0, 80)}{job.notes.length > 80 ? '...' : ''}
+                    </p>
                   )}
                   <p className="mt-2 text-xs text-slate-400">
                     {t('product.jobs.created', 'Created')} {new Date(job.createdAt).toLocaleDateString()}

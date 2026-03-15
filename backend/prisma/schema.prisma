@@ -82,6 +82,7 @@ model HiringRequest {
   id              String   @id @default(cuid())
   userId          String
   title           String
+  clientName      String?
   requirements    String   @db.Text
   jobDescription  String?  @db.Text
   status                String   @default("active") // active, paused, closed
@@ -452,6 +453,7 @@ model Job {
   interviewDuration    Int?      @default(30)  // minutes: 15,30,45,60
   interviewRequirements String?  @db.Text  // 面试要求
   evaluationRules      String?   @db.Text  // 评估规则
+  notes                String?   @db.Text  // 内部备注，不展示给候选人
   status               String    @default("draft") // draft, open, paused, closed, filled
   publishedAt     DateTime?
   closedAt        DateTime?

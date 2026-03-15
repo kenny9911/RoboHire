@@ -328,7 +328,7 @@ router.get('/', async (req, res) => {
         where,
         include: {
           _count: {
-            select: { candidates: true, resumeJobFits: true },
+            select: { candidates: true, resumeJobFits: true, interviews: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -373,6 +373,7 @@ router.get('/stats', async (req, res) => {
       totalCandidates,
       candidateStatusGroups,
       avgMatchScoreAgg,
+      totalMatches,
       recentRequests,
     ] = await Promise.all([
       prisma.hiringRequest.count({
@@ -402,11 +403,16 @@ router.get('/stats', async (req, res) => {
         },
         _avg: { matchScore: true },
       }),
+      prisma.resumeJobFit.count({
+        where: {
+          hiringRequest: { userId },
+        },
+      }),
       prisma.hiringRequest.findMany({
         where: { userId },
         include: {
           _count: {
-            select: { candidates: true, resumeJobFits: true },
+            select: { candidates: true, resumeJobFits: true, interviews: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -443,6 +449,7 @@ router.get('/stats', async (req, res) => {
         pausedRequests: requestStatusCounts.paused || 0,
         closedRequests: requestStatusCounts.closed || 0,
         totalCandidates,
+        totalMatches,
         invitationsSent: candidateStatusCounts.screening || 0,
         interviewsCompleted: candidateStatusCounts.interviewed || 0,
         avgMatchScore,
@@ -526,7 +533,7 @@ router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
-    const { title, requirements, jobDescription, webhookUrl, status } = req.body;
+    const { title, clientName, requirements, jobDescription, webhookUrl, status } = req.body;
 
     // Verify ownership
     const existing = await prisma.hiringRequest.findFirst({
@@ -555,6 +562,7 @@ router.patch('/:id', async (req, res) => {
       where: { id },
       data: {
         ...(title !== undefined && { title }),
+        ...(clientName !== undefined && { clientName: clientName || null }),
         ...(requirements !== undefined && { requirements }),
         ...(jobDescription !== undefined && { jobDescription }),
         ...(webhookUrl !== undefined && { webhookUrl }),

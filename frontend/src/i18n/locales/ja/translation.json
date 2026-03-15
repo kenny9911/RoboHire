@@ -1344,8 +1344,14 @@
       "invited": "招待済み",
       "interviewsCompleted": "面接完了",
       "requirements": "募集要件",
+      "hiringRequirements": "採用要件",
       "jobDescription": "職務内容",
-      "noJobDescription": "職務内容はまだありません。",
+      "noJobDescription": "求人票はまだありません。AIで採用要件から自動生成できます。",
+      "noRequirements": "採用要件はまだありません。",
+      "edit": "編集",
+      "addContent": "コンテンツを追加",
+      "aiGenerate": "AI生成",
+      "generateJD": "AI で JD 生成",
       "candidates": "候補者",
       "noCandidates": "候補者はまだいません。",
       "candidate": "候補者",
@@ -1356,7 +1362,14 @@
       "loadError": "リクエスト詳細の読み込みに失敗しました",
       "invitedCandidates": "招待済み候補者",
       "invitedDate": "招待日",
-      "interviewStatus": "面接ステータス"
+      "interviewStatus": "面接ステータス",
+      "projectName": "プロジェクト名",
+      "clientName": "クライアント名",
+      "clientNamePlaceholder": "クライアント名を入力（任意）",
+      "pause": "一時停止",
+      "activate": "有効化",
+      "close": "プロジェクトを閉じる",
+      "reopen": "再開"
     },
     "candidateStatus": {
       "pending": "未対応",
@@ -2007,6 +2020,7 @@
     "nav": {
       "dashboard": "ダッシュボード",
       "hiringRequests": "採用リクエスト",
+      "projects": "プロジェクト",
       "talentHub": "タレントハブ",
       "jobs": "求人",
       "aiInterview": "AI面接",
@@ -2316,7 +2330,21 @@
       "timeToHire": "採用日数",
       "trends": "市場トレンド",
       "placeholder": "AI支援で求人を作成・管理。フェーズ2で実装予定。",
-      "view": "表示"
+      "view": "表示",
+      "salary": "給与",
+      "salaryTooltip": "通貨と期間を含む給与範囲。例：$150,000 – $200,000 または ¥30,000 – ¥50,000/月",
+      "salaryPlaceholder": "給与範囲を選択または入力、例：20-30K/月",
+      "salaryNegotiable": "応相談",
+      "perMonth": "月",
+      "perYear": "年",
+      "upTo": "上限",
+      "customSalary": "カスタム範囲...",
+      "salaryMinLabel": "最低",
+      "salaryMaxLabel": "最高",
+      "notes": "備考",
+      "notesTooltip": "チーム内部メモ。候補者には表示されません。",
+      "notesPlaceholder": "例：クライアントの業界背景の好み、予算交渉可能など",
+      "notesDesc": "クライアントの好み、制限事項、承認マイルストーンを記録。候補者には表示されません。"
     },
     "jobDetail": {
       "backToJobs": "求人一覧に戻る",
@@ -2367,7 +2395,8 @@
       "confirmInviteEmail": "メール"
     },
     "hiring": {
-      "title": "採用リクエスト",
+      "title": "プロジェクト",
+      "subtitle": "採用プロジェクト管理 — 要件、候補者検索、マッチング、面接。",
       "status": "ステータス",
       "allRequests": "すべてのリクエスト",
       "createRequest": "リクエストを作成",
@@ -2386,6 +2415,28 @@
       "inProgress": "進行中",
       "filled": "採用完了",
       "candidates": "候補者",
+      "newProject": "新規プロジェクト",
+      "totalProjects": "{{count}}件のプロジェクト",
+      "searchPlaceholder": "プロジェクト検索...",
+      "empty": "プロジェクトがありません",
+      "emptyDesc": "AIアシスタントで最初の採用プロジェクトを作成しましょう。",
+      "noResults": "該当するプロジェクトがありません",
+      "noResultsDesc": "別のキーワードで検索してください。",
+      "needsAttention": "要対応",
+      "matchesLabel": "マッチ",
+      "interviewsLabel": "面接",
+      "pipeline": {
+        "candidates": "{{count}}名の候補者",
+        "matches": "{{count}}件のマッチ",
+        "interviews": "{{count}}件の面接"
+      },
+      "stats": {
+        "activeProjects": "アクティブプロジェクト",
+        "totalCandidates": "候補者合計",
+        "totalMatches": "AIマッチ",
+        "interviews": "面接",
+        "avgScore": "平均マッチスコア"
+      },
       "totalRequests": "{{count}} 件のリクエスト",
       "creatingJob": "作成中...",
       "jobCreatedSuccess": "求人「{{title}}」が正常に作成されました！",
@@ -3386,7 +3437,9 @@
     "confirmDelete": "削除の確認",
     "confirmDeleteMessage": "このアイテムを削除してもよろしいですか？この操作は元に戻せません。",
     "cancel": "キャンセル",
-    "delete": "削除"
+    "delete": "削除",
+    "save": "保存",
+    "saving": "保存中..."
   },
   "admin": {
     "activity": {
@@ -3436,6 +3489,7 @@
     "leadsByAgent": "エージェント別リード",
     "leadsByAgentDesc": "承認待ちリードが多い上位 {{count}} エージェント。管理者は組織全体のエージェントを確認できます。",
     "createTitle": "新規エージェント作成",
+    "createDesc": "スマートエージェントで検索を自動化。条件を一度設定するだけで、エージェントがバックグラウンドで継続的に稼働します。",
     "agentName": "エージェント名",
     "namePlaceholder": "例：シニアフルスタックソーサー",
     "searchCriteria": "検索条件",

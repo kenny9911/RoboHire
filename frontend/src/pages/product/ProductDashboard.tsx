@@ -237,6 +237,7 @@ export default function ProductDashboard() {
             <Link
               key={action.href}
               to={action.href}
+              state={action.href === '/start-hiring' ? { fresh: true } : undefined}
               className="group rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200"
             >
               <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${action.color} mb-3`}>

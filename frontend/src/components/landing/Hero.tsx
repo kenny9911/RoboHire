@@ -68,13 +68,14 @@ export default function Hero() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
               to={isAuthenticated ? '/start-hiring' : '/login'}
-              state={isAuthenticated ? undefined : { from: { pathname: '/start-hiring' } }}
+              state={isAuthenticated ? { fresh: true } : { from: { pathname: '/start-hiring' } }}
               className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 text-base font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(37,99,235,0.95)]"
             >
               {t('landing.hero.ctaPrimary', 'Start Free Trial')}
             </Link>
             <Link
               to="/start-hiring"
+              state={{ fresh: true }}
               className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-8 py-3.5 text-base font-semibold text-slate-700 shadow-[0_16px_30px_-26px_rgba(15,23,42,0.7)] transition-all hover:border-blue-300 hover:text-blue-700"
             >
               {t('landing.hero.ctaSecondary', 'Start Easy Hiring')}

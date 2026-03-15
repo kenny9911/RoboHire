@@ -93,7 +93,15 @@ export default function StartHiring() {
   }, [step, hiringData, jdDraft, messages, activeSessionId, createdRequestId, saveStateToSession]);
 
   // Restore state on mount (before async session load)
+  // If navigated with { fresh: true } state, clear cache and start fresh
   useEffect(() => {
+    const navState = location.state as { fresh?: boolean } | null;
+    if (navState?.fresh) {
+      sessionStorage.removeItem(STATE_KEY);
+      // Clear the fresh flag from history so back-button won't re-trigger
+      window.history.replaceState({}, '');
+      return;
+    }
     try {
       const cached = sessionStorage.getItem(STATE_KEY);
       if (!cached) return;
