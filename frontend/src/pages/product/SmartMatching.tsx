@@ -740,6 +740,21 @@ export default function SmartMatching() {
     setShowHistoryDrawer(false);
   }, []);
 
+  const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<string | null>(null);
+
+  const handleDeleteSession = useCallback(async (sessionId: string) => {
+    try {
+      await axios.delete(`/api/v1/matching/sessions/${sessionId}`);
+      if (selectedSessionId === sessionId) {
+        setSelectedSessionId(null);
+        setSelectedSessionMeta(null);
+        setShowSessionCriteriaModal(false);
+      }
+      setSessionRefreshTrigger((n) => n + 1);
+    } catch { /* silent */ }
+    setConfirmDeleteSessionId(null);
+  }, [selectedSessionId]);
+
   const openAIMatchModal = useCallback((jobIds?: string[]) => {
     setModalLaunchJobIds(jobIds && jobIds.length > 0 ? jobIds : []);
     setShowAIMatchModal(true);
@@ -960,6 +975,15 @@ export default function SmartMatching() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-6m3 6V7m3 10v-4m4 6H5a2 2 0 01-2-2V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2z" />
                 </svg>
                 {t('product.matching.viewSelectionsAndCriteria', 'Match Details')}
+              </button>
+              <button
+                onClick={() => setConfirmDeleteSessionId(selectedSessionId)}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-400 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                title={t('product.matching.deleteSession', 'Delete session')}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </button>
               <button
                 onClick={() => handleSelectSession(null)}
@@ -2104,6 +2128,34 @@ export default function SmartMatching() {
         score={detailMatch?.score ?? null}
         grade={detailMatch?.grade ?? null}
       />
+
+      {/* Delete session confirmation modal */}
+      {confirmDeleteSessionId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfirmDeleteSessionId(null)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-slate-900">
+              {t('product.matching.deleteSessionTitle', 'Delete Session')}
+            </h3>
+            <p className="mt-2 text-sm text-slate-500">
+              {t('product.matching.deleteSessionMessage', 'Are you sure you want to delete this matching session? This action cannot be undone.')}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmDeleteSessionId(null)}
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={() => handleDeleteSession(confirmDeleteSessionId)}
+                className="px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                {t('product.matching.deleteSessionConfirmBtn', 'Delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

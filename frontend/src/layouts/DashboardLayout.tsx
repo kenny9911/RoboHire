@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import LanguageSelector from '../components/LanguageSelector';
-import { getEffectiveInterviewLimit, getEffectiveMatchLimit, getRemainingUsage } from '../utils/usageLimits';
+import { getEffectiveInterviewLimit, getEffectiveMatchLimit, formatUsageLimit, getUsagePercentage } from '../utils/usageLimits';
 
 type NotificationType = 'match' | 'invitation' | 'interview';
 
@@ -306,8 +306,10 @@ export default function DashboardLayout() {
   const matchLimit = getEffectiveMatchLimit(user);
   const interviewsUsed = user?.interviewsUsed ?? 0;
   const resumeMatchesUsed = user?.resumeMatchesUsed ?? 0;
-  const interviewRemaining = getRemainingUsage(interviewLimit, interviewsUsed);
-  const resumeMatchRemaining = getRemainingUsage(matchLimit, resumeMatchesUsed);
+  const interviewLimitDisplay = formatUsageLimit(interviewLimit);
+  const matchLimitDisplay = formatUsageLimit(matchLimit);
+  const interviewPct = getUsagePercentage(interviewLimit, interviewsUsed);
+  const matchPct = getUsagePercentage(matchLimit, resumeMatchesUsed);
   const creditBalance = (user?.topUpBalance ?? 0).toFixed(2);
 
   const isActive = (path: string, exact?: boolean) => {
@@ -428,27 +430,52 @@ export default function DashboardLayout() {
             </button>
           </div>
           {usageSummaryOpen && (
-            <div className="absolute bottom-full right-0 z-20 mb-2 w-60 rounded-xl border border-slate-200 bg-white p-3 shadow-[0_18px_36px_-24px_rgba(15,23,42,0.75)]">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {t('dashboard.quickUsage', 'Quick Usage')}
-              </p>
-              <div className="mt-2 space-y-2 text-xs text-slate-600">
-                <div className="flex items-center justify-between gap-3">
-                  <span>{t('dashboard.interviews', 'Interviews')}</span>
-                  <span className="font-medium text-slate-900">
-                    {interviewsUsed} {t('dashboard.used', 'used')} / {interviewRemaining} {t('dashboard.unused', 'unused')}
-                  </span>
+            <div className="absolute bottom-full right-0 z-20 mb-2 w-64 rounded-xl border border-slate-200 bg-white shadow-[0_18px_36px_-24px_rgba(15,23,42,0.75)] overflow-hidden">
+              {/* Tier badge header */}
+              <div className="px-3.5 py-2.5 bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('dashboard.currentPlan', 'Plan')}</span>
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${
+                  tier === 'free' ? 'bg-slate-100 text-slate-600' :
+                  tier === 'starter' ? 'bg-blue-100 text-blue-700' :
+                  tier === 'growth' ? 'bg-violet-100 text-violet-700' :
+                  tier === 'business' || tier === 'enterprise' || tier === 'custom' ? 'bg-amber-100 text-amber-700' :
+                  'bg-slate-100 text-slate-600'
+                }`}>{tierLabel}</span>
+              </div>
+
+              <div className="px-3.5 py-3 space-y-3">
+                {/* Interviews usage */}
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-slate-500">{t('dashboard.interviews', 'Interviews')}</span>
+                    <span className="font-semibold text-slate-800">{interviewsUsed} / {interviewLimitDisplay}</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${interviewPct >= 90 ? 'bg-red-500' : interviewPct >= 70 ? 'bg-amber-500' : 'bg-blue-500'}`}
+                      style={{ width: interviewLimit != null ? `${Math.max(2, interviewPct)}%` : '0%' }}
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span>{t('dashboard.resumeMatches', 'Resume Matches')}</span>
-                  <span className="font-medium text-slate-900">
-                    {resumeMatchesUsed} {t('dashboard.used', 'used')} / {resumeMatchRemaining} {t('dashboard.unused', 'unused')}
-                  </span>
+
+                {/* Resume Matches usage */}
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-slate-500">{t('dashboard.resumeMatches', 'Resume Matches')}</span>
+                    <span className="font-semibold text-slate-800">{resumeMatchesUsed} / {matchLimitDisplay}</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${matchPct >= 90 ? 'bg-red-500' : matchPct >= 70 ? 'bg-amber-500' : 'bg-blue-500'}`}
+                      style={{ width: matchLimit != null ? `${Math.max(2, matchPct)}%` : '0%' }}
+                    />
+                  </div>
                 </div>
-                <div className="my-1 border-t border-slate-100" />
-                <div className="flex items-center justify-between gap-3">
-                  <span>{t('dashboard.creditBalance', 'Credit Balance')}</span>
-                  <span className="font-semibold text-emerald-700">${creditBalance}</span>
+
+                {/* Credit balance */}
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">{t('dashboard.creditBalance', 'Credit Balance')}</span>
+                  <span className="font-bold text-emerald-600">${creditBalance}</span>
                 </div>
               </div>
             </div>
