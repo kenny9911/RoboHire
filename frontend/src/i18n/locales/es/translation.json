@@ -2029,7 +2029,7 @@
       "view": "Ver",
       "salary": "Salario",
       "salaryTooltip": "Rango salarial incluyendo moneda y período. Ej: $150,000 – $200,000 o ¥30,000 – ¥50,000/mes",
-      "salaryPlaceholder": "Seleccionar o ingresar rango salarial, ej: 20-30K/mes",
+      "salaryPlaceholder": "Ej: 20-30K/mes, base 3000 + bono 1000, negociable",
       "salaryNegotiable": "Negociable",
       "perMonth": "mes",
       "perYear": "año",
@@ -2037,6 +2037,7 @@
       "customSalary": "Rango personalizado...",
       "salaryMinLabel": "Mín",
       "salaryMaxLabel": "Máx",
+      "period": "Período",
       "notes": "Notas",
       "notesTooltip": "Notas internas solo para el equipo, no visibles para candidatos.",
       "notesPlaceholder": "Ej: Cliente prefiere cierto sector, presupuesto negociable, etc.",
@@ -3357,6 +3358,16 @@
     "noEvaluation": "Sin Evaluación Aún",
     "noEvaluationDesc": "Genera un informe de evaluación impulsado por IA para obtener información detallada sobre el candidato.",
     "generateEvaluation": "Generar Evaluación",
-    "comingSoon": "La generación de evaluaciones estará disponible próximamente"
+    "comingSoon": "La generación de evaluaciones estará disponible próximamente",
+    "resumeViewer": {
+      "title": "Visor de Currículum",
+      "original": "Original",
+      "parsed": "Vista Analizada",
+      "download": "Descargar",
+      "parsing": "Analizando currículum...",
+      "retry": "Reintentar",
+      "notParsed": "El currículum aún no ha sido analizado",
+      "parseNow": "Analizar Ahora"
+    }
   }
 }

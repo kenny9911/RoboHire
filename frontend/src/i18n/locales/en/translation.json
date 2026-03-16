@@ -2381,7 +2381,7 @@
       "view": "View",
       "salary": "Salary",
       "salaryTooltip": "Salary range including currency and period. e.g. $150,000 – $200,000 or ¥30,000 – ¥50,000/mo",
-      "salaryPlaceholder": "Select or enter salary range, e.g. 20-30K/mo",
+      "salaryPlaceholder": "e.g. 20-30K/mo, base 5000 + bonus 1000, negotiable",
       "salaryNegotiable": "Negotiable",
       "perMonth": "mo",
       "perYear": "yr",
@@ -2389,6 +2389,7 @@
       "customSalary": "Custom range...",
       "salaryMinLabel": "Min",
       "salaryMaxLabel": "Max",
+      "period": "Period",
       "notes": "Notes",
       "notesTooltip": "Internal notes for the team only, not shown to candidates.",
       "notesPlaceholder": "e.g. Client prefers certain industry background, budget is negotiable, etc.",
@@ -3768,6 +3769,16 @@
     "noEvaluation": "No Evaluation Yet",
     "noEvaluationDesc": "Generate an AI-powered evaluation report for this interview to get detailed insights on the candidate.",
     "generateEvaluation": "Generate Evaluation",
-    "comingSoon": "Evaluation generation coming soon"
+    "comingSoon": "Evaluation generation coming soon",
+    "resumeViewer": {
+      "title": "Resume Viewer",
+      "original": "Original",
+      "parsed": "Parsed View",
+      "download": "Download",
+      "parsing": "Parsing resume...",
+      "retry": "Retry",
+      "notParsed": "Resume has not been parsed yet",
+      "parseNow": "Parse Now"
+    }
   }
 }

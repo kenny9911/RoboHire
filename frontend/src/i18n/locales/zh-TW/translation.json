@@ -2483,7 +2483,7 @@
       "view": "查看",
       "salary": "薪資",
       "salaryTooltip": "薪資範圍，包括貨幣單位和時間週期。格式示例：$150,000 – $200,000 或 ¥30,000 – ¥50,000/月",
-      "salaryPlaceholder": "選擇或輸入薪資範圍，例如：20-30K/月",
+      "salaryPlaceholder": "例如：20-30K/月、底薪3000+補貼600+績效1000、面議",
       "salaryNegotiable": "面議",
       "perMonth": "月",
       "perYear": "年",
@@ -2491,6 +2491,7 @@
       "customSalary": "自訂範圍...",
       "salaryMinLabel": "最低",
       "salaryMaxLabel": "最高",
+      "period": "週期",
       "notes": "備註",
       "notesTooltip": "內部備註資訊，僅供內部團隊查看",
       "notesPlaceholder": "例如：客戶偏好某行業背景、預算可談等",
@@ -3847,6 +3848,16 @@
     "noEvaluation": "暫無評估",
     "noEvaluationDesc": "生成AI驅動的評估報告，獲取候選人的詳細洞察。",
     "generateEvaluation": "生成評估",
-    "comingSoon": "評估生成功能即將推出"
+    "comingSoon": "評估生成功能即將推出",
+    "resumeViewer": {
+      "title": "簡歷查看",
+      "original": "原件",
+      "parsed": "解析視圖",
+      "download": "下載",
+      "parsing": "正在解析簡歷...",
+      "retry": "重試",
+      "notParsed": "簡歷尚未解析",
+      "parseNow": "立即解析"
+    }
   }
 }

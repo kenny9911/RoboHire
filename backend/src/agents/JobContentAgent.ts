@@ -57,6 +57,24 @@ Generate required and preferred qualifications:
 
 Use bullet points under each category header.
 
+### niceToHave (加分项 / Nice to Have)
+Generate preferred qualifications and bonus skills that would make a candidate stand out, but are not strictly required.
+- **Advanced Skills**: Specialized tools or advanced concepts
+- **Industry Experience**: Background in specific related domains
+- **Certifications**: Relevant but non-mandatory certifications
+- **Soft Traits**: Specific leadership or specialized soft skills
+
+Keep it to 3-5 bullet points.
+
+### benefits (福利待遇 / Benefits)
+Generate a compelling list of employee benefits and perks:
+- **Financial**: Competitive salary, bonuses, equity, 401k/pension matching
+- **Health & Wellness**: Premium medical/dental/vision insurance, mental health support, gym stipends
+- **Work-Life Balance**: Flexible hours, remote/hybrid options, generous PTO, parental leave
+- **Growth & Development**: Learning stipends, conference budgets, mentorship programs
+
+Format as a bulleted list grouped by category.
+
 ### hardRequirements (硬性要求 / Hard Requirements)
 This section serves as a VETO GATE — any candidate who fails even ONE item here is automatically disqualified. Therefore you must be extremely selective about what qualifies as a hard requirement.
 
@@ -163,6 +181,8 @@ Only include the requested section(s). For generate_section/enhance: one section
       description: 'Generate a full job description with: opening paragraph about the company/team, 6-10 key responsibilities as bullet points, what success looks like, and why join. Use ## headers and - bullets.',
       qualifications: 'Generate qualifications organized by: Education, Experience, Technical Skills, Soft Skills, Certifications, and Nice-to-Have. Use category headers and bullet points.',
       hardRequirements: 'Generate 3-6 TRUE hard requirements as a numbered list. Each must be a genuine veto-gate condition — if a candidate fails this single item, they are disqualified regardless of other strengths. No generic preferences or soft skills. Ask yourself: "Can this role literally not function without this?" If not, leave it out.',
+      niceToHave: 'Generate 3-5 preferred qualifications or bonus skills that would make a candidate stand out. Use bullet points.',
+      benefits: 'Generate a comprehensive list of employee benefits and perks, organized by category (Financial, Health, Work-Life, Growth). Use bullet points.',
       interviewRequirements: 'Generate concise, actionable interview directives as bullet points (max 15 total). Include: must-verify skills (3-5), key scenarios to probe (2-3), red flags to watch (2-3), and passing bar (1-2). Each bullet = one sentence. No filler, no generic advice, no interview format recommendations. This is a direct instruction set for the AI interviewer.',
       evaluationRules: 'Generate a scoring rubric with: Evaluation Dimensions with percentage weights totaling 100%, a 1-5 scoring scale with descriptors, pass threshold, must-pass dimensions, red flags, strong hire indicators, and final recommendation categories (Strong Hire/Hire/Maybe/No Hire).',
     };
@@ -173,7 +193,7 @@ Only include the requested section(s). For generate_section/enhance: one section
         : '';
       parts.push(`\nPlease enhance the "${input.section}" section. Make it more professional, add relevant keywords, and improve clarity while preserving the original intent.${customInstructions}`);
     } else if (input.action === 'generate_all') {
-      parts.push(`\nPlease generate ALL sections (description, qualifications, hardRequirements, interviewRequirements, evaluationRules) based on the company and job title.`);
+      parts.push(`\nPlease generate ALL sections (description, qualifications, hardRequirements, niceToHave, benefits, interviewRequirements, evaluationRules) based on the company and job title.`);
     } else if (input.action === 'observe_react') {
       parts.push(`\nPlease analyze all current content, identify gaps, and provide suggestions for improvement. Include improved sections where applicable.`);
     } else if (input.section) {

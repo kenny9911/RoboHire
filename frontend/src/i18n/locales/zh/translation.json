@@ -2503,7 +2503,7 @@
       "view": "查看",
       "salary": "薪资",
       "salaryTooltip": "薪资范围，包括货币单位和时间周期。格式示例：$150,000 – $200,000 或 ¥30,000 – ¥50,000/月",
-      "salaryPlaceholder": "选择或输入薪资范围，例如：20-30K/月",
+      "salaryPlaceholder": "例如：20-30K/月、base3000+补贴600+绩效1000、面议",
       "salaryNegotiable": "面议",
       "perMonth": "月",
       "perYear": "年",
@@ -2511,6 +2511,7 @@
       "customSalary": "自定义范围...",
       "salaryMinLabel": "最低",
       "salaryMaxLabel": "最高",
+      "period": "周期",
       "notes": "备注",
       "notesTooltip": "内部备注信息，仅供内部团队查看",
       "notesPlaceholder": "例如：客户偏好某行业背景、预算可谈等",
@@ -3887,6 +3888,16 @@
     "noEvaluation": "暂无评估",
     "noEvaluationDesc": "生成AI驱动的评估报告，获取候选人的详细洞察。",
     "generateEvaluation": "生成评估",
-    "comingSoon": "评估生成功能即将推出"
+    "comingSoon": "评估生成功能即将推出",
+    "resumeViewer": {
+      "title": "简历查看",
+      "original": "原件",
+      "parsed": "解析视图",
+      "download": "下载",
+      "parsing": "正在解析简历...",
+      "retry": "重试",
+      "notParsed": "简历尚未解析",
+      "parseNow": "立即解析"
+    }
   }
 }

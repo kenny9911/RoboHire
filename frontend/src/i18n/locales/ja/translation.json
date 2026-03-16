@@ -2395,7 +2395,7 @@
       "placeholder": "AI支援で求人を作成・管理。フェーズ2で実装予定。",
       "view": "表示",
       "salaryTooltip": "通貨と期間を含む給与範囲。例：$150,000 – $200,000 または ¥30,000 – ¥50,000/月",
-      "salaryPlaceholder": "給与範囲を選択または入力、例：20-30K/月",
+      "salaryPlaceholder": "例：20-30K/月、基本給30万+手当5万、応相談",
       "salaryNegotiable": "応相談",
       "perMonth": "月",
       "perYear": "年",
@@ -2403,6 +2403,7 @@
       "customSalary": "カスタム範囲...",
       "salaryMinLabel": "最低",
       "salaryMaxLabel": "最高",
+      "period": "期間",
       "notes": "備考",
       "notesTooltip": "チーム内部メモ。候補者には表示されません。",
       "notesPlaceholder": "例：クライアントの業界背景の好み、予算交渉可能など",
@@ -3811,6 +3812,16 @@
     "noEvaluation": "まだ評価がありません",
     "noEvaluationDesc": "AI評価レポートを生成して候補者の詳細な洞察を得ましょう。",
     "generateEvaluation": "評価を生成",
-    "comingSoon": "評価生成機能は近日公開予定です"
+    "comingSoon": "評価生成機能は近日公開予定です",
+    "resumeViewer": {
+      "title": "履歴書ビューア",
+      "original": "原本",
+      "parsed": "解析ビュー",
+      "download": "ダウンロード",
+      "parsing": "履歴書を解析中...",
+      "retry": "再試行",
+      "notParsed": "履歴書はまだ解析されていません",
+      "parseNow": "今すぐ解析"
+    }
   }
 }

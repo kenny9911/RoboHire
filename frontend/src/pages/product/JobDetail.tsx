@@ -31,6 +31,7 @@ interface Job {
   salaryMax: number | null;
   salaryCurrency: string | null;
   salaryPeriod: string | null;
+  salaryText: string | null;
   description: string | null;
   qualifications: string | null;
   hardRequirements: string | null;
@@ -321,11 +322,13 @@ export default function JobDetail() {
     ? (job.locations as LocationEntry[]).map((l) => `${l.city}${l.city && l.country ? ', ' : ''}${l.country}`).join(' | ')
     : job.location || null;
 
-  const salaryText = (job.salaryMin === 0 && job.salaryMax === 0)
-    ? t('product.jobs.salaryNegotiable', 'Negotiable')
-    : (job.salaryMin || job.salaryMax)
-      ? `${job.salaryCurrency || 'USD'} ${job.salaryMin?.toLocaleString() || '—'} – ${job.salaryMax?.toLocaleString() || '—'} / ${job.salaryPeriod === 'yearly' ? t('product.jobDetail.yearly', 'year') : t('product.jobDetail.monthly', 'month')}`
-      : null;
+  const salaryDisplay = job.salaryText
+    ? job.salaryText
+    : (job.salaryMin === 0 && job.salaryMax === 0)
+      ? t('product.jobs.salaryNegotiable', 'Negotiable')
+      : (job.salaryMin || job.salaryMax)
+        ? `${job.salaryCurrency || 'USD'} ${job.salaryMin?.toLocaleString() || '—'} – ${job.salaryMax?.toLocaleString() || '—'} / ${job.salaryPeriod === 'yearly' ? t('product.jobDetail.yearly', 'year') : t('product.jobDetail.monthly', 'month')}`
+        : null;
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: 'details', label: t('product.jobDetail.tabDetails', 'Details') },
@@ -366,7 +369,7 @@ export default function JobDetail() {
               <div className="mt-3 flex items-center gap-2 flex-wrap">
                 {job.employmentType && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 capitalize">{job.employmentType}</span>}
                 {job.experienceLevel && <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 capitalize">{job.experienceLevel}</span>}
-                {salaryText && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">{salaryText}</span>}
+                {salaryDisplay && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">{salaryDisplay}</span>}
               </div>
             </div>
             {/* Save status + Edit button */}
@@ -564,15 +567,18 @@ export default function JobDetail() {
               label={t('product.jobDetail.interviewDuration', 'Interview Duration')}
               value={job.interviewDuration ? `${job.interviewDuration} ${t('product.jobDetail.minutes', 'min')}` : null}
               editing={editingBasicInfo}
-              editType="select"
-              selectOptions={[
-                { value: '15', label: '15 min' },
-                { value: '30', label: '30 min' },
-                { value: '45', label: '45 min' },
-                { value: '60', label: '60 min' },
-              ]}
-              editValue={`${basicInfoDraft.interviewDuration ?? 30}`}
-              onEditChange={(v) => setBasicInfoDraft((d) => ({ ...d, interviewDuration: parseInt(v) || 30 }))}
+              editType="number"
+              editValue={`${basicInfoDraft.interviewDuration ?? ''}`}
+              onEditChange={(v) => {
+                if (v === '') {
+                  setBasicInfoDraft((d) => ({ ...d, interviewDuration: undefined }));
+                  return;
+                }
+                let val = parseInt(v, 10);
+                if (isNaN(val)) return;
+                if (val > 45) val = 45;
+                setBasicInfoDraft((d) => ({ ...d, interviewDuration: val }));
+              }}
             />
             {/* Interview Language */}
             <BasicInfoField

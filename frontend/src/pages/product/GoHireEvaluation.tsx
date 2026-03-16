@@ -5,6 +5,7 @@ import axios from '../../lib/axios';
 import { ResumeRenderer, parsedDataToMarkdown, extractJDKeywords } from '../../components/ResumeRenderer';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { JdRenderer } from '../../components/JdRenderer';
+import ResumeViewerModal from '../../components/ResumeViewerModal';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -216,12 +217,6 @@ const EyeIcon = ({ className = 'w-3 h-3' }: { className?: string }) => (
 const DocumentIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
-);
-
-const ExternalLinkIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
   </svg>
 );
 
@@ -464,6 +459,7 @@ export default function GoHireEvaluation() {
   const [transcribeError, setTranscribeError] = useState<string | null>(null);
   const [isLoadingTranscript, setIsLoadingTranscript] = useState(false);
   const [loadTranscriptError, setLoadTranscriptError] = useState<string | null>(null);
+  const [showResumeViewer, setShowResumeViewer] = useState(false);
 
   // Fetch interview data
   useEffect(() => {
@@ -479,6 +475,7 @@ export default function GoHireEvaluation() {
       })
       .finally(() => setLoading(false));
   }, [id, t]);
+
 
   // Generate / re-generate evaluation
   const handleGenerateEvaluation = useCallback(async () => {
@@ -548,6 +545,41 @@ export default function GoHireEvaluation() {
       setIsLoadingTranscript(false);
     }
   }, [id, isLoadingTranscript]);
+
+  const autoRunDone = useRef(false);
+
+  // Auto-run tasks on initial load
+  useEffect(() => {
+    if (!interview || autoRunDone.current) return;
+    autoRunDone.current = true;
+
+    // Auto load transcript if we have a URL but no transcript text yet
+    if (!interview.transcript && interview.transcriptUrl) {
+      handleLoadTranscript();
+    }
+
+    // Auto parse resume if we have a resume but it hasn't been parsed
+    const hasResumeContent = interview.parsedResume || interview.resumeText || parsedResumeMarkdown;
+    if (interview.resumeUrl && !hasResumeContent && !isParsingResume) {
+      const autoParse = async () => {
+        setIsParsingResume(true);
+        setResumeParseError(null);
+        try {
+          const res = await axios.post(`/api/v1/gohire-interviews/${id}/parse-resume`, { force: true });
+          if (res.data?.success && res.data.data?.markdown) {
+            setParsedResumeMarkdown(res.data.data.markdown);
+          } else {
+            setResumeParseError(res.data?.error || 'Parse failed');
+          }
+        } catch (err: any) {
+          setResumeParseError(err.response?.data?.error || err.message || 'Parse failed');
+        } finally {
+          setIsParsingResume(false);
+        }
+      };
+      autoParse();
+    }
+  }, [interview, handleLoadTranscript, id, parsedResumeMarkdown, isParsingResume]);
 
   // Seek video to timestamp
   const seekTo = useCallback((ts: string) => {
@@ -771,16 +803,13 @@ export default function GoHireEvaluation() {
                   {/* Action bar: view link + parse button */}
                   {interview.resumeUrl && (
                     <div className="flex items-center justify-between mb-4">
-                      <a
-                        href={interview.resumeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => setShowResumeViewer(true)}
                         className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
                       >
                         <DocumentIcon className="w-4 h-4" />
                         {t('goHireEval.viewResume', '查看简历')}
-                        <ExternalLinkIcon className="w-3 h-3" />
-                      </a>
+                      </button>
                       {!parsedResumeMarkdown && !resumeMarkdown && (
                         <button
                           onClick={async () => {
@@ -1662,6 +1691,16 @@ export default function GoHireEvaluation() {
           )}
         </div>
       </div>
+
+      {/* Resume Viewer Modal */}
+      {showResumeViewer && interview?.resumeUrl && (
+        <ResumeViewerModal
+          interviewId={interview.id}
+          resumeUrl={interview.resumeUrl}
+          onClose={() => setShowResumeViewer(false)}
+          keywords={highlightKeywords}
+        />
+      )}
     </div>
   );
 }

@@ -501,6 +501,64 @@ router.post('/:id/parse-resume', async (req, res) => {
 });
 
 /**
+ * GET /:id/resume-file — Proxy the resume file from external URL for in-app viewing.
+ * Returns the raw file with correct content-type so the browser can render it (PDF in iframe, etc.).
+ */
+router.get('/:id/resume-file', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const interview = await prisma.goHireInterview.findUnique({
+      where: { id },
+      select: { resumeUrl: true },
+    });
+
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+    if (!interview.resumeUrl) {
+      return res.status(400).json({ success: false, error: 'No resume URL available' });
+    }
+
+    const response = await fetch(interview.resumeUrl);
+    if (!response.ok) {
+      return res.status(502).json({
+        success: false,
+        error: `Failed to fetch resume: HTTP ${response.status}`,
+      });
+    }
+
+    // Determine content type from response or URL (strip query params for extension check)
+    let contentType = response.headers.get('content-type') || 'application/octet-stream';
+    const parsedUrl = new URL(interview.resumeUrl);
+    const pathLower = parsedUrl.pathname.toLowerCase();
+    if (pathLower.endsWith('.pdf')) {
+      contentType = 'application/pdf';
+    } else if (pathLower.endsWith('.docx')) {
+      contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    } else if (pathLower.endsWith('.doc')) {
+      contentType = 'application/msword';
+    } else if (pathLower.endsWith('.md') || pathLower.endsWith('.txt')) {
+      contentType = 'text/plain; charset=utf-8';
+    }
+
+    // Derive filename from URL
+    const fileName = decodeURIComponent(parsedUrl.pathname.split('/').pop() || 'resume');
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+
+    const arrayBuffer = await response.arrayBuffer();
+    res.send(Buffer.from(arrayBuffer));
+  } catch (error) {
+    logger.error('GOHIRE_INTERVIEWS', 'Failed to proxy resume file', {
+      id: req.params.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to fetch resume file' });
+  }
+});
+
+/**
  * POST /:id/load-transcript — Fetch pre-transcribed dialog from transcriptUrl and save to DB.
  */
 router.post('/:id/load-transcript', async (req, res) => {

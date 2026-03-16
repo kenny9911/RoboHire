@@ -443,6 +443,7 @@ model Job {
   salaryMin       Int?
   salaryMax       Int?
   salaryCurrency  String?   @default("USD")
+  salaryText      String?   @db.Text  // Free-text salary description, e.g. "base3000+补贴600+绩效1000"
   companyName          String?
   description          String?   @db.Text
   qualifications       String?   @db.Text   // 任职要求

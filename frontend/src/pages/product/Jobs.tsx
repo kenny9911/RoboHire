@@ -30,6 +30,7 @@ interface Job {
   salaryMax: number | null;
   salaryCurrency: string | null;
   salaryPeriod: string | null;
+  salaryText: string | null;
   description: string | null;
   qualifications: string | null;
   hardRequirements: string | null;
@@ -90,6 +91,7 @@ function getInitialForm(lang?: string) {
     salaryMax: '',
     salaryCurrency: LANG_CURRENCY_MAP[l] || 'USD',
     salaryPeriod: 'monthly',
+    salaryText: '',
     description: '',
     qualifications: '',
     hardRequirements: '',
@@ -558,6 +560,7 @@ export default function Jobs() {
       salaryMax: job.salaryMax?.toString() || '',
       salaryCurrency: job.salaryCurrency || 'USD',
       salaryPeriod: job.salaryPeriod || 'monthly',
+      salaryText: job.salaryText || '',
       description: job.description || '',
       qualifications: job.qualifications || '',
       hardRequirements: job.hardRequirements || '',
@@ -940,18 +943,32 @@ export default function Jobs() {
                 <div className="relative" ref={salaryDropdownRef}>
                   <input
                     type="text"
-                    value={getSalaryDisplayValue()}
+                    value={form.salaryText || getSalaryDisplayValue()}
                     onFocus={() => setShowSalaryDropdown(true)}
                     onChange={(e) => {
-                      // Allow free text entry — try to parse
                       const raw = e.target.value;
+                      setForm((p) => ({ ...p, salaryText: raw }));
                       if (!raw) {
-                        setForm((p) => ({ ...p, salaryMin: '', salaryMax: '' }));
+                        setForm((p) => ({ ...p, salaryMin: '', salaryMax: '', salaryText: '' }));
+                        return;
+                      }
+                      // Try to auto-parse range from text
+                      const rangeMatch = raw.match(/(\d+(?:\.\d+)?)\s*(?:万|k|K)?\s*(?:-|–|—|~|到|to)\s*(\d+(?:\.\d+)?)\s*(?:万|k|K)?/i);
+                      if (rangeMatch) {
+                        const parseAmount = (s: string) => {
+                          if (/万/i.test(raw)) return Math.round(parseFloat(s) * 10000);
+                          if (/k/i.test(raw)) return Math.round(parseFloat(s) * 1000);
+                          return Math.round(parseFloat(s));
+                        };
+                        setForm((p) => ({
+                          ...p,
+                          salaryMin: parseAmount(rangeMatch[1]).toString(),
+                          salaryMax: parseAmount(rangeMatch[2]).toString(),
+                        }));
                       }
                     }}
                     placeholder={t('product.jobs.salaryPlaceholder', 'Select or enter salary range, e.g. 20-30K/mo')}
                     className={inputCls}
-                    readOnly
                   />
                   {showSalaryDropdown && (
                     <div className="absolute left-0 top-full mt-1 w-full bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-50 max-h-64 overflow-y-auto">
@@ -965,6 +982,7 @@ export default function Jobs() {
                               salaryMin: preset.min.toString(),
                               salaryMax: preset.max.toString(),
                               salaryPeriod: preset.period,
+                              salaryText: '',
                             }));
                             setShowSalaryDropdown(false);
                           }}
@@ -978,8 +996,7 @@ export default function Jobs() {
                           type="button"
                           onClick={() => {
                             setShowSalaryDropdown(false);
-                            // Show manual entry — clear to let user type
-                            setForm((p) => ({ ...p, salaryMin: '', salaryMax: '' }));
+                            setForm((p) => ({ ...p, salaryMin: '', salaryMax: '', salaryText: '' }));
                           }}
                           className="w-full text-left px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
                         >
@@ -991,7 +1008,7 @@ export default function Jobs() {
                 </div>
                 <select
                   value={form.salaryCurrency}
-                  onChange={(e) => setForm((p) => ({ ...p, salaryCurrency: e.target.value, salaryMin: '', salaryMax: '' }))}
+                  onChange={(e) => setForm((p) => ({ ...p, salaryCurrency: e.target.value, salaryMin: '', salaryMax: '', salaryText: '' }))}
                   className={inputCls + ' sm:w-24'}
                 >
                   <option value="USD">USD</option>
@@ -1006,7 +1023,7 @@ export default function Jobs() {
               </div>
               {/* Manual min/max inputs shown when dropdown is closed and values are set or user wants custom */}
               {!showSalaryDropdown && (form.salaryMin || form.salaryMax) && form.salaryMin !== '0' && (
-                <div className="mt-2 grid grid-cols-2 gap-3">
+                <div className="mt-2 grid grid-cols-[1fr_1fr_auto] gap-3">
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">{t('product.jobs.salaryMinLabel', 'Min')}</label>
                     <input
@@ -1026,6 +1043,17 @@ export default function Jobs() {
                       placeholder="e.g. 10000"
                       className={inputCls}
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">{t('product.jobs.period', 'Period')}</label>
+                    <select
+                      value={form.salaryPeriod}
+                      onChange={(e) => setForm((p) => ({ ...p, salaryPeriod: e.target.value }))}
+                      className={inputCls}
+                    >
+                      <option value="monthly">{t('product.jobs.perMonth', 'mo')}</option>
+                      <option value="yearly">{t('product.jobs.perYear', 'yr')}</option>
+                    </select>
                   </div>
                 </div>
               )}
@@ -1199,17 +1227,30 @@ export default function Jobs() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('product.jobs.interviewDuration', 'Duration (min)')}</label>
-                <select
-                  value={form.interviewDuration}
-                  onChange={(e) => setForm((p) => ({ ...p, interviewDuration: e.target.value }))}
-                  className={inputCls}
-                >
-                  <option value="15">15 min</option>
-                  <option value="30">30 min</option>
-                  <option value="45">45 min</option>
-                  <option value="60">60 min</option>
-                </select>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('product.jobs.interviewDuration', 'Duration')}</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={1}
+                    max={45}
+                    value={form.interviewDuration || ''}
+                    onChange={(e) => {
+                      if (e.target.value === '') {
+                        setForm((p) => ({ ...p, interviewDuration: '' }));
+                        return;
+                      }
+                      let val = parseInt(e.target.value, 10);
+                      if (isNaN(val)) return;
+                      // Enforce max 45 minutes
+                      if (val > 45) val = 45;
+                      setForm((p) => ({ ...p, interviewDuration: val.toString() }));
+                    }}
+                    className={`${inputCls} pr-12`}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500 text-sm">
+                    {t('product.jobDetail.minutes', 'min')}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1453,14 +1494,15 @@ export default function Jobs() {
                     {job.workType && <span className="capitalize">{job.workType}</span>}
                     {job.employmentType && <span className="capitalize">{job.employmentType}</span>}
                     {job.experienceLevel && <span className="capitalize">{job.experienceLevel}</span>}
-                    {(job.salaryMin != null || job.salaryMax != null) && (job.salaryMin !== 0 || job.salaryMax !== 0) && (
+                    {job.salaryText ? (
+                      <span>{job.salaryText}</span>
+                    ) : (job.salaryMin != null || job.salaryMax != null) && (job.salaryMin !== 0 || job.salaryMax !== 0) ? (
                       <span>
                         {job.salaryCurrency || 'USD'} {job.salaryMin?.toLocaleString() || '—'} – {job.salaryMax?.toLocaleString() || '—'}/{job.salaryPeriod === 'yearly' ? t('product.jobs.perYear', 'yr') : t('product.jobs.perMonth', 'mo')}
                       </span>
-                    )}
-                    {job.salaryMin === 0 && job.salaryMax === 0 && (
+                    ) : job.salaryMin === 0 && job.salaryMax === 0 ? (
                       <span>{t('product.jobs.salaryNegotiable', 'Negotiable')}</span>
-                    )}
+                    ) : null}
                   </div>
                   {job.description && (
                     <p className="mt-2 text-sm text-slate-600 line-clamp-2">{job.description.slice(0, 200)}</p>
@@ -1589,9 +1631,9 @@ export default function Jobs() {
                   {form.education && <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 capitalize">{form.education.replace('_', ' ')}</span>}
                   {form.location && <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">{form.location}</span>}
                   {parseInt(form.headcount) > 1 && <span className="rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">{t('product.jobDetail.headcount', 'Headcount')}: {form.headcount}</span>}
-                  {(form.salaryMin || form.salaryMax) && (
+                  {(form.salaryText || form.salaryMin || form.salaryMax) && (
                     <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                      {form.salaryCurrency} {form.salaryMin || '—'} – {form.salaryMax || '—'} / {form.salaryPeriod === 'yearly' ? t('product.jobDetail.yearly', 'year') : t('product.jobDetail.monthly', 'month')}
+                      {form.salaryText || `${form.salaryCurrency} ${form.salaryMin || '—'} – ${form.salaryMax || '—'} / ${form.salaryPeriod === 'yearly' ? t('product.jobDetail.yearly', 'year') : t('product.jobDetail.monthly', 'month')}`}
                     </span>
                   )}
                 </div>

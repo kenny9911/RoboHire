@@ -2028,7 +2028,7 @@
       "view": "Ansehen",
       "salary": "Gehalt",
       "salaryTooltip": "Gehaltsbereich inkl. Währung und Zeitraum. Bsp: $150.000 – $200.000 oder ¥30.000 – ¥50.000/Monat",
-      "salaryPlaceholder": "Gehaltsbereich wählen oder eingeben, z.B. 20-30K/Monat",
+      "salaryPlaceholder": "z.B. 20-30K/Monat, Basis 3000 + Bonus 1000, verhandelbar",
       "salaryNegotiable": "Verhandlungsbasis",
       "perMonth": "Monat",
       "perYear": "Jahr",
@@ -2036,6 +2036,7 @@
       "customSalary": "Individueller Bereich...",
       "salaryMinLabel": "Min",
       "salaryMaxLabel": "Max",
+      "period": "Zeitraum",
       "notes": "Notizen",
       "notesTooltip": "Interne Notizen nur für das Team, nicht für Kandidaten sichtbar.",
       "notesPlaceholder": "Z.B. Kunde bevorzugt bestimmte Branche, Budget verhandelbar, etc.",
@@ -3356,6 +3357,16 @@
     "noEvaluation": "Noch Keine Bewertung",
     "noEvaluationDesc": "Erstellen Sie einen KI-gestützten Bewertungsbericht, um detaillierte Einblicke zum Kandidaten zu erhalten.",
     "generateEvaluation": "Bewertung Erstellen",
-    "comingSoon": "Die Bewertungserstellung wird in Kürze verfügbar sein"
+    "comingSoon": "Die Bewertungserstellung wird in Kürze verfügbar sein",
+    "resumeViewer": {
+      "title": "Lebenslauf-Viewer",
+      "original": "Original",
+      "parsed": "Analysierte Ansicht",
+      "download": "Herunterladen",
+      "parsing": "Lebenslauf wird analysiert...",
+      "retry": "Erneut versuchen",
+      "notParsed": "Lebenslauf wurde noch nicht analysiert",
+      "parseNow": "Jetzt Analysieren"
+    }
   }
 }

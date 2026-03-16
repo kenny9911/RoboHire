@@ -290,10 +290,28 @@ function parseSalaryDetails(text?: string | null): {
     };
   }
 
+  // "不高于35K" / "up to 35K" / "最高35K" — max only
+  const maxOnlyMatch = normalized.match(/(?:不高于|不超过|最高|up\s*to|at\s*most|under)\s*(\d+(?:\.\d+)?)\s*(?:万|k)?/i);
+  if (maxOnlyMatch) {
+    const amount = parseSalaryAmount(maxOnlyMatch[0].replace(/^.*?(\d)/, '$1'));
+    if (amount > 0) {
+      return { salaryMin: null, salaryMax: amount, salaryCurrency, salaryPeriod };
+    }
+  }
+
+  // "不低于20K" / "at least 20K" / "最低20K" — min only
+  const minOnlyMatch = normalized.match(/(?:不低于|不少于|最低|至少|at\s*least|from|starting)\s*(\d+(?:\.\d+)?)\s*(?:万|k)?/i);
+  if (minOnlyMatch) {
+    const amount = parseSalaryAmount(minOnlyMatch[0].replace(/^.*?(\d)/, '$1'));
+    if (amount > 0) {
+      return { salaryMin: amount, salaryMax: null, salaryCurrency, salaryPeriod };
+    }
+  }
+
   const rangePatterns = [
     /(\d+(?:\.\d+)?)\s*万\s*(?:-|–|—|~|到|to)\s*(\d+(?:\.\d+)?)\s*万/i,
-    /(\d+(?:\.\d+)?)\s*k\s*(?:-|–|—|~|to)\s*(\d+(?:\.\d+)?)\s*k/i,
-    /(\d[\d,]*(?:\.\d+)?)\s*(?:-|–|—|~|to)\s*(\d[\d,]*(?:\.\d+)?)/i,
+    /(\d+(?:\.\d+)?)\s*k\s*(?:-|–|—|~|到|to)\s*(\d+(?:\.\d+)?)\s*k/i,
+    /(\d[\d,]*(?:\.\d+)?)\s*(?:-|–|—|~|到|to)\s*(\d[\d,]*(?:\.\d+)?)/i,
   ];
 
   for (const pattern of rangePatterns) {
@@ -383,6 +401,7 @@ async function buildJobDraftFromHiringRequest(
     salaryMax: salary.salaryMax,
     salaryCurrency: salary.salaryCurrency,
     salaryPeriod: salary.salaryPeriod,
+    salaryText: comp?.salaryText?.trim() || compensationText.trim() || null,
     description,
     qualifications: qualifications || null,
     hardRequirements: hardRequirements || null,
@@ -417,7 +436,7 @@ function extractJobFields(body: any) {
   const {
     title, companyName, department, location, workType, employmentType,
     experienceLevel, education, headcount, salaryMin, salaryMax, salaryCurrency, salaryPeriod,
-    description, qualifications, hardRequirements, niceToHave, benefits, requirements,
+    salaryText, description, qualifications, hardRequirements, niceToHave, benefits, requirements,
     locations, interviewMode, passingScore, interviewLanguage,
     interviewDuration, interviewRequirements, evaluationRules,
     notes, hiringRequestId, status,
@@ -426,7 +445,7 @@ function extractJobFields(body: any) {
   return {
     title, companyName, department, location, workType, employmentType,
     experienceLevel, education, headcount, salaryMin, salaryMax, salaryCurrency, salaryPeriod,
-    description, qualifications, hardRequirements, niceToHave, benefits, requirements,
+    salaryText, description, qualifications, hardRequirements, niceToHave, benefits, requirements,
     locations, interviewMode, passingScore, interviewLanguage,
     interviewDuration, interviewRequirements, evaluationRules,
     notes, hiringRequestId, status,
@@ -556,6 +575,7 @@ router.post('/', requireAuth, async (req, res) => {
         salaryMax: fields.salaryMax ? parseInt(fields.salaryMax, 10) : null,
         salaryCurrency: fields.salaryCurrency?.trim() || 'USD',
         salaryPeriod: fields.salaryPeriod?.trim() || 'monthly',
+        salaryText: fields.salaryText?.trim() || null,
         description: fields.description?.trim() || null,
         qualifications: fields.qualifications?.trim() || null,
         hardRequirements: fields.hardRequirements?.trim() || null,
@@ -614,6 +634,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     if (fields.salaryMax !== undefined) data.salaryMax = fields.salaryMax ? parseInt(fields.salaryMax, 10) : null;
     if (fields.salaryCurrency !== undefined) data.salaryCurrency = fields.salaryCurrency?.trim() || 'USD';
     if (fields.salaryPeriod !== undefined) data.salaryPeriod = fields.salaryPeriod?.trim() || 'monthly';
+    if (fields.salaryText !== undefined) data.salaryText = fields.salaryText?.trim() || null;
     if (fields.description !== undefined) data.description = fields.description?.trim() || null;
     if (fields.qualifications !== undefined) data.qualifications = fields.qualifications?.trim() || null;
     if (fields.hardRequirements !== undefined) data.hardRequirements = fields.hardRequirements?.trim() || null;
@@ -767,6 +788,8 @@ router.post('/:id/generate-content', requireAuth, async (req, res) => {
         description: job.description || '',
         qualifications: job.qualifications || '',
         hardRequirements: job.hardRequirements || '',
+        niceToHave: job.niceToHave || '',
+        benefits: job.benefits || '',
         interviewRequirements: job.interviewRequirements || '',
         evaluationRules: job.evaluationRules || '',
       },
@@ -777,7 +800,7 @@ router.post('/:id/generate-content', requireAuth, async (req, res) => {
     // Update job with generated sections
     const updateData: any = {};
     for (const [key, value] of Object.entries(result.sections)) {
-      if (value && ['description', 'qualifications', 'hardRequirements', 'interviewRequirements', 'evaluationRules'].includes(key)) {
+      if (value && ['description', 'qualifications', 'hardRequirements', 'niceToHave', 'benefits', 'interviewRequirements', 'evaluationRules'].includes(key)) {
         updateData[key] = value;
       }
     }

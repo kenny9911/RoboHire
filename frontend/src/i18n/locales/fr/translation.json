@@ -2029,7 +2029,7 @@
       "view": "Voir",
       "salary": "Salaire",
       "salaryTooltip": "Fourchette salariale incluant devise et période. Ex : $150,000 – $200,000 ou ¥30,000 – ¥50,000/mois",
-      "salaryPlaceholder": "Sélectionner ou saisir la fourchette salariale, ex : 20-30K/mois",
+      "salaryPlaceholder": "Ex : 20-30K/mois, base 3000 + prime 1000, négociable",
       "salaryNegotiable": "À négocier",
       "perMonth": "mois",
       "perYear": "an",
@@ -2037,6 +2037,7 @@
       "customSalary": "Fourchette personnalisée...",
       "salaryMinLabel": "Min",
       "salaryMaxLabel": "Max",
+      "period": "Période",
       "notes": "Notes",
       "notesTooltip": "Notes internes pour l'équipe uniquement, non visibles par les candidats.",
       "notesPlaceholder": "Ex : Le client préfère un certain secteur, budget négociable, etc.",
@@ -3357,6 +3358,16 @@
     "noEvaluation": "Pas Encore d'Évaluation",
     "noEvaluationDesc": "Générez un rapport d'évaluation basé sur l'IA pour obtenir des informations détaillées sur le candidat.",
     "generateEvaluation": "Générer une Évaluation",
-    "comingSoon": "La génération d'évaluations sera bientôt disponible"
+    "comingSoon": "La génération d'évaluations sera bientôt disponible",
+    "resumeViewer": {
+      "title": "Visionneuse de CV",
+      "original": "Original",
+      "parsed": "Vue Analysée",
+      "download": "Télécharger",
+      "parsing": "Analyse du CV en cours...",
+      "retry": "Réessayer",
+      "notParsed": "Le CV n'a pas encore été analysé",
+      "parseNow": "Analyser Maintenant"
+    }
   }
 }
