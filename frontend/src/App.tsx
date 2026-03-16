@@ -34,6 +34,8 @@ const ProductJobDetail = lazy(() => import('./pages/product/JobDetail'));
 const ProductSmartMatching = lazy(() => import('./pages/product/SmartMatching'));
 const ProductAIInterview = lazy(() => import('./pages/product/AIInterview'));
 const ProductEvaluations = lazy(() => import('./pages/product/Evaluations'));
+const ProductInterviewHub = lazy(() => import('./pages/product/InterviewHub'));
+const ProductGoHireEvaluation = lazy(() => import('./pages/product/GoHireEvaluation'));
 const ProductProfile = lazy(() => import('./pages/product/Profile'));
 const ProfileLayout = lazy(() => import('./layouts/ProfileLayout'));
 const ProfileSecurity = lazy(() => import('./pages/product/ProfileSecurity'));
@@ -127,6 +129,8 @@ function App() {
               <Route path="jobs/:id" element={<ProductJobDetail />} />
               <Route path="matching" element={<ProductSmartMatching />} />
               <Route path="interview" element={<ProductAIInterview />} />
+              <Route path="interview-hub" element={<ProductInterviewHub />} />
+              <Route path="interview-hub/:id" element={<ProductGoHireEvaluation />} />
               <Route path="evaluations" element={<ProductEvaluations />} />
               <Route path="profile" element={<ProfileLayout />}>
                 <Route index element={<ProductProfile />} />

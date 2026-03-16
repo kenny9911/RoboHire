@@ -58,27 +58,41 @@ Generate required and preferred qualifications:
 Use bullet points under each category header.
 
 ### hardRequirements (硬性要求 / Hard Requirements)
-Generate non-negotiable must-have criteria as a strict checklist:
-- Minimum education level (e.g. "Bachelor's degree in Computer Science or related field")
-- Minimum years of experience (e.g. "5+ years of professional experience in backend development")
-- Must-have technical skills (e.g. "Proficiency in Python and SQL required")
-- Required certifications or licenses (e.g. "CPA certification required")
-- Language requirements (e.g. "Business-level English required")
-- Legal/compliance requirements (e.g. "Must be authorized to work in the specified country")
-- Any other absolute prerequisites
+This section serves as a VETO GATE — any candidate who fails even ONE item here is automatically disqualified. Therefore you must be extremely selective about what qualifies as a hard requirement.
 
-Format as a numbered list. Each item must be clear, measurable, and non-negotiable. Typically 5-8 items.
+**What IS a hard requirement:** A condition that, if unmet, makes it literally impossible for the candidate to perform the job. Think "the role cannot function without this."
+
+**What is NOT a hard requirement:** General preferences, nice-to-haves, or skills that can be learned on the job. "Strong communication skills", "team player", "fast learner" are NEVER hard requirements. Generic statements like "relevant experience" or "proficiency in common tools" are too vague — they belong in qualifications, not here.
+
+**Process:**
+1. Deeply analyze the job description and responsibilities to identify the TRUE non-negotiable prerequisites
+2. For each candidate requirement, ask: "If a candidate is missing ONLY this one thing but is excellent in every other way, would we still reject them?" — if the answer is NO, it does not belong here
+3. Be specific and measurable — "5+ years of production Kubernetes experience" not "experience with containers"
+
+**Typical categories (only include if genuinely non-negotiable for THIS specific role):**
+- Minimum years of SPECIFIC domain experience (not generic "work experience")
+- Specific technical skills that are fundamental to daily work and cannot be learned quickly
+- Required licenses, certifications, or legal authorizations (e.g. medical license, security clearance)
+- Language fluency if the role requires daily communication in that language
+- Education level ONLY if legally or professionally mandated (e.g. licensed engineer, physician)
+
+Format as a numbered list. Keep it to 3-6 items. Fewer is better — every item here will eliminate candidates. If you cannot identify genuine hard requirements, output only 2-3 truly critical ones rather than padding the list with soft preferences.
 
 ### interviewRequirements (面试要求 / Interview Requirements)
-Generate a structured interview assessment plan:
-- **Core Competencies to Evaluate** (4-6 items): Technical depth, problem-solving, system design, etc.
-- **Technical Assessment Areas**: Specific topics/skills to test with example question themes
-- **Behavioral Assessment**: Leadership scenarios, conflict resolution, teamwork situations to probe
-- **Culture Fit Indicators**: Values alignment, communication style, growth mindset signals
-- **Recommended Interview Format**: Suggested rounds (e.g. phone screen → technical → system design → behavioral → team fit)
-- **Key Questions to Ask**: 3-5 high-signal questions specific to this role
+This section is a CONCISE directive for the AI interview agent. It must be actionable bullet points — no filler text, no lengthy explanations. The interview agent reads this as its instruction set.
 
-Use markdown headers and bullet points. Be specific to the job title and level.
+Generate brief, pointed instructions in this format:
+- **Must-verify skills** (3-5 bullets): The specific technical skills or knowledge areas the interviewer MUST probe deeply. Each bullet = one skill + what to look for. Example: "Python async — ask candidate to explain event loop, probe production debugging experience"
+- **Key scenarios** (2-3 bullets): Concrete situation-based questions to ask. Example: "Ask about a time they resolved a production incident under time pressure — look for structured thinking"
+- **Red flags to watch** (2-3 bullets): Specific warning signs during the interview. Example: "Cannot explain trade-offs in their own past technical decisions"
+- **Passing bar** (1-2 bullets): What "good enough" looks like for this role. Example: "Must demonstrate hands-on system design ability, not just theoretical knowledge"
+
+Rules:
+- Maximum 15 bullets total across all categories
+- Each bullet must be one concise sentence — no paragraphs
+- No generic advice like "assess communication skills" or "evaluate problem-solving" — be specific to THIS role
+- No recommended interview format or round structure — the AI agent handles that
+- Write as direct instructions, not as descriptions
 
 ### evaluationRules (评估规则 / Evaluation Rules)
 Generate a comprehensive scoring rubric:
@@ -148,8 +162,8 @@ Only include the requested section(s). For generate_section/enhance: one section
     const sectionHints: Record<string, string> = {
       description: 'Generate a full job description with: opening paragraph about the company/team, 6-10 key responsibilities as bullet points, what success looks like, and why join. Use ## headers and - bullets.',
       qualifications: 'Generate qualifications organized by: Education, Experience, Technical Skills, Soft Skills, Certifications, and Nice-to-Have. Use category headers and bullet points.',
-      hardRequirements: 'Generate 5-8 non-negotiable must-have requirements as a numbered list. Each must be clear, measurable, and absolute (e.g. "Bachelor\'s degree required", "5+ years experience in X").',
-      interviewRequirements: 'Generate an interview assessment plan with: Core Competencies to Evaluate, Technical Assessment Areas, Behavioral Assessment scenarios, Culture Fit Indicators, Recommended Interview Format, and 3-5 Key Questions. Use ## headers and bullets.',
+      hardRequirements: 'Generate 3-6 TRUE hard requirements as a numbered list. Each must be a genuine veto-gate condition — if a candidate fails this single item, they are disqualified regardless of other strengths. No generic preferences or soft skills. Ask yourself: "Can this role literally not function without this?" If not, leave it out.',
+      interviewRequirements: 'Generate concise, actionable interview directives as bullet points (max 15 total). Include: must-verify skills (3-5), key scenarios to probe (2-3), red flags to watch (2-3), and passing bar (1-2). Each bullet = one sentence. No filler, no generic advice, no interview format recommendations. This is a direct instruction set for the AI interviewer.',
       evaluationRules: 'Generate a scoring rubric with: Evaluation Dimensions with percentage weights totaling 100%, a 1-5 scoring scale with descriptors, pass threshold, must-pass dimensions, red flags, strong hire indicators, and final recommendation categories (Strong Hire/Hire/Maybe/No Hire).',
     };
 

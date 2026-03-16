@@ -150,5 +150,44 @@ export function isParsedResumeLikelyIncomplete(parsed: unknown, resumeText?: str
     return true;
   }
 
+  // Check for hollow entries: sections exist but key fields are empty
+  // This catches cases where the LLM created entries with wrong field names
+  if (hasHollowEntries(parsed as Partial<ParsedResume>)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Detect entries that exist but have empty key fields (institution, company, role).
+ * This catches cases where the LLM used non-standard field names that didn't map correctly.
+ */
+function hasHollowEntries(parsed: Partial<ParsedResume>): boolean {
+  // Check education entries for missing institution
+  if (Array.isArray(parsed.education) && parsed.education.length > 0) {
+    const allMissingInstitution = parsed.education.every((edu) => {
+      const inst = typeof edu === 'object' && edu !== null
+        ? (edu as unknown as Record<string, unknown>).institution ?? (edu as unknown as Record<string, unknown>).school ?? (edu as unknown as Record<string, unknown>).university
+        : undefined;
+      return !inst || (typeof inst === 'string' && !inst.trim());
+    });
+    if (allMissingInstitution) return true;
+  }
+
+  // Check experience entries for missing company AND role
+  if (Array.isArray(parsed.experience) && parsed.experience.length > 0) {
+    const allMissingKeyFields = parsed.experience.every((exp) => {
+      if (typeof exp !== 'object' || exp === null) return true;
+      const e = exp as unknown as Record<string, unknown>;
+      const company = e.company ?? e.companyName ?? e.employer ?? e.organization;
+      const role = e.role ?? e.title ?? e.jobTitle ?? e.position;
+      const hasCompany = typeof company === 'string' && company.trim().length > 0;
+      const hasRole = typeof role === 'string' && role.trim().length > 0;
+      return !hasCompany && !hasRole;
+    });
+    if (allMissingKeyFields) return true;
+  }
+
   return false;
 }

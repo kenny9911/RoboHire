@@ -5,6 +5,7 @@ import axios from '../lib/axios';
 import SEO from '../components/SEO';
 import ResumeUploadModal from '../components/ResumeUploadModal';
 import RefineDiffView from '../components/RefineDiffView';
+import { ResumeRenderer, parsedDataToMarkdown } from '../components/ResumeRenderer';
 
 type Tab = 'overview' | 'insights' | 'jobfit' | 'invitations' | 'notes';
 
@@ -102,6 +103,11 @@ function HeaderActionButton({
   );
 }
 
+function hasResumeParseWarning(parsed: Record<string, unknown> | null): boolean {
+  const summary = typeof parsed?.summary === 'string' ? parsed.summary.trim().toLowerCase() : '';
+  return summary.startsWith('unable to parse resume');
+}
+
 export default function ResumeDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -143,6 +149,9 @@ export default function ResumeDetail() {
   const [refineLoading, setRefineLoading] = useState(false);
   const [refineResult, setRefineResult] = useState<{ refinedParsedData: any; changes: string[]; matchedSkills: string[]; emphasizedExperiences: string[] } | null>(null);
   const [refineError, setRefineError] = useState('');
+
+  // Re-parse state
+  const [reparseLoading, setReparseLoading] = useState(false);
 
   // Version selector state
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -215,6 +224,21 @@ export default function ResumeDetail() {
       console.error('Insight error:', err);
     } finally {
       setInsightLoading(false);
+    }
+  };
+
+  const handleReparse = async () => {
+    if (!resume) return;
+    setReparseLoading(true);
+    try {
+      const res = await axios.post(`/api/v1/resumes/${resume.id}/reparse`);
+      if (res.data.success) {
+        setResume(prev => prev ? { ...prev, parsedData: res.data.data.parsedData, name: res.data.data.name } : prev);
+      }
+    } catch (err) {
+      console.error('Re-parse error:', err);
+    } finally {
+      setReparseLoading(false);
     }
   };
 
@@ -867,7 +891,7 @@ export default function ResumeDetail() {
             <OverviewTab parsed={versionPreviewData.parsedData as Record<string, unknown> | null} t={t} />
           ) : null
         ) : (
-          <OverviewTab parsed={parsed} t={t} />
+          <OverviewTab parsed={parsed} t={t} onReparse={handleReparse} reparseLoading={reparseLoading} />
         )
       )}
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
@@ -1491,154 +1515,56 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
 // ─── Overview Tab ────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function OverviewTab({ parsed, t }: { parsed: Record<string, unknown> | null; t: (k: string, f?: any) => string }) {
+function OverviewTab({ parsed, t, onReparse, reparseLoading }: { parsed: Record<string, unknown> | null; t: (k: string, f?: any) => string; onReparse?: () => void; reparseLoading?: boolean }) {
   if (!parsed) return <div className="text-center py-12 text-gray-500">No parsed data available</div>;
 
-  const summary = parsed.summary as string | undefined;
+  const parseWarning = hasResumeParseWarning(parsed);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const experience = (parsed.experience || []) as Array<Record<string, any>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const education = (parsed.education || []) as Array<Record<string, any>>;
-  const skills = parsed.skills as Record<string, string[]> | string[] | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const certifications = (parsed.certifications || []) as Array<Record<string, any>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const projects = (parsed.projects || []) as Array<Record<string, any>>;
-
-  const allSkills: string[] = [];
-  if (Array.isArray(skills)) {
-    allSkills.push(...skills);
-  } else if (skills && typeof skills === 'object') {
-    for (const cat of ['technical', 'soft', 'tools', 'frameworks', 'languages', 'other']) {
-      if (Array.isArray(skills[cat])) allSkills.push(...skills[cat]);
-    }
-  }
-
-  const [skillsExpanded, setSkillsExpanded] = useState(false);
-  const SKILLS_COLLAPSE_LIMIT = 10;
-  const displaySkills = allSkills.length > SKILLS_COLLAPSE_LIMIT && !skillsExpanded
-    ? allSkills.slice(0, SKILLS_COLLAPSE_LIMIT)
-    : allSkills;
+  const markdownContent = parsedDataToMarkdown(parsed as Record<string, any>);
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
-      {summary && (
-        <Section title={t('resumeLibrary.detail.overview.summary', 'Professional Summary')}>
-          <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
-        </Section>
+      {parseWarning && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zm9-3.758a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-amber-900">
+                {t('resumeLibrary.detail.parseWarningTitle', 'Resume parsing needs review')}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-amber-800">
+                {t('resumeLibrary.detail.parseWarningDesc', 'Structured fields for this resume may be incomplete or incorrect. Review the original resume text before using it for matching or interview decisions.')}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Skills */}
-      {allSkills.length > 0 && (
-        <Section title={t('resumeLibrary.detail.overview.skills', 'Skills')}>
-          <div className="flex flex-wrap gap-2">
-            {displaySkills.map((s, i) => (
-              <span key={i} className="inline-block bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full">{s}</span>
-            ))}
-          </div>
-          {allSkills.length > SKILLS_COLLAPSE_LIMIT && (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        {onReparse && (
+          <div className="flex justify-end mb-3">
             <button
-              onClick={() => setSkillsExpanded(!skillsExpanded)}
-              className="mt-3 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+              onClick={onReparse}
+              disabled={reparseLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
             >
-              {skillsExpanded
-                ? t('resumeLibrary.detail.overview.showLess', 'Show less')
-                : t('resumeLibrary.detail.overview.showAllSkills', { defaultValue: `Show all ${allSkills.length} skills`, count: allSkills.length })}
+              {reparseLoading ? (
+                <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-slate-500" />
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              )}
+              {t('resumeLibrary.detail.reparse', 'Re-parse Resume')}
             </button>
-          )}
-        </Section>
-      )}
-
-      {/* Experience */}
-      {experience.length > 0 && (
-        <Section title={t('resumeLibrary.detail.overview.experience', 'Work Experience')}>
-          <div className="space-y-5">
-            {experience.map((exp, i) => (
-              <div key={i} className="relative pl-6 border-l-2 border-indigo-200">
-                <div className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-indigo-400" />
-                <div className="flex items-baseline justify-between">
-                  <h4 className="text-sm font-semibold text-gray-900">{exp.role as string}</h4>
-                  <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{exp.startDate as string} — {exp.endDate as string}</span>
-                </div>
-                <p className="text-xs text-indigo-600 mb-1">{exp.company as string}{exp.location ? ` · ${exp.location}` : ''}</p>
-                {exp.description && <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{exp.description as string}</p>}
-                {Array.isArray(exp.achievements) && exp.achievements.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {(exp.achievements as string[]).map((a, j) => (
-                      <li key={j} className="text-xs text-gray-700 flex items-start gap-1.5">
-                        <span className="text-indigo-400 mt-0.5">•</span>
-                        <span>{a}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {Array.isArray(exp.technologies) && exp.technologies.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {(exp.technologies as string[]).map((tech, j) => (
-                      <span key={j} className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded">{tech}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
-        </Section>
-      )}
-
-      {/* Education */}
-      {education.length > 0 && (
-        <Section title={t('resumeLibrary.detail.overview.education', 'Education')}>
-          <div className="space-y-3">
-            {education.map((edu, i) => (
-              <div key={i} className="flex items-start justify-between">
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900">{edu.degree as string}{edu.field ? ` in ${edu.field}` : ''}</h4>
-                  <p className="text-xs text-gray-600">{edu.institution as string}</p>
-                  {edu.gpa && <p className="text-xs text-gray-500">GPA: {edu.gpa as string}</p>}
-                </div>
-                <span className="text-xs text-gray-500">{edu.endDate as string}</span>
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* Certifications */}
-      {certifications.length > 0 && (
-        <Section title={t('resumeLibrary.detail.overview.certifications', 'Certifications')}>
-          <div className="space-y-2">
-            {certifications.map((c, i) => (
-              <div key={i} className="text-sm">
-                <span className="font-medium text-gray-800">{c.name as string}</span>
-                {c.issuer && <span className="text-gray-600"> — {c.issuer as string}</span>}
-                {c.date && <span className="text-xs text-gray-500 ml-2">({c.date as string})</span>}
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* Projects */}
-      {projects.length > 0 && (
-        <Section title={t('resumeLibrary.detail.overview.projects', 'Projects')}>
-          <div className="space-y-3">
-            {projects.map((p, i) => (
-              <div key={i}>
-                <h4 className="text-sm font-semibold text-gray-900">{p.name as string}</h4>
-                {p.description && <p className="text-xs text-gray-700 mt-1">{p.description as string}</p>}
-                {Array.isArray(p.technologies) && p.technologies.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {(p.technologies as string[]).map((tech, j) => (
-                      <span key={j} className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded">{tech}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
+        )}
+        <ResumeRenderer content={markdownContent} />
+      </div>
     </div>
   );
 }

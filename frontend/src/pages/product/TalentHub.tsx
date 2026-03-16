@@ -25,6 +25,8 @@ interface Resume {
   phone: string | null;
   currentRole: string | null;
   experienceYears: string | null;
+  summary: string | null;
+  highlight: string | null;
   fileName: string | null;
   status: string;
   tags: string[];
@@ -56,6 +58,7 @@ type EnrichedResume = Resume & {
   _notableCompanies: string[];
   _industryTags: string[];
   _jobCategory: string | null;
+  _parseWarning: boolean;
 };
 
 // ── Notable companies for "Ex-XXX" tags ──
@@ -169,6 +172,11 @@ const PRESENT_RE = /present|current|至今|现在/i;
 
 // ── Helper functions ──
 
+function hasResumeParseWarning(parsedData: Resume['parsedData']): boolean {
+  const summary = parsedData?.summary?.trim().toLowerCase() || '';
+  return summary.startsWith('unable to parse resume');
+}
+
 function getTopSkills(parsedData: Resume['parsedData'], count = 5): string[] {
   if (!parsedData?.skills) return [];
   if (Array.isArray(parsedData.skills)) return parsedData.skills.slice(0, count);
@@ -185,14 +193,42 @@ function getTopSkills(parsedData: Resume['parsedData'], count = 5): string[] {
 }
 
 function getHighlight(parsedData: Resume['parsedData']): string | null {
-  if (!parsedData?.summary) return null;
-  const text = parsedData.summary.trim();
-  const sentenceEnd = text.search(SENTENCE_END_RE);
-  if (sentenceEnd > 0 && sentenceEnd <= 100) {
-    return text.substring(0, sentenceEnd + 1);
+  if (hasResumeParseWarning(parsedData)) return null;
+
+  // Try summary first
+  if (parsedData?.summary) {
+    const text = parsedData.summary.trim();
+    if (text) {
+      const sentenceEnd = text.search(SENTENCE_END_RE);
+      if (sentenceEnd > 0 && sentenceEnd <= 100) {
+        return text.substring(0, sentenceEnd + 1);
+      }
+      if (text.length <= 80) return text;
+      return text.substring(0, 80) + '...';
+    }
   }
-  if (text.length <= 80) return text;
-  return text.substring(0, 80) + '...';
+
+  // Fallback: construct from experience + skills
+  if (!parsedData) return null;
+  const parts: string[] = [];
+
+  if (parsedData.experience?.[0]) {
+    const latest = parsedData.experience[0];
+    if (latest.role && latest.company) {
+      parts.push(`${latest.role} at ${latest.company}`);
+    } else if (latest.role) {
+      parts.push(latest.role);
+    }
+  }
+
+  const skills = getTopSkills(parsedData, 3);
+  if (skills.length > 0 && parts.length === 0) {
+    parts.push(skills.join(', '));
+  }
+
+  if (parts.length === 0) return null;
+  const result = parts.join(' · ');
+  return result.length <= 80 ? result : result.substring(0, 77) + '...';
 }
 
 function getWorkExperience(parsedData: Resume['parsedData']): { fullTimeYears: number; internshipMonths: number } | null {
@@ -291,9 +327,16 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
       {/* Header bar */}
       <div className="px-4 sm:px-5 pt-4 pb-3 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
-            {resume.name}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="min-w-0 flex-1 truncate text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+              {resume.name}
+            </h3>
+            {resume._parseWarning && (
+              <span className="inline-flex shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                {t('product.talent.parseWarning', 'Needs review')}
+              </span>
+            )}
+          </div>
           {resume.currentRole && (
             <p className="mt-0.5 text-sm text-slate-600 truncate">{resume.currentRole}</p>
           )}
@@ -353,12 +396,23 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
         )}
       </div>
 
-      {/* Summary */}
-      {resume._highlight && (
+      {/* Summary & Highlight */}
+      {resume._parseWarning ? (
         <div className="px-4 sm:px-5 pb-3">
-          <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{resume._highlight}</p>
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-700">
+            {t('product.talent.parseWarningDesc', 'This resume was not parsed reliably. Review the original file before matching or inviting.')}
+          </p>
         </div>
-      )}
+      ) : (resume.summary || resume._highlight) ? (
+        <div className="px-4 sm:px-5 pb-3 space-y-1.5">
+          {resume.summary && (
+            <p className="text-[13px] text-slate-600 line-clamp-3 leading-relaxed">{resume.summary}</p>
+          )}
+          {resume._highlight && !resume.summary && (
+            <p className="text-[13px] text-slate-500 line-clamp-2 leading-relaxed">{resume._highlight}</p>
+          )}
+        </div>
+      ) : null}
 
       {/* Skills + Industry tags */}
       {(resume._topSkills.length > 0 || resume._industryTags.length > 0) && (
@@ -422,6 +476,11 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
           <span className="text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
             {resume.name}
           </span>
+          {resume._parseWarning && (
+            <span className="inline-flex shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+              {t('product.talent.parseWarning', 'Needs review')}
+            </span>
+          )}
           {resume._jobCategory && (
             <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold shrink-0 ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-700'}`}>
               {resume._jobCategory}
@@ -434,7 +493,13 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
       </div>
 
       <div className="hidden xl:block min-w-0 flex-1">
-        {resume._highlight ? (
+        {resume._parseWarning ? (
+          <p className="text-sm text-amber-700 truncate">
+            {t('product.talent.parseWarningDesc', 'This resume was not parsed reliably. Review the original file before matching or inviting.')}
+          </p>
+        ) : resume.summary ? (
+          <p className="text-sm text-slate-600 truncate">{resume.summary}</p>
+        ) : resume._highlight ? (
           <p className="text-sm text-slate-500 truncate">{resume._highlight}</p>
         ) : null}
         {resume.notes && (
@@ -650,6 +715,19 @@ export default function TalentHub() {
     if (resumes.length === 0) fetchResumes();
   }, [fetchResumes]);
 
+  // Auto-backfill highlights for resumes missing them (runs once per session)
+  const backfillTriggered = useRef(false);
+  useEffect(() => {
+    if (backfillTriggered.current || resumes.length === 0) return;
+    const missing = resumes.some(r => !r.highlight && !r.summary);
+    if (missing) {
+      backfillTriggered.current = true;
+      axios.post('/api/v1/resumes/backfill-highlights').then(() => {
+        fetchResumes(search || undefined, page);
+      }).catch(() => {});
+    }
+  }, [resumes, fetchResumes, search, page]);
+
   const handleSearch = (value: string) => {
     setSearch(value);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
@@ -697,11 +775,12 @@ export default function TalentHub() {
     return resumes.map(resume => ({
       ...resume,
       _topSkills: getTopSkills(resume.parsedData),
-      _highlight: getHighlight(resume.parsedData),
+      _highlight: resume.highlight || getHighlight(resume.parsedData),
       _workExp: getWorkExperience(resume.parsedData),
       _notableCompanies: getNotableCompanies(resume.parsedData),
       _industryTags: getIndustryTags(resume.parsedData),
       _jobCategory: getJobCategory(resume.currentRole, resume.parsedData),
+      _parseWarning: hasResumeParseWarning(resume.parsedData),
     }));
   }, [resumes]);
 
@@ -883,7 +962,6 @@ export default function TalentHub() {
         open={showUpload}
         onClose={() => setShowUpload(false)}
         onUploaded={() => {
-          setShowUpload(false);
           fetchResumes(search || undefined, 1);
         }}
         batch

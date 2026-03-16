@@ -11,6 +11,7 @@ import { jobFitAgent } from '../agents/JobFitAgent.js';
 import prisma from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
 import { logger } from '../services/LoggerService.js';
+import { llmService } from '../services/llm/LLMService.js';
 import type { ParsedResume, WorkExperience } from '../types/index.js';
 
 const router = Router();
@@ -137,6 +138,122 @@ function computeExperienceYears(experience: WorkExperience[]): string {
   return parts.join(' + ') || '0 years';
 }
 
+// ─── Generate summary & highlight for a resume ────────────────────────
+
+async function generateResumeSummaryHighlight(
+  parsed: ParsedResume,
+  requestId?: string,
+): Promise<{ summary: string; highlight: string }> {
+  // If parsed data already has a good summary, use it
+  const existingSummary = parsed.summary?.trim();
+  if (existingSummary && existingSummary.length > 30) {
+    // Still generate a short highlight from the existing summary
+    const highlight = existingSummary.length <= 80
+      ? existingSummary
+      : existingSummary.replace(/[。.!！？?]\s*$/, '').substring(0, 80) + '...';
+    return { summary: existingSummary, highlight };
+  }
+
+  // Build context from parsed resume for LLM
+  const parts: string[] = [];
+  parts.push(`Name: ${parsed.name || 'Unknown'}`);
+  if (parsed.experience && Array.isArray(parsed.experience) && parsed.experience.length > 0) {
+    parts.push('Experience:');
+    for (const exp of parsed.experience.slice(0, 5)) {
+      parts.push(`- ${exp.role || ''} at ${exp.company || ''} (${exp.duration || exp.startDate || ''})`);
+    }
+  }
+  if (parsed.education && Array.isArray(parsed.education) && parsed.education.length > 0) {
+    parts.push('Education:');
+    for (const edu of parsed.education.slice(0, 3)) {
+      parts.push(`- ${edu.degree || ''} ${edu.field || ''} at ${edu.institution || ''}`);
+    }
+  }
+  const skills = Array.isArray(parsed.skills)
+    ? parsed.skills
+    : parsed.skills
+      ? Object.values(parsed.skills).flat().filter(Boolean)
+      : [];
+  if (skills.length > 0) {
+    parts.push(`Skills: ${skills.slice(0, 15).join(', ')}`);
+  }
+
+  const prompt = `Based on this resume data, generate TWO things:
+1. A professional summary (2-3 sentences, ~50-100 words) highlighting the candidate's key strengths, experience, and expertise areas. Write in the SAME LANGUAGE as the candidate's name and experience (if Chinese name/companies, write in Chinese; if English, write in English).
+2. A one-line highlight (under 60 characters) — the most impressive or distinctive aspect of this candidate. This will be shown on a card view.
+
+Resume data:
+${parts.join('\n')}
+
+Respond ONLY with JSON (no markdown):
+{"summary": "...", "highlight": "..."}`;
+
+  try {
+    const response = await llmService.chat(
+      [{ role: 'user', content: prompt }],
+      { requestId },
+    );
+
+    const text = response.trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const result = JSON.parse(jsonMatch[0]);
+      return {
+        summary: result.summary || '',
+        highlight: result.highlight || '',
+      };
+    }
+  } catch (err) {
+    logger.error('RESUME', 'Failed to generate summary/highlight', {
+      error: err instanceof Error ? err.message : String(err),
+    }, requestId);
+  }
+
+  // Local fallback: construct from parsed data so we never return empty
+  return buildFallbackSummaryHighlight(parsed);
+}
+
+/**
+ * Build summary & highlight from parsed data without LLM.
+ * Used as fallback when LLM call fails or is unavailable.
+ */
+function buildFallbackSummaryHighlight(parsed: ParsedResume): { summary: string; highlight: string } {
+  const parts: string[] = [];
+
+  if (parsed.experience && Array.isArray(parsed.experience) && parsed.experience.length > 0) {
+    const latest = parsed.experience[0];
+    const role = (latest.role as string) || '';
+    const company = (latest.company as string) || '';
+    if (role && company) {
+      parts.push(`${role} at ${company}`);
+    } else if (role) {
+      parts.push(role);
+    }
+  }
+
+  const skills = Array.isArray(parsed.skills)
+    ? parsed.skills
+    : parsed.skills
+      ? Object.values(parsed.skills).flat().filter(Boolean) as string[]
+      : [];
+  if (skills.length > 0) {
+    parts.push(`Skilled in ${skills.slice(0, 5).join(', ')}`);
+  }
+
+  if (parsed.education && Array.isArray(parsed.education) && parsed.education.length > 0) {
+    const edu = parsed.education[0];
+    const eduParts = [edu.degree, edu.field, edu.institution].filter(Boolean);
+    if (eduParts.length > 0) {
+      parts.push(eduParts.join(' — '));
+    }
+  }
+
+  const summary = parts.join('. ').trim() || '';
+  const highlight = (parts[0] || '').substring(0, 60) || '';
+
+  return { summary, highlight };
+}
+
 // ─── Upload single resume ──────────────────────────────────────────────
 router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Request, res: Response) => {
   try {
@@ -157,14 +274,11 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       return res.status(400).json({ success: false, error: 'Could not extract meaningful text from the file' });
     }
 
-    // Check for duplicate
+    // Check for identical text hash (we no longer early return so personDuplicate can trigger and updatedAt can bump)
     const contentHash = computeHash(resumeText);
     const existing = await prisma.resume.findUnique({
       where: { userId_contentHash: { userId, contentHash } },
     });
-    if (existing && !isParsedResumeLikelyIncomplete(existing.parsedData, resumeText)) {
-      return res.json({ success: true, data: existing, duplicate: true });
-    }
 
     // Parse resume with AI (DB cache first, then LLM)
     const { parsedData: parsed } = await getOrParseResume(resumeText, userId, req.requestId);
@@ -178,37 +292,44 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       ? computeExperienceYears(parsed.experience)
       : null;
 
-    // Person-duplicate check: same (name+phone) or (name+email)
-    if (!existing && req.query.skipPersonCheck !== 'true' && name) {
-      const orConds: Array<{ name: string; phone?: string; email?: string; userId: string; status: string }> = [];
-      if (phone) orConds.push({ name, phone, userId, status: 'active' });
-      if (email) orConds.push({ name, email, userId, status: 'active' });
-      if (orConds.length > 0) {
-        const personMatch = await prisma.resume.findFirst({
-          where: { OR: orConds },
+    // Person-duplicate check: same file or same (name+email)
+    if (req.query.skipPersonCheck !== 'true') {
+      let personMatch: any = null;
+      
+      if (name && email) {
+        personMatch = await prisma.resume.findFirst({
+          where: { name: { equals: name, mode: 'insensitive' }, email: { equals: email, mode: 'insensitive' }, userId, status: 'active' },
           orderBy: { updatedAt: 'desc' },
         });
-        if (personMatch) {
-          return res.json({
-            success: true,
-            personDuplicate: true,
-            existingResume: {
-              id: personMatch.id,
-              name: personMatch.name,
-              email: personMatch.email,
-              phone: personMatch.phone,
-              currentRole: personMatch.currentRole,
-              experienceYears: personMatch.experienceYears,
-              fileName: personMatch.fileName,
-              updatedAt: personMatch.updatedAt,
-              parsedData: personMatch.parsedData,
-            },
-            newParsed: { name, email, phone, currentRole, experienceYears, parsedData: parsed, fileName: decodedName },
-            metrics: getProcessingMetrics(req.requestId),
-          });
-        }
+      }
+      
+      if (!personMatch && existing) {
+        personMatch = existing;
+      }
+
+      if (personMatch) {
+        return res.json({
+          success: true,
+          personDuplicate: true,
+          existingResume: {
+            id: personMatch.id,
+            name: personMatch.name,
+            email: personMatch.email,
+            phone: personMatch.phone,
+            currentRole: personMatch.currentRole,
+            experienceYears: personMatch.experienceYears,
+            fileName: personMatch.fileName,
+            updatedAt: personMatch.updatedAt,
+            parsedData: personMatch.parsedData,
+          },
+          newParsed: { name, email, phone, currentRole, experienceYears, parsedData: parsed, fileName: decodedName },
+          metrics: getProcessingMetrics(req.requestId),
+        });
       }
     }
+
+    // Generate summary & highlight if not already in parsed data
+    const { summary, highlight } = await generateResumeSummaryHighlight(parsed, req.requestId);
 
     const resumeData = {
       userId,
@@ -217,6 +338,8 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       phone,
       currentRole,
       experienceYears,
+      summary: summary || null,
+      highlight: highlight || null,
       resumeText,
       parsedData: JSON.parse(JSON.stringify(parsed)),
       fileName: decodedName,
@@ -280,9 +403,6 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
         const existing = await prisma.resume.findUnique({
           where: { userId_contentHash: { userId, contentHash } },
         });
-        if (existing && !isParsedResumeLikelyIncomplete(existing.parsedData, resumeText)) {
-          return { fileName: decodedName, success: true as const, data: existing, duplicate: true };
-        }
 
         const { parsedData: parsed } = await getOrParseResume(resumeText, userId, requestId);
         const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
@@ -291,33 +411,39 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
         const currentRole = parsed.experience?.[0]?.role as string || null;
         const experienceYears = parsed.experience?.length ? computeExperienceYears(parsed.experience) : null;
 
-        // Person-duplicate check
-        if (!existing && name) {
-          const orConds: Array<{ name: string; phone?: string; email?: string; userId: string; status: string }> = [];
-          if (phone) orConds.push({ name, phone, userId, status: 'active' });
-          if (email) orConds.push({ name, email, userId, status: 'active' });
-          if (orConds.length > 0) {
-            const personMatch = await prisma.resume.findFirst({
-              where: { OR: orConds },
+        // Person-duplicate check: same file or same (name+email)
+        if (req.query.skipPersonCheck !== 'true') {
+          let personMatch: any = null;
+          
+          if (name && email) {
+            personMatch = await prisma.resume.findFirst({
+              where: { name: { equals: name, mode: 'insensitive' }, email: { equals: email, mode: 'insensitive' }, userId, status: 'active' },
               orderBy: { updatedAt: 'desc' },
             });
-            if (personMatch) {
-              return {
-                fileName: decodedName,
-                success: true as const,
-                personDuplicate: true as const,
-                existingResume: {
-                  id: personMatch.id, name: personMatch.name,
-                  email: personMatch.email, phone: personMatch.phone,
-                  currentRole: personMatch.currentRole, experienceYears: personMatch.experienceYears,
-                  fileName: personMatch.fileName, updatedAt: personMatch.updatedAt,
-                  parsedData: personMatch.parsedData,
-                },
-                newParsed: { name, email, phone, currentRole, experienceYears, parsedData: parsed, fileName: decodedName },
-              };
-            }
+          }
+
+          if (!personMatch && existing) {
+            personMatch = existing;
+          }
+
+          if (personMatch) {
+            return {
+              fileName: decodedName,
+              success: true as const,
+              personDuplicate: true as const,
+              existingResume: {
+                id: personMatch.id, name: personMatch.name,
+                email: personMatch.email, phone: personMatch.phone,
+                currentRole: personMatch.currentRole, experienceYears: personMatch.experienceYears,
+                fileName: personMatch.fileName, updatedAt: personMatch.updatedAt,
+                parsedData: personMatch.parsedData,
+              },
+              newParsed: { name, email, phone, currentRole, experienceYears, parsedData: parsed, fileName: decodedName },
+            };
           }
         }
+
+        const { summary, highlight } = await generateResumeSummaryHighlight(parsed, requestId);
 
         const resumeData = {
           userId,
@@ -326,6 +452,8 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
           phone,
           currentRole,
           experienceYears,
+          summary: summary || null,
+          highlight: highlight || null,
           resumeText,
           parsedData: JSON.parse(JSON.stringify(parsed)),
           fileName: decodedName,
@@ -429,6 +557,8 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
       ? computeExperienceYears(parsed.experience)
       : null;
 
+    const { summary: newSummary, highlight: newHighlight } = await generateResumeSummaryHighlight(parsed, req.requestId);
+
     const updated = await prisma.$transaction(async (tx) => {
       await tx.resumeJobFit.deleteMany({
         where: { resumeId },
@@ -442,6 +572,8 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
           phone,
           currentRole,
           experienceYears,
+          summary: newSummary || null,
+          highlight: newHighlight || null,
           resumeText,
           parsedData: JSON.parse(JSON.stringify(parsed)),
           insightData: Prisma.DbNull,
@@ -535,6 +667,8 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       phone: true,
       currentRole: true,
       experienceYears: true,
+      summary: true,
+      highlight: true,
       fileName: true,
       fileType: true,
       status: true,
@@ -618,7 +752,13 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
         summary: r.parsedData.summary,
         experience: Array.isArray(r.parsedData.experience)
           ? r.parsedData.experience.map((e: any) => ({
-              company: e.company, title: e.title, employmentType: e.employmentType,
+              company: e.company,
+              role: e.role || e.title,
+              title: e.title || e.role,
+              location: e.location,
+              description: e.description,
+              technologies: Array.isArray(e.technologies) ? e.technologies : [],
+              employmentType: e.employmentType,
               startDate: e.startDate, endDate: e.endDate, duration: e.duration,
             }))
           : [],
@@ -753,6 +893,59 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     return res.json({ success: true });
   } catch (error) {
     return res.status(500).json({ success: false, error: 'Failed to delete resume' });
+  }
+});
+
+// ─── Re-parse resume with latest agent ───────────────────────────────────
+router.post('/:id/reparse', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const resume = await prisma.resume.findUnique({
+      where: { id: req.params.id, userId: req.user.id },
+      select: { id: true, resumeText: true, name: true },
+    });
+
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    if (!resume.resumeText) {
+      return res.status(400).json({ success: false, error: 'No resume text available for re-parsing' });
+    }
+
+    // Force fresh parse (bypass cache)
+    const { parsedData: parsed } = await getOrParseResume(resume.resumeText, req.user.id, req.requestId);
+
+    // Extract metadata
+    const name = parsed.name || resume.name || 'Unknown';
+    const email = parsed.email || null;
+    const phone = parsed.phone || null;
+    const currentRole = parsed.experience?.[0]?.role || parsed.experience?.[0]?.title || null;
+
+    // Update resume record
+    await prisma.resume.update({
+      where: { id: resume.id },
+      data: {
+        parsedData: JSON.parse(JSON.stringify(parsed)),
+        name,
+        email,
+        phone,
+        currentRole,
+      },
+    });
+
+    logger.info('RESUMES', 'Resume re-parsed', { id: resume.id, name }, req.requestId);
+
+    res.json({ success: true, data: { parsedData: parsed, name, email, phone, currentRole } });
+  } catch (error) {
+    logger.error('RESUMES', 'Failed to re-parse resume', {
+      id: req.params.id,
+      error: error instanceof Error ? error.message : String(error),
+    }, req.requestId);
+    res.status(500).json({ success: false, error: 'Failed to re-parse resume' });
   }
 });
 
@@ -982,6 +1175,14 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
     }
     if (parsedData !== undefined) data.parsedData = parsedData;
 
+    // Regenerate summary/highlight when parsedData or resumeText changes
+    if (parsedData !== undefined || resumeText !== undefined) {
+      const newParsed = (parsedData ?? existing.parsedData ?? {}) as unknown as ParsedResume;
+      const { summary: editSummary, highlight: editHighlight } = await generateResumeSummaryHighlight(newParsed, req.requestId);
+      data.summary = editSummary || null;
+      data.highlight = editHighlight || null;
+    }
+
     // Clear stale caches
     data.insightData = Prisma.JsonNull;
     data.jobFitData = Prisma.JsonNull;
@@ -1093,6 +1294,9 @@ router.post('/:id/versions/:versionId/restore', requireAuth, async (req: Request
     });
 
     // Restore from target version
+    const versionParsed = (version.parsedData ?? {}) as unknown as ParsedResume;
+    const { summary: restoredSummary, highlight: restoredHighlight } = await generateResumeSummaryHighlight(versionParsed, req.requestId);
+
     const updated = await prisma.resume.update({
       where: { id: existing.id },
       data: {
@@ -1104,6 +1308,8 @@ router.post('/:id/versions/:versionId/restore', requireAuth, async (req: Request
         resumeText: version.resumeText,
         parsedData: version.parsedData ?? Prisma.JsonNull,
         contentHash: computeHash(version.resumeText),
+        summary: restoredSummary || null,
+        highlight: restoredHighlight || null,
         insightData: Prisma.JsonNull,
         jobFitData: Prisma.JsonNull,
       },
@@ -1146,6 +1352,56 @@ router.delete('/:id/versions/:versionId', requireAuth, async (req: Request, res:
   } catch (error) {
     logger.error('RESUMES', 'Failed to delete version', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ success: false, error: 'Failed to delete version' });
+  }
+});
+
+// ─── Backfill highlights for resumes that are missing them ─────────────
+router.post('/backfill-highlights', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const userId = req.user.id;
+    const resumes = await prisma.resume.findMany({
+      where: {
+        userId,
+        status: 'active',
+        OR: [
+          { highlight: null },
+          { highlight: '' },
+          { summary: null },
+          { summary: '' },
+        ],
+      },
+      select: { id: true, parsedData: true },
+      take: 50,
+    });
+
+    if (resumes.length === 0) {
+      return res.json({ success: true, updated: 0 });
+    }
+
+    let updated = 0;
+    for (const resume of resumes) {
+      const parsed = (resume.parsedData ?? {}) as unknown as ParsedResume;
+      const { summary, highlight } = await generateResumeSummaryHighlight(parsed, req.requestId);
+      if (summary || highlight) {
+        await prisma.resume.update({
+          where: { id: resume.id },
+          data: {
+            summary: summary || null,
+            highlight: highlight || null,
+          },
+        });
+        updated++;
+      }
+    }
+
+    return res.json({ success: true, updated, total: resumes.length });
+  } catch (error) {
+    logger.error('RESUMES', 'Failed to backfill highlights', { error: error instanceof Error ? error.message : String(error) });
+    return res.status(500).json({ success: false, error: 'Failed to backfill highlights' });
   }
 });
 

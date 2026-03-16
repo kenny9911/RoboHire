@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../evaluateInterviewAgent"
+		}
+	],
+	"settings": {
+		"claudeCode.allowDangerouslySkipPermissions": true
+	}
+}

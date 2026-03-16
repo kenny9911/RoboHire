@@ -3,6 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
+import {
+  getInterviewLanguageApiName,
+  getInterviewLanguageDisplay,
+  INTERVIEW_LANGUAGE_OPTIONS,
+  normalizeInterviewLanguage,
+} from '../../utils/interviewLanguage';
 
 interface LocationEntry {
   country: string;
@@ -18,6 +24,8 @@ interface Job {
   workType: string | null;
   employmentType: string | null;
   experienceLevel: string | null;
+  education: string | null;
+  headcount: number;
   salaryMin: number | null;
   salaryMax: number | null;
   salaryCurrency: string | null;
@@ -25,6 +33,8 @@ interface Job {
   description: string | null;
   qualifications: string | null;
   hardRequirements: string | null;
+  niceToHave: string | null;
+  benefits: string | null;
   requirements: any;
   locations: LocationEntry[] | null;
   interviewMode: string | null;
@@ -65,7 +75,7 @@ const LANG_CURRENCY_MAP: Record<string, string> = {
 };
 
 function getInitialForm(lang?: string) {
-  const l = lang || 'en';
+  const l = normalizeInterviewLanguage(lang);
   return {
     title: '',
     companyName: '',
@@ -74,6 +84,8 @@ function getInitialForm(lang?: string) {
     workType: '',
     employmentType: '',
     experienceLevel: '',
+    education: '',
+    headcount: '1',
     salaryMin: '',
     salaryMax: '',
     salaryCurrency: LANG_CURRENCY_MAP[l] || 'USD',
@@ -81,6 +93,8 @@ function getInitialForm(lang?: string) {
     description: '',
     qualifications: '',
     hardRequirements: '',
+    niceToHave: '',
+    benefits: '',
     interviewMode: 'standard',
     passingScore: '60',
     interviewLanguage: l,
@@ -104,14 +118,18 @@ function AIWandButton({ onClick, loading, hasContent, t }: {
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="inline-flex items-center justify-center h-5 w-5 rounded text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-50"
+      className="inline-flex items-center justify-center h-6 w-6 rounded text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-50"
       title={hasContent ? t('product.jobs.enhance', 'Refine with AI') : t('product.jobs.generate', 'Generate with AI')}
     >
       {loading ? (
-        <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-blue-500" />
+        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-500" />
       ) : (
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" />
+        <svg className="h-[1.05rem] w-[1.05rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a4.42 4.42 0 0 1 0-8.527l6.135-1.581a2 2 0 0 0 1.438-1.437l1.582-6.135a4.42 4.42 0 0 1 8.527 0l1.581 6.135a2 2 0 0 0 1.437 1.438l6.135 1.582a4.42 4.42 0 0 1 0 8.527l-6.135 1.581a2 2 0 0 0-1.438 1.437l-1.582 6.135a4.42 4.42 0 0 1-8.527 0z" />
+          <path d="M20 3v4" />
+          <path d="M22 5h-4" />
+          <path d="M4 17v2" />
+          <path d="M5 18H3" />
         </svg>
       )}
     </button>
@@ -130,6 +148,7 @@ export default function Jobs() {
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
   const [generatingAll, setGeneratingAll] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [importing, setImporting] = useState(false);
   const [importingFileName, setImportingFileName] = useState('');
@@ -293,6 +312,7 @@ export default function Jobs() {
         salaryMax: form.salaryMax ? parseInt(form.salaryMax) : null,
         passingScore: form.passingScore ? parseInt(form.passingScore) : 60,
         interviewDuration: form.interviewDuration ? parseInt(form.interviewDuration) : 30,
+        headcount: form.headcount ? parseInt(form.headcount) : 1,
         locations: locations.length > 0 ? locations : null,
       });
       setJobs((prev) => [res.data.data, ...prev]);
@@ -315,6 +335,7 @@ export default function Jobs() {
         salaryMax: form.salaryMax ? parseInt(form.salaryMax) : null,
         passingScore: form.passingScore ? parseInt(form.passingScore) : 60,
         interviewDuration: form.interviewDuration ? parseInt(form.interviewDuration) : 30,
+        headcount: form.headcount ? parseInt(form.headcount) : 1,
         locations: locations.length > 0 ? locations : null,
       });
       setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? res.data.data : j)));
@@ -343,13 +364,7 @@ export default function Jobs() {
     }
   };
 
-  const LANG_NAMES: Record<string, string> = {
-    en: 'English', zh: '中文 (Chinese)', 'zh-TW': '繁體中文 (Traditional Chinese)',
-    ja: '日本語 (Japanese)', es: 'Español (Spanish)', fr: 'Français (French)',
-    pt: 'Português (Portuguese)', de: 'Deutsch (German)',
-  };
-
-  const getLanguageParam = () => LANG_NAMES[form.interviewLanguage] || form.interviewLanguage;
+  const getLanguageParam = () => getInterviewLanguageApiName(form.interviewLanguage);
 
   const buildGeneratePayload = (extra: Record<string, any> = {}) => ({
     jobTitle: form.title,
@@ -448,25 +463,39 @@ export default function Jobs() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('language', form.interviewLanguage);
+      formData.append('language', normalizeInterviewLanguage(form.interviewLanguage));
       const res = await axios.post('/api/v1/jobs/import', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const suggested = res.data.data?.suggestedFields;
       if (suggested) {
         setImportStageIndex(importStages.length - 1);
+        // Build description from overview + responsibilities only
+        const descParts: string[] = [];
+        if (suggested.description) descParts.push(suggested.description);
+        if (suggested.responsibilities) descParts.push(suggested.responsibilities);
+        const combinedDescription = descParts.filter(Boolean).join('\n\n');
+
         setForm((p) => ({
           ...p,
           title: suggested.title || p.title,
           companyName: suggested.companyName || p.companyName,
-          description: suggested.description || p.description,
+          description: combinedDescription || suggested.description || p.description,
           department: suggested.department || p.department,
           location: suggested.location || p.location,
           workType: suggested.workType || p.workType,
           employmentType: suggested.employmentType || p.employmentType,
           experienceLevel: suggested.experienceLevel || p.experienceLevel,
+          education: suggested.education || p.education,
+          headcount: suggested.headcount ? String(suggested.headcount) : p.headcount,
           qualifications: suggested.qualifications || p.qualifications,
           hardRequirements: suggested.hardRequirements || p.hardRequirements,
+          niceToHave: suggested.niceToHave || p.niceToHave,
+          benefits: suggested.benefits || p.benefits,
+          salaryMin: suggested.salaryMin || p.salaryMin,
+          salaryMax: suggested.salaryMax || p.salaryMax,
+          salaryCurrency: suggested.salaryCurrency || p.salaryCurrency,
+          salaryPeriod: suggested.salaryPeriod || p.salaryPeriod,
         }));
       }
     } catch {
@@ -523,6 +552,8 @@ export default function Jobs() {
       workType: job.workType || '',
       employmentType: job.employmentType || '',
       experienceLevel: job.experienceLevel || '',
+      education: job.education || '',
+      headcount: job.headcount?.toString() || '1',
       salaryMin: job.salaryMin?.toString() || '',
       salaryMax: job.salaryMax?.toString() || '',
       salaryCurrency: job.salaryCurrency || 'USD',
@@ -530,9 +561,11 @@ export default function Jobs() {
       description: job.description || '',
       qualifications: job.qualifications || '',
       hardRequirements: job.hardRequirements || '',
+      niceToHave: job.niceToHave || '',
+      benefits: job.benefits || '',
       interviewMode: job.interviewMode || 'standard',
       passingScore: job.passingScore?.toString() || '60',
-      interviewLanguage: job.interviewLanguage || 'en',
+      interviewLanguage: normalizeInterviewLanguage(job.interviewLanguage),
       interviewDuration: job.interviewDuration?.toString() || '30',
       interviewRequirements: job.interviewRequirements || '',
       evaluationRules: job.evaluationRules || '',
@@ -592,7 +625,7 @@ export default function Jobs() {
             </h3>
             <div className="flex items-center gap-2 flex-wrap">
               {/* Import */}
-              <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt,.md,.markdown" onChange={handleImport} className="hidden" />
+              <input ref={fileInputRef} type="file" accept=".pdf,.docx,.doc,.txt,.md,.markdown,.csv,.xlsx,.xls" onChange={handleImport} className="hidden" />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -625,6 +658,20 @@ export default function Jobs() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   {t('product.jobs.exportJob', 'Export')}
+                </button>
+              )}
+              {/* Preview */}
+              {form.title.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {t('product.jobs.preview', 'Preview')}
                 </button>
               )}
               {/* Auto-generate all */}
@@ -804,6 +851,32 @@ export default function Jobs() {
                   <option value="contract">{t('product.jobs.empTypes.contract', 'Contract')}</option>
                   <option value="internship">{t('product.jobs.empTypes.internship', 'Internship')}</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('product.jobDetail.education', 'Education')}</label>
+                <select
+                  value={form.education}
+                  onChange={(e) => setForm((p) => ({ ...p, education: e.target.value }))}
+                  className={inputCls}
+                >
+                  <option value="">{t('product.jobs.field.select', 'Select...')}</option>
+                  <option value="none">{t('product.jobDetail.eduNone', 'No Requirement')}</option>
+                  <option value="high_school">{t('product.jobDetail.eduHighSchool', 'High School')}</option>
+                  <option value="associate">{t('product.jobDetail.eduAssociate', 'Associate')}</option>
+                  <option value="bachelor">{t('product.jobDetail.eduBachelor', 'Bachelor')}</option>
+                  <option value="master">{t('product.jobDetail.eduMaster', 'Master')}</option>
+                  <option value="phd">{t('product.jobDetail.eduPhd', 'PhD')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('product.jobDetail.headcount', 'Headcount')}</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.headcount}
+                  onChange={(e) => setForm((p) => ({ ...p, headcount: e.target.value }))}
+                  className={inputCls}
+                />
               </div>
             </div>
 
@@ -1045,6 +1118,46 @@ export default function Jobs() {
                 className={`${inputCls} font-mono`}
               />
             </div>
+
+            {/* Nice to Have */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <label className="text-sm font-medium text-slate-700">{t('product.jobs.niceToHave', 'Nice to Have')}</label>
+                <AIWandButton
+                  onClick={() => handleGenerateSection('niceToHave')}
+                  loading={generatingSection === 'niceToHave'}
+                  hasContent={!!form.niceToHave.trim()}
+                  t={t}
+                />
+              </div>
+              <textarea
+                value={form.niceToHave}
+                onChange={(e) => setForm((p) => ({ ...p, niceToHave: e.target.value }))}
+                rows={4}
+                placeholder={t('product.jobs.niceToHavePlaceholder', 'Preferred qualifications...')}
+                className={`${inputCls} font-mono`}
+              />
+            </div>
+
+            {/* Benefits */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <label className="text-sm font-medium text-slate-700">{t('product.jobs.benefits', 'Benefits')}</label>
+                <AIWandButton
+                  onClick={() => handleGenerateSection('benefits')}
+                  loading={generatingSection === 'benefits'}
+                  hasContent={!!form.benefits.trim()}
+                  t={t}
+                />
+              </div>
+              <textarea
+                value={form.benefits}
+                onChange={(e) => setForm((p) => ({ ...p, benefits: e.target.value }))}
+                rows={4}
+                placeholder={t('product.jobs.benefitsPlaceholder', 'Benefits and perks...')}
+                className={`${inputCls} font-mono`}
+              />
+            </div>
           </div>
 
           {/* Section 3: Interview Configuration */}
@@ -1077,17 +1190,12 @@ export default function Jobs() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('product.jobs.interviewLanguage', 'Language')}</label>
                 <select
                   value={form.interviewLanguage}
-                  onChange={(e) => setForm((p) => ({ ...p, interviewLanguage: e.target.value }))}
+                  onChange={(e) => setForm((p) => ({ ...p, interviewLanguage: normalizeInterviewLanguage(e.target.value) }))}
                   className={inputCls}
                 >
-                  <option value="en">English</option>
-                  <option value="zh">中文</option>
-                  <option value="zh-TW">繁體中文</option>
-                  <option value="ja">日本語</option>
-                  <option value="es">Español</option>
-                  <option value="fr">Français</option>
-                  <option value="pt">Português</option>
-                  <option value="de">Deutsch</option>
+                  {INTERVIEW_LANGUAGE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -1453,6 +1561,94 @@ export default function Jobs() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* JD Preview Modal */}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowPreview(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Preview Header */}
+            <div className="sticky top-0 bg-white border-b border-slate-200 rounded-t-2xl px-6 py-4 flex items-center justify-between z-10">
+              <h2 className="text-lg font-bold text-slate-900">{t('product.jobs.previewTitle', 'Job Description Preview')}</h2>
+              <button onClick={() => setShowPreview(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-6 py-6 space-y-6">
+              {/* Title + Meta */}
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">{form.title}</h1>
+                {form.companyName && <p className="mt-1 text-base text-slate-500">{form.companyName}</p>}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {form.employmentType && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 capitalize">{form.employmentType}</span>}
+                  {form.workType && <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 capitalize">{form.workType}</span>}
+                  {form.experienceLevel && <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 capitalize">{form.experienceLevel}</span>}
+                  {form.education && <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 capitalize">{form.education.replace('_', ' ')}</span>}
+                  {form.location && <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">{form.location}</span>}
+                  {parseInt(form.headcount) > 1 && <span className="rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700">{t('product.jobDetail.headcount', 'Headcount')}: {form.headcount}</span>}
+                  {(form.salaryMin || form.salaryMax) && (
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                      {form.salaryCurrency} {form.salaryMin || '—'} – {form.salaryMax || '—'} / {form.salaryPeriod === 'yearly' ? t('product.jobDetail.yearly', 'year') : t('product.jobDetail.monthly', 'month')}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Basic Info Grid */}
+              <div className="grid grid-cols-2 gap-4 rounded-xl border border-slate-200 p-4 bg-slate-50/50">
+                {form.department && (
+                  <div><p className="text-xs text-slate-400">{t('product.jobDetail.department', 'Department')}</p><p className="text-sm font-medium text-slate-800">{form.department}</p></div>
+                )}
+                {form.location && (
+                  <div><p className="text-xs text-slate-400">{t('product.jobDetail.location', 'Location')}</p><p className="text-sm font-medium text-slate-800">{form.location}</p></div>
+                )}
+                {form.education && (
+                  <div><p className="text-xs text-slate-400">{t('product.jobDetail.education', 'Education')}</p><p className="text-sm font-medium text-slate-800 capitalize">{form.education.replace('_', ' ')}</p></div>
+                )}
+                <div><p className="text-xs text-slate-400">{t('product.jobDetail.headcount', 'Headcount')}</p><p className="text-sm font-medium text-slate-800">{form.headcount || '1'}</p></div>
+                <div><p className="text-xs text-slate-400">{t('product.jobDetail.interviewDuration', 'Interview Duration')}</p><p className="text-sm font-medium text-slate-800">{form.interviewDuration} {t('product.jobDetail.minutes', 'min')}</p></div>
+                <div><p className="text-xs text-slate-400">{t('product.jobDetail.interviewLang', 'Interview Language')}</p><p className="text-sm font-medium text-slate-800">{getInterviewLanguageDisplay(form.interviewLanguage)}</p></div>
+              </div>
+
+              {/* Content Sections */}
+              {[
+                { key: 'description', label: t('product.jobs.field.description', 'Job Description'), color: 'border-blue-200 bg-blue-50/30' },
+                { key: 'qualifications', label: t('product.jobs.qualifications', 'Qualifications'), color: 'border-amber-200 bg-amber-50/30' },
+                { key: 'hardRequirements', label: t('product.jobs.hardRequirements', 'Hard Requirements'), color: 'border-red-200 bg-red-50/30' },
+                { key: 'niceToHave', label: t('product.jobs.niceToHave', 'Nice to Have'), color: 'border-violet-200 bg-violet-50/30' },
+                { key: 'benefits', label: t('product.jobs.benefits', 'Benefits'), color: 'border-rose-200 bg-rose-50/30' },
+                { key: 'interviewRequirements', label: t('product.jobs.interviewRequirements', 'Interview Requirements'), color: 'border-purple-200 bg-purple-50/30' },
+                { key: 'evaluationRules', label: t('product.jobs.evaluationRules', 'Evaluation Rules'), color: 'border-teal-200 bg-teal-50/30' },
+              ].map(({ key, label, color }) => {
+                const value = (form as any)[key];
+                if (!value?.trim()) return null;
+                return (
+                  <div key={key} className={`rounded-xl border ${color} overflow-hidden`}>
+                    <div className="px-4 py-2.5 border-b border-inherit">
+                      <h3 className="text-sm font-semibold text-slate-800">{label}</h3>
+                    </div>
+                    <div className="px-4 py-3 bg-white">
+                      <div className="prose prose-sm prose-slate max-w-none whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{value}</div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {form.notes?.trim() && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/30 overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-amber-200">
+                    <h3 className="text-sm font-semibold text-amber-800">{t('product.jobs.notes', 'Notes')}</h3>
+                  </div>
+                  <div className="px-4 py-3 bg-white">
+                    <p className="text-sm text-amber-800 whitespace-pre-wrap">{form.notes}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

@@ -1013,7 +1013,7 @@ router.get('/', requireAuth, async (req, res) => {
         take: limitNum,
         include: {
           evaluation: {
-            select: { overallScore: true, grade: true, verdict: true },
+            select: { id: true, overallScore: true, grade: true, verdict: true, summary: true, strengths: true, weaknesses: true },
           },
         },
       }),
@@ -1268,6 +1268,90 @@ router.post('/:id/evaluate', requireAuth, async (req, res) => {
   } catch (err: any) {
     logger.error('INTERVIEWS', 'Failed to evaluate interview', { requestId, error: err.message });
     res.status(500).json({ success: false, error: 'Failed to evaluate interview' });
+  }
+});
+
+/**
+ * POST /api/v1/interviews/:id/fetch-gohire-data
+ * Fetch video URL, resume URL, and transcript from GoHire API using stored request_introduction_id
+ */
+router.post('/:id/fetch-gohire-data', requireAuth, async (req, res) => {
+  const requestId = req.requestId || generateRequestId();
+  try {
+    const userId = req.user!.id;
+    const { id } = req.params;
+
+    const interview = await prisma.interview.findFirst({ where: { id, userId } });
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+
+    // Extract request_introduction_id from metadata
+    const metadata = interview.metadata as any;
+    const requestIntroductionId =
+      metadata?.inviteData?.request_introduction_id ||
+      metadata?.request_introduction_id;
+
+    if (!requestIntroductionId || requestIntroductionId.startsWith('local_')) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid GoHire request_introduction_id found for this interview',
+      });
+    }
+
+    const gohireBaseUrl = 'https://report-agent.gohire.top/gohire-data/gohireApi';
+
+    // Fetch video/resume URLs and dialog transcript in parallel
+    const [chatLogsRes, chatDialogRes] = await Promise.all([
+      fetch(`${gohireBaseUrl}/chat_logs?request_introduction_id=${requestIntroductionId}`).then(r => r.json()) as Promise<any>,
+      fetch(`${gohireBaseUrl}/chat_dialog?request_introduction_id=${requestIntroductionId}`).then(r => r.json()) as Promise<any>,
+    ]);
+
+    const videoUrl = chatLogsRes?.data?.[0]?.video_url || null;
+    const resumeUrl = chatLogsRes?.data?.[0]?.resume_url || null;
+    const logId = chatLogsRes?.data?.[0]?.log_id || chatDialogRes?.log_id || null;
+
+    // Transform dialog into transcript format
+    const dialog = chatDialogRes?.dialog || [];
+    const transcript = dialog.map((turn: any) => ([
+      { role: 'interviewer', content: turn.question, timestamp: turn.created_at },
+      { role: 'candidate', content: turn.answer, timestamp: turn.created_at, userTime: turn.user_time },
+    ])).flat().filter((t: any) => t.content);
+
+    // Update interview record
+    const updated = await prisma.interview.update({
+      where: { id },
+      data: {
+        recordingUrl: videoUrl,
+        transcript: transcript.length > 0 ? transcript : undefined,
+        status: transcript.length > 0 ? 'completed' : interview.status,
+        completedAt: transcript.length > 0 && !interview.completedAt ? new Date() : undefined,
+        metadata: {
+          ...metadata,
+          gohireLogId: logId,
+          resumeDownloadUrl: resumeUrl,
+          gohireDataFetchedAt: new Date().toISOString(),
+        },
+      },
+      include: {
+        evaluation: true,
+      },
+    });
+
+    logger.info('INTERVIEWS', `GoHire data fetched for interview ${id}`, {
+      requestId,
+      videoUrl: !!videoUrl,
+      transcriptTurns: transcript.length,
+      logId,
+    });
+
+    res.json({
+      success: true,
+      data: updated,
+    });
+  } catch (err: any) {
+    logger.error('INTERVIEWS', 'Failed to fetch GoHire data', { requestId, error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to fetch GoHire data' });
   }
 });
 

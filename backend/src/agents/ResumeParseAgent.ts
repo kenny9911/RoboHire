@@ -1,5 +1,5 @@
 import { BaseAgent } from './BaseAgent.js';
-import type { Message, ParsedResume } from '../types/index.js';
+import type { Message, ParsedResume, WorkExperience } from '../types/index.js';
 import { logger } from '../services/LoggerService.js';
 import { isParsedResumeLikelyIncomplete } from '../services/ResumeParseValidation.js';
 
@@ -42,6 +42,7 @@ export class ResumeParseAgent extends BaseAgent<ResumeParseInput, ParsedResume> 
 
 **Work Experience / Internships** (工作经历, 实习经历, 工作经验, Employment History, Experience):
 → "experience" array — one entry per position
+→ 要识别公司名称，岗位，任职期间，任职地点
 → employmentType: "internship" if title/section contains 实习/Intern/インターン/Stagiaire/Praktikant; "contract" for contractor; "freelance" for freelance; "part-time" if specified; default "full-time"
 → "description": include ALL bullet points concatenated with newlines, exactly as written
 → "achievements": each bullet point as a separate array element, complete text
@@ -53,6 +54,7 @@ export class ResumeParseAgent extends BaseAgent<ResumeParseInput, ParsedResume> 
 
 **Education** (教育背景, 教育经历, 学历, Education):
 → "education" array — one entry per degree/institution
+→ 要识别学校名称，学位，专业，在学和毕业时间，地点
 → Include: institution, degree (学士/硕士/博士/Bachelor/Master/PhD), field/major, dates, GPA/成绩/排名
 → "coursework": list ALL courses mentioned (主修课程)
 → "achievements": include ALL honors, scholarships (奖学金), rankings (排名), dean's list, etc.
@@ -192,30 +194,123 @@ Please parse this resume and extract structured information.`;
     const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
                       response.match(/```\s*([\s\S]*?)\s*```/) ||
                       response.match(/(\{[\s\S]*\})/);
-    
+
+    let raw: Record<string, unknown> | null = null;
     if (jsonMatch && jsonMatch[1]) {
       try {
-        return JSON.parse(jsonMatch[1].trim()) as ParsedResume;
+        raw = JSON.parse(jsonMatch[1].trim());
       } catch {
         // Continue to try parsing the entire response
       }
     }
-    
-    try {
-      return JSON.parse(response) as ParsedResume;
-    } catch {
-      // Return a default structure if parsing fails
-      return {
-        name: '',
-        email: '',
-        phone: '',
-        skills: [],
-        experience: [],
-        education: [],
-        summary: 'Unable to parse resume',
-        rawText: response,
-      };
+
+    if (!raw) {
+      try {
+        raw = JSON.parse(response);
+      } catch {
+        return {
+          name: '',
+          email: '',
+          phone: '',
+          skills: [],
+          experience: [],
+          education: [],
+          summary: 'Unable to parse resume',
+          rawText: response,
+        };
+      }
     }
+
+    // Normalize field names — LLMs sometimes use alternative keys
+    return ResumeParseAgent.normalizeFields(raw as Record<string, unknown>);
+  }
+
+  /**
+   * Pick the first non-empty string value from an object by trying multiple key names.
+   */
+  private static pick(obj: Record<string, unknown>, ...keys: string[]): string {
+    for (const k of keys) {
+      const v = obj[k];
+      if (typeof v === 'string' && v.trim()) return v.trim();
+    }
+    return '';
+  }
+
+  /**
+   * Normalize LLM output field names to canonical ParsedResume shape.
+   * Handles common variations like school→institution, title→role, etc.
+   */
+  private static normalizeFields(raw: Record<string, unknown>): ParsedResume {
+    const pick = ResumeParseAgent.pick;
+
+    const result: ParsedResume = {
+      name: pick(raw, 'name', 'candidateName', 'fullName', '姓名'),
+      email: pick(raw, 'email', 'e-mail', '邮箱'),
+      phone: pick(raw, 'phone', 'telephone', 'mobile', '电话', '手机'),
+      address: pick(raw, 'address', 'location', '地址', '现居地'),
+      linkedin: pick(raw, 'linkedin', 'linkedIn'),
+      github: pick(raw, 'github', 'GitHub'),
+      portfolio: pick(raw, 'portfolio', 'website', 'personalSite', '个人网站'),
+      summary: pick(raw, 'summary', 'objective', 'profile', 'aboutMe', '自我评价', '个人简介', '求职意向'),
+      skills: (raw.skills ?? []) as ParsedResume['skills'],
+      experience: [],
+      education: [],
+      projects: [],
+    };
+
+    // Normalize education entries
+    const eduArray = Array.isArray(raw.education) ? raw.education : [];
+    result.education = eduArray.map((e: Record<string, unknown>) => ({
+      institution: pick(e, 'institution', 'school', 'university', 'schoolName', 'school_name', 'college', '学校', '院校'),
+      degree: pick(e, 'degree', 'degreeName', 'degreeType', '学位', '学历'),
+      field: pick(e, 'field', 'major', 'fieldOfStudy', 'specialization', '专业'),
+      startDate: pick(e, 'startDate', 'start_date', 'from', 'startYear'),
+      endDate: pick(e, 'endDate', 'end_date', 'to', 'endYear'),
+      year: pick(e, 'year', 'graduationYear'),
+      gpa: pick(e, 'gpa', 'grade', 'score', '成绩', '绩点', 'GPA'),
+      achievements: Array.isArray(e.achievements) ? e.achievements as string[] : [],
+      coursework: Array.isArray(e.coursework) ? e.coursework as string[]
+        : Array.isArray(e.courses) ? e.courses as string[] : [],
+    }));
+
+    // Normalize experience entries
+    const expArray = Array.isArray(raw.experience) ? raw.experience : [];
+    result.experience = expArray.map((e: Record<string, unknown>) => ({
+      company: pick(e, 'company', 'companyName', 'company_name', 'employer', 'organization', '公司'),
+      role: pick(e, 'role', 'title', 'jobTitle', 'job_title', 'position', '职位', '岗位'),
+      location: pick(e, 'location', 'city', '地点'),
+      startDate: pick(e, 'startDate', 'start_date', 'from'),
+      endDate: pick(e, 'endDate', 'end_date', 'to'),
+      duration: pick(e, 'duration', 'period', '时长'),
+      description: pick(e, 'description', '描述'),
+      achievements: Array.isArray(e.achievements) ? e.achievements as string[] : [],
+      technologies: Array.isArray(e.technologies) ? e.technologies as string[] : [],
+      employmentType: (pick(e, 'employmentType', 'employment_type', 'type') || undefined) as WorkExperience['employmentType'],
+    }));
+
+    // Normalize project entries
+    const projArray = Array.isArray(raw.projects) ? raw.projects : [];
+    result.projects = projArray.map((p: Record<string, unknown>) => ({
+      name: pick(p, 'name', 'projectName', 'title', '项目名称'),
+      role: pick(p, 'role', 'position', '角色'),
+      date: pick(p, 'date', 'period', 'duration', 'dates'),
+      description: pick(p, 'description', '描述'),
+      technologies: Array.isArray(p.technologies) ? p.technologies as string[] : [],
+      link: pick(p, 'link', 'url', 'links'),
+    }));
+
+    // Pass through other arrays as-is
+    if (Array.isArray(raw.certifications)) result.certifications = raw.certifications as ParsedResume['certifications'];
+    if (Array.isArray(raw.awards)) result.awards = raw.awards as ParsedResume['awards'];
+    if (Array.isArray(raw.languages)) result.languages = raw.languages as ParsedResume['languages'];
+    if (Array.isArray(raw.volunteerWork)) result.volunteerWork = raw.volunteerWork as ParsedResume['volunteerWork'];
+    if (Array.isArray(raw.publications)) result.publications = raw.publications as string[];
+    if (Array.isArray(raw.patents)) result.patents = raw.patents as string[];
+    if (raw.otherSections && typeof raw.otherSections === 'object') {
+      result.otherSections = raw.otherSections as Record<string, string>;
+    }
+
+    return result;
   }
 
   /**

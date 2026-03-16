@@ -834,10 +834,10 @@ export default function StartHiring() {
           'assistant',
           t('hiring.success', 'Your hiring request has been created! 🎉\n\n') +
             t('hiring.nextSteps', '**What happens next:**\n') +
-            `1. ${t('hiring.step1', 'Our AI will start screening incoming candidates')}\n` +
-            `2. ${t('hiring.step2', 'Matched candidates will be interviewed automatically')}\n` +
-            `3. ${t('hiring.step3', "You'll receive evaluation reports for top matches")}\n\n` +
-            t('hiring.visitDashboard', 'Visit your dashboard to track progress and manage candidates.')
+            `1. ${t('hiring.step1', 'Create a job from this request so interview settings and invitations have a position to use')}\n` +
+            `2. ${t('hiring.step2', 'Run smart matching after the job is ready')}\n` +
+            `3. ${t('hiring.step3', "Review matched candidates and send interview invitations from the dashboard")}\n\n` +
+            t('hiring.visitDashboard', 'Open your dashboard to continue with job setup, matching, and candidate management.')
         );
         setAssistantSuggestions([]);
         setStep('complete');

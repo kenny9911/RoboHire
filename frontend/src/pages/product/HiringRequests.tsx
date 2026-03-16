@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
+import { normalizeInterviewLanguage } from '../../utils/interviewLanguage';
 
 interface HiringRequest {
   id: string;
@@ -295,7 +296,7 @@ const ProjectCard = memo(function ProjectCard({
 
 // ── Main Component ──
 export default function HiringRequests() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [requests, setRequests] = usePageState<HiringRequest[]>('hiring.requests', []);
   const [loading, setLoading] = useState(requests.length > 0 ? false : true);
   const [statusFilter, setStatusFilter] = usePageState<string>('hiring.statusFilter', '');
@@ -404,7 +405,12 @@ export default function HiringRequests() {
   const doCreateJob = async (requestId: string, title?: string) => {
     setCreatingJobId(requestId);
     try {
-      const res = await axios.post(`/api/v1/jobs/from-request/${requestId}`, title ? { title } : {});
+      const payload: Record<string, string> = {
+        preferredLanguage: normalizeInterviewLanguage(i18n.language),
+      };
+      if (title) payload.title = title;
+
+      const res = await axios.post(`/api/v1/jobs/from-request/${requestId}`, payload);
       const jobTitle = res.data?.data?.title || title || '';
       showSuccess(t('product.hiring.jobCreatedSuccess', 'Job "{{title}}" created successfully!', { title: jobTitle }));
     } catch {
@@ -419,12 +425,12 @@ export default function HiringRequests() {
     try {
       const hr = requests.find(r => r.id === requestId);
       if (!hr) return;
-      await axios.patch(`/api/v1/jobs/${existingJobId}`, {
-        title: hr.title,
-        description: '',
-        hiringRequestId: hr.id,
+      const res = await axios.post(`/api/v1/jobs/from-request/${requestId}`, {
+        overwriteJobId: existingJobId,
+        preferredLanguage: normalizeInterviewLanguage(i18n.language),
       });
-      showSuccess(t('product.hiring.jobOverwriteSuccess', 'Job "{{title}}" updated successfully!', { title: hr.title }));
+      const jobTitle = res.data?.data?.title || hr.title;
+      showSuccess(t('product.hiring.jobOverwriteSuccess', 'Job "{{title}}" updated successfully!', { title: jobTitle }));
     } catch {
       // handle error
     } finally {
@@ -437,6 +443,13 @@ export default function HiringRequests() {
     if (!hr) return;
     setCreatingJobId(requestId);
     try {
+      const linkedRes = await axios.get('/api/v1/jobs', { params: { hiringRequestId: requestId, limit: 1 } });
+      if (linkedRes.data.data?.length > 0) {
+        showSuccess(t('product.hiring.jobAlreadyExists', 'A job for "{{title}}" already exists.', { title: linkedRes.data.data[0].title || hr.title }));
+        setCreatingJobId(null);
+        return;
+      }
+
       const checkRes = await axios.get('/api/v1/jobs', { params: { title: hr.title, limit: 1 } });
       if (checkRes.data.data?.length > 0) {
         setCreatingJobId(null);
@@ -449,7 +462,7 @@ export default function HiringRequests() {
       // If check fails, proceed with creation
     }
     await doCreateJob(requestId);
-  }, [requests]);
+  }, [requests, t]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

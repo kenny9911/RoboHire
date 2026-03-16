@@ -348,6 +348,8 @@ model Resume {
   phone           String?
   currentRole     String?
   experienceYears String?
+  summary         String?   @db.Text  // AI-generated professional summary
+  highlight       String?             // One-line highlight for card display
   resumeText      String    @db.Text
   parsedData      Json?
   insightData     Json?
@@ -436,6 +438,8 @@ model Job {
   workType        String?   // remote, hybrid, onsite
   employmentType  String?   // full-time, part-time, contract, internship
   experienceLevel String?   // entry, mid, senior, lead, executive
+  education       String?   // 学历要求: high_school, associate, bachelor, master, phd, none
+  headcount       Int       @default(1) // 招聘人数
   salaryMin       Int?
   salaryMax       Int?
   salaryCurrency  String?   @default("USD")
@@ -443,6 +447,8 @@ model Job {
   description          String?   @db.Text
   qualifications       String?   @db.Text   // 任职要求
   hardRequirements     String?   @db.Text   // 硬性要求
+  niceToHave           String?   @db.Text   // 优先条件 / 加分项
+  benefits             String?   @db.Text   // 福利待遇
   requirements         Json?     // { mustHave: [], niceToHave: [] }
   parsedData           Json?     // AI-parsed JD cache
   salaryPeriod         String?   @default("monthly") // monthly, yearly
@@ -748,4 +754,42 @@ model AgentCandidate {
 
   @@index([agentId, status])
   @@index([agentId, createdAt])
+}
+
+/// GoHire interview records imported from CSV export
+model GoHireInterview {
+  id                    String    @id @default(cuid())
+  gohireUserId          String                          // candidate UUID in GoHire
+  candidateName         String                          // 候选人姓名
+  candidateEmail        String?                         // 用户邮箱（登录名称）
+  interviewDatetime     DateTime                        // 面试开始时间
+  interviewEndDatetime  DateTime?                       // 面试结束时间
+  duration              Int?                            // 面试时长 (minutes)
+  videoUrl              String?   @db.Text              // gohire_interview_video_filepath
+  recruiterName         String?                         // 招聘人员姓名
+  recruiterEmail        String?                         // 招聘人员邮箱
+  recruiterId           String?                         // gohire_recruiter_id
+  jobTitle              String?                         // 职位名称
+  jobDescription        String?   @db.Text              // 职位描述
+  jobRequirements       String?   @db.Text              // 任职要求
+  interviewRequirements String?   @db.Text              // 面试要求
+  resumeUrl             String?   @db.Text              // 简历下载地址
+  transcriptUrl         String?   @db.Text              // 面试记录下载地址
+  parsedResumeText      String?   @db.Text              // Cached parsed resume markdown
+  lastLoginAt           DateTime?                       // 最近登录时间
+  invitedAt             DateTime?                       // 邀约时间
+  transcript            String?   @db.Text              // Fetched/generated transcript
+  evaluationData        Json?                           // Evaluation result JSON
+  evaluationScore       Int?                            // Quick-access score (0-100)
+  evaluationVerdict     String?                         // strong_hire, hire, weak_hire, no_hire
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([candidateName])
+  @@index([candidateEmail])
+  @@index([recruiterEmail])
+  @@index([jobTitle])
+  @@index([interviewDatetime])
+  @@index([gohireUserId])
+  @@index([evaluationScore])
 }

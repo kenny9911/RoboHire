@@ -161,7 +161,8 @@ export class PDFService {
 
     const alphanumericCjkPattern = new RegExp(`[\\w${cjkPattern}]`, 'g');
     cleaned = cleaned.split('\n').map(line => {
-      const trimmed = line.trim();
+      // Collapse whitespace first so padded table-layout lines aren't misjudged
+      const trimmed = line.trim().replace(/\s+/g, ' ');
       if (this.isHashLikeGarbage(trimmed)) return '';
       const alphanumericCount = (trimmed.match(alphanumericCjkPattern) || []).length;
       const totalLength = trimmed.length;
@@ -458,6 +459,7 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
     }
 
     // Step 3: Send raw PDF directly to LLM (most reliable for CJK documents)
+    let directLLMSuccess = false;
     try {
       const directText = await this.extractTextWithDirectLLM(buffer, requestId);
       if (directText && directText.trim().length > 20) {
@@ -473,15 +475,17 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
     }
 
     // Step 4: Fallback — convert to images + LLM vision
-    try {
-      const visionText = await this.extractTextWithVision(buffer, requestId);
-      if (visionText && visionText.trim().length > 20) {
-        logger.info('PDF_EXTRACT', 'Vision extraction succeeded', { chars: visionText.length }, requestId);
-        return visionText;
+    if (!directLLMSuccess) {
+      try {
+        const visionText = await this.extractTextWithVision(buffer, requestId);
+        if (visionText && visionText.trim().length > 20) {
+          logger.info('PDF_EXTRACT', 'Vision extraction succeeded', { chars: visionText.length }, requestId);
+          return visionText;
+        }
+      } catch (visionError) {
+        const errMsg = visionError instanceof Error ? visionError.message : 'Unknown';
+        logger.error('PDF_EXTRACT', `Vision extraction also failed: ${errMsg}`, {}, requestId);
       }
-    } catch (visionError) {
-      const errMsg = visionError instanceof Error ? visionError.message : 'Unknown';
-      logger.error('PDF_EXTRACT', `Vision extraction also failed: ${errMsg}`, {}, requestId);
     }
 
     // Step 5: Last resort — return poor-quality pdf-parse text if we have anything
@@ -522,12 +526,19 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
       let finalText = cleanedText;
       if (!this.isExtractionQualityGood(cleanedText, requestId)) {
         logger.info('PDF_EXTRACT', 'Quality poor in extractWithMetadata, using LLM', {}, requestId);
+        let directSuccess = false;
         try {
           finalText = await this.extractTextWithDirectLLM(buffer, requestId);
-        } catch {
+          directSuccess = true;
+        } catch (err) {
+          logger.warn('PDF_EXTRACT', `Direct LLM failed during extractWithMetadata, trying vision fallback...`, {}, requestId);
+        }
+
+        if (!directSuccess) {
           try {
             finalText = await this.extractTextWithVision(buffer, requestId);
-          } catch {
+          } catch (err) {
+            logger.warn('PDF_EXTRACT', `Vision fallback also failed during extractWithMetadata, retaining cleaned text.`, {}, requestId);
             // Keep cleaned pdf-parse text
           }
         }

@@ -3,7 +3,7 @@ import { logger } from './LoggerService.js';
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 
-export type SupportedFormat = 'pdf' | 'docx' | 'xlsx' | 'txt' | 'md' | 'json' | 'unknown';
+export type SupportedFormat = 'pdf' | 'docx' | 'xlsx' | 'csv' | 'txt' | 'md' | 'json' | 'unknown';
 
 /**
  * Unified document parsing service that extracts text from PDF, DOCX, XLSX, and TXT files.
@@ -25,6 +25,7 @@ export class DocumentParsingService {
       mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
       mime === 'application/vnd.ms-excel'
     ) return 'xlsx';
+    if (mime === 'text/csv' || mime === 'application/csv') return 'csv';
     if (mime === 'text/plain') return 'txt';
     if (mime === 'text/markdown' || mime === 'text/x-markdown' || mime === 'application/x-markdown') return 'md';
     if (mime === 'application/json') return 'json';
@@ -35,6 +36,7 @@ export class DocumentParsingService {
       if (ext === 'pdf') return 'pdf';
       if (ext === 'docx' || ext === 'doc') return 'docx';
       if (ext === 'xlsx' || ext === 'xls') return 'xlsx';
+      if (ext === 'csv') return 'csv';
       if (ext === 'txt') return 'txt';
       if (ext === 'md' || ext === 'markdown') return 'md';
       if (ext === 'json') return 'json';
@@ -74,6 +76,9 @@ export class DocumentParsingService {
           break;
         case 'xlsx':
           text = this.extractXlsx(buffer, requestId);
+          break;
+        case 'csv':
+          text = this.extractCsv(buffer, requestId);
           break;
         case 'txt':
           text = this.extractTxt(buffer, requestId);
@@ -172,6 +177,17 @@ export class DocumentParsingService {
     }
 
     logger.info('DOC_PARSE', `XLSX extracted: ${text.length} chars, ${workbook.SheetNames.length} sheets`, {}, requestId);
+    return text;
+  }
+
+  /**
+   * Extract text from CSV files as plain text.
+   */
+  private extractCsv(buffer: Buffer, requestId?: string): string {
+    logger.info('DOC_PARSE', 'Extracting CSV as text', {}, requestId);
+    const text = buffer.toString('utf-8');
+    if (!text.trim()) throw new Error('CSV file is empty');
+    logger.info('DOC_PARSE', `CSV extracted: ${text.length} chars`, {}, requestId);
     return text;
   }
 
@@ -304,6 +320,8 @@ export class DocumentParsingService {
     'application/msword',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/vnd.ms-excel',
+    'text/csv',
+    'application/csv',
     'text/plain',
     'text/markdown',
     'application/json',

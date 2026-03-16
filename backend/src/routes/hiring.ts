@@ -1275,6 +1275,49 @@ router.post('/:id/auto-match', async (req, res) => {
       }
     }
 
+    // Sync results to JobMatch for the linked job so they appear on the Job detail page
+    try {
+      const linkedJob = await prisma.job.findFirst({
+        where: { hiringRequestId: id, userId },
+        select: { id: true },
+      });
+
+      if (linkedJob) {
+        const successResults2 = allResults.filter(r => r.fitScore !== null && !r.error);
+        for (const result of successResults2) {
+          try {
+            await prisma.jobMatch.upsert({
+              where: { jobId_resumeId: { jobId: linkedJob.id, resumeId: result.resumeId } },
+              update: {
+                score: result.fitScore,
+                grade: result.fitGrade,
+                matchData: Prisma.JsonNull,
+                status: 'new',
+              },
+              create: {
+                jobId: linkedJob.id,
+                resumeId: result.resumeId,
+                score: result.fitScore,
+                grade: result.fitGrade,
+                matchData: Prisma.JsonNull,
+                status: 'new',
+              },
+            });
+          } catch {
+            // Individual sync failure is non-critical
+          }
+        }
+        logger.info('AUTO_MATCH', `Synced ${successResults2.length} results to JobMatch for job ${linkedJob.id}`, {
+          hiringRequestId: id,
+          jobId: linkedJob.id,
+        }, requestId);
+      }
+    } catch (syncError) {
+      logger.warn('AUTO_MATCH', 'Failed to sync results to JobMatch', {
+        error: syncError instanceof Error ? syncError.message : String(syncError),
+      }, requestId);
+    }
+
     // Send final completion event
     sendSSE('complete', {
       success: true,

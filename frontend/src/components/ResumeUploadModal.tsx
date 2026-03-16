@@ -202,7 +202,7 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
     }
   };
 
-  const handleDuplicateAction = async (action: 'overwrite' | 'keep_both' | 'skip') => {
+  const handleDuplicateAction = async (action: 'overwrite' | 'skip') => {
     if (personDuplicates.length === 0) return;
     const current = personDuplicates[0];
     setResolvingDuplicate(true);
@@ -212,12 +212,6 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
         const formData = new FormData();
         formData.append('file', current.file);
         await axios.post(`/api/v1/resumes/${current.existingResume.id}/reupload`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      } else if (action === 'keep_both') {
-        const formData = new FormData();
-        formData.append('file', current.file);
-        await axios.post('/api/v1/resumes/upload?skipPersonCheck=true', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
@@ -352,23 +346,9 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
             <button
               onClick={() => handleDuplicateAction('skip')}
               disabled={resolvingDuplicate}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
-            >
-              {t('resumeLibrary.uploadModal.personDuplicate.skip', 'Skip')}
-            </button>
-            <button
-              onClick={() => handleDuplicateAction('keep_both')}
-              disabled={resolvingDuplicate}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
             >
-              {resolvingDuplicate ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-gray-500 border-t-transparent" />
-                  ...
-                </span>
-              ) : (
-                t('resumeLibrary.uploadModal.personDuplicate.keepBoth', 'Keep Both')
-              )}
+              {t('actions.cancel', 'Cancel')}
             </button>
             <button
               onClick={() => handleDuplicateAction('overwrite')}

@@ -1,9 +1,10 @@
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
-import { resumeParseAgent } from '../agents/ResumeParseAgent.js';
+import { normalizeExtractedText } from './ResumeParserService.js';
 import { logger } from './LoggerService.js';
 import { isParsedResumeLikelyIncomplete } from './ResumeParseValidation.js';
+import { resumeParseAgent } from '../agents/ResumeParseAgent.js';
 
 export function computeResumeHash(text: string): string {
   const normalized = text.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -52,7 +53,8 @@ export async function getOrParseResume(
     }, requestId);
   }
 
-  // No cache hit — parse via LLM
-  const parsedData = await resumeParseAgent.parse(resumeText, requestId);
+  // No cache hit — parse via ResumeParseAgent (detailed prompt + validation + retry)
+  const normalizedText = normalizeExtractedText(resumeText);
+  const parsedData = await resumeParseAgent.parse(normalizedText, requestId);
   return { parsedData, cached: false };
 }
