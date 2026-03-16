@@ -10,7 +10,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import axios from '../lib/axios';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
 import LLMUsageTab from './AdminLLMUsageTab';
@@ -198,7 +200,7 @@ async function authFetch(endpoint: string, options: RequestInit = {}) {
   return data;
 }
 
-const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Activity', 'Pricing', 'Interview', 'Settings'] as const;
+const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Activity', 'Pricing', 'Interview', 'Teams', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 const INTERVIEW_CONFIG_FIELDS = [
   'interview.instructions',
@@ -2794,6 +2796,248 @@ function InterviewConfigTab() {
   );
 }
 
+// ─── Teams Tab ──────────────────────────────────────────────────────
+type TeamMember = { id: string; name: string | null; email: string; role: string; avatar: string | null };
+type Team = { id: string; name: string; description: string | null; members: TeamMember[]; createdAt: string };
+
+function TeamsTab() {
+  const { t } = useTranslation();
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [addMemberTeamId, setAddMemberTeamId] = useState<string | null>(null);
+  const [allUsers, setAllUsers] = useState<TeamMember[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const fetchTeams = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/v1/admin/teams');
+      if (res.data.success) setTeams(res.data.data);
+    } catch { /* */ } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchTeams(); }, [fetchTeams]);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setSaving(true);
+    try {
+      const res = await axios.post('/api/v1/admin/teams', { name: newName.trim(), description: newDesc.trim() || null });
+      if (res.data.success) {
+        setTeams(prev => [res.data.data, ...prev]);
+        setNewName(''); setNewDesc(''); setCreating(false);
+      }
+    } catch { /* */ } finally { setSaving(false); }
+  };
+
+  const handleUpdate = async (teamId: string) => {
+    setSaving(true);
+    try {
+      const res = await axios.patch(`/api/v1/admin/teams/${teamId}`, { name: editName, description: editDesc || null });
+      if (res.data.success) {
+        setTeams(prev => prev.map(t => t.id === teamId ? res.data.data : t));
+        setEditingId(null);
+      }
+    } catch { /* */ } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (teamId: string) => {
+    if (!confirm(t('admin.teams.confirmDelete', 'Delete this team? Members will be unassigned.'))) return;
+    try {
+      await axios.delete(`/api/v1/admin/teams/${teamId}`);
+      setTeams(prev => prev.filter(t => t.id !== teamId));
+    } catch { /* */ }
+  };
+
+  const openAddMember = async (teamId: string) => {
+    setAddMemberTeamId(teamId);
+    setUserSearch('');
+    try {
+      const res = await axios.get('/api/v1/admin/users');
+      if (res.data.success) setAllUsers(res.data.data.users || []);
+    } catch { /* */ }
+  };
+
+  const handleAddMember = async (userId: string) => {
+    if (!addMemberTeamId) return;
+    try {
+      const res = await axios.post(`/api/v1/admin/teams/${addMemberTeamId}/members`, { userIds: [userId] });
+      if (res.data.success) {
+        setTeams(prev => prev.map(t => t.id === addMemberTeamId ? res.data.data : t));
+      }
+    } catch { /* */ }
+  };
+
+  const handleRemoveMember = async (teamId: string, userId: string) => {
+    try {
+      await axios.delete(`/api/v1/admin/teams/${teamId}/members/${userId}`);
+      setTeams(prev => prev.map(t => t.id === teamId ? { ...t, members: t.members.filter(m => m.id !== userId) } : t));
+    } catch { /* */ }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>;
+  }
+
+  const currentTeamMemberIds = addMemberTeamId ? new Set(teams.find(t => t.id === addMemberTeamId)?.members.map(m => m.id)) : new Set<string>();
+  const filteredUsers = allUsers.filter(u => !currentTeamMemberIds.has(u.id) && (
+    !userSearch || u.name?.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase())
+  ));
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">{t('admin.teams.title', 'Teams')}</h2>
+        <button
+          onClick={() => setCreating(true)}
+          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+        >
+          {t('admin.teams.createTeam', 'Create Team')}
+        </button>
+      </div>
+
+      {/* Create form */}
+      {creating && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+          <input
+            value={newName} onChange={e => setNewName(e.target.value)}
+            placeholder={t('admin.teams.teamName', 'Team Name')}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            autoFocus
+          />
+          <input
+            value={newDesc} onChange={e => setNewDesc(e.target.value)}
+            placeholder={t('admin.teams.description', 'Description (optional)')}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          />
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setCreating(false)} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+              {t('actions.cancel', 'Cancel')}
+            </button>
+            <button onClick={handleCreate} disabled={saving || !newName.trim()} className="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+              {saving ? '...' : t('actions.create', 'Create')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Teams list */}
+      {teams.length === 0 && !creating && (
+        <div className="text-center py-16 text-gray-500 text-sm">{t('admin.teams.noTeams', 'No teams created yet')}</div>
+      )}
+
+      {teams.map(team => (
+        <div key={team.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          {/* Team header */}
+          <div className="px-5 py-4 border-b border-gray-100">
+            {editingId === team.id ? (
+              <div className="space-y-2">
+                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                <input value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder={t('admin.teams.description', 'Description')} className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                <div className="flex gap-2 justify-end">
+                  <button onClick={() => setEditingId(null)} className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">{t('actions.cancel', 'Cancel')}</button>
+                  <button onClick={() => handleUpdate(team.id)} disabled={saving} className="text-xs font-medium text-white bg-indigo-600 px-3 py-1 rounded-lg hover:bg-indigo-700 disabled:opacity-50">{t('actions.save', 'Save')}</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">{team.name}</h3>
+                  {team.description && <p className="text-xs text-gray-500 mt-0.5">{team.description}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">{t('admin.teams.memberCount', '{{count}} member(s)', { count: team.members.length })}</span>
+                  <button onClick={() => { setEditingId(team.id); setEditName(team.name); setEditDesc(team.description || ''); }} className="text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50">{t('admin.teams.editTeam', 'Edit')}</button>
+                  <button onClick={() => handleDelete(team.id)} className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50">{t('admin.teams.deleteTeam', 'Delete')}</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Members list */}
+          <div className="px-5 py-3">
+            {team.members.length === 0 ? (
+              <p className="text-xs text-gray-400 py-2">{t('admin.teams.noMembers', 'No members yet')}</p>
+            ) : (
+              <div className="space-y-2">
+                {team.members.map(m => (
+                  <div key={m.id} className="flex items-center justify-between py-1.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-700">
+                        {m.avatar ? <img src={m.avatar} className="w-7 h-7 rounded-full" alt="" /> : (m.name?.[0] || m.email[0]).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{m.name || m.email}</p>
+                        <p className="text-xs text-gray-400">{m.email}</p>
+                      </div>
+                      {m.role === 'admin' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">Admin</span>}
+                    </div>
+                    <button onClick={() => handleRemoveMember(team.id, m.id)} className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50">
+                      {t('admin.teams.removeMember', 'Remove')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => openAddMember(team.id)}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 px-2 py-1.5 rounded-lg hover:bg-indigo-50"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              {t('admin.teams.addMember', 'Add Member')}
+            </button>
+          </div>
+        </div>
+      ))}
+
+      {/* Add Member Modal */}
+      {addMemberTeamId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setAddMemberTeamId(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900">{t('admin.teams.addMember', 'Add Member')}</h3>
+              <button onClick={() => setAddMemberTeamId(null)} className="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <div className="p-4">
+              <input
+                value={userSearch} onChange={e => setUserSearch(e.target.value)}
+                placeholder={t('admin.teams.searchUsers', 'Search users...')}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                autoFocus
+              />
+            </div>
+            <div className="overflow-y-auto flex-1 px-4 pb-4 space-y-1 max-h-80">
+              {filteredUsers.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-4">{t('admin.teams.noUsersFound', 'No users found')}</p>
+              ) : filteredUsers.slice(0, 20).map(u => (
+                <div key={u.id} className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{u.name || u.email}</p>
+                    <p className="text-xs text-gray-400">{u.email}</p>
+                  </div>
+                  <button
+                    onClick={() => handleAddMember(u.id)}
+                    className="text-xs font-medium text-indigo-600 hover:text-indigo-800 px-3 py-1 rounded-lg hover:bg-indigo-50"
+                  >
+                    {t('actions.add', 'Add')}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SettingsTab() {
   const { user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
@@ -2949,6 +3193,7 @@ export default function AdminDashboard() {
       {activeTab === 'Activity' && <ActivityTab />}
       {activeTab === 'Pricing' && <PricingTab />}
       {activeTab === 'Interview' && <InterviewConfigTab />}
+      {activeTab === 'Teams' && <TeamsTab />}
       {activeTab === 'Settings' && <SettingsTab />}
     </div>
   );

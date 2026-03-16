@@ -13,6 +13,7 @@ import { Prisma } from '@prisma/client';
 import { logger } from '../services/LoggerService.js';
 import { llmService } from '../services/llm/LLMService.js';
 import type { ParsedResume, WorkExperience } from '../types/index.js';
+import { getVisibilityScope, buildUserIdFilter } from '../lib/teamVisibility.js';
 
 const router = Router();
 
@@ -333,6 +334,7 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
 
     const resumeData = {
       userId,
+      recruiterUserId: userId,
       name,
       email,
       phone,
@@ -458,6 +460,7 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
 
         const resumeData = {
           userId,
+          recruiterUserId: userId,
           name,
           email,
           phone,
@@ -625,7 +628,6 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const userId = req.user.id;
     const {
       search,
       status = 'active',
@@ -646,8 +648,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 20));
     const skip = (pageNum - 1) * limitNum;
 
-    // Build where clause
-    const where: Record<string, unknown> = { userId };
+    // Build where clause with team visibility
+    const scope = await getVisibilityScope(req.user!);
+    const where: Record<string, unknown> = { ...buildUserIdFilter(scope) };
     if (status && status !== 'all') {
       where.status = status;
     }
@@ -1066,6 +1069,145 @@ router.get('/:id/invitations', requireAuth, async (req: Request, res: Response) 
   } catch (error) {
     console.error('List resume invitations error:', error);
     return res.status(500).json({ success: false, error: 'Failed to list invitations' });
+  }
+});
+
+// ─── Applied jobs for a resume ──────────────────────────────────────────
+router.get('/:id/applied-jobs', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+      select: { id: true },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    // Fetch all JobMatch records for this resume
+    const jobMatches = await prisma.jobMatch.findMany({
+      where: { resumeId: resume.id },
+      include: {
+        job: {
+          select: {
+            id: true, title: true, department: true, location: true,
+            workType: true, employmentType: true, status: true,
+            salaryMin: true, salaryMax: true, salaryCurrency: true, salaryText: true, salaryPeriod: true,
+            companyName: true, locations: true, createdAt: true,
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // Also fetch ResumeJobFit records (hiring request matches + invitations)
+    const resumeJobFits = await prisma.resumeJobFit.findMany({
+      where: { resumeId: resume.id },
+      include: {
+        hiringRequest: { select: { id: true, title: true, status: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // Fetch interviews linked to this resume
+    const interviews = await prisma.interview.findMany({
+      where: { resumeId: resume.id },
+      select: {
+        id: true, hiringRequestId: true, status: true,
+        scheduledAt: true, completedAt: true, type: true,
+        jobId: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const interviewByJob = new Map<string, typeof interviews[0]>();
+    const interviewByHR = new Map<string, typeof interviews[0]>();
+    for (const iv of interviews) {
+      if (iv.jobId && !interviewByJob.has(iv.jobId)) interviewByJob.set(iv.jobId, iv);
+      if (iv.hiringRequestId && !interviewByHR.has(iv.hiringRequestId)) interviewByHR.set(iv.hiringRequestId, iv);
+    }
+
+    const data = {
+      jobMatches: jobMatches.map(m => ({
+        id: m.id,
+        jobId: m.jobId,
+        jobTitle: m.job.title,
+        department: m.job.department,
+        location: m.job.location,
+        workType: m.job.workType,
+        employmentType: m.job.employmentType,
+        companyName: m.job.companyName,
+        jobStatus: m.job.status,
+        salaryMin: m.job.salaryMin,
+        salaryMax: m.job.salaryMax,
+        salaryCurrency: m.job.salaryCurrency,
+        salaryText: m.job.salaryText,
+        salaryPeriod: m.job.salaryPeriod,
+        score: m.score,
+        grade: m.grade,
+        status: m.status,
+        appliedAt: m.appliedAt,
+        reviewedAt: m.reviewedAt,
+        createdAt: m.createdAt,
+        interview: interviewByJob.get(m.jobId) || null,
+      })),
+      hiringRequestFits: resumeJobFits.map(f => ({
+        id: f.id,
+        hiringRequestId: f.hiringRequestId,
+        hiringRequestTitle: f.hiringRequest.title,
+        hiringRequestStatus: f.hiringRequest.status,
+        fitScore: f.fitScore,
+        fitGrade: f.fitGrade,
+        pipelineStatus: f.pipelineStatus,
+        invitedAt: f.invitedAt,
+        createdAt: f.createdAt,
+        interview: interviewByHR.get(f.hiringRequestId) || null,
+      })),
+    };
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error('List applied jobs error:', error);
+    return res.status(500).json({ success: false, error: 'Failed to list applied jobs' });
+  }
+});
+
+// ─── Update job match status ────────────────────────────────────────────
+router.patch('/:id/job-matches/:matchId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+      select: { id: true },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const { status } = req.body;
+    const validStatuses = ['new', 'reviewed', 'shortlisted', 'applied', 'rejected', 'invited'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid status' });
+    }
+
+    const updated = await prisma.jobMatch.update({
+      where: { id: req.params.matchId },
+      data: {
+        status,
+        ...(status === 'reviewed' ? { reviewedAt: new Date(), reviewedBy: req.user.id } : {}),
+      },
+    });
+
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    console.error('Update job match error:', error);
+    return res.status(500).json({ success: false, error: 'Failed to update job match' });
   }
 });
 

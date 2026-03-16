@@ -7,6 +7,7 @@ import { generateRequestId, logger } from '../services/LoggerService.js';
 import { EvaluationAgent } from '../agents/EvaluationAgent.js';
 import { liveKitService } from '../services/LiveKitService.js';
 import { interviewPromptAgent } from '../agents/InterviewPromptAgent.js';
+import { getVisibilityScope, buildUserIdFilter } from '../lib/teamVisibility.js';
 import '../types/auth.js';
 
 const router = Router();
@@ -994,10 +995,10 @@ async function findInterviewForJoin(joinCode: string) {
  */
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
     const { status, page = '1', limit = '20' } = req.query;
 
-    const where: any = { userId };
+    const scope = await getVisibilityScope(req.user!);
+    const where: any = { ...buildUserIdFilter(scope) };
     if (status && typeof status === 'string') {
       where.status = status;
     }
@@ -1037,9 +1038,9 @@ router.get('/', requireAuth, async (req, res) => {
  */
 router.get('/:id', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const scope = await getVisibilityScope(req.user!);
     const interview = await prisma.interview.findFirst({
-      where: { id: req.params.id, userId },
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
       include: {
         evaluation: true,
         candidate: {

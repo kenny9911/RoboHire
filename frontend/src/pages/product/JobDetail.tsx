@@ -362,13 +362,13 @@ export default function JobDetail() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-2xl font-bold text-slate-900">{job.title}</h1>
                   <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${JOB_STATUS_COLORS[job.status] || JOB_STATUS_COLORS.draft}`}>
-                    {job.status}
+                    {t(`product.jobs.status.${job.status}`, job.status)}
                   </span>
                 </div>
               )}
               <div className="mt-3 flex items-center gap-2 flex-wrap">
                 {job.employmentType && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 capitalize">{job.employmentType}</span>}
-                {job.experienceLevel && <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 capitalize">{job.experienceLevel}</span>}
+                {job.experienceLevel && <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 capitalize">{t(`product.jobDetail.exp${job.experienceLevel.charAt(0).toUpperCase() + job.experienceLevel.slice(1)}`, job.experienceLevel)}</span>}
                 {salaryDisplay && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">{salaryDisplay}</span>}
               </div>
             </div>
@@ -1007,7 +1007,7 @@ function BasicInfoField({ icon, iconBg, iconColor, label, value, editing, editVa
   editType?: 'text' | 'select' | 'number';
   selectOptions?: { value: string; label: string }[];
 }) {
-  const displayValue = value || '—';
+  const displayValue = (selectOptions && value ? selectOptions.find((o) => o.value === value)?.label : value) || '—';
 
   return (
     <div className="flex items-center gap-3">
@@ -1472,7 +1472,7 @@ function ApplicantsTab({ matches, allMatches, loading, statusFilter, onStatusFil
               statusFilter === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            {s || t('product.jobDetail.allStatuses', 'All')}
+            {s ? t(`product.matchStatus.${s}`, s) : t('product.jobDetail.allStatuses', 'All')}
             <span className="ml-1 opacity-60">({statusCounts[s] || 0})</span>
           </button>
         ))}
@@ -1507,7 +1507,7 @@ function ApplicantsTab({ matches, allMatches, loading, statusFilter, onStatusFil
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link to={`/product/talent/${m.resumeId}`} className="text-sm font-semibold text-slate-900 hover:text-blue-600 truncate">{m.resume.name}</Link>
                   {m.grade && <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${GRADE_COLORS[m.grade] || 'bg-slate-100 text-slate-600'}`}>{m.grade}</span>}
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${MATCH_STATUS_COLORS[m.status] || MATCH_STATUS_COLORS.new}`}>{m.status}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${MATCH_STATUS_COLORS[m.status] || MATCH_STATUS_COLORS.new}`}>{t(`product.matchStatus.${m.status}`, m.status)}</span>
                 </div>
                 <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
                   {m.resume.currentRole && <span>{m.resume.currentRole}</span>}

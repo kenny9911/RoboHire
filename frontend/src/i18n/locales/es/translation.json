@@ -1921,6 +1921,14 @@
       "preparingNextStep": "Las verificaciones de cámara y micrófono aparecerán a continuación",
       "preparingHint": "Esto generalmente toma unos segundos."
     },
+    "matchStatus": {
+      "new": "Nuevo",
+      "reviewed": "Revisado",
+      "shortlisted": "Preseleccionado",
+      "applied": "Aplicado",
+      "rejected": "Rechazado",
+      "invited": "Invitado"
+    },
     "jobs": {
       "title": "Empleos",
       "subtitle": "Crea y gestiona publicaciones de empleo con asistencia IA.",
@@ -2566,6 +2574,8 @@
       "dragDrop": "Arrastra y suelta archivos de currículos aquí",
       "formats": "Formatos: PDF, DOCX, TXT, MD, JSON",
       "maxFiles": "Hasta {{count}} archivos a la vez",
+      "applyToJob": "Aplicar a puesto (opcional)",
+      "noJobSelected": "— Ninguno —",
       "uploading": "Procesando...",
       "duplicate": "Duplicado",
       "successCount": "{{count}} subidos",
@@ -2604,7 +2614,8 @@
         "insights": "Análisis IA",
         "jobFit": "Ajuste al Puesto",
         "notes": "Notas y Etiquetas",
-        "invitations": "Invitaciones"
+        "invitations": "Invitaciones",
+        "appliedJobs": "Postulaciones"
       },
       "actions": {
         "regenerateInsights": "Regenerar análisis",
@@ -2761,6 +2772,42 @@
       "internship": "Pasantía",
       "hardGaps": "Requisitos obligatorios faltantes",
       "transferable": "Habilidades transferibles"
+    },
+    "appliedJobs": {
+      "empty": "Aún no hay postulaciones",
+      "emptyHint": "Sube currículos seleccionando un puesto, o empareja candidatos con puestos",
+      "jobApplications": "Postulaciones a puestos",
+      "hiringRequestMatches": "Coincidencias de solicitudes",
+      "appliedAt": "Postulado",
+      "reviewedAt": "Revisado",
+      "invitedAt": "Invitado",
+      "stats": {
+        "total": "Total",
+        "shortlisted": "En proceso",
+        "interviewing": "En entrevista",
+        "rejected": "Rechazado"
+      },
+      "status": {
+        "new": "Nuevo",
+        "applied": "Postulado",
+        "reviewed": "Revisado",
+        "shortlisted": "Preseleccionado",
+        "invited": "Invitado",
+        "matched": "Emparejado",
+        "rejected": "Rechazado"
+      },
+      "interview": {
+        "scheduled": "Programada",
+        "inProgress": "En curso",
+        "completed": "Completada",
+        "cancelled": "Cancelada",
+        "expired": "Expirada"
+      },
+      "actions": {
+        "shortlist": "Preseleccionar",
+        "reject": "Rechazar",
+        "restore": "Restaurar"
+      }
     },
     "notes": {
       "tags": "Etiquetas",
@@ -3141,6 +3188,23 @@
     "saving": "Guardando..."
   },
   "admin": {
+    "teams": {
+      "title": "Equipos",
+      "createTeam": "Crear equipo",
+      "editTeam": "Editar",
+      "deleteTeam": "Eliminar",
+      "teamName": "Nombre del equipo",
+      "description": "Descripción (opcional)",
+      "members": "Miembros",
+      "addMember": "Añadir miembro",
+      "removeMember": "Eliminar",
+      "noTeams": "No hay equipos todavía",
+      "noMembers": "No hay miembros todavía",
+      "confirmDelete": "¿Eliminar este equipo? Los miembros serán desasignados.",
+      "memberCount": "{{count}} miembro(s)",
+      "searchUsers": "Buscar usuarios...",
+      "noUsersFound": "No se encontraron usuarios"
+    },
     "activity": {
       "signups": "Registros",
       "logins": "Inicios de sesión",

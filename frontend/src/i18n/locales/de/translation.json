@@ -1920,6 +1920,14 @@
       "preparingNextStep": "Kamera- und Mikrofon-Checks erscheinen als Nächstes",
       "preparingHint": "Dies dauert normalerweise nur wenige Sekunden."
     },
+    "matchStatus": {
+      "new": "Neu",
+      "reviewed": "Überprüft",
+      "shortlisted": "Vorausgewählt",
+      "applied": "Beworben",
+      "rejected": "Abgelehnt",
+      "invited": "Eingeladen"
+    },
     "jobs": {
       "title": "Stellen",
       "subtitle": "Stellenausschreibungen mit KI-Unterstützung erstellen und verwalten.",
@@ -2565,6 +2573,8 @@
       "dragDrop": "Lebenslauf-Dateien hierher ziehen",
       "formats": "Formate: PDF, DOCX, TXT, MD, JSON",
       "maxFiles": "Bis zu {{count}} Dateien gleichzeitig",
+      "applyToJob": "Auf Stelle bewerben (optional)",
+      "noJobSelected": "— Keine —",
       "uploading": "Wird verarbeitet...",
       "duplicate": "Duplikat",
       "successCount": "{{count}} hochgeladen",
@@ -2603,7 +2613,8 @@
         "insights": "KI-Analyse",
         "jobFit": "Stelleneignung",
         "notes": "Notizen & Tags",
-        "invitations": "Einladungen"
+        "invitations": "Einladungen",
+        "appliedJobs": "Bewerbungen"
       },
       "actions": {
         "regenerateInsights": "Einblicke neu generieren",
@@ -2760,6 +2771,42 @@
       "internship": "Praktikum",
       "hardGaps": "Fehlende Pflichtanforderungen",
       "transferable": "Übertragbare Fähigkeiten"
+    },
+    "appliedJobs": {
+      "empty": "Noch keine Bewerbungen",
+      "emptyHint": "Laden Sie Lebensläufe mit einer ausgewählten Stelle hoch oder ordnen Sie diesen Kandidaten Stellen zu",
+      "jobApplications": "Stellenbewerbungen",
+      "hiringRequestMatches": "Stellenanfragen-Übereinstimmungen",
+      "appliedAt": "Beworben",
+      "reviewedAt": "Überprüft",
+      "invitedAt": "Eingeladen",
+      "stats": {
+        "total": "Gesamt",
+        "shortlisted": "Im Prozess",
+        "interviewing": "Im Interview",
+        "rejected": "Abgelehnt"
+      },
+      "status": {
+        "new": "Neu",
+        "applied": "Beworben",
+        "reviewed": "Überprüft",
+        "shortlisted": "Vorauswahl",
+        "invited": "Eingeladen",
+        "matched": "Zugeordnet",
+        "rejected": "Abgelehnt"
+      },
+      "interview": {
+        "scheduled": "Geplant",
+        "inProgress": "Läuft",
+        "completed": "Abgeschlossen",
+        "cancelled": "Abgesagt",
+        "expired": "Abgelaufen"
+      },
+      "actions": {
+        "shortlist": "Vorauswählen",
+        "reject": "Ablehnen",
+        "restore": "Wiederherstellen"
+      }
     },
     "notes": {
       "tags": "Tags",
@@ -3140,6 +3187,23 @@
     "saving": "Speichern..."
   },
   "admin": {
+    "teams": {
+      "title": "Teams",
+      "createTeam": "Team erstellen",
+      "editTeam": "Bearbeiten",
+      "deleteTeam": "Löschen",
+      "teamName": "Teamname",
+      "description": "Beschreibung (optional)",
+      "members": "Mitglieder",
+      "addMember": "Mitglied hinzufügen",
+      "removeMember": "Entfernen",
+      "noTeams": "Noch keine Teams erstellt",
+      "noMembers": "Noch keine Mitglieder",
+      "confirmDelete": "Dieses Team löschen? Mitglieder werden die Zuweisung aufgehoben.",
+      "memberCount": "{{count}} Mitglied(er)",
+      "searchUsers": "Benutzer suchen...",
+      "noUsersFound": "Keine Benutzer gefunden"
+    },
     "activity": {
       "signups": "Registrierungen",
       "logins": "Anmeldungen",

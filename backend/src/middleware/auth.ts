@@ -46,6 +46,7 @@ async function validateApiKey(apiKey: string): Promise<{
             role: true,
             provider: true,
             providerId: true,
+            teamId: true,
             createdAt: true,
             updatedAt: true,
             stripeCustomerId: true,

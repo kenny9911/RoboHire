@@ -2273,6 +2273,14 @@
       "preparingNextStep": "Camera and microphone checks will appear next",
       "preparingHint": "This usually takes a few seconds."
     },
+    "matchStatus": {
+      "new": "New",
+      "reviewed": "Reviewed",
+      "shortlisted": "Shortlisted",
+      "applied": "Applied",
+      "rejected": "Rejected",
+      "invited": "Invited"
+    },
     "jobs": {
       "title": "Jobs",
       "subtitle": "Create and manage job postings with AI assistance.",
@@ -2967,6 +2975,8 @@
       "dragDrop": "Drag & drop resume files here",
       "formats": "Supported: PDF, DOCX, TXT, MD, JSON",
       "maxFiles": "Up to {{count}} files at once",
+      "applyToJob": "Apply to Job (optional)",
+      "noJobSelected": "— None —",
       "uploading": "Processing...",
       "duplicate": "Duplicate",
       "successCount": "{{count}} uploaded",
@@ -3005,7 +3015,8 @@
         "insights": "AI Insights",
         "jobFit": "Job Fit",
         "notes": "Notes & Tags",
-        "invitations": "Invitations"
+        "invitations": "Invitations",
+        "appliedJobs": "Applied Jobs"
       },
       "actions": {
         "regenerateInsights": "Re-generate Insights",
@@ -3172,6 +3183,42 @@
       "internship": "Internship",
       "hardGaps": "Hard Requirement Gaps",
       "transferable": "Transferable Skills"
+    },
+    "appliedJobs": {
+      "empty": "No job applications yet",
+      "emptyHint": "Upload resumes with a job selected, or match this candidate against jobs",
+      "jobApplications": "Job Applications",
+      "hiringRequestMatches": "Hiring Request Matches",
+      "appliedAt": "Applied",
+      "reviewedAt": "Reviewed",
+      "invitedAt": "Invited",
+      "stats": {
+        "total": "Total",
+        "shortlisted": "In Pipeline",
+        "interviewing": "Interviewing",
+        "rejected": "Rejected"
+      },
+      "status": {
+        "new": "New",
+        "applied": "Applied",
+        "reviewed": "Reviewed",
+        "shortlisted": "Shortlisted",
+        "invited": "Invited",
+        "matched": "Matched",
+        "rejected": "Rejected"
+      },
+      "interview": {
+        "scheduled": "Scheduled",
+        "inProgress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      },
+      "actions": {
+        "shortlist": "Shortlist",
+        "reject": "Reject",
+        "restore": "Restore"
+      }
     },
     "notes": {
       "tags": "Tags",
@@ -3552,6 +3599,23 @@
     "saving": "Saving..."
   },
   "admin": {
+    "teams": {
+      "title": "Teams",
+      "createTeam": "Create Team",
+      "editTeam": "Edit",
+      "deleteTeam": "Delete",
+      "teamName": "Team Name",
+      "description": "Description (optional)",
+      "members": "Members",
+      "addMember": "Add Member",
+      "removeMember": "Remove",
+      "noTeams": "No teams created yet",
+      "noMembers": "No members yet",
+      "confirmDelete": "Delete this team? Members will be unassigned.",
+      "memberCount": "{{count}} member(s)",
+      "searchUsers": "Search users...",
+      "noUsersFound": "No users found"
+    },
     "activity": {
       "signups": "Signups",
       "logins": "Logins",

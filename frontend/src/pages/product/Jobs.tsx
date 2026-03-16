@@ -126,7 +126,7 @@ function AIWandButton({ onClick, loading, hasContent, t }: {
       {loading ? (
         <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-500" />
       ) : (
-        <svg className="h-[1.05rem] w-[1.05rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a4.42 4.42 0 0 1 0-8.527l6.135-1.581a2 2 0 0 0 1.438-1.437l1.582-6.135a4.42 4.42 0 0 1 8.527 0l1.581 6.135a2 2 0 0 0 1.437 1.438l6.135 1.582a4.42 4.42 0 0 1 0 8.527l-6.135 1.581a2 2 0 0 0-1.438 1.437l-1.582 6.135a4.42 4.42 0 0 1-8.527 0z" />
           <path d="M20 3v4" />
           <path d="M22 5h-4" />

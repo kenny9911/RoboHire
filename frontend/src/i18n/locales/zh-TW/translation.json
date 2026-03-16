@@ -2378,6 +2378,14 @@
       "preparingNextStep": "攝影機和麥克風檢查將在下一步出現",
       "preparingHint": "通常只需幾秒鐘。"
     },
+    "matchStatus": {
+      "new": "新增",
+      "reviewed": "已檢視",
+      "shortlisted": "已入圍",
+      "applied": "已投遞",
+      "rejected": "已拒絕",
+      "invited": "已邀約"
+    },
     "jobs": {
       "title": "職缺",
       "description": "使用AI協助建立和管理職位發布",
@@ -3046,6 +3054,8 @@
       "dragDrop": "將簡歷檔案拖放到此處",
       "formats": "支援格式：PDF、DOCX、TXT、MD、JSON",
       "maxFiles": "一次最多 {{count}} 個檔案",
+      "applyToJob": "投遞職位（可選）",
+      "noJobSelected": "— 不選擇 —",
       "uploading": "處理中...",
       "duplicate": "重複",
       "successCount": "{{count}} 個已上傳",
@@ -3084,7 +3094,8 @@
         "insights": "AI洞察",
         "jobFit": "崗位匹配",
         "notes": "備註與標籤",
-        "invitations": "面試邀約"
+        "invitations": "面試邀約",
+        "appliedJobs": "投遞記錄"
       },
       "actions": {
         "regenerateInsights": "重新生成洞察",
@@ -3251,6 +3262,42 @@
       "internship": "實習",
       "hardGaps": "硬性要求缺口",
       "transferable": "可遷移技能"
+    },
+    "appliedJobs": {
+      "empty": "暫無投遞記錄",
+      "emptyHint": "上傳簡歷時選擇職位，或將候選人匹配到職位",
+      "jobApplications": "職位投遞",
+      "hiringRequestMatches": "招聘需求匹配",
+      "appliedAt": "投遞時間",
+      "reviewedAt": "審核時間",
+      "invitedAt": "邀約時間",
+      "stats": {
+        "total": "總計",
+        "shortlisted": "進入流程",
+        "interviewing": "面試中",
+        "rejected": "已淘汰"
+      },
+      "status": {
+        "new": "新投遞",
+        "applied": "已投遞",
+        "reviewed": "已審核",
+        "shortlisted": "已入圍",
+        "invited": "已邀約",
+        "matched": "已匹配",
+        "rejected": "已淘汰"
+      },
+      "interview": {
+        "scheduled": "已安排",
+        "inProgress": "進行中",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "expired": "已過期"
+      },
+      "actions": {
+        "shortlist": "入圍",
+        "reject": "淘汰",
+        "restore": "恢復"
+      }
     },
     "notes": {
       "tags": "標籤",
@@ -3631,6 +3678,23 @@
     "saving": "儲存中..."
   },
   "admin": {
+    "teams": {
+      "title": "團隊管理",
+      "createTeam": "建立團隊",
+      "editTeam": "編輯",
+      "deleteTeam": "刪除",
+      "teamName": "團隊名稱",
+      "description": "描述（可選）",
+      "members": "成員",
+      "addMember": "新增成員",
+      "removeMember": "移除",
+      "noTeams": "尚無團隊",
+      "noMembers": "尚無成員",
+      "confirmDelete": "確定刪除此團隊？成員將被取消分配。",
+      "memberCount": "{{count}} 名成員",
+      "searchUsers": "搜尋用戶...",
+      "noUsersFound": "未找到用戶"
+    },
     "activity": {
       "signups": "註冊",
       "logins": "登入",

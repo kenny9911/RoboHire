@@ -12,6 +12,7 @@ export interface AuthUser {
   role?: string;
   provider?: string | null;
   providerId?: string | null;
+  teamId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   // Subscription
@@ -47,6 +48,7 @@ declare global {
       role?: string;
       provider?: string | null;
       providerId?: string | null;
+      teamId?: string | null;
       createdAt: Date;
       updatedAt: Date;
       // Subscription

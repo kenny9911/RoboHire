@@ -2295,6 +2295,14 @@
       "preparingNextStep": "次にカメラとマイクのチェックが表示されます",
       "preparingHint": "通常、数秒で完了します。"
     },
+    "matchStatus": {
+      "new": "新規",
+      "reviewed": "確認済み",
+      "shortlisted": "候補リスト入り",
+      "applied": "応募済み",
+      "rejected": "不合格",
+      "invited": "招待済み"
+    },
     "jobs": {
       "title": "求人管理",
       "allJobs": "すべての求人",
@@ -3020,6 +3028,8 @@
       "dragDrop": "履歴書ファイルをここにドラッグ＆ドロップ",
       "formats": "対応形式：PDF、DOCX、TXT、MD、JSON",
       "maxFiles": "一度に最大 {{count}} ファイル",
+      "applyToJob": "求人に応募（任意）",
+      "noJobSelected": "— なし —",
       "uploading": "処理中...",
       "duplicate": "重複",
       "successCount": "{{count}} 件アップロード完了",
@@ -3058,7 +3068,8 @@
         "insights": "AIインサイト",
         "jobFit": "職種適性",
         "notes": "メモ・タグ",
-        "invitations": "面接招待"
+        "invitations": "面接招待",
+        "appliedJobs": "応募履歴"
       },
       "actions": {
         "regenerateInsights": "インサイトを再生成",
@@ -3215,6 +3226,42 @@
       "internship": "インターン",
       "hardGaps": "必須要件の不足",
       "transferable": "応用可能なスキル"
+    },
+    "appliedJobs": {
+      "empty": "応募履歴はまだありません",
+      "emptyHint": "履歴書アップロード時に求人を選択するか、候補者を求人にマッチングしてください",
+      "jobApplications": "求人への応募",
+      "hiringRequestMatches": "採用リクエストマッチ",
+      "appliedAt": "応募日",
+      "reviewedAt": "審査日",
+      "invitedAt": "招待日",
+      "stats": {
+        "total": "合計",
+        "shortlisted": "選考中",
+        "interviewing": "面接中",
+        "rejected": "不採用"
+      },
+      "status": {
+        "new": "新規",
+        "applied": "応募済み",
+        "reviewed": "審査済み",
+        "shortlisted": "候補入り",
+        "invited": "招待済み",
+        "matched": "マッチ済み",
+        "rejected": "不採用"
+      },
+      "interview": {
+        "scheduled": "予定済み",
+        "inProgress": "進行中",
+        "completed": "完了",
+        "cancelled": "キャンセル",
+        "expired": "期限切れ"
+      },
+      "actions": {
+        "shortlist": "候補入り",
+        "reject": "不採用",
+        "restore": "復元"
+      }
     },
     "notes": {
       "tags": "タグ",
@@ -3595,6 +3642,23 @@
     "saving": "保存中..."
   },
   "admin": {
+    "teams": {
+      "title": "チーム管理",
+      "createTeam": "チームを作成",
+      "editTeam": "編集",
+      "deleteTeam": "削除",
+      "teamName": "チーム名",
+      "description": "説明（任意）",
+      "members": "メンバー",
+      "addMember": "メンバーを追加",
+      "removeMember": "削除",
+      "noTeams": "チームがまだありません",
+      "noMembers": "メンバーがまだいません",
+      "confirmDelete": "このチームを削除しますか？メンバーの割り当てが解除されます。",
+      "memberCount": "{{count}} 名のメンバー",
+      "searchUsers": "ユーザーを検索...",
+      "noUsersFound": "ユーザーが見つかりません"
+    },
     "activity": {
       "signups": "サインアップ",
       "logins": "ログイン",

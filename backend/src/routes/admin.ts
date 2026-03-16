@@ -2369,4 +2369,102 @@ router.get('/activity/users', async (req, res) => {
   }
 });
 
+// ─── Team Management ──────────────────────────────────────────────────
+
+// List all teams
+router.get('/teams', async (_req, res) => {
+  try {
+    const teams = await prisma.team.findMany({
+      include: { members: { select: { id: true, name: true, email: true, role: true, avatar: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ success: true, data: teams });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch teams' });
+  }
+});
+
+// Create a team
+router.post('/teams', async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'Team name is required' });
+    }
+    const team = await prisma.team.create({
+      data: { name: name.trim(), description: description?.trim() || null },
+      include: { members: { select: { id: true, name: true, email: true, role: true, avatar: true } } },
+    });
+    res.json({ success: true, data: team });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to create team' });
+  }
+});
+
+// Update a team
+router.patch('/teams/:teamId', async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const team = await prisma.team.update({
+      where: { id: req.params.teamId },
+      data: {
+        ...(name !== undefined ? { name: name.trim() } : {}),
+        ...(description !== undefined ? { description: description?.trim() || null } : {}),
+      },
+      include: { members: { select: { id: true, name: true, email: true, role: true, avatar: true } } },
+    });
+    res.json({ success: true, data: team });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update team' });
+  }
+});
+
+// Delete a team (unsets teamId for all members)
+router.delete('/teams/:teamId', async (req, res) => {
+  try {
+    await prisma.user.updateMany({
+      where: { teamId: req.params.teamId },
+      data: { teamId: null },
+    });
+    await prisma.team.delete({ where: { id: req.params.teamId } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to delete team' });
+  }
+});
+
+// Add members to a team
+router.post('/teams/:teamId/members', async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'userIds array is required' });
+    }
+    await prisma.user.updateMany({
+      where: { id: { in: userIds } },
+      data: { teamId: req.params.teamId },
+    });
+    const team = await prisma.team.findUnique({
+      where: { id: req.params.teamId },
+      include: { members: { select: { id: true, name: true, email: true, role: true, avatar: true } } },
+    });
+    res.json({ success: true, data: team });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to add members' });
+  }
+});
+
+// Remove a member from a team
+router.delete('/teams/:teamId/members/:userId', async (req, res) => {
+  try {
+    await prisma.user.update({
+      where: { id: req.params.userId },
+      data: { teamId: null },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to remove member' });
+  }
+});
+
 export default router;

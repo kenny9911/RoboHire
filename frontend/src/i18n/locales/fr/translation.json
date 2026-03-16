@@ -1921,6 +1921,14 @@
       "preparingNextStep": "Les vérifications de caméra et microphone apparaîtront ensuite",
       "preparingHint": "Cela ne prend généralement que quelques secondes."
     },
+    "matchStatus": {
+      "new": "Nouveau",
+      "reviewed": "Examiné",
+      "shortlisted": "Présélectionné",
+      "applied": "Postulé",
+      "rejected": "Rejeté",
+      "invited": "Invité"
+    },
     "jobs": {
       "title": "Emplois",
       "subtitle": "Créez et gérez les offres d'emploi avec l'aide de l'IA.",
@@ -2566,6 +2574,8 @@
       "dragDrop": "Glissez-déposez les fichiers CV ici",
       "formats": "Formats : PDF, DOCX, TXT, MD, JSON",
       "maxFiles": "Jusqu'à {{count}} fichiers à la fois",
+      "applyToJob": "Postuler à un poste (optionnel)",
+      "noJobSelected": "— Aucun —",
       "uploading": "Traitement...",
       "duplicate": "Doublon",
       "successCount": "{{count}} téléchargés",
@@ -2604,7 +2614,8 @@
         "insights": "Analyses IA",
         "jobFit": "Adéquation au poste",
         "notes": "Notes et tags",
-        "invitations": "Invitations"
+        "invitations": "Invitations",
+        "appliedJobs": "Candidatures"
       },
       "actions": {
         "regenerateInsights": "Régénérer les analyses",
@@ -2761,6 +2772,42 @@
       "internship": "Stage",
       "hardGaps": "Exigences obligatoires manquantes",
       "transferable": "Compétences transférables"
+    },
+    "appliedJobs": {
+      "empty": "Aucune candidature pour le moment",
+      "emptyHint": "Téléchargez des CV en sélectionnant un poste, ou associez ce candidat à des postes",
+      "jobApplications": "Candidatures aux postes",
+      "hiringRequestMatches": "Correspondances de recrutement",
+      "appliedAt": "Candidaté",
+      "reviewedAt": "Examiné",
+      "invitedAt": "Invité",
+      "stats": {
+        "total": "Total",
+        "shortlisted": "En cours",
+        "interviewing": "En entretien",
+        "rejected": "Rejeté"
+      },
+      "status": {
+        "new": "Nouveau",
+        "applied": "Candidaté",
+        "reviewed": "Examiné",
+        "shortlisted": "Présélectionné",
+        "invited": "Invité",
+        "matched": "Associé",
+        "rejected": "Rejeté"
+      },
+      "interview": {
+        "scheduled": "Planifié",
+        "inProgress": "En cours",
+        "completed": "Terminé",
+        "cancelled": "Annulé",
+        "expired": "Expiré"
+      },
+      "actions": {
+        "shortlist": "Présélectionner",
+        "reject": "Rejeter",
+        "restore": "Restaurer"
+      }
     },
     "notes": {
       "tags": "Tags",
@@ -3141,6 +3188,23 @@
     "saving": "Enregistrement..."
   },
   "admin": {
+    "teams": {
+      "title": "Équipes",
+      "createTeam": "Créer une équipe",
+      "editTeam": "Modifier",
+      "deleteTeam": "Supprimer",
+      "teamName": "Nom de l'équipe",
+      "description": "Description (facultatif)",
+      "members": "Membres",
+      "addMember": "Ajouter un membre",
+      "removeMember": "Retirer",
+      "noTeams": "Aucune équipe pour le moment",
+      "noMembers": "Aucun membre pour le moment",
+      "confirmDelete": "Supprimer cette équipe ? Les membres seront désassignés.",
+      "memberCount": "{{count}} membre(s)",
+      "searchUsers": "Rechercher des utilisateurs...",
+      "noUsersFound": "Aucun utilisateur trouvé"
+    },
     "activity": {
       "signups": "Inscriptions",
       "logins": "Connexions",

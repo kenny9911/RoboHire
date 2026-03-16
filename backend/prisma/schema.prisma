@@ -10,6 +10,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     User[]
+
+  @@index([name])
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -22,6 +34,7 @@ model User {
   role          String    @default("user") // 'user' or 'admin'
   provider      String?   // 'email', 'google', 'github', 'linkedin'
   providerId    String?
+  teamId        String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -37,7 +50,8 @@ model User {
   topUpBalance        Float     @default(0)
   customMaxInterviews Int?      // Admin override for max interviews (null = use plan default)
   customMaxMatches    Int?      // Admin override for max matches (null = use plan default)
-  
+
+  team            Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
   hiringRequests  HiringRequest[]
   sessions        Session[]
   hiringSessions  HiringSession[]
@@ -47,6 +61,7 @@ model User {
   llmCallLogs     LLMCallLog[]
   topUpRecords    TopUpRecord[]
   resumes         Resume[]
+  recruiterResumes Resume[]  @relation("ResumeRecruiter")
   adminAdjustmentsReceived  AdminAdjustment[] @relation("AdminAdjustmentsReceived")
   adminAdjustmentsMade      AdminAdjustment[] @relation("AdminAdjustmentsMade")
   atsIntegrations ATSIntegration[]
@@ -61,6 +76,7 @@ model User {
 
   @@index([email])
   @@index([provider, providerId])
+  @@index([teamId])
   @@index([createdAt])
 }
 
@@ -343,6 +359,7 @@ model InterviewRoomConfigVersion {
 model Resume {
   id              String    @id @default(cuid())
   userId          String
+  recruiterUserId String?
   name            String
   email           String?
   phone           String?
@@ -367,6 +384,7 @@ model Resume {
   updatedAt       DateTime  @updatedAt
 
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recruiterUser   User?     @relation("ResumeRecruiter", fields: [recruiterUserId], references: [id], onDelete: SetNull)
   resumeJobFits   ResumeJobFit[]
   jobMatches      JobMatch[]
   resumeVersions  ResumeVersion[]
@@ -374,6 +392,7 @@ model Resume {
 
   @@unique([userId, contentHash])
   @@index([userId])
+  @@index([recruiterUserId])
   @@index([userId, status])
   @@index([userId, status, createdAt])
   @@index([name])

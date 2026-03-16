@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
+import { useAuth } from '../context/AuthContext';
 
 interface ResumeUploadModalProps {
   open: boolean;
@@ -55,6 +56,8 @@ type PersonDuplicate = {
 
 export default function ResumeUploadModal({ open, onClose, onUploaded, batch = false, replaceResumeId, preselectedJobId }: ResumeUploadModalProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropTimeRef = useRef(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -523,8 +526,8 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
           </div>
         )}
 
-        {/* Processing Metrics */}
-        {metrics && (
+        {/* Processing Metrics (admin only) */}
+        {isAdmin && metrics && (
           <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
             <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1.5">
               {t('resumeLibrary.uploadModal.metrics.title', 'Processing Details')}

@@ -7,7 +7,49 @@ import ResumeUploadModal from '../components/ResumeUploadModal';
 import RefineDiffView from '../components/RefineDiffView';
 import { ResumeRenderer, parsedDataToMarkdown } from '../components/ResumeRenderer';
 
-type Tab = 'overview' | 'insights' | 'jobfit' | 'invitations' | 'notes';
+type Tab = 'overview' | 'insights' | 'jobfit' | 'appliedJobs' | 'invitations' | 'notes';
+
+interface AppliedJobMatch {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  department: string | null;
+  location: string | null;
+  workType: string | null;
+  employmentType: string | null;
+  companyName: string | null;
+  jobStatus: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string | null;
+  salaryText: string | null;
+  salaryPeriod: string | null;
+  score: number | null;
+  grade: string | null;
+  status: string;
+  appliedAt: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  interview: { id: string; status: string; scheduledAt: string | null; completedAt: string | null; type: string } | null;
+}
+
+interface AppliedHRFit {
+  id: string;
+  hiringRequestId: string;
+  hiringRequestTitle: string;
+  hiringRequestStatus: string;
+  fitScore: number | null;
+  fitGrade: string | null;
+  pipelineStatus: string;
+  invitedAt: string | null;
+  createdAt: string;
+  interview: { id: string; status: string; scheduledAt: string | null; completedAt: string | null; type: string } | null;
+}
+
+interface AppliedJobsData {
+  jobMatches: AppliedJobMatch[];
+  hiringRequestFits: AppliedHRFit[];
+}
 
 interface InvitationRecord {
   id: string;
@@ -131,6 +173,8 @@ export default function ResumeDetail() {
   const [inviteError, setInviteError] = useState('');
   const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
   const [invitationsMap, setInvitationsMap] = useState<Record<string, InvitationRecord>>({});
+  const [appliedJobsData, setAppliedJobsData] = useState<AppliedJobsData | null>(null);
+  const [appliedJobsLoading, setAppliedJobsLoading] = useState(false);
 
   // Edit mode state
   const [editMode, setEditMode] = useState(false);
@@ -177,6 +221,19 @@ export default function ResumeDetail() {
     }
   }, [id]);
 
+  const fetchAppliedJobs = useCallback(async () => {
+    if (!id) return;
+    setAppliedJobsLoading(true);
+    try {
+      const res = await axios.get(`/api/v1/resumes/${id}/applied-jobs`);
+      if (res.data.success) setAppliedJobsData(res.data.data);
+    } catch {
+      // silently fail
+    } finally {
+      setAppliedJobsLoading(false);
+    }
+  }, [id]);
+
   const fetchResume = useCallback(async () => {
     if (!id) return;
     setLoading(true);
@@ -209,7 +266,8 @@ export default function ResumeDetail() {
     fetchResume();
     fetchInvitations();
     fetchVersions();
-  }, [fetchResume, fetchInvitations, fetchVersions]);
+    fetchAppliedJobs();
+  }, [fetchResume, fetchInvitations, fetchVersions, fetchAppliedJobs]);
 
   const generateInsights = async (force = false) => {
     if (!resume) return;
@@ -598,6 +656,7 @@ export default function ResumeDetail() {
     { key: 'overview', label: t('resumeLibrary.detail.tabs.overview', 'Overview') },
     { key: 'insights', label: t('resumeLibrary.detail.tabs.insights', 'AI Insights') },
     { key: 'jobfit', label: t('resumeLibrary.detail.tabs.jobFit', 'Job Fit') },
+    { key: 'appliedJobs', label: `${t('resumeLibrary.detail.tabs.appliedJobs', 'Applied Jobs')}${appliedJobsData ? ` (${appliedJobsData.jobMatches.length + appliedJobsData.hiringRequestFits.length})` : ''}` },
     { key: 'invitations', label: `${t('resumeLibrary.detail.tabs.invitations', 'Invitations')}${invitations.length > 0 ? ` (${invitations.length})` : ''}` },
     { key: 'notes', label: t('resumeLibrary.detail.tabs.notes', 'Notes & Tags') },
   ];
@@ -896,6 +955,7 @@ export default function ResumeDetail() {
       )}
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
       {tab === 'jobfit' && <JobFitTab data={resume.jobFitData} loading={jobFitLoading} onAnalyze={analyzeJobFit} onInvite={handleInviteFromFit} invitationsMap={invitationsMap} t={t} />}
+      {tab === 'appliedJobs' && <AppliedJobsTab data={appliedJobsData} loading={appliedJobsLoading} onRefresh={fetchAppliedJobs} resumeId={resume.id} t={t} />}
       {tab === 'invitations' && <InvitationsTab invitations={invitations} resumeText={resume.resumeText} onRefresh={fetchInvitations} t={t} />}
       {tab === 'notes' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -2020,6 +2080,277 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { 
           {t('resumeLibrary.jobFit.reanalyze', 'Re-analyze job fit')}
         </button>
       </div>
+    </div>
+  );
+}
+
+// ─── Applied Jobs Tab ─────────────────────────────────────────────────
+
+function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
+  data: AppliedJobsData | null;
+  loading: boolean;
+  onRefresh: () => void;
+  resumeId: string;
+  t: (k: string, f: string, opts?: Record<string, unknown>) => string;
+}) {
+  const navigate = useNavigate();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  if (loading && !data) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+      </div>
+    );
+  }
+
+  const jobMatches = data?.jobMatches || [];
+  const hrFits = data?.hiringRequestFits || [];
+  const totalCount = jobMatches.length + hrFits.length;
+
+  if (totalCount === 0) {
+    return (
+      <div className="text-center py-16">
+        <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
+        </svg>
+        <p className="text-sm text-gray-500">{t('resumeLibrary.appliedJobs.empty', 'No job applications yet')}</p>
+        <p className="text-xs text-gray-400 mt-1">{t('resumeLibrary.appliedJobs.emptyHint', 'Upload resumes with a job selected, or match this candidate against jobs')}</p>
+      </div>
+    );
+  }
+
+  // Stats
+  const appliedCount = jobMatches.filter(m => m.status === 'applied').length;
+  const shortlistedCount = jobMatches.filter(m => m.status === 'shortlisted').length;
+  const interviewingCount = jobMatches.filter(m => m.status === 'invited' || m.interview).length
+    + hrFits.filter(f => f.pipelineStatus === 'invited' || f.interview).length;
+  const rejectedCount = jobMatches.filter(m => m.status === 'rejected').length
+    + hrFits.filter(f => f.pipelineStatus === 'rejected').length;
+
+  const statusConfig: Record<string, { color: string; bg: string; label: string }> = {
+    new: { color: 'text-gray-600', bg: 'bg-gray-100', label: t('resumeLibrary.appliedJobs.status.new', 'New') },
+    applied: { color: 'text-blue-700', bg: 'bg-blue-100', label: t('resumeLibrary.appliedJobs.status.applied', 'Applied') },
+    reviewed: { color: 'text-indigo-700', bg: 'bg-indigo-100', label: t('resumeLibrary.appliedJobs.status.reviewed', 'Reviewed') },
+    shortlisted: { color: 'text-amber-700', bg: 'bg-amber-100', label: t('resumeLibrary.appliedJobs.status.shortlisted', 'Shortlisted') },
+    invited: { color: 'text-emerald-700', bg: 'bg-emerald-100', label: t('resumeLibrary.appliedJobs.status.invited', 'Invited') },
+    matched: { color: 'text-purple-700', bg: 'bg-purple-100', label: t('resumeLibrary.appliedJobs.status.matched', 'Matched') },
+    rejected: { color: 'text-red-700', bg: 'bg-red-100', label: t('resumeLibrary.appliedJobs.status.rejected', 'Rejected') },
+  };
+
+  const interviewStatusConfig: Record<string, { color: string; bg: string; label: string }> = {
+    scheduled: { color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', label: t('resumeLibrary.appliedJobs.interview.scheduled', 'Scheduled') },
+    in_progress: { color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', label: t('resumeLibrary.appliedJobs.interview.inProgress', 'In Progress') },
+    completed: { color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', label: t('resumeLibrary.appliedJobs.interview.completed', 'Completed') },
+    cancelled: { color: 'text-red-700', bg: 'bg-red-50 border-red-200', label: t('resumeLibrary.appliedJobs.interview.cancelled', 'Cancelled') },
+    expired: { color: 'text-gray-500', bg: 'bg-gray-50 border-gray-200', label: t('resumeLibrary.appliedJobs.interview.expired', 'Expired') },
+  };
+
+  const handleStatusChange = async (matchId: string, newStatus: string) => {
+    setUpdatingId(matchId);
+    try {
+      await axios.patch(`/api/v1/resumes/${resumeId}/job-matches/${matchId}`, { status: newStatus });
+      onRefresh();
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const gradeColor = (grade: string | null) => {
+    if (!grade) return 'text-gray-400';
+    if (grade.startsWith('A')) return 'text-emerald-600';
+    if (grade.startsWith('B')) return 'text-blue-600';
+    if (grade.startsWith('C')) return 'text-amber-600';
+    return 'text-red-600';
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: t('resumeLibrary.appliedJobs.stats.total', 'Total'), value: totalCount, color: 'text-gray-900', bg: 'bg-gray-50 border-gray-200' },
+          { label: t('resumeLibrary.appliedJobs.stats.shortlisted', 'Shortlisted'), value: shortlistedCount + appliedCount, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+          { label: t('resumeLibrary.appliedJobs.stats.interviewing', 'Interviewing'), value: interviewingCount, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+          { label: t('resumeLibrary.appliedJobs.stats.rejected', 'Rejected'), value: rejectedCount, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
+        ].map(s => (
+          <div key={s.label} className={`rounded-xl border px-4 py-3 ${s.bg}`}>
+            <p className="text-xs font-medium text-gray-500">{s.label}</p>
+            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Job Matches */}
+      {jobMatches.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">
+            {t('resumeLibrary.appliedJobs.jobApplications', 'Job Applications')}
+          </h4>
+          <div className="space-y-2">
+            {jobMatches.map(m => {
+              const sc = statusConfig[m.status] || statusConfig.new;
+              const isc = m.interview ? (interviewStatusConfig[m.interview.status] || interviewStatusConfig.scheduled) : null;
+              return (
+                <div key={m.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-300 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4
+                          className="text-sm font-semibold text-gray-900 hover:text-indigo-600 cursor-pointer truncate"
+                          onClick={() => navigate(`/product/jobs?id=${m.jobId}`)}
+                        >
+                          {m.jobTitle}
+                        </h4>
+                        {m.jobStatus && m.jobStatus !== 'open' && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 shrink-0">{m.jobStatus}</span>
+                        )}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500">
+                        {m.department && <span>{m.department}</span>}
+                        {m.location && <span>{m.location}</span>}
+                        {m.workType && <span>{m.workType}</span>}
+                        {m.employmentType && <span>{m.employmentType}</span>}
+                        {m.salaryText ? (
+                          <span className="text-gray-600">{m.salaryText}</span>
+                        ) : m.salaryMin || m.salaryMax ? (
+                          <span className="text-gray-600">
+                            {m.salaryCurrency || 'USD'} {m.salaryMin?.toLocaleString() || '—'}–{m.salaryMax?.toLocaleString() || '—'}
+                            {m.salaryPeriod === 'yearly' ? '/yr' : '/mo'}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {m.score != null && (
+                        <span className={`text-xs font-bold ${gradeColor(m.grade)}`}>
+                          {m.grade || m.score}
+                        </span>
+                      )}
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${sc.bg} ${sc.color}`}>
+                        {sc.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Interview status */}
+                  {m.interview && isc && (
+                    <div className={`mt-2 rounded-lg border px-3 py-2 flex items-center justify-between ${isc.bg}`}>
+                      <div className="flex items-center gap-2 text-xs">
+                        <svg className={`w-3.5 h-3.5 ${isc.color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        <span className={`font-medium ${isc.color}`}>{isc.label}</span>
+                      </div>
+                      {m.interview.scheduledAt && (
+                        <span className="text-[11px] text-gray-500">{new Date(m.interview.scheduledAt).toLocaleString()}</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Timeline & actions */}
+                  <div className="mt-3 flex items-center justify-between pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-3 text-[11px] text-gray-400">
+                      {m.appliedAt && (
+                        <span>{t('resumeLibrary.appliedJobs.appliedAt', 'Applied')}: {new Date(m.appliedAt).toLocaleDateString()}</span>
+                      )}
+                      {m.reviewedAt && (
+                        <span>{t('resumeLibrary.appliedJobs.reviewedAt', 'Reviewed')}: {new Date(m.reviewedAt).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {m.status !== 'shortlisted' && m.status !== 'invited' && m.status !== 'rejected' && (
+                        <button
+                          onClick={() => handleStatusChange(m.id, 'shortlisted')}
+                          disabled={updatingId === m.id}
+                          className="text-[11px] font-medium text-amber-600 hover:bg-amber-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          {t('resumeLibrary.appliedJobs.actions.shortlist', 'Shortlist')}
+                        </button>
+                      )}
+                      {m.status !== 'rejected' && (
+                        <button
+                          onClick={() => handleStatusChange(m.id, 'rejected')}
+                          disabled={updatingId === m.id}
+                          className="text-[11px] font-medium text-red-500 hover:bg-red-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          {t('resumeLibrary.appliedJobs.actions.reject', 'Reject')}
+                        </button>
+                      )}
+                      {m.status === 'rejected' && (
+                        <button
+                          onClick={() => handleStatusChange(m.id, 'applied')}
+                          disabled={updatingId === m.id}
+                          className="text-[11px] font-medium text-gray-500 hover:bg-gray-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          {t('resumeLibrary.appliedJobs.actions.restore', 'Restore')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Hiring Request Fits */}
+      {hrFits.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">
+            {t('resumeLibrary.appliedJobs.hiringRequestMatches', 'Hiring Request Matches')}
+          </h4>
+          <div className="space-y-2">
+            {hrFits.map(f => {
+              const sc = statusConfig[f.pipelineStatus] || statusConfig.matched;
+              const isc = f.interview ? (interviewStatusConfig[f.interview.status] || interviewStatusConfig.scheduled) : null;
+              return (
+                <div key={f.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-semibold text-gray-900 truncate">{f.hiringRequestTitle}</h4>
+                      <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                        {f.hiringRequestStatus && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{f.hiringRequestStatus}</span>
+                        )}
+                        {f.invitedAt && (
+                          <span>{t('resumeLibrary.appliedJobs.invitedAt', 'Invited')}: {new Date(f.invitedAt).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {f.fitScore != null && (
+                        <span className={`text-xs font-bold ${gradeColor(f.fitGrade)}`}>
+                          {f.fitGrade} {f.fitScore}
+                        </span>
+                      )}
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${sc.bg} ${sc.color}`}>
+                        {sc.label}
+                      </span>
+                    </div>
+                  </div>
+                  {f.interview && isc && (
+                    <div className={`mt-2 rounded-lg border px-3 py-2 flex items-center justify-between ${isc.bg}`}>
+                      <div className="flex items-center gap-2 text-xs">
+                        <svg className={`w-3.5 h-3.5 ${isc.color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        <span className={`font-medium ${isc.color}`}>{isc.label}</span>
+                      </div>
+                      {f.interview.scheduledAt && (
+                        <span className="text-[11px] text-gray-500">{new Date(f.interview.scheduledAt).toLocaleString()}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

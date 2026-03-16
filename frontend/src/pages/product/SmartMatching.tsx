@@ -1156,7 +1156,7 @@ export default function SmartMatching() {
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {s || t('product.matching.allStatuses', 'All')}
+              {s ? t(`product.matchStatus.${s}`, s) : t('product.matching.allStatuses', 'All')}
             </button>
           ))}
         </div>
@@ -1329,7 +1329,7 @@ export default function SmartMatching() {
                             </span>
                           )}
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[match.status] || STATUS_COLORS.new}`}>
-                            {match.status}
+                            {t(`product.matchStatus.${match.status}`, match.status)}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
