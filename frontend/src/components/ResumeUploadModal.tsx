@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
 
@@ -8,7 +8,10 @@ interface ResumeUploadModalProps {
   onUploaded: () => void;
   batch?: boolean;
   replaceResumeId?: string;
+  preselectedJobId?: string;
 }
+
+type JobOption = { id: string; title: string; status?: string };
 
 const MAX_BATCH_FILES = 20;
 
@@ -50,7 +53,7 @@ type PersonDuplicate = {
   metrics?: ProcessingMetrics;
 };
 
-export default function ResumeUploadModal({ open, onClose, onUploaded, batch = false, replaceResumeId }: ResumeUploadModalProps) {
+export default function ResumeUploadModal({ open, onClose, onUploaded, batch = false, replaceResumeId, preselectedJobId }: ResumeUploadModalProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropTimeRef = useRef(0);
@@ -62,8 +65,23 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
   const [metrics, setMetrics] = useState<ProcessingMetrics | null>(null);
   const [personDuplicates, setPersonDuplicates] = useState<PersonDuplicate[]>([]);
   const [resolvingDuplicate, setResolvingDuplicate] = useState(false);
+  const [jobs, setJobs] = useState<JobOption[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<string>(preselectedJobId || '');
   const isReplaceMode = Boolean(replaceResumeId);
   const effectiveBatch = batch && !isReplaceMode;
+
+  // Fetch available jobs for the selector
+  useEffect(() => {
+    if (!open || isReplaceMode) return;
+    axios.get('/api/v1/jobs', { params: { status: 'open', limit: 100 } })
+      .then(res => setJobs(res.data.data || []))
+      .catch(() => {});
+  }, [open, isReplaceMode]);
+
+  // Sync preselectedJobId when it changes
+  useEffect(() => {
+    if (preselectedJobId) setSelectedJobId(preselectedJobId);
+  }, [preselectedJobId]);
 
   if (!open) return null;
 
@@ -129,6 +147,7 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
       } else if (effectiveBatch && selectedFiles.length > 1) {
         const formData = new FormData();
         selectedFiles.forEach(f => formData.append('files', f));
+        if (selectedJobId) formData.append('jobId', selectedJobId);
         const res = await axios.post('/api/v1/resumes/upload-batch', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
@@ -164,6 +183,7 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
       } else {
         const formData = new FormData();
         formData.append('file', selectedFiles[0]);
+        if (selectedJobId) formData.append('jobId', selectedJobId);
         const res = await axios.post('/api/v1/resumes/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
@@ -426,6 +446,26 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
             onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
           />
         </div>
+
+        {/* Job selector (optional) */}
+        {!isReplaceMode && jobs.length > 0 && (
+          <div className="mt-4">
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              {t('resumeLibrary.uploadModal.applyToJob', 'Apply to Job (optional)')}
+            </label>
+            <select
+              value={selectedJobId}
+              onChange={(e) => setSelectedJobId(e.target.value)}
+              disabled={uploading}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 disabled:opacity-50"
+            >
+              <option value="">{t('resumeLibrary.uploadModal.noJobSelected', '— None —')}</option>
+              {jobs.map(j => (
+                <option key={j.id} value={j.id}>{j.title}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Selected files / progress */}
         {selectedFiles.length > 0 && (

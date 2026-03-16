@@ -358,6 +358,16 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
           data: resumeData,
         });
 
+    // If a jobId was provided, create a JobMatch to apply the resume to that job
+    const jobId = req.body?.jobId as string | undefined;
+    if (jobId) {
+      await prisma.jobMatch.upsert({
+        where: { jobId_resumeId: { jobId, resumeId: resume.id } },
+        create: { jobId, resumeId: resume.id, status: 'applied', appliedAt: new Date(), appliedBy: userId },
+        update: { status: 'applied', appliedAt: new Date(), appliedBy: userId },
+      });
+    }
+
     return res.json({
       success: true,
       data: resume,
@@ -389,6 +399,7 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
 
     const userId = req.user.id;
     const requestId = req.requestId;
+    const batchJobId = req.body?.jobId as string | undefined;
 
     // Process a single file
     async function processFile(file: { buffer: Buffer; mimetype: string; originalname: string; size: number }) {
@@ -471,6 +482,15 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
           : await prisma.resume.create({
               data: resumeData,
             });
+
+        // If a jobId was provided, create a JobMatch to apply the resume to that job
+        if (batchJobId) {
+          await prisma.jobMatch.upsert({
+            where: { jobId_resumeId: { jobId: batchJobId, resumeId: resume.id } },
+            create: { jobId: batchJobId, resumeId: resume.id, status: 'applied', appliedAt: new Date(), appliedBy: userId },
+            update: { status: 'applied', appliedAt: new Date(), appliedBy: userId },
+          });
+        }
 
         return { fileName: decodedName, success: true as const, data: resume, duplicate: Boolean(existing) };
       } catch (err) {

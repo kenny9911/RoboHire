@@ -141,9 +141,9 @@ const JOB_CATEGORIES: Array<{ category: string; keywords: string[] }> = [
   { category: 'Data', keywords: ['data analyst', 'data engineer', '数据分析', '数据工程', 'analytics', 'bi'] },
   { category: 'Marketing', keywords: ['marketing', '市场', '营销', 'growth', 'seo', 'content'] },
   { category: 'Operations', keywords: ['operations', '运营', '运维', 'sre', 'infrastructure'] },
+  { category: 'Sales', keywords: ['sales', 'account', 'bd', 'business develop', '销售', '客户经理'] },
   { category: 'Management', keywords: ['manager', 'director', 'vp', 'cto', 'ceo', '总监', '经理', 'lead', 'head of', '负责人', '主管'] },
   { category: 'QA', keywords: ['qa', 'test', 'quality', '测试', '质量'] },
-  { category: 'Sales', keywords: ['sales', 'account', 'bd', 'business develop', '销售'] },
   { category: 'HR', keywords: ['hr', 'human resource', '人力', '招聘', 'recruiter', 'talent'] },
   { category: 'Finance', keywords: ['finance', 'accounting', '财务', '会计', 'cfo'] },
 ];

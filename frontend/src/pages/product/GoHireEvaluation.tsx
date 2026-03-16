@@ -589,18 +589,34 @@ export default function GoHireEvaluation() {
     }
   }, []);
 
-  // Build JD data for JdRenderer — parse Chinese section markers like 【职位概述】【主要职责】【任职要求】
+  // Build JD data for JdRenderer — parse Chinese section markers like 【职位概述】【主要职责】【任职要求】 or 职位概述：
   const jdData = useMemo(() => {
     if (!interview) return null;
     const raw = interview.jobDescription || '';
-    // Try splitting by 【...】 section markers
-    const sectionRegex = /【([^】]+)】/g;
+
+    // Known section titles
+    // Removed overly broad '要求' as it matches '面试要求' unintentionally.
+    const descriptionKeys = ['职位概述', '岗位概述', '职位描述', '岗位描述', '概述', 'overview'];
+    const responsibilityKeys = ['主要职责', '岗位职责', '工作职责', '职责', 'responsibilities'];
+    const requirementKeys = ['任职要求', '岗位要求', '任职资格', '基本要求', 'requirements'];
+    const interviewKeys = ['面试要求', '考察点', '面试侧重点', 'interview requirements'];
+
+    const allKnownKeys = [...descriptionKeys, ...responsibilityKeys, ...requirementKeys, ...interviewKeys];
+    // Sort descending by length so "职位描述" matches before "描述"
+    const sortedKeys = [...allKnownKeys].sort((a, b) => b.length - a.length);
+
+    // Regex to match: 【(any text)】 OR (known_key)[:：]
+    // Allowing optional whitespace around the colon.
+    const keysRegexStr = sortedKeys.join('|');
+    const sectionRegex = new RegExp(`【([^】]+)】|(${keysRegexStr})\\s*[:：]`, 'ig');
+    
     const sections: Record<string, string> = {};
     let match: RegExpExecArray | null;
     const markers: { key: string; start: number; headerEnd: number }[] = [];
 
     while ((match = sectionRegex.exec(raw)) !== null) {
-      markers.push({ key: match[1], start: match.index, headerEnd: match.index + match[0].length });
+      const keyName = match[1] || match[2];
+      markers.push({ key: keyName, start: match.index, headerEnd: match.index + match[0].length });
     }
 
     if (markers.length > 0) {
@@ -614,11 +630,6 @@ export default function GoHireEvaluation() {
       }
     }
 
-    // Map sections to JdRenderer fields
-    const descriptionKeys = ['职位概述', '岗位概述', '职位描述', '岗位描述', '概述', 'overview'];
-    const responsibilityKeys = ['主要职责', '岗位职责', '工作职责', '职责', 'responsibilities'];
-    const requirementKeys = ['任职要求', '岗位要求', '任职资格', '要求', 'requirements', '基本要求'];
-
     const findSection = (keys: string[]) => {
       for (const k of keys) {
         for (const [sk, sv] of Object.entries(sections)) {
@@ -628,25 +639,39 @@ export default function GoHireEvaluation() {
       return undefined;
     };
 
-    const splitLines = (text?: string) =>
-      text
-        ? text.split(/\n/).map(l => l.replace(/^[\s•●○◦▪▫■□◆◇·∙✦✧\-–—*]+\s*/, '').replace(/^\d+[.、]\s*/, '').trim()).filter(Boolean)
-        : undefined;
+    const splitLines = (text?: string) => {
+      if (!text) return undefined;
+      // If text lacks newlines but has typical bullet markers like " .", add newlines before them
+      let processedText = text;
+      if (!processedText.includes('\n')) {
+        processedText = processedText.replace(/\s+(\.(?!\s))/g, '\n$1'); // split space+dot
+        processedText = processedText.replace(/\s+(\d+[.、])/g, '\n$1'); // split space+number+dot
+      }
+      
+      return processedText
+        .split(/\n/)
+        .map(l => l.replace(/^[\s•●○◦▪▫■□◆◇·∙✦✧\-–—*]+\s*/, '').replace(/^\d+[.、]\s*/, '').replace(/^\.\s*/, '').trim())
+        .filter(Boolean);
+    };
 
     const description = findSection(descriptionKeys) || (markers.length === 0 ? raw : sections['_preamble']) || undefined;
     const responsibilities = splitLines(findSection(responsibilityKeys));
     const parsedRequirements = splitLines(findSection(requirementKeys));
+    const parsedInterviewReqs = splitLines(findSection(interviewKeys));
 
     // Also use explicit jobRequirements / interviewRequirements fields from DB if available
     const requirements = parsedRequirements
       || (interview.jobRequirements ? interview.jobRequirements.split('\n').filter(Boolean) : undefined);
 
+    const interviewRequirements = parsedInterviewReqs
+      || (interview.interviewRequirements ? interview.interviewRequirements.split('\n').filter(Boolean) : undefined);
+
     return {
       title: interview.jobTitle || undefined,
       description: description || undefined,
       requirements,
-      responsibilities: responsibilities
-        || (interview.interviewRequirements ? interview.interviewRequirements.split('\n').filter(Boolean) : undefined),
+      responsibilities,
+      interviewRequirements,
     };
   }, [interview]);
 

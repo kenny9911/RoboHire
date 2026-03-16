@@ -10,6 +10,7 @@ interface JdRendererProps {
     hardRequirements?: string[] | string;
     niceToHave?: string[] | string;
     benefits?: string[] | string;
+    interviewRequirements?: string[] | string;
   };
   className?: string;
 }
@@ -173,6 +174,7 @@ export function JdRenderer({ jd, className = '' }: JdRendererProps) {
   const niceToHave = toArray(jd.niceToHave);
   const responsibilities = toArray(jd.responsibilities);
   const benefits = toArray(jd.benefits);
+  const interviewReqs = toArray(jd.interviewRequirements);
 
   return (
     <div className={`jd-container ${className}`}>
@@ -186,8 +188,9 @@ export function JdRenderer({ jd, className = '' }: JdRendererProps) {
         <div className="jd-description">{cleanText(jd.description)}</div>
       )}
 
-      <SectionList title="职责 / Responsibilities" items={responsibilities} icon="📋" />
-      <SectionList title="要求 / Requirements" items={requirements} icon="✅" />
+      <SectionList title="工作职责 / Responsibilities" items={responsibilities} icon="📋" />
+      <SectionList title="任职要求 / Requirements" items={requirements} icon="✅" />
+      <SectionList title="面试要求 / Interview Requirements" items={interviewReqs} icon="🎯" />
       <SectionList title="必备能力 / Must Have" items={mustHave} icon="🎯" />
       <SectionList title="加分项 / Nice to Have" items={niceToHave} icon="⭐" />
       <SectionList title="福利 / Benefits" items={benefits} icon="💝" />
