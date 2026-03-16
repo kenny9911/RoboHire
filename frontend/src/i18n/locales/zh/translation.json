@@ -3336,7 +3336,8 @@
       "actions": {
         "shortlist": "入围",
         "reject": "淘汰",
-        "restore": "恢复"
+        "restore": "恢复",
+        "delete": "删除"
       }
     },
     "notes": {
@@ -3763,6 +3764,101 @@
       "showing": "显示",
       "prev": "上一页",
       "next": "下一页"
+    },
+    "userDetail": {
+      "notFound": "未找到用户",
+      "backToAdmin": "返回管理",
+      "backToUsers": "返回用户列表",
+      "teamLead": "团队主管",
+      "joined": "加入时间",
+      "provider": "注册方式",
+      "balance": "余额",
+      "interviews": "面试",
+      "matches": "匹配",
+      "teams": "团队",
+      "personalInfo": "个人信息",
+      "subscriptionInfo": "订阅信息",
+      "adminActions": "管理操作",
+      "adjustmentHistory": "调整记录",
+      "edit": "编辑",
+      "cancel": "取消",
+      "save": "保存",
+      "saving": "保存中...",
+      "submit": "提交",
+      "submitting": "提交中...",
+      "actionSuccess": "操作成功",
+      "amountPlaceholder": "金额（+ 充值 / - 扣减）",
+      "interview": "面试",
+      "match": "匹配",
+      "amount": "数量",
+      "maxInterviews": "最大面试数",
+      "maxMatches": "最大匹配数",
+      "immediate": "立即取消",
+      "reasonPlaceholder": "原因（必填）",
+      "noActivity": "暂无活动记录",
+      "recentActivity": "最近活动",
+      "activity": {
+        "list": "列表",
+        "byType": "按类型",
+        "byApi": "按接口",
+        "records": "条记录",
+        "requests": "次请求",
+        "errors": "个错误"
+      },
+      "noUsage": "暂无使用数据",
+      "currentTeams": "当前团队",
+      "noTeams": "未加入任何团队",
+      "lead": "主管",
+      "member": "成员",
+      "assignTeams": "分配团队",
+      "noTeamsAvailable": "暂无可用团队",
+      "saveTeams": "保存团队分配",
+      "teamLeadRole": "团队主管角色",
+      "teamLeadDesc": "选择该用户负责的团队。团队主管可以邀请成员加入团队。",
+      "saveTeamLead": "保存团队主管",
+      "inviteMember": "邀请成员加入团队",
+      "inviteDesc": "通过邮箱邀请用户。如果用户已存在，将直接添加。否则将创建待处理的邀请。",
+      "selectTeam": "选择团队...",
+      "emailPlaceholder": "user@example.com",
+      "invite": "邀请",
+      "inviteAdded": "用户已加入团队",
+      "inviteSent": "邀请已发送",
+      "tabs": {
+        "profile": "个人信息",
+        "activity": "活动记录",
+        "usage": "使用统计",
+        "teams": "团队与角色"
+      },
+      "field": {
+        "name": "姓名",
+        "phone": "电话",
+        "jobTitle": "职位",
+        "company": "公司",
+        "provider": "认证方式",
+        "tier": "套餐",
+        "status": "状态",
+        "periodEnd": "到期日",
+        "stripeId": "Stripe ID"
+      },
+      "actions": {
+        "adjustBalance": "调整余额",
+        "adjustUsage": "调整用量",
+        "setSubscription": "设置订阅",
+        "setLimits": "设置限额",
+        "resetUsage": "重置用量",
+        "setRole": "设置角色",
+        "disable": "禁用用户",
+        "enable": "启用用户"
+      },
+      "usage": {
+        "requests": "请求数（30天）",
+        "tokens": "Token数（30天）",
+        "cost": "费用（30天）",
+        "avgDaily": "日均请求",
+        "requestsChart": "每日请求",
+        "costChart": "每日费用",
+        "tokensChart": "每日Token"
+      }
     }
   },
   "agents": {

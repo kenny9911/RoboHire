@@ -2805,7 +2805,8 @@
       "actions": {
         "shortlist": "Pré-selecionar",
         "reject": "Rejeitar",
-        "restore": "Restaurar"
+        "restore": "Restaurar",
+        "delete": "Excluir"
       }
     },
     "notes": {
@@ -3232,6 +3233,101 @@
       "showing": "Exibindo",
       "prev": "Anterior",
       "next": "Próximo"
+    },
+    "userDetail": {
+      "notFound": "Usuário não encontrado",
+      "backToAdmin": "Voltar ao Admin",
+      "backToUsers": "Voltar aos Usuários",
+      "teamLead": "Líder de Equipe",
+      "joined": "Cadastro",
+      "provider": "Provedor",
+      "balance": "Saldo",
+      "interviews": "Entrevistas",
+      "matches": "Correspondências",
+      "teams": "Equipes",
+      "personalInfo": "Informações Pessoais",
+      "subscriptionInfo": "Assinatura",
+      "adminActions": "Ações do Admin",
+      "adjustmentHistory": "Histórico de Ajustes",
+      "edit": "Editar",
+      "cancel": "Cancelar",
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "submit": "Enviar",
+      "submitting": "Enviando...",
+      "actionSuccess": "Ação concluída com sucesso",
+      "amountPlaceholder": "Valor (+ crédito / - débito)",
+      "interview": "Entrevista",
+      "match": "Correspondência",
+      "amount": "Quantidade",
+      "maxInterviews": "Máx Entrevistas",
+      "maxMatches": "Máx Correspondências",
+      "immediate": "Cancelar imediatamente",
+      "reasonPlaceholder": "Motivo (obrigatório)",
+      "noActivity": "Sem atividade recente",
+      "recentActivity": "Atividade Recente",
+      "activity": {
+        "list": "Lista",
+        "byType": "Por tipo",
+        "byApi": "Por API",
+        "records": "registros",
+        "requests": "requisições",
+        "errors": "erros"
+      },
+      "noUsage": "Sem dados de uso",
+      "currentTeams": "Equipes Atuais",
+      "noTeams": "Não é membro de nenhuma equipe",
+      "lead": "Líder",
+      "member": "Membro",
+      "assignTeams": "Atribuir Equipes",
+      "noTeamsAvailable": "Nenhuma equipe disponível",
+      "saveTeams": "Salvar Atribuição",
+      "teamLeadRole": "Papel de Líder",
+      "teamLeadDesc": "Selecione as equipes que este usuário lidera. Líderes podem convidar membros.",
+      "saveTeamLead": "Salvar Líder",
+      "inviteMember": "Convidar Membro",
+      "inviteDesc": "Convide um usuário por email. Se existir, será adicionado diretamente. Caso contrário, um convite pendente será criado.",
+      "selectTeam": "Selecionar equipe...",
+      "emailPlaceholder": "user@example.com",
+      "invite": "Convidar",
+      "inviteAdded": "Usuário adicionado à equipe",
+      "inviteSent": "Convite enviado",
+      "tabs": {
+        "profile": "Perfil",
+        "activity": "Atividade",
+        "usage": "Uso e Estatísticas",
+        "teams": "Equipes e Papéis"
+      },
+      "field": {
+        "name": "Nome",
+        "phone": "Telefone",
+        "jobTitle": "Cargo",
+        "company": "Empresa",
+        "provider": "Provedor Auth",
+        "tier": "Plano",
+        "status": "Status",
+        "periodEnd": "Fim do Período",
+        "stripeId": "Stripe ID"
+      },
+      "actions": {
+        "adjustBalance": "Ajustar Saldo",
+        "adjustUsage": "Ajustar Uso",
+        "setSubscription": "Definir Assinatura",
+        "setLimits": "Definir Limites",
+        "resetUsage": "Redefinir Uso",
+        "setRole": "Definir Papel",
+        "disable": "Desativar Usuário",
+        "enable": "Ativar Usuário"
+      },
+      "usage": {
+        "requests": "Requisições (30d)",
+        "tokens": "Tokens (30d)",
+        "cost": "Custo (30d)",
+        "avgDaily": "Requisições Diárias Médias",
+        "requestsChart": "Requisições Diárias",
+        "costChart": "Custo Diário",
+        "tokensChart": "Tokens Diários"
+      }
     }
   },
   "agents": {

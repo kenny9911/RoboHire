@@ -3296,7 +3296,8 @@
       "actions": {
         "shortlist": "入圍",
         "reject": "淘汰",
-        "restore": "恢復"
+        "restore": "恢復",
+        "delete": "刪除"
       }
     },
     "notes": {
@@ -3723,6 +3724,101 @@
       "showing": "顯示",
       "prev": "上一頁",
       "next": "下一頁"
+    },
+    "userDetail": {
+      "notFound": "未找到使用者",
+      "backToAdmin": "返回管理",
+      "backToUsers": "返回使用者列表",
+      "teamLead": "團隊主管",
+      "joined": "加入時間",
+      "provider": "註冊方式",
+      "balance": "餘額",
+      "interviews": "面試",
+      "matches": "匹配",
+      "teams": "團隊",
+      "personalInfo": "個人資訊",
+      "subscriptionInfo": "訂閱資訊",
+      "adminActions": "管理操作",
+      "adjustmentHistory": "調整記錄",
+      "edit": "編輯",
+      "cancel": "取消",
+      "save": "儲存",
+      "saving": "儲存中...",
+      "submit": "提交",
+      "submitting": "提交中...",
+      "actionSuccess": "操作成功",
+      "amountPlaceholder": "金額（+ 充值 / - 扣減）",
+      "interview": "面試",
+      "match": "匹配",
+      "amount": "數量",
+      "maxInterviews": "最大面試數",
+      "maxMatches": "最大匹配數",
+      "immediate": "立即取消",
+      "reasonPlaceholder": "原因（必填）",
+      "noActivity": "暫無活動記錄",
+      "recentActivity": "最近活動",
+      "activity": {
+        "list": "列表",
+        "byType": "按類型",
+        "byApi": "按接口",
+        "records": "筆記錄",
+        "requests": "次請求",
+        "errors": "個錯誤"
+      },
+      "noUsage": "暫無使用數據",
+      "currentTeams": "目前團隊",
+      "noTeams": "未加入任何團隊",
+      "lead": "主管",
+      "member": "成員",
+      "assignTeams": "分配團隊",
+      "noTeamsAvailable": "暫無可用團隊",
+      "saveTeams": "儲存團隊分配",
+      "teamLeadRole": "團隊主管角色",
+      "teamLeadDesc": "選擇該使用者負責的團隊。團隊主管可以邀請成員加入團隊。",
+      "saveTeamLead": "儲存團隊主管",
+      "inviteMember": "邀請成員加入團隊",
+      "inviteDesc": "透過信箱邀請使用者。如果使用者已存在，將直接新增。否則將建立待處理的邀請。",
+      "selectTeam": "選擇團隊...",
+      "emailPlaceholder": "user@example.com",
+      "invite": "邀請",
+      "inviteAdded": "使用者已加入團隊",
+      "inviteSent": "邀請已發送",
+      "tabs": {
+        "profile": "個人資訊",
+        "activity": "活動記錄",
+        "usage": "使用統計",
+        "teams": "團隊與角色"
+      },
+      "field": {
+        "name": "姓名",
+        "phone": "電話",
+        "jobTitle": "職位",
+        "company": "公司",
+        "provider": "認證方式",
+        "tier": "方案",
+        "status": "狀態",
+        "periodEnd": "到期日",
+        "stripeId": "Stripe ID"
+      },
+      "actions": {
+        "adjustBalance": "調整餘額",
+        "adjustUsage": "調整用量",
+        "setSubscription": "設定訂閱",
+        "setLimits": "設定限額",
+        "resetUsage": "重置用量",
+        "setRole": "設定角色",
+        "disable": "停用使用者",
+        "enable": "啟用使用者"
+      },
+      "usage": {
+        "requests": "請求數（30天）",
+        "tokens": "Token數（30天）",
+        "cost": "費用（30天）",
+        "avgDaily": "日均請求",
+        "requestsChart": "每日請求",
+        "costChart": "每日費用",
+        "tokensChart": "每日Token"
+      }
     }
   },
   "agents": {

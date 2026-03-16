@@ -49,6 +49,7 @@ const UsageDashboard = lazy(() => import('./pages/UsageDashboard'));
 const CallDetail = lazy(() => import('./pages/CallDetail'));
 const Account = lazy(() => import('./pages/Account'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
 const ResumeDetail = lazy(() => import('./pages/ResumeDetail'));
 const ATSIntegrations = lazy(() => import('./pages/ATSIntegrations'));
 
@@ -141,6 +142,7 @@ function App() {
                 <Route path="integrations" element={<ATSIntegrations />} />
               </Route>
               <Route path="admin" element={<AdminDashboard />} />
+              <Route path="admin/users/:userId" element={<AdminUserDetail />} />
             </Route>
 
             {/* Dashboard (protected, shared sidebar layout) */}

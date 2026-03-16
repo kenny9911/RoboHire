@@ -2805,7 +2805,8 @@
       "actions": {
         "shortlist": "Vorauswählen",
         "reject": "Ablehnen",
-        "restore": "Wiederherstellen"
+        "restore": "Wiederherstellen",
+        "delete": "Löschen"
       }
     },
     "notes": {
@@ -3232,6 +3233,101 @@
       "showing": "Anzeige",
       "prev": "Zurück",
       "next": "Weiter"
+    },
+    "userDetail": {
+      "notFound": "Benutzer nicht gefunden",
+      "backToAdmin": "Zurück zur Verwaltung",
+      "backToUsers": "Zurück zur Benutzerliste",
+      "teamLead": "Teamleiter",
+      "joined": "Beigetreten",
+      "provider": "Anbieter",
+      "balance": "Guthaben",
+      "interviews": "Interviews",
+      "matches": "Zuordnungen",
+      "teams": "Teams",
+      "personalInfo": "Persönliche Informationen",
+      "subscriptionInfo": "Abonnement",
+      "adminActions": "Admin-Aktionen",
+      "adjustmentHistory": "Anpassungsverlauf",
+      "edit": "Bearbeiten",
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "saving": "Speichern...",
+      "submit": "Absenden",
+      "submitting": "Wird gesendet...",
+      "actionSuccess": "Aktion erfolgreich abgeschlossen",
+      "amountPlaceholder": "Betrag (+ Gutschrift / - Belastung)",
+      "interview": "Interview",
+      "match": "Zuordnung",
+      "amount": "Menge",
+      "maxInterviews": "Max Interviews",
+      "maxMatches": "Max Zuordnungen",
+      "immediate": "Sofort kündigen",
+      "reasonPlaceholder": "Grund (erforderlich)",
+      "noActivity": "Keine aktuelle Aktivität",
+      "recentActivity": "Letzte Aktivität",
+      "activity": {
+        "list": "Liste",
+        "byType": "Nach Typ",
+        "byApi": "Nach API",
+        "records": "Einträge",
+        "requests": "Anfragen",
+        "errors": "Fehler"
+      },
+      "noUsage": "Keine Nutzungsdaten",
+      "currentTeams": "Aktuelle Teams",
+      "noTeams": "Kein Teammitglied",
+      "lead": "Leiter",
+      "member": "Mitglied",
+      "assignTeams": "Teams Zuweisen",
+      "noTeamsAvailable": "Keine Teams verfügbar",
+      "saveTeams": "Teamzuweisung Speichern",
+      "teamLeadRole": "Teamleiter-Rolle",
+      "teamLeadDesc": "Wählen Sie die Teams, die dieser Benutzer leitet. Teamleiter können Mitglieder einladen.",
+      "saveTeamLead": "Teamleiter Speichern",
+      "inviteMember": "Mitglied Einladen",
+      "inviteDesc": "Laden Sie einen Benutzer per E-Mail ein. Wenn der Benutzer existiert, wird er direkt hinzugefügt. Andernfalls wird eine ausstehende Einladung erstellt.",
+      "selectTeam": "Team auswählen...",
+      "emailPlaceholder": "user@example.com",
+      "invite": "Einladen",
+      "inviteAdded": "Benutzer zum Team hinzugefügt",
+      "inviteSent": "Einladung gesendet",
+      "tabs": {
+        "profile": "Profil",
+        "activity": "Aktivität",
+        "usage": "Nutzung & Statistiken",
+        "teams": "Teams & Rollen"
+      },
+      "field": {
+        "name": "Name",
+        "phone": "Telefon",
+        "jobTitle": "Berufsbezeichnung",
+        "company": "Unternehmen",
+        "provider": "Auth-Anbieter",
+        "tier": "Plan",
+        "status": "Status",
+        "periodEnd": "Periodenende",
+        "stripeId": "Stripe ID"
+      },
+      "actions": {
+        "adjustBalance": "Guthaben Anpassen",
+        "adjustUsage": "Nutzung Anpassen",
+        "setSubscription": "Abonnement Festlegen",
+        "setLimits": "Limits Festlegen",
+        "resetUsage": "Nutzung Zurücksetzen",
+        "setRole": "Rolle Festlegen",
+        "disable": "Benutzer Deaktivieren",
+        "enable": "Benutzer Aktivieren"
+      },
+      "usage": {
+        "requests": "Anfragen (30T)",
+        "tokens": "Tokens (30T)",
+        "cost": "Kosten (30T)",
+        "avgDaily": "Durchschn. Tägliche Anfragen",
+        "requestsChart": "Tägliche Anfragen",
+        "costChart": "Tägliche Kosten",
+        "tokensChart": "Tägliche Tokens"
+      }
     }
   },
   "agents": {

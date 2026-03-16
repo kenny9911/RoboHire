@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, type FormEvent, type ReactNode } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Area,
   AreaChart,
@@ -1082,6 +1083,7 @@ function SimpleTable({
 }
 
 function UsersTab() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -1287,7 +1289,7 @@ function UsersTab() {
                       className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
                         selectedUser?.id === u.id ? 'bg-indigo-50' : ''
                       }`}
-                      onClick={() => loadUserDetail(u.id)}
+                      onClick={() => navigate(`/product/admin/users/${u.id}`)}
                     >
                       <td className="py-2.5 text-gray-900">{u.email}</td>
                       <td className="py-2.5 text-gray-600">{u.name || '-'}</td>
@@ -3152,7 +3154,9 @@ function SettingsTab() {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>('Overview');
+  const [searchParams] = useSearchParams();
+  const initialTab = TABS.includes(searchParams.get('tab') as Tab) ? (searchParams.get('tab') as Tab) : 'Overview';
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
   if (user?.role !== 'admin') {
     return (

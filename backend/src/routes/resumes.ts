@@ -1211,6 +1211,43 @@ router.patch('/:id/job-matches/:matchId', requireAuth, async (req: Request, res:
   }
 });
 
+// ─── Delete job match (non-application only) ────────────────────────────
+router.delete('/:id/job-matches/:matchId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+      select: { id: true },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const match = await prisma.jobMatch.findUnique({
+      where: { id: req.params.matchId },
+      select: { id: true, status: true, resumeId: true },
+    });
+    if (!match || match.resumeId !== resume.id) {
+      return res.status(404).json({ success: false, error: 'Match not found' });
+    }
+
+    // Only allow deleting non-application records
+    const nonDeletable = ['applied', 'shortlisted', 'invited'];
+    if (nonDeletable.includes(match.status)) {
+      return res.status(400).json({ success: false, error: 'Cannot delete an active application record' });
+    }
+
+    await prisma.jobMatch.delete({ where: { id: req.params.matchId } });
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Delete job match error:', error);
+    return res.status(500).json({ success: false, error: 'Failed to delete job match' });
+  }
+});
+
 // ─── Generate job fit analysis ──────────────────────────────────────────
 router.post('/:id/job-fit', requireAuth, async (req: Request, res: Response) => {
   try {

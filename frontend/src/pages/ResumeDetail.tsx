@@ -656,7 +656,7 @@ export default function ResumeDetail() {
     { key: 'overview', label: t('resumeLibrary.detail.tabs.overview', 'Overview') },
     { key: 'insights', label: t('resumeLibrary.detail.tabs.insights', 'AI Insights') },
     { key: 'jobfit', label: t('resumeLibrary.detail.tabs.jobFit', 'Job Fit') },
-    { key: 'appliedJobs', label: `${t('resumeLibrary.detail.tabs.appliedJobs', 'Applied Jobs')}${appliedJobsData ? ` (${appliedJobsData.jobMatches.length + appliedJobsData.hiringRequestFits.length})` : ''}` },
+    { key: 'appliedJobs', label: `${t('resumeLibrary.detail.tabs.appliedJobs', 'Applied Jobs')}${appliedJobsData ? ` (${appliedJobsData.jobMatches.length + (appliedJobsData.hiringRequestFits || []).filter(f => f.pipelineStatus === 'invited' || f.interview).length})` : ''}` },
     { key: 'invitations', label: `${t('resumeLibrary.detail.tabs.invitations', 'Invitations')}${invitations.length > 0 ? ` (${invitations.length})` : ''}` },
     { key: 'notes', label: t('resumeLibrary.detail.tabs.notes', 'Notes & Tags') },
   ];
@@ -2105,7 +2105,8 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
   }
 
   const jobMatches = data?.jobMatches || [];
-  const hrFits = data?.hiringRequestFits || [];
+  // Only show HR fits that have been invited or have an interview
+  const hrFits = (data?.hiringRequestFits || []).filter(f => f.pipelineStatus === 'invited' || f.interview);
   const totalCount = jobMatches.length + hrFits.length;
 
   if (totalCount === 0) {
@@ -2153,6 +2154,18 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
       onRefresh();
     } catch (err) {
       console.error('Failed to update status:', err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleDelete = async (matchId: string) => {
+    setUpdatingId(matchId);
+    try {
+      await axios.delete(`/api/v1/resumes/${resumeId}/job-matches/${matchId}`);
+      onRefresh();
+    } catch (err) {
+      console.error('Failed to delete match:', err);
     } finally {
       setUpdatingId(null);
     }
@@ -2286,6 +2299,15 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
                           className="text-[11px] font-medium text-gray-500 hover:bg-gray-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
                         >
                           {t('resumeLibrary.appliedJobs.actions.restore', 'Restore')}
+                        </button>
+                      )}
+                      {!['applied', 'shortlisted', 'invited'].includes(m.status) && (
+                        <button
+                          onClick={() => handleDelete(m.id)}
+                          disabled={updatingId === m.id}
+                          className="text-[11px] font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          {t('resumeLibrary.appliedJobs.actions.delete', 'Delete')}
                         </button>
                       )}
                     </div>

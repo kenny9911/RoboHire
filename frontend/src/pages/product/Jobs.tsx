@@ -308,7 +308,11 @@ export default function Jobs() {
   // Close export dropdown on click outside
   useEffect(() => {
     if (!exportDropdownId) return;
-    const handler = () => setExportDropdownId(null);
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-export-dropdown]')) return;
+      setExportDropdownId(null);
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [exportDropdownId]);
@@ -520,15 +524,39 @@ export default function Jobs() {
   const handleExport = async (jobId: string, format: 'pdf' | 'text' | 'markdown' | 'json' = 'json') => {
     try {
       const ext = { pdf: 'pdf', text: 'txt', markdown: 'md', json: 'json' }[format];
+      const contentTypes: Record<string, string> = {
+        pdf: 'application/pdf',
+        text: 'text/plain',
+        markdown: 'text/markdown',
+        json: 'application/json',
+      };
       const res = await axios.get(`/api/v1/jobs/${jobId}/export?format=${format}`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+
+      // Check if the response is actually an error JSON disguised as blob
+      if (res.data instanceof Blob && res.data.type === 'application/json' && format !== 'json') {
+        const text = await res.data.text();
+        try {
+          const errData = JSON.parse(text);
+          if (errData.error) {
+            console.error('Export error:', errData.error);
+            return;
+          }
+        } catch {
+          // not JSON, proceed
+        }
+      }
+
+      const blob = new Blob([res.data], { type: contentTypes[format] || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `job-${jobId.slice(0, 8)}.${ext}`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch {
-      // handle error
+    } catch (err) {
+      console.error('Export failed:', err);
     }
   };
 
@@ -662,7 +690,7 @@ export default function Jobs() {
               </button>
               {/* Export */}
               {editingJob && (
-                <div className="relative">
+                <div className="relative" data-export-dropdown>
                   <button
                     type="button"
                     onClick={() => setExportDropdownId(exportDropdownId === editingJob.id ? null : editingJob.id)}
@@ -1603,7 +1631,7 @@ export default function Jobs() {
                     </svg>
                   </button>
 
-                  <div className="relative">
+                  <div className="relative" data-export-dropdown>
                     <button
                       onClick={() => setExportDropdownId(exportDropdownId === job.id ? null : job.id)}
                       title={t('product.jobs.exportJob', 'Export')}

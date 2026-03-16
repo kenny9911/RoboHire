@@ -843,34 +843,45 @@ router.get('/:id/export', requireAuth, async (req, res) => {
     const safeTitle = job.title.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g, '-').replace(/-+/g, '-').substring(0, 50);
     const slug = `${safeTitle}-${job.id.slice(0, 8)}`;
 
+    const encodedSlug = encodeURIComponent(slug);
+    const asciiFallback = slug.replace(/[^\x20-\x7E]/g, '').replace(/^-+|-+$/g, '') || 'job-export';
+
     if (format === 'pdf') {
       const { jobToPdf } = await import('../services/JobExportService.js');
       const doc = jobToPdf(job as any);
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${slug}.pdf"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}.pdf"; filename*=UTF-8''${encodedSlug}.pdf`);
+      doc.on('error', (err: Error) => {
+        console.error('PDF generation error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, error: 'PDF generation failed' });
+        }
+      });
       doc.pipe(res);
       doc.end();
     } else if (format === 'text' || format === 'txt') {
       const { jobToText } = await import('../services/JobExportService.js');
       const text = jobToText(job as any);
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="${slug}.txt"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}.txt"; filename*=UTF-8''${encodedSlug}.txt`);
       res.send(text);
     } else if (format === 'markdown' || format === 'md') {
       const { jobToMarkdown } = await import('../services/JobExportService.js');
       const md = jobToMarkdown(job as any);
       res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="${slug}.md"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}.md"; filename*=UTF-8''${encodedSlug}.md`);
       res.send(md);
     } else {
       // Default: JSON
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="${slug}.json"`);
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}.json"; filename*=UTF-8''${encodedSlug}.json`);
       res.json(job);
     }
   } catch (error) {
-    logger.error('JOBS', 'Export failed', { error: error instanceof Error ? error.message : String(error) });
-    res.status(500).json({ success: false, error: 'Failed to export job' });
+    const errStr = error instanceof Error ? (error.stack || error.message) : String(error);
+    console.error("DEBUG EXPORT ERROR:", errStr);
+    logger.error('JOBS', 'Export failed', { error: errStr });
+    res.status(500).json({ success: false, error: 'Failed to export job', details: errStr });
   }
 });
 

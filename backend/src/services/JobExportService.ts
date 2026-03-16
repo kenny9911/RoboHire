@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -6,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FONT_DIR = path.resolve(__dirname, '..', '..', 'assets', 'fonts');
 const FONT_REGULAR = path.join(FONT_DIR, 'NotoSansSC-Regular.ttf');
 const FONT_BOLD = path.join(FONT_DIR, 'NotoSansSC-Bold.ttf');
+const HAS_FONTS = fs.existsSync(FONT_REGULAR) && fs.existsSync(FONT_BOLD);
 
 type ExportableJob = {
   title: string;
@@ -178,23 +180,28 @@ export function jobToMarkdown(job: ExportableJob): string {
 export function jobToPdf(job: ExportableJob): PDFDocument {
   const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
 
-  doc.registerFont('NotoSans', FONT_REGULAR);
-  doc.registerFont('NotoSansBold', FONT_BOLD);
+  const fontRegular = HAS_FONTS ? 'NotoSans' : 'Helvetica';
+  const fontBold = HAS_FONTS ? 'NotoSansBold' : 'Helvetica-Bold';
+
+  if (HAS_FONTS) {
+    doc.registerFont('NotoSans', FONT_REGULAR);
+    doc.registerFont('NotoSansBold', FONT_BOLD);
+  }
 
   const PAGE_WIDTH = doc.page.width - 100; // 50 margin each side
 
   // Title
-  doc.font('NotoSansBold').fontSize(20).text(job.title, { width: PAGE_WIDTH });
+  doc.font(fontBold).fontSize(20).text(job.title, { width: PAGE_WIDTH });
   if (job.companyName) {
     doc.moveDown(0.3);
-    doc.font('NotoSans').fontSize(12).fillColor('#666666').text(job.companyName, { width: PAGE_WIDTH });
+    doc.font(fontRegular).fontSize(12).fillColor('#666666').text(job.companyName, { width: PAGE_WIDTH });
   }
 
   // Meta tags
   const tags = metaTags(job);
   if (tags.length) {
     doc.moveDown(0.5);
-    doc.font('NotoSans').fontSize(9).fillColor('#888888').text(tags.join('  |  '), { width: PAGE_WIDTH });
+    doc.font(fontRegular).fontSize(9).fillColor('#888888').text(tags.join('  |  '), { width: PAGE_WIDTH });
   }
 
   doc.moveDown(1);
@@ -206,9 +213,9 @@ export function jobToPdf(job: ExportableJob): PDFDocument {
     if (doc.y > doc.page.height - 130) {
       doc.addPage();
     }
-    doc.font('NotoSansBold').fontSize(13).text(title, { width: PAGE_WIDTH });
+    doc.font(fontBold).fontSize(13).text(title, { width: PAGE_WIDTH });
     doc.moveDown(0.3);
-    doc.font('NotoSans').fontSize(10).text(content, { width: PAGE_WIDTH, lineGap: 3 });
+    doc.font(fontRegular).fontSize(10).text(content, { width: PAGE_WIDTH, lineGap: 3 });
     doc.moveDown(0.8);
   };
 

@@ -125,7 +125,7 @@ router.get('/users', async (req, res) => {
 
 /**
  * GET /api/v1/admin/users/:userId
- * Get full user details including adjustment history
+ * Get full user details including adjustment history, team memberships, and usage stats
  */
 router.get('/users/:userId', async (req, res) => {
   try {
@@ -135,10 +135,13 @@ router.get('/users/:userId', async (req, res) => {
         id: true,
         email: true,
         name: true,
+        phone: true,
+        jobTitle: true,
         company: true,
         avatar: true,
         role: true,
         provider: true,
+        teamId: true,
         createdAt: true,
         updatedAt: true,
         stripeCustomerId: true,
@@ -160,14 +163,69 @@ router.get('/users/:userId', async (req, res) => {
       return;
     }
 
-    const adjustments = await prisma.adminAdjustment.findMany({
-      where: { userId: user.id },
-      include: {
-        admin: { select: { id: true, email: true, name: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    });
+    const [adjustments, teamMemberships, recentActivities, usageStats] = await Promise.all([
+      prisma.adminAdjustment.findMany({
+        where: { userId: user.id },
+        include: { admin: { select: { id: true, email: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+      prisma.teamMember.findMany({
+        where: { userId: user.id },
+        include: { team: { select: { id: true, name: true, description: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.apiRequestLog.findMany({
+        where: { userId: user.id },
+        select: {
+          id: true,
+          endpoint: true,
+          method: true,
+          module: true,
+          apiName: true,
+          statusCode: true,
+          durationMs: true,
+          totalTokens: true,
+          cost: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+      }),
+      // Usage stats: aggregate API request logs for the last 30 days
+      (async () => {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const [totalRequests, totalTokensAgg, totalCostAgg, dailyUsage] = await Promise.all([
+          prisma.apiRequestLog.count({ where: { userId: user.id, createdAt: { gte: thirtyDaysAgo } } }),
+          prisma.apiRequestLog.aggregate({ where: { userId: user.id, createdAt: { gte: thirtyDaysAgo } }, _sum: { totalTokens: true } }),
+          prisma.apiRequestLog.aggregate({ where: { userId: user.id, createdAt: { gte: thirtyDaysAgo } }, _sum: { cost: true } }),
+          prisma.apiRequestLog.groupBy({
+            by: ['createdAt'],
+            where: { userId: user.id, createdAt: { gte: thirtyDaysAgo } },
+            _count: { _all: true },
+            _sum: { totalTokens: true, cost: true },
+            orderBy: { createdAt: 'asc' },
+          }).then(rows => {
+            const byDay: Record<string, { count: number; tokens: number; cost: number }> = {};
+            for (const r of rows) {
+              const day = r.createdAt.toISOString().slice(0, 10);
+              if (!byDay[day]) byDay[day] = { count: 0, tokens: 0, cost: 0 };
+              byDay[day].count += r._count?._all ?? 0;
+              byDay[day].tokens += r._sum?.totalTokens ?? 0;
+              byDay[day].cost += r._sum?.cost ?? 0;
+            }
+            return Object.entries(byDay).map(([date, v]) => ({ date, ...v }));
+          }),
+        ]);
+        return {
+          totalRequests,
+          totalTokens: totalTokensAgg._sum?.totalTokens ?? 0,
+          totalCost: totalCostAgg._sum?.cost ?? 0,
+          dailyUsage,
+        };
+      })(),
+    ]);
 
     const planLimits = await getPlanLimits();
     const userWithLimits = {
@@ -175,7 +233,20 @@ router.get('/users/:userId', async (req, res) => {
       ...resolveUserUsageLimitsFromPlan(user, planLimits),
     };
 
-    res.json({ success: true, data: { user: userWithLimits, adjustments } });
+    // Derive team lead teams
+    const teamLeadTeams = teamMemberships.filter(m => m.role === 'lead').map(m => m.team);
+
+    res.json({
+      success: true,
+      data: {
+        user: userWithLimits,
+        adjustments,
+        teamMemberships,
+        teamLeadTeams,
+        recentActivities,
+        usageStats,
+      },
+    });
   } catch (error) {
     console.error('Admin get user error:', error);
     res.status(500).json({ success: false, error: 'Failed to get user details' });
@@ -1601,6 +1672,140 @@ router.post('/users/:userId/set-role', async (req, res) => {
   } catch (error) {
     console.error('Admin set role error:', error);
     res.status(500).json({ success: false, error: 'Failed to set role' });
+  }
+});
+
+/**
+ * PATCH /api/v1/admin/users/:userId/profile
+ * Update user profile fields
+ */
+router.patch('/users/:userId/profile', async (req, res) => {
+  try {
+    const { name, phone, jobTitle, company } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: req.params.userId }, select: { id: true } });
+    if (!user) { res.status(404).json({ success: false, error: 'User not found' }); return; }
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(name !== undefined ? { name: name?.trim() || null } : {}),
+        ...(phone !== undefined ? { phone: phone?.trim() || null } : {}),
+        ...(jobTitle !== undefined ? { jobTitle: jobTitle?.trim() || null } : {}),
+        ...(company !== undefined ? { company: company?.trim() || null } : {}),
+      },
+      select: { id: true, name: true, phone: true, jobTitle: true, company: true },
+    });
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    console.error('Admin update user profile error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update profile' });
+  }
+});
+
+/**
+ * POST /api/v1/admin/users/:userId/assign-teams
+ * Set the teams a user belongs to. Body: { teamIds: string[] }
+ */
+router.post('/users/:userId/assign-teams', async (req, res) => {
+  try {
+    const { teamIds } = req.body;
+    if (!Array.isArray(teamIds)) {
+      res.status(400).json({ success: false, error: 'teamIds array is required' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.params.userId }, select: { id: true, teamId: true } });
+    if (!user) { res.status(404).json({ success: false, error: 'User not found' }); return; }
+
+    // Remove all existing memberships
+    await prisma.teamMember.deleteMany({ where: { userId: user.id } });
+
+    // Create new memberships (preserve lead role if re-assigning)
+    if (teamIds.length > 0) {
+      await prisma.teamMember.createMany({
+        data: teamIds.map((teamId: string) => ({ userId: user.id, teamId, role: 'member' })),
+        skipDuplicates: true,
+      });
+      // Also set the primary teamId to the first team
+      await prisma.user.update({ where: { id: user.id }, data: { teamId: teamIds[0] } });
+    } else {
+      await prisma.user.update({ where: { id: user.id }, data: { teamId: null } });
+    }
+
+    const memberships = await prisma.teamMember.findMany({
+      where: { userId: user.id },
+      include: { team: { select: { id: true, name: true, description: true } } },
+    });
+
+    res.json({ success: true, data: memberships });
+  } catch (error) {
+    console.error('Admin assign teams error:', error);
+    res.status(500).json({ success: false, error: 'Failed to assign teams' });
+  }
+});
+
+/**
+ * POST /api/v1/admin/users/:userId/set-team-lead
+ * Set which teams this user leads. Body: { teamIds: string[], reason: string }
+ */
+router.post('/users/:userId/set-team-lead', async (req, res) => {
+  try {
+    const { teamIds, reason } = req.body;
+    if (!Array.isArray(teamIds)) {
+      res.status(400).json({ success: false, error: 'teamIds array is required' });
+      return;
+    }
+    if (!reason || typeof reason !== 'string' || !reason.trim()) {
+      res.status(400).json({ success: false, error: 'reason is required' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.params.userId }, select: { id: true } });
+    if (!user) { res.status(404).json({ success: false, error: 'User not found' }); return; }
+
+    // Reset all existing lead roles to member
+    await prisma.teamMember.updateMany({
+      where: { userId: user.id, role: 'lead' },
+      data: { role: 'member' },
+    });
+
+    if (teamIds.length > 0) {
+      // Ensure user is a member of each team, then set as lead
+      for (const teamId of teamIds) {
+        await prisma.teamMember.upsert({
+          where: { userId_teamId: { userId: user.id, teamId } },
+          create: { userId: user.id, teamId, role: 'lead' },
+          update: { role: 'lead' },
+        });
+      }
+    }
+
+    // Log the adjustment
+    const oldLeadTeams = await prisma.teamMember.findMany({
+      where: { userId: user.id, role: 'lead' },
+      include: { team: { select: { name: true } } },
+    });
+
+    await prisma.adminAdjustment.create({
+      data: {
+        userId: user.id,
+        adminId: req.user!.id,
+        type: 'subscription',
+        oldValue: '{}',
+        newValue: JSON.stringify({ teamLeadTeams: oldLeadTeams.map(m => m.team.name) }),
+        reason: `[Team Lead] ${reason.trim()}`,
+      },
+    });
+
+    const memberships = await prisma.teamMember.findMany({
+      where: { userId: user.id },
+      include: { team: { select: { id: true, name: true, description: true } } },
+    });
+
+    res.json({ success: true, data: memberships });
+  } catch (error) {
+    console.error('Admin set team lead error:', error);
+    res.status(500).json({ success: false, error: 'Failed to set team lead' });
   }
 });
 

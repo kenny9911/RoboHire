@@ -3260,7 +3260,8 @@
       "actions": {
         "shortlist": "候補入り",
         "reject": "不採用",
-        "restore": "復元"
+        "restore": "復元",
+        "delete": "削除"
       }
     },
     "notes": {
@@ -3687,6 +3688,101 @@
       "showing": "表示中",
       "prev": "前へ",
       "next": "次へ"
+    },
+    "userDetail": {
+      "notFound": "ユーザーが見つかりません",
+      "backToAdmin": "管理画面に戻る",
+      "backToUsers": "ユーザー一覧に戻る",
+      "teamLead": "チームリーダー",
+      "joined": "登録日",
+      "provider": "認証方法",
+      "balance": "残高",
+      "interviews": "面接",
+      "matches": "マッチング",
+      "teams": "チーム",
+      "personalInfo": "個人情報",
+      "subscriptionInfo": "サブスクリプション",
+      "adminActions": "管理操作",
+      "adjustmentHistory": "調整履歴",
+      "edit": "編集",
+      "cancel": "キャンセル",
+      "save": "保存",
+      "saving": "保存中...",
+      "submit": "送信",
+      "submitting": "送信中...",
+      "actionSuccess": "操作が完了しました",
+      "amountPlaceholder": "金額（+ チャージ / - 引き落とし）",
+      "interview": "面接",
+      "match": "マッチング",
+      "amount": "数量",
+      "maxInterviews": "面接上限",
+      "maxMatches": "マッチング上限",
+      "immediate": "即時キャンセル",
+      "reasonPlaceholder": "理由（必須）",
+      "noActivity": "最近のアクティビティはありません",
+      "recentActivity": "最近のアクティビティ",
+      "activity": {
+        "list": "リスト",
+        "byType": "タイプ別",
+        "byApi": "API別",
+        "records": "件",
+        "requests": "リクエスト",
+        "errors": "エラー"
+      },
+      "noUsage": "利用データなし",
+      "currentTeams": "所属チーム",
+      "noTeams": "チームに所属していません",
+      "lead": "リーダー",
+      "member": "メンバー",
+      "assignTeams": "チーム割り当て",
+      "noTeamsAvailable": "利用可能なチームがありません",
+      "saveTeams": "チーム割り当てを保存",
+      "teamLeadRole": "チームリーダー権限",
+      "teamLeadDesc": "このユーザーがリーダーを務めるチームを選択します。チームリーダーはメンバーを招待できます。",
+      "saveTeamLead": "チームリーダーを保存",
+      "inviteMember": "チームにメンバーを招待",
+      "inviteDesc": "メールでユーザーを招待します。ユーザーが存在する場合は直接追加されます。それ以外は保留中の招待が作成されます。",
+      "selectTeam": "チームを選択...",
+      "emailPlaceholder": "user@example.com",
+      "invite": "招待",
+      "inviteAdded": "ユーザーをチームに追加しました",
+      "inviteSent": "招待を送信しました",
+      "tabs": {
+        "profile": "プロフィール",
+        "activity": "アクティビティ",
+        "usage": "利用状況",
+        "teams": "チームと権限"
+      },
+      "field": {
+        "name": "氏名",
+        "phone": "電話番号",
+        "jobTitle": "役職",
+        "company": "会社",
+        "provider": "認証プロバイダー",
+        "tier": "プラン",
+        "status": "ステータス",
+        "periodEnd": "期間終了",
+        "stripeId": "Stripe ID"
+      },
+      "actions": {
+        "adjustBalance": "残高調整",
+        "adjustUsage": "利用量調整",
+        "setSubscription": "サブスクリプション設定",
+        "setLimits": "上限設定",
+        "resetUsage": "利用量リセット",
+        "setRole": "権限設定",
+        "disable": "ユーザー無効化",
+        "enable": "ユーザー有効化"
+      },
+      "usage": {
+        "requests": "リクエスト数（30日）",
+        "tokens": "トークン数（30日）",
+        "cost": "コスト（30日）",
+        "avgDaily": "日平均リクエスト",
+        "requestsChart": "日別リクエスト",
+        "costChart": "日別コスト",
+        "tokensChart": "日別トークン"
+      }
     }
   },
   "agents": {

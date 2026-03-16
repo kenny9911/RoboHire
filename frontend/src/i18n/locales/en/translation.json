@@ -3217,7 +3217,8 @@
       "actions": {
         "shortlist": "Shortlist",
         "reject": "Reject",
-        "restore": "Restore"
+        "restore": "Restore",
+        "delete": "Delete"
       }
     },
     "notes": {
@@ -3644,6 +3645,101 @@
       "showing": "Showing",
       "prev": "Prev",
       "next": "Next"
+    },
+    "userDetail": {
+      "notFound": "User not found",
+      "backToAdmin": "Back to Admin",
+      "backToUsers": "Back to Users",
+      "teamLead": "Team Lead",
+      "joined": "Joined",
+      "provider": "Provider",
+      "balance": "Balance",
+      "interviews": "Interviews",
+      "matches": "Matches",
+      "teams": "Teams",
+      "personalInfo": "Personal Information",
+      "subscriptionInfo": "Subscription",
+      "adminActions": "Admin Actions",
+      "adjustmentHistory": "Adjustment History",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "submit": "Submit",
+      "submitting": "Submitting...",
+      "actionSuccess": "Action completed successfully",
+      "amountPlaceholder": "Amount (+ credit / - debit)",
+      "interview": "Interview",
+      "match": "Match",
+      "amount": "Amount",
+      "maxInterviews": "Max Interviews",
+      "maxMatches": "Max Matches",
+      "immediate": "Cancel immediately",
+      "reasonPlaceholder": "Reason (required)",
+      "noActivity": "No recent activity",
+      "recentActivity": "Recent Activity",
+      "activity": {
+        "list": "List",
+        "byType": "By Type",
+        "byApi": "By API",
+        "records": "records",
+        "requests": "requests",
+        "errors": "errors"
+      },
+      "noUsage": "No usage data",
+      "currentTeams": "Current Team Memberships",
+      "noTeams": "Not a member of any team",
+      "lead": "Lead",
+      "member": "Member",
+      "assignTeams": "Assign Teams",
+      "noTeamsAvailable": "No teams available",
+      "saveTeams": "Save Team Assignment",
+      "teamLeadRole": "Team Lead Role",
+      "teamLeadDesc": "Select which teams this user leads. Team leads can invite members to their teams.",
+      "saveTeamLead": "Save Team Lead",
+      "inviteMember": "Invite Member to Team",
+      "inviteDesc": "Invite a user by email. If the user exists, they will be added directly. Otherwise, a pending invitation will be created.",
+      "selectTeam": "Select team...",
+      "emailPlaceholder": "user@example.com",
+      "invite": "Invite",
+      "inviteAdded": "User added to team",
+      "inviteSent": "Invitation sent",
+      "tabs": {
+        "profile": "Profile",
+        "activity": "Activity",
+        "usage": "Usage & Stats",
+        "teams": "Teams & Roles"
+      },
+      "field": {
+        "name": "Name",
+        "phone": "Phone",
+        "jobTitle": "Job Title",
+        "company": "Company",
+        "provider": "Auth Provider",
+        "tier": "Plan",
+        "status": "Status",
+        "periodEnd": "Period End",
+        "stripeId": "Stripe ID"
+      },
+      "actions": {
+        "adjustBalance": "Adjust Balance",
+        "adjustUsage": "Adjust Usage",
+        "setSubscription": "Set Subscription",
+        "setLimits": "Set Limits",
+        "resetUsage": "Reset Usage",
+        "setRole": "Set Role",
+        "disable": "Disable User",
+        "enable": "Enable User"
+      },
+      "usage": {
+        "requests": "Requests (30d)",
+        "tokens": "Tokens (30d)",
+        "cost": "Cost (30d)",
+        "avgDaily": "Avg Daily Requests",
+        "requestsChart": "Daily Requests",
+        "costChart": "Daily Cost",
+        "tokensChart": "Daily Tokens"
+      }
     }
   },
   "agents": {

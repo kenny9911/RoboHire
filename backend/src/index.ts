@@ -33,6 +33,7 @@ import activityRouter from './routes/activity.js';
 import agentsRouter from './routes/agents.js';
 import dashboardRouter from './routes/dashboard.js';
 import gohireInterviewsRouter from './routes/gohireInterviews.js';
+import teamsRouter from './routes/teams.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
 import prisma from './lib/prisma.js';
@@ -93,6 +94,7 @@ app.use('/api/v1/activity', activityRouter);
 app.use('/api/v1/agents', agentsRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/gohire-interviews', gohireInterviewsRouter);
+app.use('/api/v1/teams', teamsRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {
