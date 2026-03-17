@@ -389,11 +389,6 @@ export default function HiringRequests() {
     }
   }, [confirmDeleteId, fetchRequests, fetchStats, page, totalCount]);
 
-  const [jobDuplicateModal, setJobDuplicateModal] = useState<{
-    requestId: string; title: string; existingJobId: string;
-  } | null>(null);
-  const [customJobTitle, setCustomJobTitle] = useState('');
-  const [showRenameInput, setShowRenameInput] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [creatingJobId, setCreatingJobId] = useState<string | null>(null);
 
@@ -420,49 +415,13 @@ export default function HiringRequests() {
     }
   };
 
-  const doOverwriteJob = async (existingJobId: string, requestId: string) => {
-    setCreatingJobId(requestId);
-    try {
-      const hr = requests.find(r => r.id === requestId);
-      if (!hr) return;
-      const res = await axios.post(`/api/v1/jobs/from-request/${requestId}`, {
-        overwriteJobId: existingJobId,
-        preferredLanguage: normalizeInterviewLanguage(i18n.language),
-      });
-      const jobTitle = res.data?.data?.title || hr.title;
-      showSuccess(t('product.hiring.jobOverwriteSuccess', 'Job "{{title}}" updated successfully!', { title: jobTitle }));
-    } catch {
-      // handle error
-    } finally {
-      setCreatingJobId(null);
-    }
-  };
 
   const handleCreateJob = useCallback(async (requestId: string) => {
     const hr = requests.find(r => r.id === requestId);
     if (!hr) return;
     setCreatingJobId(requestId);
-    try {
-      const linkedRes = await axios.get('/api/v1/jobs', { params: { hiringRequestId: requestId, limit: 1 } });
-      if (linkedRes.data.data?.length > 0) {
-        showSuccess(t('product.hiring.jobAlreadyExists', 'A job for "{{title}}" already exists.', { title: linkedRes.data.data[0].title || hr.title }));
-        setCreatingJobId(null);
-        return;
-      }
-
-      const checkRes = await axios.get('/api/v1/jobs', { params: { title: hr.title, limit: 1 } });
-      if (checkRes.data.data?.length > 0) {
-        setCreatingJobId(null);
-        setJobDuplicateModal({ requestId, title: hr.title, existingJobId: checkRes.data.data[0].id });
-        setCustomJobTitle('');
-        setShowRenameInput(false);
-        return;
-      }
-    } catch {
-      // If check fails, proceed with creation
-    }
     await doCreateJob(requestId);
-  }, [requests, t]);
+  }, [requests]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -617,79 +576,6 @@ export default function HiringRequests() {
 
       <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
 
-      {/* Job Duplicate Modal */}
-      {jobDuplicateModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">{t('product.hiring.duplicateJob.title', 'Duplicate Job Title')}</h3>
-            </div>
-            <p className="mb-6 text-sm text-gray-600">
-              {t('product.hiring.duplicateJob.message', 'A job with the title "{{title}}" already exists. Would you like to overwrite it or create with a different name?', { title: jobDuplicateModal.title })}
-            </p>
-
-            {showRenameInput ? (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('product.hiring.duplicateJob.newTitle', 'New Title')}</label>
-                <input
-                  type="text"
-                  value={customJobTitle}
-                  onChange={(e) => setCustomJobTitle(e.target.value)}
-                  placeholder={jobDuplicateModal.title}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                  autoFocus
-                />
-              </div>
-            ) : null}
-
-            <div className="flex flex-col gap-2">
-              {showRenameInput ? (
-                <button
-                  onClick={async () => {
-                    const title = customJobTitle.trim();
-                    if (!title) return;
-                    await doCreateJob(jobDuplicateModal.requestId, title);
-                    setJobDuplicateModal(null);
-                  }}
-                  disabled={!customJobTitle.trim()}
-                  className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {t('product.hiring.duplicateJob.createNew', 'Create Job')}
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={async () => {
-                      await doOverwriteJob(jobDuplicateModal.existingJobId, jobDuplicateModal.requestId);
-                      setJobDuplicateModal(null);
-                    }}
-                    className="w-full rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700 transition-colors"
-                  >
-                    {t('product.hiring.duplicateJob.overwrite', 'Overwrite Existing')}
-                  </button>
-                  <button
-                    onClick={() => setShowRenameInput(true)}
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    {t('product.hiring.duplicateJob.rename', 'Use a Different Name')}
-                  </button>
-                </>
-              )}
-              <button
-                onClick={() => setJobDuplicateModal(null)}
-                className="w-full rounded-lg px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                {t('product.hiring.duplicateJob.cancel', 'Cancel')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete Confirmation Modal */}
       {confirmDeleteId && (

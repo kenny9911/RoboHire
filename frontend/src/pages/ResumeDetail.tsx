@@ -6,6 +6,29 @@ import SEO from '../components/SEO';
 import ResumeUploadModal from '../components/ResumeUploadModal';
 import RefineDiffView from '../components/RefineDiffView';
 import { ResumeRenderer, parsedDataToMarkdown } from '../components/ResumeRenderer';
+import {
+  IconChevronLeft,
+  IconChevronDown,
+  IconFiles,
+  IconX,
+  IconVideo,
+  IconPencil,
+  IconUpload,
+  IconChartBar,
+  IconArrowsExchange,
+  IconAdjustments,
+  IconArchive,
+  IconEye,
+  IconCircleCheck,
+  IconTrash,
+  IconArrowBack,
+  IconPlus,
+  IconAlertCircle,
+  IconRefresh,
+  IconBulb,
+  IconMail,
+  IconBriefcase,
+} from '@tabler/icons-react';
 
 type Tab = 'overview' | 'insights' | 'jobfit' | 'appliedJobs' | 'invitations' | 'notes';
 
@@ -642,7 +665,7 @@ export default function ResumeDetail() {
     return (
       <div className="max-w-4xl mx-auto">
         <button onClick={() => navigate('/product/talent')} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-6">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          <IconChevronLeft size={16} stroke={2} />
           {t('resumeLibrary.detail.back', 'Back to Resumes')}
         </button>
         <div className="bg-red-50 text-red-700 rounded-xl p-6 text-center">{error || 'Resume not found'}</div>
@@ -683,7 +706,7 @@ export default function ResumeDetail() {
 
       {/* Back */}
       <button onClick={() => navigate('/product/talent')} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-6">
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        <IconChevronLeft size={16} stroke={2} />
         {t('resumeLibrary.detail.back', 'Back to Resumes')}
       </button>
 
@@ -709,16 +732,12 @@ export default function ResumeDetail() {
                       : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
-                  </svg>
+                  <IconFiles size={14} stroke={2} />
                   {isPreviewingVersion
                     ? (selectedVersionInfo?.versionName || selectedVersionInfo?.name || t('resumeLibrary.detail.versions.autoSave', 'Auto-save'))
                     : t('resumeLibrary.detail.versions.current', 'Current Version')}
                   <span className="text-[10px] text-gray-400 ml-0.5">({versions.length + 1})</span>
-                  <svg className={`w-3 h-3 transition-transform ${versionDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                  </svg>
+                  <IconChevronDown size={12} stroke={2} className={`transition-transform ${versionDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {versionDropdownOpen && (
@@ -771,9 +790,7 @@ export default function ResumeDetail() {
                             {deleteVersionLoading === v.id ? (
                               <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-red-400" />
                             ) : (
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                              </svg>
+                              <IconX size={14} stroke={2} />
                             )}
                           </button>
                         </div>
@@ -792,72 +809,44 @@ export default function ResumeDetail() {
                   tone={interviewActionTone}
                   disabled={isPreviewingVersion}
                   label={inviteActionLabel}
-                  icon={(
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6.75A2.25 2.25 0 0013.5 4.5h-6a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 007.5 19.5h6a2.25 2.25 0 002.25-2.25V13.5l4.5 4.5v-12l-4.5 4.5z" />
-                    </svg>
-                  )}
+                  icon={<IconVideo size={14} stroke={2} />}
                 />
                 <HeaderActionButton
                   onClick={enterEditMode}
                   disabled={isPreviewingVersion}
                   label={editActionLabel}
-                  icon={(
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                    </svg>
-                  )}
+                  icon={<IconPencil size={14} stroke={2} />}
                 />
                 <HeaderActionButton
                   onClick={() => setReplaceUploadOpen(true)}
                   disabled={isPreviewingVersion}
                   label={reuploadActionLabel}
-                  icon={(
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V4.5m0 0l-3.75 3.75M12 4.5l3.75 3.75M3.75 15.75v2.25A2.25 2.25 0 006 20.25h12A2.25 2.25 0 0020.25 18v-2.25" />
-                    </svg>
-                  )}
+                  icon={<IconUpload size={14} stroke={2} />}
                 />
                 <HeaderActionButton
                   onClick={() => generateInsights(true)}
                   disabled={insightLoading || isPreviewingVersion}
                   label={regenerateActionLabel}
-                  icon={(
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 19.5h16.5M6.75 16.5v-4.5m5.25 4.5V9m5.25 7.5V6" />
-                    </svg>
-                  )}
+                  icon={<IconChartBar size={14} stroke={2} />}
                 />
                 <HeaderActionButton
                   onClick={analyzeJobFit}
                   disabled={jobFitLoading || isPreviewingVersion}
                   label={rematchActionLabel}
-                  icon={(
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h9m0 0-2.25-2.25M16.5 7.5l-2.25 2.25M16.5 16.5h-9m0 0 2.25-2.25M7.5 16.5l2.25 2.25" />
-                    </svg>
-                  )}
+                  icon={<IconArrowsExchange size={14} stroke={2} />}
                 />
                 <HeaderActionButton
                   onClick={openRefineModal}
                   disabled={isPreviewingVersion}
                   label={refineActionLabel}
-                  icon={(
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 7.5h15m-12 4.5h9m-6 4.5h3" />
-                    </svg>
-                  )}
+                  icon={<IconAdjustments size={14} stroke={2} />}
                 />
                 <HeaderActionButton
                   onClick={handleArchive}
                   tone="destructive"
                   disabled={isPreviewingVersion}
                   label={archiveActionLabel}
-                  icon={(
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5v10.125A2.625 2.625 0 0117.625 20.25H6.375A2.625 2.625 0 013.75 17.625V7.5m16.5 0H3.75m16.5 0-1.06-2.118A1.125 1.125 0 0018.184 4.5H5.816c-.426 0-.815.24-1.006.62L3.75 7.5" />
-                    </svg>
-                  )}
+                  icon={<IconArchive size={14} stroke={2} />}
                 />
               </div>
             </div>
@@ -884,10 +873,7 @@ export default function ResumeDetail() {
       {isPreviewingVersion && (
         <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.007-9.963-7.178z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            <IconEye size={16} stroke={2} className="text-blue-600" />
             <span className="text-sm font-medium text-blue-800">
               {t('resumeLibrary.detail.versions.previewing', 'Previewing')}: {selectedVersionInfo?.versionName || selectedVersionInfo?.name || t('resumeLibrary.detail.versions.autoSave', 'Auto-save')}
             </span>
@@ -904,9 +890,7 @@ export default function ResumeDetail() {
               {restoreLoading ? (
                 <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-emerald-600" />
               ) : (
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <IconCircleCheck size={14} stroke={2} />
               )}
               {t('resumeLibrary.detail.versions.setActive', 'Set as Active')}
             </button>
@@ -918,9 +902,7 @@ export default function ResumeDetail() {
               {deleteVersionLoading ? (
                 <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-red-400" />
               ) : (
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                </svg>
+                <IconTrash size={14} stroke={2} />
               )}
               {t('resumeLibrary.detail.versions.delete', 'Delete')}
             </button>
@@ -928,9 +910,7 @@ export default function ResumeDetail() {
               onClick={() => selectVersion(null)}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-              </svg>
+              <IconArrowBack size={14} stroke={2} />
               {t('resumeLibrary.detail.versions.backToCurrent', 'Back to Current')}
             </button>
           </div>
@@ -1013,7 +993,7 @@ export default function ResumeDetail() {
                 onClick={() => setInviteModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <IconX size={20} stroke={2} />
               </button>
             </div>
 
@@ -1083,7 +1063,7 @@ export default function ResumeDetail() {
                 <div className="space-y-4">
                   <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <IconCircleCheck size={20} stroke={2} className="text-emerald-600" />
                       <span className="text-sm font-semibold text-emerald-800">{t('resumeLibrary.detail.invite.success', 'Invitation sent successfully!')}</span>
                     </div>
                     {(inviteResult as any).job_title && (
@@ -1141,7 +1121,7 @@ export default function ResumeDetail() {
                 {t('resumeLibrary.detail.refine.title', 'Refine Resume for Job')}
               </h3>
               <button onClick={() => { setRefineModalOpen(false); setRefineResult(null); }} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <IconX size={20} stroke={2} />
               </button>
             </div>
 
@@ -1412,7 +1392,7 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
           {(form.experience || []).map((exp: any, i: number) => (
             <div key={i} className="relative border border-gray-100 rounded-lg p-4 bg-gray-50/50">
               <button onClick={() => removeExperience(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <IconX size={16} stroke={2} />
               </button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -1451,7 +1431,7 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
             </div>
           ))}
           <button onClick={addExperience} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            <IconPlus size={16} stroke={2} />
             {t('resumeLibrary.detail.edit.addExperience', 'Add Experience')}
           </button>
         </div>
@@ -1463,7 +1443,7 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
           {(form.education || []).map((edu: any, i: number) => (
             <div key={i} className="relative border border-gray-100 rounded-lg p-4 bg-gray-50/50">
               <button onClick={() => removeEducation(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <IconX size={16} stroke={2} />
               </button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -1490,7 +1470,7 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
             </div>
           ))}
           <button onClick={addEducation} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            <IconPlus size={16} stroke={2} />
             {t('resumeLibrary.detail.edit.addEducation', 'Add Education')}
           </button>
         </div>
@@ -1502,7 +1482,7 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
           {(form.certifications || []).map((cert: any, i: number) => (
             <div key={i} className="relative border border-gray-100 rounded-lg p-4 bg-gray-50/50">
               <button onClick={() => removeCertification(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <IconX size={16} stroke={2} />
               </button>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
@@ -1521,7 +1501,7 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
             </div>
           ))}
           <button onClick={addCertification} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            <IconPlus size={16} stroke={2} />
             {t('resumeLibrary.detail.edit.addCertification', 'Add Certification')}
           </button>
         </div>
@@ -1533,7 +1513,7 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
           {(form.projects || []).map((proj: any, i: number) => (
             <div key={i} className="relative border border-gray-100 rounded-lg p-4 bg-gray-50/50">
               <button onClick={() => removeProject(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <IconX size={16} stroke={2} />
               </button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="md:col-span-2">
@@ -1552,7 +1532,7 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
             </div>
           ))}
           <button onClick={addProject} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            <IconPlus size={16} stroke={2} />
             {t('resumeLibrary.detail.edit.addProject', 'Add Project')}
           </button>
         </div>
@@ -1588,9 +1568,7 @@ function OverviewTab({ parsed, t, onReparse, reparseLoading }: { parsed: Record<
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zm9-3.758a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <IconAlertCircle size={16} stroke={2} />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-amber-900">
@@ -1615,9 +1593,7 @@ function OverviewTab({ parsed, t, onReparse, reparseLoading }: { parsed: Record<
               {reparseLoading ? (
                 <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-slate-500" />
               ) : (
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+                <IconRefresh size={14} stroke={2} />
               )}
               {t('resumeLibrary.detail.reparse', 'Re-parse Resume')}
             </button>
@@ -1645,9 +1621,7 @@ function InsightsTab({ data, loading, onGenerate, t }: { data: Record<string, un
   if (!data) {
     return (
       <div className="text-center py-16">
-        <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
+        <IconBulb size={48} stroke={1} className="mx-auto text-gray-300 mb-4" />
         <button onClick={onGenerate} className="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
           {t('resumeLibrary.insights.generate', 'Generate AI Insights')}
         </button>
@@ -1869,9 +1843,7 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { 
   if (!data) {
     return (
       <div className="text-center py-16">
-        <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
+        <IconArrowsExchange size={48} stroke={1} className="mx-auto text-gray-300 mb-4" />
         <button onClick={onAnalyze} className="px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
           {t('resumeLibrary.jobFit.analyze', 'Analyze Job Fit')}
         </button>
@@ -1912,7 +1884,7 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { 
       {fitData.bestFit && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-1">
-            <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <IconCircleCheck size={20} stroke={2} className="text-emerald-600" />
             <span className="text-sm font-semibold text-emerald-800">{t('resumeLibrary.jobFit.bestFit', 'Best Fit')}: {fitData.bestFit.hiringRequestTitle as string}</span>
           </div>
           <p className="text-xs text-emerald-700 ml-7">{fitData.bestFit.reason as string}</p>
@@ -2042,9 +2014,7 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { 
                 return (
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <IconCircleCheck size={14} stroke={2} />
                       {t('resumeLibrary.jobFit.alreadyInvited', 'Invited on {{date}}', { date: inv.invitedAt ? new Date(inv.invitedAt).toLocaleDateString() : '-' })}
                     </span>
                     {inv.interview && (
@@ -2061,9 +2031,7 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { 
                     onClick={() => onInvite(fit.hiringRequestId as string, fit.hiringRequestTitle as string)}
                     className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                    </svg>
+                    <IconMail size={14} stroke={2} />
                     {t('resumeLibrary.jobFit.inviteInterview', 'Invite to Interview')}
                   </button>
                 );
@@ -2112,9 +2080,7 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
   if (totalCount === 0) {
     return (
       <div className="text-center py-16">
-        <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
-        </svg>
+        <IconBriefcase size={48} stroke={1} className="mx-auto text-gray-300 mb-4" />
         <p className="text-sm text-gray-500">{t('resumeLibrary.appliedJobs.empty', 'No job applications yet')}</p>
         <p className="text-xs text-gray-400 mt-1">{t('resumeLibrary.appliedJobs.emptyHint', 'Upload resumes with a job selected, or match this candidate against jobs')}</p>
       </div>
@@ -2252,9 +2218,7 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
                   {m.interview && isc && (
                     <div className={`mt-2 rounded-lg border px-3 py-2 flex items-center justify-between ${isc.bg}`}>
                       <div className="flex items-center gap-2 text-xs">
-                        <svg className={`w-3.5 h-3.5 ${isc.color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-                        </svg>
+                        <IconVideo size={14} stroke={2} className={isc.color} />
                         <span className={`font-medium ${isc.color}`}>{isc.label}</span>
                       </div>
                       {m.interview.scheduledAt && (
@@ -2357,9 +2321,7 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
                   {f.interview && isc && (
                     <div className={`mt-2 rounded-lg border px-3 py-2 flex items-center justify-between ${isc.bg}`}>
                       <div className="flex items-center gap-2 text-xs">
-                        <svg className={`w-3.5 h-3.5 ${isc.color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-                        </svg>
+                        <IconVideo size={14} stroke={2} className={isc.color} />
                         <span className={`font-medium ${isc.color}`}>{isc.label}</span>
                       </div>
                       {f.interview.scheduledAt && (
@@ -2414,9 +2376,7 @@ function InvitationsTab({ invitations, resumeText, onRefresh, t }: { invitations
   if (invitations.length === 0) {
     return (
       <div className="text-center py-16">
-        <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-        </svg>
+        <IconMail size={48} stroke={1} className="mx-auto text-gray-300 mb-4" />
         <p className="text-sm text-gray-500">{t('resumeLibrary.detail.invitations.noInvitations', 'No invitations sent yet')}</p>
       </div>
     );
@@ -2477,10 +2437,7 @@ function InvitationsTab({ invitations, resumeText, onRefresh, t }: { invitations
                   onClick={() => setViewingInvite(inv)}
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                  <IconEye size={14} stroke={2} />
                   {t('resumeLibrary.detail.invitations.viewResult', 'View Result')}
                 </button>
               )}
@@ -2492,9 +2449,7 @@ function InvitationsTab({ invitations, resumeText, onRefresh, t }: { invitations
                 {resendingId === inv.id ? (
                   <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-emerald-600" />
                 ) : (
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                  </svg>
+                  <IconMail size={14} stroke={2} />
                 )}
                 {resendingId === inv.id
                   ? t('resumeLibrary.detail.invitations.resending', 'Sending...')
@@ -2520,7 +2475,7 @@ function InvitationsTab({ invitations, resumeText, onRefresh, t }: { invitations
                 onClick={() => setViewingInvite(null)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <IconX size={20} stroke={2} />
               </button>
             </div>
             <div className="p-5 space-y-4">
@@ -2534,7 +2489,7 @@ function InvitationsTab({ invitations, resumeText, onRefresh, t }: { invitations
               {/* Success badge */}
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <IconCircleCheck size={20} stroke={2} className="text-emerald-600" />
                   <span className="text-sm font-semibold text-emerald-800">{t('resumeLibrary.detail.invite.success', 'Invitation sent successfully!')}</span>
                 </div>
                 {viewingInvite.inviteData.job_title && (

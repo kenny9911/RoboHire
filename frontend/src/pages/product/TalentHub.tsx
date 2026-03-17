@@ -6,6 +6,22 @@ import { usePageState } from '../../hooks/usePageState';
 import ResumeUploadModal from '../../components/ResumeUploadModal';
 import CandidatePreferencesModal, { type CandidatePreferences } from '../../components/CandidatePreferencesModal';
 import ApplyToJobModal from '../../components/ApplyToJobModal';
+import {
+  IconBriefcase,
+  IconAdjustments,
+  IconX,
+  IconBookmark,
+  IconCopy,
+  IconFiles,
+  IconChevronLeft,
+  IconChevronRight,
+  IconUpload,
+  IconSearch,
+  IconChevronDown,
+  IconLayoutGrid,
+  IconList,
+  IconUsers,
+} from '@tabler/icons-react';
 
 interface ExperienceEntry {
   company: string;
@@ -347,27 +363,21 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
             className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             title={t('product.talent.applyToJob', 'Apply to Job')}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
-            </svg>
+            <IconBriefcase size={16} stroke={1.5} />
           </button>
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreferences(resume); }}
             className={`p-1 rounded transition-colors ${hasPrefs ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
             title={t('product.talent.preferences.title', 'Candidate Preferences')}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-            </svg>
+            <IconAdjustments size={16} stroke={1.5} />
           </button>
           {!resume.hasInvitations && (
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
               className="p-1 rounded text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <IconX size={16} stroke={1.5} />
             </button>
           )}
         </div>
@@ -434,9 +444,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
       {resume.notes && (
         <div className="px-4 sm:px-5 pb-3">
           <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-2.5 py-1.5 line-clamp-2 leading-relaxed">
-            <svg className="w-3 h-3 inline-block mr-1 -mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
-            </svg>
+            <IconBookmark className="w-3 h-3 inline-block mr-1 -mt-0.5 shrink-0" size={12} stroke={2} />
             {resume.notes}
           </p>
         </div>
@@ -450,7 +458,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
           </span>
           {resume._versionCount != null && resume._versionCount > 0 && (
             <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" /></svg>
+              <IconCopy size={12} stroke={1.5} />
               {resume._versionCount}
             </span>
           )}
@@ -504,9 +512,7 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
         ) : null}
         {resume.notes && (
           <p className="text-xs text-amber-600 truncate mt-0.5">
-            <svg className="w-3 h-3 inline-block mr-0.5 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
-            </svg>
+            <IconBookmark className="w-3 h-3 inline-block mr-0.5 -mt-0.5" size={12} stroke={2} />
             {resume.notes.slice(0, 60)}{resume.notes.length > 60 ? '...' : ''}
           </p>
         )}
@@ -551,7 +557,7 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
       <div className="flex items-center gap-1 shrink-0 ml-auto">
         {resume._versionCount != null && resume._versionCount > 0 && (
           <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-0.5 mr-1">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
+            <IconFiles size={14} stroke={1.5} />
             {resume._versionCount}
           </span>
         )}
@@ -563,27 +569,21 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
           className="p-1.5 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
           title={t('product.talent.applyToJob', 'Apply to Job')}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
-          </svg>
+          <IconBriefcase size={16} stroke={1.5} />
         </button>
         <button
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreferences(resume); }}
           className={`p-1.5 rounded transition-colors ${hasPrefs ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
           title={t('product.talent.preferences.title', 'Candidate Preferences')}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-          </svg>
+          <IconAdjustments size={16} stroke={1.5} />
         </button>
         {!resume.hasInvitations && (
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
             className="p-1.5 rounded text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <IconX size={16} stroke={1.5} />
           </button>
         )}
       </div>
@@ -616,9 +616,7 @@ function Pagination({ page, totalPages, total, onPageChange, t }: {
           disabled={page <= 1}
           className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <IconChevronLeft size={16} stroke={2} />
         </button>
         {pages.map((p) => (
           <button
@@ -636,9 +634,7 @@ function Pagination({ page, totalPages, total, onPageChange, t }: {
           disabled={page >= totalPages}
           className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
+          <IconChevronRight size={16} stroke={2} />
         </button>
       </div>
     </div>
@@ -798,9 +794,7 @@ export default function TalentHub() {
           onClick={() => setShowUpload(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shrink-0"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
+          <IconUpload size={16} stroke={2} />
           {t('product.talent.upload', 'Upload Resumes')}
         </button>
       </div>
@@ -809,9 +803,7 @@ export default function TalentHub() {
       <div className="flex items-center gap-2 flex-wrap">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
           <input
             type="text"
             value={search}
@@ -834,9 +826,7 @@ export default function TalentHub() {
             <option value="invited">{t('product.talent.filterInvited', 'Invited')}</option>
             <option value="rejected">{t('product.talent.filterRejected', 'Rejected')}</option>
           </select>
-          <svg className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
+          <IconChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
         </div>
 
         {/* Add Filter toggle */}
@@ -844,9 +834,7 @@ export default function TalentHub() {
           onClick={() => setShowMoreFilters(!showMoreFilters)}
           className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${showMoreFilters || activeFilterCount > 0 ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-          </svg>
+          <IconAdjustments size={16} stroke={1.5} />
           {t('product.talent.addFilter', 'Add Filter')}
           {activeFilterCount > 0 && (
             <span className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{activeFilterCount}</span>
@@ -860,18 +848,14 @@ export default function TalentHub() {
             className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${viewMode === 'card' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
             title={t('product.talent.viewCard', 'Card View')}
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2.5a2 2 0 012 2v2.5a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM13.5 6a2 2 0 012-2H18a2 2 0 012 2v2.5a2 2 0 01-2 2h-2.5a2 2 0 01-2-2V6zM4 15.5a2 2 0 012-2h2.5a2 2 0 012 2V18a2 2 0 01-2 2H6a2 2 0 01-2-2v-2.5zM13.5 15.5a2 2 0 012-2H18a2 2 0 012 2V18a2 2 0 01-2 2h-2.5a2 2 0 01-2-2v-2.5z" />
-            </svg>
+            <IconLayoutGrid size={16} stroke={1.5} />
           </button>
           <button
             onClick={() => setViewMode('list')}
             className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
             title={t('product.talent.viewList', 'List View')}
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M5 12h14M5 17h14" />
-            </svg>
+            <IconList size={16} stroke={1.5} />
           </button>
         </div>
       </div>
@@ -939,9 +923,7 @@ export default function TalentHub() {
                     <option key={j.id} value={j.id}>{j.title}</option>
                   ))}
                 </select>
-                <svg className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
+                <IconChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
               </div>
             </div>
 
@@ -974,9 +956,7 @@ export default function TalentHub() {
         </div>
       ) : enrichedResumes.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-slate-200 bg-white">
-          <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
+          <IconUsers className="w-16 h-16 mx-auto text-slate-300 mb-4" size={64} stroke={1} />
           <h3 className="text-lg font-semibold text-slate-900">{t('product.talent.empty', 'No candidates yet')}</h3>
           <p className="mt-1 text-sm text-slate-600">{t('product.talent.emptyDesc', 'Upload resumes to build your talent pool.')}</p>
           <button

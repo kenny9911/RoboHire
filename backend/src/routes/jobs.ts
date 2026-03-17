@@ -1057,14 +1057,6 @@ router.post('/from-request/:requestId', requireAuth, async (req, res) => {
       : null;
     const resolvedTitle = customTitle?.trim() || hr.title;
 
-    const existingJob = await prisma.job.findFirst({
-      where: { userId, hiringRequestId: hr.id },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (existingJob && !overwriteJobId) {
-      return res.json({ success: true, data: existingJob, existing: true });
-    }
-
     const draft = await buildJobDraftFromHiringRequest(hr, preferredLanguage, logRequestId);
 
     if (overwriteJobId) {
@@ -1073,13 +1065,6 @@ router.post('/from-request/:requestId', requireAuth, async (req, res) => {
       });
       if (!targetJob) {
         return res.status(404).json({ success: false, error: 'Target job not found' });
-      }
-      if (existingJob && existingJob.id !== targetJob.id) {
-        return res.status(409).json({
-          success: false,
-          error: 'This hiring request is already linked to another job',
-          data: existingJob,
-        });
       }
 
       const updatedJob = await prisma.job.update({
