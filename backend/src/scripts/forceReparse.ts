@@ -48,7 +48,7 @@ async function main() {
   const name = parsed.name || resume.name || 'Unknown';
   const email = parsed.email || null;
   const phone = parsed.phone || null;
-  const currentRole = parsed.experience?.[0]?.role || parsed.experience?.[0]?.title || null;
+  const currentRole = parsed.experience?.[0]?.role || null;
 
   await prisma.resume.update({
     where: { id: resumeId },
