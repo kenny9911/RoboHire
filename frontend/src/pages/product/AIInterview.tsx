@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
@@ -17,6 +18,14 @@ interface Interview {
   duration: number | null;
   recordingUrl: string | null;
   accessToken: string | null;
+  gohireUserId: string | null;
+  metadata: {
+    inviteData?: {
+      user_id?: number | string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  } | null;
   createdAt: string;
   evaluation: {
     overallScore: number | null;
@@ -88,6 +97,7 @@ const VERDICT_BG: Record<string, string> = {
 export default function AIInterview() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const statusLabel = (status: string) => {
     const map: Record<string, string> = {
@@ -328,6 +338,22 @@ export default function AIInterview() {
     const pending = interviews.filter((i) => i.status === 'completed' && !i.evaluation);
     for (const interview of pending) {
       await handleEvaluate(interview.id);
+    }
+  };
+
+  const handleViewGoHireEvaluation = async (interview: Interview) => {
+    const userId = interview.gohireUserId || interview.metadata?.inviteData?.user_id;
+    if (!userId) return;
+    try {
+      const res = await axios.get('/api/v1/gohire-interviews', {
+        params: { gohireUserId: String(userId), limit: 1 },
+      });
+      const matches = res.data.data || [];
+      if (matches.length > 0) {
+        navigate(`/product/interview-hub/${matches[0].id}`);
+      }
+    } catch {
+      // silent
     }
   };
 
@@ -1203,6 +1229,22 @@ export default function AIInterview() {
                               </div>
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* View GoHire Evaluation button */}
+                      {(interview.gohireUserId || interview.metadata?.inviteData?.user_id) && (
+                        <div className="sm:col-span-2 pt-2 border-t border-slate-200">
+                          <button
+                            onClick={() => handleViewGoHireEvaluation(interview)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            {t('product.interview.viewGoHireEvaluation', 'View GoHire Evaluation')}
+                          </button>
                         </div>
                       )}
                     </div>

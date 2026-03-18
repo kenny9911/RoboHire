@@ -1,4 +1,4 @@
-根据 user_id 获取已完成面试列表
+# 根据 user_id 获取 GoHire 中的已完成面试列表
 curl --location --request GET 'https://report-agent.gohire.top/gohire-data/interviews/completed?user_id=d2ba9f09-c47f-4aa1-8210-aa1d3e7ec7af&page=1&page_size=20'
 
 {
@@ -47,7 +47,7 @@ curl --location --request GET 'https://report-agent.gohire.top/gohire-data/inter
     }
 }
 
-根据 user_id 获取面试记录（视频，简历，对话记录）
+# 根据 user_id 获取面试记录（视频，简历，对话记录）
 curl --location --request GET 'https://report-agent.gohire.top/gohire-data/interviews/detail?user_id=d2ba9f09-c47f-4aa1-8210-aa1d3e7ec7af'
 {
     "code": 0,

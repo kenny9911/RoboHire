@@ -11,6 +11,7 @@ import { jdParseAgent } from '../agents/JDParseAgent.js';
 import { jdParserService } from '../services/JDParserService.js';
 import { languageService } from '../services/LanguageService.js';
 import type { ParsedJD, RequirementsDetailed, QualificationsDetailed } from '../types/index.js';
+import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 import '../types/auth.js';
 
 /**
@@ -459,10 +460,16 @@ function extractJobFields(body: any) {
 router.get('/', requireAuth, async (req, res) => {
   const requestId = req.requestId || generateRequestId();
   try {
-    const userId = req.user!.id;
-    const { status, search, title, hiringRequestId, page = '1', limit = '20' } = req.query;
+    const { status, search, title, hiringRequestId, filterUserId, filterTeamId, page = '1', limit = '20' } = req.query;
 
-    const where: any = { userId };
+    const scope = await getVisibilityScope(req.user!);
+    const where: any = {
+      ...await buildAdminOverrideFilter(
+        scope,
+        filterUserId as string | undefined,
+        filterTeamId as string | undefined,
+      ),
+    };
     if (status && typeof status === 'string') {
       where.status = status;
     }
@@ -518,9 +525,9 @@ router.get('/', requireAuth, async (req, res) => {
  */
 router.get('/:id', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const scope = await getVisibilityScope(req.user!);
     const job = await prisma.job.findFirst({
-      where: { id: req.params.id, userId },
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
       include: {
         hiringRequest: { select: { id: true, title: true, requirements: true } },
       },
@@ -612,8 +619,8 @@ router.post('/', requireAuth, async (req, res) => {
  */
 router.patch('/:id', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const existing = await prisma.job.findFirst({ where: { id: req.params.id, userId } });
+    const scope = await getVisibilityScope(req.user!);
+    const existing = await prisma.job.findFirst({ where: { id: req.params.id, ...buildUserIdFilter(scope) } });
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
@@ -677,8 +684,8 @@ router.patch('/:id', requireAuth, async (req, res) => {
  */
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const existing = await prisma.job.findFirst({ where: { id: req.params.id, userId } });
+    const scope = await getVisibilityScope(req.user!);
+    const existing = await prisma.job.findFirst({ where: { id: req.params.id, ...buildUserIdFilter(scope) } });
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }

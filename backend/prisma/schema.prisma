@@ -581,6 +581,7 @@ model Interview {
   roomId          String?   // LiveKit room ID
   transcript      Json?     // Array of { role, content, timestamp }
   recordingUrl    String?
+  gohireUserId    String?   // GoHire user_id returned from invitation API
   metadata        Json?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -599,6 +600,7 @@ model Interview {
   @@index([hiringRequestId])
   @@index([candidateId])
   @@index([resumeId])
+  @@index([gohireUserId])
 }
 
 model InterviewDialogTurn {

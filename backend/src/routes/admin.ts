@@ -56,6 +56,30 @@ function bucketTimestamp(date: Date, bucket: UsageBucket): string {
 }
 
 /**
+ * GET /api/v1/admin/filter-options
+ * Lightweight list of users and teams for admin filter dropdowns
+ */
+router.get('/filter-options', async (_req, res) => {
+  try {
+    const [users, teams] = await Promise.all([
+      prisma.user.findMany({
+        select: { id: true, name: true, email: true },
+        orderBy: { name: 'asc' },
+      }),
+      prisma.team.findMany({
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' },
+      }),
+    ]);
+
+    res.json({ success: true, data: { users, teams } });
+  } catch (error) {
+    console.error('Admin filter-options error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load filter options' });
+  }
+});
+
+/**
  * GET /api/v1/admin/users
  * List users with pagination and search
  */
@@ -1806,6 +1830,47 @@ router.post('/users/:userId/set-team-lead', async (req, res) => {
   } catch (error) {
     console.error('Admin set team lead error:', error);
     res.status(500).json({ success: false, error: 'Failed to set team lead' });
+  }
+});
+
+/**
+ * DELETE /api/v1/admin/users/:userId
+ * Permanently delete a user and all their data (cascading).
+ * Admin cannot delete themselves.
+ */
+router.delete('/users/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (userId === req.user!.id) {
+      res.status(400).json({ success: false, error: 'Cannot delete your own account' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, subscriptionId: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ success: false, error: 'User not found' });
+      return;
+    }
+
+    // Cancel Stripe subscription if active
+    const stripe = getStripe();
+    if (stripe && user.subscriptionId) {
+      try { await stripe.subscriptions.cancel(user.subscriptionId); } catch { /* ignore */ }
+    }
+
+    // Delete user — cascading relations handle related records
+    await prisma.user.delete({ where: { id: userId } });
+
+    console.log(`[Admin] User ${user.email} (${userId}) deleted by admin ${req.user!.id}`);
+    res.json({ success: true, data: { deleted: true, email: user.email } });
+  } catch (error) {
+    console.error('Admin delete user error:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete user' });
   }
 });
 

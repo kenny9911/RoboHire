@@ -251,6 +251,26 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
     }
   };
 
+  const handleDuplicateOverwriteAll = async () => {
+    if (personDuplicates.length === 0) return;
+    setResolvingDuplicate(true);
+    try {
+      for (const dup of personDuplicates) {
+        const formData = new FormData();
+        formData.append('file', dup.file);
+        await axios.post(`/api/v1/resumes/${dup.existingResume.id}/reupload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+    } catch (err) {
+      console.error('Failed to overwrite all duplicates:', err);
+    } finally {
+      setResolvingDuplicate(false);
+      setPersonDuplicates([]);
+      onUploaded();
+    }
+  };
+
   const allDone = results.length > 0 && personDuplicates.length === 0;
   const successCount = results.filter(r => r.success && !r.duplicate).length;
   const duplicateCount = results.filter(r => r.duplicate).length;
@@ -373,6 +393,22 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
             >
               {t('actions.cancel', 'Cancel')}
             </button>
+            {personDuplicates.length > 1 && (
+              <button
+                onClick={handleDuplicateOverwriteAll}
+                disabled={resolvingDuplicate}
+                className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50"
+              >
+                {resolvingDuplicate ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
+                    ...
+                  </span>
+                ) : (
+                  t('resumeLibrary.uploadModal.personDuplicate.overwriteAll', 'Overwrite All ({{count}})', { count: personDuplicates.length })
+                )}
+              </button>
+            )}
             <button
               onClick={() => handleDuplicateAction('overwrite')}
               disabled={resolvingDuplicate}

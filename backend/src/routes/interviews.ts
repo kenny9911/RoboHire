@@ -15,7 +15,7 @@ const MIN_INTERVIEW_DURATION_SECONDS = 300; // 5 minutes — interviews shorter 
 const LIVEKIT_USAGE_ENDPOINT = '/api/v1/interviews/live-session';
 const LIVEKIT_USAGE_MODULE = 'interview_livekit';
 const LIVEKIT_USAGE_API_NAME = 'interviews_live_session';
-const DEFAULT_PROMPT_GENERATION_TIMEOUT_MS = 8000;
+const DEFAULT_PROMPT_GENERATION_TIMEOUT_MS = 15000;
 
 type WorkerSessionUsagePayload = {
   sessionConfig?: {
@@ -847,11 +847,13 @@ async function buildRoomMetadata(
   if (!config['interview.instructions']) {
     try {
       const promptModel = getInterviewPromptModel();
+      const promptProvider = getInterviewPromptProvider();
       const promptTimeoutMs = getInterviewPromptTimeoutMs();
 
       logger.info('INTERVIEWS', 'Generating interview prompt via agent', {
         interviewId: interview.id,
         model: promptModel || process.env.LLM_MODEL || 'default',
+        provider: promptProvider || process.env.LLM_PROVIDER || 'default',
         timeoutMs: promptTimeoutMs,
       });
 
@@ -877,6 +879,7 @@ async function buildRoomMetadata(
             undefined,
             promptModel,
             signal,
+            promptProvider,
           ),
         promptTimeoutMs,
       );
@@ -926,7 +929,25 @@ async function buildRoomMetadata(
   return metadata;
 }
 
+/**
+ * Parse LLM_LIVEKIT env var (format: "provider/model" e.g. "openai/gpt-5.4" or "google/gemini-3.1-pro-preview")
+ * Returns { provider, model } to bypass OpenRouter and call the provider directly.
+ */
+function parseLivekitLLM(): { provider: string; model: string } | null {
+  const raw = (process.env.LLM_LIVEKIT || '').trim();
+  if (!raw) return null;
+  const slashIdx = raw.indexOf('/');
+  if (slashIdx <= 0) return null;
+  return {
+    provider: raw.substring(0, slashIdx),
+    model: raw.substring(slashIdx + 1),
+  };
+}
+
 function getInterviewPromptModel(): string | undefined {
+  const livekit = parseLivekitLLM();
+  if (livekit) return livekit.model;
+
   const explicit = (process.env.INTERVIEW_PROMPT_MODEL || '').trim();
   if (explicit) return explicit;
 
@@ -939,6 +960,11 @@ function getInterviewPromptModel(): string | undefined {
   }
 
   return undefined;
+}
+
+function getInterviewPromptProvider(): string | undefined {
+  const livekit = parseLivekitLLM();
+  return livekit?.provider;
 }
 
 function getInterviewPromptTimeoutMs(): number {

@@ -143,6 +143,10 @@ export default function AdminUserDetail() {
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
 
+  // Delete user state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   // Team Lead state
   const [selectedLeadTeams, setSelectedLeadTeams] = useState<string[]>([]);
   const [leadReason, setLeadReason] = useState('');
@@ -274,6 +278,20 @@ export default function AdminUserDetail() {
       console.error('Set team lead failed:', err);
     } finally {
       setLeadSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userId) return;
+    setDeleting(true);
+    try {
+      await axios.delete(`/api/v1/admin/users/${userId}`);
+      navigate('/product/admin?tab=Users');
+    } catch (err: any) {
+      setActionError(err?.response?.data?.error || 'Failed to delete user');
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -444,6 +462,50 @@ export default function AdminUserDetail() {
           onSaveTeamLead={saveTeamLead}
           t={t}
         />
+      )}
+
+      {/* Delete User — danger zone */}
+      <div className="mt-8 rounded-2xl border border-red-200 bg-red-50/50 p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-red-700">{t('admin.userDetail.dangerZone', 'Danger Zone')}</h3>
+            <p className="text-xs text-red-500 mt-0.5">{t('admin.userDetail.deleteWarning', 'Permanently delete this user and all associated data. This cannot be undone.')}</p>
+          </div>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+          >
+            {t('admin.userDetail.deleteUser', 'Delete User')}
+          </button>
+        </div>
+      </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-gray-900">{t('admin.userDetail.confirmDeleteTitle', 'Delete User')}</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              {t('admin.userDetail.confirmDeleteMessage', 'Are you sure you want to permanently delete {{email}}? All their data (resumes, interviews, jobs, sessions) will be removed. This action cannot be undone.', { email: user.email })}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={deleting}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {deleting ? t('admin.userDetail.deleting', 'Deleting...') : t('admin.userDetail.confirmDelete', 'Yes, Delete')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

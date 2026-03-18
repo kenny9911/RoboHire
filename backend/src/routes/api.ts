@@ -265,6 +265,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
             status: 'scheduled',
             type: 'ai_video',
             accessToken,
+            gohireUserId: result.user_id != null ? String(result.user_id) : null,
             metadata: {
               inviteData: JSON.parse(JSON.stringify(result)),
               loginUrl: result.login_url,

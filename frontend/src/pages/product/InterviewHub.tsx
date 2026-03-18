@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
+import { useAuth } from '../../context/AuthContext';
+import RecruiterTeamFilter, { RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 
 interface GoHireInterview {
   id: string;
@@ -62,6 +64,10 @@ function formatDuration(startFull: string, endFull: string | null): string {
 export default function InterviewHub() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Admin filter state
+  const [adminFilter, setAdminFilter] = useState<RecruiterTeamFilterValue>({});
 
   // Search / filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,7 +109,10 @@ export default function InterviewHub() {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
-        const res = await axios.get('/api/v1/gohire-interviews/stats');
+        const params: Record<string, string> = {};
+        if (adminFilter.filterUserId) params.filterUserId = adminFilter.filterUserId;
+        if (adminFilter.filterTeamId) params.filterTeamId = adminFilter.filterTeamId;
+        const res = await axios.get('/api/v1/gohire-interviews/stats', { params });
         if (res.data.success) {
           setStats(res.data.data);
         }
@@ -114,7 +123,7 @@ export default function InterviewHub() {
       }
     };
     fetchStats();
-  }, []);
+  }, [adminFilter]);
 
   // Fetch interviews
   const fetchInterviews = useCallback(async () => {
@@ -132,6 +141,8 @@ export default function InterviewHub() {
       if (dateFrom) params.dateFrom = dateFrom;
       if (dateTo) params.dateTo = dateTo;
       if (hasVideo !== undefined) params.hasVideo = hasVideo;
+      if (adminFilter.filterUserId) params.filterUserId = adminFilter.filterUserId;
+      if (adminFilter.filterTeamId) params.filterTeamId = adminFilter.filterTeamId;
 
       const res = await axios.get('/api/v1/gohire-interviews', { params });
       if (res.data.success) {
@@ -143,7 +154,7 @@ export default function InterviewHub() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, sortBy, sortOrder, debouncedQuery, jobTitleFilter, recruiterFilter, dateFrom, dateTo, hasVideo]);
+  }, [page, limit, sortBy, sortOrder, debouncedQuery, jobTitleFilter, recruiterFilter, dateFrom, dateTo, hasVideo, adminFilter]);
 
   useEffect(() => {
     fetchInterviews();
@@ -289,6 +300,11 @@ export default function InterviewHub() {
               className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-slate-400"
             />
           </div>
+
+          {/* Admin recruiter/team filter */}
+          {user?.role === 'admin' && (
+            <RecruiterTeamFilter value={adminFilter} onChange={(f) => { setAdminFilter(f); setPage(1); }} />
+          )}
 
           {/* Filter toggle button */}
           <button

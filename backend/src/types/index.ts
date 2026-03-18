@@ -20,6 +20,7 @@ export interface LLMOptions {
   temperature?: number;
   maxTokens?: number;
   model?: string;
+  provider?: string; // Override provider for this call (e.g. 'openai', 'google')
   requestId?: string;
   visionModel?: string; // Override model for vision tasks
   signal?: AbortSignal;

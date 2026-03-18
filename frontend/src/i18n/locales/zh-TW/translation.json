@@ -112,7 +112,7 @@
       "signIn": "登入",
       "getStarted": "開始使用",
       "dashboard": "控制面板",
-      "product": "產品",
+      "product": "功能",
       "productMenu": {
         "requirements": "需求分析",
         "agents": "智能代理",
@@ -273,7 +273,7 @@
     },
     "footer": {
       "tagline": "AI 驅動的招聘平臺，幫助您比他人更快地找到和僱用精英人才。",
-      "product": "產品",
+      "product": "功能",
       "startHiring": "開始招聘",
       "api": "API",
       "playground": "Playground",
@@ -2309,7 +2309,8 @@
       "startedLabel": "開始",
       "completedLabel": "結束",
       "durationLabel": "時長",
-      "gradeLabel": "評級"
+      "gradeLabel": "評級",
+      "viewGoHireEvaluation": "查看 GoHire 評估"
     },
     "videoInterview": {
       "title": "視訊面試",
@@ -3081,6 +3082,7 @@
         "skills": "技能",
         "uploadedAt": "上傳時間",
         "overwrite": "覆蓋舊的",
+        "overwriteAll": "全部覆蓋 ({{count}})",
         "keepBoth": "保留兩份",
         "skip": "跳過",
         "of": "/"
@@ -3676,7 +3678,12 @@
     "cancel": "取消",
     "delete": "刪除",
     "save": "儲存",
-    "saving": "儲存中..."
+    "saving": "儲存中...",
+    "filters": {
+      "allRecruiters": "所有招聘官",
+      "recruiterGroup": "招聘官",
+      "teamGroup": "團隊"
+    }
   },
   "admin": {
     "teams": {
@@ -3818,12 +3825,19 @@
         "requestsChart": "每日請求",
         "costChart": "每日費用",
         "tokensChart": "每日Token"
-      }
+      },
+      "dangerZone": "危險操作",
+      "deleteWarning": "永久刪除此使用者及所有關聯資料。此操作不可撤銷。",
+      "deleteUser": "刪除使用者",
+      "confirmDeleteTitle": "刪除使用者",
+      "confirmDeleteMessage": "確定要永久刪除 {{email}} 嗎？該使用者的所有資料（履歷、面試、職位、工作階段）都將被刪除。此操作不可撤銷。",
+      "deleting": "刪除中...",
+      "confirmDelete": "確認刪除"
     }
   },
   "agents": {
     "title": "Agents",
-    "subtitle": "AI 招聘 Agent 自動尋找並聯繫候選人。",
+    "subtitle": "RoboHire Agent 可以自動搜尋、審核並聯繫候選人。",
     "create": "新建 Agent",
     "myAgents": "我的 Agents",
     "searchPlaceholder": "搜尋 Agent、負責人或協作者名稱",

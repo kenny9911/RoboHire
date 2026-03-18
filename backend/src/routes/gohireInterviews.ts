@@ -4,12 +4,50 @@ import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { generateRequestId, logger } from '../services/LoggerService.js';
 import { goHireEvaluationService } from '../services/GoHireEvaluationService.js';
-import { pdfService } from '../services/PDFService.js';
 import { resumeParserService, normalizeExtractedText, convertStructuredToMarkdown } from '../services/ResumeParserService.js';
+import { documentParsingService } from '../services/DocumentParsingService.js';
+import { getVisibilityScope, VisibilityScope } from '../lib/teamVisibility.js';
 import OpenAI from 'openai';
 import '../types/auth.js';
 
 const router = Router();
+
+/**
+ * Build a recruiterEmail filter for GoHireInterview based on visibility scope.
+ * GoHireInterview has no userId — we match recruiterEmail against User.email.
+ */
+async function buildRecruiterEmailFilter(
+  scope: VisibilityScope,
+  filterUserId?: string,
+  filterTeamId?: string,
+): Promise<Record<string, unknown>> {
+  // Admin with no filter → show all
+  if (scope.isAdmin && !filterUserId && !filterTeamId) return {};
+
+  let targetUserIds: string[];
+  if (filterUserId) {
+    targetUserIds = [filterUserId];
+  } else if (filterTeamId) {
+    const members = await prisma.user.findMany({
+      where: { teamId: filterTeamId },
+      select: { id: true },
+    });
+    targetUserIds = members.map((m) => m.id);
+  } else {
+    // Non-admin: use scope's visible user IDs
+    targetUserIds = scope.userIds;
+  }
+
+  if (targetUserIds.length === 0) return { recruiterEmail: '__none__' };
+
+  const users = await prisma.user.findMany({
+    where: { id: { in: targetUserIds } },
+    select: { email: true },
+  });
+  const emails = users.map((u) => u.email).filter(Boolean);
+  if (emails.length === 0) return { recruiterEmail: '__none__' };
+  return { recruiterEmail: { in: emails, mode: 'insensitive' } };
+}
 
 // All routes require authentication
 router.use(requireAuth);
@@ -21,6 +59,10 @@ router.use(requireAuth);
 router.get('/stats', async (req, res) => {
   const requestId = generateRequestId();
   try {
+    const { filterUserId, filterTeamId } = req.query as Record<string, string | undefined>;
+    const scope = await getVisibilityScope(req.user!);
+    const visFilter = await buildRecruiterEmailFilter(scope, filterUserId, filterTeamId);
+
     const [
       totalCount,
       withVideoCount,
@@ -29,15 +71,17 @@ router.get('/stats', async (req, res) => {
       topRecruiters,
       topJobTitles,
     ] = await Promise.all([
-      prisma.goHireInterview.count(),
-      prisma.goHireInterview.count({ where: { videoUrl: { not: null } } }),
-      prisma.goHireInterview.count({ where: { evaluationData: { not: Prisma.DbNull } } }),
+      prisma.goHireInterview.count({ where: visFilter }),
+      prisma.goHireInterview.count({ where: { ...visFilter, videoUrl: { not: null } } }),
+      prisma.goHireInterview.count({ where: { ...visFilter, evaluationData: { not: Prisma.DbNull } } }),
       prisma.goHireInterview.aggregate({
+        where: visFilter,
         _min: { interviewDatetime: true },
         _max: { interviewDatetime: true },
       }),
       prisma.goHireInterview.groupBy({
         by: ['recruiterName', 'recruiterEmail'],
+        where: visFilter,
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
         take: 10,
@@ -47,7 +91,7 @@ router.get('/stats', async (req, res) => {
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
         take: 10,
-        where: { jobTitle: { not: null } },
+        where: { ...visFilter, jobTitle: { not: null } },
       }),
     ]);
 
@@ -94,6 +138,9 @@ router.get('/', async (req, res) => {
       hasVideo,
       dateFrom,
       dateTo,
+      filterUserId,
+      filterTeamId,
+      gohireUserId,
       page = '1',
       limit = '20',
       sortBy = 'interviewDatetime',
@@ -104,8 +151,14 @@ router.get('/', async (req, res) => {
     const limitNum = Math.min(100, Math.max(1, parseInt(limit || '20', 10)));
     const skip = (pageNum - 1) * limitNum;
 
-    // Build where clause
-    const where: any = {};
+    // Build where clause with visibility filtering
+    const scope = await getVisibilityScope(req.user!);
+    const visFilter = await buildRecruiterEmailFilter(scope, filterUserId, filterTeamId);
+    const where: any = { ...visFilter };
+
+    if (gohireUserId) {
+      where.gohireUserId = gohireUserId;
+    }
 
     if (q) {
       where.OR = [
@@ -413,7 +466,8 @@ router.post('/:id/transcribe', async (req, res) => {
 });
 
 /**
- * POST /:id/parse-resume — Fetch resume PDF from URL, parse it, and return markdown + structured data.
+ * POST /:id/parse-resume — Fetch resume from URL, auto-detect file type (PDF, DOCX, DOC, MD, TXT),
+ * parse it, and return markdown + structured data.
  */
 router.post('/:id/parse-resume', async (req, res) => {
   const requestId = generateRequestId();
@@ -442,13 +496,13 @@ router.post('/:id/parse-resume', async (req, res) => {
       });
     }
 
-    logger.info('GOHIRE_INTERVIEWS', 'Fetching resume PDF from URL', {
+    logger.info('GOHIRE_INTERVIEWS', 'Fetching resume from URL', {
       requestId,
       id,
       url: interview.resumeUrl.substring(0, 80),
     });
 
-    // Fetch the PDF from the remote URL
+    // Fetch the file from the remote URL
     const response = await fetch(interview.resumeUrl);
     if (!response.ok) {
       return res.status(502).json({
@@ -460,12 +514,50 @@ router.post('/:id/parse-resume', async (req, res) => {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Extract text from PDF
-    const rawText = await pdfService.extractText(buffer, requestId);
+    // Detect file type: URL extension → response Content-Type → magic bytes
+    const extMimeMap: Record<string, string> = {
+      pdf: 'application/pdf',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      doc: 'application/msword',
+      md: 'text/markdown',
+      markdown: 'text/markdown',
+      txt: 'text/plain',
+    };
+    const parsedUrl = new URL(interview.resumeUrl);
+    const urlFilename = parsedUrl.pathname.split('/').pop() || '';
+    const ext = urlFilename.includes('.') ? urlFilename.toLowerCase().split('.').pop()! : '';
+    let mimetype = extMimeMap[ext] || '';
+
+    // Fallback: check response Content-Type header
+    if (!mimetype) {
+      const contentType = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+      if (contentType && contentType !== 'application/octet-stream') {
+        mimetype = contentType;
+      }
+    }
+
+    // Fallback: detect from buffer magic bytes
+    if (!mimetype) {
+      if (buffer.length >= 4 && buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46) {
+        mimetype = 'application/pdf'; // %PDF
+      } else if (buffer.length >= 2 && buffer[0] === 0x50 && buffer[1] === 0x4B) {
+        mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; // PK (ZIP/DOCX)
+      } else {
+        mimetype = 'text/plain'; // assume plain text
+      }
+    }
+
+    const filename = decodeURIComponent(urlFilename || 'resume');
+    logger.info('GOHIRE_INTERVIEWS', 'Resume file type detected', {
+      requestId, ext: ext || 'none', mimetype, filename, bufferSize: buffer.length,
+    });
+
+    // Extract text using DocumentParsingService (supports PDF, DOCX, DOC, MD, TXT)
+    const rawText = await documentParsingService.extractText(buffer, mimetype, filename, requestId);
     if (!rawText || rawText.trim().length < 20) {
       return res.status(422).json({
         success: false,
-        error: 'Could not extract meaningful text from the resume PDF',
+        error: 'Could not extract meaningful text from the resume file',
       });
     }
 

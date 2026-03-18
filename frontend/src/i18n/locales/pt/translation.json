@@ -110,7 +110,7 @@
       "signIn": "Entrar",
       "getStarted": "Começar",
       "dashboard": "Painel",
-      "product": "Produto",
+      "product": "Recursos",
       "productMenu": {
         "requirements": "Análise de requisitos",
         "agents": "Agentes",
@@ -271,7 +271,7 @@
     },
     "footer": {
       "tagline": "Plataforma de contratação com IA para encontrar e contratar talentos de elite antes dos outros.",
-      "product": "Produto",
+      "product": "Recursos",
       "startHiring": "Começar a contratar",
       "api": "API",
       "playground": "Playground",
@@ -1859,7 +1859,8 @@
       "startedLabel": "Início",
       "completedLabel": "Fim",
       "durationLabel": "Duração",
-      "gradeLabel": "Nota"
+      "gradeLabel": "Nota",
+      "viewGoHireEvaluation": "Ver avaliação GoHire"
     },
     "videoInterview": {
       "title": "Entrevista em Vídeo",
@@ -2600,6 +2601,7 @@
         "skills": "Habilidades",
         "uploadedAt": "Enviado",
         "overwrite": "Sobrescrever",
+        "overwriteAll": "Sobrescrever tudo ({{count}})",
         "keepBoth": "Manter ambos",
         "skip": "Pular",
         "of": "de"
@@ -3185,7 +3187,12 @@
     "cancel": "Cancelar",
     "delete": "Excluir",
     "save": "Salvar",
-    "saving": "Salvando..."
+    "saving": "Salvando...",
+    "filters": {
+      "allRecruiters": "Todos os recrutadores",
+      "recruiterGroup": "Recrutadores",
+      "teamGroup": "Equipes"
+    }
   },
   "admin": {
     "teams": {
@@ -3327,12 +3334,19 @@
         "requestsChart": "Requisições Diárias",
         "costChart": "Custo Diário",
         "tokensChart": "Tokens Diários"
-      }
+      },
+      "dangerZone": "Zona de Perigo",
+      "deleteWarning": "Excluir permanentemente este usuário e todos os dados associados. Esta ação não pode ser desfeita.",
+      "deleteUser": "Excluir Usuário",
+      "confirmDeleteTitle": "Excluir Usuário",
+      "confirmDeleteMessage": "Tem certeza de que deseja excluir permanentemente {{email}}? Todos os dados (currículos, entrevistas, vagas, sessões) serão removidos. Esta ação não pode ser desfeita.",
+      "deleting": "Excluindo...",
+      "confirmDelete": "Sim, Excluir"
     }
   },
   "agents": {
     "title": "Agentes",
-    "subtitle": "Agentes de IA que buscam e contatam candidatos autonomamente.",
+    "subtitle": "Os agentes do RoboHire podem buscar, avaliar e contactar perfis de forma autónoma.",
     "create": "Criar novo agente",
     "myAgents": "Meus Agentes",
     "searchPlaceholder": "Pesquisar agente, proprietário ou colaborador",

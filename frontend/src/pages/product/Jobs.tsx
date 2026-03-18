@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
+import { useAuth } from '../../context/AuthContext';
+import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 import {
   getInterviewLanguageApiName,
   getInterviewLanguageDisplay,
@@ -140,10 +142,12 @@ function AIWandButton({ onClick, loading, hasContent, t }: {
 
 export default function Jobs() {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [jobs, setJobs] = usePageState<Job[]>('jobs.list', []);
   const [loading, setLoading] = useState(jobs.length > 0 ? false : true);
   const [statusFilter, setStatusFilter] = usePageState<string>('jobs.statusFilter', '');
+  const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [showCreate, setShowCreate] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [saving, setSaving] = useState(false);
@@ -190,6 +194,8 @@ export default function Jobs() {
       setLoading(true);
       const params: any = {};
       if (statusFilter) params.status = statusFilter;
+      if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
+      if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
       const res = await axios.get('/api/v1/jobs', { params });
       setJobs(res.data.data || []);
     } catch {
@@ -197,7 +203,7 @@ export default function Jobs() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, recruiterFilter]);
 
   useEffect(() => {
     fetchJobs();
@@ -639,21 +645,29 @@ export default function Jobs() {
         </button>
       </div>
 
-      {/* Status filter */}
-      <div className="flex gap-2 flex-wrap">
-        {statuses.map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-              statusFilter === s
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            {s ? t(`product.jobs.status.${s}`, s.charAt(0).toUpperCase() + s.slice(1)) : t('product.jobs.allStatuses', 'All')}
-          </button>
-        ))}
+      {/* Status filter + Recruiter/Team filter */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
+          {statuses.map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                statusFilter === s
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {s ? t(`product.jobs.status.${s}`, s.charAt(0).toUpperCase() + s.slice(1)) : t('product.jobs.allStatuses', 'All')}
+            </button>
+          ))}
+        </div>
+        {user?.role === 'admin' && (
+          <RecruiterTeamFilter
+            value={recruiterFilter}
+            onChange={setRecruiterFilter}
+          />
+        )}
       </div>
 
       {/* Create / Edit Form */}

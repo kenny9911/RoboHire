@@ -110,7 +110,7 @@
       "signIn": "Se connecter",
       "getStarted": "Commencer",
       "dashboard": "Tableau de bord",
-      "product": "Produit",
+      "product": "Fonctionnalités",
       "productMenu": {
         "requirements": "Analyse des besoins",
         "agents": "Agents",
@@ -271,7 +271,7 @@
     },
     "footer": {
       "tagline": "La plateforme IA qui vous aide à recruter les meilleurs avant les autres.",
-      "product": "Produit",
+      "product": "Fonctionnalités",
       "startHiring": "Commencer à recruter",
       "api": "API",
       "playground": "Playground",
@@ -1860,7 +1860,8 @@
       "startedLabel": "Début",
       "completedLabel": "Fin",
       "durationLabel": "Durée",
-      "gradeLabel": "Note"
+      "gradeLabel": "Note",
+      "viewGoHireEvaluation": "Voir l'évaluation GoHire"
     },
     "videoInterview": {
       "title": "Entretien Vidéo",
@@ -2601,6 +2602,7 @@
         "skills": "Compétences",
         "uploadedAt": "Téléchargé",
         "overwrite": "Écraser",
+        "overwriteAll": "Tout écraser ({{count}})",
         "keepBoth": "Garder les deux",
         "skip": "Ignorer",
         "of": "sur"
@@ -3186,7 +3188,12 @@
     "cancel": "Annuler",
     "delete": "Supprimer",
     "save": "Enregistrer",
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "filters": {
+      "allRecruiters": "Tous les recruteurs",
+      "recruiterGroup": "Recruteurs",
+      "teamGroup": "Équipes"
+    }
   },
   "admin": {
     "teams": {
@@ -3328,12 +3335,19 @@
         "requestsChart": "Requêtes Quotidiennes",
         "costChart": "Coût Quotidien",
         "tokensChart": "Tokens Quotidiens"
-      }
+      },
+      "dangerZone": "Zone Dangereuse",
+      "deleteWarning": "Supprimer définitivement cet utilisateur et toutes les données associées. Cette action est irréversible.",
+      "deleteUser": "Supprimer l'utilisateur",
+      "confirmDeleteTitle": "Supprimer l'utilisateur",
+      "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer définitivement {{email}} ? Toutes ses données (CV, entretiens, offres, sessions) seront supprimées. Cette action est irréversible.",
+      "deleting": "Suppression...",
+      "confirmDelete": "Oui, Supprimer"
     }
   },
   "agents": {
     "title": "Agents",
-    "subtitle": "Agents IA qui recherchent et contactent les candidats de manière autonome.",
+    "subtitle": "Les agents RoboHire peuvent sourcer, évaluer et contacter des profils de manière autonome.",
     "create": "Créer un agent",
     "myAgents": "Mes Agents",
     "searchPlaceholder": "Rechercher un agent, propriétaire ou collaborateur",

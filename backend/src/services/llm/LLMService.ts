@@ -5,10 +5,14 @@ import { GoogleProvider } from './GoogleProvider.js';
 import { KimiProvider } from './KimiProvider.js';
 import { generateRequestId, logger } from '../LoggerService.js';
 
+const DIRECT_PROVIDER_PREFIXES = new Set(['openai', 'google', 'kimi', 'moonshot']);
+
 export class LLMService {
   private provider: LLMProvider | null = null;
   private model: string = '';
   private providerName: string = '';
+  /** When providerName is 'direct', this stores the resolved provider type (e.g. 'google') */
+  private defaultProviderType: string = '';
   private initialized: boolean = false;
 
   private getConfiguredFallbackModel(primaryModel: string): string | null {
@@ -49,20 +53,71 @@ export class LLMService {
   }
 
   /**
+   * Strip provider prefix from model ID when using a direct provider.
+   * e.g. "google/gemini-3-flash-preview" → "gemini-3-flash-preview" when provider is "google"
+   * OpenRouter needs the prefix, direct providers don't.
+   */
+  private normalizeModel(model: string, provider: string): string {
+    if (!model.includes('/')) return model;
+    // OpenRouter expects provider/model format — keep as-is
+    if (provider.toLowerCase() === 'openrouter') return model;
+
+    const [modelProvider, ...rest] = model.split('/');
+    const modelName = rest.join('/');
+    // Strip prefix if it matches the active provider
+    if (modelProvider.toLowerCase() === provider.toLowerCase()) {
+      logger.debug('LLM_SERVICE', `Auto-corrected model ID: "${model}" → "${modelName}" for provider "${provider}"`);
+      return modelName;
+    }
+    return model;
+  }
+
+  /**
+   * In 'direct' mode, parse "provider/model" to resolve which provider to use.
+   * Returns null if the prefix is not a known direct provider.
+   */
+  private resolveDirectModel(rawModel: string): { providerType: string; model: string } | null {
+    if (!rawModel.includes('/')) return null;
+    const slashIdx = rawModel.indexOf('/');
+    const prefix = rawModel.substring(0, slashIdx).toLowerCase();
+    if (!DIRECT_PROVIDER_PREFIXES.has(prefix)) return null;
+    return { providerType: prefix, model: rawModel.substring(slashIdx + 1) };
+  }
+
+  /**
    * Lazily initialize the LLM provider
    * This ensures environment variables are loaded before accessing them
    */
   private ensureInitialized(): void {
     if (this.initialized) return;
-    
-    this.providerName = process.env.LLM_PROVIDER || 'openrouter';
-    this.model = process.env.LLM_MODEL || 'google/gemini-3-flash-preview';
-    this.provider = this.createProvider(this.providerName);
+
+    this.providerName = (process.env.LLM_PROVIDER || 'openrouter').toLowerCase();
+    const rawModel = process.env.LLM_MODEL || 'google/gemini-3-flash-preview';
+
+    if (this.providerName === 'direct') {
+      const resolved = this.resolveDirectModel(rawModel);
+      if (resolved) {
+        this.defaultProviderType = resolved.providerType;
+        this.model = resolved.model;
+      } else {
+        // No recognized prefix — treat entire string as model, fall back to openrouter
+        logger.warn('LLM_SERVICE', `direct mode but model "${rawModel}" has no recognized provider prefix, falling back to openrouter`);
+        this.defaultProviderType = 'openrouter';
+        this.model = rawModel;
+      }
+      this.provider = this.createProvider(this.defaultProviderType);
+    } else {
+      this.model = this.normalizeModel(rawModel, this.providerName);
+      this.provider = this.createProvider(this.providerName);
+    }
+
     this.initialized = true;
-    
+
     logger.info('LLM_SERVICE', `Initialized LLM service`, {
       provider: this.providerName,
+      ...(this.providerName === 'direct' ? { resolvedProvider: this.defaultProviderType } : {}),
       model: this.model,
+      ...(rawModel !== this.model ? { rawModel } : {}),
     });
   }
 
@@ -103,14 +158,42 @@ export class LLMService {
 
     const startTime = Date.now();
     const requestId = options?.requestId || generateRequestId();
-    // Use visionModel if specified (for multimodal messages), otherwise regular model
-    const model = options?.visionModel || options?.model || this.model;
+
+    // Resolve provider + model depending on mode
+    const rawModel = options?.visionModel || options?.model || this.model;
+    let activeProvider: LLMProvider;
+    let model: string;
+
+    if (options?.provider) {
+      // Explicit per-call provider override
+      activeProvider = this.createProvider(options.provider);
+      model = this.normalizeModel(rawModel, options.provider);
+    } else if (this.providerName === 'direct') {
+      // Direct mode: parse provider from the model string prefix
+      const resolved = this.resolveDirectModel(rawModel);
+      if (resolved) {
+        if (resolved.providerType === this.defaultProviderType) {
+          activeProvider = this.provider!; // reuse default instance
+        } else {
+          activeProvider = this.createProvider(resolved.providerType);
+        }
+        model = resolved.model;
+      } else {
+        // No prefix or unknown prefix — use default provider, pass model as-is
+        activeProvider = this.provider!;
+        model = rawModel;
+      }
+    } else {
+      // Legacy single-provider mode (openrouter, google, openai, kimi)
+      activeProvider = this.provider!;
+      model = this.normalizeModel(rawModel, this.providerName);
+    }
+
+    const providerName = activeProvider.getProviderName();
     const requestOptions = {
       ...options,
       model,
     };
-
-    const providerName = this.provider!.getProviderName();
     logger.info('LLM', `→ ${providerName}/${model}`, {
       provider: providerName,
       model,
@@ -118,7 +201,7 @@ export class LLMService {
     }, requestId);
 
     try {
-      const response = await this.provider!.chat(messages, {
+      const response = await activeProvider.chat(messages, {
         ...options,
         model,
       });
@@ -128,7 +211,7 @@ export class LLMService {
       logger.logLLMCall({
         requestId,
         model: response.model || model,
-        provider: this.provider!.getProviderName(),
+        provider: activeProvider.getProviderName(),
         promptTokens: response.usage.promptTokens,
         completionTokens: response.usage.completionTokens,
         duration,
@@ -161,16 +244,30 @@ export class LLMService {
         duration: `${duration}ms`,
       }, requestId);
 
-      const fallbackModel = this.getConfiguredFallbackModel(model);
-      if (fallbackModel && fallbackModel !== model && this.shouldTryFallback(error)) {
+      const rawFallbackModel = this.getConfiguredFallbackModel(model);
+      if (rawFallbackModel && rawFallbackModel !== model && this.shouldTryFallback(error)) {
+        // In direct mode, the fallback model may have a provider prefix that needs resolving
+        let fallbackProvider = activeProvider;
+        let fallbackModel = rawFallbackModel;
+        if (this.providerName === 'direct') {
+          const resolved = this.resolveDirectModel(rawFallbackModel);
+          if (resolved) {
+            fallbackModel = resolved.model;
+            if (resolved.providerType !== activeProvider.getProviderName().toLowerCase()) {
+              fallbackProvider = this.createProvider(resolved.providerType);
+            }
+          }
+        }
+
         const fallbackStart = Date.now();
         logger.warn('LLM', 'Retrying with fallback model', {
           model,
           fallbackModel,
+          fallbackProvider: fallbackProvider.getProviderName(),
         }, requestId);
 
         try {
-          const fallbackResponse = await this.provider!.chat(messages, {
+          const fallbackResponse = await fallbackProvider.chat(messages, {
             ...options,
             model: fallbackModel,
           });
@@ -179,7 +276,7 @@ export class LLMService {
           logger.logLLMCall({
             requestId,
             model: fallbackResponse.model || fallbackModel,
-            provider: this.provider!.getProviderName(),
+            provider: fallbackProvider.getProviderName(),
             promptTokens: fallbackResponse.usage.promptTokens,
             completionTokens: fallbackResponse.usage.completionTokens,
             duration: fallbackDuration,
@@ -199,7 +296,7 @@ export class LLMService {
           logger.logLLMCall({
             requestId,
             model: fallbackModel,
-            provider: providerName,
+            provider: fallbackProvider.getProviderName(),
             promptTokens: 0,
             completionTokens: 0,
             duration: fallbackDuration,

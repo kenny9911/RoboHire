@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
+import { useAuth } from '../../context/AuthContext';
 import ResumeUploadModal from '../../components/ResumeUploadModal';
+import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 import CandidatePreferencesModal, { type CandidatePreferences } from '../../components/CandidatePreferencesModal';
 import ApplyToJobModal from '../../components/ApplyToJobModal';
 import {
@@ -647,6 +649,7 @@ const PAGE_SIZE = 20;
 
 export default function TalentHub() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [resumes, setResumes] = usePageState<Resume[]>('talent.resumes', []);
   const [loading, setLoading] = useState(resumes.length > 0 ? false : true);
   const [search, setSearch] = usePageState<string>('talent.search', '');
@@ -668,6 +671,7 @@ export default function TalentHub() {
   const [filterJobId, setFilterJobId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
 
   // Fetch jobs for the filter dropdown
@@ -677,8 +681,8 @@ export default function TalentHub() {
       .catch(() => {});
   }, []);
 
-  const filtersRef = useRef({ expYearsMin: '', expYearsMax: '', salaryMin: '', salaryMax: '', filterJobId: '', filterStatus: '' });
-  filtersRef.current = { expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus };
+  const filtersRef = useRef({ expYearsMin: '', expYearsMax: '', salaryMin: '', salaryMax: '', filterJobId: '', filterStatus: '', recruiterFilter: {} as RecruiterTeamFilterValue });
+  filtersRef.current = { expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus, recruiterFilter };
 
   const fetchResumes = useCallback(async (query?: string, pageNum = 1) => {
     try {
@@ -692,6 +696,8 @@ export default function TalentHub() {
       if (f.salaryMax) params.salaryMax = f.salaryMax;
       if (f.filterJobId) params.jobId = f.filterJobId;
       if (f.filterStatus) params.pipelineStatus = f.filterStatus;
+      if (f.recruiterFilter.filterUserId) params.filterUserId = f.recruiterFilter.filterUserId;
+      if (f.recruiterFilter.filterTeamId) params.filterTeamId = f.recruiterFilter.filterTeamId;
       const res = await axios.get('/api/v1/resumes', { params });
       setResumes(res.data.data || []);
       const pag = res.data.pagination;
@@ -813,7 +819,15 @@ export default function TalentHub() {
           />
         </div>
 
-        {/* Sort */}
+        {/* Recruiter / Team filter (admin only) */}
+        {user?.role === 'admin' && (
+          <RecruiterTeamFilter
+            value={recruiterFilter}
+            onChange={(f) => { setRecruiterFilter(f); setTimeout(() => applyFilters(), 0); }}
+          />
+        )}
+
+        {/* Status */}
         <div className="relative">
           <select
             value={filterStatus}

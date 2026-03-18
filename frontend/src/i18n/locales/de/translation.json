@@ -110,7 +110,7 @@
       "signIn": "Anmelden",
       "getStarted": "Loslegen",
       "dashboard": "Dashboard",
-      "product": "Produkt",
+      "product": "Funktionen",
       "productMenu": {
         "requirements": "Anforderungsanalyse",
         "agents": "Agenten",
@@ -271,7 +271,7 @@
     },
     "footer": {
       "tagline": "KI‑Recruiting‑Plattform, mit der Sie Top‑Talente früher einstellen.",
-      "product": "Produkt",
+      "product": "Funktionen",
       "startHiring": "Jetzt einstellen",
       "api": "API",
       "playground": "Playground",
@@ -1859,7 +1859,8 @@
       "startedLabel": "Beginn",
       "completedLabel": "Ende",
       "durationLabel": "Dauer",
-      "gradeLabel": "Bewertung"
+      "gradeLabel": "Bewertung",
+      "viewGoHireEvaluation": "GoHire-Bewertung anzeigen"
     },
     "videoInterview": {
       "title": "Video-Interview",
@@ -2600,6 +2601,7 @@
         "skills": "Fähigkeiten",
         "uploadedAt": "Hochgeladen",
         "overwrite": "Überschreiben",
+        "overwriteAll": "Alle überschreiben ({{count}})",
         "keepBoth": "Beide behalten",
         "skip": "Überspringen",
         "of": "von"
@@ -3185,7 +3187,12 @@
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "save": "Speichern",
-    "saving": "Speichern..."
+    "saving": "Speichern...",
+    "filters": {
+      "allRecruiters": "Alle Recruiter",
+      "recruiterGroup": "Recruiter",
+      "teamGroup": "Teams"
+    }
   },
   "admin": {
     "teams": {
@@ -3327,12 +3334,19 @@
         "requestsChart": "Tägliche Anfragen",
         "costChart": "Tägliche Kosten",
         "tokensChart": "Tägliche Tokens"
-      }
+      },
+      "dangerZone": "Gefahrenzone",
+      "deleteWarning": "Diesen Benutzer und alle zugehörigen Daten dauerhaft löschen. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deleteUser": "Benutzer löschen",
+      "confirmDeleteTitle": "Benutzer löschen",
+      "confirmDeleteMessage": "Sind Sie sicher, dass Sie {{email}} dauerhaft löschen möchten? Alle Daten (Lebensläufe, Interviews, Stellen, Sitzungen) werden entfernt. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deleting": "Wird gelöscht...",
+      "confirmDelete": "Ja, löschen"
     }
   },
   "agents": {
     "title": "Agenten",
-    "subtitle": "KI-Agenten, die Kandidaten autonom finden und kontaktieren.",
+    "subtitle": "RoboHire-Agenten können Profile autonom finden, prüfen und kontaktieren.",
     "create": "Neuen Agent erstellen",
     "myAgents": "Meine Agenten",
     "searchPlaceholder": "Agent, Eigentümer oder Mitarbeiter suchen",

@@ -13,7 +13,7 @@ import { Prisma } from '@prisma/client';
 import { logger } from '../services/LoggerService.js';
 import { llmService } from '../services/llm/LLMService.js';
 import type { ParsedResume, WorkExperience } from '../types/index.js';
-import { getVisibilityScope, buildUserIdFilter } from '../lib/teamVisibility.js';
+import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 
 const router = Router();
 
@@ -642,15 +642,19 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       salaryMax,
       jobId,
       pipelineStatus,
+      filterUserId,
+      filterTeamId,
     } = req.query as Record<string, string>;
 
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 20));
     const skip = (pageNum - 1) * limitNum;
 
-    // Build where clause with team visibility
+    // Build where clause with team visibility (admin can narrow by user/team)
     const scope = await getVisibilityScope(req.user!);
-    const where: Record<string, unknown> = { ...buildUserIdFilter(scope) };
+    const where: Record<string, unknown> = {
+      ...await buildAdminOverrideFilter(scope, filterUserId, filterTeamId),
+    };
     if (status && status !== 'all') {
       where.status = status;
     }
@@ -810,15 +814,16 @@ router.get('/stats', requireAuth, async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
-    const userId = req.user.id;
+    const scope = await getVisibilityScope(req.user!);
+    const userFilter = buildUserIdFilter(scope);
 
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
     const [total, thisWeek, analyzed] = await Promise.all([
-      prisma.resume.count({ where: { userId, status: 'active' } }),
-      prisma.resume.count({ where: { userId, status: 'active', createdAt: { gte: oneWeekAgo } } }),
-      prisma.resume.count({ where: { userId, status: 'active', NOT: { insightData: { equals: Prisma.DbNull } } } }),
+      prisma.resume.count({ where: { ...userFilter, status: 'active' } }),
+      prisma.resume.count({ where: { ...userFilter, status: 'active', createdAt: { gte: oneWeekAgo } } }),
+      prisma.resume.count({ where: { ...userFilter, status: 'active', NOT: { insightData: { equals: Prisma.DbNull } } } }),
     ]);
 
     return res.json({ success: true, data: { total, thisWeek, analyzed } });
@@ -834,8 +839,9 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const scope = await getVisibilityScope(req.user!);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
       include: {
         resumeJobFits: {
           include: { hiringRequest: { select: { id: true, title: true, status: true } } },
@@ -861,8 +867,9 @@ router.patch('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const scope = await getVisibilityScope(req.user!);
     const existing = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
     });
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Resume not found' });
@@ -893,8 +900,9 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const scope = await getVisibilityScope(req.user!);
     const existing = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
     });
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Resume not found' });
@@ -926,8 +934,9 @@ router.post('/:id/reparse', requireAuth, async (req: Request, res: Response) => 
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const resume = await prisma.resume.findUnique({
-      where: { id: req.params.id, userId: req.user.id },
+    const scope = await getVisibilityScope(req.user!);
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
       select: { id: true, resumeText: true, name: true },
     });
 

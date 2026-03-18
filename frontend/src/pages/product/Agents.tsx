@@ -191,7 +191,10 @@ export default function Agents() {
       <div className="flex-1 min-w-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h1 className="text-2xl font-bold text-slate-900">{t('agents.title', 'Agents')}</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">{t('agents.title', 'Agents')}</h1>
+            <p className="text-sm text-slate-500 mt-1">{t('agents.subtitle', 'RoboHire agents can source, review, and reach out to profiles autonomously.')}</p>
+          </div>
           <button
             onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5"

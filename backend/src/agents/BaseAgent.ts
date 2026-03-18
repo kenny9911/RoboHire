@@ -81,6 +81,7 @@ export abstract class BaseAgent<TInput, TOutput> {
     locale?: string,
     model?: string,
     signal?: AbortSignal,
+    provider?: string,
   ): Promise<TOutput> {
     const stepNum = requestId ? logger.startStep(requestId, `${this.name}: Execute`) : 0;
 
@@ -106,6 +107,7 @@ export abstract class BaseAgent<TInput, TOutput> {
         requestId,
         ...(model ? { model } : {}),
         ...(signal ? { signal } : {}),
+        ...(provider ? { provider } : {}),
       });
       
       logger.debug('AGENT', `${this.name}: Parsing response`, {

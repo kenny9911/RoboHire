@@ -110,7 +110,7 @@
       "signIn": "ログイン",
       "getStarted": "はじめる",
       "dashboard": "ダッシュボード",
-      "product": "プロダクト",
+      "product": "機能",
       "productMenu": {
         "requirements": "要件分析",
         "agents": "エージェント",
@@ -271,7 +271,7 @@
     },
     "footer": {
       "tagline": "AIで優秀人材をいち早く採用できるプラットフォーム。",
-      "product": "プロダクト",
+      "product": "機能",
       "startHiring": "採用を始める",
       "api": "API",
       "playground": "Playground",
@@ -2234,7 +2234,8 @@
       "startedLabel": "開始",
       "completedLabel": "終了",
       "durationLabel": "所要時間",
-      "gradeLabel": "評価"
+      "gradeLabel": "評価",
+      "viewGoHireEvaluation": "GoHire 評価を表示"
     },
     "videoInterview": {
       "title": "ビデオ面接",
@@ -3055,6 +3056,7 @@
         "skills": "スキル",
         "uploadedAt": "アップロード日",
         "overwrite": "上書き",
+        "overwriteAll": "すべて上書き ({{count}})",
         "keepBoth": "両方保持",
         "skip": "スキップ",
         "of": "/"
@@ -3640,7 +3642,12 @@
     "cancel": "キャンセル",
     "delete": "削除",
     "save": "保存",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "filters": {
+      "allRecruiters": "すべてのリクルーター",
+      "recruiterGroup": "リクルーター",
+      "teamGroup": "チーム"
+    }
   },
   "admin": {
     "teams": {
@@ -3782,12 +3789,19 @@
         "requestsChart": "日別リクエスト",
         "costChart": "日別コスト",
         "tokensChart": "日別トークン"
-      }
+      },
+      "dangerZone": "危険ゾーン",
+      "deleteWarning": "このユーザーと関連するすべてのデータを完全に削除します。この操作は元に戻せません。",
+      "deleteUser": "ユーザーを削除",
+      "confirmDeleteTitle": "ユーザーを削除",
+      "confirmDeleteMessage": "{{email}} を完全に削除してもよろしいですか？すべてのデータ（履歴書、面接、求人、セッション）が削除されます。この操作は元に戻せません。",
+      "deleting": "削除中...",
+      "confirmDelete": "はい、削除します"
     }
   },
   "agents": {
     "title": "エージェント",
-    "subtitle": "AIソーシングエージェントが自動で候補者を発見・連絡します。",
+    "subtitle": "RoboHireエージェントが自動でプロフィールの検索・審査・連絡を行います。",
     "create": "新規エージェント作成",
     "myAgents": "マイエージェント",
     "searchPlaceholder": "エージェント名、オーナー名、コラボレーター名で検索",

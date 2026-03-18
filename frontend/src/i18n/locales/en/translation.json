@@ -112,7 +112,7 @@
       "signIn": "Sign In",
       "getStarted": "Get Started",
       "dashboard": "Dashboard",
-      "product": "Product",
+      "product": "Features",
       "productMenu": {
         "requirements": "Requirements Analysis",
         "agents": "Agents",
@@ -337,7 +337,7 @@
     },
     "footer": {
       "tagline": "AI-powered hiring platform that helps you find and hire elite candidates before others.",
-      "product": "Product",
+      "product": "Features",
       "startHiring": "Start Hiring",
       "api": "API",
       "playground": "Playground",
@@ -2204,7 +2204,8 @@
       "startedLabel": "Started",
       "completedLabel": "Ended",
       "durationLabel": "Duration",
-      "gradeLabel": "Grade"
+      "gradeLabel": "Grade",
+      "viewGoHireEvaluation": "View GoHire Evaluation"
     },
     "videoInterview": {
       "title": "Video Interview",
@@ -3002,6 +3003,7 @@
         "skills": "Skills",
         "uploadedAt": "Uploaded",
         "overwrite": "Overwrite",
+        "overwriteAll": "Overwrite All ({{count}})",
         "keepBoth": "Keep Both",
         "skip": "Skip",
         "of": "of"
@@ -3597,7 +3599,12 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "save": "Save",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "filters": {
+      "allRecruiters": "All Recruiters",
+      "recruiterGroup": "Recruiters",
+      "teamGroup": "Teams"
+    }
   },
   "admin": {
     "teams": {
@@ -3739,12 +3746,19 @@
         "requestsChart": "Daily Requests",
         "costChart": "Daily Cost",
         "tokensChart": "Daily Tokens"
-      }
+      },
+      "dangerZone": "Danger Zone",
+      "deleteWarning": "Permanently delete this user and all associated data. This cannot be undone.",
+      "deleteUser": "Delete User",
+      "confirmDeleteTitle": "Delete User",
+      "confirmDeleteMessage": "Are you sure you want to permanently delete {{email}}? All their data (resumes, interviews, jobs, sessions) will be removed. This action cannot be undone.",
+      "deleting": "Deleting...",
+      "confirmDelete": "Yes, Delete"
     }
   },
   "agents": {
     "title": "Agents",
-    "subtitle": "AI sourcing agents that find and contact candidates autonomously.",
+    "subtitle": "RoboHire agents can source, review, and reach out to profiles autonomously.",
     "create": "Create new agent",
     "myAgents": "My Agents",
     "searchPlaceholder": "Search for any agent, owner name, or collaborator name",

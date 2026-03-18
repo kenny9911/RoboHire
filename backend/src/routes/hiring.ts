@@ -1499,6 +1499,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
             status: 'scheduled',
             type: 'ai_video',
             accessToken,
+            gohireUserId: inviteResult.user_id != null ? String(inviteResult.user_id) : null,
             metadata: {
               inviteData: JSON.parse(JSON.stringify(inviteResult)),
               loginUrl: inviteResult.login_url,

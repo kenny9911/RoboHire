@@ -46,3 +46,30 @@ export function buildUserIdFilter(scope: VisibilityScope): Record<string, unknow
   if (scope.userIds.length === 1) return { userId: scope.userIds[0] };
   return { userId: { in: scope.userIds } };
 }
+
+/**
+ * For admin users, optionally narrow the visibility to a specific user or team.
+ * Non-admin users always get their standard visibility filter.
+ */
+export async function buildAdminOverrideFilter(
+  scope: VisibilityScope,
+  filterUserId?: string,
+  filterTeamId?: string,
+): Promise<Record<string, unknown>> {
+  if (!scope.isAdmin) return buildUserIdFilter(scope);
+
+  if (filterUserId) return { userId: filterUserId };
+
+  if (filterTeamId) {
+    const members = await prisma.user.findMany({
+      where: { teamId: filterTeamId },
+      select: { id: true },
+    });
+    const ids = members.map((m) => m.id);
+    if (ids.length === 0) return { userId: '__none__' };
+    if (ids.length === 1) return { userId: ids[0] };
+    return { userId: { in: ids } };
+  }
+
+  return {};
+}
