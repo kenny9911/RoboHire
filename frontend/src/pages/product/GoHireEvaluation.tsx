@@ -450,7 +450,7 @@ export default function GoHireEvaluation() {
   const [interview, setInterview] = useState<InterviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'resume' | 'jd' | 'transcript'>('jd');
+  const [activeTab, setActiveTab] = useState<'resume' | 'jd' | 'transcript'>('resume');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isParsingResume, setIsParsingResume] = useState(false);
   const [parsedResumeMarkdown, setParsedResumeMarkdown] = useState<string | null>(null);
@@ -460,6 +460,69 @@ export default function GoHireEvaluation() {
   const [isLoadingTranscript, setIsLoadingTranscript] = useState(false);
   const [loadTranscriptError, setLoadTranscriptError] = useState<string | null>(null);
   const [showResumeViewer, setShowResumeViewer] = useState(false);
+  const [cheatingWarningCollapsed, setCheatingWarningCollapsed] = useState(false);
+
+  // Draggable panel divider
+  const [leftPanelPercent, setLeftPanelPercent] = useState(40);
+  const isDraggingDivider = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingDivider.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      setLeftPanelPercent(Math.min(70, Math.max(25, pct)));
+    };
+    const handleMouseUp = () => {
+      if (isDraggingDivider.current) {
+        isDraggingDivider.current = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  const startDraggingDivider = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingDivider.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  // Accordion section collapse state — summary expanded by default
+  const allSectionKeys = ['recommendation', 'expertInsight', 'summary', 'strengthsWeaknesses', 'technical', 'hardRequirements', 'jdMatch', 'behavioral', 'interviewersKit', 'suitableWorkTypes', 'cheating'] as const;
+  type SectionKey = typeof allSectionKeys[number];
+  const [collapsedSections, setCollapsedSections] = useState<Set<SectionKey>>(() => {
+    const collapsed = new Set<SectionKey>(allSectionKeys);
+    collapsed.delete('recommendation');
+    collapsed.delete('summary');
+    return collapsed;
+  });
+  const toggleSection = (key: SectionKey) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+  const allExpanded = collapsedSections.size === 0;
+  const toggleAll = () => {
+    if (allExpanded) {
+      const collapsed = new Set<SectionKey>(allSectionKeys);
+      collapsed.delete('recommendation');
+      collapsed.delete('summary');
+      setCollapsedSections(collapsed);
+    } else {
+      setCollapsedSections(new Set());
+    }
+  };
 
   // Fetch interview data
   useEffect(() => {
@@ -503,6 +566,19 @@ export default function GoHireEvaluation() {
       setIsGenerating(false);
     }
   }, [id, isGenerating]);
+
+  // Auto-generate evaluation when resume + JD exist but evaluation doesn't
+  const autoEvalTriggered = useRef(false);
+  useEffect(() => {
+    if (!interview || autoEvalTriggered.current || isGenerating) return;
+    const hasResume = !!(interview.resumeText || interview.parsedResume);
+    const hasJD = !!(interview.jobDescription || interview.jobRequirements);
+    const hasEvaluation = !!interview.evaluationData;
+    if (hasResume && hasJD && !hasEvaluation) {
+      autoEvalTriggered.current = true;
+      handleGenerateEvaluation();
+    }
+  }, [interview, isGenerating, handleGenerateEvaluation]);
 
   // Transcribe video via ASR
   const handleTranscribe = useCallback(async () => {
@@ -773,11 +849,11 @@ export default function GoHireEvaluation() {
       </header>
 
       {/* Main two-column layout */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div ref={containerRef} className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* ================================================================ */}
         {/* LEFT PANEL - Video + Context Tabs                                */}
         {/* ================================================================ */}
-        <div className="w-full lg:w-1/2 flex flex-col overflow-hidden border-r border-slate-200">
+        <div className="w-full flex flex-col overflow-hidden" style={{ flex: `0 0 ${leftPanelPercent}%` }}>
           {/* Video player */}
           <div className="bg-black flex-none">
             <div className="aspect-video">
@@ -1117,10 +1193,18 @@ export default function GoHireEvaluation() {
           </div>
         </div>
 
+        {/* Draggable vertical divider */}
+        <div
+          className="hidden lg:flex w-1.5 flex-none cursor-col-resize items-center justify-center group hover:bg-slate-200 active:bg-slate-300 transition-colors"
+          onMouseDown={startDraggingDivider}
+        >
+          <div className="w-px h-full bg-slate-300 group-hover:bg-slate-400 transition-colors" />
+        </div>
+
         {/* ================================================================ */}
         {/* RIGHT PANEL - Evaluation Report                                  */}
         {/* ================================================================ */}
-        <div className="w-full lg:w-1/2 flex flex-col overflow-hidden bg-white">
+        <div className="w-full flex-1 flex flex-col overflow-hidden bg-white">
           {/* Report header */}
           <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100 flex-none">
             <div className="flex items-center gap-2.5">
@@ -1132,14 +1216,23 @@ export default function GoHireEvaluation() {
               </h2>
             </div>
             {evaluation && (
-              <button
-                onClick={handleGenerateEvaluation}
-                disabled={isGenerating}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
-              >
-                <RefreshIcon className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                {t('goHireEval.regenerate', 'Re-generate')}
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={toggleAll}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                >
+                  <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${allExpanded ? 'rotate-180' : ''}`} />
+                  {allExpanded ? t('goHireEval.collapseAll', 'Collapse') : t('goHireEval.expandAll', 'Expand All')}
+                </button>
+                <button
+                  onClick={handleGenerateEvaluation}
+                  disabled={isGenerating}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+                >
+                  <RefreshIcon className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                  {t('goHireEval.regenerate', 'Re-generate')}
+                </button>
+              </div>
             )}
           </div>
 
@@ -1177,7 +1270,7 @@ export default function GoHireEvaluation() {
                 {evaluation.cheatingAnalysis &&
                   evaluation.cheatingAnalysis.riskLevel !== 'Low' && (
                     <div
-                      className={`p-3 border-b ${
+                      className={`border-b ${
                         evaluation.cheatingAnalysis.riskLevel === 'Critical'
                           ? 'bg-red-100 border-red-300'
                           : evaluation.cheatingAnalysis.riskLevel === 'High'
@@ -1185,7 +1278,10 @@ export default function GoHireEvaluation() {
                           : 'bg-amber-100 border-amber-300'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
+                      <div
+                        className="p-3 cursor-pointer flex items-start gap-3"
+                        onClick={() => setCheatingWarningCollapsed(!cheatingWarningCollapsed)}
+                      >
                         <ShieldAlertIcon
                           className={`w-5 h-5 mt-0.5 flex-none ${
                             evaluation.cheatingAnalysis.riskLevel === 'Critical'
@@ -1196,7 +1292,7 @@ export default function GoHireEvaluation() {
                           }`}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2">
                             <span
                               className={`text-sm font-bold ${
                                 evaluation.cheatingAnalysis.riskLevel === 'Critical'
@@ -1206,7 +1302,7 @@ export default function GoHireEvaluation() {
                                   : 'text-amber-800'
                               }`}
                             >
-                              {t('goHireEval.cheatingWarning', '作弊嫌疑警告')}
+                              {t('goHireEval.cheatingWarning', 'Cheating Suspicion Warning')}
                             </span>
                             <span
                               className={`text-[10px] px-1.5 py-0.5 rounded text-white font-bold ${
@@ -1220,289 +1316,313 @@ export default function GoHireEvaluation() {
                               {evaluation.cheatingAnalysis.riskLevel}
                             </span>
                           </div>
-                          <p
-                            className={`text-xs mb-1 ${
-                              evaluation.cheatingAnalysis.riskLevel === 'Critical'
-                                ? 'text-red-800'
-                                : evaluation.cheatingAnalysis.riskLevel === 'High'
-                                ? 'text-orange-800'
-                                : 'text-amber-800'
-                            }`}
-                          >
-                            {evaluation.cheatingAnalysis.summary.length > 150
-                              ? `${evaluation.cheatingAnalysis.summary.substring(0, 150)}...`
-                              : evaluation.cheatingAnalysis.summary}
-                          </p>
+                          {!cheatingWarningCollapsed && (
+                            <p
+                              className={`text-xs mt-1 ${
+                                evaluation.cheatingAnalysis.riskLevel === 'Critical'
+                                  ? 'text-red-800'
+                                  : evaluation.cheatingAnalysis.riskLevel === 'High'
+                                  ? 'text-orange-800'
+                                  : 'text-amber-800'
+                              }`}
+                            >
+                              {evaluation.cheatingAnalysis.summary.length > 150
+                                ? `${evaluation.cheatingAnalysis.summary.substring(0, 150)}...`
+                                : evaluation.cheatingAnalysis.summary}
+                            </p>
+                          )}
                         </div>
+                        <ChevronDownIcon
+                          className={`w-4 h-4 mt-1 flex-none transition-transform ${
+                            evaluation.cheatingAnalysis.riskLevel === 'Critical'
+                              ? 'text-red-600'
+                              : evaluation.cheatingAnalysis.riskLevel === 'High'
+                              ? 'text-orange-600'
+                              : 'text-amber-600'
+                          } ${cheatingWarningCollapsed ? '' : 'rotate-180'}`}
+                        />
                       </div>
                     </div>
                   )}
 
-                {/* Score and hiring decision */}
-                <div className="p-4 bg-gray-50 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      {t('goHireEval.matchScore', '匹配得分')}
-                    </span>
-                    <div className="text-3xl font-bold text-cyan-600">{evaluation.score}/100</div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
-                      {t('goHireEval.hiringDecision', '录用建议')}
-                    </span>
-                    <span className={getDecisionBadge(evaluation.hiringDecision)}>
-                      {evaluation.hiringDecision.replace(/_/g, ' ')}
-                    </span>
-                  </div>
+                {/* Score */}
+                <div className="px-5 py-4 bg-gray-50 flex items-center gap-3">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    {t('goHireEval.matchScore', 'Match Score')}
+                  </span>
+                  <span className="text-3xl font-bold text-cyan-600">{evaluation.score}<span className="text-lg text-gray-400 font-normal">/100</span></span>
                 </div>
               </div>
 
               {/* ---- Scrollable report body ---- */}
               <div className="flex-1 overflow-y-auto p-5 min-h-0">
-                <div className="space-y-8">
+                <div className="space-y-5">
                   {/* 1. Recommendation */}
                   <div
-                    className={`p-4 rounded-lg border shadow-sm ${
-                      isNegativeDecision(evaluation.hiringDecision)
-                        ? 'bg-red-50 border-red-100'
-                        : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100'
-                    }`}
+                    className="rounded-lg bg-white shadow-md"
                   >
-                    <h4
-                      className={`text-sm font-bold mb-2 flex items-center gap-2 ${
-                        isNegativeDecision(evaluation.hiringDecision)
-                          ? 'text-red-900'
-                          : 'text-blue-900'
-                      }`}
-                    >
-                      {isNegativeDecision(evaluation.hiringDecision) ? (
-                        <XCircleIcon className="w-4 h-4" />
-                      ) : (
-                        <ThumbsUpIcon className="w-4 h-4" />
-                      )}
-                      {t('goHireEval.recommendation', '建议')}
-                    </h4>
-                    <MarkdownRenderer
-                      content={evaluation.recommendation}
-                      className={`text-sm font-medium leading-relaxed ${
-                        isNegativeDecision(evaluation.hiringDecision)
-                          ? 'text-red-900'
-                          : 'text-blue-900'
-                      }`}
-                      keywords={highlightKeywords}
-                    />
-                  </div>
-
-                  {/* 2. Expert Insight */}
-                  {(evaluation.levelAssessment || evaluation.expertAdvice) && (
-                    <div className="bg-fuchsia-50 p-4 rounded-lg border border-fuchsia-100 shadow-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-bold text-fuchsia-900 flex items-center gap-2">
-                          <LightbulbIcon className="w-4 h-4" />
-                          {t('goHireEval.expertInsight', 'Expert Insight')}
-                        </h4>
-                        {evaluation.levelAssessment && (
-                          <span className="bg-fuchsia-600 text-white text-xs font-bold px-2 py-0.5 rounded">
-                            {evaluation.levelAssessment} Level
-                          </span>
+                    <button onClick={() => toggleSection('recommendation')} className="w-full flex items-center justify-between p-4 text-left">
+                      <h4 className="text-sm font-bold flex items-center gap-2 text-gray-900">
+                        {isNegativeDecision(evaluation.hiringDecision) ? (
+                          <XCircleIcon className="w-4 h-4 text-red-500" />
+                        ) : (
+                          <ThumbsUpIcon className="w-4 h-4 text-blue-500" />
                         )}
-                      </div>
-                      {evaluation.expertAdvice && (
+                        {t('goHireEval.recommendation', '建议')}
+                      </h4>
+                      <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('recommendation') ? '' : 'rotate-180'}`} />
+                    </button>
+                    {!collapsedSections.has('recommendation') && (
+                      <div className="px-4 pb-4">
                         <MarkdownRenderer
-                          content={evaluation.expertAdvice}
-                          className="text-sm text-fuchsia-900 leading-relaxed"
+                          content={evaluation.recommendation}
+                          className="text-sm leading-relaxed text-gray-700"
                           keywords={highlightKeywords}
                         />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. Summary */}
+                  <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <button onClick={() => toggleSection('summary')} className="w-full flex items-center justify-between p-4 text-left">
+                      <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                        <BrainIcon className="w-4 h-4" />
+                        {t('goHireEval.summary', '总结摘要')}
+                      </h4>
+                      <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('summary') ? '' : 'rotate-180'}`} />
+                    </button>
+                    {!collapsedSections.has('summary') && (
+                      <div className="px-4 pb-4">
+                        <MarkdownRenderer
+                          content={evaluation.summary}
+                          className="text-sm text-gray-700"
+                          keywords={highlightKeywords}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. Expert Insight */}
+                  {(evaluation.levelAssessment || evaluation.expertAdvice) && (
+                    <div className="rounded-lg bg-white shadow-md">
+                      <button onClick={() => toggleSection('expertInsight')} className="w-full flex items-center justify-between p-4 text-left">
+                        <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <LightbulbIcon className="w-4 h-4 text-purple-500" />
+                          {t('goHireEval.expertInsight', 'Expert Insight')}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          {evaluation.levelAssessment && (
+                            <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-0.5 rounded">
+                              {evaluation.levelAssessment} Level
+                            </span>
+                          )}
+                          <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('expertInsight') ? '' : 'rotate-180'}`} />
+                        </div>
+                      </button>
+                      {!collapsedSections.has('expertInsight') && evaluation.expertAdvice && (
+                        <div className="px-4 pb-4">
+                          <MarkdownRenderer
+                            content={evaluation.expertAdvice}
+                            className="text-sm text-gray-700 leading-relaxed"
+                            keywords={highlightKeywords}
+                          />
+                        </div>
                       )}
                     </div>
                   )}
 
-                  {/* 3. Summary */}
-                  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                      <BrainIcon className="w-4 h-4" />
-                      {t('goHireEval.summary', '总结摘要')}
-                    </h4>
-                    <MarkdownRenderer
-                      content={evaluation.summary}
-                      className="text-sm text-gray-700"
-                      keywords={highlightKeywords}
-                    />
-                  </div>
+                  {/* Divider */}
+                  <hr className="border-gray-200" />
 
-                  {/* 4. Strengths */}
-                  {evaluation.strengths.length > 0 && (
-                    <div className="bg-green-50 p-4 rounded-lg border border-green-100 shadow-sm">
-                      <h4 className="text-sm font-bold text-green-800 flex items-center gap-2 mb-3">
-                        <CheckCircleIcon className="w-4 h-4" />
-                        {t('goHireEval.strengths', '优势')}
-                      </h4>
-                      <ul className="space-y-2">
-                        {evaluation.strengths.map((s, i) => (
-                          <li
-                            key={i}
-                            className="text-xs text-green-900 flex items-start gap-2"
-                          >
-                            <span className="block w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 flex-none" />
-                            <span className="leading-relaxed">{s}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* 5. Weaknesses */}
-                  {evaluation.weaknesses.length > 0 && (
-                    <div className="bg-red-50 p-4 rounded-lg border border-red-100 shadow-sm">
-                      <h4 className="text-sm font-bold text-red-800 flex items-center gap-2 mb-3">
-                        <WarningIcon className="w-4 h-4" />
-                        {t('goHireEval.weaknesses', '劣势')}
-                      </h4>
-                      <ul className="space-y-2">
-                        {evaluation.weaknesses.map((w, i) => (
-                          <li
-                            key={i}
-                            className="text-xs text-red-900 flex items-start gap-2"
-                          >
-                            <span className="block w-1.5 h-1.5 bg-red-400 rounded-full mt-1.5 flex-none" />
-                            <span className="leading-relaxed">{w}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* 6. Technical Analysis */}
-                  {evaluation.technicalAnalysis && (
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <CodeIcon className="w-4 h-4" />
-                        {t('goHireEval.technicalAnalysis', '技术能力')}
-                      </h4>
-                      <div className="bg-white border rounded-lg p-4 shadow-sm space-y-4">
-                        {/* Ratings row */}
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-600">
-                              {t('goHireEval.depthRating', 'Depth Rating')}
-                            </span>
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded border font-medium ${
-                                evaluation.technicalAnalysis.depthRating === 'Expert'
-                                  ? 'bg-purple-100 text-purple-700 border-purple-200'
-                                  : evaluation.technicalAnalysis.depthRating === 'Advanced'
-                                  ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                  : evaluation.technicalAnalysis.depthRating === 'Intermediate'
-                                  ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                  : 'bg-gray-100 text-gray-700 border-gray-200'
-                              }`}
-                            >
-                              {evaluation.technicalAnalysis.depthRating}
-                            </span>
-                          </div>
-                          {evaluation.technicalAnalysis.responseQuality && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-600">
-                                {t('goHireEval.responseQuality', 'Response Quality')}
-                              </span>
-                              <span
-                                className={`text-[10px] px-2 py-0.5 rounded border font-medium ${
-                                  evaluation.technicalAnalysis.responseQuality === 'High'
-                                    ? 'bg-green-100 text-green-700 border-green-200'
-                                    : evaluation.technicalAnalysis.responseQuality === 'Medium'
-                                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                    : 'bg-red-100 text-red-700 border-red-200'
-                                }`}
-                              >
-                                {evaluation.technicalAnalysis.responseQuality}
-                              </span>
+                  {/* 4. Strengths & Weaknesses */}
+                  {(evaluation.strengths.length > 0 || evaluation.weaknesses.length > 0) && (
+                    <div className="rounded-lg bg-white shadow-md">
+                      <button onClick={() => toggleSection('strengthsWeaknesses')} className="w-full flex items-center justify-between p-4 text-left">
+                        <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                          {t('goHireEval.strengthsAndWeaknesses', 'Strengths & Gaps')}
+                        </h4>
+                        <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('strengthsWeaknesses') ? '' : 'rotate-180'}`} />
+                      </button>
+                      {!collapsedSections.has('strengthsWeaknesses') && (
+                        <div className="px-4 pb-4 space-y-4">
+                          {evaluation.strengths.length > 0 && (
+                            <div>
+                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('goHireEval.strengths', '优势')}</h5>
+                              <ul className="space-y-1.5">
+                                {evaluation.strengths.map((s, i) => (
+                                  <li key={i} className="text-xs text-gray-700 flex items-start gap-2">
+                                    <span className="block w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 flex-none" />
+                                    <MarkdownRenderer content={s} className="leading-relaxed" />
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {evaluation.weaknesses.length > 0 && (
+                            <div className={evaluation.strengths.length > 0 ? 'pt-3 border-t border-gray-100' : ''}>
+                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('goHireEval.weaknesses', '劣势')}</h5>
+                              <ul className="space-y-1.5">
+                                {evaluation.weaknesses.map((w, i) => (
+                                  <li key={i} className="text-xs text-gray-700 flex items-start gap-2">
+                                    <span className="block w-1.5 h-1.5 bg-orange-400 rounded-full mt-1.5 flex-none" />
+                                    <MarkdownRenderer content={w} className="leading-relaxed" />
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                           )}
                         </div>
+                      )}
+                    </div>
+                  )}
 
-                        {/* Summary */}
-                        <p className="text-sm text-gray-700">
-                          {evaluation.technicalAnalysis.summary}
-                        </p>
+                  {/* Divider */}
+                  <hr className="border-gray-200" />
 
-                        {/* Details */}
-                        {evaluation.technicalAnalysis.details.length > 0 && (
-                          <ul className="space-y-1">
-                            {evaluation.technicalAnalysis.details.map((d, i) => (
-                              <li
-                                key={i}
-                                className="text-xs text-gray-600 flex items-start gap-2"
-                              >
-                                <span className="block w-1 h-1 bg-gray-400 rounded-full mt-1.5 flex-none" />
-                                {d}
-                              </li>
-                            ))}
-                          </ul>
+                  {/* 6. Technical Analysis */}
+                  {evaluation.technicalAnalysis && (
+                    <div className="rounded-lg bg-white shadow-md">
+                      <button onClick={() => toggleSection('technical')} className="w-full flex items-center justify-between p-4 text-left">
+                        <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <CodeIcon className="w-4 h-4 text-cyan-500" />
+                          {t('goHireEval.technicalAnalysis', '技术能力')}
+                        </h4>
+                        <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('technical') ? '' : 'rotate-180'}`} />
+                      </button>
+                      {!collapsedSections.has('technical') && (
+                      <div className="px-4 pb-4">
+                      {/* Ratings row */}
+                      <div className="flex items-center gap-4 flex-wrap mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {t('goHireEval.depthRating', 'Depth Rating')}
+                          </span>
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded border font-medium ${
+                              evaluation.technicalAnalysis.depthRating === 'Expert'
+                                ? 'bg-purple-100 text-purple-700 border-purple-200'
+                                : evaluation.technicalAnalysis.depthRating === 'Advanced'
+                                ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                : evaluation.technicalAnalysis.depthRating === 'Intermediate'
+                                ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                : 'bg-gray-100 text-gray-700 border-gray-200'
+                            }`}
+                          >
+                            {evaluation.technicalAnalysis.depthRating}
+                          </span>
+                        </div>
+                        {evaluation.technicalAnalysis.responseQuality && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {t('goHireEval.responseQuality', 'Response Quality')}
+                            </span>
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded border font-medium ${
+                                evaluation.technicalAnalysis.responseQuality === 'High'
+                                  ? 'bg-green-100 text-green-700 border-green-200'
+                                  : evaluation.technicalAnalysis.responseQuality === 'Medium'
+                                  ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                  : 'bg-red-100 text-red-700 border-red-200'
+                              }`}
+                            >
+                              {evaluation.technicalAnalysis.responseQuality}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Summary */}
+                      <MarkdownRenderer
+                        content={evaluation.technicalAnalysis.summary}
+                        className="text-sm text-gray-700 mb-3"
+                        keywords={highlightKeywords}
+                      />
+
+                      {/* Details */}
+                      {evaluation.technicalAnalysis.details.length > 0 && (
+                        <ul className="space-y-1.5 mb-3">
+                          {evaluation.technicalAnalysis.details.map((d, i) => (
+                            <li
+                              key={i}
+                              className="text-xs text-gray-700 flex items-start gap-2"
+                            >
+                              <span className="block w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 flex-none" />
+                              <MarkdownRenderer content={d} className="leading-relaxed" />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {/* Proven skills */}
+                      {evaluation.technicalAnalysis.provenSkills &&
+                        evaluation.technicalAnalysis.provenSkills.length > 0 && (
+                          <div className="pt-3 border-t border-gray-100">
+                            <h5 className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                              <CheckCircleIcon className="w-3 h-3 text-green-500" />
+                              {t('goHireEval.provenSkills', 'Proven Skills (有实际证明)')}
+                            </h5>
+                            <div className="flex flex-wrap gap-1.5">
+                              {evaluation.technicalAnalysis.provenSkills.map((skill, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[10px] px-2 py-0.5 rounded border bg-green-50 text-green-700 border-green-200"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         )}
 
-                        {/* Proven skills */}
-                        {evaluation.technicalAnalysis.provenSkills &&
-                          evaluation.technicalAnalysis.provenSkills.length > 0 && (
-                            <div className="pt-2 border-t border-gray-100">
-                              <h5 className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
-                                <CheckCircleIcon className="w-3 h-3" />
-                                {t('goHireEval.provenSkills', 'Proven Skills (有实际证明)')}
-                              </h5>
-                              <div className="flex flex-wrap gap-1.5">
-                                {evaluation.technicalAnalysis.provenSkills.map((skill, i) => (
+                      {/* Claimed but unverified */}
+                      {evaluation.technicalAnalysis.claimedButUnverified &&
+                        evaluation.technicalAnalysis.claimedButUnverified.length > 0 && (
+                          <div className="pt-3 border-t border-gray-100 mt-3">
+                            <h5 className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                              <WarningIcon className="w-3 h-3 text-amber-500" />
+                              {t(
+                                'goHireEval.claimedUnverified',
+                                'Claimed but Unverified (声称但未验证)',
+                              )}
+                            </h5>
+                            <div className="flex flex-wrap gap-1.5">
+                              {evaluation.technicalAnalysis.claimedButUnverified.map(
+                                (skill, i) => (
                                   <span
                                     key={i}
-                                    className="text-[10px] px-2 py-0.5 rounded border bg-green-50 text-green-700 border-green-200"
+                                    className="text-[10px] px-2 py-0.5 rounded border bg-amber-50 text-amber-700 border-amber-200"
                                   >
                                     {skill}
                                   </span>
-                                ))}
-                              </div>
+                                ),
+                              )}
                             </div>
-                          )}
-
-                        {/* Claimed but unverified */}
-                        {evaluation.technicalAnalysis.claimedButUnverified &&
-                          evaluation.technicalAnalysis.claimedButUnverified.length > 0 && (
-                            <div className="pt-2 border-t border-gray-100">
-                              <h5 className="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
-                                <WarningIcon className="w-3 h-3" />
-                                {t(
-                                  'goHireEval.claimedUnverified',
-                                  'Claimed but Unverified (声称但未验证)',
-                                )}
-                              </h5>
-                              <div className="flex flex-wrap gap-1.5">
-                                {evaluation.technicalAnalysis.claimedButUnverified.map(
-                                  (skill, i) => (
-                                    <span
-                                      key={i}
-                                      className="text-[10px] px-2 py-0.5 rounded border bg-amber-50 text-amber-700 border-amber-200"
-                                    >
-                                      {skill}
-                                    </span>
-                                  ),
-                                )}
-                              </div>
-                            </div>
-                          )}
+                          </div>
+                        )}
                       </div>
+                      )}
                     </div>
                   )}
 
                   {/* 7. Hard Requirements Check */}
                   {evaluation.jdMatch?.hardRequirementsAnalysis &&
                     evaluation.jdMatch.hardRequirementsAnalysis.length > 0 && (
-                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 shadow-sm">
-                        <h4 className="text-sm font-bold text-orange-900 mb-3 flex items-center gap-2">
-                          <WarningIcon className="w-4 h-4" />
-                          {t('goHireEval.hardRequirements', 'Mandatory Requirements Check')}
-                        </h4>
-                        <div className="space-y-3">
+                      <div className="rounded-lg bg-white shadow-md">
+                        <button onClick={() => toggleSection('hardRequirements')} className="w-full flex items-center justify-between p-4 text-left">
+                          <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                            <WarningIcon className="w-4 h-4 text-amber-500" />
+                            {t('goHireEval.hardRequirements', 'Mandatory Requirements Check')}
+                          </h4>
+                          <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('hardRequirements') ? '' : 'rotate-180'}`} />
+                        </button>
+                        {!collapsedSections.has('hardRequirements') && (
+                        <div className="px-4 pb-4 space-y-2">
                           {evaluation.jdMatch.hardRequirementsAnalysis.map((req, i) => (
                             <div
                               key={i}
-                              className="flex gap-3 items-start bg-white p-3 rounded border border-orange-100"
+                              className="flex gap-3 items-start p-3 rounded bg-gray-50"
                             >
                               <div
                                 className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-none ${
@@ -1521,28 +1641,34 @@ export default function GoHireEvaluation() {
                                 <p className="text-sm font-semibold text-gray-900 mb-1">
                                   {req.requirement}
                                 </p>
-                                <p className="text-xs text-gray-600">{req.analysis}</p>
+                                <MarkdownRenderer content={req.analysis} className="text-xs text-gray-600" />
                               </div>
                             </div>
                           ))}
                         </div>
+                        )}
                       </div>
                     )}
 
                   {/* 8. JD Requirements Match */}
                   {evaluation.jdMatch && (
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <ListCheckIcon className="w-4 h-4" />
-                        {t('goHireEval.jdMatch', 'JD Requirements Match')}
-                      </h4>
-                      <div className="space-y-3">
+                    <div className="rounded-lg bg-white shadow-md">
+                      <button onClick={() => toggleSection('jdMatch')} className="w-full flex items-center justify-between p-4 text-left">
+                        <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <ListCheckIcon className="w-4 h-4 text-teal-500" />
+                          {t('goHireEval.jdMatch', 'JD Requirements Match')}
+                        </h4>
+                        <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('jdMatch') ? '' : 'rotate-180'}`} />
+                      </button>
+                      {!collapsedSections.has('jdMatch') && (
+                      <div className="px-4 pb-4">
+                      <div className="space-y-2">
                         {evaluation.jdMatch.requirements.map((req, i) => (
                           <div
                             key={i}
-                            className="bg-white border rounded-lg p-3 shadow-sm"
+                            className="p-3 rounded bg-gray-50"
                           >
-                            <div className="flex items-start justify-between gap-3 mb-2">
+                            <div className="flex items-start justify-between gap-3 mb-1">
                               <span className="text-xs font-medium text-gray-800 flex-1">
                                 {req.requirement}
                               </span>
@@ -1560,7 +1686,7 @@ export default function GoHireEvaluation() {
                                 {req.matchLevel}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-2 rounded">
+                            <p className="text-xs text-gray-600 leading-relaxed">
                               {req.explanation}
                             </p>
                           </div>
@@ -1570,15 +1696,15 @@ export default function GoHireEvaluation() {
                       {/* Bonus skills */}
                       {evaluation.jdMatch.extraSkillsFound &&
                         evaluation.jdMatch.extraSkillsFound.length > 0 && (
-                          <div className="mt-4 bg-amber-50 border border-amber-100 rounded-lg p-3">
-                            <h5 className="text-xs font-semibold text-amber-900 mb-2">
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <h5 className="text-xs font-semibold text-gray-700 mb-2">
                               {t('goHireEval.bonusSkills', 'Bonus Skills Identified')}
                             </h5>
                             <div className="flex flex-wrap gap-2">
                               {evaluation.jdMatch.extraSkillsFound.map((skill, i) => (
                                 <span
                                   key={i}
-                                  className="bg-white text-amber-800 border border-amber-200 text-[10px] px-2 py-0.5 rounded"
+                                  className="bg-gray-50 text-gray-900 font-medium border border-gray-200 text-[10px] px-2 py-0.5 rounded"
                                 >
                                   {skill}
                                 </span>
@@ -1586,120 +1712,139 @@ export default function GoHireEvaluation() {
                             </div>
                           </div>
                         )}
+                      </div>
+                      )}
                     </div>
                   )}
 
                   {/* 9. Behavioral Analysis */}
                   {evaluation.behavioralAnalysis && (
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <UsersIcon className="w-4 h-4" />
-                        {t('goHireEval.behavioralAnalysis', 'Behavioral Analysis')}
-                      </h4>
-                      <div className="bg-white border rounded-lg p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium text-gray-600">
-                            {t('goHireEval.culturalFit', 'Cultural Fit')}
-                          </span>
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded border font-medium ${
-                              evaluation.behavioralAnalysis.compatibility === 'High'
-                                ? 'bg-green-50 text-green-700 border-green-200'
-                                : evaluation.behavioralAnalysis.compatibility === 'Medium'
-                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                : 'bg-red-50 text-red-700 border-red-200'
-                            }`}
-                          >
-                            {evaluation.behavioralAnalysis.compatibility}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-700 mb-3">
-                          {evaluation.behavioralAnalysis.summary}
-                        </p>
-                        {evaluation.behavioralAnalysis.details.length > 0 && (
-                          <ul className="space-y-1">
-                            {evaluation.behavioralAnalysis.details.map((d, i) => (
-                              <li
-                                key={i}
-                                className="text-xs text-gray-600 flex items-start gap-2"
-                              >
-                                <span className="block w-1 h-1 bg-blue-400 rounded-full mt-1.5 flex-none" />
-                                {d}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+                    <div className="rounded-lg bg-white shadow-md">
+                      <button onClick={() => toggleSection('behavioral')} className="w-full flex items-center justify-between p-4 text-left">
+                        <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <UsersIcon className="w-4 h-4 text-blue-500" />
+                          {t('goHireEval.behavioralAnalysis', 'Behavioral Analysis')}
+                        </h4>
+                        <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('behavioral') ? '' : 'rotate-180'}`} />
+                      </button>
+                      {!collapsedSections.has('behavioral') && (
+                      <div className="px-4 pb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-gray-500">
+                          {t('goHireEval.culturalFit', 'Cultural Fit')}
+                        </span>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded border font-medium ${
+                            evaluation.behavioralAnalysis.compatibility === 'High'
+                              ? 'bg-green-100 text-green-700 border-green-200'
+                              : evaluation.behavioralAnalysis.compatibility === 'Medium'
+                              ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                              : 'bg-red-100 text-red-700 border-red-200'
+                          }`}
+                        >
+                          {evaluation.behavioralAnalysis.compatibility}
+                        </span>
                       </div>
+                      <MarkdownRenderer
+                        content={evaluation.behavioralAnalysis.summary}
+                        className="text-sm text-gray-700 mb-3"
+                        keywords={highlightKeywords}
+                      />
+                      {evaluation.behavioralAnalysis.details.length > 0 && (
+                        <ul className="space-y-1.5">
+                          {evaluation.behavioralAnalysis.details.map((d, i) => (
+                            <li
+                              key={i}
+                              className="text-xs text-gray-700 flex items-start gap-2"
+                            >
+                              <span className="block w-1.5 h-1.5 bg-blue-400 rounded-full mt-1.5 flex-none" />
+                              <MarkdownRenderer content={d} className="leading-relaxed" />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      </div>
+                      )}
                     </div>
                   )}
 
                   {/* 10. Interviewer's Kit */}
                   {evaluation.interviewersKit && (
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <HelpCircleIcon className="w-4 h-4" />
-                        {t('goHireEval.interviewersKit', "Interviewer's Kit")}
-                      </h4>
-                      <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
-                        <h5 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-2">
-                          {t(
-                            'goHireEval.suggestedQuestions',
-                            'Suggested Follow-up Questions',
-                          )}
-                        </h5>
-                        <ul className="space-y-2 mb-4">
-                          {evaluation.interviewersKit.suggestedQuestions.map((q, i) => (
-                            <li
-                              key={i}
-                              className="text-sm text-indigo-800 flex items-start gap-2 bg-white p-2 rounded"
-                            >
-                              <span className="text-indigo-400 font-bold flex-none">
-                                Q{i + 1}:
-                              </span>
-                              <span>{q}</span>
-                            </li>
-                          ))}
-                        </ul>
-
-                        {evaluation.interviewersKit.focusAreas.length > 0 && (
-                          <>
-                            <h5 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-2">
-                              {t('goHireEval.focusAreas', 'Key Focus Areas')}
-                            </h5>
-                            <div className="flex flex-wrap gap-2">
-                              {evaluation.interviewersKit.focusAreas.map((area, i) => (
-                                <span
-                                  key={i}
-                                  className="bg-indigo-200 text-indigo-800 text-xs font-medium px-2 py-1 rounded"
-                                >
-                                  {area}
-                                </span>
-                              ))}
-                            </div>
-                          </>
+                    <div className="rounded-lg bg-white shadow-md">
+                      <button onClick={() => toggleSection('interviewersKit')} className="w-full flex items-center justify-between p-4 text-left">
+                        <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <HelpCircleIcon className="w-4 h-4 text-indigo-500" />
+                          {t('goHireEval.interviewersKit', "Interviewer's Kit")}
+                        </h4>
+                        <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('interviewersKit') ? '' : 'rotate-180'}`} />
+                      </button>
+                      {!collapsedSections.has('interviewersKit') && (
+                      <div className="px-4 pb-4">
+                      <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                        {t(
+                          'goHireEval.suggestedQuestions',
+                          'Suggested Follow-up Questions',
                         )}
+                      </h5>
+                      <ul className="space-y-2 mb-4">
+                        {evaluation.interviewersKit.suggestedQuestions.map((q, i) => (
+                          <li
+                            key={i}
+                            className="text-sm text-gray-700 flex items-start gap-2 bg-gray-50 p-2 rounded"
+                          >
+                            <span className="text-indigo-500 font-bold flex-none">
+                              Q{i + 1}:
+                            </span>
+                            <MarkdownRenderer content={q} className="flex-1" />
+                          </li>
+                        ))}
+                      </ul>
+
+                      {evaluation.interviewersKit.focusAreas.length > 0 && (
+                        <>
+                          <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                            {t('goHireEval.focusAreas', 'Key Focus Areas')}
+                          </h5>
+                          <div className="flex flex-wrap gap-2">
+                            {evaluation.interviewersKit.focusAreas.map((area, i) => (
+                              <span
+                                key={i}
+                                className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded border border-gray-200"
+                              >
+                                {area}
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
                       </div>
+                      )}
                     </div>
                   )}
 
                   {/* 11. Suitable Work Types */}
                   {evaluation.suitableWorkTypes &&
                     evaluation.suitableWorkTypes.length > 0 && (
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                        <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-                          <BriefcaseIcon className="w-4 h-4" />
-                          {t('goHireEval.suitableWorkTypes', 'Suitable For Roles')}
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {evaluation.suitableWorkTypes.map((type, i) => (
-                            <span
-                              key={i}
-                              className="bg-white border border-slate-300 text-slate-700 text-xs font-medium px-2 py-1 rounded"
-                            >
-                              {type}
-                            </span>
-                          ))}
-                        </div>
+                      <div className="rounded-lg bg-white shadow-md">
+                        <button onClick={() => toggleSection('suitableWorkTypes')} className="w-full flex items-center justify-between p-4 text-left">
+                          <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                            <BriefcaseIcon className="w-4 h-4 text-slate-500" />
+                            {t('goHireEval.suitableWorkTypes', 'Suitable For Roles')}
+                          </h4>
+                          <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('suitableWorkTypes') ? '' : 'rotate-180'}`} />
+                        </button>
+                        {!collapsedSections.has('suitableWorkTypes') && (
+                          <div className="px-4 pb-4 flex flex-wrap gap-2">
+                            {evaluation.suitableWorkTypes.map((type, i) => (
+                              <span
+                                key={i}
+                                className="bg-gray-50 border border-gray-200 text-gray-700 text-xs font-medium px-2 py-1 rounded"
+                              >
+                                {type}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
