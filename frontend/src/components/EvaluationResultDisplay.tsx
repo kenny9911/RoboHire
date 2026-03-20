@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface InterviewEvaluation {
   score: number;
@@ -89,6 +90,22 @@ interface InterviewEvaluation {
     }>;
     authenticitySignals: string[];
     recommendation: string;
+  };
+  personalityAssessment?: {
+    mbtiEstimate: string;
+    mbtiConfidence: string;
+    mbtiExplanation: string;
+    bigFiveTraits: Array<{
+      trait: string;
+      level: string;
+      evidence: string;
+    }>;
+    communicationStyle: string;
+    workStylePreferences: string[];
+    motivators: string[];
+    potentialChallenges: string[];
+    teamDynamicsAdvice: string;
+    summary: string;
   };
 }
 
@@ -531,6 +548,7 @@ function MustHaveAnalysisSection({ analysis }: { analysis: InterviewEvaluation['
 }
 
 export default function EvaluationResultDisplay({ data }: EvaluationResultDisplayProps) {
+  const { t } = useTranslation();
   if (!data) return null;
 
   // Calculate Q&A stats
@@ -836,6 +854,102 @@ export default function EvaluationResultDisplay({ data }: EvaluationResultDispla
           )}
         </div>
       </CollapsibleSection>
+
+      {/* Personality Assessment (性格测试) */}
+      {data.personalityAssessment && (
+        <CollapsibleSection title={t('goHireEval.personalityAssessment', 'Personality Assessment 性格测试')} badge={data.personalityAssessment.mbtiEstimate}>
+          <div className="space-y-5">
+            {/* Summary */}
+            <p className="text-gray-700">{data.personalityAssessment.summary}</p>
+
+            {/* MBTI Card */}
+            <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-xl p-5">
+              <div className="flex items-center gap-4 mb-3">
+                <span className="text-3xl font-bold text-indigo-700">{data.personalityAssessment.mbtiEstimate}</span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  data.personalityAssessment.mbtiConfidence === 'High' ? 'bg-green-100 text-green-700' :
+                  data.personalityAssessment.mbtiConfidence === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {t(`goHireEval.level${data.personalityAssessment.mbtiConfidence?.replace('-', '')}` as any, data.personalityAssessment.mbtiConfidence)} {t('goHireEval.confidence', 'Confidence')}
+                </span>
+              </div>
+              <p className="text-gray-600 text-sm">{data.personalityAssessment.mbtiExplanation}</p>
+            </div>
+
+            {/* Big Five Traits */}
+            {data.personalityAssessment.bigFiveTraits?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-gray-700 mb-3">{t('goHireEval.bigFiveOcean', 'Big Five (OCEAN)')}</h4>
+                <div className="space-y-2">
+                  {data.personalityAssessment.bigFiveTraits.map((bt, i) => {
+                    const levelPercent = bt.level === 'High' ? 90 : bt.level === 'Medium-High' ? 72 : bt.level === 'Medium' ? 50 : bt.level === 'Medium-Low' ? 30 : 12;
+                    const barColor = bt.level === 'High' || bt.level === 'Medium-High' ? 'bg-indigo-500' : bt.level === 'Medium' ? 'bg-blue-400' : 'bg-slate-400';
+                    return (
+                      <div key={i} className="bg-white border border-gray-100 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-medium text-gray-800 text-sm">{t(`goHireEval.trait${bt.trait}` as any, bt.trait)}</span>
+                          <span className="text-xs text-gray-500">{t(`goHireEval.level${bt.level?.replace(/[- ]/g, '')}` as any, bt.level)}</span>
+                        </div>
+                        <div className="w-full h-2 bg-gray-100 rounded-full mb-2">
+                          <div className={`h-full rounded-full ${barColor}`} style={{ width: `${levelPercent}%` }} />
+                        </div>
+                        <p className="text-xs text-gray-500">{bt.evidence}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Communication & Work Style */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white border border-gray-100 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-700 mb-2 text-sm">{t('goHireEval.communicationStyle', 'Communication Style')}</h4>
+                <p className="text-gray-600 text-sm">{data.personalityAssessment.communicationStyle}</p>
+              </div>
+              <div className="bg-white border border-gray-100 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-700 mb-2 text-sm">{t('goHireEval.teamDynamics', 'Team Dynamics')}</h4>
+                <p className="text-gray-600 text-sm">{data.personalityAssessment.teamDynamicsAdvice}</p>
+              </div>
+            </div>
+
+            {/* Tags: Motivators, Work Style, Challenges */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {data.personalityAssessment.motivators?.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-700 mb-2 text-sm">{t('goHireEval.motivators', 'Motivators')}</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {data.personalityAssessment.motivators.map((m, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs">{m}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {data.personalityAssessment.workStylePreferences?.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-700 mb-2 text-sm">{t('goHireEval.workStyle', 'Work Style')}</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {data.personalityAssessment.workStylePreferences.map((w, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">{w}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {data.personalityAssessment.potentialChallenges?.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-700 mb-2 text-sm">{t('goHireEval.potentialChallenges', 'Potential Challenges')}</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {data.personalityAssessment.potentialChallenges.map((c, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs">{c}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </CollapsibleSection>
+      )}
 
       {/* Expert Advice & Recommendation */}
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6">

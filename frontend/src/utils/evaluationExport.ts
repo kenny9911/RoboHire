@@ -183,6 +183,26 @@ export function generateEvaluationMarkdown(data: any, meta: ExportMeta): string 
     }
   }
 
+  // Personality Assessment
+  if (data.personalityAssessment) {
+    const pa = data.personalityAssessment;
+    push(`## Personality Assessment (性格测试)`);
+    push(`**MBTI Estimate:** ${pa.mbtiEstimate} (${pa.mbtiConfidence} confidence)`);
+    if (pa.mbtiExplanation) push(pa.mbtiExplanation);
+    if (pa.bigFiveTraits?.length) {
+      push(`### Big Five Traits (OCEAN)`);
+      for (const t of pa.bigFiveTraits) {
+        push(`- **${t.trait}** — ${t.level}: ${t.evidence}`);
+      }
+    }
+    if (pa.communicationStyle) push(`**Communication Style:** ${pa.communicationStyle}`);
+    if (pa.workStylePreferences?.length) push(`**Work Style:** ${pa.workStylePreferences.join(', ')}`);
+    if (pa.motivators?.length) push(`**Motivators:** ${pa.motivators.join(', ')}`);
+    if (pa.potentialChallenges?.length) push(`**Potential Challenges:** ${pa.potentialChallenges.join(', ')}`);
+    if (pa.teamDynamicsAdvice) push(`**Team Dynamics:** ${pa.teamDynamicsAdvice}`);
+    if (pa.summary) push(pa.summary);
+  }
+
   // Expert Advice
   if (data.expertAdvice) {
     push(`## Expert Advice`, data.expertAdvice);

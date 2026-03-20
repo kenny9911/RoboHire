@@ -409,6 +409,13 @@ model Resume {
   fileName        String?
   fileSize        Int?
   fileType        String?
+  originalFileProvider String?
+  originalFileKey      String?
+  originalFileName     String?
+  originalFileMimeType String?
+  originalFileSize     Int?
+  originalFileChecksum String?
+  originalFileStoredAt DateTime?
   contentHash     String?
   status          String    @default("active")
   source          String    @default("upload")
@@ -432,6 +439,7 @@ model Resume {
   @@index([userId, status, createdAt])
   @@index([name])
   @@index([contentHash])
+  @@index([originalFileKey])
   @@index([createdAt])
 }
 

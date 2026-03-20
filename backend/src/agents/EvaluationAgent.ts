@@ -177,7 +177,27 @@ You must output a JSON object adhering to the following structure:
       "mustHaveVerified": boolean, // If must-have, did they pass?
       "weight": "Must-Have" | "Important" | "Nice-to-Have" // Question importance
     }
-  ]
+  ],
+
+  // 8. Personality Assessment (性格测试) — Inferred from interview behavior
+  "personalityAssessment": {
+    "mbtiEstimate": "string", // Best-fit MBTI type (e.g. "INTJ", "ENFP")
+    "mbtiConfidence": "High" | "Medium" | "Low",
+    "mbtiExplanation": "string", // Evidence-based reasoning for this MBTI estimate
+    "bigFiveTraits": [
+      {
+        "trait": "string", // One of: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
+        "level": "High" | "Medium-High" | "Medium" | "Medium-Low" | "Low",
+        "evidence": "string" // Specific behavioral evidence from the transcript
+      }
+    ], // Must include all 5 traits
+    "communicationStyle": "string", // e.g. "Direct and structured", "Warm and collaborative"
+    "workStylePreferences": ["string", ...], // e.g. "Independent deep work", "Cross-functional collaboration"
+    "motivators": ["string", ...], // What drives this person (e.g. "Technical challenge", "Impact")
+    "potentialChallenges": ["string", ...], // Personality-based workplace challenges
+    "teamDynamicsAdvice": "string", // How they might fit in a team, management style recommendations
+    "summary": "string" // 2-3 sentence overall personality characterization
+  }
 }
 
 ## Evaluation Guidelines
@@ -250,6 +270,29 @@ You must carefully analyze each candidate response to determine:
 - Focus on verifying "Medium" matches or exploring "Extra Skills".
 - Include probing questions for areas where candidate gave vague or unsubstantiated answers.
 - Suggest technical deep-dive questions to verify claimed expertise.
+
+### Personality Assessment (性格测试)
+As an experienced recruiter, personality expert, and psychologist, infer the candidate's personality profile from HOW they communicate during the interview — not just WHAT they say. Be objective and evidence-based.
+
+**MBTI Estimation:**
+- Analyze Introversion(I) vs Extraversion(E): response length, energy level, social cues, whether they process internally or externally
+- Analyze Sensing(S) vs Intuition(N): focus on concrete details vs abstract concepts, practical vs theoretical orientation
+- Analyze Thinking(T) vs Feeling(F): decision rationale (logic vs values), empathy signals, conflict handling style
+- Analyze Judging(J) vs Perceiving(P): structured vs flexible answers, planning orientation, comfort with ambiguity
+
+**Big Five Traits (OCEAN):**
+- Openness: curiosity, creativity, willingness to explore new ideas (look for: novel approaches, interest in learning)
+- Conscientiousness: organization, thoroughness, reliability (look for: structured answers, attention to detail, follow-through examples)
+- Extraversion: enthusiasm, talkativeness, social energy (look for: engagement level, initiative in conversation)
+- Agreeableness: cooperation, empathy, team orientation (look for: how they discuss colleagues, conflict resolution)
+- Neuroticism: stress handling, emotional stability (look for: composure under pressure, reaction to difficult questions)
+
+**Important Rules:**
+- Base ALL assessments on observable behavioral evidence from the transcript — cite specific examples
+- Be honest and objective — do NOT flatter the candidate
+- State confidence level honestly — a 30-minute interview provides limited data
+- Focus on workplace-relevant personality traits, not clinical diagnosis
+- Provide actionable advice for team fit and management approach
 
 ## SCORING GUIDELINES (0-100)
 
@@ -335,7 +378,7 @@ Make sure to address these specific points in your analysis while still followin
 
 ---
 
-Please provide a comprehensive evaluation including Technical Analysis, JD Match, Behavioral Analysis, and Interviewer's Kit as defined in the system prompt.`;
+Please provide a comprehensive evaluation including Technical Analysis, JD Match, Behavioral Analysis, Interviewer's Kit, and Personality Assessment (性格测试) as defined in the system prompt.`;
 
     return prompt;
   }
@@ -421,6 +464,7 @@ Please provide a comprehensive evaluation including Technical Analysis, JD Match
       suitableWorkTypes: Array.isArray(parsed.suitableWorkTypes) ? parsed.suitableWorkTypes : [],
       questionAnswerAssessment: Array.isArray(parsed.questionAnswerAssessment) ? parsed.questionAnswerAssessment : [],
       cheatingAnalysis: parsed.cheatingAnalysis,
+      personalityAssessment: parsed.personalityAssessment,
     };
   }
 

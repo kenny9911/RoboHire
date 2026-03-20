@@ -64,6 +64,18 @@ interface EvaluationReport {
     authenticitySignals: string[];
     recommendation: string;
   };
+  personalityAssessment?: {
+    mbtiEstimate: string;
+    mbtiConfidence: string;
+    mbtiExplanation: string;
+    bigFiveTraits: Array<{ trait: string; level: string; evidence: string }>;
+    communicationStyle: string;
+    workStylePreferences: string[];
+    motivators: string[];
+    potentialChallenges: string[];
+    teamDynamicsAdvice: string;
+    summary: string;
+  };
 }
 
 interface InterviewData {
@@ -500,7 +512,7 @@ export default function GoHireEvaluation() {
   }, []);
 
   // Accordion section collapse state — summary expanded by default
-  const allSectionKeys = ['recommendation', 'expertInsight', 'summary', 'strengthsWeaknesses', 'technical', 'hardRequirements', 'jdMatch', 'behavioral', 'interviewersKit', 'suitableWorkTypes', 'cheating'] as const;
+  const allSectionKeys = ['recommendation', 'expertInsight', 'summary', 'strengthsWeaknesses', 'technical', 'hardRequirements', 'jdMatch', 'behavioral', 'interviewersKit', 'suitableWorkTypes', 'personality', 'cheating'] as const;
   type SectionKey = typeof allSectionKeys[number];
   const [collapsedSections, setCollapsedSections] = useState<Set<SectionKey>>(() => {
     const collapsed = new Set<SectionKey>(allSectionKeys);
@@ -1867,6 +1879,124 @@ export default function GoHireEvaluation() {
                         )}
                       </div>
                     )}
+
+                  {/* Personality Assessment (性格测试) */}
+                  {evaluation.personalityAssessment && (
+                    <div className="rounded-lg bg-white shadow-md">
+                      <button onClick={() => toggleSection('personality')} className="w-full flex items-center justify-between p-4 text-left">
+                        <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <UsersIcon className="w-4 h-4 text-indigo-500" />
+                          {t('goHireEval.personalityAssessment', 'Personality Assessment 性格测试')}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          {evaluation.personalityAssessment.mbtiEstimate && (
+                            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-bold rounded">
+                              {evaluation.personalityAssessment.mbtiEstimate}
+                            </span>
+                          )}
+                          <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('personality') ? '' : 'rotate-180'}`} />
+                        </div>
+                      </button>
+                      {!collapsedSections.has('personality') && (
+                        <div className="px-4 pb-4 space-y-4">
+                          {/* Summary */}
+                          {evaluation.personalityAssessment.summary && (
+                            <p className="text-sm text-gray-700">{evaluation.personalityAssessment.summary}</p>
+                          )}
+
+                          {/* MBTI Card */}
+                          <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-lg p-4">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-2xl font-bold text-indigo-700">{evaluation.personalityAssessment.mbtiEstimate}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                evaluation.personalityAssessment.mbtiConfidence === 'High' ? 'bg-green-100 text-green-700' :
+                                evaluation.personalityAssessment.mbtiConfidence === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-gray-100 text-gray-600'
+                              }`}>
+                                {t(`goHireEval.level${evaluation.personalityAssessment.mbtiConfidence?.replace('-', '')}` as any, evaluation.personalityAssessment.mbtiConfidence)} {t('goHireEval.confidence', 'Confidence')}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600">{evaluation.personalityAssessment.mbtiExplanation}</p>
+                          </div>
+
+                          {/* Big Five Traits */}
+                          {evaluation.personalityAssessment.bigFiveTraits?.length > 0 && (
+                            <div>
+                              <h5 className="text-xs font-semibold text-gray-700 mb-2">{t('goHireEval.bigFiveOcean', 'Big Five (OCEAN)')}</h5>
+                              <div className="space-y-2">
+                                {evaluation.personalityAssessment.bigFiveTraits.map((trait, i) => {
+                                  const pct = trait.level === 'High' ? 90 : trait.level === 'Medium-High' ? 72 : trait.level === 'Medium' ? 50 : trait.level === 'Medium-Low' ? 30 : 12;
+                                  const barColor = pct >= 70 ? 'bg-indigo-500' : pct >= 40 ? 'bg-blue-400' : 'bg-slate-400';
+                                  return (
+                                    <div key={i} className="bg-gray-50 border border-gray-100 rounded-md p-2.5">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs font-medium text-gray-800">{t(`goHireEval.trait${trait.trait}` as any, trait.trait)}</span>
+                                        <span className="text-[10px] text-gray-500">{t(`goHireEval.level${trait.level?.replace(/[- ]/g, '')}` as any, trait.level)}</span>
+                                      </div>
+                                      <div className="w-full h-1.5 bg-gray-200 rounded-full mb-1.5">
+                                        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+                                      </div>
+                                      <p className="text-[11px] text-gray-500">{trait.evidence}</p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Communication & Team */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {evaluation.personalityAssessment.communicationStyle && (
+                              <div className="bg-gray-50 border border-gray-100 rounded-md p-3">
+                                <h5 className="text-xs font-semibold text-gray-700 mb-1">{t('goHireEval.communicationStyle', 'Communication Style')}</h5>
+                                <p className="text-xs text-gray-600">{evaluation.personalityAssessment.communicationStyle}</p>
+                              </div>
+                            )}
+                            {evaluation.personalityAssessment.teamDynamicsAdvice && (
+                              <div className="bg-gray-50 border border-gray-100 rounded-md p-3">
+                                <h5 className="text-xs font-semibold text-gray-700 mb-1">{t('goHireEval.teamDynamics', 'Team Dynamics')}</h5>
+                                <p className="text-xs text-gray-600">{evaluation.personalityAssessment.teamDynamicsAdvice}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Tags */}
+                          <div className="space-y-3">
+                            {evaluation.personalityAssessment.motivators?.length > 0 && (
+                              <div>
+                                <h5 className="text-xs font-semibold text-gray-700 mb-1.5">{t('goHireEval.motivators', 'Motivators')}</h5>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {evaluation.personalityAssessment.motivators.map((m, i) => (
+                                    <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[11px] font-medium">{m}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {evaluation.personalityAssessment.workStylePreferences?.length > 0 && (
+                              <div>
+                                <h5 className="text-xs font-semibold text-gray-700 mb-1.5">{t('goHireEval.workStyle', 'Work Style')}</h5>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {evaluation.personalityAssessment.workStylePreferences.map((w, i) => (
+                                    <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-medium">{w}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {evaluation.personalityAssessment.potentialChallenges?.length > 0 && (
+                              <div>
+                                <h5 className="text-xs font-semibold text-gray-700 mb-1.5">{t('goHireEval.potentialChallenges', 'Potential Challenges')}</h5>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {evaluation.personalityAssessment.potentialChallenges.map((c, i) => (
+                                    <span key={i} className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[11px] font-medium">{c}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* 12. Cheating Analysis (collapsible) */}
                   {evaluation.cheatingAnalysis && (

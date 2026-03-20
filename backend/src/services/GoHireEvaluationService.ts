@@ -122,6 +122,22 @@ export interface EvaluationReport {
   expertAdvice?: string;
   suitableWorkTypes?: string[];
   cheatingAnalysis?: CheatingAnalysis;
+  personalityAssessment?: {
+    mbtiEstimate: string;
+    mbtiConfidence: 'High' | 'Medium' | 'Low';
+    mbtiExplanation: string;
+    bigFiveTraits: Array<{
+      trait: string;
+      level: 'High' | 'Medium-High' | 'Medium' | 'Medium-Low' | 'Low';
+      evidence: string;
+    }>;
+    communicationStyle: string;
+    workStylePreferences: string[];
+    motivators: string[];
+    potentialChallenges: string[];
+    teamDynamicsAdvice: string;
+    summary: string;
+  };
 }
 
 export interface EvaluateInterviewResult {
@@ -369,7 +385,27 @@ You must output a JSON object adhering to the following structure:
       "clarity": "High" | "Medium" | "Low",
       "completeness": "Complete" | "Partial" | "Incomplete"
     }
-  ]
+  ],
+
+  // 7. Personality Assessment (性格测试) — Inferred from interview behavior
+  "personalityAssessment": {
+    "mbtiEstimate": "string", // Best-fit MBTI type (e.g. "INTJ", "ENFP")
+    "mbtiConfidence": "High" | "Medium" | "Low",
+    "mbtiExplanation": "string", // Evidence-based reasoning for the MBTI estimate
+    "bigFiveTraits": [
+      {
+        "trait": "string", // One of: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
+        "level": "High" | "Medium-High" | "Medium" | "Medium-Low" | "Low",
+        "evidence": "string" // Specific behavioral evidence from the transcript
+      }
+    ], // Must include all 5 traits
+    "communicationStyle": "string", // e.g. "Direct and structured"
+    "workStylePreferences": ["string", ...], // e.g. "Independent deep work"
+    "motivators": ["string", ...], // What drives this person
+    "potentialChallenges": ["string", ...], // Personality-based workplace challenges
+    "teamDynamicsAdvice": "string", // Team fit and management recommendations
+    "summary": "string" // 2-3 sentence overall personality characterization
+  }
 }
 
 ## Evaluation Guidelines
@@ -443,6 +479,24 @@ You must carefully analyze each candidate response to determine:
 - Include probing questions for areas where candidate gave vague or unsubstantiated answers.
 - Suggest technical deep-dive questions to verify claimed expertise.
 
+### Personality Assessment (性格测试)
+As an experienced recruiter, personality expert, and psychologist, infer the candidate's personality profile from HOW they communicate — not just WHAT they say. Be objective and evidence-based.
+
+**MBTI Estimation:**
+- Analyze I vs E: response style, social energy, processing approach
+- Analyze S vs N: concrete details vs abstract concepts
+- Analyze T vs F: logic-based vs values-based reasoning
+- Analyze J vs P: structured vs flexible answers
+
+**Big Five (OCEAN) — assess all 5 traits:**
+- Openness: curiosity, creativity, willingness to explore
+- Conscientiousness: organization, thoroughness, reliability
+- Extraversion: enthusiasm, talkativeness, social energy
+- Agreeableness: cooperation, empathy, team orientation
+- Neuroticism: stress handling, emotional stability
+
+**Rules:** Base on observable evidence from transcript. Be honest and objective. State confidence level honestly. Focus on workplace-relevant traits.
+
 ## SCORING GUIDELINES (0-100)
 
 The overall score MUST factor in the quality of candidate responses, not just claimed experience:
@@ -472,7 +526,7 @@ The overall score MUST factor in the quality of candidate responses, not just cl
 3. The score should reflect what was DEMONSTRATED in the interview, not what is claimed on resume.
 
 ## CRITICAL LANGUAGE REQUIREMENT
-The entire report content (summary, strengths, weaknesses, technicalAnalysis, jdMatch, behavioralAnalysis, interviewersKit, recommendation) MUST be written in **${outputLanguage}**.
+The entire report content (summary, strengths, weaknesses, technicalAnalysis, jdMatch, behavioralAnalysis, interviewersKit, personalityAssessment, recommendation) MUST be written in **${outputLanguage}**.
 Do NOT translate the output to any other language. If the user selected Chinese, output MUST be in Chinese. Do NOT output in English unless explicitly selected.
 `;
 
@@ -495,7 +549,7 @@ ${transcript}
 
 ---
 
-Please provide a comprehensive evaluation including Technical Analysis, JD Match, Behavioral Analysis, and Interviewer's Kit as defined in the system prompt.
+Please provide a comprehensive evaluation including Technical Analysis, JD Match, Behavioral Analysis, Interviewer's Kit, and Personality Assessment (性格测试) as defined in the system prompt.
 `;
 
     try {

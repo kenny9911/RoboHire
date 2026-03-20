@@ -512,6 +512,9 @@ export interface InterviewEvaluation {
 
   // 8. Cheating Analysis (optional)
   cheatingAnalysis?: CheatingAnalysis;
+
+  // 9. Personality Assessment (optional)
+  personalityAssessment?: PersonalityAssessment;
 }
 
 // Must-Have Interview Analysis - Determines disqualification
@@ -644,6 +647,24 @@ export interface CheatingIndicator {
   description: string; // What was detected
   severity: 'Low' | 'Medium' | 'High';
   evidence: string; // Direct quote or example
+}
+
+// Personality Assessment — inferred from interview behavioral cues
+export interface PersonalityAssessment {
+  mbtiEstimate: string; // e.g. "INTJ" or "ENFP" — best-fit estimate
+  mbtiConfidence: 'High' | 'Medium' | 'Low';
+  mbtiExplanation: string; // Why this type was chosen based on transcript evidence
+  bigFiveTraits: Array<{
+    trait: string; // Openness | Conscientiousness | Extraversion | Agreeableness | Neuroticism
+    level: 'High' | 'Medium-High' | 'Medium' | 'Medium-Low' | 'Low';
+    evidence: string; // Supporting behavioral evidence from transcript
+  }>;
+  communicationStyle: string; // e.g. "Direct and structured", "Collaborative and empathetic"
+  workStylePreferences: string[]; // e.g. ["Independent deep work", "Structured environment"]
+  motivators: string[]; // e.g. ["Technical challenge", "Impact-driven"]
+  potentialChallenges: string[]; // e.g. ["May struggle with ambiguity", "Could be overly detail-oriented"]
+  teamDynamicsAdvice: string; // How this person might fit in a team
+  summary: string; // Overall personality summary paragraph
 }
 
 // API Request Types

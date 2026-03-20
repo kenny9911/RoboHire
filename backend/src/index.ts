@@ -39,6 +39,7 @@ import { beginRequestLogging, persistRequestAudit } from './middleware/requestAu
 import prisma from './lib/prisma.js';
 import { logger } from './services/LoggerService.js';
 import { documentStorage } from './services/DocumentStorageService.js';
+import { resumeOriginalFileStorageService } from './services/ResumeOriginalFileStorageService.js';
 
 const app = express();
 const PORT = process.env.PORT || 4607;
@@ -140,6 +141,7 @@ const server = app.listen(PORT, () => {
   const docDir = documentStorage.getStorageDirectory();
   const docStats = documentStorage.getStats();
   const fileLogging = process.env.FILE_LOGGING !== 'false' ? 'Enabled' : 'Disabled';
+  const originalResumeStorage = resumeOriginalFileStorageService.getProviderMode();
   
   console.log('\n');
   console.log('╔════════════════════════════════════════════════════════════════════════════════╗');
@@ -155,6 +157,7 @@ const server = app.listen(PORT, () => {
   console.log(`║  📁 File Logging:      ${fileLogging.padEnd(56)}║`);
   console.log(`║  📂 Log Directory:     ${logDir.padEnd(56)}║`);
   console.log(`║  📄 Document Storage:  ${docDir.padEnd(56)}║`);
+  console.log(`║  🗂️ Resume Originals:  ${originalResumeStorage.padEnd(56)}║`);
   console.log(`║  📊 Cached Documents:  ${`${docStats.resumeCount} resumes, ${docStats.jdCount} JDs, ${docStats.matchResultCount} matches`.padEnd(56)}║`);
   console.log('╠════════════════════════════════════════════════════════════════════════════════╣');
   console.log('║  Endpoints:                                                                    ║');
@@ -178,6 +181,7 @@ const server = app.listen(PORT, () => {
     fileLogging,
     logDir,
     docDir,
+    originalResumeStorage,
     cachedResumes: docStats.resumeCount,
     cachedJDs: docStats.jdCount,
   });

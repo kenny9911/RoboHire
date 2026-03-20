@@ -16,6 +16,11 @@ import prisma from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
 import { logger } from '../services/LoggerService.js';
 import { llmService } from '../services/llm/LLMService.js';
+import {
+  resumeOriginalFileStorageService,
+  type ResumeOriginalFileRef,
+  type StoredResumeOriginalFile,
+} from '../services/ResumeOriginalFileStorageService.js';
 import type { ParsedResume, WorkExperience } from '../types/index.js';
 import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 
@@ -82,6 +87,44 @@ function buildInlineContentDisposition(filename: string): string {
     .trim() || 'resume';
 
   return `inline; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`;
+}
+
+function mapStoredOriginalFileFields(storedOriginalFile: StoredResumeOriginalFile | null) {
+  return {
+    originalFileProvider: storedOriginalFile?.provider || null,
+    originalFileKey: storedOriginalFile?.key || null,
+    originalFileName: storedOriginalFile?.fileName || null,
+    originalFileMimeType: storedOriginalFile?.mimeType || null,
+    originalFileSize: storedOriginalFile?.size || null,
+    originalFileChecksum: storedOriginalFile?.checksum || null,
+    originalFileStoredAt: storedOriginalFile?.storedAt || null,
+  };
+}
+
+function extractStoredOriginalFileRef(record: {
+  originalFileProvider?: string | null;
+  originalFileKey?: string | null;
+  originalFileName?: string | null;
+  originalFileMimeType?: string | null;
+}): ResumeOriginalFileRef | null {
+  if (!record.originalFileProvider || !record.originalFileKey) {
+    return null;
+  }
+
+  return {
+    provider: record.originalFileProvider,
+    key: record.originalFileKey,
+    fileName: record.originalFileName,
+    mimeType: record.originalFileMimeType,
+  };
+}
+
+async function removeStoredOriginalFile(ref: ResumeOriginalFileRef | null, requestId?: string): Promise<void> {
+  if (!ref?.provider || !ref?.key) {
+    return;
+  }
+
+  await resumeOriginalFileStorageService.deleteFile(ref, requestId);
 }
 
 async function extractText(buffer: Buffer, mimetype: string, filename: string, requestId?: string): Promise<string> {
@@ -395,6 +438,15 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
 
     // Generate summary & highlight if not already in parsed data
     const { summary, highlight } = await generateResumeSummaryHighlight(parsed, req.requestId);
+    const previousStoredOriginal = existing ? extractStoredOriginalFileRef(existing) : null;
+    const storedOriginalFile = await resumeOriginalFileStorageService.saveFile({
+      buffer,
+      fileName: decodedName,
+      mimeType: mimetype,
+      size,
+      userId,
+      requestId: req.requestId,
+    });
 
     const resumeData = {
       userId,
@@ -411,18 +463,29 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       fileName: decodedName,
       fileSize: size,
       fileType: mimetype,
+      ...mapStoredOriginalFileFields(storedOriginalFile),
       contentHash,
       source: existing?.source || 'upload',
     };
 
-    const resume = existing
-      ? await prisma.resume.update({
-          where: { id: existing.id },
-          data: resumeData,
-        })
-      : await prisma.resume.create({
-          data: resumeData,
-        });
+    let resume;
+    try {
+      resume = existing
+        ? await prisma.resume.update({
+            where: { id: existing.id },
+            data: resumeData,
+          })
+        : await prisma.resume.create({
+            data: resumeData,
+          });
+    } catch (error) {
+      await removeStoredOriginalFile(extractStoredOriginalFileRef(mapStoredOriginalFileFields(storedOriginalFile)), req.requestId);
+      throw error;
+    }
+
+    if (previousStoredOriginal && previousStoredOriginal.key !== storedOriginalFile?.key) {
+      await removeStoredOriginalFile(previousStoredOriginal, req.requestId);
+    }
 
     // If a jobId was provided, create a JobMatch to apply the resume to that job
     const jobId = req.body?.jobId as string | undefined;
@@ -521,6 +584,15 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
         }
 
         const { summary, highlight } = await generateResumeSummaryHighlight(parsed, requestId);
+        const previousStoredOriginal = existing ? extractStoredOriginalFileRef(existing) : null;
+        const storedOriginalFile = await resumeOriginalFileStorageService.saveFile({
+          buffer: file.buffer,
+          fileName: decodedName,
+          mimeType: file.mimetype,
+          size: file.size,
+          userId,
+          requestId,
+        });
 
         const resumeData = {
           userId,
@@ -537,18 +609,29 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
           fileName: decodedName,
           fileSize: file.size,
           fileType: file.mimetype,
+          ...mapStoredOriginalFileFields(storedOriginalFile),
           contentHash,
           source: existing?.source || 'upload',
         };
 
-        const resume = existing
-          ? await prisma.resume.update({
-              where: { id: existing.id },
-              data: resumeData,
-            })
-          : await prisma.resume.create({
-              data: resumeData,
-            });
+        let resume;
+        try {
+          resume = existing
+            ? await prisma.resume.update({
+                where: { id: existing.id },
+                data: resumeData,
+              })
+            : await prisma.resume.create({
+                data: resumeData,
+              });
+        } catch (error) {
+          await removeStoredOriginalFile(extractStoredOriginalFileRef(mapStoredOriginalFileFields(storedOriginalFile)), requestId);
+          throw error;
+        }
+
+        if (previousStoredOriginal && previousStoredOriginal.key !== storedOriginalFile?.key) {
+          await removeStoredOriginalFile(previousStoredOriginal, requestId);
+        }
 
         // If a jobId was provided, create a JobMatch to apply the resume to that job
         if (batchJobId) {
@@ -601,7 +684,15 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
     const resumeId = req.params.id;
     const existingResume = await prisma.resume.findFirst({
       where: { id: resumeId, userId },
-      select: { id: true, source: true, status: true },
+      select: {
+        id: true,
+        source: true,
+        status: true,
+        originalFileProvider: true,
+        originalFileKey: true,
+        originalFileName: true,
+        originalFileMimeType: true,
+      },
     });
 
     if (!existingResume) {
@@ -645,35 +736,55 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
       : null;
 
     const { summary: newSummary, highlight: newHighlight } = await generateResumeSummaryHighlight(parsed, req.requestId);
-
-    const updated = await prisma.$transaction(async (tx) => {
-      await tx.resumeJobFit.deleteMany({
-        where: { resumeId },
-      });
-
-      return tx.resume.update({
-        where: { id: resumeId },
-        data: {
-          name,
-          email,
-          phone,
-          currentRole,
-          experienceYears,
-          summary: newSummary || null,
-          highlight: newHighlight || null,
-          resumeText,
-          parsedData: JSON.parse(JSON.stringify(parsed)),
-          insightData: Prisma.DbNull,
-          jobFitData: Prisma.DbNull,
-          fileName: decodedName,
-          fileSize: size,
-          fileType: mimetype,
-          contentHash,
-          source: existingResume.source || 'upload',
-          status: 'active',
-        },
-      });
+    const previousStoredOriginal = extractStoredOriginalFileRef(existingResume);
+    const storedOriginalFile = await resumeOriginalFileStorageService.saveFile({
+      buffer,
+      fileName: decodedName,
+      mimeType: mimetype,
+      size,
+      userId,
+      requestId: req.requestId,
     });
+
+    let updated;
+    try {
+      updated = await prisma.$transaction(async (tx) => {
+        await tx.resumeJobFit.deleteMany({
+          where: { resumeId },
+        });
+
+        return tx.resume.update({
+          where: { id: resumeId },
+          data: {
+            name,
+            email,
+            phone,
+            currentRole,
+            experienceYears,
+            summary: newSummary || null,
+            highlight: newHighlight || null,
+            resumeText,
+            parsedData: JSON.parse(JSON.stringify(parsed)),
+            insightData: Prisma.DbNull,
+            jobFitData: Prisma.DbNull,
+            fileName: decodedName,
+            fileSize: size,
+            fileType: mimetype,
+            ...mapStoredOriginalFileFields(storedOriginalFile),
+            contentHash,
+            source: existingResume.source || 'upload',
+            status: 'active',
+          },
+        });
+      });
+    } catch (error) {
+      await removeStoredOriginalFile(extractStoredOriginalFileRef(mapStoredOriginalFileFields(storedOriginalFile)), req.requestId);
+      throw error;
+    }
+
+    if (previousStoredOriginal && previousStoredOriginal.key !== storedOriginalFile?.key) {
+      await removeStoredOriginalFile(previousStoredOriginal, req.requestId);
+    }
 
     return res.json({ success: true, data: updated, metrics: getProcessingMetrics(req.requestId) });
   } catch (error) {
@@ -868,6 +979,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       highlight: true,
       fileName: true,
       fileType: true,
+      originalFileKey: true,
       status: true,
       source: true,
       tags: true,
@@ -966,9 +1078,11 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       // Find earliest invitation (scheduled) time
       const scheduledIvs = ivs.filter((iv) => iv.scheduledAt);
       const earliestInvited = scheduledIvs.length > 0 ? scheduledIvs[scheduledIvs.length - 1] : null;
+      const { originalFileKey, ...rest } = r;
 
       return {
-        ...r,
+        ...rest,
+        hasOriginalFile: Boolean(originalFileKey),
         _versionCount: r._count?.resumeVersions || 0,
         _count: undefined,
         hasInvitations: r.resumeJobFits?.some((f: any) => f.pipelineStatus === 'invited') || false,
@@ -1071,7 +1185,18 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Resume not found' });
     }
 
-    return res.json({ success: true, data: resume });
+    const {
+      originalFileKey,
+      originalFileProvider,
+      originalFileChecksum,
+      ...rest
+    } = resume as typeof resume & {
+      originalFileKey?: string | null;
+      originalFileProvider?: string | null;
+      originalFileChecksum?: string | null;
+    };
+
+    return res.json({ success: true, data: { ...rest, hasOriginalFile: Boolean(originalFileKey) } });
   } catch (error) {
     return res.status(500).json({ success: false, error: 'Failed to get resume' });
   }
@@ -1092,6 +1217,10 @@ router.get('/:id/original-file', requireAuth, async (req: Request, res: Response
         fileName: true,
         fileType: true,
         resumeText: true,
+        originalFileProvider: true,
+        originalFileKey: true,
+        originalFileName: true,
+        originalFileMimeType: true,
       },
     });
 
@@ -1099,14 +1228,39 @@ router.get('/:id/original-file', requireAuth, async (req: Request, res: Response
       return res.status(404).json({ success: false, error: 'Resume not found' });
     }
 
-    if (!resume.resumeText?.trim()) {
-      return res.status(400).json({ success: false, error: 'No original resume text available' });
-    }
-
     const baseName = (resume.fileName || resume.name || 'resume').replace(/\.[^.]+$/, '').replace(/"/g, '');
     const fileType = (resume.fileType || '').toLowerCase();
     const extension = resume.fileName?.split('.').pop()?.toLowerCase() || '';
     const isPdf = fileType === 'application/pdf' || extension === 'pdf';
+
+    if (resume.originalFileProvider && resume.originalFileKey) {
+      try {
+        const storedFile = await resumeOriginalFileStorageService.readFile({
+          provider: resume.originalFileProvider,
+          key: resume.originalFileKey,
+          fileName: resume.originalFileName || resume.fileName,
+          mimeType: resume.originalFileMimeType || resume.fileType,
+        }, req.requestId);
+
+        res.setHeader('Content-Type', storedFile.mimeType || 'application/octet-stream');
+        res.setHeader(
+          'Content-Disposition',
+          buildInlineContentDisposition(storedFile.fileName || resume.fileName || `${baseName || 'resume'}`),
+        );
+        return res.send(storedFile.buffer);
+      } catch (error) {
+        logger.warn('RESUMES', 'Stored original resume file unavailable, falling back to reconstructed content', {
+          id: req.params.id,
+          provider: resume.originalFileProvider,
+          key: resume.originalFileKey,
+          error: error instanceof Error ? error.message : String(error),
+        }, req.requestId);
+      }
+    }
+
+    if (!resume.resumeText?.trim()) {
+      return res.status(400).json({ success: false, error: 'No original resume text available' });
+    }
 
     if (isPdf) {
       const pdfBuffer = await renderResumeTextAsPdf(resume.fileName || resume.name || 'Resume', resume.resumeText);
