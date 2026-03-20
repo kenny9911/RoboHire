@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
 import { useAuth } from '../../context/AuthContext';
 import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
+import { formatDateTimeLabel } from '../../utils/dateTime';
 import {
   getInterviewLanguageApiName,
   getInterviewLanguageDisplay,
@@ -52,6 +53,11 @@ interface Job {
   createdAt: string;
   updatedAt: string;
   hiringRequest?: { id: string; title: string } | null;
+  stats?: {
+    matches: number;
+    interviews: number;
+    completedInterviews: number;
+  };
 }
 
 interface AnalysisResult {
@@ -111,6 +117,19 @@ function getInitialForm(lang?: string) {
 
 const INITIAL_FORM = getInitialForm();
 
+type JobViewMode = 'list' | 'cards';
+type JobSortOrder = 'created_desc' | 'created_asc' | 'title_asc' | 'title_desc';
+type JobDateRangeFilter = 'all' | 'today' | 'week' | 'month';
+
+function getJobLocationsLabel(job: Job): string | null {
+  if (job.locations && Array.isArray(job.locations) && job.locations.length > 0) {
+    return (job.locations as LocationEntry[])
+      .map((entry) => `${entry.city}${entry.city && entry.country ? ', ' : ''}${entry.country}`)
+      .join(' | ');
+  }
+  return job.location || null;
+}
+
 function AIWandButton({ onClick, loading, hasContent, t }: {
   onClick: () => void;
   loading: boolean;
@@ -147,6 +166,11 @@ export default function Jobs() {
   const [jobs, setJobs] = usePageState<Job[]>('jobs.list', []);
   const [loading, setLoading] = useState(jobs.length > 0 ? false : true);
   const [statusFilter, setStatusFilter] = usePageState<string>('jobs.statusFilter', '');
+  const [viewMode, setViewMode] = usePageState<JobViewMode>('jobs.viewMode', 'list');
+  const [searchQuery, setSearchQuery] = usePageState<string>('jobs.searchQuery', '');
+  const [clientFilter, setClientFilter] = usePageState<string>('jobs.clientFilter', '');
+  const [dateRangeFilter, setDateRangeFilter] = usePageState<JobDateRangeFilter>('jobs.dateRangeFilter', 'all');
+  const [sortOrder, setSortOrder] = usePageState<JobSortOrder>('jobs.sortOrder', 'created_desc');
   const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [showCreate, setShowCreate] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -175,6 +199,40 @@ export default function Jobs() {
     t('product.jobs.importStageApply', 'Applying details to the form'),
   ];
 
+  const formatSalarySummary = useCallback((job: Job) => {
+    if (job.salaryText) return job.salaryText;
+    if ((job.salaryMin != null || job.salaryMax != null) && (job.salaryMin !== 0 || job.salaryMax !== 0)) {
+      return `${job.salaryCurrency || 'USD'} ${job.salaryMin?.toLocaleString() || '—'} – ${job.salaryMax?.toLocaleString() || '—'}/${job.salaryPeriod === 'yearly' ? t('product.jobs.perYear', 'yr') : t('product.jobs.perMonth', 'mo')}`;
+    }
+    if (job.salaryMin === 0 && job.salaryMax === 0) return t('product.jobs.salaryNegotiable', 'Negotiable');
+    return null;
+  }, [t]);
+
+  const matchesDateRange = useCallback((job: Job, range: JobDateRangeFilter) => {
+    if (range === 'all') return true;
+
+    const createdAt = new Date(job.createdAt);
+    if (Number.isNaN(createdAt.getTime())) return false;
+
+    const now = new Date();
+
+    if (range === 'today') {
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return createdAt >= startOfDay;
+    }
+
+    if (range === 'week') {
+      const today = now.getDay();
+      const diffToMonday = (today + 6) % 7;
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+      startOfWeek.setHours(0, 0, 0, 0);
+      return createdAt >= startOfWeek;
+    }
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return createdAt >= startOfMonth;
+  }, []);
+
   useEffect(() => {
     if (!importing) {
       setImportStageIndex(0);
@@ -192,12 +250,29 @@ export default function Jobs() {
   const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
-      const params: any = {};
+      const params: Record<string, string | number> = { page: 1, limit: 50 };
       if (statusFilter) params.status = statusFilter;
       if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
       if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
-      const res = await axios.get('/api/v1/jobs', { params });
-      setJobs(res.data.data || []);
+
+      const collected: Job[] = [];
+      const seen = new Set<string>();
+      let page = 1;
+      let totalPages = 1;
+
+      do {
+        const res = await axios.get('/api/v1/jobs', { params: { ...params, page } });
+        const pageItems: Job[] = res.data.data || [];
+        pageItems.forEach((job) => {
+          if (seen.has(job.id)) return;
+          seen.add(job.id);
+          collected.push(job);
+        });
+        totalPages = Math.max(1, Number(res.data.pagination?.totalPages || 1));
+        page += 1;
+      } while (page <= totalPages);
+
+      setJobs(collected);
     } catch {
       // silently fail
     } finally {
@@ -208,6 +283,64 @@ export default function Jobs() {
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
+
+  const clientOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          jobs
+            .map((job) => job.companyName?.trim())
+            .filter((value): value is string => Boolean(value)),
+        ),
+      ).sort((a, b) => a.localeCompare(b, i18n.language)),
+    [i18n.language, jobs],
+  );
+
+  useEffect(() => {
+    if (!clientFilter || clientOptions.includes(clientFilter)) return;
+    setClientFilter('');
+  }, [clientFilter, clientOptions, setClientFilter]);
+
+  const displayedJobs = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+
+    const next = jobs.filter((job) => {
+      if (clientFilter && (job.companyName || '') !== clientFilter) return false;
+      if (!matchesDateRange(job, dateRangeFilter)) return false;
+      if (!normalizedSearch) return true;
+
+      const haystack = [
+        job.title,
+        job.companyName,
+        job.department,
+        getJobLocationsLabel(job),
+        job.hiringRequest?.title,
+        job.description,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(normalizedSearch);
+    });
+
+    next.sort((a, b) => {
+      if (sortOrder === 'created_desc') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      if (sortOrder === 'created_asc') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      if (sortOrder === 'title_asc') {
+        return a.title.localeCompare(b.title, i18n.language);
+      }
+      return b.title.localeCompare(a.title, i18n.language);
+    });
+
+    return next;
+  }, [clientFilter, dateRangeFilter, i18n.language, jobs, matchesDateRange, searchQuery, sortOrder]);
+
+  const hasActiveFilters = Boolean(searchQuery.trim() || clientFilter || dateRangeFilter !== 'all');
 
   const resetForm = () => {
     setForm(getInitialForm(i18n.language));
@@ -336,7 +469,17 @@ export default function Jobs() {
         headcount: form.headcount ? parseInt(form.headcount) : 1,
         locations: locations.length > 0 ? locations : null,
       });
-      setJobs((prev) => [res.data.data, ...prev]);
+      setJobs((prev) => [
+        {
+          ...res.data.data,
+          stats: {
+            matches: 0,
+            interviews: 0,
+            completedInterviews: 0,
+          },
+        },
+        ...prev,
+      ]);
       setShowCreate(false);
       resetForm();
     } catch {
@@ -359,7 +502,11 @@ export default function Jobs() {
         headcount: form.headcount ? parseInt(form.headcount) : 1,
         locations: locations.length > 0 ? locations : null,
       });
-      setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? res.data.data : j)));
+      setJobs((prev) => prev.map((j) => (
+        j.id === editingJob.id
+          ? { ...res.data.data, stats: j.stats }
+          : j
+      )));
       setEditingJob(null);
       resetForm();
     } catch {
@@ -421,7 +568,11 @@ export default function Jobs() {
         setForm((p) => ({ ...p, [section]: generated.sections[section] }));
       }
       if (editingJob && res.data.data) {
-        setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? res.data.data : j)));
+        setJobs((prev) => prev.map((j) => (
+          j.id === editingJob.id
+            ? { ...res.data.data, stats: j.stats }
+            : j
+        )));
       }
     } catch {
       // handle error
@@ -453,7 +604,11 @@ export default function Jobs() {
         }));
       }
       if (editingJob && res.data.data) {
-        setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? res.data.data : j)));
+        setJobs((prev) => prev.map((j) => (
+          j.id === editingJob.id
+            ? { ...res.data.data, stats: j.stats }
+            : j
+        )));
       }
     } catch {
       // handle error
@@ -569,7 +724,11 @@ export default function Jobs() {
   const handleStatusChange = async (jobId: string, newStatus: string) => {
     try {
       const res = await axios.patch(`/api/v1/jobs/${jobId}`, { status: newStatus });
-      setJobs((prev) => prev.map((j) => (j.id === jobId ? res.data.data : j)));
+      setJobs((prev) => prev.map((j) => (
+        j.id === jobId
+          ? { ...res.data.data, stats: j.stats }
+          : j
+      )));
     } catch {
       // handle error
     }
@@ -626,6 +785,101 @@ export default function Jobs() {
   const inputCls = 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
   const importProgressWidth = `${Math.max(22, ((importStageIndex + 1) / importStages.length) * 100)}%`;
 
+  const renderJobActions = (job: Job) => (
+    <div className="flex flex-wrap items-center justify-end gap-1 shrink-0">
+      {job.status === 'draft' && (
+        <button
+          onClick={() => handleStatusChange(job.id, 'open')}
+          title={t('product.jobs.publish', 'Publish')}
+          className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+      )}
+      {job.status === 'open' && (
+        <button
+          onClick={() => handleStatusChange(job.id, 'paused')}
+          title={t('product.jobs.pause', 'Pause')}
+          className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      )}
+      {job.status === 'paused' && (
+        <button
+          onClick={() => handleStatusChange(job.id, 'open')}
+          title={t('product.jobs.resume', 'Resume')}
+          className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      )}
+
+      <button
+        onClick={() => navigate(`/product/jobs/${job.id}`)}
+        title={t('product.jobs.view', 'View')}
+        className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      </button>
+
+      <button
+        onClick={() => openEdit(job)}
+        title={t('product.jobs.edit', 'Edit')}
+        className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      </button>
+
+      <div className="relative" data-export-dropdown>
+        <button
+          onClick={() => setExportDropdownId(exportDropdownId === job.id ? null : job.id)}
+          title={t('product.jobs.exportJob', 'Export')}
+          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </button>
+        {exportDropdownId === job.id && (
+          <div className="absolute right-0 top-full mt-1 bg-white rounded-lg border border-slate-200 shadow-lg py-1 z-50 min-w-[140px]">
+            {([['pdf', 'PDF'], ['markdown', 'Markdown'], ['text', 'Text'], ['json', 'JSON']] as const).map(([fmt, label]) => (
+              <button
+                key={fmt}
+                onClick={() => { handleExport(job.id, fmt); setExportDropdownId(null); }}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={() => handleDelete(job.id)}
+        title={t('product.jobs.delete', 'Delete')}
+        className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
+    </div>
+  );
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -645,8 +899,8 @@ export default function Jobs() {
         </button>
       </div>
 
-      {/* Status filter + Recruiter/Team filter */}
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* Status filter + toolbar */}
+      <div className="space-y-3">
         <div className="flex gap-2 flex-wrap">
           {statuses.map((s) => (
             <button
@@ -662,12 +916,142 @@ export default function Jobs() {
             </button>
           ))}
         </div>
-        {user?.role === 'admin' && (
-          <RecruiterTeamFilter
-            value={recruiterFilter}
-            onChange={setRecruiterFilter}
-          />
-        )}
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1.8fr)_minmax(180px,0.8fr)_minmax(160px,0.7fr)_minmax(180px,0.9fr)]">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                {t('product.jobs.filterSearch', 'Search')}
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('product.jobs.searchPlaceholder', 'Search by title, client, department, or location...')}
+                className={inputCls}
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                {t('product.jobs.filterClient', 'Client')}
+              </span>
+              <select
+                value={clientFilter}
+                onChange={(e) => setClientFilter(e.target.value)}
+                className={inputCls}
+              >
+                <option value="">{t('product.jobs.filterAllClients', 'All clients')}</option>
+                {clientOptions.map((client) => (
+                  <option key={client} value={client}>{client}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                {t('product.jobs.filterDateRange', 'Created')}
+              </span>
+              <select
+                value={dateRangeFilter}
+                onChange={(e) => setDateRangeFilter(e.target.value as JobDateRangeFilter)}
+                className={inputCls}
+              >
+                <option value="all">{t('product.jobs.filterDateAll', 'All time')}</option>
+                <option value="today">{t('product.jobs.filterDateToday', 'Today')}</option>
+                <option value="week">{t('product.jobs.filterDateWeek', 'This week')}</option>
+                <option value="month">{t('product.jobs.filterDateMonth', 'This month')}</option>
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                {t('product.jobs.sortLabel', 'Sort')}
+              </span>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as JobSortOrder)}
+                className={inputCls}
+              >
+                <option value="created_desc">{t('product.jobs.sortCreatedDesc', 'Created: newest first')}</option>
+                <option value="created_asc">{t('product.jobs.sortCreatedAsc', 'Created: oldest first')}</option>
+                <option value="title_asc">{t('product.jobs.sortTitleAsc', 'Title: A to Z')}</option>
+                <option value="title_desc">{t('product.jobs.sortTitleDesc', 'Title: Z to A')}</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:flex-1">
+              <p className="text-sm text-slate-500">
+                {displayedJobs.length === jobs.length
+                  ? t('product.jobs.resultsCount', '{{count}} jobs', { count: displayedJobs.length })
+                  : t('product.jobs.resultsCountFiltered', 'Showing {{shown}} of {{total}} jobs', {
+                      shown: displayedJobs.length,
+                      total: jobs.length,
+                    })}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setClientFilter('');
+                      setDateRangeFilter('all');
+                    }}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                  >
+                    {t('product.jobs.clearFilters', 'Clear filters')}
+                  </button>
+                )}
+                {user?.role === 'admin' && (
+                  <RecruiterTeamFilter
+                    value={recruiterFilter}
+                    onChange={setRecruiterFilter}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                {t('product.jobs.viewLabel', 'View')}
+              </span>
+              <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  {t('product.jobs.viewList', 'List')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('cards')}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                    viewMode === 'cards'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5h7v6H4V5zm9 0h7v6h-7V5zM4 13h7v6H4v-6zm9 0h7v6h-7v-6z" />
+                  </svg>
+                  {t('product.jobs.viewCards', 'Cards')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Create / Edit Form */}
@@ -1530,156 +1914,111 @@ export default function Jobs() {
             {t('product.jobs.create', 'Create Job')}
           </button>
         </div>
+      ) : displayedJobs.length === 0 ? (
+        <div className="text-center py-16 rounded-2xl border border-slate-200 bg-white">
+          <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h18M3 12h18M3 19h18" />
+          </svg>
+          <h3 className="text-lg font-semibold text-slate-900">{t('product.jobs.noFilteredResults', 'No jobs match these filters')}</h3>
+          <p className="mt-1 text-sm text-slate-500">{t('product.jobs.noFilteredResultsDesc', 'Try changing the client, created date, or search query.')}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setClientFilter('');
+              setDateRangeFilter('all');
+            }}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            {t('product.jobs.clearFilters', 'Clear filters')}
+          </button>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {jobs.map((job) => (
-            <div
-              key={job.id}
-              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 hover:border-blue-200 transition-colors"
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3
-                      className="text-base font-semibold text-slate-900 hover:text-blue-600 cursor-pointer transition-colors"
-                      onClick={() => navigate(`/product/jobs/${job.id}`)}
-                    >{job.title}</h3>
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[job.status] || STATUS_COLORS.draft}`}>
-                      {t(`product.jobs.status.${job.status}`, job.status.charAt(0).toUpperCase() + job.status.slice(1))}
-                    </span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-slate-500 flex-wrap">
-                    {job.companyName && <span className="font-medium">{job.companyName}</span>}
-                    {job.department && <span>{job.department}</span>}
-                    {job.locations && Array.isArray(job.locations) && job.locations.length > 0 ? (
-                      <span>{(job.locations as LocationEntry[]).map((l) => `${l.city}${l.city && l.country ? ', ' : ''}${l.country}`).join(' | ')}</span>
-                    ) : job.location ? (
-                      <span>{job.location}</span>
-                    ) : null}
-                    {job.workType && <span className="capitalize">{job.workType}</span>}
-                    {job.employmentType && <span className="capitalize">{job.employmentType}</span>}
-                    {job.experienceLevel && <span className="capitalize">{job.experienceLevel}</span>}
-                    {job.salaryText ? (
-                      <span>{job.salaryText}</span>
-                    ) : (job.salaryMin != null || job.salaryMax != null) && (job.salaryMin !== 0 || job.salaryMax !== 0) ? (
-                      <span>
-                        {job.salaryCurrency || 'USD'} {job.salaryMin?.toLocaleString() || '—'} – {job.salaryMax?.toLocaleString() || '—'}/{job.salaryPeriod === 'yearly' ? t('product.jobs.perYear', 'yr') : t('product.jobs.perMonth', 'mo')}
-                      </span>
-                    ) : job.salaryMin === 0 && job.salaryMax === 0 ? (
-                      <span>{t('product.jobs.salaryNegotiable', 'Negotiable')}</span>
-                    ) : null}
-                  </div>
-                  {job.description && (
-                    <p className="mt-2 text-sm text-slate-600 line-clamp-2">{job.description.slice(0, 200)}</p>
-                  )}
-                  {job.notes && (
-                    <p className="mt-1.5 text-xs text-amber-600 bg-amber-50 rounded-lg px-2.5 py-1.5 inline-flex items-center gap-1.5">
-                      <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
-                      </svg>
-                      {job.notes.slice(0, 80)}{job.notes.length > 80 ? '...' : ''}
-                    </p>
-                  )}
-                  <p className="mt-2 text-xs text-slate-400">
-                    {t('product.jobs.created', 'Created')} {new Date(job.createdAt).toLocaleDateString()}
-                    {job.hiringRequest && (
-                      <> · {t('product.jobs.fromRequest', 'From request:')} {job.hiringRequest.title}</>
-                    )}
-                  </p>
-                </div>
+        <div className={viewMode === 'cards' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : 'space-y-3'}>
+          {displayedJobs.map((job) => {
+            const locationLabel = getJobLocationsLabel(job);
+            const salarySummary = formatSalarySummary(job);
+            const stats = [
+              { label: t('product.jobs.statsHeadcount', 'Headcount'), value: job.headcount || 0 },
+              { label: t('product.jobs.statsMatches', 'Matches'), value: job.stats?.matches ?? 0 },
+              { label: t('product.jobs.statsInterviews', 'Interviews'), value: job.stats?.interviews ?? 0 },
+              { label: t('product.jobs.statsCompleted', 'Completed'), value: job.stats?.completedInterviews ?? 0 },
+            ];
 
-                <div className="flex items-center gap-1 shrink-0">
-                  {job.status === 'draft' && (
-                    <button
-                      onClick={() => handleStatusChange(job.id, 'open')}
-                      title={t('product.jobs.publish', 'Publish')}
-                      className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </button>
-                  )}
-                  {job.status === 'open' && (
-                    <button
-                      onClick={() => handleStatusChange(job.id, 'paused')}
-                      title={t('product.jobs.pause', 'Pause')}
-                      className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-                  )}
-                  {job.status === 'paused' && (
-                    <button
-                      onClick={() => handleStatusChange(job.id, 'open')}
-                      title={t('product.jobs.resume', 'Resume')}
-                      className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => navigate(`/product/jobs/${job.id}`)}
-                    title={t('product.jobs.view', 'View')}
-                    className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </button>
-
-                  <button
-                    onClick={() => openEdit(job)}
-                    title={t('product.jobs.edit', 'Edit')}
-                    className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-
-                  <div className="relative" data-export-dropdown>
-                    <button
-                      onClick={() => setExportDropdownId(exportDropdownId === job.id ? null : job.id)}
-                      title={t('product.jobs.exportJob', 'Export')}
-                      className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                    </button>
-                    {exportDropdownId === job.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-white rounded-lg border border-slate-200 shadow-lg py-1 z-50 min-w-[140px]">
-                        {([['pdf', 'PDF'], ['markdown', 'Markdown'], ['text', 'Text'], ['json', 'JSON']] as const).map(([fmt, label]) => (
-                          <button key={fmt} onClick={() => { handleExport(job.id, fmt); setExportDropdownId(null); }}
-                            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                            {label}
-                          </button>
-                        ))}
+            return (
+              <div
+                key={job.id}
+                className={`rounded-2xl border border-slate-200 bg-white transition-colors hover:border-blue-200 ${
+                  viewMode === 'cards' ? 'h-full p-5 shadow-[0_20px_44px_-36px_rgba(15,23,42,0.55)]' : 'p-4 sm:p-5'
+                }`}
+              >
+                <div className={`flex ${viewMode === 'cards' ? 'h-full flex-col gap-4' : 'flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-5'}`}>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3
+                            className="text-base font-semibold text-slate-900 hover:text-blue-600 cursor-pointer transition-colors"
+                            onClick={() => navigate(`/product/jobs/${job.id}`)}
+                          >
+                            {job.title}
+                          </h3>
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[job.status] || STATUS_COLORS.draft}`}>
+                            {t(`product.jobs.status.${job.status}`, job.status.charAt(0).toUpperCase() + job.status.slice(1))}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                          {job.companyName && <span className="font-medium text-slate-700">{job.companyName}</span>}
+                          {job.department && <span>{job.department}</span>}
+                          {locationLabel && <span>{locationLabel}</span>}
+                          {job.workType && <span className="capitalize">{job.workType}</span>}
+                          {job.employmentType && <span className="capitalize">{job.employmentType}</span>}
+                          {job.experienceLevel && <span className="capitalize">{job.experienceLevel}</span>}
+                          {salarySummary && <span>{salarySummary}</span>}
+                        </div>
                       </div>
+                      {viewMode === 'cards' && renderJobActions(job)}
+                    </div>
+
+                    {job.description && (
+                      <p className={`mt-3 text-sm leading-6 text-slate-600 ${viewMode === 'cards' ? 'line-clamp-3' : 'line-clamp-2'}`}>
+                        {job.description}
+                      </p>
                     )}
+
+                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {stats.map((stat) => (
+                        <div key={stat.label} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{stat.label}</p>
+                          <p className="mt-1 text-lg font-semibold text-slate-900">{stat.value}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {job.notes && (
+                      <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700">
+                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />
+                        </svg>
+                        {job.notes.slice(0, 120)}{job.notes.length > 120 ? '...' : ''}
+                      </p>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+                      <span>
+                        {t('product.jobs.created', 'Created')} {formatDateTimeLabel(job.createdAt)}
+                      </span>
+                      {job.hiringRequest && (
+                        <span>· {t('product.jobs.fromRequest', 'From request:')} {job.hiringRequest.title}</span>
+                      )}
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => handleDelete(job.id)}
-                    title={t('product.jobs.delete', 'Delete')}
-                    className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  {viewMode === 'list' && renderJobActions(job)}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

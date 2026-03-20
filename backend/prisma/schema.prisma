@@ -766,8 +766,10 @@ model Agent {
   userId          String
   name            String
   description     String    // natural-language search criteria
+  taskType        String    @default("search") // search, match
+  instructions    String?   // user instructions for what the agent should do
   status          String    @default("active") // active, paused, completed
-  jobId           String?   // optional linked job
+  jobId           String?   // linked job (required for task execution)
 
   // Search config snapshot
   config          Json?     // { location?, skills[], experienceMin?, experienceMax?, keywords? }
@@ -839,6 +841,7 @@ model GoHireInterview {
   evaluationData        Json?                           // Evaluation result JSON
   evaluationScore       Int?                            // Quick-access score (0-100)
   evaluationVerdict     String?                         // strong_hire, hire, weak_hire, no_hire
+  evaluationShareToken  String?   @unique               // Share token for public evaluation report
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 

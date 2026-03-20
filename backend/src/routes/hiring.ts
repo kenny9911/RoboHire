@@ -9,10 +9,11 @@ import { languageService } from '../services/LanguageService.js';
 import { generateRequestId, logger } from '../services/LoggerService.js';
 import { createJDAgent } from '../agents/CreateJDAgent.js';
 import { screeningAgent } from '../agents/ScreeningAgent.js';
-import { inviteAgent } from '../agents/InviteAgent.js';
+import { inviteAgent, buildGoHireInvitationCallLog } from '../agents/InviteAgent.js';
 import { recruitmentIntelligenceService } from '../services/RecruitmentIntelligenceService.js';
 import { DocumentParsingService } from '../services/DocumentParsingService.js';
 import { fireHiringRequestWebhook } from '../services/WebhookService.js';
+import { getVisibilityScope, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 // Import auth types to extend Express
 import '../types/auth.js';
 
@@ -310,12 +311,15 @@ router.post('/', async (req, res) => {
  */
 router.get('/', async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const { status, title, limit, offset = 0 } = req.query;
+    const user = req.user!;
+    const { status, title, limit, offset = 0, filterUserId, filterTeamId, teamView } = req.query;
     const pageSize = Math.min(50, Math.max(1, parseInt(limit as string, 10) || 20));
     const pageOffset = Math.max(0, parseInt(offset as string, 10) || 0);
 
-    const where: any = { userId };
+    const scope = await getVisibilityScope(user, teamView === 'true');
+    const userFilter = await buildAdminOverrideFilter(scope, filterUserId as string, filterTeamId as string);
+
+    const where: any = { ...userFilter };
     if (status) {
       where.status = status;
     }
@@ -327,6 +331,16 @@ router.get('/', async (req, res) => {
       prisma.hiringRequest.findMany({
         where,
         include: {
+          jobs: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+              updatedAt: true,
+            },
+            orderBy: { updatedAt: 'desc' },
+            take: 1,
+          },
           _count: {
             select: { candidates: true, resumeJobFits: true, interviews: true },
           },
@@ -339,7 +353,10 @@ router.get('/', async (req, res) => {
     ]);
 
     // Trim heavy fields not needed in list view
-    const trimmed = hiringRequests.map(({ jobDescription, intelligenceData, webhookUrl, ...rest }) => rest);
+    const trimmed = hiringRequests.map(({ jobDescription, intelligenceData, webhookUrl, jobs, ...rest }) => ({
+      ...rest,
+      linkedJob: jobs[0] || null,
+    }));
 
     res.json({
       success: true,
@@ -365,7 +382,12 @@ router.get('/', async (req, res) => {
  */
 router.get('/stats', async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const user = req.user!;
+    const { filterUserId, filterTeamId, teamView } = req.query;
+
+    const scope = await getVisibilityScope(user, teamView === 'true');
+    const userFilter = await buildAdminOverrideFilter(scope, filterUserId as string, filterTeamId as string);
+    const hrWhere: any = { ...userFilter };
 
     const [
       totalRequests,
@@ -377,39 +399,39 @@ router.get('/stats', async (req, res) => {
       recentRequests,
     ] = await Promise.all([
       prisma.hiringRequest.count({
-        where: { userId },
+        where: hrWhere,
       }),
       prisma.hiringRequest.groupBy({
         by: ['status'],
-        where: { userId },
+        where: hrWhere,
         _count: { _all: true },
       }),
       prisma.candidate.count({
         where: {
-          hiringRequest: { userId },
+          hiringRequest: hrWhere,
         },
       }),
       prisma.candidate.groupBy({
         by: ['status'],
         where: {
-          hiringRequest: { userId },
+          hiringRequest: hrWhere,
         },
         _count: { _all: true },
       }),
       prisma.candidate.aggregate({
         where: {
-          hiringRequest: { userId },
+          hiringRequest: hrWhere,
           matchScore: { not: null },
         },
         _avg: { matchScore: true },
       }),
       prisma.resumeJobFit.count({
         where: {
-          hiringRequest: { userId },
+          hiringRequest: hrWhere,
         },
       }),
       prisma.hiringRequest.findMany({
-        where: { userId },
+        where: hrWhere,
         include: {
           _count: {
             select: { candidates: true, resumeJobFits: true, interviews: true },
@@ -1471,6 +1493,19 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
           recruiter_email,
           interviewer_requirement
         );
+        const inviteApiMeta = (inviteResult as {
+          __gohireApiMeta?: { endpoint?: string; deliveryMode?: 'remote_api' | 'fallback_local' };
+        }).__gohireApiMeta;
+        const gohireInviteLog = buildGoHireInvitationCallLog({
+          resume: resume.resumeText,
+          jd,
+          recruiterEmail: recruiter_email,
+          interviewerRequirement: interviewer_requirement,
+          response: inviteResult,
+          requestId,
+          deliveryMode: inviteApiMeta?.deliveryMode || (inviteResult.request_introduction_id.startsWith('local_') ? 'fallback_local' : 'remote_api'),
+          endpoint: inviteApiMeta?.endpoint,
+        });
 
         // Update pipeline status to invited
         await prisma.resumeJobFit.updateMany({
@@ -1502,6 +1537,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
             gohireUserId: inviteResult.user_id != null ? String(inviteResult.user_id) : null,
             metadata: {
               inviteData: JSON.parse(JSON.stringify(inviteResult)),
+              gohireInviteLog: JSON.parse(JSON.stringify(gohireInviteLog)),
               loginUrl: inviteResult.login_url,
               qrcodeUrl: inviteResult.qrcode_url,
             },

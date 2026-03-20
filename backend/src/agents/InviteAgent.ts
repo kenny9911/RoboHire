@@ -3,27 +3,156 @@ import { logger } from '../services/LoggerService.js';
 import { llmService } from '../services/llm/LLMService.js';
 import { languageService } from '../services/LanguageService.js';
 
-const DEFAULT_ROBOHIRE_INVITATION_API = 'https://report-agent.gohire.top/instant/instant/v1/invitation';
+const DEFAULT_GOHIRE_INVITATION_API = 'https://report-agent.gohire.top/instant/instant/v1/invitation';
+const LEGACY_GOHIRE_SINGLE_PATH_API = 'https://report-agent.gohire.top/instant/instant/v1/invitation';
 
-// Return the configured API URL or the default. The path `/instant/instant/v1/invitation` is correct per GoHire API docs.
-function normalizeInvitationApiUrl(raw?: string): string {
-  const configured = (raw || '').trim();
-  return configured || DEFAULT_ROBOHIRE_INVITATION_API;
+interface InviteApiMeta {
+  endpoint: string;
+  deliveryMode: 'remote_api' | 'fallback_local';
 }
 
-// External invitation API – override via ROBOHIRE_INVITATION_API env var
-const RAW_ROBOHIRE_INVITATION_API = process.env.ROBOHIRE_INVITATION_API;
-const ROBOHIRE_INVITATION_API = normalizeInvitationApiUrl(RAW_ROBOHIRE_INVITATION_API);
+function normalizeInvitationApiUrl(raw?: string): string {
+  const configured = (raw || '').trim();
+  return configured || DEFAULT_GOHIRE_INVITATION_API;
+}
 
-if (RAW_ROBOHIRE_INVITATION_API && ROBOHIRE_INVITATION_API !== RAW_ROBOHIRE_INVITATION_API.trim()) {
-  logger.warn('InviteAgent', 'Normalized ROBOHIRE_INVITATION_API', {
-    configured: RAW_ROBOHIRE_INVITATION_API,
-    normalized: ROBOHIRE_INVITATION_API,
+function buildInvitationApiCandidates(raw?: string): string[] {
+  const primary = normalizeInvitationApiUrl(raw);
+  const candidates = [primary];
+
+  const addCandidate = (url: string) => {
+    const normalized = normalizeInvitationApiUrl(url);
+    if (!candidates.includes(normalized)) {
+      candidates.push(normalized);
+    }
+  };
+
+  if (primary.endsWith('/instant/v1/invitation')) {
+    addCandidate(primary.replace(/\/instant\/v1\/invitation$/i, '/instant/instant/v1/invitation'));
+  }
+  if (primary.endsWith('/instant/instant/v1/invitation')) {
+    addCandidate(primary.replace(/\/instant\/instant\/v1\/invitation$/i, '/instant/v1/invitation'));
+  }
+
+  addCandidate(DEFAULT_GOHIRE_INVITATION_API);
+  addCandidate(LEGACY_GOHIRE_SINGLE_PATH_API);
+
+  return candidates;
+}
+
+function shouldRetryWithAlternateEndpoint(status: number, errorText: string): boolean {
+  if (status === 404) return true;
+  if (status >= 500 && /status\s*404|404/i.test(errorText)) return true;
+  return false;
+}
+
+function attachInviteApiMeta<T extends RoboHireInvitationResponse>(result: T, meta: InviteApiMeta): T {
+  Object.defineProperty(result, '__gohireApiMeta', {
+    value: meta,
+    enumerable: false,
+    configurable: true,
+    writable: false,
+  });
+  return result;
+}
+
+// External invitation API – prefer GOHIRE_INVITATION_API, keep ROBOHIRE_INVITATION_API as legacy fallback
+const RAW_GOHIRE_INVITATION_API = process.env.GOHIRE_INVITATION_API || process.env.ROBOHIRE_INVITATION_API;
+const GOHIRE_INVITATION_API = normalizeInvitationApiUrl(RAW_GOHIRE_INVITATION_API);
+const GOHIRE_INVITATION_API_CANDIDATES = buildInvitationApiCandidates(RAW_GOHIRE_INVITATION_API);
+
+if (RAW_GOHIRE_INVITATION_API && GOHIRE_INVITATION_API !== RAW_GOHIRE_INVITATION_API.trim()) {
+  logger.warn('InviteAgent', 'Normalized GOHIRE_INVITATION_API', {
+    configured: RAW_GOHIRE_INVITATION_API,
+    normalized: GOHIRE_INVITATION_API,
   });
 }
 
+export interface GoHireInvitationRequestBody {
+  recruiter_email: string;
+  jd_content: string;
+  interviewer_requirement: string;
+  resume_text: string;
+  request_source: 'robohire';
+}
+
+export interface GoHireInvitationCallLog {
+  provider: 'gohire';
+  deliveryMode: 'remote_api' | 'fallback_local';
+  endpoint: string;
+  method: 'POST';
+  generatedAt: string;
+  requestId: string | null;
+  actualCall: string;
+  requestBody: GoHireInvitationRequestBody;
+  responseBody: RoboHireInvitationResponse;
+}
+
+function resolveRecruiterEmail(recruiterEmail?: string): string {
+  return recruiterEmail || process.env.RECRUITER_EMAIL || process.env.recruiter_email || 'hr@lightark.ai';
+}
+
+export function buildGoHireInvitationRequestBody(
+  resume: string,
+  jd: string,
+  recruiterEmail?: string,
+  interviewerRequirement?: string,
+): GoHireInvitationRequestBody {
+  return {
+    recruiter_email: resolveRecruiterEmail(recruiterEmail),
+    jd_content: jd,
+    interviewer_requirement: interviewerRequirement || '',
+    resume_text: resume,
+    request_source: 'robohire',
+  };
+}
+
+export function buildGoHireInvitationCallLog({
+  resume,
+  jd,
+  recruiterEmail,
+  interviewerRequirement,
+  response,
+  requestId,
+  deliveryMode,
+  endpoint,
+}: {
+  resume: string;
+  jd: string;
+  recruiterEmail?: string;
+  interviewerRequirement?: string;
+  response: RoboHireInvitationResponse;
+  requestId?: string;
+  deliveryMode: 'remote_api' | 'fallback_local';
+  endpoint?: string;
+}): GoHireInvitationCallLog {
+  const requestBody = buildGoHireInvitationRequestBody(
+    resume,
+    jd,
+    recruiterEmail,
+    interviewerRequirement,
+  );
+
+  return {
+    provider: 'gohire',
+    deliveryMode,
+    endpoint: endpoint || GOHIRE_INVITATION_API,
+    method: 'POST',
+    generatedAt: new Date().toISOString(),
+    requestId: requestId || null,
+    actualCall: [
+      `POST ${endpoint || GOHIRE_INVITATION_API}`,
+      'Content-Type: application/json',
+      '',
+      JSON.stringify(requestBody, null, 2),
+    ].join('\n'),
+    requestBody,
+    responseBody: JSON.parse(JSON.stringify(response)) as RoboHireInvitationResponse,
+  };
+}
+
 /**
- * Agent for sending interview invitations via RoboHire 一键邀约 API
+ * Agent for sending interview invitations via GoHire 一键邀约 API
  * Calls the external API to create invitation and send email to candidate
  */
 export class InviteAgent {
@@ -34,7 +163,7 @@ export class InviteAgent {
   }
 
   /**
-   * Send an interview invitation via RoboHire API
+   * Send an interview invitation via GoHire API
    */
   async sendInvitation(
     resume: string,
@@ -43,21 +172,19 @@ export class InviteAgent {
     interviewerRequirement?: string,
     requestId?: string
   ): Promise<RoboHireInvitationResponse> {
-    const stepId = logger.startStep(requestId || '', `${this.agentName}: Call RoboHire API`);
-    
-    // Use provided email or fall back to environment variable
-    const email = recruiterEmail || process.env.RECRUITER_EMAIL || process.env.recruiter_email || 'hr@lightark.ai';
-    
-    const requestBody = {
-      recruiter_email: email,
-      jd_content: jd,
-      interviewer_requirement: interviewerRequirement || '',
-      resume_text: resume,
-      request_source: 'robohire',
-    };
+    const stepId = logger.startStep(requestId || '', `${this.agentName}: Call GoHire API`);
 
-    logger.info(this.agentName, 'Sending invitation request to RoboHire API', {
-      endpoint: ROBOHIRE_INVITATION_API,
+    const email = resolveRecruiterEmail(recruiterEmail);
+    const requestBody = buildGoHireInvitationRequestBody(
+      resume,
+      jd,
+      recruiterEmail,
+      interviewerRequirement,
+    );
+
+    logger.info(this.agentName, 'Sending invitation request to GoHire API', {
+      endpoint: GOHIRE_INVITATION_API,
+      candidates: GOHIRE_INVITATION_API_CANDIDATES,
       recruiter_email: email,
       jd_length: jd.length,
       resume_length: resume.length,
@@ -65,54 +192,95 @@ export class InviteAgent {
     }, requestId);
 
     try {
-      const startTime = Date.now();
-      
-      const response = await fetch(ROBOHIRE_INVITATION_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      let lastError = 'Unknown invitation API failure';
 
-      const elapsed = Date.now() - startTime;
+      for (let index = 0; index < GOHIRE_INVITATION_API_CANDIDATES.length; index += 1) {
+        const endpoint = GOHIRE_INVITATION_API_CANDIDATES[index];
+        const isLastCandidate = index === GOHIRE_INVITATION_API_CANDIDATES.length - 1;
+        const startTime = Date.now();
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        logger.error(this.agentName, 'RoboHire API request failed', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText,
-        }, requestId);
-        logger.endStep(requestId || '', stepId, 'failed', { error: errorText });
-        return await this.generateFallbackInvitation(
-          resume,
-          jd,
-          recruiterEmail,
-          interviewerRequirement,
-          requestId,
-          `RoboHire API error: ${response.status} - ${errorText}`
-        );
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const elapsed = Date.now() - startTime;
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            lastError = `GoHire API error: ${response.status} - ${errorText}`;
+
+            logger.error(this.agentName, 'GoHire API request failed', {
+              endpoint,
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText,
+            }, requestId);
+
+            if (!isLastCandidate && shouldRetryWithAlternateEndpoint(response.status, errorText)) {
+              logger.warn(this.agentName, 'Retrying invitation with alternate endpoint', {
+                failedEndpoint: endpoint,
+                nextEndpoint: GOHIRE_INVITATION_API_CANDIDATES[index + 1],
+                status: response.status,
+              }, requestId);
+              continue;
+            }
+            break;
+          }
+
+          const result = await response.json() as RoboHireInvitationResponse;
+
+          logger.info(this.agentName, 'GoHire API response received', {
+            endpoint,
+            candidate_email: result.email,
+            candidate_name: result.name,
+            job_title: result.job_title,
+            user_id: result.user_id,
+            message: result.message,
+            elapsed_ms: elapsed,
+          }, requestId);
+
+          logger.endStep(requestId || '', stepId, 'completed', {
+            endpoint,
+            candidate_email: result.email,
+            job_title: result.job_title,
+            elapsed_ms: elapsed,
+          });
+
+          return attachInviteApiMeta(result, {
+            endpoint,
+            deliveryMode: 'remote_api',
+          });
+        } catch (error) {
+          lastError = error instanceof Error ? error.message : String(error);
+          logger.error(this.agentName, 'Failed to send invitation', {
+            endpoint,
+            error: lastError,
+          }, requestId);
+
+          if (!isLastCandidate) {
+            logger.warn(this.agentName, 'Retrying invitation after transport error', {
+              failedEndpoint: endpoint,
+              nextEndpoint: GOHIRE_INVITATION_API_CANDIDATES[index + 1],
+            }, requestId);
+            continue;
+          }
+        }
       }
 
-      const result = await response.json() as RoboHireInvitationResponse;
-
-      logger.info(this.agentName, 'RoboHire API response received', {
-        candidate_email: result.email,
-        candidate_name: result.name,
-        job_title: result.job_title,
-        user_id: result.user_id,
-        message: result.message,
-        elapsed_ms: elapsed,
-      }, requestId);
-
-      logger.endStep(requestId || '', stepId, 'completed', {
-        candidate_email: result.email,
-        job_title: result.job_title,
-        elapsed_ms: elapsed,
-      });
-
-      return result;
+      logger.endStep(requestId || '', stepId, 'failed', { error: lastError });
+      return await this.generateFallbackInvitation(
+        resume,
+        jd,
+      recruiterEmail,
+      interviewerRequirement,
+      requestId,
+      lastError
+      );
     } catch (error) {
       logger.error(this.agentName, 'Failed to send invitation', {
         error: error instanceof Error ? error.message : String(error),
@@ -133,7 +301,7 @@ export class InviteAgent {
 
   /**
    * Generate an interview invitation (legacy method for backward compatibility)
-   * Now calls the RoboHire API instead of generating email locally
+   * Now calls the GoHire API instead of generating email locally
    */
   async generateInvitation(
     resume: string,
@@ -155,7 +323,7 @@ export class InviteAgent {
   ): Promise<RoboHireInvitationResponse> {
     const fallbackStep = logger.startStep(requestId || '', `${this.agentName}: Fallback invitation`);
 
-    const email = recruiterEmail || process.env.RECRUITER_EMAIL || process.env.recruiter_email || 'hr@lightark.ai';
+    const email = resolveRecruiterEmail(recruiterEmail);
     const candidateEmail = this.extractEmail(resume) || 'candidate@example.com';
     const candidateName = this.extractName(resume) || 'Candidate';
     const jobTitle = this.extractJobTitle(jd) || 'Interview Invitation';
@@ -210,7 +378,7 @@ Keep it concise and friendly.`;
       reason,
     });
 
-    return {
+    const fallbackResult: RoboHireInvitationResponse = {
       email: candidateEmail,
       bcc: [],
       name: candidateName,
@@ -230,6 +398,11 @@ Keep it concise and friendly.`;
       password: null,
       message,
     };
+
+    return attachInviteApiMeta(fallbackResult, {
+      endpoint: GOHIRE_INVITATION_API,
+      deliveryMode: 'fallback_local',
+    });
   }
 
   private extractEmail(text: string): string | null {

@@ -443,8 +443,17 @@ export function ResumeRenderer({ content, jdKeywords = [] }: ResumeRendererProps
  * Works with both old format (name, email, role) and new format (candidateName, contact, title).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parsedDataToMarkdown(parsed: Record<string, any>): string {
+interface ParsedDataToMarkdownOptions {
+  includeSummary?: boolean;
+  includeSkills?: boolean;
+}
+
+export function parsedDataToMarkdown(
+  parsed: Record<string, any>,
+  options: ParsedDataToMarkdownOptions = {},
+): string {
   if (!parsed) return '';
+  const { includeSummary = true, includeSkills = true } = options;
   const lines: string[] = [];
 
   // Name
@@ -475,7 +484,7 @@ export function parsedDataToMarkdown(parsed: Record<string, any>): string {
   }
 
   // Summary
-  if (parsed.summary) {
+  if (includeSummary && parsed.summary) {
     lines.push('## 个人简介');
     lines.push(parsed.summary);
     lines.push('');
@@ -494,7 +503,7 @@ export function parsedDataToMarkdown(parsed: Record<string, any>): string {
     other: '其他 / Other',
   };
   const skills = parsed.skills;
-  if (skills) {
+  if (includeSkills && skills) {
     lines.push('## 技能');
     if (Array.isArray(skills)) {
       // SkillCategory[] format

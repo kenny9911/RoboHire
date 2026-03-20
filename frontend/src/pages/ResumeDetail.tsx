@@ -3,9 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
 import SEO from '../components/SEO';
+import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import ResumeUploadModal from '../components/ResumeUploadModal';
 import RefineDiffView from '../components/RefineDiffView';
 import { ResumeRenderer, parsedDataToMarkdown } from '../components/ResumeRenderer';
+import { formatDateTimeLabel } from '../utils/dateTime';
 import {
   IconChevronLeft,
   IconChevronDown,
@@ -104,6 +106,7 @@ interface ResumeData {
   insightData: Record<string, unknown> | null;
   jobFitData: Record<string, unknown> | null;
   fileName: string | null;
+  fileType: string | null;
   status: string;
   tags: string[];
   notes: string | null;
@@ -173,9 +176,89 @@ function hasResumeParseWarning(parsed: Record<string, unknown> | null): boolean 
   return summary.startsWith('unable to parse resume');
 }
 
+type OriginalDocumentKind = 'pdf' | 'word' | 'markdown' | 'text' | 'unsupported';
+
+function getOriginalDocumentKind(fileName?: string | null, fileType?: string | null): OriginalDocumentKind {
+  const normalizedType = (fileType || '').toLowerCase();
+  const extension = fileName?.split('.').pop()?.toLowerCase() || '';
+
+  if (normalizedType === 'application/pdf' || extension === 'pdf') return 'pdf';
+  if (
+    normalizedType === 'application/msword' ||
+    normalizedType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    extension === 'doc' ||
+    extension === 'docx'
+  ) {
+    return 'word';
+  }
+  if (
+    normalizedType === 'text/markdown' ||
+    normalizedType === 'text/x-markdown' ||
+    normalizedType === 'application/x-markdown' ||
+    extension === 'md' ||
+    extension === 'markdown'
+  ) {
+    return 'markdown';
+  }
+  if (normalizedType === 'text/plain' || extension === 'txt') return 'text';
+  if (!fileName && !fileType) return 'text';
+  return 'unsupported';
+}
+
+function canViewOriginalDocument(fileName?: string | null, fileType?: string | null, resumeText?: string | null): boolean {
+  if (!resumeText?.trim()) return false;
+  return getOriginalDocumentKind(fileName, fileType) !== 'unsupported';
+}
+
+function getOriginalDocumentFormatLabel(kind: OriginalDocumentKind): string {
+  if (kind === 'pdf') return 'PDF';
+  if (kind === 'word') return 'Word';
+  if (kind === 'markdown') return 'Markdown';
+  if (kind === 'text') return 'Text';
+  return 'Document';
+}
+
+function extractResumeSkills(parsed: Record<string, unknown> | null): string[] {
+  const rawSkills = parsed?.skills;
+  if (!rawSkills) return [];
+
+  const values: string[] = [];
+
+  const appendValue = (value: unknown) => {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed) values.push(trimmed);
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach(appendValue);
+      return;
+    }
+
+    if (value && typeof value === 'object') {
+      const candidate = value as Record<string, unknown>;
+      if (typeof candidate.skill === 'string') values.push(candidate.skill.trim());
+      if (typeof candidate.name === 'string') values.push(candidate.name.trim());
+      if (Array.isArray(candidate.skills)) candidate.skills.forEach(appendValue);
+    }
+  };
+
+  appendValue(rawSkills);
+
+  return Array.from(new Set(values.map((skill) => skill.trim()).filter(Boolean)));
+}
+
+function normalizeResumeId(rawId?: string): string | undefined {
+  if (!rawId) return undefined;
+  const match = rawId.toLowerCase().match(/[a-z0-9]{10,}/);
+  return match?.[0];
+}
+
 export default function ResumeDetail() {
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
+  const { id: rawId } = useParams<{ id: string }>();
+  const id = normalizeResumeId(rawId);
   const navigate = useNavigate();
   const [resume, setResume] = useState<ResumeData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -219,6 +302,7 @@ export default function ResumeDetail() {
 
   // Re-parse state
   const [reparseLoading, setReparseLoading] = useState(false);
+  const [originalDocumentOpen, setOriginalDocumentOpen] = useState(false);
 
   // Version selector state
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -229,9 +313,9 @@ export default function ResumeDetail() {
   const versionDropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchInvitations = useCallback(async () => {
-    if (!id) return;
+    if (!resume?.id) return;
     try {
-      const res = await axios.get(`/api/v1/resumes/${id}/invitations`);
+      const res = await axios.get(`/api/v1/resumes/${resume.id}/invitations`);
       if (res.data.success) {
         const list: InvitationRecord[] = res.data.data || [];
         setInvitations(list);
@@ -242,25 +326,30 @@ export default function ResumeDetail() {
     } catch {
       // silently fail
     }
-  }, [id]);
+  }, [resume?.id]);
 
   const fetchAppliedJobs = useCallback(async () => {
-    if (!id) return;
+    if (!resume?.id) return;
     setAppliedJobsLoading(true);
     try {
-      const res = await axios.get(`/api/v1/resumes/${id}/applied-jobs`);
+      const res = await axios.get(`/api/v1/resumes/${resume.id}/applied-jobs`);
       if (res.data.success) setAppliedJobsData(res.data.data);
     } catch {
       // silently fail
     } finally {
       setAppliedJobsLoading(false);
     }
-  }, [id]);
+  }, [resume?.id]);
 
   const fetchResume = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError(null);
+    setResume(null);
+    setVersions([]);
+    setInvitations([]);
+    setInvitationsMap({});
+    setAppliedJobsData(null);
     try {
       const res = await axios.get(`/api/v1/resumes/${id}`);
       if (res.data.success) {
@@ -278,19 +367,28 @@ export default function ResumeDetail() {
   }, [id]);
 
   const fetchVersions = useCallback(async () => {
-    if (!id) return;
+    if (!resume?.id) return;
     try {
-      const res = await axios.get(`/api/v1/resumes/${id}/versions`);
+      const res = await axios.get(`/api/v1/resumes/${resume.id}/versions`);
       if (res.data.success) setVersions(res.data.data || []);
     } catch { /* silent */ }
-  }, [id]);
+  }, [resume?.id]);
 
   useEffect(() => {
     fetchResume();
+  }, [fetchResume]);
+
+  useEffect(() => {
+    if (!resume?.id) return;
     fetchInvitations();
     fetchVersions();
     fetchAppliedJobs();
-  }, [fetchResume, fetchInvitations, fetchVersions, fetchAppliedJobs]);
+  }, [resume?.id, fetchInvitations, fetchVersions, fetchAppliedJobs]);
+
+  useEffect(() => {
+    if (!rawId || !id || rawId === id) return;
+    navigate(`/product/talent/${id}`, { replace: true });
+  }, [id, navigate, rawId]);
 
   const generateInsights = async (force = false) => {
     if (!resume) return;
@@ -674,6 +772,7 @@ export default function ResumeDetail() {
   }
 
   const parsed = resume.parsedData as Record<string, unknown> | null;
+  const hasOriginalDocument = canViewOriginalDocument(resume.fileName, resume.fileType, resume.resumeText);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: t('resumeLibrary.detail.tabs.overview', 'Overview') },
@@ -930,7 +1029,13 @@ export default function ResumeDetail() {
             <OverviewTab parsed={versionPreviewData.parsedData as Record<string, unknown> | null} t={t} />
           ) : null
         ) : (
-          <OverviewTab parsed={parsed} t={t} onReparse={handleReparse} reparseLoading={reparseLoading} />
+          <OverviewTab
+            parsed={parsed}
+            t={t}
+            onReparse={handleReparse}
+            reparseLoading={reparseLoading}
+            onViewOriginal={hasOriginalDocument ? () => setOriginalDocumentOpen(true) : undefined}
+          />
         )
       )}
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
@@ -979,6 +1084,16 @@ export default function ResumeDetail() {
           fetchResume();
         }}
         replaceResumeId={resume.id}
+      />
+
+      <OriginalDocumentModal
+        open={originalDocumentOpen}
+        resumeId={resume.id}
+        fileName={resume.fileName}
+        fileType={resume.fileType}
+        resumeText={resume.resumeText}
+        onClose={() => setOriginalDocumentOpen(false)}
+        t={t}
       />
 
       {/* Invite Interview Modal */}
@@ -1555,12 +1670,205 @@ function EditModeView({ form, setForm, saving, onSave, onCancel, t }: {
 // ─── Overview Tab ────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function OverviewTab({ parsed, t, onReparse, reparseLoading }: { parsed: Record<string, unknown> | null; t: (k: string, f?: any) => string; onReparse?: () => void; reparseLoading?: boolean }) {
-  if (!parsed) return <div className="text-center py-12 text-gray-500">No parsed data available</div>;
+function OriginalDocumentModal({
+  open,
+  resumeId,
+  fileName,
+  fileType,
+  resumeText,
+  onClose,
+  t,
+}: {
+  open: boolean;
+  resumeId: string;
+  fileName?: string | null;
+  fileType?: string | null;
+  resumeText?: string | null;
+  onClose: () => void;
+  t: (...args: any[]) => any;
+}) {
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const kind = getOriginalDocumentKind(fileName, fileType);
+  const formatLabel = getOriginalDocumentFormatLabel(kind);
+  const isMarkdown = kind === 'markdown';
+  const content = resumeText?.trim() || '';
+  const wordBlocks = content
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, open]);
+
+  useEffect(() => {
+    if (!open || kind !== 'pdf') {
+      setPdfPreviewUrl((current) => {
+        if (current) window.URL.revokeObjectURL(current);
+        return null;
+      });
+      setPdfLoading(false);
+      setPdfError(null);
+      return;
+    }
+
+    let objectUrl: string | null = null;
+    let cancelled = false;
+
+    const loadPdf = async () => {
+      setPdfPreviewUrl(null);
+      setPdfLoading(true);
+      setPdfError(null);
+      try {
+        const res = await axios.get(`/api/v1/resumes/${resumeId}/original-file`, { responseType: 'blob' });
+        if (cancelled) return;
+        objectUrl = window.URL.createObjectURL(res.data);
+        setPdfPreviewUrl((current) => {
+          if (current) window.URL.revokeObjectURL(current);
+          return objectUrl;
+        });
+      } catch (error) {
+        if (cancelled) return;
+        setPdfError(
+          axios.isAxiosError(error)
+            ? error.response?.data?.error || error.message || 'Failed to load original PDF'
+            : 'Failed to load original PDF',
+        );
+      } finally {
+        if (!cancelled) setPdfLoading(false);
+      }
+    };
+
+    loadPdf();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) window.URL.revokeObjectURL(objectUrl);
+    };
+  }, [kind, open, resumeId]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4" onClick={onClose}>
+      <div
+        className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900">
+                {t('resumeLibrary.detail.originalDocument.title', 'Original Document')}
+              </h3>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                {formatLabel}
+              </span>
+            </div>
+            {fileName && <p className="mt-1 text-sm text-slate-500">{fileName}</p>}
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            aria-label={t('resumeLibrary.detail.originalDocument.close', 'Close original document')}
+          >
+            <IconX size={18} stroke={2} />
+          </button>
+        </div>
+
+        <div className="overflow-auto bg-slate-50 px-5 py-5">
+          {content ? (
+            kind === 'pdf' ? (
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                {pdfLoading ? (
+                  <div className="flex h-[72vh] items-center justify-center">
+                    <div className="flex flex-col items-center gap-3 text-sm text-slate-500">
+                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
+                      <span>{t('resumeLibrary.detail.originalDocument.loadingPdf', 'Loading PDF...')}</span>
+                    </div>
+                  </div>
+                ) : pdfError ? (
+                  <div className="flex h-[72vh] items-center justify-center px-6">
+                    <div className="max-w-md rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                      {pdfError}
+                    </div>
+                  </div>
+                ) : pdfPreviewUrl ? (
+                  <iframe src={pdfPreviewUrl} className="h-[72vh] w-full border-0" title={fileName || 'Resume PDF'} />
+                ) : null}
+              </div>
+            ) : isMarkdown ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <MarkdownRenderer content={content} className="text-sm text-slate-700" />
+              </div>
+            ) : kind === 'word' ? (
+              <div className="mx-auto max-w-[860px] rounded-[28px] border border-slate-200 bg-white px-10 py-12 shadow-[0_36px_80px_-52px_rgba(15,23,42,0.38)]">
+                <div className="mb-8 border-b border-slate-100 pb-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{formatLabel}</p>
+                  {fileName && <p className="mt-2 text-lg font-semibold text-slate-900">{fileName}</p>}
+                </div>
+                <div className="space-y-4 font-serif text-[15px] leading-8 text-slate-700">
+                  {wordBlocks.map((block, index) => (
+                    <p key={`${index}-${block.slice(0, 24)}`} className="whitespace-pre-wrap">
+                      {block}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-slate-950 p-5 shadow-sm">
+                <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-6 text-slate-100">{content}</pre>
+              </div>
+            )
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
+              {t('resumeLibrary.detail.originalDocument.empty', 'Original document text is not available for this resume.')}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function OverviewTab({
+  parsed,
+  t,
+  onReparse,
+  reparseLoading,
+  onViewOriginal,
+}: {
+  parsed: Record<string, unknown> | null;
+  t: (...args: any[]) => any;
+  onReparse?: () => void;
+  reparseLoading?: boolean;
+  onViewOriginal?: () => void;
+}) {
   const parseWarning = hasResumeParseWarning(parsed);
+  const [skillsExpanded, setSkillsExpanded] = useState(false);
+  const allSkills = extractResumeSkills(parsed);
+  const visibleSkillCount = 12;
+  const visibleSkills = skillsExpanded ? allSkills : allSkills.slice(0, visibleSkillCount);
+  const hasCollapsedSkills = allSkills.length > visibleSkillCount;
+
+  useEffect(() => {
+    setSkillsExpanded(false);
+  }, [parsed]);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const markdownContent = parsedDataToMarkdown(parsed as Record<string, any>);
+  const markdownContent = parsedDataToMarkdown(parsed as Record<string, any>, { includeSkills: false });
+
+  if (!parsed) return <div className="text-center py-12 text-gray-500">No parsed data available</div>;
 
   return (
     <div className="space-y-6">
@@ -1583,22 +1891,80 @@ function OverviewTab({ parsed, t, onReparse, reparseLoading }: { parsed: Record<
       )}
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        {onReparse && (
-          <div className="flex justify-end mb-3">
-            <button
-              onClick={onReparse}
-              disabled={reparseLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
-            >
-              {reparseLoading ? (
-                <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-slate-500" />
-              ) : (
-                <IconRefresh size={14} stroke={2} />
-              )}
-              {t('resumeLibrary.detail.reparse', 'Re-parse Resume')}
-            </button>
+        {(onViewOriginal || onReparse) && (
+          <div className="mb-4 flex flex-wrap justify-end gap-2">
+            {onViewOriginal && (
+              <button
+                onClick={onViewOriginal}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-800"
+              >
+                <IconEye size={14} stroke={2} />
+                {t('resumeLibrary.detail.viewOriginalDocument', 'View Original Document')}
+              </button>
+            )}
+            {onReparse && (
+              <button
+                onClick={onReparse}
+                disabled={reparseLoading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
+              >
+                {reparseLoading ? (
+                  <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-slate-500" />
+                ) : (
+                  <IconRefresh size={14} stroke={2} />
+                )}
+                {t('resumeLibrary.detail.reparse', 'Re-parse Resume')}
+              </button>
+            )}
           </div>
         )}
+
+        {allSkills.length > 0 && (
+          <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {t('resumeLibrary.detail.overview.skills', 'Skills')}
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">{allSkills.length}</p>
+              </div>
+              {hasCollapsedSkills && (
+                <button
+                  type="button"
+                  onClick={() => setSkillsExpanded((current) => !current)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100"
+                  title={skillsExpanded ? t('actions.collapse', 'Collapse') : t('actions.expand', 'Expand')}
+                >
+                  <span>
+                    {skillsExpanded
+                      ? t('resumeLibrary.detail.overview.showLess', 'Show less')
+                      : t(
+                          'resumeLibrary.detail.overview.showAllSkills',
+                          'Show all {{count}} skills',
+                          { count: allSkills.length },
+                        )}
+                  </span>
+                  <IconChevronDown
+                    size={14}
+                    stroke={2}
+                    className={`transition-transform ${skillsExpanded ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              )}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {visibleSkills.map((skill) => (
+                <span
+                  key={skill}
+                  className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <ResumeRenderer content={markdownContent} />
       </div>
     </div>
@@ -2015,7 +2381,7 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { 
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
                       <IconCircleCheck size={14} stroke={2} />
-                      {t('resumeLibrary.jobFit.alreadyInvited', 'Invited on {{date}}', { date: inv.invitedAt ? new Date(inv.invitedAt).toLocaleDateString() : '-' })}
+                      {t('resumeLibrary.jobFit.alreadyInvited', 'Invited on {{date}}', { date: inv.invitedAt ? formatDateTimeLabel(inv.invitedAt) : '-' })}
                     </span>
                     {inv.interview && (
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[inv.interview.status] || 'bg-gray-100 text-gray-600'}`}>
@@ -2303,7 +2669,7 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{f.hiringRequestStatus}</span>
                         )}
                         {f.invitedAt && (
-                          <span>{t('resumeLibrary.appliedJobs.invitedAt', 'Invited')}: {new Date(f.invitedAt).toLocaleDateString()}</span>
+                          <span>{t('resumeLibrary.appliedJobs.invitedAt', 'Invited')}: {formatDateTimeLabel(f.invitedAt)}</span>
                         )}
                       </div>
                     </div>

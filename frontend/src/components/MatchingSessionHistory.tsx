@@ -35,6 +35,7 @@ interface MatchingSessionHistoryProps {
   refreshTrigger?: number;
   embedded?: boolean;
   limit?: number;
+  filterParams?: Record<string, string>;
 }
 
 const STATUS_BADGES: Record<string, string> = {
@@ -49,6 +50,7 @@ export default function MatchingSessionHistory({
   refreshTrigger,
   embedded = false,
   limit = 50,
+  filterParams,
 }: MatchingSessionHistoryProps) {
   const { t } = useTranslation();
   const [sessions, setSessions] = useState<MatchingSession[]>([]);
@@ -58,14 +60,14 @@ export default function MatchingSessionHistory({
   const fetchSessions = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/v1/matching/sessions', { params: { limit } });
+      const res = await axios.get('/api/v1/matching/sessions', { params: { limit, ...filterParams } });
       setSessions(res.data.data || []);
     } catch {
       setSessions([]);
     } finally {
       setLoading(false);
     }
-  }, [limit]);
+  }, [limit, filterParams]);
 
   useEffect(() => {
     fetchSessions();

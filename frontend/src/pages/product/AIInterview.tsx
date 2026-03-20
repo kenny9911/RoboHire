@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
+import { formatDateTimeLabel } from '../../utils/dateTime';
 
 interface Interview {
   id: string;
@@ -25,6 +27,17 @@ interface Interview {
       [key: string]: unknown;
     };
     [key: string]: unknown;
+  } | null;
+  gohireInviteLog?: {
+    provider?: string;
+    deliveryMode?: string;
+    endpoint?: string;
+    method?: string;
+    generatedAt?: string;
+    requestId?: string | null;
+    actualCall?: string;
+    requestBody?: Record<string, unknown>;
+    responseBody?: Record<string, unknown>;
   } | null;
   createdAt: string;
   evaluation: {
@@ -130,6 +143,7 @@ export default function AIInterview() {
   // Arrange interview state
   const [showArrange, setShowArrange] = useState(false);
   const [arrangeStep, setArrangeStep] = useState(1);
+  const [arrangeRecruiterFilter, setArrangeRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [resumes, setResumes] = useState<ResumeListItem[]>([]);
   const [jobs, setJobs] = useState<JobListItem[]>([]);
   const [selectedResumeIds, setSelectedResumeIds] = useState<Set<string>>(new Set());
@@ -143,6 +157,7 @@ export default function AIInterview() {
   const [sending, setSending] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [syncingInterviewId, setSyncingInterviewId] = useState<string | null>(null);
 
   const fetchInterviews = useCallback(async () => {
     try {
@@ -161,29 +176,85 @@ export default function AIInterview() {
     fetchInterviews();
   }, [fetchInterviews]);
 
-  const fetchResumes = async () => {
+  const fetchResumes = useCallback(async () => {
     setLoadingResumes(true);
     try {
-      const res = await axios.get('/api/v1/resumes', { params: { limit: 100, status: 'active' } });
-      setResumes(res.data.data || []);
+      const collected: ResumeListItem[] = [];
+      const seen = new Set<string>();
+      let page = 1;
+      let totalPages = 1;
+
+      do {
+        const params: Record<string, string | number> = {
+          page,
+          limit: 50,
+          status: 'active',
+        };
+        if (arrangeRecruiterFilter.filterUserId) params.filterUserId = arrangeRecruiterFilter.filterUserId;
+        if (arrangeRecruiterFilter.filterTeamId) params.filterTeamId = arrangeRecruiterFilter.filterTeamId;
+
+        const res = await axios.get('/api/v1/resumes', { params });
+        const pageItems: ResumeListItem[] = res.data.data || [];
+        pageItems.forEach((item) => {
+          if (seen.has(item.id)) return;
+          seen.add(item.id);
+          collected.push(item);
+        });
+
+        totalPages = Math.max(1, Number(res.data.pagination?.totalPages || 1));
+        page += 1;
+      } while (page <= totalPages);
+
+      setResumes(collected);
     } catch {
       // silent
     } finally {
       setLoadingResumes(false);
     }
-  };
+  }, [arrangeRecruiterFilter.filterTeamId, arrangeRecruiterFilter.filterUserId]);
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     setLoadingJobs(true);
     try {
-      const res = await axios.get('/api/v1/jobs', { params: { limit: 100, status: 'open' } });
-      setJobs(res.data.data || []);
+      const collected: JobListItem[] = [];
+      const seen = new Set<string>();
+      let page = 1;
+      let totalPages = 1;
+
+      do {
+        const params: Record<string, string | number> = {
+          page,
+          limit: 50,
+          status: 'open',
+        };
+        if (arrangeRecruiterFilter.filterUserId) params.filterUserId = arrangeRecruiterFilter.filterUserId;
+        if (arrangeRecruiterFilter.filterTeamId) params.filterTeamId = arrangeRecruiterFilter.filterTeamId;
+
+        const res = await axios.get('/api/v1/jobs', { params });
+        const pageItems: JobListItem[] = res.data.data || [];
+        pageItems.forEach((item) => {
+          if (seen.has(item.id)) return;
+          seen.add(item.id);
+          collected.push(item);
+        });
+
+        totalPages = Math.max(1, Number(res.data.pagination?.totalPages || 1));
+        page += 1;
+      } while (page <= totalPages);
+
+      setJobs(collected);
     } catch {
       // silent
     } finally {
       setLoadingJobs(false);
     }
-  };
+  }, [arrangeRecruiterFilter.filterTeamId, arrangeRecruiterFilter.filterUserId]);
+
+  useEffect(() => {
+    if (!showArrange) return;
+    fetchResumes();
+    fetchJobs();
+  }, [fetchJobs, fetchResumes, showArrange]);
 
   const openArrange = () => {
     setShowArrange(true);
@@ -195,8 +266,6 @@ export default function AIInterview() {
     setJobSearch('');
     setInviteResults([]);
     setSending(false);
-    fetchResumes();
-    fetchJobs();
   };
 
   const closeArrange = () => {
@@ -227,6 +296,15 @@ export default function AIInterview() {
     if (job?.interviewRequirements) {
       setInterviewReqs(job.interviewRequirements);
     }
+  };
+
+  const handleArrangeRecruiterFilterChange = (filter: RecruiterTeamFilterValue) => {
+    setArrangeRecruiterFilter(filter);
+    setArrangeStep(1);
+    setSelectedResumeIds(new Set());
+    setSelectedJobId('');
+    setInterviewReqs('');
+    setInviteResults([]);
   };
 
   const filteredResumes = useMemo(() => {
@@ -344,16 +422,35 @@ export default function AIInterview() {
   const handleViewGoHireEvaluation = async (interview: Interview) => {
     const userId = interview.gohireUserId || interview.metadata?.inviteData?.user_id;
     if (!userId) return;
+
+    setSyncingInterviewId(interview.id);
     try {
+      // 1. Check for existing GoHireInterview
       const res = await axios.get('/api/v1/gohire-interviews', {
         params: { gohireUserId: String(userId), limit: 1 },
       });
       const matches = res.data.data || [];
       if (matches.length > 0) {
         navigate(`/product/interview-hub/${matches[0].id}`);
+        return;
+      }
+
+      // 2. No record found — sync from GoHire
+      const requestIntroductionId = interview.metadata?.inviteData?.request_introduction_id;
+      const syncRes = await axios.post('/api/v1/gohire-interviews/sync-from-invite', {
+        gohireUserId: String(userId),
+        requestIntroductionId: requestIntroductionId || undefined,
+      });
+
+      if (syncRes.data.success && syncRes.data.data?.id) {
+        navigate(`/product/interview-hub/${syncRes.data.data.id}`);
+      } else {
+        alert(t('product.interview.goHireInterviewNotReady', 'Interview not yet completed on GoHire'));
       }
     } catch {
-      // silent
+      alert(t('product.interview.goHireSyncFailed', 'Failed to sync interview data'));
+    } finally {
+      setSyncingInterviewId(null);
     }
   };
 
@@ -472,6 +569,25 @@ export default function AIInterview() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4">
+              {user?.role === 'admin' && (
+                <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        {t('product.interview.recruiterScope', 'Recruiter Scope')}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {t('product.interview.recruiterScopeDesc', 'Filter candidate and job options by recruiter or team before arranging interviews.')}
+                      </p>
+                    </div>
+                    <RecruiterTeamFilter
+                      value={arrangeRecruiterFilter}
+                      onChange={handleArrangeRecruiterFilterChange}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Step 1: Select Resumes */}
               {arrangeStep === 1 && (
                 <div className="space-y-4">
@@ -988,6 +1104,9 @@ export default function AIInterview() {
           {interviewsByNewest.map((interview) => {
             const isExpanded = expandedId === interview.id;
             const isEvaluating = evaluatingIds.has(interview.id);
+            const showAdminGoHireCall =
+              user?.role === 'admin' &&
+              Boolean(interview.gohireInviteLog || interview.gohireUserId || interview.metadata?.inviteData?.user_id);
 
             return (
               <div key={interview.id} className="group">
@@ -1038,7 +1157,7 @@ export default function AIInterview() {
                       {interview.jobTitle && interview.duration && <span className="text-slate-300">·</span>}
                       {interview.duration && interview.duration > 0 && <span>{formatDuration(interview.duration)}</span>}
                       {(interview.duration || interview.jobTitle) && <span className="text-slate-300">·</span>}
-                      <span>{new Date(interview.createdAt).toLocaleDateString()}</span>
+                      <span>{formatDateTimeLabel(interview.createdAt)}</span>
                     </div>
                   </div>
 
@@ -1149,19 +1268,19 @@ export default function AIInterview() {
                         {interview.scheduledAt && (
                           <div className="flex gap-2">
                             <span className="text-slate-400 w-16 shrink-0">{t('product.interview.status.scheduled', 'Scheduled')}</span>
-                            <span className="text-slate-700">{new Date(interview.scheduledAt).toLocaleString()}</span>
+                            <span className="text-slate-700">{formatDateTimeLabel(interview.scheduledAt)}</span>
                           </div>
                         )}
                         {interview.startedAt && (
                           <div className="flex gap-2">
                             <span className="text-slate-400 w-16 shrink-0">{t('product.interview.startedLabel', 'Started')}</span>
-                            <span className="text-slate-700">{new Date(interview.startedAt).toLocaleString()}</span>
+                            <span className="text-slate-700">{formatDateTimeLabel(interview.startedAt)}</span>
                           </div>
                         )}
                         {interview.completedAt && (
                           <div className="flex gap-2">
                             <span className="text-slate-400 w-16 shrink-0">{t('product.interview.completedLabel', 'Ended')}</span>
-                            <span className="text-slate-700">{new Date(interview.completedAt).toLocaleString()}</span>
+                            <span className="text-slate-700">{formatDateTimeLabel(interview.completedAt)}</span>
                           </div>
                         )}
                         {interview.duration && interview.duration > 0 && (
@@ -1237,14 +1356,76 @@ export default function AIInterview() {
                         <div className="sm:col-span-2 pt-2 border-t border-slate-200">
                           <button
                             onClick={() => handleViewGoHireEvaluation(interview)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                            disabled={syncingInterviewId === interview.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-wait"
                           >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            {t('product.interview.viewGoHireEvaluation', 'View GoHire Evaluation')}
+                            {syncingInterviewId === interview.id ? (
+                              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            )}
+                            {syncingInterviewId === interview.id
+                              ? t('product.interview.syncingGoHireData', 'Syncing interview data...')
+                              : t('product.interview.viewGoHireEvaluation', 'View GoHire Evaluation')}
                           </button>
+                        </div>
+                      )}
+
+                      {showAdminGoHireCall && (
+                        <div className="sm:col-span-2 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+                                {t('product.interview.gohireCallLogLabel', 'GoHire Call Log')}
+                              </p>
+                              {interview.gohireInviteLog ? (
+                                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-amber-900">
+                                  {interview.gohireInviteLog.deliveryMode && (
+                                    <span>
+                                      {t('product.interview.gohireCallMode', 'Mode')}: {interview.gohireInviteLog.deliveryMode}
+                                    </span>
+                                  )}
+                                  {interview.gohireInviteLog.method && interview.gohireInviteLog.endpoint && (
+                                    <span>
+                                      {t('product.interview.gohireCallEndpoint', 'Endpoint')}: {interview.gohireInviteLog.method} {interview.gohireInviteLog.endpoint}
+                                    </span>
+                                  )}
+                                  {interview.gohireInviteLog.generatedAt && (
+                                    <span>
+                                      {t('product.interview.gohireCallGeneratedAt', 'Generated')}: {new Date(interview.gohireInviteLog.generatedAt).toLocaleString()}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="mt-2 text-xs text-amber-800">
+                                  {t('product.interview.gohireCallMissing', 'No GoHire call log was captured for this older interview record.')}
+                                </p>
+                              )}
+                            </div>
+                            {interview.gohireInviteLog?.actualCall && (
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(interview.gohireInviteLog!.actualCall!, `gohire-call-${interview.id}`)}
+                                className="shrink-0 rounded-md border border-amber-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100 transition-colors"
+                              >
+                                {copiedId === `gohire-call-${interview.id}`
+                                  ? t('common.copied', 'Copied!')
+                                  : t('product.interview.copyGoHireCall', 'Copy Call')}
+                              </button>
+                            )}
+                          </div>
+
+                          {interview.gohireInviteLog?.actualCall && (
+                            <pre className="mt-3 max-h-64 overflow-auto rounded-lg border border-amber-200 bg-white p-3 text-[11px] leading-5 text-slate-700 whitespace-pre-wrap break-words">
+                              {interview.gohireInviteLog.actualCall}
+                            </pre>
+                          )}
                         </div>
                       )}
                     </div>

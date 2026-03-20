@@ -1,7 +1,10 @@
 import { Router } from 'express';
+import multer from 'multer';
+import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/admin.js';
 import { generateRequestId, logger } from '../services/LoggerService.js';
 import { goHireEvaluationService } from '../services/GoHireEvaluationService.js';
 import { resumeParserService, normalizeExtractedText, convertStructuredToMarkdown } from '../services/ResumeParserService.js';
@@ -9,6 +12,8 @@ import { documentParsingService } from '../services/DocumentParsingService.js';
 import { getVisibilityScope, VisibilityScope } from '../lib/teamVisibility.js';
 import OpenAI from 'openai';
 import '../types/auth.js';
+
+const csvUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -49,8 +54,420 @@ async function buildRecruiterEmailFilter(
   return { recruiterEmail: { in: emails, mode: 'insensitive' } };
 }
 
-// All routes require authentication
+/**
+ * GET /shared/:token — Public route: fetch evaluation report by share token (no auth).
+ */
+router.get('/shared/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const interview = await prisma.goHireInterview.findUnique({
+      where: { evaluationShareToken: token },
+      select: {
+        id: true,
+        candidateName: true,
+        candidateEmail: true,
+        jobTitle: true,
+        interviewDatetime: true,
+        duration: true,
+        evaluationData: true,
+        evaluationScore: true,
+        evaluationVerdict: true,
+      },
+    });
+
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Report not found or link has been revoked' });
+    }
+
+    res.json({ success: true, data: interview });
+  } catch (error) {
+    logger.error('GOHIRE_INTERVIEWS', 'Failed to fetch shared report', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to fetch shared report' });
+  }
+});
+
+// All routes below require authentication
 router.use(requireAuth);
+
+const GOHIRE_DATA_BASE = 'https://report-agent.gohire.top';
+const GOHIRE_API_BASE = `${GOHIRE_DATA_BASE}/gohire-data`;
+
+/**
+ * POST /sync-from-invite — Fetch completed interview data from GoHire APIs
+ * and create a GoHireInterview record for viewing in the review page.
+ */
+router.post('/sync-from-invite', async (req, res) => {
+  const requestId = generateRequestId();
+  try {
+    const { gohireUserId, requestIntroductionId } = req.body;
+
+    if (!gohireUserId) {
+      return res.status(400).json({ success: false, error: 'gohireUserId is required' });
+    }
+
+    const userId = String(gohireUserId);
+
+    // Check for existing GoHireInterview record
+    const existing = await prisma.goHireInterview.findFirst({
+      where: { gohireUserId: userId },
+      orderBy: { interviewDatetime: 'desc' },
+    });
+    if (existing) {
+      return res.json({ success: true, data: existing, cached: true });
+    }
+
+    logger.info('GOHIRE_SYNC', 'Fetching GoHire interview data', {
+      requestId, gohireUserId: userId, requestIntroductionId,
+    });
+
+    // Try the user_id-based data APIs first, fall back to request_introduction_id-based APIs
+    let detailRecord: any = null;
+    let completedRecord: any = null;
+
+    // Strategy 1: Use /gohire-data/interviews/completed + /detail with user_id
+    try {
+      const [completedRes, detailRes] = await Promise.all([
+        fetch(`${GOHIRE_API_BASE}/interviews/completed?user_id=${userId}&page=1&page_size=20`).then(r => r.json()) as Promise<any>,
+        fetch(`${GOHIRE_API_BASE}/interviews/detail?user_id=${userId}`).then(r => r.json()) as Promise<any>,
+      ]);
+
+      const completedList = completedRes?.data?.list || [];
+      const detailList = detailRes?.data || [];
+
+      if (detailList.length > 0) {
+        // Match by request_introduction_id if available
+        if (requestIntroductionId) {
+          detailRecord = detailList.find((d: any) => d.request_introduction_id === requestIntroductionId);
+          completedRecord = completedList.find((c: any) => c.request_introduction_id === requestIntroductionId);
+        }
+        // Fall back to latest
+        if (!detailRecord) {
+          detailRecord = detailList[0];
+          completedRecord = completedList.find((c: any) => c.log_id === detailRecord.log_id) || completedList[0];
+        }
+      }
+    } catch (err) {
+      logger.warn('GOHIRE_SYNC', 'user_id-based API failed, trying request_introduction_id fallback', {
+        requestId, error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    // Strategy 2: Fall back to /gohireApi/chat_logs + chat_dialog with request_introduction_id
+    if (!detailRecord && requestIntroductionId) {
+      try {
+        const gohireApiBase = `${GOHIRE_DATA_BASE}/gohire-data/gohireApi`;
+        const [chatLogsRes, chatDialogRes] = await Promise.all([
+          fetch(`${gohireApiBase}/chat_logs?request_introduction_id=${requestIntroductionId}`).then(r => r.json()) as Promise<any>,
+          fetch(`${gohireApiBase}/chat_dialog?request_introduction_id=${requestIntroductionId}`).then(r => r.json()) as Promise<any>,
+        ]);
+
+        const logEntry = chatLogsRes?.data?.[0];
+        const dialog = chatDialogRes?.dialog || [];
+
+        if (logEntry || dialog.length > 0) {
+          detailRecord = {
+            log_id: logEntry?.log_id || null,
+            request_introduction_id: requestIntroductionId,
+            video_url: logEntry?.video_url || null,
+            resume_url: logEntry?.resume_url || null,
+            interview_start_time: logEntry?.interview_start_time || null,
+            interview_end_time: logEntry?.interview_end_time || null,
+            dialog_list: dialog.map((turn: any) => ({
+              question: turn.question,
+              answer: turn.answer,
+            })),
+            report: null, // evaluation not available through this API path
+          };
+        }
+      } catch (err) {
+        logger.warn('GOHIRE_SYNC', 'request_introduction_id-based API also failed', {
+          requestId, error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    if (!detailRecord) {
+      return res.status(404).json({
+        success: false,
+        error: 'No completed interview found on GoHire for this user',
+      });
+    }
+
+    // Map GoHire data to GoHireInterview fields
+    const jobInfo = completedRecord?.job_info;
+    const evaluate = detailRecord.report?.hr_interview_evaluate;
+    const dialogList: Array<{ question: string; answer: string }> = detailRecord.dialog_list || [];
+
+    // Build transcript from dialog
+    const segments: Array<{ speaker: string; text: string; timestamp: string }> = [];
+    for (const item of dialogList) {
+      if (item.question) {
+        segments.push({ speaker: 'Interviewer', text: item.question, timestamp: '' });
+      }
+      if (item.answer) {
+        segments.push({ speaker: 'Candidate', text: item.answer, timestamp: '' });
+      }
+    }
+
+    // Parse interview times
+    const startTime = detailRecord.interview_start_time ? new Date(detailRecord.interview_start_time) : new Date();
+    const endTime = detailRecord.interview_end_time ? new Date(detailRecord.interview_end_time) : null;
+    const durationMinutes = endTime ? Math.round((endTime.getTime() - startTime.getTime()) / 60000) : null;
+
+    // Map decision to verdict
+    let evaluationVerdict: string | null = null;
+    if (evaluate?.decision_recommendations) {
+      const dec = evaluate.decision_recommendations.toLowerCase();
+      if (dec.includes('strongly') || dec.includes('strong')) evaluationVerdict = 'strong_hire';
+      else if (dec === 'recommend' || dec === 'pass') evaluationVerdict = 'hire';
+      else if (dec === 'reject') evaluationVerdict = 'no_hire';
+      else evaluationVerdict = 'weak_hire';
+    }
+
+    // Extract candidate name from evaluation report if available
+    const reportJson = evaluate?.result_json_parsed;
+    const candidateName = reportJson?.['报告元数据']?.['候选人姓名']
+      || reportJson?.['报告元数据']?.['candidateName']
+      || 'Unknown';
+
+    // Extract candidate email from video_url pattern (e.g., interview_471665598@qq.com_...)
+    let candidateEmail: string | null = null;
+    if (detailRecord.video_url) {
+      const emailMatch = detailRecord.video_url.match(/interview_([^_]+@[^_]+)_/);
+      if (emailMatch) candidateEmail = emailMatch[1];
+    }
+
+    const created = await prisma.goHireInterview.create({
+      data: {
+        gohireUserId: userId,
+        candidateName,
+        candidateEmail,
+        interviewDatetime: startTime,
+        interviewEndDatetime: endTime,
+        duration: durationMinutes,
+        videoUrl: detailRecord.video_url || null,
+        resumeUrl: detailRecord.resume_url || null,
+        jobTitle: jobInfo?.job_title || null,
+        jobDescription: jobInfo?.job_jd || null,
+        jobRequirements: jobInfo?.interview_requirements || null,
+        transcript: segments.length > 0 ? JSON.stringify(segments) : null,
+        evaluationData: evaluate ? (evaluate as any) : undefined,
+        evaluationScore: evaluate?.score ?? null,
+        evaluationVerdict,
+        recruiterEmail: req.user!.email || null,
+        recruiterName: req.user!.name || null,
+      },
+    });
+
+    logger.info('GOHIRE_SYNC', 'GoHireInterview record created from sync', {
+      requestId,
+      id: created.id,
+      gohireUserId: userId,
+      hasVideo: !!created.videoUrl,
+      hasTranscript: segments.length > 0,
+      hasEvaluation: !!evaluate,
+      evaluationScore: evaluate?.score,
+    });
+
+    res.json({ success: true, data: created });
+  } catch (error) {
+    logger.error('GOHIRE_SYNC', 'Failed to sync GoHire interview', {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to sync interview data from GoHire' });
+  }
+});
+
+/**
+ * POST /import-csv — Import GoHire interviews from CSV file (admin only).
+ * Returns { created, updated, skipped, errors } counts plus list of duplicates for confirmation.
+ */
+router.post('/import-csv', requireAdmin, csvUpload.single('file'), async (req, res) => {
+  const requestId = generateRequestId();
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'CSV file is required' });
+    }
+
+    const overwrite = req.body.overwrite === 'true';
+    const csvText = req.file.buffer.toString('utf-8');
+
+    // Parse CSV — handle quoted fields with embedded newlines/commas
+    const rows = parseCsv(csvText);
+    if (rows.length < 2) {
+      return res.status(400).json({ success: false, error: 'CSV file has no data rows' });
+    }
+
+    const headers = rows[0];
+    const dataRows = rows.slice(1).filter(r => r.some(cell => cell.trim()));
+
+    logger.info('GOHIRE_IMPORT', 'Starting CSV import', {
+      requestId, totalRows: dataRows.length, overwrite,
+    });
+
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    const errors: Array<{ row: number; error: string }> = [];
+    const duplicates: Array<{ row: number; gohireUserId: string; candidateName: string; interviewDatetime: string; existingId: string }> = [];
+
+    for (let i = 0; i < dataRows.length; i++) {
+      const row = dataRows[i];
+      const rowNum = i + 2; // 1-indexed, header is row 1
+      try {
+        const record = mapCsvRow(headers, row);
+        if (!record.gohireUserId) {
+          errors.push({ row: rowNum, error: 'Missing gohire_user_id' });
+          continue;
+        }
+
+        // Check for existing record by gohireUserId + interviewDatetime
+        const existing = await prisma.goHireInterview.findFirst({
+          where: {
+            gohireUserId: record.gohireUserId,
+            interviewDatetime: record.interviewDatetime,
+          },
+          select: { id: true },
+        });
+
+        if (existing) {
+          if (overwrite) {
+            await prisma.goHireInterview.update({
+              where: { id: existing.id },
+              data: record,
+            });
+            updated++;
+          } else {
+            duplicates.push({
+              row: rowNum,
+              gohireUserId: record.gohireUserId,
+              candidateName: record.candidateName,
+              interviewDatetime: record.interviewDatetime.toISOString(),
+              existingId: existing.id,
+            });
+            skipped++;
+          }
+        } else {
+          await prisma.goHireInterview.create({ data: record });
+          created++;
+        }
+      } catch (err) {
+        errors.push({ row: rowNum, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+
+    logger.info('GOHIRE_IMPORT', 'CSV import completed', {
+      requestId, created, updated, skipped, errors: errors.length, duplicates: duplicates.length,
+    });
+
+    res.json({
+      success: true,
+      data: { created, updated, skipped, errors, duplicates, total: dataRows.length },
+    });
+  } catch (error) {
+    logger.error('GOHIRE_IMPORT', 'CSV import failed', {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to import CSV' });
+  }
+});
+
+/** Parse a CSV string, handling quoted fields with embedded newlines and commas. */
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (inQuotes) {
+      if (ch === '"' && next === '"') {
+        field += '"';
+        i++; // skip escaped quote
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        field += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(field);
+        field = '';
+      } else if (ch === '\n' || (ch === '\r' && next === '\n')) {
+        row.push(field);
+        field = '';
+        rows.push(row);
+        row = [];
+        if (ch === '\r') i++; // skip \n in \r\n
+      } else if (ch === '\r') {
+        row.push(field);
+        field = '';
+        rows.push(row);
+        row = [];
+      } else {
+        field += ch;
+      }
+    }
+  }
+
+  // Final field/row
+  if (field || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+/** Map a CSV row to GoHireInterview create data. */
+function mapCsvRow(headers: string[], row: string[]): any {
+  const get = (name: string) => {
+    const idx = headers.indexOf(name);
+    return idx >= 0 && idx < row.length ? row[idx].trim() : '';
+  };
+
+  const parseDate = (val: string): Date | null => {
+    if (!val) return null;
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const gohireUserId = get('gohire_user_id') || get('imgohire_user_id');
+  const interviewDatetime = parseDate(get('gohire_interview_datetime'));
+  const interviewEndDatetime = parseDate(get('面试结束时间'));
+  const durationStr = get('面试时长');
+  const duration = durationStr ? parseInt(durationStr, 10) || null : null;
+
+  return {
+    gohireUserId,
+    candidateName: get('gohire_user_name') || 'Unknown',
+    candidateEmail: get('用户邮箱（登录名称）') || null,
+    interviewDatetime: interviewDatetime || new Date(),
+    interviewEndDatetime,
+    duration,
+    videoUrl: get('gohire_interview_video_filepath') || null,
+    recruiterName: get('gohire_recruiter_name') || null,
+    recruiterEmail: get('gohire_recruiter_email') || null,
+    recruiterId: get('hrid') || null,
+    jobTitle: get('职位名称') || null,
+    jobDescription: get('职位描述') || null,
+    jobRequirements: get('任职要求') || null,
+    interviewRequirements: get('面试要求') || null,
+    resumeUrl: get('简历下载地址') || null,
+    transcriptUrl: get('面试记录下载地址') || null,
+    lastLoginAt: parseDate(get('最近登录时间')),
+    invitedAt: parseDate(get('邀约时间')),
+  };
+}
 
 /**
  * GET /stats — Aggregate stats for GoHire interviews.
@@ -59,8 +476,8 @@ router.use(requireAuth);
 router.get('/stats', async (req, res) => {
   const requestId = generateRequestId();
   try {
-    const { filterUserId, filterTeamId } = req.query as Record<string, string | undefined>;
-    const scope = await getVisibilityScope(req.user!);
+    const { filterUserId, filterTeamId, teamView } = req.query as Record<string, string | undefined>;
+    const scope = await getVisibilityScope(req.user!, teamView === 'true');
     const visFilter = await buildRecruiterEmailFilter(scope, filterUserId, filterTeamId);
 
     const [
@@ -136,10 +553,12 @@ router.get('/', async (req, res) => {
       jobTitle,
       recruiterEmail,
       hasVideo,
+      hasEvaluation,
       dateFrom,
       dateTo,
       filterUserId,
       filterTeamId,
+      teamView,
       gohireUserId,
       page = '1',
       limit = '20',
@@ -152,7 +571,7 @@ router.get('/', async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Build where clause with visibility filtering
-    const scope = await getVisibilityScope(req.user!);
+    const scope = await getVisibilityScope(req.user!, teamView === 'true');
     const visFilter = await buildRecruiterEmailFilter(scope, filterUserId, filterTeamId);
     const where: any = { ...visFilter };
 
@@ -179,6 +598,12 @@ router.get('/', async (req, res) => {
       where.videoUrl = { not: null };
     } else if (hasVideo === 'false') {
       where.videoUrl = null;
+    }
+
+    if (hasEvaluation === 'true') {
+      where.evaluationData = { not: Prisma.DbNull };
+    } else if (hasEvaluation === 'false') {
+      where.evaluationData = Prisma.DbNull;
     }
 
     if (dateFrom || dateTo) {
@@ -805,6 +1230,78 @@ router.patch('/:id', async (req, res) => {
       error: error instanceof Error ? error.message : String(error),
     });
     res.status(500).json({ success: false, error: 'Failed to update interview' });
+  }
+});
+
+/**
+ * POST /:id/share — Generate a share token for public evaluation report access.
+ */
+router.post('/:id/share', async (req, res) => {
+  const requestId = generateRequestId();
+  try {
+    const { id } = req.params;
+    const interview = await prisma.goHireInterview.findUnique({
+      where: { id },
+      select: { evaluationData: true, evaluationShareToken: true },
+    });
+
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+
+    if (!interview.evaluationData) {
+      return res.status(400).json({ success: false, error: 'No evaluation data to share' });
+    }
+
+    // Reuse existing token if already shared
+    const token = interview.evaluationShareToken || crypto.randomUUID();
+
+    if (!interview.evaluationShareToken) {
+      await prisma.goHireInterview.update({
+        where: { id },
+        data: { evaluationShareToken: token },
+      });
+    }
+
+    logger.info('GOHIRE_INTERVIEWS', 'Evaluation share token generated', { requestId, id });
+
+    res.json({ success: true, data: { token } });
+  } catch (error) {
+    logger.error('GOHIRE_INTERVIEWS', 'Failed to generate share token', {
+      requestId,
+      id: req.params.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to generate share token' });
+  }
+});
+
+/**
+ * DELETE /:id/share — Revoke the share token for an evaluation report.
+ */
+router.delete('/:id/share', async (req, res) => {
+  const requestId = generateRequestId();
+  try {
+    const { id } = req.params;
+
+    await prisma.goHireInterview.update({
+      where: { id },
+      data: { evaluationShareToken: null },
+    });
+
+    logger.info('GOHIRE_INTERVIEWS', 'Evaluation share token revoked', { requestId, id });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+    logger.error('GOHIRE_INTERVIEWS', 'Failed to revoke share token', {
+      requestId,
+      id: req.params.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to revoke share token' });
   }
 });
 

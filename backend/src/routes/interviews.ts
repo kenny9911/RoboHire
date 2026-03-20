@@ -286,6 +286,42 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function sanitizeInterviewMetadata(metadata: unknown, isAdmin: boolean): unknown {
+  if (isAdmin || !isRecord(metadata) || !('gohireInviteLog' in metadata)) {
+    return metadata;
+  }
+
+  const { gohireInviteLog: _hidden, ...rest } = metadata;
+  return rest;
+}
+
+function extractGoHireInviteLog(metadata: unknown): Record<string, unknown> | null {
+  if (!isRecord(metadata) || !isRecord(metadata.gohireInviteLog)) {
+    return null;
+  }
+
+  return metadata.gohireInviteLog;
+}
+
+function serializeInterviewForResponse<T extends { metadata?: unknown }>(
+  interview: T,
+  isAdmin: boolean,
+): T & { gohireInviteLog?: Record<string, unknown> | null } {
+  const base = {
+    ...interview,
+    metadata: sanitizeInterviewMetadata(interview.metadata, isAdmin),
+  };
+
+  if (!isAdmin) {
+    return base;
+  }
+
+  return {
+    ...base,
+    gohireInviteLog: extractGoHireInviteLog(interview.metadata),
+  };
+}
+
 function normalizeWorkerUsagePayload(raw: unknown): WorkerSessionUsagePayload | null {
   if (!isRecord(raw)) return null;
 
@@ -1049,7 +1085,7 @@ router.get('/', requireAuth, async (req, res) => {
 
     res.json({
       success: true,
-      data: interviews,
+      data: interviews.map((interview) => serializeInterviewForResponse(interview, scope.isAdmin)),
       meta: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     });
   } catch (err: any) {
@@ -1088,7 +1124,7 @@ router.get('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Interview not found' });
     }
 
-    res.json({ success: true, data: interview });
+    res.json({ success: true, data: serializeInterviewForResponse(interview, scope.isAdmin) });
   } catch (err: any) {
     logger.error('INTERVIEWS', 'Failed to get interview', { error: err.message });
     res.status(500).json({ success: false, error: 'Failed to get interview' });

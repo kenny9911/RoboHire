@@ -460,9 +460,9 @@ function extractJobFields(body: any) {
 router.get('/', requireAuth, async (req, res) => {
   const requestId = req.requestId || generateRequestId();
   try {
-    const { status, search, title, hiringRequestId, filterUserId, filterTeamId, page = '1', limit = '20' } = req.query;
+    const { status, search, title, hiringRequestId, filterUserId, filterTeamId, teamView, page = '1', limit = '20' } = req.query;
 
-    const scope = await getVisibilityScope(req.user!);
+    const scope = await getVisibilityScope(req.user!, teamView === 'true');
     const where: any = {
       ...await buildAdminOverrideFilter(
         scope,
@@ -503,9 +503,60 @@ router.get('/', requireAuth, async (req, res) => {
       prisma.job.count({ where }),
     ]);
 
+    const jobIds = jobs.map((job) => job.id);
+
+    const [jobMatchCounts, interviewCounts, completedInterviewCounts] = jobIds.length > 0
+      ? await Promise.all([
+          prisma.jobMatch.groupBy({
+            by: ['jobId'],
+            where: { jobId: { in: jobIds } },
+            _count: { _all: true },
+          }),
+          prisma.interview.groupBy({
+            by: ['jobId'],
+            where: { jobId: { in: jobIds } },
+            _count: { _all: true },
+          }),
+          prisma.interview.groupBy({
+            by: ['jobId'],
+            where: {
+              jobId: { in: jobIds },
+              status: 'completed',
+            },
+            _count: { _all: true },
+          }),
+        ])
+      : [[], [], []];
+
+    const jobMatchCountById = new Map<string, number>();
+    jobMatchCounts.forEach((row) => {
+      jobMatchCountById.set(row.jobId, row._count._all);
+    });
+
+    const interviewCountById = new Map<string, number>();
+    interviewCounts.forEach((row) => {
+      if (!row.jobId) return;
+      interviewCountById.set(row.jobId, row._count._all);
+    });
+
+    const completedInterviewCountById = new Map<string, number>();
+    completedInterviewCounts.forEach((row) => {
+      if (!row.jobId) return;
+      completedInterviewCountById.set(row.jobId, row._count._all);
+    });
+
+    const jobsWithStats = jobs.map((job) => ({
+      ...job,
+      stats: {
+        matches: jobMatchCountById.get(job.id) ?? 0,
+        interviews: interviewCountById.get(job.id) ?? 0,
+        completedInterviews: completedInterviewCountById.get(job.id) ?? 0,
+      },
+    }));
+
     res.json({
       success: true,
-      data: jobs,
+      data: jobsWithStats,
       pagination: {
         page: pageNum,
         limit: pageSize,

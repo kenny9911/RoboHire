@@ -1734,7 +1734,50 @@
       "pendingProjects": "Proyectos Activos",
       "pendingEvaluations": "Evaluaciones Pendientes",
       "agents": "Agentes",
-      "agentsDesc": "Despliegue agentes IA para buscar y filtrar candidatos automáticamente."
+      "agentsDesc": "Despliegue agentes IA para buscar y filtrar candidatos automáticamente.",
+      "kpiScorecard": "Cuadro de Rendimiento",
+      "kpiUploads": "Cargas",
+      "kpiInvitationsSent": "Invitaciones Enviadas",
+      "kpiCompletedInterviews": "Completadas",
+      "kpiMatchesCreated": "Coincidencias",
+      "kpiVerdicts": "Veredictos",
+      "kpiVerdictStrongHire": "Contratar Sí",
+      "kpiVerdictHire": "Contratar",
+      "kpiVerdictLeanHire": "Inclinado a Contratar",
+      "kpiVerdictLeanNoHire": "Inclinado a No",
+      "kpiVerdictNoHire": "No Contratar",
+      "todoList": "Tareas Pendientes",
+      "todoStaleRequests": "Solicitudes Estancadas",
+      "todoStaleRequestsDesc": "{{count}} solicitud(es) sin actividad por más de 7 días",
+      "todoUnreviewedMatches": "Coincidencias Sin Revisar",
+      "todoUnreviewedMatchesDesc": "{{count}} coincidencia(s) esperando revisión",
+      "todoAwaitingFollowup": "Esperando Seguimiento",
+      "todoAwaitingFollowupDesc": "{{count}} candidato(s) aprobado(s) necesitan seguimiento",
+      "todoNeedsEvaluation": "Necesita Evaluación",
+      "todoNeedsEvaluationDesc": "{{count}} entrevista(s) esperando evaluación",
+      "todoAllClear": "¡Todo al Día!",
+      "todoAllClearDesc": "No hay tareas pendientes. ¡Buen trabajo!",
+      "todoViewAll": "Ver todo",
+      "agentPerformance": "Rendimiento de Agentes IA",
+      "agentActive": "Agentes Activos",
+      "agentSourced": "Buscados",
+      "agentApproved": "Aprobados",
+      "agentContacted": "Contactados",
+      "agentTopAgents": "Mejores Agentes",
+      "agentViewAll": "Ver todos los agentes",
+      "agentNone": "Aún no hay agentes desplegados.",
+      "agentCreateDesc": "Despliega un agente IA para buscar candidatos automáticamente.",
+      "recentActivity": "Actividad Reciente",
+      "activityInterviewCompleted": "{{name}} completó la entrevista para {{job}}",
+      "activityEvaluationCompleted": "{{name}} evaluado — {{verdict}}",
+      "activityNewMatch": "{{resume}} coincide con {{request}}",
+      "activityAgentDiscovery": "Agente {{agent}} encontró a {{name}}",
+      "activityEmpty": "Sin actividad reciente en este período.",
+      "conversionFunnel": "Tasas de Conversión",
+      "funnelMatched": "Coincididos",
+      "funnelInvited": "Invitados",
+      "funnelCompleted": "Completados",
+      "funnelPassed": "Aprobados"
     },
     "profile": {
       "quickLinks": "Enlaces Rápidos",
@@ -1861,7 +1904,10 @@
       "completedLabel": "Fin",
       "durationLabel": "Duración",
       "gradeLabel": "Calificación",
-      "viewGoHireEvaluation": "Ver evaluación GoHire"
+      "viewGoHireEvaluation": "Ver evaluación GoHire",
+      "syncingGoHireData": "Sincronizando datos de entrevista...",
+      "goHireInterviewNotReady": "La entrevista aún no se ha completado en GoHire",
+      "goHireSyncFailed": "Error al sincronizar los datos de la entrevista"
     },
     "videoInterview": {
       "title": "Entrevista en Video",
@@ -2305,7 +2351,36 @@
       "filterRejected": "Rechazado",
       "filterMore": "Más filtros",
       "addFilter": "Añadir Filtro",
-      "applyFilters": "Aplicar Filtros"
+      "applyFilters": "Aplicar Filtros",
+      "interviewInvited": "Entrevista invitada",
+      "interviewInvitedTooltip": "La invitación a la entrevista ha sido enviada. Esperando respuesta del candidato.",
+      "inviteToInterviewTooltip": "Invitar a este candidato a una entrevista con IA. Navegar para organizar y enviar la invitación.",
+      "interviewCompleted": "Entrevista completada",
+      "filterSkills": "Habilidades",
+      "filterSkillsPlaceholder": "Escriba y pulse Enter para agregar",
+      "filterEducation": "Educación",
+      "filterAllEducation": "Toda Educación",
+      "eduJuniorHigh": "Secundaria e inferior",
+      "eduVocational": "Formación Profesional",
+      "eduHighSchool": "Bachillerato",
+      "eduAssociate": "Grado Asociado",
+      "eduBachelor": "Licenciatura",
+      "eduMaster": "Maestría",
+      "eduDoctorate": "Doctorado",
+      "filterSchool": "Universidad",
+      "filterSchoolPlaceholder": "Nombre de universidad",
+      "filterCompany": "Empresa",
+      "filterCompanyPlaceholder": "Nombre de empresa",
+      "filterCountry": "País / Región",
+      "filterAllCountries": "Todos los Países",
+      "statTotal": "Total de Candidatos",
+      "statThisWeek": "Nuevos Esta Semana",
+      "statMatched": "Coincididos",
+      "statInterviewed": "Invitados a Entrevista",
+      "statAnalyzed": "Analizados por IA",
+      "statTopSkills": "Habilidades Principales",
+      "filteredResults": "{{count}} candidatos encontrados",
+      "clearFilters": "Limpiar todos los filtros"
     },
     "matching": {
       "title": "Coincidencia Inteligente",
@@ -2374,6 +2449,9 @@
       "startMatching": "Iniciar Coincidencia ({{count}} currículums)",
       "preFilterRunning": "Pre-filtrando {{total}} currículums...",
       "preFilterComplete": "Pre-filtro completado: {{passed}} aprobados, {{excluded}} excluidos",
+      "screeningRunning": "Evaluando {{total}} currículos...",
+      "screeningRunningDesc": "La IA está evaluando rápidamente a todos los candidatos para priorizar las mejores coincidencias.",
+      "screeningComplete": "Evaluación completa: {{a}} coincidencia fuerte, {{b}} moderada, {{c}} baja",
       "preFilteredCount": "({{filtered}} pre-filtrados)",
       "sessionHistory": "Historial de Sesiones",
       "currentResults": "Resultados Actuales",
@@ -2679,6 +2757,14 @@
         "setActive": "Establecer como Activa",
         "delete": "Eliminar",
         "backToCurrent": "Volver a la Actual"
+      },
+      "reparse": "Volver a analizar el currículum",
+      "viewOriginalDocument": "Ver documento original",
+      "originalDocument": {
+        "title": "Documento original",
+        "description": "Texto fuente extraído de {{fileName}}",
+        "empty": "El texto del documento original no está disponible para este currículum.",
+        "close": "Cerrar documento original"
       },
       "refine": {
         "title": "Optimizar Currículum para Puesto",
@@ -3192,7 +3278,9 @@
     "filters": {
       "allRecruiters": "Todos los reclutadores",
       "recruiterGroup": "Reclutadores",
-      "teamGroup": "Equipos"
+      "teamGroup": "Equipos",
+      "myData": "Mis datos",
+      "teamView": "Equipo"
     }
   },
   "admin": {
@@ -3369,6 +3457,12 @@
     "criteriaPlaceholder": "Describe tu candidato ideal en detalle...",
     "linkedJob": "Puesto Vinculado (opcional)",
     "noJob": "Sin puesto vinculado",
+    "taskType": "Tipo de tarea",
+    "taskTypeSearch": "Buscar candidatos",
+    "taskTypeMatch": "Emparejar candidato",
+    "selectJob": "Seleccionar puesto...",
+    "instructions": "Instrucciones",
+    "instructionsPlaceholder": "Dile al agente qué quieres que haga...",
     "creating": "Creando...",
     "createBtn": "Crear Agente",
     "empty": "Sin agentes aún",
@@ -3471,6 +3565,19 @@
       "results": "resultados",
       "prev": "Anterior",
       "next": "Siguiente"
+    },
+    "import": {
+      "button": "Importar CSV",
+      "resultTitle": "Resultados de importación",
+      "total": "Total",
+      "created": "Creados",
+      "updated": "Actualizados",
+      "skipped": "Omitidos",
+      "duplicatesFound": "{{count}} registros duplicados fueron omitidos",
+      "duplicateRow": "Fila {{row}}: {{name}} ({{date}})",
+      "overwriteAll": "Reimportar y sobrescribir duplicados",
+      "errorsFound": "{{count}} filas tuvieron errores",
+      "failed": "Error en la importación"
     }
   },
   "goHireEval": {
@@ -3561,5 +3668,73 @@
       "notParsed": "El currículum aún no ha sido analizado",
       "parseNow": "Analizar Ahora"
     }
+  },
+  "evaluationCenter": {
+    "title": "Centro de Evaluación",
+    "subtitle": "Centro de Evaluación con IA",
+    "description": "Revisa y gestiona los informes de evaluación de entrevistas generados por IA. Comparte, exporta y compara candidatos.",
+    "searchPlaceholder": "Buscar por nombre o correo del candidato...",
+    "filters": "Filtros",
+    "verdictFilter": "Veredicto",
+    "allVerdicts": "Todos los Veredictos",
+    "dateFrom": "Fecha Desde",
+    "dateTo": "Fecha Hasta",
+    "clearFilters": "Limpiar todos los filtros",
+    "stats": {
+      "totalEvaluated": "Total Evaluados",
+      "avgScore": "Puntaje Promedio",
+      "passCount": "Aprobados (70+)",
+      "strongHire": "Contratación Fuerte"
+    },
+    "col": {
+      "candidate": "Candidato",
+      "position": "Puesto",
+      "score": "Puntaje",
+      "verdict": "Veredicto",
+      "recruiter": "Reclutador",
+      "date": "Fecha"
+    },
+    "verdict": {
+      "strongHire": "Contratación Fuerte",
+      "strong_hire": "Contratación Fuerte",
+      "hire": "Contratar",
+      "leanHire": "Inclinado a Contratar",
+      "lean_hire": "Inclinado a Contratar",
+      "leanNoHire": "Inclinado a No Contratar",
+      "lean_no_hire": "Inclinado a No Contratar",
+      "noHire": "No Contratar",
+      "no_hire": "No Contratar"
+    },
+    "empty": "Aún no hay entrevistas evaluadas",
+    "emptyHint": "Completa una entrevista y genera una evaluación para verla aquí.",
+    "showing": "Mostrando",
+    "of": "de",
+    "prev": "Anterior",
+    "next": "Siguiente"
+  },
+  "evaluationReport": {
+    "loading": "Cargando informe...",
+    "notFound": "Informe No Encontrado",
+    "notFoundDesc": "Este enlace de informe de evaluación no es válido o ha sido revocado. Contacta al reclutador para obtener un nuevo enlace.",
+    "headerTag": "Informe de Evaluación",
+    "outOf": "de 100",
+    "footer": "Impulsado por RoboHire AI — Evaluación Integral de Entrevistas"
+  },
+  "share": {
+    "share": "Compartir",
+    "shareEvaluation": "Compartir Informe de Evaluación",
+    "shareDesc": "Genera un enlace público para compartir este informe de evaluación con cualquier persona.",
+    "generating": "Generando...",
+    "generateLink": "Generar Enlace Compartible",
+    "copied": "¡Copiado!",
+    "copy": "Copiar",
+    "scanQr": "Escanea para abrir en móvil",
+    "revokeAccess": "Revocar Acceso"
+  },
+  "export": {
+    "export": "Exportar",
+    "pdf": "PDF (Imprimir)",
+    "word": "Documento Word",
+    "markdown": "Markdown"
   }
 }

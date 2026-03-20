@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
+import { formatDateTimeLabel } from '../../utils/dateTime';
 
 interface TranscriptTurn {
   role: string;
@@ -191,7 +192,7 @@ export default function Evaluations() {
                         <span className="text-sm font-semibold text-slate-900">{interview.candidateName}</span>
                         {interview.jobTitle && <span className="ml-2 text-xs text-slate-500">{interview.jobTitle}</span>}
                         <div className="text-[10px] text-slate-400 mt-0.5">
-                          {t('product.evaluations.statusScheduled', 'Interview scheduled')} &middot; {new Date(interview.createdAt).toLocaleDateString()}
+                          {t('product.evaluations.statusScheduled', 'Interview scheduled')} &middot; {formatDateTimeLabel(interview.createdAt)}
                         </div>
                       </div>
                     </div>

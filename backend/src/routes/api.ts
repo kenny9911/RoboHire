@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import crypto from 'crypto';
 import { resumeMatchAgent } from '../agents/ResumeMatchAgent.js';
-import { inviteAgent } from '../agents/InviteAgent.js';
+import { inviteAgent, buildGoHireInvitationCallLog } from '../agents/InviteAgent.js';
 import { resumeParseAgent } from '../agents/ResumeParseAgent.js';
 import { jdParseAgent } from '../agents/JDParseAgent.js';
 import { evaluationAgent } from '../agents/EvaluationAgent.js';
@@ -23,6 +23,7 @@ import {
   InviteCandidateRequest,
   EvaluateInterviewRequest,
   APIResponse,
+  RoboHireInvitationResponse,
 } from '../types/index.js';
 
 function computeContentHash(text: string): string {
@@ -166,6 +167,19 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
       recruiter_email,
       interviewer_requirement
     );
+    const inviteApiMeta = (result as RoboHireInvitationResponse & {
+      __gohireApiMeta?: { endpoint?: string; deliveryMode?: 'remote_api' | 'fallback_local' };
+    }).__gohireApiMeta;
+    const gohireInviteLog = buildGoHireInvitationCallLog({
+      resume,
+      jd,
+      recruiterEmail: recruiter_email,
+      interviewerRequirement: interviewer_requirement,
+      response: result,
+      requestId,
+      deliveryMode: inviteApiMeta?.deliveryMode || (result.request_introduction_id.startsWith('local_') ? 'fallback_local' : 'remote_api'),
+      endpoint: inviteApiMeta?.endpoint,
+    });
 
     req.payloadCapture = {
       requestPayload: {
@@ -268,6 +282,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
             gohireUserId: result.user_id != null ? String(result.user_id) : null,
             metadata: {
               inviteData: JSON.parse(JSON.stringify(result)),
+              gohireInviteLog: JSON.parse(JSON.stringify(gohireInviteLog)),
               loginUrl: result.login_url,
               qrcodeUrl: result.qrcode_url,
             },

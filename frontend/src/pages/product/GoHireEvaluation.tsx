@@ -6,6 +6,7 @@ import { ResumeRenderer, parsedDataToMarkdown, extractJDKeywords } from '../../c
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { JdRenderer } from '../../components/JdRenderer';
 import ResumeViewerModal from '../../components/ResumeViewerModal';
+import EvaluationShareExport from '../../components/EvaluationShareExport';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +85,8 @@ interface InterviewData {
   evaluationData: EvaluationReport | null;
   evaluationScore: number | null;
   evaluationVerdict: string | null;
+  evaluationShareToken: string | null;
+  interviewDatetime: string | null;
   createdAt: string;
 }
 
@@ -841,11 +844,28 @@ export default function GoHireEvaluation() {
             )}
           </div>
         </div>
-        {interview.evaluationVerdict && (
-          <span className={getDecisionBadge(interview.evaluationVerdict)}>
-            {interview.evaluationVerdict.replace(/_/g, ' ')}
-          </span>
-        )}
+        <div className="flex items-center gap-3 flex-none print:hidden">
+          {interview.evaluationData && (
+            <EvaluationShareExport
+              interviewId={interview.id}
+              candidateName={interview.candidateName}
+              jobTitle={interview.jobTitle}
+              interviewDate={interview.interviewDatetime}
+              evaluationData={interview.evaluationData}
+              evaluationScore={interview.evaluationScore}
+              evaluationVerdict={interview.evaluationVerdict}
+              shareToken={interview.evaluationShareToken}
+              onShareTokenChange={(token) => {
+                setInterview((prev) => prev ? { ...prev, evaluationShareToken: token } : prev);
+              }}
+            />
+          )}
+          {interview.evaluationVerdict && (
+            <span className={getDecisionBadge(interview.evaluationVerdict)}>
+              {interview.evaluationVerdict.replace(/_/g, ' ')}
+            </span>
+          )}
+        </div>
       </header>
 
       {/* Main two-column layout */}

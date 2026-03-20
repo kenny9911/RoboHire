@@ -1,6 +1,10 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import crypto from 'crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import PDFDocument from 'pdfkit';
 import { requireAuth } from '../middleware/auth.js';
 import { documentParsingService, DocumentParsingService } from '../services/DocumentParsingService.js';
 import { pdfService } from '../services/PDFService.js';
@@ -16,6 +20,11 @@ import type { ParsedResume, WorkExperience } from '../types/index.js';
 import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 
 const router = Router();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const FONT_DIR = path.resolve(__dirname, '..', '..', 'assets', 'fonts');
+const FONT_REGULAR = path.join(FONT_DIR, 'NotoSansSC-Regular.ttf');
+const FONT_BOLD = path.join(FONT_DIR, 'NotoSansSC-Bold.ttf');
+const HAS_PDF_FONTS = fs.existsSync(FONT_REGULAR) && fs.existsSync(FONT_BOLD);
 
 const uploadDoc = multer({
   storage: multer.memoryStorage(),
@@ -64,11 +73,61 @@ function decodeFilename(raw: string): string {
   }
 }
 
+function buildInlineContentDisposition(filename: string): string {
+  const cleaned = filename.replace(/[\r\n"]/g, '').trim() || 'resume';
+  const encoded = encodeURIComponent(cleaned);
+  const asciiFallback = cleaned
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/[;\\]/g, '-')
+    .trim() || 'resume';
+
+  return `inline; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`;
+}
+
 async function extractText(buffer: Buffer, mimetype: string, filename: string, requestId?: string): Promise<string> {
   if (mimetype === 'application/pdf') {
     return pdfService.extractText(buffer, requestId);
   }
   return documentParsingService.extractText(buffer, mimetype, filename, requestId);
+}
+
+async function renderResumeTextAsPdf(title: string, resumeText: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
+    const chunks: Buffer[] = [];
+    const pageWidth = doc.page.width - 100;
+
+    const fontRegular = HAS_PDF_FONTS ? 'ResumeSans' : 'Helvetica';
+    const fontBold = HAS_PDF_FONTS ? 'ResumeSansBold' : 'Helvetica-Bold';
+
+    if (HAS_PDF_FONTS) {
+      doc.registerFont('ResumeSans', FONT_REGULAR);
+      doc.registerFont('ResumeSansBold', FONT_BOLD);
+    }
+
+    doc.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    doc.font(fontBold).fontSize(18).fillColor('#0f172a').text(title, { width: pageWidth });
+    doc.moveDown(0.75);
+    doc.font(fontRegular).fontSize(10.5).fillColor('#334155').text(resumeText.replace(/\r\n/g, '\n'), {
+      width: pageWidth,
+      lineGap: 4,
+      paragraphGap: 8,
+    });
+
+    doc.end();
+  });
+}
+
+async function buildVisibleResumeWhere(user: {
+  id: string;
+  role?: string;
+  teamId?: string | null;
+}, resumeId: string): Promise<Record<string, unknown>> {
+  const scope = await getVisibilityScope(user);
+  return { id: resumeId, ...buildUserIdFilter(scope) };
 }
 
 function parseDate(dateStr: string | undefined): Date | null {
@@ -161,13 +220,18 @@ async function generateResumeSummaryHighlight(
   if (parsed.experience && Array.isArray(parsed.experience) && parsed.experience.length > 0) {
     parts.push('Experience:');
     for (const exp of parsed.experience.slice(0, 5)) {
-      parts.push(`- ${exp.role || ''} at ${exp.company || ''} (${exp.duration || exp.startDate || ''})`);
+      const desc = exp.description ? ` — ${String(exp.description).substring(0, 120)}` : '';
+      parts.push(`- ${exp.role || ''} at ${exp.company || ''} (${exp.duration || exp.startDate || ''})${desc}`);
     }
   }
   if (parsed.education && Array.isArray(parsed.education) && parsed.education.length > 0) {
     parts.push('Education:');
     for (const edu of parsed.education.slice(0, 3)) {
-      parts.push(`- ${edu.degree || ''} ${edu.field || ''} at ${edu.institution || ''}`);
+      const eduParts = [edu.degree, edu.field, edu.institution].filter(Boolean).join(' ');
+      const gpa = (edu as any).gpa ? ` (GPA: ${(edu as any).gpa})` : '';
+      const achievements = Array.isArray((edu as any).achievements) && (edu as any).achievements.length > 0
+        ? ` [${(edu as any).achievements.join(', ')}]` : '';
+      parts.push(`- ${eduParts}${gpa}${achievements}`);
     }
   }
   const skills = Array.isArray(parsed.skills)
@@ -176,12 +240,12 @@ async function generateResumeSummaryHighlight(
       ? Object.values(parsed.skills).flat().filter(Boolean)
       : [];
   if (skills.length > 0) {
-    parts.push(`Skills: ${skills.slice(0, 15).join(', ')}`);
+    parts.push(`Skills: ${skills.slice(0, 20).join(', ')}`);
   }
 
-  const prompt = `Based on this resume data, generate TWO things:
-1. A professional summary (2-3 sentences, ~50-100 words) highlighting the candidate's key strengths, experience, and expertise areas. Write in the SAME LANGUAGE as the candidate's name and experience (if Chinese name/companies, write in Chinese; if English, write in English).
-2. A one-line highlight (under 60 characters) — the most impressive or distinctive aspect of this candidate. This will be shown on a card view.
+  const prompt = `You are a senior recruiter writing an executive summary of a candidate for a client pitch. Based on this resume data, generate TWO things:
+1. An executive summary (3-4 sentences, ~80-120 words) that a recruiter can use to pitch this candidate to a hiring manager. Highlight: notable skills and technical depth, relevant experience and achievements, education (only if prestigious or highly relevant), and what makes this candidate stand out. Write in the SAME LANGUAGE as the candidate's name and experience (if Chinese name/companies, write in Chinese; if English, write in English). Focus on what's impressive and sellable — skip generic filler.
+2. A one-line highlight (under 60 characters) — the single most compelling selling point of this candidate.
 
 Resume data:
 ${parts.join('\n')}
@@ -644,6 +708,12 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       pipelineStatus,
       filterUserId,
       filterTeamId,
+      teamView,
+      skills,
+      educationLevel,
+      school,
+      company,
+      country,
     } = req.query as Record<string, string>;
 
     const pageNum = Math.max(1, parseInt(page) || 1);
@@ -651,7 +721,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Build where clause with team visibility (admin can narrow by user/team)
-    const scope = await getVisibilityScope(req.user!);
+    const scope = await getVisibilityScope(req.user!, teamView === 'true');
     const where: Record<string, unknown> = {
       ...await buildAdminOverrideFilter(scope, filterUserId, filterTeamId),
     };
@@ -675,6 +745,106 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     // Filter by pipeline status (via ResumeJobFit)
     if (pipelineStatus) {
       where.resumeJobFits = { some: { pipelineStatus } };
+    }
+
+    // ── JSON-based filters via raw SQL pre-filter (uses GIN indexes on parsedData) ──
+    const hasJsonFilters = !!(skills || educationLevel || school || company || country);
+    if (hasJsonFilters) {
+      const conditions: string[] = [`"parsedData" IS NOT NULL`];
+      const params: any[] = [];
+      // Helper to push a param and return its $N placeholder
+      const p = (val: string) => { params.push(val); return `$${params.length}`; };
+
+      if (skills) {
+        // Support comma-separated skill list — ALL must match (AND)
+        const skillList = skills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+        for (const skill of skillList) {
+          const ph = p(`%${skill}%`);
+          // Handle both array and object (categorized) skill formats
+          conditions.push(`(
+            (jsonb_typeof("parsedData"->'skills') = 'array' AND EXISTS (
+              SELECT 1 FROM jsonb_array_elements_text("parsedData"->'skills') AS s WHERE LOWER(s) LIKE ${ph}
+            ))
+            OR
+            (jsonb_typeof("parsedData"->'skills') = 'object' AND EXISTS (
+              SELECT 1 FROM jsonb_each("parsedData"->'skills') AS cat(k,v)
+              WHERE jsonb_typeof(cat.v) = 'array' AND EXISTS (
+                SELECT 1 FROM jsonb_array_elements_text(cat.v) AS s WHERE LOWER(s) LIKE ${ph}
+              )
+            ))
+          )`);
+        }
+      }
+
+      if (educationLevel) {
+        // Map education level to degree keywords for fuzzy matching
+        const eduMap: Record<string, string[]> = {
+          'junior_high': ['初中', 'junior high', 'middle school', 'junior middle'],
+          'vocational': ['中专', '中技', 'vocational', 'technical school', 'technical secondary'],
+          'high_school': ['高中', 'high school', 'senior high', 'senior middle'],
+          'associate': ['大专', 'associate', 'diploma', 'junior college', 'college diploma'],
+          'bachelor': ['本科', 'bachelor', 'undergraduate', 'b.s.', 'b.a.', 'b.eng', 'bsc', 'ba'],
+          'master': ['硕士', 'master', 'graduate', 'm.s.', 'm.a.', 'm.eng', 'msc', 'mba', 'ma'],
+          'doctorate': ['博士', 'phd', 'ph.d', 'doctorate', 'doctoral', 'doctor of'],
+        };
+        const keywords = eduMap[educationLevel] || [educationLevel];
+        const orClauses = keywords.map((kw) => {
+          const ph = p(`%${kw.toLowerCase()}%`);
+          return `LOWER(edu->>'degree') LIKE ${ph} OR LOWER(edu->>'field') LIKE ${ph}`;
+        });
+        conditions.push(`EXISTS (
+          SELECT 1 FROM jsonb_array_elements("parsedData"->'education') AS edu
+          WHERE ${orClauses.join(' OR ')}
+        )`);
+      }
+
+      if (school) {
+        const ph = p(`%${school.toLowerCase()}%`);
+        conditions.push(`EXISTS (
+          SELECT 1 FROM jsonb_array_elements("parsedData"->'education') AS edu
+          WHERE LOWER(edu->>'institution') LIKE ${ph}
+        )`);
+      }
+
+      if (company) {
+        const ph = p(`%${company.toLowerCase()}%`);
+        conditions.push(`EXISTS (
+          SELECT 1 FROM jsonb_array_elements("parsedData"->'experience') AS exp
+          WHERE LOWER(exp->>'company') LIKE ${ph}
+        )`);
+      }
+
+      if (country) {
+        const ph = p(`%${country.toLowerCase()}%`);
+        // Search across address, location in experience, and education
+        conditions.push(`(
+          LOWER("parsedData"->>'address') LIKE ${ph}
+          OR LOWER("parsedData"->>'location') LIKE ${ph}
+          OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements("parsedData"->'experience') AS exp
+            WHERE LOWER(exp->>'location') LIKE ${ph}
+          )
+          OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements("parsedData"->'education') AS edu
+            WHERE LOWER(edu->>'institution') LIKE ${ph} OR LOWER(edu->>'location') LIKE ${ph}
+          )
+        )`);
+      }
+
+      // Run raw SQL to get matching resume IDs
+      const sql = `SELECT "id" FROM "Resume" WHERE ${conditions.join(' AND ')}`;
+      const matchingRows: Array<{ id: string }> = await prisma.$queryRawUnsafe(sql, ...params);
+      const matchingIds = matchingRows.map(r => r.id);
+
+      if (matchingIds.length === 0) {
+        // No results — short-circuit
+        return res.json({
+          success: true,
+          data: [],
+          pagination: { page: pageNum, limit: limitNum, total: 0, totalPages: 0 },
+        });
+      }
+      where.id = { in: matchingIds };
     }
 
     // Post-query filters for experience years and salary (parsed from stored strings/JSON)
@@ -768,29 +938,76 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       ]);
     }
 
+    // Batch-fetch interview status for all listed resumes
+    const resumeIds = resumes.map((r: any) => r.id);
+    const interviews = resumeIds.length > 0
+      ? await prisma.interview.findMany({
+          where: { resumeId: { in: resumeIds } },
+          select: { resumeId: true, status: true, scheduledAt: true, completedAt: true, duration: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        })
+      : [];
+
+    // Group interviews by resumeId
+    const interviewsByResume = new Map<string, typeof interviews>();
+    for (const iv of interviews) {
+      if (!iv.resumeId) continue;
+      if (!interviewsByResume.has(iv.resumeId)) interviewsByResume.set(iv.resumeId, []);
+      interviewsByResume.get(iv.resumeId)!.push(iv);
+    }
+
     // Trim parsedData to only fields needed by the list view
-    const trimmedResumes = resumes.map((r: any) => ({
-      ...r,
-      _versionCount: r._count?.resumeVersions || 0,
-      _count: undefined,
-      hasInvitations: r.resumeJobFits?.some((f: any) => f.pipelineStatus === 'invited') || false,
-      parsedData: r.parsedData ? {
-        skills: r.parsedData.skills,
-        summary: r.parsedData.summary,
-        experience: Array.isArray(r.parsedData.experience)
-          ? r.parsedData.experience.map((e: any) => ({
-              company: e.company,
-              role: e.role || e.title,
-              title: e.title || e.role,
-              location: e.location,
-              description: e.description,
-              technologies: Array.isArray(e.technologies) ? e.technologies : [],
-              employmentType: e.employmentType,
-              startDate: e.startDate, endDate: e.endDate, duration: e.duration,
-            }))
-          : [],
-      } : null,
-    }));
+    const trimmedResumes = resumes.map((r: any) => {
+      const ivs = interviewsByResume.get(r.id) || [];
+      const hasInvited = ivs.some((iv) => iv.status === 'scheduled' || iv.status === 'in_progress');
+      const completedIvs = ivs.filter((iv) => iv.status === 'completed');
+      const latestCompleted = completedIvs.length > 0 ? completedIvs[0] : null; // already sorted desc
+
+      // Find earliest invitation (scheduled) time
+      const scheduledIvs = ivs.filter((iv) => iv.scheduledAt);
+      const earliestInvited = scheduledIvs.length > 0 ? scheduledIvs[scheduledIvs.length - 1] : null;
+
+      return {
+        ...r,
+        _versionCount: r._count?.resumeVersions || 0,
+        _count: undefined,
+        hasInvitations: r.resumeJobFits?.some((f: any) => f.pipelineStatus === 'invited') || false,
+        interviewStatus: {
+          invited: hasInvited || r.resumeJobFits?.some((f: any) => f.pipelineStatus === 'invited') || false,
+          invitedAt: earliestInvited?.scheduledAt || null,
+          completed: completedIvs.length > 0,
+          completedAt: latestCompleted?.completedAt || null,
+          durationSeconds: latestCompleted?.duration || null,
+        },
+        parsedData: r.parsedData ? {
+          skills: r.parsedData.skills,
+          summary: r.parsedData.summary,
+          address: r.parsedData.address,
+          experience: Array.isArray(r.parsedData.experience)
+            ? r.parsedData.experience.map((e: any) => ({
+                company: e.company,
+                role: e.role || e.title,
+                title: e.title || e.role,
+                location: e.location,
+                description: e.description,
+                technologies: Array.isArray(e.technologies) ? e.technologies : [],
+                employmentType: e.employmentType,
+                startDate: e.startDate, endDate: e.endDate, duration: e.duration,
+              }))
+            : [],
+          education: Array.isArray(r.parsedData.education)
+            ? r.parsedData.education.map((e: any) => ({
+                institution: e.institution,
+                degree: e.degree,
+                field: e.field,
+                year: e.year,
+                startDate: e.startDate,
+                endDate: e.endDate,
+              }))
+            : [],
+        } : null,
+      };
+    });
 
     return res.json({
       success: true,
@@ -857,6 +1074,60 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
     return res.json({ success: true, data: resume });
   } catch (error) {
     return res.status(500).json({ success: false, error: 'Failed to get resume' });
+  }
+});
+
+router.get('/:id/original-file', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const scope = await getVisibilityScope(req.user!);
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
+      select: {
+        id: true,
+        name: true,
+        fileName: true,
+        fileType: true,
+        resumeText: true,
+      },
+    });
+
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    if (!resume.resumeText?.trim()) {
+      return res.status(400).json({ success: false, error: 'No original resume text available' });
+    }
+
+    const baseName = (resume.fileName || resume.name || 'resume').replace(/\.[^.]+$/, '').replace(/"/g, '');
+    const fileType = (resume.fileType || '').toLowerCase();
+    const extension = resume.fileName?.split('.').pop()?.toLowerCase() || '';
+    const isPdf = fileType === 'application/pdf' || extension === 'pdf';
+
+    if (isPdf) {
+      const pdfBuffer = await renderResumeTextAsPdf(resume.fileName || resume.name || 'Resume', resume.resumeText);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', buildInlineContentDisposition(`${baseName || 'resume'}.pdf`));
+      return res.send(pdfBuffer);
+    }
+
+    const contentType = extension === 'md' || extension === 'markdown'
+      ? 'text/markdown; charset=utf-8'
+      : 'text/plain; charset=utf-8';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', buildInlineContentDisposition(resume.fileName || `${baseName || 'resume'}.txt`));
+    return res.send(resume.resumeText);
+  } catch (error) {
+    logger.error('RESUMES', 'Failed to stream original resume file', {
+      id: req.params.id,
+      error: error instanceof Error ? error.message : String(error),
+    }, req.requestId);
+    return res.status(500).json({ success: false, error: 'Failed to load original resume file' });
   }
 });
 
@@ -988,8 +1259,9 @@ router.post('/:id/insights', requireAuth, async (req: Request, res: Response) =>
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
     });
     if (!resume) {
       return res.status(404).json({ success: false, error: 'Resume not found' });
@@ -1032,8 +1304,9 @@ router.get('/:id/invitations', requireAuth, async (req: Request, res: Response) 
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
       select: { id: true },
     });
     if (!resume) {
@@ -1088,8 +1361,9 @@ router.get('/:id/applied-jobs', requireAuth, async (req: Request, res: Response)
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
       select: { id: true },
     });
     if (!resume) {
@@ -1191,8 +1465,9 @@ router.patch('/:id/job-matches/:matchId', requireAuth, async (req: Request, res:
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
       select: { id: true },
     });
     if (!resume) {
@@ -1227,8 +1502,9 @@ router.delete('/:id/job-matches/:matchId', requireAuth, async (req: Request, res
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
       select: { id: true },
     });
     if (!resume) {
@@ -1264,8 +1540,9 @@ router.post('/:id/job-fit', requireAuth, async (req: Request, res: Response) => 
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
     });
     if (!resume) {
       return res.status(404).json({ success: false, error: 'Resume not found' });
@@ -1344,8 +1621,9 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const existing = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
     });
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Resume not found' });
@@ -1357,7 +1635,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
     await prisma.resumeVersion.create({
       data: {
         resumeId: existing.id,
-        userId: req.user.id,
+        userId: existing.userId,
         versionName: versionName || null,
         resumeText: existing.resumeText,
         parsedData: existing.parsedData ?? Prisma.JsonNull,
@@ -1417,8 +1695,9 @@ router.get('/:id/versions', requireAuth, async (req: Request, res: Response) => 
     }
 
     // Verify ownership
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
       select: { id: true },
     });
     if (!resume) {
@@ -1451,8 +1730,17 @@ router.get('/:id/versions/:versionId', requireAuth, async (req: Request, res: Re
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
+    const resume = await prisma.resume.findFirst({
+      where: resumeWhere,
+      select: { id: true },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
     const version = await prisma.resumeVersion.findFirst({
-      where: { id: req.params.versionId, resumeId: req.params.id, userId: req.user.id },
+      where: { id: req.params.versionId, resumeId: resume.id },
     });
     if (!version) {
       return res.status(404).json({ success: false, error: 'Version not found' });
@@ -1471,15 +1759,16 @@ router.post('/:id/versions/:versionId/restore', requireAuth, async (req: Request
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const existing = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
     });
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Resume not found' });
     }
 
     const version = await prisma.resumeVersion.findFirst({
-      where: { id: req.params.versionId, resumeId: req.params.id, userId: req.user.id },
+      where: { id: req.params.versionId, resumeId: existing.id },
     });
     if (!version) {
       return res.status(404).json({ success: false, error: 'Version not found' });
@@ -1489,7 +1778,7 @@ router.post('/:id/versions/:versionId/restore', requireAuth, async (req: Request
     await prisma.resumeVersion.create({
       data: {
         resumeId: existing.id,
-        userId: req.user.id,
+        userId: existing.userId,
         resumeText: existing.resumeText,
         parsedData: existing.parsedData ?? Prisma.JsonNull,
         name: existing.name,
@@ -1539,8 +1828,9 @@ router.delete('/:id/versions/:versionId', requireAuth, async (req: Request, res:
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
     });
     if (!resume) {
       return res.status(404).json({ success: false, error: 'Resume not found' });
@@ -1625,8 +1915,9 @@ router.post('/:id/refine', requireAuth, async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'jobId is required' });
     }
 
+    const resumeWhere = await buildVisibleResumeWhere(req.user, req.params.id);
     const resume = await prisma.resume.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
+      where: resumeWhere,
     });
     if (!resume) {
       return res.status(404).json({ success: false, error: 'Resume not found' });

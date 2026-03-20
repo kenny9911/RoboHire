@@ -2106,7 +2106,50 @@
       "pendingProjects": "進行中プロジェクト",
       "pendingEvaluations": "未評価",
       "agents": "エージェント",
-      "agentsDesc": "AIエージェントを展開して候補者の検索とスクリーニングを自動化。"
+      "agentsDesc": "AIエージェントを展開して候補者の検索とスクリーニングを自動化。",
+      "kpiScorecard": "パフォーマンススコアカード",
+      "kpiUploads": "アップロード",
+      "kpiInvitationsSent": "送信済み招待",
+      "kpiCompletedInterviews": "完了",
+      "kpiMatchesCreated": "マッチング",
+      "kpiVerdicts": "評価結果",
+      "kpiVerdictStrongHire": "強く推薦",
+      "kpiVerdictHire": "推薦",
+      "kpiVerdictLeanHire": "推薦寄り",
+      "kpiVerdictLeanNoHire": "不推薦寄り",
+      "kpiVerdictNoHire": "不推薦",
+      "todoList": "アクションアイテム",
+      "todoStaleRequests": "停滞中の採用依頼",
+      "todoStaleRequestsDesc": "{{count}}件の依頼が7日以上更新なし",
+      "todoUnreviewedMatches": "未レビューのマッチング",
+      "todoUnreviewedMatchesDesc": "{{count}}件のマッチングがレビュー待ち",
+      "todoAwaitingFollowup": "フォローアップ待ち",
+      "todoAwaitingFollowupDesc": "{{count}}名の合格候補者がフォローアップ待ち",
+      "todoNeedsEvaluation": "評価待ち",
+      "todoNeedsEvaluationDesc": "{{count}}件の面接が評価待ち",
+      "todoAllClear": "すべて完了！",
+      "todoAllClearDesc": "未処理のアイテムはありません。お疲れ様です！",
+      "todoViewAll": "すべて見る",
+      "agentPerformance": "AIエージェントパフォーマンス",
+      "agentActive": "アクティブなエージェント",
+      "agentSourced": "発掘済み",
+      "agentApproved": "承認済み",
+      "agentContacted": "連絡済み",
+      "agentTopAgents": "トップエージェント",
+      "agentViewAll": "全エージェントを見る",
+      "agentNone": "エージェントはまだ配置されていません。",
+      "agentCreateDesc": "AIエージェントを配置して候補者の自動発掘を開始しましょう。",
+      "recentActivity": "最近のアクティビティ",
+      "activityInterviewCompleted": "{{name}} が {{job}} の面接を完了",
+      "activityEvaluationCompleted": "{{name}} の評価完了 — {{verdict}}",
+      "activityNewMatch": "{{resume}} が {{request}} にマッチング",
+      "activityAgentDiscovery": "エージェント {{agent}} が {{name}} を発見",
+      "activityEmpty": "この期間のアクティビティはありません。",
+      "conversionFunnel": "コンバージョン率",
+      "funnelMatched": "マッチ済み",
+      "funnelInvited": "招待済み",
+      "funnelCompleted": "完了済み",
+      "funnelPassed": "合格済み"
     },
     "profile": {
       "quickLinks": "クイックリンク",
@@ -2235,7 +2278,10 @@
       "completedLabel": "終了",
       "durationLabel": "所要時間",
       "gradeLabel": "評価",
-      "viewGoHireEvaluation": "GoHire 評価を表示"
+      "viewGoHireEvaluation": "GoHire 評価を表示",
+      "syncingGoHireData": "面接データを同期中...",
+      "goHireInterviewNotReady": "GoHireでの面接がまだ完了していません",
+      "goHireSyncFailed": "面接データの同期に失敗しました"
     },
     "videoInterview": {
       "title": "ビデオ面接",
@@ -2698,7 +2744,36 @@
       "filterRejected": "不採用",
       "filterMore": "その他のフィルター",
       "addFilter": "フィルター追加",
-      "applyFilters": "フィルター適用"
+      "applyFilters": "フィルター適用",
+      "interviewInvited": "面接招待済み",
+      "interviewInvitedTooltip": "面接の招待が送信されました。候選者の回答をお待ちください。",
+      "inviteToInterviewTooltip": "この候補者をAI面接に招待します。面接手配ページに移動して招待を送信します。",
+      "interviewCompleted": "面接完了",
+      "filterSkills": "スキル",
+      "filterSkillsPlaceholder": "スキルを入力してEnterで追加",
+      "filterEducation": "学歴",
+      "filterAllEducation": "全学歴",
+      "eduJuniorHigh": "中学校以下",
+      "eduVocational": "専門学校",
+      "eduHighSchool": "高等学校",
+      "eduAssociate": "短期大学・専門士",
+      "eduBachelor": "学士",
+      "eduMaster": "修士",
+      "eduDoctorate": "博士",
+      "filterSchool": "学校",
+      "filterSchoolPlaceholder": "大学名",
+      "filterCompany": "企業",
+      "filterCompanyPlaceholder": "企業名",
+      "filterCountry": "国 / 地域",
+      "filterAllCountries": "全ての国 / 地域",
+      "statTotal": "候補者総数",
+      "statThisWeek": "今週の新規",
+      "statMatched": "マッチ済み",
+      "statInterviewed": "面接招待済み",
+      "statAnalyzed": "AI分析済み",
+      "statTopSkills": "人気スキル",
+      "filteredResults": "{{count}}名の候補者が見つかりました",
+      "clearFilters": "すべてのフィルタをクリア"
     },
     "matching": {
       "title": "スマートマッチング",
@@ -2789,6 +2864,9 @@
       "preFilterRunning": "{{total}} 件の履歴書を事前フィルター中...",
       "preFilterRunningDesc": "AI が候補者をスクリーニングし、この求人に最適な人材を見つけています。",
       "preFilterComplete": "事前フィルター完了：{{passed}} 件合格、{{excluded}} 件除外",
+      "screeningRunning": "{{total}} 件の履歴書をスクリーニング中...",
+      "screeningRunningDesc": "AIが全候補者を素早く評価し、最適なマッチングを優先しています。",
+      "screeningComplete": "スクリーニング完了：{{a}} 件強マッチ、{{b}} 件中マッチ、{{c}} 件弱マッチ",
       "preFilteredCount": "({{filtered}} 件は事前フィルターで除外)",
       "progressTitleMulti": "求人 {{jobIndex}}/{{jobCount}}: {{jobTitle}} の履歴書をマッチング中",
       "progressTitle": "{{jobTitle}} の履歴書をマッチング中",
@@ -3133,6 +3211,14 @@
         "setActive": "有効に設定",
         "delete": "削除",
         "backToCurrent": "現在のバージョンに戻る"
+      },
+      "reparse": "履歴書を再解析",
+      "viewOriginalDocument": "元のドキュメントを表示",
+      "originalDocument": {
+        "title": "元のドキュメント",
+        "description": "{{fileName}} から抽出した元テキスト",
+        "empty": "この履歴書では元のドキュメントテキストを利用できません。",
+        "close": "元のドキュメントを閉じる"
       },
       "refine": {
         "title": "求人向けに履歴書を最適化",
@@ -3646,7 +3732,9 @@
     "filters": {
       "allRecruiters": "すべてのリクルーター",
       "recruiterGroup": "リクルーター",
-      "teamGroup": "チーム"
+      "teamGroup": "チーム",
+      "myData": "マイデータ",
+      "teamView": "チーム"
     }
   },
   "admin": {
@@ -3823,6 +3911,12 @@
     "criteriaPlaceholder": "理想の候補者を詳しく記述してください...",
     "linkedJob": "紐付け求人（任意）",
     "noJob": "求人に紐付けない",
+    "taskType": "タスクタイプ",
+    "taskTypeSearch": "候補者を検索",
+    "taskTypeMatch": "候補者をマッチング",
+    "selectJob": "求人を選択...",
+    "instructions": "指示",
+    "instructionsPlaceholder": "エージェントに何をしてほしいか教えてください...",
     "creating": "作成中...",
     "createBtn": "エージェント作成",
     "empty": "エージェントがまだありません",
@@ -3925,6 +4019,19 @@
       "results": "件",
       "prev": "前へ",
       "next": "次へ"
+    },
+    "import": {
+      "button": "CSVインポート",
+      "resultTitle": "インポート結果",
+      "total": "合計",
+      "created": "作成",
+      "updated": "更新",
+      "skipped": "スキップ",
+      "duplicatesFound": "{{count}} 件の重複レコードがスキップされました",
+      "duplicateRow": "行 {{row}}: {{name}} ({{date}})",
+      "overwriteAll": "再インポートして重複を上書き",
+      "errorsFound": "{{count}} 行でエラーが発生しました",
+      "failed": "インポートに失敗しました"
     }
   },
   "goHireEval": {
@@ -4015,5 +4122,73 @@
       "notParsed": "履歴書はまだ解析されていません",
       "parseNow": "今すぐ解析"
     }
+  },
+  "evaluationCenter": {
+    "title": "評価センター",
+    "subtitle": "AI評価ハブ",
+    "description": "AI生成の面接評価レポートを確認・管理。共有、エクスポート、候補者比較。",
+    "searchPlaceholder": "候補者名またはメールで検索...",
+    "filters": "フィルター",
+    "verdictFilter": "評価結果",
+    "allVerdicts": "すべての結果",
+    "dateFrom": "開始日",
+    "dateTo": "終了日",
+    "clearFilters": "すべてのフィルターをクリア",
+    "stats": {
+      "totalEvaluated": "評価済み合計",
+      "avgScore": "平均スコア",
+      "passCount": "合格 (70+)",
+      "strongHire": "強く推薦"
+    },
+    "col": {
+      "candidate": "候補者",
+      "position": "ポジション",
+      "score": "スコア",
+      "verdict": "結果",
+      "recruiter": "リクルーター",
+      "date": "日付"
+    },
+    "verdict": {
+      "strongHire": "強く推薦",
+      "strong_hire": "強く推薦",
+      "hire": "採用推薦",
+      "leanHire": "採用寄り",
+      "lean_hire": "採用寄り",
+      "leanNoHire": "不採用寄り",
+      "lean_no_hire": "不採用寄り",
+      "noHire": "不推薦",
+      "no_hire": "不推薦"
+    },
+    "empty": "評価済みの面接はまだありません",
+    "emptyHint": "面接を完了し評価を生成すると、ここに表示されます。",
+    "showing": "表示中",
+    "of": "/",
+    "prev": "前へ",
+    "next": "次へ"
+  },
+  "evaluationReport": {
+    "loading": "レポートを読み込み中...",
+    "notFound": "レポートが見つかりません",
+    "notFoundDesc": "この評価レポートのリンクは無効であるか、取り消されています。新しいリンクについてはリクルーターにお問い合わせください。",
+    "headerTag": "評価レポート",
+    "outOf": "100点満点",
+    "footer": "RoboHire AI による総合面接評価"
+  },
+  "share": {
+    "share": "共有",
+    "shareEvaluation": "評価レポートを共有",
+    "shareDesc": "公開リンクを生成して、この評価レポートを誰とでも共有できます。",
+    "generating": "生成中...",
+    "generateLink": "共有リンクを生成",
+    "copied": "コピーしました！",
+    "copy": "コピー",
+    "scanQr": "モバイルでスキャンして開く",
+    "revokeAccess": "アクセスを取り消す"
+  },
+  "export": {
+    "export": "エクスポート",
+    "pdf": "PDF（印刷）",
+    "word": "Word文書",
+    "markdown": "Markdown"
   }
 }

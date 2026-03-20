@@ -92,7 +92,7 @@ Important env groups in `.env.example`:
   - `PORT`
   - `NODE_ENV`
   - `RECRUITER_EMAIL`
-  - `ROBOHIRE_INVITATION_API`
+  - `GOHIRE_INVITATION_API`
 - Logging/storage:
   - `LOG_LEVEL`
   - `FILE_LOGGING`

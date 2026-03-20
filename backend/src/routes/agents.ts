@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
+import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 import '../types/auth.js';
 
 const router = Router();
@@ -8,10 +9,13 @@ const router = Router();
 // ── List agents ──
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const { status, limit = '20', page = '1' } = req.query;
+    const user = req.user!;
+    const { status, limit = '20', page = '1', filterUserId, filterTeamId, teamView } = req.query;
 
-    const where: any = { userId };
+    const scope = await getVisibilityScope(user, teamView === 'true');
+    const userFilter = await buildAdminOverrideFilter(scope, filterUserId as string, filterTeamId as string);
+
+    const where: any = { ...userFilter };
     if (status && typeof status === 'string') where.status = status;
 
     const take = Math.min(parseInt(limit as string) || 20, 100);
@@ -63,20 +67,34 @@ router.get('/:id', requireAuth, async (req, res) => {
 router.post('/', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    const { name, description, jobId, config } = req.body;
+    const { name, description, jobId, config, taskType, instructions } = req.body;
 
     if (!name || !description) {
       return res.status(400).json({ error: 'Name and description are required' });
     }
 
+    // Validate taskType
+    const validTaskTypes = ['search', 'match'];
+    const resolvedTaskType = taskType && validTaskTypes.includes(taskType) ? taskType : 'search';
+
     // Validate jobId if provided
     if (jobId) {
-      const job = await prisma.job.findFirst({ where: { id: jobId, userId } });
+      const scope = await getVisibilityScope(req.user!);
+      const jobWhere: any = { id: jobId, ...buildUserIdFilter(scope) };
+      const job = await prisma.job.findFirst({ where: jobWhere });
       if (!job) return res.status(400).json({ error: 'Job not found' });
     }
 
     const agent = await prisma.agent.create({
-      data: { userId, name, description, jobId: jobId || null, config: config || null },
+      data: {
+        userId,
+        name,
+        description,
+        taskType: resolvedTaskType,
+        instructions: instructions?.trim() || null,
+        jobId: jobId || null,
+        config: config || null,
+      },
       include: {
         job: { select: { id: true, title: true } },
         _count: { select: { candidates: true } },

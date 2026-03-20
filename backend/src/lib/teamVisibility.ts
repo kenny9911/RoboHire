@@ -8,19 +8,20 @@ export interface VisibilityScope {
 /**
  * Compute the set of user IDs whose data the current user can see.
  * - Admin: sees everything (isAdmin = true, empty userIds)
- * - Team member: sees own + all teammates' data
+ * - Team member with teamView=true: sees own + all teammates' data
+ * - Team member with teamView=false: sees only own data
  * - No team: sees only own data
  */
 export async function getVisibilityScope(user: {
   id: string;
   role?: string;
   teamId?: string | null;
-}): Promise<VisibilityScope> {
+}, teamView = true): Promise<VisibilityScope> {
   if (user.role === 'admin') {
     return { userIds: [], isAdmin: true };
   }
 
-  if (!user.teamId) {
+  if (!user.teamId || !teamView) {
     return { userIds: [user.id], isAdmin: false };
   }
 

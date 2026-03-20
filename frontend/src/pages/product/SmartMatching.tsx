@@ -6,6 +6,7 @@ import { API_BASE } from '../../config';
 import { usePageState } from '../../hooks/usePageState';
 import MatchingSessionHistory from '../../components/MatchingSessionHistory';
 import MatchDetailModal from '../../components/MatchDetailModal';
+import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 
 interface Job {
   id: string;
@@ -60,6 +61,14 @@ interface PreFilterProgress {
   passed?: number;
   excluded?: number;
   durationMs?: number;
+}
+
+interface ScreeningProgress {
+  status: string;
+  total?: number;
+  A?: number;
+  B?: number;
+  C?: number;
 }
 
 interface MatchingCriteriaSnapshot {
@@ -128,6 +137,7 @@ const DEFAULT_MAX_RESUME_MATCHES_PER_JOB = '3';
 export default function SmartMatching() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [jobs, setJobs] = usePageState<Job[]>('matching.jobs', []);
   const [selectedJobIds, setSelectedJobIds] = usePageState<string[]>('matching.selectedJobIds', []);
   const [matches, setMatches] = usePageState<MatchResult[]>('matching.matches', []);
@@ -136,6 +146,7 @@ export default function SmartMatching() {
   const [running, setRunning] = useState(false);
   const [matchProgress, setMatchProgress] = useState<MatchProgress | null>(null);
   const [preFilterProgress, setPreFilterProgress] = useState<PreFilterProgress | null>(null);
+  const [screeningProgress, setScreeningProgress] = useState<ScreeningProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = usePageState<string>('matching.statusFilter', '');
@@ -168,6 +179,7 @@ export default function SmartMatching() {
   const [modalMinScore, setModalMinScore] = useState<string>(DEFAULT_MATCH_MIN_SCORE);
   const [modalMaxJobMatchesPerResume, setModalMaxJobMatchesPerResume] = useState<string>(DEFAULT_MAX_JOB_MATCHES_PER_RESUME);
   const [modalMaxResumeMatchesPerJob, setModalMaxResumeMatchesPerJob] = useState<string>(DEFAULT_MAX_RESUME_MATCHES_PER_JOB);
+  const [modalRecruiterFilter, setModalRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
 
   const filteredJobs = useMemo(() => {
     if (!modalJobSearch.trim()) return jobs;
@@ -286,29 +298,43 @@ export default function SmartMatching() {
     return t('product.matching.errorGeneric', 'Matching failed. Please try again.');
   }, [t]);
 
-  // Fetch user's jobs (skip if cached)
+  // Build filter params from recruiter filter state
+  const buildFilterParams = useCallback((filter: RecruiterTeamFilterValue): Record<string, string> => {
+    const params: Record<string, string> = {};
+    if (filter.filterUserId) params.filterUserId = filter.filterUserId;
+    if (filter.filterTeamId) params.filterTeamId = filter.filterTeamId;
+    if (filter.teamView !== undefined) params.teamView = filter.teamView ? 'true' : 'false';
+    return params;
+  }, []);
+
+  // Fetch jobs with optional filter
+  const fetchModalJobs = useCallback(async (filter: RecruiterTeamFilterValue) => {
+    setLoadingJobs(true);
+    try {
+      const res = await axios.get('/api/v1/jobs', { params: { limit: 100, ...buildFilterParams(filter) } });
+      setJobs(res.data.data || []);
+    } catch {
+      // silent
+    } finally {
+      setLoadingJobs(false);
+    }
+  }, [buildFilterParams]);
+
+  // Fetch user's jobs on mount (skip if cached)
   useEffect(() => {
     if (jobs.length > 0) return;
-    (async () => {
-      try {
-        const res = await axios.get('/api/v1/jobs', { params: { limit: 100 } });
-        setJobs(res.data.data || []);
-      } catch {
-        // silent
-      } finally {
-        setLoadingJobs(false);
-      }
-    })();
+    fetchModalJobs(recruiterFilter);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let cancelled = false;
+    const fp = buildFilterParams(recruiterFilter);
 
     (async () => {
       setLoadingOverviewCounts(true);
       const [resumesRes, sessionsRes] = await Promise.allSettled([
-        axios.get('/api/v1/resumes', { params: { limit: 1 } }),
-        axios.get('/api/v1/matching/sessions', { params: { limit: 1 } }),
+        axios.get('/api/v1/resumes', { params: { limit: 1, ...fp } }),
+        axios.get('/api/v1/matching/sessions', { params: { limit: 1, ...fp } }),
       ]);
 
       if (cancelled) return;
@@ -327,25 +353,59 @@ export default function SmartMatching() {
     return () => {
       cancelled = true;
     };
-  }, [sessionRefreshTrigger]);
+  }, [sessionRefreshTrigger, recruiterFilter, buildFilterParams]);
+
+  const fetchModalResumes = useCallback(async (filter: RecruiterTeamFilterValue) => {
+    setLoadingModalResumes(true);
+    try {
+      const collected: Resume[] = [];
+      const seen = new Set<string>();
+      let page = 1;
+      let totalPages = 1;
+      const filterParams = buildFilterParams(filter);
+
+      do {
+        const res = await axios.get('/api/v1/resumes', { params: { page, limit: 50, ...filterParams } });
+        const data = res.data.data || res.data.resumes || [];
+        data.forEach((resume: Resume) => {
+          if (seen.has(resume.id)) return;
+          seen.add(resume.id);
+          collected.push(resume);
+        });
+        totalPages = Math.max(1, Number(res.data.pagination?.totalPages || 1));
+        page += 1;
+      } while (page <= totalPages);
+
+      setModalResumes(collected);
+      setModalSelectedResumeIds(new Set(collected.map((resume) => resume.id)));
+    } catch {
+      setModalResumes([]);
+      setModalSelectedResumeIds(new Set());
+    } finally {
+      setLoadingModalResumes(false);
+    }
+  }, [buildFilterParams]);
 
   // Fetch resumes when AI Match modal opens
   useEffect(() => {
     if (!showAIMatchModal) return;
-    (async () => {
-      try {
-        setLoadingModalResumes(true);
-        const res = await axios.get('/api/v1/resumes', { params: { limit: 500 } });
-        const data = res.data.data || res.data.resumes || [];
-        setModalResumes(data);
-        setModalSelectedResumeIds(new Set(data.map((r: Resume) => r.id)));
-      } catch {
-        setModalResumes([]);
-      } finally {
-        setLoadingModalResumes(false);
-      }
-    })();
-  }, [showAIMatchModal]);
+    fetchModalResumes(modalRecruiterFilter);
+  }, [showAIMatchModal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch jobs when page-level recruiter filter changes
+  useEffect(() => {
+    fetchModalJobs(recruiterFilter);
+    setSelectedJobIds([]);
+    setMatches([]);
+    setSelectedSessionId(null);
+  }, [recruiterFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch jobs and resumes when recruiter filter changes in modal
+  useEffect(() => {
+    if (!showAIMatchModal) return;
+    fetchModalJobs(modalRecruiterFilter);
+    fetchModalResumes(modalRecruiterFilter);
+  }, [modalRecruiterFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset modal state when opening
   useEffect(() => {
@@ -363,6 +423,7 @@ export default function SmartMatching() {
     setModalSelectedJobTypes(new Set());
     setModalFreeText('');
     setModalMatchNameEdited(false);
+    setModalRecruiterFilter({});
     setModalSessionName(buildAutoMatchName(initialJobIds));
     setModalMinScore(DEFAULT_MATCH_MIN_SCORE);
     setModalMaxJobMatchesPerResume(DEFAULT_MAX_JOB_MATCHES_PER_RESUME);
@@ -386,7 +447,7 @@ export default function SmartMatching() {
     }
     try {
       setLoadingMatches(true);
-      const params: any = { sort: 'score', order: 'desc' };
+      const params: any = { sort: 'score', order: 'desc', ...buildFilterParams(recruiterFilter) };
       if (statusFilter) params.status = statusFilter;
       const results = await Promise.all(
         jobIds.map((jobId) => axios.get(`/api/v1/matching/results/${jobId}`, { params }).catch(() => ({ data: { data: [], meta: {} } })))
@@ -407,7 +468,7 @@ export default function SmartMatching() {
     } finally {
       setLoadingMatches(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, recruiterFilter, buildFilterParams]);
 
   // Load session-specific matches
   const fetchSessionMatches = useCallback(async (sessionId: string) => {
@@ -514,6 +575,7 @@ export default function SmartMatching() {
     }
   ) => {
     setPreFilterProgress(null);
+    setScreeningProgress(null);
     setMatchProgress({
       total: 0,
       completed: 0,
@@ -586,6 +648,14 @@ export default function SmartMatching() {
                   passed: eventData.passed,
                   excluded: eventData.excluded,
                   durationMs: eventData.durationMs,
+                });
+              } else if (currentEvent === 'screening') {
+                setScreeningProgress({
+                  status: eventData.status,
+                  total: eventData.total,
+                  A: eventData.A,
+                  B: eventData.B,
+                  C: eventData.C,
                 });
               } else if (currentEvent === 'progress') {
                 setMatchProgress({
@@ -694,6 +764,7 @@ export default function SmartMatching() {
       setRunning(false);
       setMatchProgress(null);
       setPreFilterProgress(null);
+      setScreeningProgress(null);
     }
   };
 
@@ -845,6 +916,7 @@ export default function SmartMatching() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <RecruiterTeamFilter value={recruiterFilter} onChange={setRecruiterFilter} />
           <button
             onClick={() => setShowHistoryDrawer(true)}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900 transition-colors"
@@ -1138,6 +1210,7 @@ export default function SmartMatching() {
               refreshTrigger={sessionRefreshTrigger}
               embedded
               limit={5}
+              filterParams={buildFilterParams(recruiterFilter)}
             />
           </div>
         </div>
@@ -1195,6 +1268,42 @@ export default function SmartMatching() {
               {preFilterProgress.durationMs && (
                 <span className="text-purple-500 ml-1">({(preFilterProgress.durationMs / 1000).toFixed(1)}s)</span>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Batch screening progress */}
+      {running && screeningProgress && (
+        <div className={`rounded-xl border p-5 ${
+          screeningProgress.status === 'running'
+            ? 'border-amber-200 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50'
+            : 'border-amber-200 bg-amber-50'
+        }`}>
+          {screeningProgress.status === 'running' ? (
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-600 text-white">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  {t('product.matching.screeningRunning', 'Screening {{total}} resumes...', { total: screeningProgress.total ?? 0 })}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {t('product.matching.screeningRunningDesc', 'AI is quickly evaluating all candidates to prioritize the best matches.')}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-amber-700">
+              <svg className="w-5 h-5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              {t('product.matching.screeningComplete', 'Screening complete: {{a}} strong, {{b}} moderate, {{c}} low match', {
+                a: screeningProgress.A ?? 0,
+                b: screeningProgress.B ?? 0,
+                c: screeningProgress.C ?? 0,
+              })}
             </div>
           )}
         </div>
@@ -1507,14 +1616,17 @@ export default function SmartMatching() {
                   {t('product.matching.aiMatchDesc', 'Select jobs and candidates, then configure matching parameters.')}
                 </p>
               </div>
-              <button
-                onClick={() => setShowAIMatchModal(false)}
-                className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-3">
+                <RecruiterTeamFilter value={modalRecruiterFilter} onChange={setModalRecruiterFilter} />
+                <button
+                  onClick={() => setShowAIMatchModal(false)}
+                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Two-Panel Body */}
@@ -1872,6 +1984,7 @@ export default function SmartMatching() {
                 selectedSessionId={selectedSessionId}
                 refreshTrigger={sessionRefreshTrigger}
                 embedded
+                filterParams={buildFilterParams(recruiterFilter)}
               />
             </div>
           </div>

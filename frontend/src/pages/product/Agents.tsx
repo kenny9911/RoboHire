@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../lib/axios';
+import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 
 interface Agent {
   id: string;
@@ -33,6 +34,8 @@ export default function Agents() {
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState('');
   const [createDesc, setCreateDesc] = useState('');
+  const [createTaskType, setCreateTaskType] = useState<'search' | 'match'>('search');
+  const [createInstructions, setCreateInstructions] = useState('');
   const [creating, setCreating] = useState(false);
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
   const [createJobId, setCreateJobId] = useState('');
@@ -41,6 +44,7 @@ export default function Agents() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [ownerFilter, setOwnerFilter] = useState('all');
+  const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [showEdit, setShowEdit] = useState(false);
   const [editAgent, setEditAgent] = useState<Agent | null>(null);
   const [editName, setEditName] = useState('');
@@ -49,14 +53,18 @@ export default function Agents() {
 
   const fetchAgents = useCallback(async () => {
     try {
-      const res = await axios.get('/api/v1/agents', { params: { limit: 50 } });
+      const params: Record<string, string | number> = { limit: 50 };
+      if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
+      if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
+      if (recruiterFilter.teamView) params.teamView = 'true';
+      const res = await axios.get('/api/v1/agents', { params });
       setAgents(res.data.data || []);
     } catch {
       // ignore
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [recruiterFilter]);
 
   useEffect(() => {
     fetchAgents();
@@ -66,17 +74,21 @@ export default function Agents() {
   }, [fetchAgents]);
 
   const handleCreate = async () => {
-    if (!createName.trim() || !createDesc.trim()) return;
+    if (!createName.trim() || !createDesc.trim() || !createJobId) return;
     setCreating(true);
     try {
       await axios.post('/api/v1/agents', {
         name: createName.trim(),
         description: createDesc.trim(),
-        jobId: createJobId || undefined,
+        taskType: createTaskType,
+        instructions: createInstructions.trim() || undefined,
+        jobId: createJobId,
       });
       setShowCreate(false);
       setCreateName('');
       setCreateDesc('');
+      setCreateTaskType('search');
+      setCreateInstructions('');
       setCreateJobId('');
       fetchAgents();
     } catch {
@@ -195,15 +207,18 @@ export default function Agents() {
             <h1 className="text-2xl font-bold text-slate-900">{t('agents.title', 'Agents')}</h1>
             <p className="text-sm text-slate-500 mt-1">{t('agents.subtitle', 'RoboHire agents can source, review, and reach out to profiles autonomously.')}</p>
           </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5"
-          >
-            {t('agents.create', 'Create new agent')}
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-3">
+            <RecruiterTeamFilter value={recruiterFilter} onChange={setRecruiterFilter} />
+            <button
+              onClick={() => setShowCreate(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5"
+            >
+              {t('agents.create', 'Create new agent')}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Tab */}
@@ -344,7 +359,21 @@ export default function Agents() {
                   </div>
 
                   <Link to={`/product/agents/${agent.id}`} className="block">
-                    <h3 className="text-base font-semibold text-slate-900 pr-8 mb-3">{agent.name}</h3>
+                    <h3 className="text-base font-semibold text-slate-900 pr-8 mb-1">{agent.name}</h3>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                        (agent as any).taskType === 'match'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-violet-100 text-violet-700'
+                      }`}>
+                        {(agent as any).taskType === 'match'
+                          ? t('agents.taskTypeMatch', 'Match Candidate')
+                          : t('agents.taskTypeSearch', 'Search Candidates')}
+                      </span>
+                      {agent.job && (
+                        <span className="text-xs text-slate-500 truncate max-w-[140px]">{agent.job.title}</span>
+                      )}
+                    </div>
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -632,6 +661,52 @@ export default function Agents() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.taskType', 'Task Type')} <span className="text-red-500">*</span></label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreateTaskType('search')}
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                      createTaskType === 'search'
+                        ? 'border-violet-500 bg-violet-50 text-violet-700 ring-1 ring-violet-500'
+                        : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    {t('agents.taskTypeSearch', 'Search Candidates')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreateTaskType('match')}
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                      createTaskType === 'match'
+                        ? 'border-violet-500 bg-violet-50 text-violet-700 ring-1 ring-violet-500'
+                        : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {t('agents.taskTypeMatch', 'Match Candidate')}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.linkedJob', 'Linked Job')} <span className="text-red-500">*</span></label>
+                <select
+                  value={createJobId}
+                  onChange={(e) => setCreateJobId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                >
+                  <option value="">{t('agents.selectJob', 'Select a job...')}</option>
+                  {jobs.map((j) => (
+                    <option key={j.id} value={j.id}>{j.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.searchCriteria', 'Search Criteria')}</label>
                 <textarea
                   value={createDesc}
@@ -642,17 +717,14 @@ export default function Agents() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.linkedJob', 'Linked Job (optional)')}</label>
-                <select
-                  value={createJobId}
-                  onChange={(e) => setCreateJobId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                >
-                  <option value="">{t('agents.noJob', 'No linked job')}</option>
-                  {jobs.map((j) => (
-                    <option key={j.id} value={j.id}>{j.title}</option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.instructions', 'Instructions')}</label>
+                <textarea
+                  value={createInstructions}
+                  onChange={(e) => setCreateInstructions(e.target.value)}
+                  placeholder={t('agents.instructionsPlaceholder', 'Tell the agent what you want it to do...')}
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
+                />
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
@@ -664,7 +736,7 @@ export default function Agents() {
               </button>
               <button
                 onClick={handleCreate}
-                disabled={creating || !createName.trim() || !createDesc.trim()}
+                disabled={creating || !createName.trim() || !createDesc.trim() || !createJobId}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
               >
                 {creating ? t('agents.creating', 'Creating...') : t('agents.createBtn', 'Create Agent')}

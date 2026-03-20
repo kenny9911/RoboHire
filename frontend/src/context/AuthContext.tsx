@@ -10,6 +10,7 @@ export interface User {
   phone?: string;
   avatar?: string;
   role?: string;
+  teamId?: string | null;
   provider?: string;
   createdAt: string;
   updatedAt: string;

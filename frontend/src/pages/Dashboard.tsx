@@ -6,6 +6,7 @@ import { API_BASE } from '../config';
 import SEO from '../components/SEO';
 import AutoMatchPanel from '../components/AutoMatchPanel';
 import IntelligenceReportPanel from '../components/IntelligenceReportPanel';
+import { formatDateTimeLabel } from '../utils/dateTime';
 
 interface HiringRequest {
   id: string;
@@ -1350,7 +1351,7 @@ function InvitedCandidatesPanel({ hiringRequestId, t }: { hiringRequestId: strin
               {c.candidateRole && <p className="text-xs text-slate-400">{c.candidateRole}</p>}
             </div>
             <div className="md:col-span-2 text-xs text-slate-500">
-              {c.invitedAt ? new Date(c.invitedAt).toLocaleDateString() : '--'}
+              {c.invitedAt ? formatDateTimeLabel(c.invitedAt) : '--'}
             </div>
             <div className="md:col-span-3">
               <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${

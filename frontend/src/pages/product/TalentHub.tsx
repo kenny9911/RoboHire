@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
@@ -23,7 +23,67 @@ import {
   IconLayoutGrid,
   IconList,
   IconUsers,
+  IconMailForward,
+  IconCircleCheck,
+  IconExternalLink,
+  IconSend,
 } from '@tabler/icons-react';
+
+// Country/region list for filter dropdown — covers major hiring markets
+const COUNTRY_LIST = [
+  { value: 'China', label: '🇨🇳 中国 / China' },
+  { value: 'United States', label: '🇺🇸 美国 / United States' },
+  { value: 'United Kingdom', label: '🇬🇧 英国 / United Kingdom' },
+  { value: 'Japan', label: '🇯🇵 日本 / Japan' },
+  { value: 'South Korea', label: '🇰🇷 韩国 / South Korea' },
+  { value: 'Singapore', label: '🇸🇬 新加坡 / Singapore' },
+  { value: 'India', label: '🇮🇳 印度 / India' },
+  { value: 'Germany', label: '🇩🇪 德国 / Germany' },
+  { value: 'France', label: '🇫🇷 法国 / France' },
+  { value: 'Canada', label: '🇨🇦 加拿大 / Canada' },
+  { value: 'Australia', label: '🇦🇺 澳大利亚 / Australia' },
+  { value: 'Brazil', label: '🇧🇷 巴西 / Brazil' },
+  { value: 'Hong Kong', label: '🇭🇰 香港 / Hong Kong' },
+  { value: 'Taiwan', label: '🇹🇼 台湾 / Taiwan' },
+  { value: 'Indonesia', label: '🇮🇩 印度尼西亚 / Indonesia' },
+  { value: 'Thailand', label: '🇹🇭 泰国 / Thailand' },
+  { value: 'Vietnam', label: '🇻🇳 越南 / Vietnam' },
+  { value: 'Philippines', label: '🇵🇭 菲律宾 / Philippines' },
+  { value: 'Malaysia', label: '🇲🇾 马来西亚 / Malaysia' },
+  { value: 'Netherlands', label: '🇳🇱 荷兰 / Netherlands' },
+  { value: 'Spain', label: '🇪🇸 西班牙 / Spain' },
+  { value: 'Italy', label: '🇮🇹 意大利 / Italy' },
+  { value: 'Sweden', label: '🇸🇪 瑞典 / Sweden' },
+  { value: 'Switzerland', label: '🇨🇭 瑞士 / Switzerland' },
+  { value: 'UAE', label: '🇦🇪 阿联酋 / UAE' },
+  { value: 'Saudi Arabia', label: '🇸🇦 沙特阿拉伯 / Saudi Arabia' },
+  { value: 'Mexico', label: '🇲🇽 墨西哥 / Mexico' },
+  { value: 'Argentina', label: '🇦🇷 阿根廷 / Argentina' },
+  { value: 'Nigeria', label: '🇳🇬 尼日利亚 / Nigeria' },
+  { value: 'South Africa', label: '🇿🇦 南非 / South Africa' },
+  { value: 'Israel', label: '🇮🇱 以色列 / Israel' },
+  { value: 'Poland', label: '🇵🇱 波兰 / Poland' },
+  { value: 'Portugal', label: '🇵🇹 葡萄牙 / Portugal' },
+  { value: 'Ireland', label: '🇮🇪 爱尔兰 / Ireland' },
+  { value: 'New Zealand', label: '🇳🇿 新西兰 / New Zealand' },
+  { value: 'Russia', label: '🇷🇺 俄罗斯 / Russia' },
+  { value: 'Turkey', label: '🇹🇷 土耳其 / Turkey' },
+  { value: 'Egypt', label: '🇪🇬 埃及 / Egypt' },
+  { value: 'Pakistan', label: '🇵🇰 巴基斯坦 / Pakistan' },
+  { value: 'Bangladesh', label: '🇧🇩 孟加拉国 / Bangladesh' },
+  { value: 'Colombia', label: '🇨🇴 哥伦比亚 / Colombia' },
+  { value: 'Chile', label: '🇨🇱 智利 / Chile' },
+  { value: 'Peru', label: '🇵🇪 秘鲁 / Peru' },
+  { value: 'Czech Republic', label: '🇨🇿 捷克 / Czech Republic' },
+  { value: 'Romania', label: '🇷🇴 罗马尼亚 / Romania' },
+  { value: 'Ukraine', label: '🇺🇦 乌克兰 / Ukraine' },
+  { value: 'Austria', label: '🇦🇹 奥地利 / Austria' },
+  { value: 'Belgium', label: '🇧🇪 比利时 / Belgium' },
+  { value: 'Denmark', label: '🇩🇰 丹麦 / Denmark' },
+  { value: 'Finland', label: '🇫🇮 芬兰 / Finland' },
+  { value: 'Norway', label: '🇳🇴 挪威 / Norway' },
+  { value: 'Kenya', label: '🇰🇪 肯尼亚 / Kenya' },
+];
 
 interface ExperienceEntry {
   company: string;
@@ -34,6 +94,14 @@ interface ExperienceEntry {
   description?: string;
   technologies?: string[];
   employmentType?: string;
+}
+
+interface InterviewStatus {
+  invited: boolean;
+  invitedAt: string | null;
+  completed: boolean;
+  completedAt: string | null;
+  durationSeconds: number | null;
 }
 
 interface Resume {
@@ -50,6 +118,7 @@ interface Resume {
   tags: string[];
   preferences: CandidatePreferences | null;
   hasInvitations: boolean;
+  interviewStatus?: InterviewStatus;
   notes: string | null;
   _versionCount?: number;
   createdAt: string;
@@ -334,9 +403,16 @@ function getJobCategory(currentRole: string | null, parsedData: Resume['parsedDa
   return null;
 }
 
+function formatDateTimeShort(dateStr: string | null): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 // ── Memoized Card Component ──
-const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, onApply, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
+const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, onApply, onInvite, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; onInvite: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
   const hasPrefs = resume.preferences && Object.values(resume.preferences).some(v => v && (Array.isArray(v) ? v.length > 0 : String(v).trim()));
+  const ivStatus = resume.interviewStatus;
   return (
     <Link
       to={`/product/talent/${resume.id}`}
@@ -360,6 +436,29 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {ivStatus?.completed ? (
+            <span
+              className="p-1 rounded text-emerald-600 bg-emerald-50"
+              title={`${t('product.talent.interviewCompleted', 'Interview completed')}: ${formatDateTimeShort(ivStatus.completedAt)}${ivStatus.durationSeconds ? ` (${Math.round(ivStatus.durationSeconds / 60)} min)` : ''}`}
+            >
+              <IconCircleCheck size={16} stroke={2} />
+            </span>
+          ) : ivStatus?.invited ? (
+            <span
+              className="p-1 rounded text-blue-600 bg-blue-50"
+              title={t('product.talent.interviewInvitedTooltip', 'Interview invitation has been sent. Awaiting candidate response.')}
+            >
+              <IconMailForward size={16} stroke={2} />
+            </span>
+          ) : (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInvite(resume); }}
+              className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              title={t('product.talent.inviteToInterviewTooltip', 'Invite this candidate to an AI interview. Navigate to arrange and send the invitation.')}
+            >
+              <IconSend size={16} stroke={1.5} />
+            </button>
+          )}
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onApply(resume); }}
             className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -465,8 +564,8 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
             </span>
           )}
         </div>
-        <span className="text-sm font-medium text-blue-600 group-hover:text-blue-700">
-          {t('product.talent.viewProfile', 'View Profile')} →
+        <span className="p-1.5 rounded-lg text-blue-600 group-hover:text-blue-700 group-hover:bg-blue-50 transition-colors" title={t('product.talent.viewProfile', 'View Profile')}>
+          <IconExternalLink size={16} stroke={2} />
         </span>
       </div>
     </Link>
@@ -474,8 +573,9 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
 });
 
 // ── Memoized List Row Component ──
-const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferences, onApply, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
+const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferences, onApply, onInvite, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; onInvite: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
   const hasPrefs = resume.preferences && Object.values(resume.preferences).some(v => v && (Array.isArray(v) ? v.length > 0 : String(v).trim()));
+  const ivStatus = resume.interviewStatus;
   return (
     <Link
       to={`/product/talent/${resume.id}`}
@@ -557,14 +657,37 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
       </div>
 
       <div className="flex items-center gap-1 shrink-0 ml-auto">
+        {ivStatus?.completed ? (
+          <span
+            className="p-1 rounded text-emerald-600 bg-emerald-50"
+            title={`${t('product.talent.interviewCompleted', 'Interview completed')}: ${formatDateTimeShort(ivStatus.completedAt)}${ivStatus.durationSeconds ? ` (${Math.round(ivStatus.durationSeconds / 60)} min)` : ''}`}
+          >
+            <IconCircleCheck size={16} stroke={2} />
+          </span>
+        ) : ivStatus?.invited ? (
+          <span
+            className="p-1 rounded text-blue-600 bg-blue-50"
+            title={t('product.talent.interviewInvitedTooltip', 'Interview invitation has been sent. Awaiting candidate response.')}
+          >
+            <IconMailForward size={16} stroke={2} />
+          </span>
+        ) : (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInvite(resume); }}
+            className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            title={t('product.talent.inviteToInterviewTooltip', 'Invite this candidate to an AI interview. Navigate to arrange and send the invitation.')}
+          >
+            <IconSend size={16} stroke={1.5} />
+          </button>
+        )}
         {resume._versionCount != null && resume._versionCount > 0 && (
           <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-0.5 mr-1">
             <IconFiles size={14} stroke={1.5} />
             {resume._versionCount}
           </span>
         )}
-        <span className="text-sm font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity mr-1">
-          {t('product.talent.viewProfile', 'View Profile')}
+        <span className="p-1 rounded-lg text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" title={t('product.talent.viewProfile', 'View Profile')}>
+          <IconExternalLink size={16} stroke={2} />
         </span>
         <button
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onApply(resume); }}
@@ -649,6 +772,7 @@ const PAGE_SIZE = 20;
 
 export default function TalentHub() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [resumes, setResumes] = usePageState<Resume[]>('talent.resumes', []);
   const [loading, setLoading] = useState(resumes.length > 0 ? false : true);
@@ -673,16 +797,46 @@ export default function TalentHub() {
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
+  // Advanced filters
+  const [filterSkills, setFilterSkills] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState('');
+  const [filterEducation, setFilterEducation] = useState('');
+  const [filterSchool, setFilterSchool] = useState('');
+  const [filterCompany, setFilterCompany] = useState('');
+  const [filterCountry, setFilterCountry] = useState('');
 
-  // Fetch jobs for the filter dropdown
+  // Stats for executive summary
+  const [stats, setStats] = useState<{ total: number; thisWeek: number; analyzed: number } | null>(null);
+  const [matchedCount, setMatchedCount] = useState(0);
+  const [interviewedCount, setInterviewedCount] = useState(0);
+
+  // Fetch jobs and stats for the filter dropdown and summary
   useEffect(() => {
     axios.get('/api/v1/jobs', { params: { limit: 200 } })
       .then((res) => setJobs(res.data.data || []))
       .catch(() => {});
+    axios.get('/api/v1/resumes/stats')
+      .then((res) => setStats(res.data.data))
+      .catch(() => {});
+    // Get matched & interviewed counts for summary
+    Promise.all([
+      axios.get('/api/v1/resumes', { params: { limit: 1, pipelineStatus: 'matched' } }),
+      axios.get('/api/v1/resumes', { params: { limit: 1, pipelineStatus: 'invited' } }),
+    ]).then(([matchedRes, invitedRes]) => {
+      setMatchedCount(matchedRes.data.pagination?.total || 0);
+      setInterviewedCount(invitedRes.data.pagination?.total || 0);
+    }).catch(() => {});
   }, []);
 
-  const filtersRef = useRef({ expYearsMin: '', expYearsMax: '', salaryMin: '', salaryMax: '', filterJobId: '', filterStatus: '', recruiterFilter: {} as RecruiterTeamFilterValue });
-  filtersRef.current = { expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus, recruiterFilter };
+  const filtersRef = useRef({
+    expYearsMin: '', expYearsMax: '', salaryMin: '', salaryMax: '',
+    filterJobId: '', filterStatus: '', recruiterFilter: {} as RecruiterTeamFilterValue,
+    filterSkills: [] as string[], filterEducation: '', filterSchool: '', filterCompany: '', filterCountry: '',
+  });
+  filtersRef.current = {
+    expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus, recruiterFilter,
+    filterSkills, filterEducation, filterSchool, filterCompany, filterCountry,
+  };
 
   const fetchResumes = useCallback(async (query?: string, pageNum = 1) => {
     try {
@@ -698,6 +852,11 @@ export default function TalentHub() {
       if (f.filterStatus) params.pipelineStatus = f.filterStatus;
       if (f.recruiterFilter.filterUserId) params.filterUserId = f.recruiterFilter.filterUserId;
       if (f.recruiterFilter.filterTeamId) params.filterTeamId = f.recruiterFilter.filterTeamId;
+      if (f.filterSkills.length > 0) params.skills = f.filterSkills.join(',');
+      if (f.filterEducation) params.educationLevel = f.filterEducation;
+      if (f.filterSchool) params.school = f.filterSchool;
+      if (f.filterCompany) params.company = f.filterCompany;
+      if (f.filterCountry) params.country = f.filterCountry;
       const res = await axios.get('/api/v1/resumes', { params });
       setResumes(res.data.data || []);
       const pag = res.data.pagination;
@@ -759,6 +918,10 @@ export default function TalentHub() {
     setApplyResume(resume);
   }, []);
 
+  const handleInvite = useCallback((resume: EnrichedResume) => {
+    navigate('/product/interview', { state: { inviteResumeId: resume.id, inviteResumeName: resume.name } });
+  }, [navigate]);
+
   const confirmDelete = useCallback(async () => {
     if (!confirmDeleteId) return;
     try {
@@ -786,7 +949,24 @@ export default function TalentHub() {
     }));
   }, [resumes]);
 
-  const activeFilterCount = [expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus].filter(Boolean).length;
+  const activeFilterCount = [expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus, filterEducation, filterSchool, filterCompany, filterCountry].filter(Boolean).length + (filterSkills.length > 0 ? 1 : 0);
+  const hasActiveFilters = activeFilterCount > 0 || !!search;
+
+  // Compute top skills across current page for the summary
+  const topPoolSkills = useMemo(() => {
+    const skillMap = new Map<string, number>();
+    for (const r of resumes) {
+      const pd = r.parsedData;
+      if (!pd?.skills) continue;
+      const allSkills: string[] = Array.isArray(pd.skills)
+        ? pd.skills
+        : Object.values(pd.skills).flat().filter((s: any) => typeof s === 'string');
+      for (const s of allSkills) {
+        skillMap.set(s, (skillMap.get(s) || 0) + 1);
+      }
+    }
+    return [...skillMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([s]) => s);
+  }, [resumes]);
 
   return (
     <div className="mx-auto max-w-[1380px] space-y-4">
@@ -804,6 +984,36 @@ export default function TalentHub() {
           {t('product.talent.upload', 'Upload Resumes')}
         </button>
       </div>
+
+      {/* Executive Summary */}
+      {stats && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-center gap-6">
+            {[
+              { label: t('product.talent.statTotal', 'Total Candidates'), value: stats.total, color: 'text-slate-900' },
+              { label: t('product.talent.statThisWeek', 'New This Week'), value: stats.thisWeek, color: 'text-blue-600' },
+              { label: t('product.talent.statMatched', 'Matched'), value: matchedCount, color: 'text-cyan-600' },
+              { label: t('product.talent.statInterviewed', 'Interview Invited'), value: interviewedCount, color: 'text-violet-600' },
+              { label: t('product.talent.statAnalyzed', 'AI Analyzed'), value: stats.analyzed, color: 'text-emerald-600' },
+            ].map((s) => (
+              <div key={s.label} className="text-center min-w-[80px]">
+                <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-[11px] text-slate-500 font-medium">{s.label}</p>
+              </div>
+            ))}
+            {topPoolSkills.length > 0 && (
+              <div className="flex-1 min-w-[200px] border-l border-slate-200 pl-6 ml-2">
+                <p className="text-[11px] text-slate-500 font-medium mb-1.5">{t('product.talent.statTopSkills', 'Top Skills')}</p>
+                <div className="flex flex-wrap gap-1">
+                  {topPoolSkills.map((skill) => (
+                    <span key={skill} className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">{skill}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Toolbar: search + filters + view toggle — single row */}
       <div className="flex items-center gap-2 flex-wrap">
@@ -874,56 +1084,186 @@ export default function TalentHub() {
         </div>
       </div>
 
+      {/* Filtered result count */}
+      {hasActiveFilters && !loading && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="font-semibold text-slate-700">
+            {t('product.talent.filteredResults', '{{count}} candidates found', { count: totalCount })}
+          </span>
+          {activeFilterCount > 0 && (
+            <button
+              onClick={() => {
+                setExpYearsMin(''); setExpYearsMax(''); setSalaryMin(''); setSalaryMax('');
+                setFilterJobId(''); setFilterStatus(''); setFilterSkills([]); setSkillInput('');
+                setFilterEducation(''); setFilterSchool(''); setFilterCompany(''); setFilterCountry('');
+                setTimeout(() => fetchResumes(search || undefined, 1), 0);
+              }}
+              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            >
+              {t('product.talent.clearFilters', 'Clear all filters')}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Collapsible filter panel */}
       {showMoreFilters && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-4">
+          {/* Row 1: Skills, Education, School, Company */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Skills (multi-tag input) */}
+            <div className="space-y-1.5 lg:col-span-2">
+              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterSkills', 'Skills')}</label>
+              <div className="flex flex-wrap items-center gap-1.5 min-h-[36px] rounded-lg border border-slate-200 bg-white px-2 py-1 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                {filterSkills.map((skill) => (
+                  <span key={skill} className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => setFilterSkills(filterSkills.filter(s => s !== skill))}
+                      className="text-blue-400 hover:text-blue-600"
+                    >
+                      <IconX size={12} stroke={2} />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ',') && skillInput.trim()) {
+                      e.preventDefault();
+                      const val = skillInput.trim().replace(/,$/, '');
+                      if (val && !filterSkills.includes(val)) setFilterSkills([...filterSkills, val]);
+                      setSkillInput('');
+                    }
+                    if (e.key === 'Backspace' && !skillInput && filterSkills.length > 0) {
+                      setFilterSkills(filterSkills.slice(0, -1));
+                    }
+                  }}
+                  placeholder={filterSkills.length === 0 ? t('product.talent.filterSkillsPlaceholder', 'Type skill and press Enter') : ''}
+                  className="flex-1 min-w-[80px] h-7 border-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Education Level */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterEducation', 'Education')}</label>
+              <div className="relative">
+                <select
+                  value={filterEducation}
+                  onChange={(e) => setFilterEducation(e.target.value)}
+                  className="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">{t('product.talent.filterAllEducation', 'All Education')}</option>
+                  <option value="junior_high">{t('product.talent.eduJuniorHigh', 'Junior High & Below')}</option>
+                  <option value="vocational">{t('product.talent.eduVocational', 'Vocational / Technical')}</option>
+                  <option value="high_school">{t('product.talent.eduHighSchool', 'High School')}</option>
+                  <option value="associate">{t('product.talent.eduAssociate', 'Associate Degree')}</option>
+                  <option value="bachelor">{t('product.talent.eduBachelor', 'Bachelor\'s Degree')}</option>
+                  <option value="master">{t('product.talent.eduMaster', 'Master\'s Degree')}</option>
+                  <option value="doctorate">{t('product.talent.eduDoctorate', 'Doctorate / PhD')}</option>
+                </select>
+                <IconChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
+              </div>
+            </div>
+
+            {/* School */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterSchool', 'School')}</label>
+              <input
+                type="text"
+                value={filterSchool}
+                onChange={(e) => setFilterSchool(e.target.value)}
+                placeholder={t('product.talent.filterSchoolPlaceholder', 'University name')}
+                className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Row 2: Company, Country, Work Years, Salary, Job, Apply */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+            {/* Company */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterCompany', 'Company')}</label>
+              <input
+                type="text"
+                value={filterCompany}
+                onChange={(e) => setFilterCompany(e.target.value)}
+                placeholder={t('product.talent.filterCompanyPlaceholder', 'Company name')}
+                className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Country/Region */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterCountry', 'Country / Region')}</label>
+              <div className="relative">
+                <select
+                  value={filterCountry}
+                  onChange={(e) => setFilterCountry(e.target.value)}
+                  className="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">{t('product.talent.filterAllCountries', 'All Countries')}</option>
+                  {COUNTRY_LIST.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+                <IconChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
+              </div>
+            </div>
+
+            {/* Work Years */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500">{t('product.talent.filterWorkYears', 'Work Years')}</label>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <input
                   type="number"
                   min="0"
                   value={expYearsMin}
                   onChange={(e) => setExpYearsMin(e.target.value)}
                   placeholder={t('product.talent.filterMin', 'Min')}
-                  className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="h-9 w-full rounded-lg border border-slate-200 px-2 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-                <span className="text-slate-300">—</span>
+                <span className="text-slate-300 shrink-0">—</span>
                 <input
                   type="number"
                   min="0"
                   value={expYearsMax}
                   onChange={(e) => setExpYearsMax(e.target.value)}
                   placeholder={t('product.talent.filterMax', 'Max')}
-                  className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="h-9 w-full rounded-lg border border-slate-200 px-2 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
 
+            {/* Expected Salary */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500">{t('product.talent.filterSalary', 'Expected Salary')}</label>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <input
                   type="number"
                   min="0"
                   value={salaryMin}
                   onChange={(e) => setSalaryMin(e.target.value)}
                   placeholder={t('product.talent.filterMin', 'Min')}
-                  className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="h-9 w-full rounded-lg border border-slate-200 px-2 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-                <span className="text-slate-300">—</span>
+                <span className="text-slate-300 shrink-0">—</span>
                 <input
                   type="number"
                   min="0"
                   value={salaryMax}
                   onChange={(e) => setSalaryMax(e.target.value)}
                   placeholder={t('product.talent.filterMax', 'Max')}
-                  className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="h-9 w-full rounded-lg border border-slate-200 px-2 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
 
+            {/* Job */}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500">{t('product.talent.filterJob', 'Job')}</label>
               <div className="relative">
@@ -941,6 +1281,7 @@ export default function TalentHub() {
               </div>
             </div>
 
+            {/* Apply */}
             <div className="flex items-end">
               <button
                 onClick={applyFilters}
@@ -985,7 +1326,7 @@ export default function TalentHub() {
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {enrichedResumes.map((resume) => (
-              <ResumeCard key={resume.id} resume={resume} onDelete={handleDelete} onPreferences={handlePreferences} onApply={handleApply} t={t} />
+              <ResumeCard key={resume.id} resume={resume} onDelete={handleDelete} onPreferences={handlePreferences} onApply={handleApply} onInvite={handleInvite} t={t} />
             ))}
           </div>
           <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
@@ -995,7 +1336,7 @@ export default function TalentHub() {
         <>
           <div className="rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
             {enrichedResumes.map((resume) => (
-              <ResumeListRow key={resume.id} resume={resume} onDelete={handleDelete} onPreferences={handlePreferences} onApply={handleApply} t={t} />
+              <ResumeListRow key={resume.id} resume={resume} onDelete={handleDelete} onPreferences={handlePreferences} onApply={handleApply} onInvite={handleInvite} t={t} />
             ))}
           </div>
           <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />

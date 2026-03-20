@@ -3,8 +3,9 @@ import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { checkBatchUsage } from '../middleware/usageMeter.js';
 import { logger } from '../services/LoggerService.js';
-import { ResumeMatchAgent } from '../agents/ResumeMatchAgent.js';
 import { PreMatchFilterAgent, PreMatchFilterResumeSummary } from '../agents/PreMatchFilterAgent.js';
+import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
+import { orchestrateMatching } from '../services/MatchOrchestratorService.js';
 import '../types/auth.js';
 
 const router = Router();
@@ -116,36 +117,6 @@ function buildMatchingCriteriaSnapshot(session: { config: unknown; totalResumes?
 }
 
 /**
- * Run tasks with a concurrency limit
- */
-async function runConcurrent<T>(
-  tasks: (() => Promise<T>)[],
-  limit: number
-): Promise<PromiseSettledResult<T>[]> {
-  const results: PromiseSettledResult<T>[] = [];
-  const executing = new Set<Promise<void>>();
-
-  for (let i = 0; i < tasks.length; i++) {
-    const task = tasks[i];
-    const p = (async () => {
-      try {
-        const value = await task();
-        results.push({ status: 'fulfilled', value });
-      } catch (reason: any) {
-        results.push({ status: 'rejected', reason });
-      }
-    })();
-    const tracked = p.finally(() => executing.delete(tracked));
-    executing.add(tracked);
-    if (executing.size >= limit) {
-      await Promise.race(executing);
-    }
-  }
-  await Promise.all(executing);
-  return results;
-}
-
-/**
  * POST /api/v1/matching/run
  * Run AI matching for a job against selected or all resumes
  * Supports pre-filtering, concurrent processing, and session history
@@ -176,9 +147,11 @@ router.post('/run', requireAuth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'jobId is required' });
     }
 
-    // Verify job belongs to user
+    // Verify job belongs to user or team
+    const scope = await getVisibilityScope(req.user!);
     let stepStart = Date.now();
-    const job = await prisma.job.findFirst({ where: { id: jobId, userId } });
+    const jobWhere: any = { id: jobId, ...buildUserIdFilter(scope) };
+    const job = await prisma.job.findFirst({ where: jobWhere });
     logTiming('fetch_job', stepStart);
     if (!job) {
       return res.status(404).json({ success: false, error: 'Job not found' });
@@ -376,145 +349,116 @@ router.post('/run', requireAuth, async (req, res) => {
       });
     }
 
-    // Concurrent matching — progress tracked in real time
-    const CONCURRENCY = parseInt(process.env.MATCH_CONCURRENCY || '5', 10);
-    const matchModel = process.env.LLM_MATCH_RESUME || undefined;
-    const matchAgent = new ResumeMatchAgent();
-    if (matchModel) {
-      logger.info('MATCHING_PERF', `Using dedicated match model: ${matchModel}`, { requestId, model: matchModel });
-    }
+    // Orchestrated matching — Phase 1 screening + Phase 2 deep analysis
     const results: any[] = [];
     let completed = 0;
     let failed = 0;
     let totalScore = 0;
     let bestGrade: string | null = null;
     const gradeRank: Record<string, number> = { 'A+': 10, A: 9, 'A-': 8, 'B+': 7, B: 6, 'B-': 5, 'C+': 4, C: 3, 'C-': 2, D: 1, F: 0 };
-    const resumeTimings: { name: string; llmMs: number; upsertMs: number; totalMs: number }[] = [];
 
-    logger.info('MATCHING_PERF', `Starting concurrent matching: ${resumesToMatch.length} resumes, concurrency=${CONCURRENCY}`, { requestId });
+    logger.info('MATCHING_PERF', `Starting orchestrated matching: ${resumesToMatch.length} resumes`, { requestId });
 
     const matchingStart = Date.now();
 
-    const tasks = resumesToMatch.map((resume, idx) => async () => {
-      const taskStart = Date.now();
+    const orchestratorResults = await orchestrateMatching(
+      resumesToMatch.map((r) => ({
+        id: r.id,
+        name: r.name,
+        resumeText: r.resumeText || '',
+        currentRole: r.currentRole,
+        experienceYears: r.experienceYears,
+        tags: r.tags || [],
+        preferences: (r as any).preferences,
+      })),
+      {
+        id: jobId,
+        title: job.title || '',
+        description: job.description!,
+        jobMetadata,
+      },
+      formatCandidatePreferences,
+      {
+        onScreeningStart: (total) => {
+          sendSSE('screening', { status: 'running', total });
+        },
+        onScreeningComplete: (tierCounts) => {
+          sendSSE('screening', { status: 'completed', ...tierCounts });
+        },
+        onMatchStart: (resumeName) => {
+          sendSSE('progress', {
+            jobTitle: job.title,
+            total: resumesToMatch.length,
+            completed,
+            failed,
+            currentCandidateName: resumeName,
+          });
+        },
+        onMatchComplete: (c, f) => {
+          completed = c;
+          failed = f;
+          sendSSE('progress', {
+            jobTitle: job.title,
+            total: resumesToMatch.length,
+            completed,
+            failed,
+            currentCandidateName: null,
+          });
+        },
+      },
+      requestId,
+      locale,
+    );
 
-      logger.info('MATCHING_PERF', `[resume_${idx}] START "${resume.name}" (slot acquired)`, { requestId, resumeId: resume.id });
+    // Persist results and build response
+    for (const taskResult of orchestratorResults) {
+      if (!taskResult.matchResult) {
+        results.push({ resumeId: taskResult.resumeId, resumeName: taskResult.resumeName, error: taskResult.error || 'Matching failed' });
+        continue;
+      }
 
-      sendSSE('progress', {
-        jobTitle: job.title,
-        total: resumesToMatch.length,
-        completed,
-        failed,
-        currentCandidateName: resume.name || 'Unnamed resume',
-      });
+      const matchResult = taskResult.matchResult;
+      const score = matchResult?.overallMatchScore?.score ?? null;
+      const grade = matchResult?.overallMatchScore?.grade ?? null;
 
       try {
-        const candidatePrefs = formatCandidatePreferences((resume as any).preferences);
-
-        const llmStart = Date.now();
-        const matchResult = await matchAgent.execute(
-          {
-            resume: resume.resumeText,
-            jd: job.description!,
-            candidatePreferences: candidatePrefs || undefined,
-            jobMetadata: jobMetadata || undefined,
-          },
-          job.description!,
-          requestId,
-          locale,
-          matchModel
-        );
-        const llmMs = Date.now() - llmStart;
-
-        const score = matchResult?.overallMatchScore?.score ?? null;
-        const grade = matchResult?.overallMatchScore?.grade ?? null;
-
-        // Upsert the match result
-        const upsertStart = Date.now();
         const jobMatch = await prisma.jobMatch.upsert({
-          where: { jobId_resumeId: { jobId, resumeId: resume.id } },
-          update: {
-            score,
-            grade,
-            matchData: matchResult as any,
-            status: 'new',
-          },
-          create: {
-            jobId,
-            resumeId: resume.id,
-            score,
-            grade,
-            matchData: matchResult as any,
-            status: 'new',
-          },
-        });
-        const upsertMs = Date.now() - upsertStart;
-
-        const taskTotal = Date.now() - taskStart;
-        resumeTimings.push({ name: resume.name, llmMs, upsertMs, totalMs: taskTotal });
-        logger.info('MATCHING_PERF', `[resume_${idx}] DONE "${resume.name}" llm=${llmMs}ms upsert=${upsertMs}ms total=${taskTotal}ms`, {
-          requestId, resumeId: resume.id, llmMs, upsertMs, totalMs: taskTotal,
+          where: { jobId_resumeId: { jobId, resumeId: taskResult.resumeId } },
+          update: { score, grade, matchData: matchResult as any, status: 'new' },
+          create: { jobId, resumeId: taskResult.resumeId, score, grade, matchData: matchResult as any, status: 'new' },
         });
 
         const result = {
           id: jobMatch.id,
-          resumeId: resume.id,
-          resumeName: resume.name,
+          resumeId: taskResult.resumeId,
+          resumeName: taskResult.resumeName,
           score,
           grade,
           status: jobMatch.status,
+          tier: taskResult.tier,
           preferenceScore: matchResult?.preferenceAlignment?.overallScore ?? null,
           preferenceWarnings: matchResult?.preferenceAlignment?.warnings ?? [],
         };
 
-        // Update counters immediately as each task completes
-        completed += 1;
         if (score != null) totalScore += score;
         if (grade && (bestGrade === null || (gradeRank[grade] ?? 0) > (gradeRank[bestGrade] ?? 0))) {
           bestGrade = grade;
         }
         results.push(result);
-
-        sendSSE('progress', {
-          jobTitle: job.title,
-          total: resumesToMatch.length,
-          completed,
-          failed,
-          currentCandidateName: null,
-        });
-
-        return result;
-      } catch (err: any) {
-        const taskTotal = Date.now() - taskStart;
-        failed += 1;
-        logger.error('MATCHING', `Failed to match resume ${resume.id} after ${taskTotal}ms`, { requestId, error: err.message, durationMs: taskTotal });
-        results.push({ resumeId: resume.id, resumeName: resume.name, error: 'Matching failed' });
-
-        sendSSE('progress', {
-          jobTitle: job.title,
-          total: resumesToMatch.length,
-          completed,
-          failed,
-          currentCandidateName: null,
-        });
-
-        throw err; // re-throw so runConcurrent records it
+      } catch (upsertErr: any) {
+        logger.error('MATCHING', `Failed to upsert match for ${taskResult.resumeId}`, { requestId, error: upsertErr.message });
+        results.push({ resumeId: taskResult.resumeId, resumeName: taskResult.resumeName, error: 'Failed to save result' });
       }
-    });
+    }
 
-    await runConcurrent(tasks, CONCURRENCY);
+    // Recount from orchestrator results
+    completed = orchestratorResults.filter((r) => r.matchResult != null).length;
+    failed = orchestratorResults.filter((r) => r.matchResult == null).length;
+
     const matchingTotal = Date.now() - matchingStart;
     logTiming('all_matching', matchingStart);
 
-    // Log concurrency analysis
-    const avgLlm = resumeTimings.length > 0 ? Math.round(resumeTimings.reduce((s, t) => s + t.llmMs, 0) / resumeTimings.length) : 0;
-    const sumLlm = resumeTimings.reduce((s, t) => s + t.llmMs, 0);
-    const parallelismRatio = matchingTotal > 0 ? (sumLlm / matchingTotal).toFixed(2) : '0';
-    logger.info('MATCHING_PERF', `Matching summary: wall=${matchingTotal}ms sumLLM=${sumLlm}ms avgLLM=${avgLlm}ms parallelism=${parallelismRatio}x concurrency=${CONCURRENCY}`, {
-      requestId, wallMs: matchingTotal, sumLlmMs: sumLlm, avgLlmMs: avgLlm, parallelismRatio, concurrency: CONCURRENCY,
-      perResume: resumeTimings,
-    });
-
+    logger.info('MATCHING_PERF', `Matching complete: wall=${matchingTotal}ms completed=${completed} failed=${failed}`, { requestId, wallMs: matchingTotal });
     logger.info('MATCHING', `Completed matching: ${completed}/${resumesToMatch.length} successful`, { requestId });
 
     const metrics = getProcessingMetrics(requestId);
@@ -594,10 +538,11 @@ router.post('/run', requireAuth, async (req, res) => {
  */
 router.get('/sessions', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const { jobId, limit = '20', offset = '0' } = req.query;
+    const { jobId, limit = '20', offset = '0', filterUserId, filterTeamId, teamView } = req.query;
+    const scope = await getVisibilityScope(req.user!, (teamView as string) === 'true');
+    const visFilter = await buildAdminOverrideFilter(scope, filterUserId as string | undefined, filterTeamId as string | undefined);
 
-    const where: any = { userId };
+    const where: any = { ...visFilter };
     if (jobId && typeof jobId === 'string') {
       where.jobId = jobId;
     }
@@ -633,11 +578,13 @@ router.get('/sessions', requireAuth, async (req, res) => {
  */
 router.get('/sessions/:sessionId', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
     const { sessionId } = req.params;
+    const { filterUserId, filterTeamId, teamView } = req.query;
+    const scope = await getVisibilityScope(req.user!, (teamView as string) === 'true');
+    const visFilter = await buildAdminOverrideFilter(scope, filterUserId as string | undefined, filterTeamId as string | undefined);
 
     const session = await prisma.matchingSession.findFirst({
-      where: { id: sessionId, userId },
+      where: { id: sessionId, ...visFilter },
       include: {
         job: { select: { id: true, title: true, description: true } },
       },
@@ -674,7 +621,7 @@ router.get('/sessions/:sessionId', requireAuth, async (req, res) => {
     const selectedResumeRecords = resumeIds.length > 0
       ? await prisma.resume.findMany({
           where: {
-            userId,
+            ...buildUserIdFilter(scope),
             id: { in: resumeIds },
           },
           select: {
@@ -717,11 +664,11 @@ router.get('/sessions/:sessionId', requireAuth, async (req, res) => {
  */
 router.delete('/sessions/:sessionId', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
     const { sessionId } = req.params;
+    const scope = await getVisibilityScope(req.user!);
 
     const session = await prisma.matchingSession.findFirst({
-      where: { id: sessionId, userId },
+      where: { id: sessionId, ...buildUserIdFilter(scope) },
     });
 
     if (!session) {
@@ -742,12 +689,14 @@ router.delete('/sessions/:sessionId', requireAuth, async (req, res) => {
  */
 router.get('/results/:jobId', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
     const { jobId } = req.params;
-    const { status, minScore, sort = 'score', order = 'desc' } = req.query;
+    const { status, minScore, sort = 'score', order = 'desc', filterUserId, filterTeamId, teamView } = req.query;
 
-    // Verify job ownership
-    const job = await prisma.job.findFirst({ where: { id: jobId, userId } });
+    // Verify job ownership using team visibility
+    const scope = await getVisibilityScope(req.user!, (teamView as string) === 'true');
+    const visFilter = await buildAdminOverrideFilter(scope, filterUserId as string | undefined, filterTeamId as string | undefined);
+    const jobWhere: any = { id: jobId, ...visFilter };
+    const job = await prisma.job.findFirst({ where: jobWhere });
     if (!job) {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
@@ -812,13 +761,17 @@ router.patch('/results/:matchId', requireAuth, async (req, res) => {
       return res.status(400).json({ success: false, error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
     }
 
-    // Verify ownership through job
+    // Verify ownership through job using team visibility
+    const scope = await getVisibilityScope(req.user!);
     const match = await prisma.jobMatch.findUnique({
       where: { id: matchId },
       include: { job: { select: { userId: true, passingScore: true } } },
     });
 
-    if (!match || match.job.userId !== userId) {
+    if (!match) {
+      return res.status(404).json({ success: false, error: 'Match not found' });
+    }
+    if (!scope.isAdmin && !scope.userIds.includes(match.job.userId)) {
       return res.status(404).json({ success: false, error: 'Match not found' });
     }
 
@@ -863,6 +816,7 @@ router.post('/results/:matchId/apply-invite', requireAuth, async (req, res) => {
     const { matchId } = req.params;
     const { type = 'ai_video' } = req.body;
 
+    const scope = await getVisibilityScope(req.user!);
     const match = await prisma.jobMatch.findUnique({
       where: { id: matchId },
       include: {
@@ -871,7 +825,10 @@ router.post('/results/:matchId/apply-invite', requireAuth, async (req, res) => {
       },
     });
 
-    if (!match || match.job.userId !== userId) {
+    if (!match) {
+      return res.status(404).json({ success: false, error: 'Match not found' });
+    }
+    if (!scope.isAdmin && !scope.userIds.includes(match.job.userId)) {
       return res.status(404).json({ success: false, error: 'Match not found' });
     }
 
@@ -943,15 +900,18 @@ router.post('/results/:matchId/apply-invite', requireAuth, async (req, res) => {
  */
 router.delete('/results/:matchId', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
     const { matchId } = req.params;
 
+    const scope = await getVisibilityScope(req.user!);
     const match = await prisma.jobMatch.findUnique({
       where: { id: matchId },
       include: { job: { select: { userId: true } } },
     });
 
-    if (!match || match.job.userId !== userId) {
+    if (!match) {
+      return res.status(404).json({ success: false, error: 'Match not found' });
+    }
+    if (!scope.isAdmin && !scope.userIds.includes(match.job.userId)) {
       return res.status(404).json({ success: false, error: 'Match not found' });
     }
 

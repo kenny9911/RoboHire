@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
+import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 
 interface DashboardData {
   periodStats: { newResumes: number; newMatches: number; newJobs: number; newRequests: number };
@@ -14,29 +15,89 @@ interface DashboardData {
   clients: string[];
 }
 
+interface EnhancedData {
+  kpiScorecard: {
+    uploads: number;
+    invitationsSent: number;
+    completedInterviews: number;
+    matchesCreated: number;
+    verdicts: { strongHire: number; hire: number; leanHire: number; leanNoHire: number; noHire: number };
+  };
+  todoItems: Array<{
+    type: string;
+    count: number;
+    items: Array<{ id: string; label: string; subLabel?: string; href: string }>;
+  }>;
+  agentPerformance: {
+    activeAgents: number;
+    totalSourced: number;
+    totalApproved: number;
+    totalContacted: number;
+    topAgents: Array<{ id: string; name: string; jobTitle: string | null; totalSourced: number; totalApproved: number; totalContacted: number }>;
+  };
+  recentActivity: Array<{ type: string; timestamp: string; data: Record<string, any> }>;
+  conversionFunnel: {
+    totalMatched: number;
+    totalInvited: number;
+    totalCompleted: number;
+    totalPassed: number;
+    matchToInviteRate: number;
+    inviteToCompleteRate: number;
+    completeToPassRate: number;
+  };
+}
+
 type Period = 'today' | 'week' | 'month' | 'quarter' | 'year';
+
+function formatRelativeTime(ts: string): string {
+  const diff = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d`;
+}
+
+const verdictColor: Record<string, string> = {
+  strong_hire: 'bg-emerald-100 text-emerald-700',
+  hire: 'bg-green-100 text-green-700',
+  lean_hire: 'bg-lime-100 text-lime-700',
+  lean_no_hire: 'bg-amber-100 text-amber-700',
+  no_hire: 'bg-rose-100 text-rose-700',
+};
 
 export default function ProductDashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
   const [data, setData] = usePageState<DashboardData | null>('prodDash.data', null);
+  const [enhanced, setEnhanced] = usePageState<EnhancedData | null>('prodDash.enhanced', null);
   const [period, setPeriod] = usePageState<Period>('prodDash.period', 'month');
   const [client, setClient] = usePageState<string>('prodDash.client', '');
+  const [recruiterFilter, setRecruiterFilter] = usePageState<RecruiterTeamFilterValue>('prodDash.recruiterFilter', {});
   const [loading, setLoading] = useState(!data);
 
   const fetchData = useCallback(async () => {
     try {
       const params: Record<string, string> = { period };
       if (client) params.client = client;
-      const res = await axios.get('/api/v1/dashboard/stats', { params });
-      setData(res.data.data);
+      if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
+      if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
+      if (recruiterFilter.teamView) params.teamView = 'true';
+      const [statsRes, enhancedRes] = await Promise.allSettled([
+        axios.get('/api/v1/dashboard/stats', { params }),
+        axios.get('/api/v1/dashboard/enhanced', { params }),
+      ]);
+      if (statsRes.status === 'fulfilled') setData(statsRes.value.data.data);
+      if (enhancedRes.status === 'fulfilled') setEnhanced(enhancedRes.value.data.data);
     } catch {
       // silent
     } finally {
       setLoading(false);
     }
-  }, [period, client]);
+  }, [period, client, recruiterFilter]);
 
   useEffect(() => {
     fetchData();
@@ -138,6 +199,8 @@ export default function ProductDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
+          {/* Recruiter / Team filter */}
+          <RecruiterTeamFilter value={recruiterFilter} onChange={setRecruiterFilter} />
           {/* Period pills */}
           <div className="flex bg-slate-100 rounded-lg p-0.5 gap-0.5">
             {periods.map((p) => (
@@ -319,6 +382,316 @@ export default function ProductDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ══════════ Enhanced Dashboard Sections ══════════ */}
+
+      {/* ── KPI Scorecard ── */}
+      {enhanced?.kpiScorecard && (
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">{t('product.dashboard.kpiScorecard', 'Performance Scorecard')}</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            {[
+              { label: t('product.dashboard.kpiUploads', 'Uploads'), value: enhanced.kpiScorecard.uploads, icon: '↑', accent: 'border-indigo-400 bg-indigo-50' },
+              { label: t('product.dashboard.kpiInvitationsSent', 'Invitations Sent'), value: enhanced.kpiScorecard.invitationsSent, icon: '✉', accent: 'border-blue-400 bg-blue-50' },
+              { label: t('product.dashboard.kpiCompletedInterviews', 'Completed'), value: enhanced.kpiScorecard.completedInterviews, icon: '✓', accent: 'border-emerald-400 bg-emerald-50' },
+              { label: t('product.dashboard.kpiMatchesCreated', 'Matches'), value: enhanced.kpiScorecard.matchesCreated, icon: '⚡', accent: 'border-cyan-400 bg-cyan-50' },
+            ].map((kpi) => (
+              <div key={kpi.label} className={`rounded-xl border-l-4 ${kpi.accent} p-4`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">{kpi.icon}</span>
+                  <span className="text-xs font-medium text-slate-500">{kpi.label}</span>
+                </div>
+                <p className="text-2xl font-bold text-slate-900">{kpi.value}</p>
+              </div>
+            ))}
+            {/* Verdicts card */}
+            <div className="rounded-xl border-l-4 border-violet-400 bg-violet-50 p-4">
+              <span className="text-xs font-medium text-slate-500">{t('product.dashboard.kpiVerdicts', 'Verdicts')}</span>
+              <div className="mt-2 space-y-1">
+                {[
+                  { key: 'strongHire', label: t('product.dashboard.kpiVerdictStrongHire', 'Strong Hire'), color: 'bg-emerald-500' },
+                  { key: 'hire', label: t('product.dashboard.kpiVerdictHire', 'Hire'), color: 'bg-green-500' },
+                  { key: 'leanHire', label: t('product.dashboard.kpiVerdictLeanHire', 'Lean Hire'), color: 'bg-lime-500' },
+                  { key: 'leanNoHire', label: t('product.dashboard.kpiVerdictLeanNoHire', 'Lean No'), color: 'bg-amber-500' },
+                  { key: 'noHire', label: t('product.dashboard.kpiVerdictNoHire', 'No Hire'), color: 'bg-rose-500' },
+                ].map((vd) => {
+                  const count = enhanced.kpiScorecard.verdicts[vd.key as keyof typeof enhanced.kpiScorecard.verdicts] || 0;
+                  if (!count) return null;
+                  return (
+                    <div key={vd.key} className="flex items-center gap-2 text-xs">
+                      <span className={`inline-block w-2 h-2 rounded-full ${vd.color}`} />
+                      <span className="text-slate-600">{vd.label}</span>
+                      <span className="font-bold text-slate-800 ml-auto">{count}</span>
+                    </div>
+                  );
+                })}
+                {Object.values(enhanced.kpiScorecard.verdicts).every((v) => !v) && (
+                  <span className="text-xs text-slate-400">—</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Conversion Funnel + Action Items / Agent Performance ── */}
+      {enhanced && (
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left 2/3 */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Conversion Funnel Rates */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <h3 className="text-sm font-semibold text-slate-800 mb-4">{t('product.dashboard.conversionFunnel', 'Conversion Rates')}</h3>
+              <div className="flex items-center gap-1">
+                {[
+                  { label: t('product.dashboard.funnelMatched', 'Matched'), value: enhanced.conversionFunnel.totalMatched, bg: 'bg-cyan-100 text-cyan-800' },
+                  { label: t('product.dashboard.funnelInvited', 'Invited'), value: enhanced.conversionFunnel.totalInvited, bg: 'bg-blue-100 text-blue-800', rate: enhanced.conversionFunnel.matchToInviteRate },
+                  { label: t('product.dashboard.funnelCompleted', 'Completed'), value: enhanced.conversionFunnel.totalCompleted, bg: 'bg-indigo-100 text-indigo-800', rate: enhanced.conversionFunnel.inviteToCompleteRate },
+                  { label: t('product.dashboard.funnelPassed', 'Passed'), value: enhanced.conversionFunnel.totalPassed, bg: 'bg-emerald-100 text-emerald-800', rate: enhanced.conversionFunnel.completeToPassRate },
+                ].map((step, i) => (
+                  <div key={step.label} className="flex-1 flex items-center">
+                    {i > 0 && (
+                      <div className="flex flex-col items-center mx-1 shrink-0">
+                        <svg className="w-4 h-4 text-slate-300" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" /></svg>
+                        <span className="text-[10px] font-bold text-slate-500">{step.rate}%</span>
+                      </div>
+                    )}
+                    <div className={`flex-1 rounded-lg py-3 px-2 text-center ${step.bg}`}>
+                      <p className="text-lg font-bold">{step.value}</p>
+                      <p className="text-xs font-medium mt-0.5">{step.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Items */}
+            <div className="rounded-xl border border-slate-200 bg-white">
+              <div className="px-5 py-4 border-b border-slate-100">
+                <h3 className="text-sm font-semibold text-slate-800">{t('product.dashboard.todoList', 'Action Items')}</h3>
+              </div>
+              {enhanced.todoItems.filter((td) => td.count > 0).length === 0 ? (
+                <div className="px-5 py-8 text-center">
+                  <div className="text-3xl mb-2">&#10003;</div>
+                  <p className="text-sm font-medium text-slate-700">{t('product.dashboard.todoAllClear', 'All Caught Up!')}</p>
+                  <p className="text-xs text-slate-500 mt-1">{t('product.dashboard.todoAllClearDesc', 'No pending action items. Great work!')}</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {enhanced.todoItems.filter((td) => td.count > 0).map((td) => {
+                    const configs: Record<string, { title: string; desc: string; color: string; href: string; icon: string }> = {
+                      stale_request: {
+                        title: t('product.dashboard.todoStaleRequests', 'Stale Hiring Requests'),
+                        desc: t('product.dashboard.todoStaleRequestsDesc', '{{count}} request(s) with no activity for 7+ days', { count: td.count }),
+                        color: 'bg-amber-100 text-amber-700',
+                        href: '/product/hiring',
+                        icon: '⏱',
+                      },
+                      unreviewed_match: {
+                        title: t('product.dashboard.todoUnreviewedMatches', 'Unreviewed Matches'),
+                        desc: t('product.dashboard.todoUnreviewedMatchesDesc', '{{count}} match(es) awaiting review', { count: td.count }),
+                        color: 'bg-blue-100 text-blue-700',
+                        href: '/product/matching',
+                        icon: '🔍',
+                      },
+                      awaiting_followup: {
+                        title: t('product.dashboard.todoAwaitingFollowup', 'Awaiting Follow-up'),
+                        desc: t('product.dashboard.todoAwaitingFollowupDesc', '{{count}} passed candidate(s) need follow-up', { count: td.count }),
+                        color: 'bg-rose-100 text-rose-700',
+                        href: '/product/evaluations',
+                        icon: '📋',
+                      },
+                      needs_evaluation: {
+                        title: t('product.dashboard.todoNeedsEvaluation', 'Needs Evaluation'),
+                        desc: t('product.dashboard.todoNeedsEvaluationDesc', '{{count}} interview(s) awaiting evaluation', { count: td.count }),
+                        color: 'bg-violet-100 text-violet-700',
+                        href: '/product/evaluations',
+                        icon: '📝',
+                      },
+                    };
+                    const cfg = configs[td.type];
+                    if (!cfg) return null;
+                    return (
+                      <div key={td.type} className="px-5 py-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">{cfg.icon}</span>
+                            <span className="text-sm font-semibold text-slate-800">{cfg.title}</span>
+                            <span className={`inline-flex items-center justify-center h-5 min-w-[20px] rounded-full text-xs font-bold px-1.5 ${cfg.color}`}>
+                              {td.count}
+                            </span>
+                          </div>
+                          <Link to={cfg.href} className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                            {t('product.dashboard.todoViewAll', 'View all')} →
+                          </Link>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-2">{cfg.desc}</p>
+                        {td.items.length > 0 && (
+                          <div className="space-y-1">
+                            {td.items.map((item) => (
+                              <Link
+                                key={item.id}
+                                to={cfg.href}
+                                className="flex items-center gap-2 text-xs text-slate-600 hover:text-blue-700 transition-colors py-0.5"
+                              >
+                                <span className="w-1 h-1 rounded-full bg-slate-400 shrink-0" />
+                                <span className="truncate font-medium">{item.label}</span>
+                                {item.subLabel && <span className="text-slate-400 truncate">· {item.subLabel}</span>}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right 1/3: Agent Performance */}
+          <div className="space-y-6">
+            <div className="rounded-xl border border-slate-200 bg-white">
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-800">{t('product.dashboard.agentPerformance', 'AI Agent Performance')}</h3>
+                {enhanced.agentPerformance.activeAgents > 0 && (
+                  <span className="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-violet-100 text-violet-700 text-xs font-bold px-1.5">
+                    {enhanced.agentPerformance.activeAgents} {t('product.dashboard.agentActive', 'Active')}
+                  </span>
+                )}
+              </div>
+              {enhanced.agentPerformance.activeAgents === 0 ? (
+                <div className="px-5 py-8 text-center">
+                  <div className="text-3xl mb-2">🤖</div>
+                  <p className="text-sm font-medium text-slate-700">{t('product.dashboard.agentNone', 'No agents deployed yet.')}</p>
+                  <p className="text-xs text-slate-500 mt-1">{t('product.dashboard.agentCreateDesc', 'Deploy an AI agent to start sourcing candidates automatically.')}</p>
+                  <Link to="/product/agents" className="inline-block mt-3 text-xs text-blue-600 hover:text-blue-800 font-medium">
+                    {t('product.dashboard.agentViewAll', 'View all agents')} →
+                  </Link>
+                </div>
+              ) : (
+                <div>
+                  {/* Aggregate metrics */}
+                  <div className="grid grid-cols-3 gap-px bg-slate-100">
+                    {[
+                      { label: t('product.dashboard.agentSourced', 'Sourced'), value: enhanced.agentPerformance.totalSourced, color: 'text-violet-700' },
+                      { label: t('product.dashboard.agentApproved', 'Approved'), value: enhanced.agentPerformance.totalApproved, color: 'text-emerald-700' },
+                      { label: t('product.dashboard.agentContacted', 'Contacted'), value: enhanced.agentPerformance.totalContacted, color: 'text-blue-700' },
+                    ].map((m) => (
+                      <div key={m.label} className="bg-white text-center py-3">
+                        <p className={`text-lg font-bold ${m.color}`}>{m.value}</p>
+                        <p className="text-xs text-slate-500">{m.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Top agents list */}
+                  {enhanced.agentPerformance.topAgents.length > 0 && (
+                    <div className="px-5 py-3">
+                      <p className="text-xs font-semibold text-slate-600 mb-2">{t('product.dashboard.agentTopAgents', 'Top Agents')}</p>
+                      <div className="space-y-2">
+                        {enhanced.agentPerformance.topAgents.map((agent) => (
+                          <Link
+                            key={agent.id}
+                            to={`/product/agents/${agent.id}`}
+                            className="flex items-center justify-between py-1.5 hover:bg-slate-50 -mx-2 px-2 rounded-lg transition-colors"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-slate-800 truncate">{agent.name}</p>
+                              {agent.jobTitle && <p className="text-xs text-slate-400 truncate">{agent.jobTitle}</p>}
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0 text-xs">
+                              <span className="text-violet-600 font-bold">{agent.totalSourced}</span>
+                              <span className="text-emerald-600 font-bold">{agent.totalApproved}</span>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="px-5 py-3 border-t border-slate-100">
+                    <Link to="/product/agents" className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                      {t('product.dashboard.agentViewAll', 'View all agents')} →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Recent Activity Feed ── */}
+      {enhanced?.recentActivity && (
+        <div className="rounded-xl border border-slate-200 bg-white">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-800">{t('product.dashboard.recentActivity', 'Recent Activity')}</h3>
+          </div>
+          {enhanced.recentActivity.length === 0 ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-sm text-slate-500">{t('product.dashboard.activityEmpty', 'No recent activity in this period.')}</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50">
+              {enhanced.recentActivity.map((item, i) => {
+                const iconMap: Record<string, { icon: string; bg: string }> = {
+                  interview_completed: { icon: '🎤', bg: 'bg-blue-50' },
+                  evaluation_completed: { icon: '📊', bg: 'bg-emerald-50' },
+                  new_match: { icon: '⚡', bg: 'bg-cyan-50' },
+                  agent_discovery: { icon: '🤖', bg: 'bg-violet-50' },
+                };
+                const style = iconMap[item.type] || { icon: '•', bg: 'bg-slate-50' };
+
+                let text = '';
+                if (item.type === 'interview_completed') {
+                  text = t('product.dashboard.activityInterviewCompleted', '{{name}} completed interview for {{job}}', {
+                    name: item.data.candidateName || '—',
+                    job: item.data.jobTitle || '—',
+                  });
+                } else if (item.type === 'evaluation_completed') {
+                  text = t('product.dashboard.activityEvaluationCompleted', '{{name}} evaluated — {{verdict}}', {
+                    name: item.data.candidateName || '—',
+                    verdict: item.data.verdict?.replace(/_/g, ' ') || '—',
+                  });
+                } else if (item.type === 'new_match') {
+                  text = t('product.dashboard.activityNewMatch', '{{resume}} matched to {{request}}', {
+                    resume: item.data.resumeName || '—',
+                    request: item.data.requestTitle || '—',
+                  });
+                } else if (item.type === 'agent_discovery') {
+                  text = t('product.dashboard.activityAgentDiscovery', 'Agent {{agent}} found {{name}}', {
+                    agent: item.data.agentName || '—',
+                    name: item.data.candidateName || '—',
+                  });
+                }
+
+                return (
+                  <div key={`${item.type}-${i}`} className="flex items-start gap-3 px-5 py-3">
+                    <div className={`mt-0.5 h-7 w-7 rounded-lg ${style.bg} flex items-center justify-center text-sm shrink-0`}>
+                      {style.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-slate-700">{text}</p>
+                      {item.type === 'evaluation_completed' && item.data.verdict && (
+                        <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${verdictColor[item.data.verdict] || 'bg-slate-100 text-slate-600'}`}>
+                          {item.data.verdict.replace(/_/g, ' ').toUpperCase()}
+                        </span>
+                      )}
+                      {item.type === 'new_match' && item.data.fitScore != null && (
+                        <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700">
+                          {item.data.fitGrade || `${item.data.fitScore}%`}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-400 shrink-0 mt-1 font-medium">
+                      {formatRelativeTime(item.timestamp)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

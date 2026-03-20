@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
 import { normalizeInterviewLanguage } from '../../utils/interviewLanguage';
+import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 
 interface HiringRequest {
   id: string;
@@ -13,6 +14,7 @@ interface HiringRequest {
   createdAt: string;
   updatedAt: string;
   _count?: { candidates: number; resumeJobFits: number; interviews: number };
+  linkedJob?: { id: string; title: string; status: string; updatedAt: string } | null;
 }
 
 interface HiringStats {
@@ -242,21 +244,37 @@ const ProjectCard = memo(function ProjectCard({
 
       {/* Action bar */}
       <div className="flex items-center justify-end gap-1 border-t border-slate-100 px-4 py-2">
-        {/* Create Job */}
-        <button onClick={(e) => { e.preventDefault(); onCreateJob(req.id); }} disabled={isCreatingJob}
-          title={isCreatingJob ? t('product.hiring.creatingJob', 'Creating...') : t('product.hiring.createJob', 'Create Job')}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-            isCreatingJob ? 'text-blue-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'
-          }`}>
-          {isCreatingJob ? (
-            <div className="w-3.5 h-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
-          ) : (
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          )}
-          {t('product.hiring.createJob', 'Create Job')}
-        </button>
+        {/* Linked job / Create Job */}
+        {req.linkedJob ? (
+          <Link
+            to={`/product/jobs/${req.linkedJob.id}`}
+            onClick={(e) => e.stopPropagation()}
+            title={t('product.hiring.manageJob', 'Manage Job')}
+            className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50 px-3 py-2 text-sm font-semibold text-blue-700 shadow-[0_16px_30px_-24px_rgba(37,99,235,0.95)] transition-colors hover:border-blue-300 hover:from-blue-100 hover:to-cyan-100"
+          >
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5V6A2.25 2.25 0 019.75 3.75h4.5A2.25 2.25 0 0116.5 6v1.5m-9 0h9m-9 0H6A2.25 2.25 0 003.75 9.75v7.5A2.25 2.25 0 006 19.5h12a2.25 2.25 0 002.25-2.25v-7.5A2.25 2.25 0 0018 7.5h-1.5" />
+              </svg>
+            </span>
+            <span>{t('product.hiring.manageJob', 'Manage Job')}</span>
+          </Link>
+        ) : (
+          <button onClick={(e) => { e.preventDefault(); onCreateJob(req.id); }} disabled={isCreatingJob}
+            title={isCreatingJob ? t('product.hiring.creatingJob', 'Creating...') : t('product.hiring.createJob', 'Create Job')}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+              isCreatingJob ? 'text-blue-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'
+            }`}>
+            {isCreatingJob ? (
+              <div className="w-3.5 h-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            )}
+            {t('product.hiring.createJob', 'Create Job')}
+          </button>
+        )}
 
         <div className="w-px h-4 bg-slate-200 mx-1" />
 
@@ -301,6 +319,7 @@ export default function HiringRequests() {
   const [loading, setLoading] = useState(requests.length > 0 ? false : true);
   const [statusFilter, setStatusFilter] = usePageState<string>('hiring.statusFilter', '');
   const [search, setSearch] = usePageState<string>('hiring.search', '');
+  const [recruiterFilter, setRecruiterFilter] = usePageState<RecruiterTeamFilterValue>('hiring.recruiterFilter', {});
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -309,18 +328,25 @@ export default function HiringRequests() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const res = await axios.get('/api/v1/hiring-requests/stats');
+      const params: Record<string, string> = {};
+      if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
+      if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
+      if (recruiterFilter.teamView) params.teamView = 'true';
+      const res = await axios.get('/api/v1/hiring-requests/stats', { params });
       setStats(res.data.data);
     } catch {
       // silently fail
     }
-  }, []);
+  }, [recruiterFilter]);
 
   const fetchRequests = useCallback(async (pageNum: number) => {
     try {
       setLoading(true);
       const params: Record<string, unknown> = { limit: PAGE_SIZE, offset: (pageNum - 1) * PAGE_SIZE };
       if (statusFilter) params.status = statusFilter;
+      if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
+      if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
+      if (recruiterFilter.teamView) params.teamView = 'true';
       const res = await axios.get('/api/v1/hiring-requests', { params });
       setRequests(res.data.data || []);
       const pag = res.data.pagination;
@@ -333,7 +359,7 @@ export default function HiringRequests() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, recruiterFilter]);
 
   useEffect(() => {
     fetchStats();
@@ -408,6 +434,7 @@ export default function HiringRequests() {
       const res = await axios.post(`/api/v1/jobs/from-request/${requestId}`, payload);
       const jobTitle = res.data?.data?.title || title || '';
       showSuccess(t('product.hiring.jobCreatedSuccess', 'Job "{{title}}" created successfully!', { title: jobTitle }));
+      await fetchRequests(page);
     } catch {
       // handle error
     } finally {
@@ -441,16 +468,19 @@ export default function HiringRequests() {
           <h2 className="text-2xl font-bold text-slate-900">{t('product.hiring.title', 'Projects')}</h2>
           <p className="mt-1 text-sm text-slate-500">{t('product.hiring.subtitle', 'Manage recruitment projects — requirements, candidate search, matching, and interviews.')}</p>
         </div>
-        <Link
-          to="/start-hiring"
-          state={{ fresh: true }}
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors self-start sm:self-auto shrink-0"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          {t('product.hiring.newProject', 'New Project')}
-        </Link>
+        <div className="flex items-center gap-3 flex-wrap self-start sm:self-auto">
+          <RecruiterTeamFilter value={recruiterFilter} onChange={setRecruiterFilter} />
+          <Link
+            to="/start-hiring"
+            state={{ fresh: true }}
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors shrink-0"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            {t('product.hiring.newProject', 'New Project')}
+          </Link>
+        </div>
       </div>
 
       {/* Stats Overview */}

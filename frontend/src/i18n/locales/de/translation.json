@@ -1733,7 +1733,50 @@
       "pendingProjects": "Aktive Projekte",
       "pendingEvaluations": "Ausstehende Bewertungen",
       "agents": "Agenten",
-      "agentsDesc": "Setzen Sie KI-Agenten ein, um Kandidaten automatisch zu suchen und zu filtern."
+      "agentsDesc": "Setzen Sie KI-Agenten ein, um Kandidaten automatisch zu suchen und zu filtern.",
+      "kpiScorecard": "Leistungsübersicht",
+      "kpiUploads": "Uploads",
+      "kpiInvitationsSent": "Einladungen Gesendet",
+      "kpiCompletedInterviews": "Abgeschlossen",
+      "kpiMatchesCreated": "Übereinstimmungen",
+      "kpiVerdicts": "Bewertungen",
+      "kpiVerdictStrongHire": "Starke Empfehlung",
+      "kpiVerdictHire": "Empfehlung",
+      "kpiVerdictLeanHire": "Tendenz Empfehlung",
+      "kpiVerdictLeanNoHire": "Tendenz Ablehnung",
+      "kpiVerdictNoHire": "Ablehnung",
+      "todoList": "Aufgaben",
+      "todoStaleRequests": "Inaktive Anfragen",
+      "todoStaleRequestsDesc": "{{count}} Anfrage(n) seit über 7 Tagen ohne Aktivität",
+      "todoUnreviewedMatches": "Ungeprüfte Übereinstimmungen",
+      "todoUnreviewedMatchesDesc": "{{count}} Übereinstimmung(en) warten auf Prüfung",
+      "todoAwaitingFollowup": "Nachfassen Erforderlich",
+      "todoAwaitingFollowupDesc": "{{count}} bestandene(r) Kandidat(en) benötigen Nachfassen",
+      "todoNeedsEvaluation": "Bewertung Erforderlich",
+      "todoNeedsEvaluationDesc": "{{count}} Interview(s) warten auf Bewertung",
+      "todoAllClear": "Alles Erledigt!",
+      "todoAllClearDesc": "Keine offenen Aufgaben. Gute Arbeit!",
+      "todoViewAll": "Alle anzeigen",
+      "agentPerformance": "KI-Agenten Leistung",
+      "agentActive": "Aktive Agenten",
+      "agentSourced": "Gefunden",
+      "agentApproved": "Genehmigt",
+      "agentContacted": "Kontaktiert",
+      "agentTopAgents": "Top Agenten",
+      "agentViewAll": "Alle Agenten anzeigen",
+      "agentNone": "Noch keine Agenten eingesetzt.",
+      "agentCreateDesc": "Setzen Sie einen KI-Agenten ein, um automatisch Kandidaten zu finden.",
+      "recentActivity": "Aktuelle Aktivität",
+      "activityInterviewCompleted": "{{name}} hat das Interview für {{job}} abgeschlossen",
+      "activityEvaluationCompleted": "{{name}} bewertet — {{verdict}}",
+      "activityNewMatch": "{{resume}} passt zu {{request}}",
+      "activityAgentDiscovery": "Agent {{agent}} hat {{name}} gefunden",
+      "activityEmpty": "Keine aktuelle Aktivität in diesem Zeitraum.",
+      "conversionFunnel": "Konversionsraten",
+      "funnelMatched": "Zugeordnet",
+      "funnelInvited": "Eingeladen",
+      "funnelCompleted": "Abgeschlossen",
+      "funnelPassed": "Bestanden"
     },
     "profile": {
       "quickLinks": "Schnelllinks",
@@ -1860,7 +1903,10 @@
       "completedLabel": "Ende",
       "durationLabel": "Dauer",
       "gradeLabel": "Bewertung",
-      "viewGoHireEvaluation": "GoHire-Bewertung anzeigen"
+      "viewGoHireEvaluation": "GoHire-Bewertung anzeigen",
+      "syncingGoHireData": "Interviewdaten werden synchronisiert...",
+      "goHireInterviewNotReady": "Das Interview ist auf GoHire noch nicht abgeschlossen",
+      "goHireSyncFailed": "Synchronisierung der Interviewdaten fehlgeschlagen"
     },
     "videoInterview": {
       "title": "Video-Interview",
@@ -2304,7 +2350,36 @@
       "filterRejected": "Abgelehnt",
       "filterMore": "Weitere Filter",
       "addFilter": "Filter hinzufügen",
-      "applyFilters": "Filter anwenden"
+      "applyFilters": "Filter anwenden",
+      "interviewInvited": "Interview eingeladen",
+      "interviewInvitedTooltip": "Die Intervieweinladung wurde gesendet. Warten auf Antwort des Kandidaten.",
+      "inviteToInterviewTooltip": "Diesen Kandidaten zu einem KI-Interview einladen. Zur Terminplanung navigieren und Einladung senden.",
+      "interviewCompleted": "Interview abgeschlossen",
+      "filterSkills": "Fähigkeiten",
+      "filterSkillsPlaceholder": "Fähigkeit eingeben und Enter drücken",
+      "filterEducation": "Bildung",
+      "filterAllEducation": "Alle Bildungsgrade",
+      "eduJuniorHigh": "Hauptschule und darunter",
+      "eduVocational": "Berufsschule",
+      "eduHighSchool": "Gymnasium / Abitur",
+      "eduAssociate": "Fachhochschulreife",
+      "eduBachelor": "Bachelor",
+      "eduMaster": "Master",
+      "eduDoctorate": "Promotion / Doktor",
+      "filterSchool": "Hochschule",
+      "filterSchoolPlaceholder": "Name der Universität",
+      "filterCompany": "Unternehmen",
+      "filterCompanyPlaceholder": "Firmenname",
+      "filterCountry": "Land / Region",
+      "filterAllCountries": "Alle Länder",
+      "statTotal": "Kandidaten Gesamt",
+      "statThisWeek": "Neu Diese Woche",
+      "statMatched": "Zugeordnet",
+      "statInterviewed": "Zum Interview Eingeladen",
+      "statAnalyzed": "KI-Analysiert",
+      "statTopSkills": "Top Fähigkeiten",
+      "filteredResults": "{{count}} Kandidaten gefunden",
+      "clearFilters": "Alle Filter löschen"
     },
     "matching": {
       "title": "Intelligentes Matching",
@@ -2373,6 +2448,9 @@
       "startMatching": "Matching starten ({{count}} Lebensläufe)",
       "preFilterRunning": "Vorfilter {{total}} Lebensläufe...",
       "preFilterComplete": "Vorfilter abgeschlossen: {{passed}} bestanden, {{excluded}} ausgeschlossen",
+      "screeningRunning": "{{total}} Lebensläufe werden überprüft...",
+      "screeningRunningDesc": "KI bewertet alle Kandidaten schnell, um die besten Übereinstimmungen zu priorisieren.",
+      "screeningComplete": "Überprüfung abgeschlossen: {{a}} stark, {{b}} mäßig, {{c}} schwach passend",
       "preFilteredCount": "({{filtered}} vorgefiltert)",
       "sessionHistory": "Sitzungsverlauf",
       "currentResults": "Aktuelle Ergebnisse",
@@ -2678,6 +2756,14 @@
         "setActive": "Als Aktiv setzen",
         "delete": "Löschen",
         "backToCurrent": "Zurück zur Aktuellen"
+      },
+      "reparse": "Lebenslauf neu parsen",
+      "viewOriginalDocument": "Originaldokument anzeigen",
+      "originalDocument": {
+        "title": "Originaldokument",
+        "description": "Aus {{fileName}} extrahierter Quelltext",
+        "empty": "Der Originaldokumenttext ist für diesen Lebenslauf nicht verfügbar.",
+        "close": "Originaldokument schließen"
       },
       "refine": {
         "title": "Lebenslauf für Stelle optimieren",
@@ -3191,7 +3277,9 @@
     "filters": {
       "allRecruiters": "Alle Recruiter",
       "recruiterGroup": "Recruiter",
-      "teamGroup": "Teams"
+      "teamGroup": "Teams",
+      "myData": "Meine Daten",
+      "teamView": "Team"
     }
   },
   "admin": {
@@ -3368,6 +3456,12 @@
     "criteriaPlaceholder": "Beschreiben Sie Ihren idealen Kandidaten im Detail...",
     "linkedJob": "Verknüpfte Stelle (optional)",
     "noJob": "Keine verknüpfte Stelle",
+    "taskType": "Aufgabentyp",
+    "taskTypeSearch": "Kandidaten suchen",
+    "taskTypeMatch": "Kandidat zuordnen",
+    "selectJob": "Stelle auswählen...",
+    "instructions": "Anweisungen",
+    "instructionsPlaceholder": "Sagen Sie dem Agenten, was er tun soll...",
     "creating": "Erstelle...",
     "createBtn": "Agent erstellen",
     "empty": "Noch keine Agenten",
@@ -3470,6 +3564,19 @@
       "results": "Ergebnisse",
       "prev": "Zurück",
       "next": "Weiter"
+    },
+    "import": {
+      "button": "CSV importieren",
+      "resultTitle": "Importergebnisse",
+      "total": "Gesamt",
+      "created": "Erstellt",
+      "updated": "Aktualisiert",
+      "skipped": "Übersprungen",
+      "duplicatesFound": "{{count}} doppelte Datensätze wurden übersprungen",
+      "duplicateRow": "Zeile {{row}}: {{name}} ({{date}})",
+      "overwriteAll": "Erneut importieren und Duplikate überschreiben",
+      "errorsFound": "{{count}} Zeilen hatten Fehler",
+      "failed": "Import fehlgeschlagen"
     }
   },
   "goHireEval": {
@@ -3560,5 +3667,73 @@
       "notParsed": "Lebenslauf wurde noch nicht analysiert",
       "parseNow": "Jetzt Analysieren"
     }
+  },
+  "evaluationCenter": {
+    "title": "Bewertungszentrum",
+    "subtitle": "KI-gestütztes Bewertungszentrum",
+    "description": "KI-generierte Interviewbewertungsberichte überprüfen und verwalten. Teilen, exportieren und Kandidaten vergleichen.",
+    "searchPlaceholder": "Nach Kandidatenname oder E-Mail suchen...",
+    "filters": "Filter",
+    "verdictFilter": "Bewertung",
+    "allVerdicts": "Alle Bewertungen",
+    "dateFrom": "Datum von",
+    "dateTo": "Datum bis",
+    "clearFilters": "Alle Filter löschen",
+    "stats": {
+      "totalEvaluated": "Gesamt Bewertet",
+      "avgScore": "Durchschnittspunktzahl",
+      "passCount": "Bestanden (70+)",
+      "strongHire": "Starke Empfehlung"
+    },
+    "col": {
+      "candidate": "Kandidat",
+      "position": "Position",
+      "score": "Punktzahl",
+      "verdict": "Bewertung",
+      "recruiter": "Recruiter",
+      "date": "Datum"
+    },
+    "verdict": {
+      "strongHire": "Starke Empfehlung",
+      "strong_hire": "Starke Empfehlung",
+      "hire": "Einstellen",
+      "leanHire": "Tendenz Einstellen",
+      "lean_hire": "Tendenz Einstellen",
+      "leanNoHire": "Tendenz Nicht Einstellen",
+      "lean_no_hire": "Tendenz Nicht Einstellen",
+      "noHire": "Nicht Einstellen",
+      "no_hire": "Nicht Einstellen"
+    },
+    "empty": "Noch keine bewerteten Interviews",
+    "emptyHint": "Schließen Sie ein Interview ab und erstellen Sie eine Bewertung, um sie hier zu sehen.",
+    "showing": "Anzeige",
+    "of": "von",
+    "prev": "Zurück",
+    "next": "Weiter"
+  },
+  "evaluationReport": {
+    "loading": "Bericht wird geladen...",
+    "notFound": "Bericht Nicht Gefunden",
+    "notFoundDesc": "Dieser Bewertungsberichtslink ist ungültig oder wurde widerrufen. Bitte kontaktieren Sie den Recruiter für einen neuen Link.",
+    "headerTag": "Bewertungsbericht",
+    "outOf": "von 100",
+    "footer": "Bereitgestellt von RoboHire AI — Umfassende Interviewbewertung"
+  },
+  "share": {
+    "share": "Teilen",
+    "shareEvaluation": "Bewertungsbericht Teilen",
+    "shareDesc": "Erstellen Sie einen öffentlichen Link, um diesen Bewertungsbericht mit jedem zu teilen.",
+    "generating": "Wird erstellt...",
+    "generateLink": "Teilbaren Link Erstellen",
+    "copied": "Kopiert!",
+    "copy": "Kopieren",
+    "scanQr": "Scannen zum Öffnen auf dem Handy",
+    "revokeAccess": "Zugriff Widerrufen"
+  },
+  "export": {
+    "export": "Exportieren",
+    "pdf": "PDF (Drucken)",
+    "word": "Word-Dokument",
+    "markdown": "Markdown"
   }
 }

@@ -90,6 +90,19 @@ export default function InterviewHub() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  // CSV import state (admin only)
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    updated: number;
+    skipped: number;
+    total: number;
+    errors: Array<{ row: number; error: string }>;
+    duplicates: Array<{ row: number; candidateName: string; interviewDatetime: string }>;
+  } | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounce search input
@@ -112,6 +125,7 @@ export default function InterviewHub() {
         const params: Record<string, string> = {};
         if (adminFilter.filterUserId) params.filterUserId = adminFilter.filterUserId;
         if (adminFilter.filterTeamId) params.filterTeamId = adminFilter.filterTeamId;
+        if (adminFilter.teamView !== undefined) params.teamView = adminFilter.teamView ? 'true' : 'false';
         const res = await axios.get('/api/v1/gohire-interviews/stats', { params });
         if (res.data.success) {
           setStats(res.data.data);
@@ -143,6 +157,7 @@ export default function InterviewHub() {
       if (hasVideo !== undefined) params.hasVideo = hasVideo;
       if (adminFilter.filterUserId) params.filterUserId = adminFilter.filterUserId;
       if (adminFilter.filterTeamId) params.filterTeamId = adminFilter.filterTeamId;
+      if (adminFilter.teamView !== undefined) params.teamView = adminFilter.teamView ? 'true' : 'false';
 
       const res = await axios.get('/api/v1/gohire-interviews', { params });
       if (res.data.success) {
@@ -188,6 +203,53 @@ export default function InterviewHub() {
   };
 
   const hasActiveFilters = jobTitleFilter || recruiterFilter || dateFrom || dateTo || hasVideo !== undefined;
+
+  const handleImportCsv = async (file: File, overwrite = false) => {
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (overwrite) formData.append('overwrite', 'true');
+
+      const res = await axios.post('/api/v1/gohire-interviews/import-csv', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (res.data.success) {
+        const result = res.data.data;
+        setImportResult(result);
+
+        // If there are duplicates and not overwriting, save the file for potential re-import
+        if (result.duplicates.length > 0 && !overwrite) {
+          setPendingFile(file);
+        } else {
+          setPendingFile(null);
+        }
+
+        // Refresh data if any records were created or updated
+        if (result.created > 0 || result.updated > 0) {
+          fetchInterviews();
+        }
+      }
+    } catch {
+      setImportResult({ created: 0, updated: 0, skipped: 0, total: 0, errors: [{ row: 0, error: t('interviewHub.import.failed', 'Import failed') }], duplicates: [] });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImportCsv(file);
+  };
+
+  const handleOverwriteConfirm = () => {
+    if (pendingFile) {
+      handleImportCsv(pendingFile, true);
+    }
+  };
 
   const SortIcon = ({ column }: { column: string }) => {
     if (sortBy !== column) {
@@ -301,9 +363,37 @@ export default function InterviewHub() {
             />
           </div>
 
-          {/* Admin recruiter/team filter */}
+          {/* Recruiter/team filter — admin sees full user picker, non-admin with team sees My/Team toggle */}
+          <RecruiterTeamFilter value={adminFilter} onChange={(f) => { setAdminFilter(f); setPage(1); }} />
+
+          {/* Import CSV button (admin only) */}
           {user?.role === 'admin' && (
-            <RecruiterTeamFilter value={adminFilter} onChange={(f) => { setAdminFilter(f); setPage(1); }} />
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                {importing ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                )}
+                {t('interviewHub.import.button', 'Import CSV')}
+              </button>
+            </>
           )}
 
           {/* Filter toggle button */}
@@ -637,6 +727,113 @@ export default function InterviewHub() {
           </>
         )}
       </div>
+
+      {/* Import Result Modal */}
+      {importResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { setImportResult(null); setPendingFile(null); }}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">
+                {t('interviewHub.import.resultTitle', 'Import Results')}
+              </h3>
+              <button onClick={() => { setImportResult(null); setPendingFile(null); }} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-4">
+              {/* Summary stats */}
+              <div className="grid grid-cols-4 gap-3">
+                <div className="text-center p-3 rounded-lg bg-slate-50">
+                  <div className="text-xl font-bold text-slate-700">{importResult.total}</div>
+                  <div className="text-[11px] text-slate-500">{t('interviewHub.import.total', 'Total')}</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-emerald-50">
+                  <div className="text-xl font-bold text-emerald-600">{importResult.created}</div>
+                  <div className="text-[11px] text-emerald-600">{t('interviewHub.import.created', 'Created')}</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-blue-50">
+                  <div className="text-xl font-bold text-blue-600">{importResult.updated}</div>
+                  <div className="text-[11px] text-blue-600">{t('interviewHub.import.updated', 'Updated')}</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-amber-50">
+                  <div className="text-xl font-bold text-amber-600">{importResult.skipped}</div>
+                  <div className="text-[11px] text-amber-600">{t('interviewHub.import.skipped', 'Skipped')}</div>
+                </div>
+              </div>
+
+              {/* Duplicates warning */}
+              {importResult.duplicates.length > 0 && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-800">
+                        {t('interviewHub.import.duplicatesFound', '{{count}} duplicate records were skipped', { count: importResult.duplicates.length })}
+                      </p>
+                      <div className="mt-2 max-h-32 overflow-y-auto space-y-1">
+                        {importResult.duplicates.map((d, i) => (
+                          <div key={i} className="text-xs text-amber-700">
+                            {t('interviewHub.import.duplicateRow', 'Row {{row}}: {{name}} ({{date}})', {
+                              row: d.row,
+                              name: d.candidateName,
+                              date: new Date(d.interviewDatetime).toLocaleDateString(),
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                      {pendingFile && (
+                        <button
+                          onClick={handleOverwriteConfirm}
+                          disabled={importing}
+                          className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          {importing ? (
+                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                          ) : null}
+                          {t('interviewHub.import.overwriteAll', 'Re-import & overwrite duplicates')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Errors */}
+              {importResult.errors.length > 0 && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                  <p className="text-sm font-medium text-red-800 mb-2">
+                    {t('interviewHub.import.errorsFound', '{{count}} rows had errors', { count: importResult.errors.length })}
+                  </p>
+                  <div className="max-h-24 overflow-y-auto space-y-1">
+                    {importResult.errors.map((e, i) => (
+                      <div key={i} className="text-xs text-red-700">
+                        {e.row > 0 ? `Row ${e.row}: ` : ''}{e.error}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-3 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => { setImportResult(null); setPendingFile(null); }}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                {t('common.close', 'Close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
