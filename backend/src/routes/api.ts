@@ -17,6 +17,8 @@ import { requireAuth, requireScopes, optionalAuth } from '../middleware/auth.js'
 import { trackUsage } from '../middleware/usageTracker.js';
 import { apiRateLimit } from '../middleware/rateLimiter.js';
 import { checkUsageLimit, checkBatchUsage } from '../middleware/usageMeter.js';
+import { getPreferredResumeEmail } from '../utils/resumeContact.js';
+import { universityTierService } from '../services/UniversityTierService.js';
 import prisma from '../lib/prisma.js';
 import {
   MatchResumeRequest,
@@ -88,8 +90,9 @@ router.post('/match-resume', requireAuth, requireScopes('write'), apiRateLimit()
       jdLength: jd.length,
     });
 
-    // Step 2: Execute agent
-    const result = await resumeMatchAgent.match({ resume, jd }, requestId);
+    // Step 2: Enrich resume with university tier annotations and execute agent
+    const enrichedResume = universityTierService.annotateResumeEducation(resume);
+    const result = await resumeMatchAgent.match({ resume: enrichedResume, jd }, requestId);
 
     // Step 3: Save match result
     const saveStep = logger.startStep(requestId, 'Save match result');
@@ -139,7 +142,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
   logger.startRequest(requestId, '/api/v1/invite-candidate', 'POST');
 
   try {
-    const { resume, jd, recruiter_email, interviewer_requirement } = req.body as InviteCandidateRequest;
+    const { resume, jd, candidate_email, recruiter_email, interviewer_requirement } = req.body as InviteCandidateRequest;
 
     // Step 1: Validate input
     const validateStep = logger.startStep(requestId, 'Validate input');
@@ -155,6 +158,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
     logger.endStep(requestId, validateStep, 'completed', {
       resumeLength: resume.length,
       jdLength: jd.length,
+      hasCandidateEmail: !!candidate_email,
       hasRecruiterEmail: !!recruiter_email,
       hasInterviewerRequirement: !!interviewer_requirement,
     });
@@ -165,7 +169,8 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
       jd,
       requestId,
       recruiter_email,
-      interviewer_requirement
+      interviewer_requirement,
+      candidate_email,
     );
     const inviteApiMeta = (result as RoboHireInvitationResponse & {
       __gohireApiMeta?: { endpoint?: string; deliveryMode?: 'remote_api' | 'fallback_local' };
@@ -173,6 +178,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
     const gohireInviteLog = buildGoHireInvitationCallLog({
       resume,
       jd,
+      candidateEmail: candidate_email,
       recruiterEmail: recruiter_email,
       interviewerRequirement: interviewer_requirement,
       response: result,
@@ -187,6 +193,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
         resumeLength: resume.length,
         jdPreview: jd.slice(0, 10000),
         jdLength: jd.length,
+        candidate_email: candidate_email || null,
         recruiter_email: recruiter_email || null,
         interviewer_requirement: interviewer_requirement || null,
       },
@@ -223,6 +230,8 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
           update: {},
         });
         resumeId = resumeRecord.id;
+        const preferredCandidateEmail =
+          getPreferredResumeEmail(resumeRecord) || candidate_email || parsed.email || result.email || null;
 
         // Find or create HiringRequest from JD (dedup by exact JD content)
         let hiringRequest = await prisma.hiringRequest.findFirst({
@@ -274,7 +283,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
             hiringRequestId: hiringRequest.id,
             resumeId: resumeRecord.id,
             candidateName: parsed.name || result.name || 'Unknown',
-            candidateEmail: parsed.email || result.email || null,
+            candidateEmail: preferredCandidateEmail,
             jobTitle: result.job_title || hiringRequest.title || 'Interview',
             status: 'scheduled',
             type: 'ai_video',

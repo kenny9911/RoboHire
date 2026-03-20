@@ -32,6 +32,15 @@ export class SkillMatchSkill extends BaseAgent<SkillMatchInput, SkillMatchOutput
 - If mustHaveScore <= 25 -> disqualified = true
 - List all disqualification reasons
 
+## Education & University Tier Rules (CRITICAL):
+- If JD requires Master's (硕士) and candidate only has Bachelor's (本科) → **Dealbreaker** — add to missingQualifications with severity "Dealbreaker"
+- If JD requires 985/211 university and candidate's university is not 985/211 → **Dealbreaker**
+- Look for "[985/211/双一流]" system-verified annotations in resume text — always trust these
+- "[Not in 985/211/双一流 lists]" means the university does NOT qualify for 985/211 requirements
+- "[海外/International]" satisfies 985/211 requirements as overseas education equivalent
+- "本硕要求985、211" → BOTH undergraduate AND graduate institutions must qualify
+- Education dealbreakers are absolute — no amount of skill strength compensates
+
 ## Output Format
 Return ONLY valid JSON matching this structure:
 \`\`\`json

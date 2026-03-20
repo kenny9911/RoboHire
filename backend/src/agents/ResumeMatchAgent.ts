@@ -49,6 +49,36 @@ Before scoring, extract hard/must-have requirements from the JD:
 Report each gap in "hardRequirementGaps" with severity and what the candidate has instead.
 These feed into the existing disqualification logic — a dealbreaker hard requirement gap triggers disqualification.
 
+## Education & University Tier Matching Rules (CRITICAL):
+When analyzing education requirements from the JD, apply these rules strictly:
+
+1. **Degree Level Matching**:
+   - If JD requires Master's degree (硕士/研究生) or above → candidate with only Bachelor's (本科/学士) = **Dealbreaker**
+   - If JD requires PhD (博士) → candidate without PhD = **Dealbreaker**
+   - "硕士及以上" / "硕士以上学历" means Master's or PhD only — Bachelor's does NOT qualify
+   - "本科及以上" means Bachelor's or above — this is the minimum, not a preference
+
+2. **Chinese University Tier Matching (985/211/双一流)**:
+   - If JD requires "985" → ONLY candidates from 985-tier universities qualify. 211-only or 双一流-only do NOT.
+   - If JD requires "211" → candidates from 985 OR 211 qualify (all 985 schools are also 211).
+   - If JD requires "双一流" → candidates from 985, 211, or 双一流 all qualify.
+   - Look for "[985/211/双一流]" annotations in the resume text — these are **system-verified** tier classifications. Always trust these annotations over your own knowledge.
+   - If resume education shows "[Not in 985/211/双一流 lists]" and JD requires 985/211 → **Dealbreaker**
+   - If JD says "本硕要求985、211" or "本硕均为985/211" → BOTH the undergraduate AND graduate institutions must be 985 or 211 tier.
+
+3. **Overseas Education Equivalence**:
+   - "海外留学背景" / "overseas education" — a degree from a recognized international university satisfies 985/211 requirements as an equivalent.
+   - Resume education annotated as "[海外/International]" qualifies as overseas background.
+
+4. **Severity Assignment for Education Gaps**:
+   - Missing required degree level (e.g., needs Master's, has Bachelor's) → severity: **"Dealbreaker"**
+   - Missing required university tier (e.g., needs 985/211, university is not) → severity: **"Dealbreaker"**
+   - These are absolute requirements with no exceptions — outstanding skills or experience do NOT compensate for education dealbreakers.
+
+5. **Reporting**: Education tier mismatches must be reported in BOTH:
+   - "hardRequirementGaps" array with severity "dealbreaker"
+   - "mustHaveAnalysis.candidateEvaluation.missingQualifications" with severity "Dealbreaker"
+
 ## Transferable Skills & Growth Potential:
 You MUST look beyond exact keyword matches for adjacent/transferable skills:
 1. **Related Technologies**: React ↔ Vue.js ↔ Angular, Python ↔ Ruby ↔ Go, AWS ↔ GCP ↔ Azure — closely related and learnable quickly

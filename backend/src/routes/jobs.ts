@@ -152,6 +152,19 @@ function buildHardRequirementsText(parsed: ParsedJD): string {
 const router = Router();
 
 const SUPPORTED_JOB_LANGUAGE_CODES = new Set(['en', 'zh', 'zh-TW', 'ja', 'es', 'fr', 'pt', 'de']);
+/** Map interview-language code → default salary currency */
+const LANG_CURRENCY_DEFAULT: Record<string, string> = {
+  zh: 'CNY',
+  'zh-TW': 'NTD',
+  ja: 'JPY',
+  ko: 'KRW',
+  en: 'USD',
+  es: 'USD',
+  fr: 'USD',
+  pt: 'USD',
+  de: 'USD',
+};
+
 const LANGUAGE_NAME_TO_JOB_CODE: Record<string, string> = {
   English: 'en',
   Chinese: 'zh',
@@ -265,7 +278,8 @@ function parseSalaryDetails(text?: string | null): {
   const lower = normalized.toLowerCase();
 
   const salaryCurrency =
-    /\b(twd|nt\$)\b|新台币|新臺幣/i.test(normalized) ? 'TWD' :
+    /\b(ntd|twd|nt\$)\b|新台币|新臺幣/i.test(normalized) ? 'NTD' :
+    /\b(krw)\b|₩|원|만원/i.test(normalized) ? 'KRW' :
     /\b(jpy)\b|日元|円/i.test(normalized) ? 'JPY' :
     /\b(eur)\b|€/i.test(normalized) ? 'EUR' :
     /\b(gbp)\b|£/i.test(normalized) ? 'GBP' :
@@ -390,6 +404,21 @@ async function buildJobDraftFromHiringRequest(
   const hardRequirements = parsed?.mustHave?.length
     ? parsed.mustHave.map((r, i) => `${i + 1}. ${r}`).join('\n')
     : '';
+  const niceToHave = parsed?.niceToHave?.length
+    ? parsed.niceToHave.map(r => `- ${r}`).join('\n')
+    : '';
+  const benefits = parsed?.benefits?.length
+    ? parsed.benefits.map(r => `- ${r}`).join('\n')
+    : '';
+
+  const interviewLanguage = resolveInterviewLanguage(
+    preferredLanguage,
+    rawDescription,
+    rawRequirements,
+    parsed?.location,
+    parsed?.description,
+    compensationText,
+  );
 
   return {
     companyName: hiringRequest.clientName?.trim() || parsed?.company?.trim() || null,
@@ -398,25 +427,25 @@ async function buildJobDraftFromHiringRequest(
     workType: parsed?.workType || normalizeWorkType(undefined),
     employmentType: parsed?.employmentType || normalizeEmploymentType(undefined),
     experienceLevel: parsed?.experienceLevel || normalizeExperienceLevel(undefined),
+    education: parsed?.education?.trim() || null,
+    headcount: parsed?.headcount && parsed.headcount >= 1 ? parsed.headcount : 1,
     salaryMin: salary.salaryMin,
     salaryMax: salary.salaryMax,
-    salaryCurrency: salary.salaryCurrency,
+    salaryCurrency: salary.salaryCurrency || LANG_CURRENCY_DEFAULT[interviewLanguage] || 'USD',
     salaryPeriod: salary.salaryPeriod,
     salaryText: comp?.salaryText?.trim() || compensationText.trim() || null,
     description,
     qualifications: qualifications || null,
     hardRequirements: hardRequirements || null,
+    niceToHave: niceToHave || null,
+    benefits: benefits || null,
+    interviewRequirements: null as string | null,
+    evaluationRules: null as string | null,
     requirements: parsed?.requirements ? JSON.parse(JSON.stringify(parsed.requirements)) : null,
     parsedData: parsed ? JSON.parse(JSON.stringify(parsed)) : null,
     locations: buildLocationEntries(location),
-    interviewLanguage: resolveInterviewLanguage(
-      preferredLanguage,
-      rawDescription,
-      rawRequirements,
-      parsed?.location,
-      parsed?.description,
-      compensationText,
-    ),
+    sourceText: sourceText || null,
+    interviewLanguage,
   };
 }
 
@@ -1117,6 +1146,58 @@ router.post('/from-request/:requestId', requireAuth, async (req, res) => {
 
     const draft = await buildJobDraftFromHiringRequest(hr, preferredLanguage, logRequestId);
 
+    // Auto-generate missing content sections via LLM
+    const fieldsToGenerate = (['hardRequirements', 'niceToHave', 'interviewRequirements', 'evaluationRules'] as const)
+      .filter(f => !draft[f]);
+
+    if (fieldsToGenerate.length > 0) {
+      try {
+        const existingContent: Record<string, string> = {};
+        for (const key of ['description', 'qualifications', 'hardRequirements', 'niceToHave', 'benefits'] as const) {
+          if (draft[key]) existingContent[key] = draft[key]!;
+        }
+
+        const agentResult = await jobContentAgent.generateContent({
+          action: 'generate_all',
+          jobTitle: resolvedTitle,
+          companyName: draft.companyName || undefined,
+          department: draft.department || undefined,
+          locations: (draft.locations as any[]) || undefined,
+          experienceLevel: draft.experienceLevel || undefined,
+          existingContent,
+          language: draft.interviewLanguage || undefined,
+          instructions: draft.sourceText || undefined,
+        }, logRequestId);
+
+        // Only fill in sections that were empty — never overwrite parser results
+        for (const section of fieldsToGenerate) {
+          if (agentResult.sections[section]) {
+            (draft as any)[section] = agentResult.sections[section];
+          }
+        }
+        // Also fill description if it was empty
+        if (!draft.description && agentResult.sections.description) {
+          draft.description = agentResult.sections.description;
+        }
+        if (!draft.qualifications && agentResult.sections.qualifications) {
+          draft.qualifications = agentResult.sections.qualifications;
+        }
+        if (!draft.benefits && agentResult.sections.benefits) {
+          draft.benefits = agentResult.sections.benefits;
+        }
+
+        logger.info('JOBS', 'AI-generated missing job sections from hiring request', {
+          hiringRequestId: hr.id,
+          generated: fieldsToGenerate.filter(s => agentResult.sections[s]),
+        }, logRequestId);
+      } catch (error) {
+        // Non-fatal: job still gets created with parser-only data
+        logger.warn('JOBS', 'Failed to AI-generate missing job sections', {
+          error: error instanceof Error ? error.message : String(error),
+        }, logRequestId);
+      }
+    }
+
     if (overwriteJobId) {
       const targetJob = await prisma.job.findFirst({
         where: { id: overwriteJobId, userId },
@@ -1136,17 +1217,24 @@ router.post('/from-request/:requestId', requireAuth, async (req, res) => {
           workType: draft.workType,
           employmentType: draft.employmentType,
           experienceLevel: draft.experienceLevel,
+          education: draft.education,
+          headcount: draft.headcount,
           salaryMin: draft.salaryMin,
           salaryMax: draft.salaryMax,
           salaryCurrency: draft.salaryCurrency,
           salaryPeriod: draft.salaryPeriod,
+          salaryText: draft.salaryText,
           description: draft.description,
           qualifications: draft.qualifications,
           hardRequirements: draft.hardRequirements,
+          niceToHave: draft.niceToHave,
+          benefits: draft.benefits,
           requirements: draft.requirements,
           parsedData: draft.parsedData,
           ...(draft.locations ? { locations: draft.locations } : {}),
           interviewLanguage: draft.interviewLanguage,
+          interviewRequirements: draft.interviewRequirements,
+          evaluationRules: draft.evaluationRules,
           status: 'draft',
           publishedAt: null,
           closedAt: null,
@@ -1172,17 +1260,24 @@ router.post('/from-request/:requestId', requireAuth, async (req, res) => {
         workType: draft.workType,
         employmentType: draft.employmentType,
         experienceLevel: draft.experienceLevel,
+        education: draft.education,
+        headcount: draft.headcount,
         salaryMin: draft.salaryMin,
         salaryMax: draft.salaryMax,
         salaryCurrency: draft.salaryCurrency,
         salaryPeriod: draft.salaryPeriod,
+        salaryText: draft.salaryText,
         description: draft.description,
         qualifications: draft.qualifications,
         hardRequirements: draft.hardRequirements,
+        niceToHave: draft.niceToHave,
+        benefits: draft.benefits,
         requirements: draft.requirements,
         parsedData: draft.parsedData,
         ...(draft.locations ? { locations: draft.locations } : {}),
         interviewLanguage: draft.interviewLanguage,
+        interviewRequirements: draft.interviewRequirements,
+        evaluationRules: draft.evaluationRules,
         status: 'draft',
       },
     });

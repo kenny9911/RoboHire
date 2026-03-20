@@ -6,6 +6,7 @@ import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../compon
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
 import { formatDateTimeLabel } from '../../utils/dateTime';
+import { getPreferredResumeEmail } from '../../utils/resumeContact';
 
 interface Interview {
   id: string;
@@ -51,6 +52,9 @@ interface ResumeListItem {
   id: string;
   name: string;
   email: string | null;
+  preferences?: {
+    email?: string | null;
+  } | null;
   currentRole: string | null;
   experienceYears: string | null;
   tags: string[];
@@ -313,7 +317,7 @@ export default function AIInterview() {
     return resumes.filter(
       (r) =>
         r.name.toLowerCase().includes(q) ||
-        r.email?.toLowerCase().includes(q) ||
+        getPreferredResumeEmail(r)?.toLowerCase().includes(q) ||
         r.currentRole?.toLowerCase().includes(q),
     );
   }, [resumes, resumeSearch]);
@@ -350,6 +354,7 @@ export default function AIInterview() {
       try {
         const resumeRes = await axios.get(`/api/v1/resumes/${resumeIds[i]}`);
         const resumeText = resumeRes.data.data?.resumeText;
+        const candidateEmail = getPreferredResumeEmail(resumeRes.data.data);
         if (!resumeText) {
           results[i].status = 'error';
           results[i].error = t('product.interview.noResumeText', 'Resume text not available');
@@ -360,6 +365,7 @@ export default function AIInterview() {
         const inviteRes = await axios.post('/api/v1/invite-candidate', {
           resume: resumeText,
           jd: selectedJob.description || selectedJob.title,
+          candidate_email: candidateEmail || undefined,
           recruiter_email: user?.email || '',
           interviewer_requirement: interviewReqs || undefined,
         });
@@ -643,7 +649,7 @@ export default function AIInterview() {
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-slate-900 truncate">{r.name}</p>
                             <p className="text-xs text-slate-500 truncate">
-                              {[r.currentRole, r.email, r.experienceYears ? `${r.experienceYears} yrs` : null].filter(Boolean).join(' · ')}
+                              {[r.currentRole, getPreferredResumeEmail(r), r.experienceYears ? `${r.experienceYears} yrs` : null].filter(Boolean).join(' · ')}
                             </p>
                           </div>
                           {r.tags.length > 0 && (

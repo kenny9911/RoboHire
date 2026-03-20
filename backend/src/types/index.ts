@@ -513,7 +513,26 @@ export interface InterviewEvaluation {
   // 8. Cheating Analysis (optional)
   cheatingAnalysis?: CheatingAnalysis;
 
-  // 9. Personality Assessment (optional)
+  // 9. Key Competency Deep Assessment (optional)
+  keyCompetencyAssessment?: {
+    professionalCompetency: { score: number; assessment: string };
+    resumeInterviewConsistency: { score: number; assessment: string };
+    achievementsContribution: { score: number; assessment: string };
+    logicCommunication: { score: number; assessment: string };
+    businessTeamwork: { score: number; assessment: string };
+    overallCompetency: string;
+  };
+
+  // 10. Skill Radar (optional)
+  skillRadar?: {
+    professionalAbility: number;
+    teamCollaboration: number;
+    communication: number;
+    achievementContribution: number;
+    experienceFit: number;
+  };
+
+  // 11. Personality Assessment (optional)
   personalityAssessment?: PersonalityAssessment;
 }
 
@@ -678,6 +697,7 @@ export interface MatchResumeRequest {
 export interface InviteCandidateRequest {
   resume: string;
   jd: string;
+  candidate_email?: string;
   recruiter_email?: string;
   interviewer_requirement?: string;
 }

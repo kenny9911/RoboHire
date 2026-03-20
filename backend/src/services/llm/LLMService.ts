@@ -178,8 +178,12 @@ export class LLMService {
           activeProvider = this.createProvider(resolved.providerType);
         }
         model = resolved.model;
+      } else if (rawModel.includes('/')) {
+        // Has a prefix but not a recognized direct provider — route through OpenRouter
+        activeProvider = this.createProvider('openrouter');
+        model = rawModel;
       } else {
-        // No prefix or unknown prefix — use default provider, pass model as-is
+        // No prefix at all — use default provider, pass model as-is
         activeProvider = this.provider!;
         model = rawModel;
       }

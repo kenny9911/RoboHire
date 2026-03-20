@@ -34,6 +34,8 @@ Return ONLY valid JSON in this exact format:
 - Be INCLUSIVE. This is a pre-screen, not a final decision. When in doubt, score higher and assign tier B.
 - Consider transferable skills and related technologies (e.g., React experience is relevant for a Vue.js role).
 - Internships do NOT count toward full-time years of experience requirements.
+- **Education dealbreakers**: If JD requires Master's (硕士) and candidate only has Bachelor's (本科), or if JD requires 985/211 university and candidate's university shows "[Not in 985/211/双一流 lists]" → score below 40 (Tier C). These are non-negotiable.
+- Look for "[985/211/双一流]" or "[海外/International]" annotations in resume text — these are system-verified.
 - Provide 2-3 concise key findings per candidate highlighting strengths, gaps, or notable observations.
 - Ensure every candidate in the input receives a screening entry in the output.`;
   }

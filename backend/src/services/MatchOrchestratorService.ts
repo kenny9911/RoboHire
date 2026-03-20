@@ -135,7 +135,7 @@ async function runBatchScreening(
   const batchTasks = batches.map((batch) => async () => {
     const input: BatchScreenInput = {
       jobTitle: job.title,
-      jobDescription: job.description.slice(0, 2000),
+      jobDescription: job.description.slice(0, 4000),
       jobMetadata: job.jobMetadata || undefined,
       resumes: batch.map((r) => ({
         id: r.id,

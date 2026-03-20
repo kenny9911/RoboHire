@@ -8,6 +8,7 @@ import { EvaluationAgent } from '../agents/EvaluationAgent.js';
 import { liveKitService } from '../services/LiveKitService.js';
 import { interviewPromptAgent } from '../agents/InterviewPromptAgent.js';
 import { getVisibilityScope, buildUserIdFilter } from '../lib/teamVisibility.js';
+import { getPreferredResumeEmail } from '../utils/resumeContact.js';
 import '../types/auth.js';
 
 const router = Router();
@@ -1083,9 +1084,31 @@ router.get('/', requireAuth, async (req, res) => {
       prisma.interview.count({ where }),
     ]);
 
+    const resumeIds = interviews
+      .map((interview) => interview.resumeId)
+      .filter((resumeId): resumeId is string => Boolean(resumeId));
+    const resumes = resumeIds.length > 0
+      ? await prisma.resume.findMany({
+          where: { id: { in: resumeIds } },
+          select: { id: true, email: true, preferences: true },
+        })
+      : [];
+    const resumeById = new Map(resumes.map((resume) => [resume.id, resume]));
+
     res.json({
       success: true,
-      data: interviews.map((interview) => serializeInterviewForResponse(interview, scope.isAdmin)),
+      data: interviews.map((interview) =>
+        serializeInterviewForResponse(
+          {
+            ...interview,
+            candidateEmail:
+              getPreferredResumeEmail(
+                interview.resumeId ? resumeById.get(interview.resumeId) : null,
+              ) || interview.candidateEmail || null,
+          },
+          scope.isAdmin,
+        ),
+      ),
       meta: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     });
   } catch (err: any) {
@@ -1124,7 +1147,22 @@ router.get('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Interview not found' });
     }
 
-    res.json({ success: true, data: serializeInterviewForResponse(interview, scope.isAdmin) });
+    const resume = interview.resumeId
+      ? await prisma.resume.findUnique({
+          where: { id: interview.resumeId },
+          select: { email: true, preferences: true },
+        })
+      : null;
+    res.json({
+      success: true,
+      data: serializeInterviewForResponse(
+        {
+          ...interview,
+          candidateEmail: getPreferredResumeEmail(resume) || interview.candidateEmail || null,
+        },
+        scope.isAdmin,
+      ),
+    });
   } catch (err: any) {
     logger.error('INTERVIEWS', 'Failed to get interview', { error: err.message });
     res.status(500).json({ success: false, error: 'Failed to get interview' });
@@ -1168,10 +1206,19 @@ router.post('/', requireAuth, async (req, res) => {
 
     // If resumeId provided, fetch resume text
     let rt = resumeText;
+    let resolvedCandidateEmail = candidateEmail?.trim() || null;
     if (resumeId) {
-      const resume = await prisma.resume.findFirst({ where: { id: resumeId, userId } });
+      const resume = await prisma.resume.findFirst({
+        where: { id: resumeId, userId },
+        select: {
+          resumeText: true,
+          email: true,
+          preferences: true,
+        },
+      });
       if (resume) {
         rt = rt || resume.resumeText;
+        resolvedCandidateEmail = resolvedCandidateEmail || getPreferredResumeEmail(resume);
       }
     }
 
@@ -1183,7 +1230,7 @@ router.post('/', requireAuth, async (req, res) => {
         jobId: jobId || null,
         resumeId: resumeId || null,
         candidateName,
-        candidateEmail: candidateEmail || null,
+        candidateEmail: resolvedCandidateEmail,
         jobTitle: jt || null,
         jobDescription: jd || null,
         resumeText: rt || null,

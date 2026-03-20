@@ -1,0 +1,72 @@
+﻿gohire_user_id,gohire_user_name,gohire_interview_datetime,gohire_interview_video_filepath,gohire_recruiter_name,gohire_recruiter_email,用户邮箱（登录名称）,最近登录时间,hrid,面试记录id,邀约时间,面试结束时间,面试时长,职位名称,职位描述,任职要求,面试要求,简历下载地址,面试记录下载地址
+9eb439ef-b3c3-466d-af15-d98259eaf489,孔令钊,2026-03-20 14:47:47.048888,https://gohire-recordings-v3.gohire.top/recordings/2026/03/20/interview_15376311114@163.com_10493795_5455_20260320_144750.mp4,agent_hr,agent_hr@lightark.ai,15376311114@163.com,,9e82db6c-f135-4f1c-a8ce-e81c0ad7b53c,3c73a9c0-4b96-427a-bd5d-b6729a4f5666,2026-03-19 07:14:58.776996,2026-03-20 14:48:18.894321,45,大数据开发工程师 (ERP)_20260319140550,我们正在寻找一位资深的大数据开发工程师，加入我们的ERP数据团队。该职位位于北京核建大厦，月薪范围为13-17K。您将负责构建和优化支撑企业级ERP系统的大数据架构，处理大规模实时与离线数据任务，并利用前沿的大数据技术栈（如Spark、Flink、Hadoop等）确保数据处理的高效性与稳定性。,"### 任职要求
+- **学历要求**：计算机相关专业本科及以上学历。
+- **工作年限要求**：具备5年以上大数据开发实战经验。
+- **技能要求**：
+    1. 深入理解Hadoop生态体系，具备实际的集群运维和底层调优经验。
+    2. 精通Spark，深刻理解其内核原理（如内存管理、Shuffle机制），具备大规模作业调优经验。
+    3. 精通Flink，熟练掌握状态管理、时间窗口及Exactly-Once语义，有复杂实时项目经验。
+    4. 熟练掌握Kafka、Hive、HBase、Zookeeper、Yarn等核心组件。
+    5. 熟悉数据仓库分层建模理论，具备完",,https://report-agent.gohire.top/gohire-data/gohire/godown/download/OWViNDM5ZWYtYjNjMy00NjZkLWFmMTUtZDk4MjU5ZWFmNDg5,https://report-agent.gohire.top/gohire-data/gohireApi/chat_dialog?log_id=3c73a9c0-4b96-427a-bd5d-b6729a4f5666
+e0aa4dd9-a99c-4bdd-a7c2-d036422d9c14,王雪豪,2026-03-20 13:21:16.243667,https://gohire-recordings-v3.gohire.top/recordings/2026/03/20/interview_xuehao_w@163.com_462995126_2568_20260320_132119.mp4,邹井英,zoujingying@chinasofti.com,xuehao_w@163.com,,319fa45a-b476-44bd-9205-adc387694b76,f34a4886-0a78-43eb-9b5f-b55a158e8b25,2026-03-13 10:58:12.376286,2026-03-20 13:53:29.737073,30,AI 软件工程师,"职位概述：
+作为全栈AI工程的先锋，负责推动公司下一代AI应用、智能体（Agents）和AI自动化平台的快速落地。我们期待您不仅是技术专家，更是产品设计师。您需要深入理解业务需求，并将其转化为卓越的AI产品，能够使用AI生成PRD与方案。如果您热衷于构建、部署和迭代真正智能的AI产品与智能体，并希望在AI浪潮中留下自己的印记，我们期待您的加入。
+主要职责：
+. 全栈AI开发： 负责AI应用、智能体（Agents）和本题库的端到端开发，包括快速构建原型、部署上线和持续迭代优化。
+. 需求转化： 深入内部业务部门，独立梳理业务需求，并将其转化为清晰的产品需求、用户场景和技术实现方案。
+. 原型开发： 使用 Coding Agents 独立设计和优化应用架构、产品架构，确保技术选型的前瞻性、可扩展性和稳定性。
+. 流程自动化： 利用大型语言模型（LLM）和AI Agent技术，开发创新应用，并实现关键业务流程的自动化。
+. 提示词工程与智能体优化：运用ReAct、CoT、ToT等策略设计高鲁棒性 System Prompt，持续提升模型响应质量与稳定性。
+. 智能体系统设计与开发：构建具备协作能力的Multi-Agent 系统，实现任务自治与复杂工作流的自动化。","任职要求：
+. [硬性条件] 全栈经验： 具备丰富的全栈开发经验，精通从前端、中间件到后端和数据库的整套技术栈。
+. [硬性条件] 技术功底： 精通至少一种主流编程语言（如 Python），对主流大型语言模型（LLM）有深入的理解和实践经验。
+AI 软件工程师 
+1. [硬性条件] 熟悉 MCP 及 Skills. 必须要有实际开发 MCP 和 Skill 的经验。
+. [硬性条件] Prompt Engineering： 具备高超的 Prompt Engineering（提示词工程）能力，能够设计、撰写和优化复杂的提示词，并熟悉各种主流的Prompting框架。
+. [硬性条件] AI Agent 技术： 熟练使用AI Agent技术进行复杂应用开发，熟悉多智能体（Multi-Agent）的设计理念与构建框架。
+. [硬性条件] 熟悉并积极使用AI编程辅助工具（需精通以下至少一个：Claude Code, AntiGravity, Codex, Cursor ）来提升开发效率。
+. 架构与需求： 具备出色的抽象能力、架构设计能力和业务理解能力，能独立主导从需求到产品的全过程。
+. 综合素质： 拥有极强的动手能力、能独立完成一款产品应用、快速学习能力和解决复杂问题的能力。
+
+【面试要求】
+. 要考验基本功，以及是否 coachable
+. 实际动手实操经验，考核细节，而不是范范的表面知识。
+. 考验 Skills 的开发，让面试者将出 Skill 设计的内容，要细节，不要表面描述。还要让面试者讲出 Skill 怎么用，能用在那些场景。
+. 考验 MCP 的开发，让面试者讲出实现 MCP 的每一个步骤的内容。要细节，不要表面描述。
+. 考验 Multi-Agent 的开发，让面试者讲出以· Multi-Agent 设计实现 的应用场景，并能解释说明每一个agent 的功能，协作与多智能体的调动。要细节，不要表面描述。
+. 考验设计 prompt, 出一个题目，让后选人当场设计并讲出他设计的 prompt，让面试者回答 prompt，必须是说出 prompt 内容，不是概念。
+. 要问 problem solving, 问类似 Google 的智力考验问题，需要动脑筋，不是查 ChatGPT 或 DeepSeek 就有答案的。目的要考验评估后选人的资质与智力。
+. 要前后问题交叉比对，找出作弊与矛盾点。
+. 最后，后选人在 AI Agent 的基础功，资质，可 coachable 需要严格评估，以宁缺毋滥的原则来筛选评估后选人。
+AI 软件工程师 2",,https://report-agent.gohire.top/gohire-data/gohire/godown/download/ZTBhYTRkZDktYTk5Yy00YmRkLWE3YzItZDAzNjQyMmQ5YzE0,https://report-agent.gohire.top/gohire-data/gohireApi/chat_dialog?log_id=f34a4886-0a78-43eb-9b5f-b55a158e8b25
+9eb439ef-b3c3-466d-af15-d98259eaf489,孔令钊,2026-03-20 12:16:11.813381,https://gohire-recordings-v3.gohire.top/recordings/2026/03/20/interview_15376311114@163.com_15509170_9445_20260320_121615.mp4,agent_hr,agent_hr@lightark.ai,15376311114@163.com,,9e82db6c-f135-4f1c-a8ce-e81c0ad7b53c,5010ca28-ca68-4943-a9db-b3fc564aa36c,2026-03-19 07:14:58.776996,2026-03-20 12:28:31.424085,45,大数据开发工程师 (ERP)_20260319140550,我们正在寻找一位资深的大数据开发工程师，加入我们的ERP数据团队。该职位位于北京核建大厦，月薪范围为13-17K。您将负责构建和优化支撑企业级ERP系统的大数据架构，处理大规模实时与离线数据任务，并利用前沿的大数据技术栈（如Spark、Flink、Hadoop等）确保数据处理的高效性与稳定性。,"### 任职要求
+- **学历要求**：计算机相关专业本科及以上学历。
+- **工作年限要求**：具备5年以上大数据开发实战经验。
+- **技能要求**：
+    1. 深入理解Hadoop生态体系，具备实际的集群运维和底层调优经验。
+    2. 精通Spark，深刻理解其内核原理（如内存管理、Shuffle机制），具备大规模作业调优经验。
+    3. 精通Flink，熟练掌握状态管理、时间窗口及Exactly-Once语义，有复杂实时项目经验。
+    4. 熟练掌握Kafka、Hive、HBase、Zookeeper、Yarn等核心组件。
+    5. 熟悉数据仓库分层建模理论，具备完",,https://report-agent.gohire.top/gohire-data/gohire/godown/download/OWViNDM5ZWYtYjNjMy00NjZkLWFmMTUtZDk4MjU5ZWFmNDg5,https://report-agent.gohire.top/gohire-data/gohireApi/chat_dialog?log_id=5010ca28-ca68-4943-a9db-b3fc564aa36c
+9eb439ef-b3c3-466d-af15-d98259eaf489,孔令钊,2026-03-20 12:07:21.354836,https://gohire-recordings-v3.gohire.top/recordings/2026/03/20/interview_15376311114@163.com_14853138_4216_20260320_120725.mp4,agent_hr,agent_hr@lightark.ai,15376311114@163.com,,9e82db6c-f135-4f1c-a8ce-e81c0ad7b53c,3a8846c5-7a5e-408f-a349-adc0b827dc00,2026-03-19 07:14:58.776996,2026-03-20 12:13:09.719255,45,大数据开发工程师 (ERP)_20260319140550,我们正在寻找一位资深的大数据开发工程师，加入我们的ERP数据团队。该职位位于北京核建大厦，月薪范围为13-17K。您将负责构建和优化支撑企业级ERP系统的大数据架构，处理大规模实时与离线数据任务，并利用前沿的大数据技术栈（如Spark、Flink、Hadoop等）确保数据处理的高效性与稳定性。,"### 任职要求
+- **学历要求**：计算机相关专业本科及以上学历。
+- **工作年限要求**：具备5年以上大数据开发实战经验。
+- **技能要求**：
+    1. 深入理解Hadoop生态体系，具备实际的集群运维和底层调优经验。
+    2. 精通Spark，深刻理解其内核原理（如内存管理、Shuffle机制），具备大规模作业调优经验。
+    3. 精通Flink，熟练掌握状态管理、时间窗口及Exactly-Once语义，有复杂实时项目经验。
+    4. 熟练掌握Kafka、Hive、HBase、Zookeeper、Yarn等核心组件。
+    5. 熟悉数据仓库分层建模理论，具备完",,https://report-agent.gohire.top/gohire-data/gohire/godown/download/OWViNDM5ZWYtYjNjMy00NjZkLWFmMTUtZDk4MjU5ZWFmNDg5,https://report-agent.gohire.top/gohire-data/gohireApi/chat_dialog?log_id=3a8846c5-7a5e-408f-a349-adc0b827dc00
+4d18f776-f5d5-43ae-b649-d43a43b972a1,钱锟,2026-03-20 11:39:28.551384,https://gohire-recordings-v3.gohire.top/recordings/2026/03/20/interview_2426398540@qq.com_480362974_2680_20260320_113932.mp4,游荆梅,youjingmei001@chinasoftinc.com,2426398540@qq.com,2026-03-20 12:55:20.211815,b0049856-3e6b-41ce-b7a1-996e5d4c1be1,9e69cabe-17a0-4f64-89cd-9cb93c66506d,2026-03-19 07:25:48.678503,2026-03-20 11:55:18.223501,15,软件测试工程师-ICT业务线-中国航空无线电电子研究所与中软国际科技服务有限公司2025年-2027年项目软件验证劳务外包服务框架协议,"1. 负责飞机配套软硬件产品的测试工作；
+2. 根据产品需求编写测试用例，执行软件测试流程；
+3. 验证通讯协议的正确性与稳定性；
+4. 对硬件相关功能进行集成测试与问题定位。","1. 具备硬件经验的软件测试背景；
+2. 能够独立编写测试用例；
+3. 熟悉通讯协议相关知识。",,https://report-agent.gohire.top/gohire-data/gohire/godown/download/NGQxOGY3NzYtZjVkNS00M2FlLWI2NDktZDQzYTQzYjk3MmEx,https://report-agent.gohire.top/gohire-data/gohireApi/chat_dialog?log_id=9e69cabe-17a0-4f64-89cd-9cb93c66506d
+818d7b8a-b2fe-4064-a0d6-67be16dd7599,沈晓东,2026-03-20 10:19:11.290329,https://gohire-recordings-v3.gohire.top/recordings/2026/03/20/interview_644569875@qq.com_10750009_7817_20260320_101914.mp4,agent_hr,agent_hr@lightark.ai,644569875@qq.com,,9e82db6c-f135-4f1c-a8ce-e81c0ad7b53c,a582ee6d-82ac-4a2f-aba6-3c9a12b2deff,2026-03-20 10:18:36.148500,2026-03-20 10:20:35.231787,10,ERP实施顾问（财务方向）_20260320181822,作为ERP财务实施团队的核心成员，您将负责为不同行业的客户提供深度的财务数字化转型方案。本岗位不仅要求精通ERP财务核心模块（如总账、应收应付、费用报销等）的实施交付，更强调通过RPA（机器人流程自动化）等前沿技术优化财务流程。您将深入新能源、建筑、金融等行业一线，平衡标准产品逻辑与客户个性化需求，确保项目的高质量落地与价值交付。,"- 学历背景：本科及以上学历，财务管理、会计、信息管理或计算机相关专业优先。
+- 核心经验：3年以上ERP财务模块实施经验，具备至少2个以上完整项目的独立交付经验。
+- 模块精通：精通总账（GL）、应收应付（AR/AP）、交易核算、费用报销中至少3个模块的配置与业务逻辑。
+- 行业知识：熟悉加工制造、新能源、金融、建筑等任一行业的财务核算逻辑（如项目成本核算、科目体系、补贴管理等）。
+- 综合素质：具备优秀的需求分析能力，能提炼系统层面的解决方案；具备较强的抗压能力、客户掌控力及高管汇报能力，能适应项目出差。
+
+优先要求：具备深度费用报销模块实施经验，熟悉主流商旅集成方案或复杂费用分摊规则者优",包含10分钟AI面试环节,https://report-agent.gohire.top/gohire-data/gohire/godown/download/ODE4ZDdiOGEtYjJmZS00MDY0LWEwZDYtNjdiZTE2ZGQ3NTk5,https://report-agent.gohire.top/gohire-data/gohireApi/chat_dialog?log_id=a582ee6d-82ac-4a2f-aba6-3c9a12b2deff
+89979a1d-6d46-48a5-bf3f-15df29c73dd7,冷强,2026-03-20 09:42:47.671070,https://gohire-recordings-v3.gohire.top/recordings/2026/03/20/interview_lakersqiang@163.com_982074484_1958_20260320_094251.mp4,陈雪梅,chenxuemei001@chinasofti.com,lakersqiang@163.com,2026-03-20 09:41:41.596216,7ad763f5-76d9-4f20-bc1f-2465e78ab19a,c3a01506-cdce-4f3b-bd43-23599cedf44c,2026-03-20 09:36:31.724386,2026-03-20 09:53:39.345296,20,Java开发工程师-平安业务线-平安Y25-荣超南北塔,Java开发工程师,有银行相关项目经验,,https://report-agent.gohire.top/gohire-data/gohire/godown/download/ODk5NzlhMWQtNmQ0Ni00OGE1LWJmM2YtMTVkZjI5YzczZGQ3,https://report-agent.gohire.top/gohire-data/gohireApi/chat_dialog?log_id=c3a01506-cdce-4f3b-bd43-23599cedf44c

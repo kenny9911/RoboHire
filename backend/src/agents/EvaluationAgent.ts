@@ -179,7 +179,41 @@ You must output a JSON object adhering to the following structure:
     }
   ],
 
-  // 8. Personality Assessment (性格测试) — Inferred from interview behavior
+  // 8. Key Competency Deep Assessment (关键能力深度评估)
+  "keyCompetencyAssessment": {
+    "professionalCompetency": {
+      "score": "<0-100, based on demonstrated domain expertise and practical experience depth>",
+      "assessment": "<2-3 sentence deep analysis of the candidate's professional competency, citing specific interview evidence. Be articulative and insightful.>"
+    },
+    "resumeInterviewConsistency": {
+      "score": "<0-100, how well resume claims match actual interview performance>",
+      "assessment": "<2-3 sentence analysis of consistency between resume descriptions and interview performance. Flag any discrepancies or confirmations.>"
+    },
+    "achievementsContribution": {
+      "score": "<0-100, based on demonstrated project outcomes and measurable contributions>",
+      "assessment": "<2-3 sentence analysis of the candidate's actual achievements and contributions, with evidence from the interview.>"
+    },
+    "logicCommunication": {
+      "score": "<0-100, based on logical reasoning and communication clarity during interview>",
+      "assessment": "<2-3 sentence analysis of the candidate's logical thinking ability and communication expression quality.>"
+    },
+    "businessTeamwork": {
+      "score": "<0-100, based on business understanding and team collaboration ability>",
+      "assessment": "<2-3 sentence analysis of the candidate's business acumen and teamwork capabilities.>"
+    },
+    "overallCompetency": "<3-4 sentence comprehensive capability evaluation synthesizing all dimensions above. This should be a hiring-decision-quality summary that provides clear, actionable insight.>"
+  },
+
+  // 9. Skill Radar (技能雷达)
+  "skillRadar": {
+    "professionalAbility": <0-100>,
+    "teamCollaboration": <0-100>,
+    "communication": <0-100>,
+    "achievementContribution": <0-100>,
+    "experienceFit": <0-100>
+  },
+
+  // 10. Personality Assessment (性格测试) — Inferred from interview behavior
   "personalityAssessment": {
     "mbtiEstimate": "string", // Best-fit MBTI type (e.g. "INTJ", "ENFP")
     "mbtiConfidence": "High" | "Medium" | "Low",
@@ -270,6 +304,29 @@ You must carefully analyze each candidate response to determine:
 - Focus on verifying "Medium" matches or exploring "Extra Skills".
 - Include probing questions for areas where candidate gave vague or unsubstantiated answers.
 - Suggest technical deep-dive questions to verify claimed expertise.
+
+### Key Competency Deep Assessment (关键能力深度评估):
+You MUST provide in-depth analysis for each of these 6 dimensions. Each assessment must be:
+- **Articulative**: Use professional HR language with specific observations
+- **Evidence-based**: Cite specific interview moments, questions, or responses
+- **Insightful**: Provide actionable insight for the hiring decision
+- **Balanced**: Note both strengths and areas of concern
+
+Dimensions:
+1. **Professional Competency & Practical Experience (专业能力与实践经验)**: Evaluate depth of domain expertise. Did candidate demonstrate real hands-on experience or just theoretical knowledge?
+2. **Resume-Interview Consistency (简历描述与面试表现匹配度)**: Compare resume claims with actual interview performance. Are there gaps or confirmations?
+3. **Achievements & Contribution (项目/工作成果与贡献)**: Evaluate concrete outcomes. Did candidate provide measurable results or vague descriptions?
+4. **Logic & Communication (逻辑思维与沟通表达)**: Assess reasoning structure, clarity of expression, and ability to articulate complex ideas.
+5. **Business Understanding & Teamwork (业务理解与团队协作)**: Evaluate business acumen, cross-functional awareness, and collaboration mindset.
+6. **Overall Competency (能力综合评价)**: Synthesize all dimensions into a decision-quality summary.
+
+### Skill Radar (技能雷达):
+Score each of these 5 dimensions on a 0-100 scale based on the interview evidence:
+- **Professional Ability (专业能力)**: Domain expertise depth and breadth
+- **Team Collaboration (团队协作)**: Teamwork mindset, collaboration examples
+- **Communication (沟通表达)**: Clarity, structure, persuasiveness of communication
+- **Achievement Contribution (成果贡献)**: Proven outcomes and measurable impact
+- **Experience Fit (履历适配)**: How well candidate's background matches this specific role
 
 ### Personality Assessment (性格测试)
 As an experienced recruiter, personality expert, and psychologist, infer the candidate's personality profile from HOW they communicate during the interview — not just WHAT they say. Be objective and evidence-based.
@@ -464,6 +521,21 @@ Please provide a comprehensive evaluation including Technical Analysis, JD Match
       suitableWorkTypes: Array.isArray(parsed.suitableWorkTypes) ? parsed.suitableWorkTypes : [],
       questionAnswerAssessment: Array.isArray(parsed.questionAnswerAssessment) ? parsed.questionAnswerAssessment : [],
       cheatingAnalysis: parsed.cheatingAnalysis,
+      keyCompetencyAssessment: parsed.keyCompetencyAssessment || {
+        professionalCompetency: { score: 0, assessment: '' },
+        resumeInterviewConsistency: { score: 0, assessment: '' },
+        achievementsContribution: { score: 0, assessment: '' },
+        logicCommunication: { score: 0, assessment: '' },
+        businessTeamwork: { score: 0, assessment: '' },
+        overallCompetency: '',
+      },
+      skillRadar: parsed.skillRadar || {
+        professionalAbility: 0,
+        teamCollaboration: 0,
+        communication: 0,
+        achievementContribution: 0,
+        experienceFit: 0,
+      },
       personalityAssessment: parsed.personalityAssessment,
     };
   }
@@ -570,8 +642,9 @@ Please provide a comprehensive evaluation including Technical Analysis, JD Match
       userInstructions: options?.userInstructions,
     };
 
-    // Run main evaluation
-    const evaluation = await this.executeWithJsonResponse(input, jd, requestId);
+    // Run main evaluation (use LLM_EVALUATION model if configured)
+    const evalModel = (process.env.LLM_EVALUATION || '').trim() || undefined;
+    const evaluation = await this.executeWithJsonResponse(input, jd, requestId, evalModel);
 
     // Optionally run cheating detection in parallel
     if (options?.includeCheatingDetection) {

@@ -79,8 +79,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const LANG_CURRENCY_MAP: Record<string, string> = {
-  en: 'USD', zh: 'CNY', 'zh-TW': 'TWD', ja: 'JPY',
-  es: 'EUR', fr: 'EUR', pt: 'EUR', de: 'EUR',
+  en: 'USD', zh: 'CNY', 'zh-TW': 'NTD', ja: 'JPY', ko: 'KRW',
+  es: 'USD', fr: 'USD', pt: 'USD', de: 'USD',
 };
 
 function getInitialForm(lang?: string) {
@@ -389,6 +389,23 @@ export default function Jobs() {
       { label: '¥800万-¥1000万/' + t('product.jobs.perYear', 'yr'), min: 8000000, max: 10000000, period: 'yearly' },
       { label: '¥1000万-¥1500万/' + t('product.jobs.perYear', 'yr'), min: 10000000, max: 15000000, period: 'yearly' },
     ],
+    NTD: [
+      { label: t('product.jobs.salaryNegotiable', 'Negotiable'), min: 0, max: 0, period: 'monthly' },
+      { label: 'NT$30K-40K/' + t('product.jobs.perMonth', 'mo'), min: 30000, max: 40000, period: 'monthly' },
+      { label: 'NT$40K-50K/' + t('product.jobs.perMonth', 'mo'), min: 40000, max: 50000, period: 'monthly' },
+      { label: 'NT$50K-60K/' + t('product.jobs.perMonth', 'mo'), min: 50000, max: 60000, period: 'monthly' },
+      { label: 'NT$60K-80K/' + t('product.jobs.perMonth', 'mo'), min: 60000, max: 80000, period: 'monthly' },
+      { label: 'NT$80K-100K/' + t('product.jobs.perMonth', 'mo'), min: 80000, max: 100000, period: 'monthly' },
+      { label: 'NT$100K-150K/' + t('product.jobs.perMonth', 'mo'), min: 100000, max: 150000, period: 'monthly' },
+    ],
+    KRW: [
+      { label: t('product.jobs.salaryNegotiable', 'Negotiable'), min: 0, max: 0, period: 'yearly' },
+      { label: '₩3000만-₩4000만/' + t('product.jobs.perYear', 'yr'), min: 30000000, max: 40000000, period: 'yearly' },
+      { label: '₩4000만-₩5000만/' + t('product.jobs.perYear', 'yr'), min: 40000000, max: 50000000, period: 'yearly' },
+      { label: '₩5000만-₩7000만/' + t('product.jobs.perYear', 'yr'), min: 50000000, max: 70000000, period: 'yearly' },
+      { label: '₩7000만-₩1억/' + t('product.jobs.perYear', 'yr'), min: 70000000, max: 100000000, period: 'yearly' },
+      { label: '₩1억+/' + t('product.jobs.perYear', 'yr'), min: 100000000, max: 0, period: 'yearly' },
+    ],
   };
 
   const getSalaryPresets = (): SalaryPreset[] =>
@@ -408,6 +425,8 @@ export default function Jobs() {
         CNY: '¥',
         JPY: '¥',
         TWD: 'NT$',
+        NTD: 'NT$',
+        KRW: '₩',
         CAD: 'CA$',
         AUD: 'A$',
       }[form.salaryCurrency] || form.salaryCurrency;
@@ -1465,7 +1484,8 @@ export default function Jobs() {
                   <option value="GBP">GBP</option>
                   <option value="CNY">CNY</option>
                   <option value="JPY">JPY</option>
-                  <option value="TWD">TWD</option>
+                  <option value="NTD">NTD</option>
+                  <option value="KRW">KRW</option>
                   <option value="CAD">CAD</option>
                   <option value="AUD">AUD</option>
                 </select>

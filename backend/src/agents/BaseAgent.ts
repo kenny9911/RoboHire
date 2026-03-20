@@ -144,10 +144,10 @@ export abstract class BaseAgent<TInput, TOutput> {
    * @param jdContent Optional JD content for language detection
    * @param requestId Optional request ID for logging
    */
-  async executeWithJsonResponse(input: TInput, jdContent?: string, requestId?: string): Promise<TOutput> {
+  async executeWithJsonResponse(input: TInput, jdContent?: string, requestId?: string, model?: string): Promise<TOutput> {
     const stepNum = requestId ? logger.startStep(requestId, `${this.name}: Execute (JSON)`) : 0;
 
-    logger.logAgentStart(requestId || '', this.name, { inputType: typeof input, outputFormat: 'JSON' });
+    logger.logAgentStart(requestId || '', this.name, { inputType: typeof input, outputFormat: 'JSON', model: model || 'default' });
 
     const systemPrompt = this.buildSystemPrompt(jdContent, requestId);
     const userMessage = this.formatInput(input);
@@ -160,6 +160,7 @@ export abstract class BaseAgent<TInput, TOutput> {
     logger.debug('AGENT', `${this.name}: Prepared messages for JSON response`, {
       systemPromptLength: systemPrompt.length,
       userMessageLength: userMessage.length,
+      model: model || 'default',
     }, requestId);
 
     try {
@@ -169,6 +170,7 @@ export abstract class BaseAgent<TInput, TOutput> {
       const response = await this.llm.chat(messages, {
         temperature: 0.7,
         requestId,
+        ...(model ? { model } : {}),
       });
 
       logger.debug('AGENT', `${this.name}: Parsing JSON response`, {

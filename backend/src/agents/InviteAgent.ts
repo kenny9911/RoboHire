@@ -11,6 +11,28 @@ interface InviteApiMeta {
   deliveryMode: 'remote_api' | 'fallback_local';
 }
 
+function normalizeOptionalValue(value?: string | null): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function buildInvitationResumeText(resume: string, candidateEmail?: string): string {
+  const normalizedCandidateEmail = normalizeOptionalValue(candidateEmail);
+  if (!normalizedCandidateEmail) return resume;
+
+  const firstEmail = resume.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+  if (firstEmail && firstEmail.toLowerCase() === normalizedCandidateEmail.toLowerCase()) {
+    return resume;
+  }
+
+  return [
+    `Candidate contact email for this interview invitation: ${normalizedCandidateEmail}`,
+    'Use this email address when sending the interview invitation.',
+    '',
+    resume,
+  ].join('\n');
+}
+
 function normalizeInvitationApiUrl(raw?: string): string {
   const configured = (raw || '').trim();
   return configured || DEFAULT_GOHIRE_INVITATION_API;
@@ -97,12 +119,13 @@ export function buildGoHireInvitationRequestBody(
   jd: string,
   recruiterEmail?: string,
   interviewerRequirement?: string,
+  candidateEmail?: string,
 ): GoHireInvitationRequestBody {
   return {
     recruiter_email: resolveRecruiterEmail(recruiterEmail),
     jd_content: jd,
     interviewer_requirement: interviewerRequirement || '',
-    resume_text: resume,
+    resume_text: buildInvitationResumeText(resume, candidateEmail),
     request_source: 'robohire',
   };
 }
@@ -112,6 +135,7 @@ export function buildGoHireInvitationCallLog({
   jd,
   recruiterEmail,
   interviewerRequirement,
+  candidateEmail,
   response,
   requestId,
   deliveryMode,
@@ -121,6 +145,7 @@ export function buildGoHireInvitationCallLog({
   jd: string;
   recruiterEmail?: string;
   interviewerRequirement?: string;
+  candidateEmail?: string;
   response: RoboHireInvitationResponse;
   requestId?: string;
   deliveryMode: 'remote_api' | 'fallback_local';
@@ -131,6 +156,7 @@ export function buildGoHireInvitationCallLog({
     jd,
     recruiterEmail,
     interviewerRequirement,
+    candidateEmail,
   );
 
   return {
@@ -170,6 +196,7 @@ export class InviteAgent {
     jd: string,
     recruiterEmail?: string,
     interviewerRequirement?: string,
+    candidateEmail?: string,
     requestId?: string
   ): Promise<RoboHireInvitationResponse> {
     const stepId = logger.startStep(requestId || '', `${this.agentName}: Call GoHire API`);
@@ -180,12 +207,14 @@ export class InviteAgent {
       jd,
       recruiterEmail,
       interviewerRequirement,
+      candidateEmail,
     );
 
     logger.info(this.agentName, 'Sending invitation request to GoHire API', {
       endpoint: GOHIRE_INVITATION_API,
       candidates: GOHIRE_INVITATION_API_CANDIDATES,
       recruiter_email: email,
+      candidate_email: normalizeOptionalValue(candidateEmail),
       jd_length: jd.length,
       resume_length: resume.length,
       has_interviewer_requirement: !!interviewerRequirement,
@@ -276,10 +305,11 @@ export class InviteAgent {
       return await this.generateFallbackInvitation(
         resume,
         jd,
-      recruiterEmail,
-      interviewerRequirement,
-      requestId,
-      lastError
+        recruiterEmail,
+        interviewerRequirement,
+        candidateEmail,
+        requestId,
+        lastError
       );
     } catch (error) {
       logger.error(this.agentName, 'Failed to send invitation', {
@@ -293,6 +323,7 @@ export class InviteAgent {
         jd,
         recruiterEmail,
         interviewerRequirement,
+        candidateEmail,
         requestId,
         error instanceof Error ? error.message : String(error)
       );
@@ -308,9 +339,17 @@ export class InviteAgent {
     jd: string,
     requestId?: string,
     recruiterEmail?: string,
-    interviewerRequirement?: string
+    interviewerRequirement?: string,
+    candidateEmail?: string,
   ): Promise<RoboHireInvitationResponse> {
-    return this.sendInvitation(resume, jd, recruiterEmail, interviewerRequirement, requestId);
+    return this.sendInvitation(
+      resume,
+      jd,
+      recruiterEmail,
+      interviewerRequirement,
+      candidateEmail,
+      requestId,
+    );
   }
 
   private async generateFallbackInvitation(
@@ -318,13 +357,15 @@ export class InviteAgent {
     jd: string,
     recruiterEmail?: string,
     interviewerRequirement?: string,
+    candidateEmail?: string,
     requestId?: string,
     reason?: string
   ): Promise<RoboHireInvitationResponse> {
     const fallbackStep = logger.startStep(requestId || '', `${this.agentName}: Fallback invitation`);
 
     const email = resolveRecruiterEmail(recruiterEmail);
-    const candidateEmail = this.extractEmail(resume) || 'candidate@example.com';
+    const resolvedCandidateEmail =
+      normalizeOptionalValue(candidateEmail) || this.extractEmail(resume) || 'candidate@example.com';
     const candidateName = this.extractName(resume) || 'Candidate';
     const jobTitle = this.extractJobTitle(jd) || 'Interview Invitation';
     const companyName = process.env.COMPANY_NAME || 'RoboHire';
@@ -342,11 +383,12 @@ Keep it concise and friendly.`;
 
     const userPrompt = [
       `Recruiter email: ${email}`,
+      `Candidate email: ${resolvedCandidateEmail}`,
       `Company: ${companyName}`,
       `Role: ${jobTitle}`,
       interviewerRequirement ? `Interviewer requirement: ${interviewerRequirement}` : '',
       `Job description:\n${jd.slice(0, 3000)}`,
-      `Resume:\n${resume.slice(0, 3000)}`,
+      `Resume:\n${buildInvitationResumeText(resume, resolvedCandidateEmail).slice(0, 3000)}`,
     ]
       .filter(Boolean)
       .join('\n\n');
@@ -369,7 +411,7 @@ Keep it concise and friendly.`;
 
     logger.info(this.agentName, 'Using fallback invitation generator', {
       reason,
-      candidateEmail,
+      candidateEmail: resolvedCandidateEmail,
       candidateName,
       jobTitle,
     }, requestId);
@@ -379,7 +421,7 @@ Keep it concise and friendly.`;
     });
 
     const fallbackResult: RoboHireInvitationResponse = {
-      email: candidateEmail,
+      email: resolvedCandidateEmail,
       bcc: [],
       name: candidateName,
       login_url: loginUrl,

@@ -6,6 +6,8 @@ import { logger } from '../services/LoggerService.js';
 import { PreMatchFilterAgent, PreMatchFilterResumeSummary } from '../agents/PreMatchFilterAgent.js';
 import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 import { orchestrateMatching } from '../services/MatchOrchestratorService.js';
+import { getPreferredResumeEmail } from '../utils/resumeContact.js';
+import { universityTierService } from '../services/UniversityTierService.js';
 import '../types/auth.js';
 
 const router = Router();
@@ -27,7 +29,39 @@ function formatJobMetadata(job: any): string {
   if (job.department) parts.push(`Department: ${job.department}`);
   if (job.companyName) parts.push(`Company: ${job.companyName}`);
   if (job.experienceLevel) parts.push(`Experience Level: ${job.experienceLevel}`);
+  if (job.education) parts.push(`Education Requirement: ${job.education}`);
+  if (job.hardRequirements) parts.push(`Hard Requirements:\n${job.hardRequirements}`);
+  if (job.qualifications) parts.push(`Qualifications:\n${job.qualifications}`);
+  if (job.niceToHave) parts.push(`Nice to Have:\n${job.niceToHave}`);
+  if (job.evaluationRules) parts.push(`Evaluation Rules:\n${job.evaluationRules}`);
   return parts.length > 0 ? parts.join('\n') : '';
+}
+
+/**
+ * Build a comprehensive JD text combining all relevant job fields.
+ * Hard requirements are placed early so they survive truncation in batch screening.
+ */
+function buildComprehensiveJD(job: any): string {
+  const sections: string[] = [];
+  if (job.hardRequirements) {
+    sections.push(`## 硬性要求 / Hard Requirements\n${job.hardRequirements}`);
+  }
+  if (job.qualifications) {
+    sections.push(`## 任职要求 / Qualifications\n${job.qualifications}`);
+  }
+  if (job.description) {
+    sections.push(`## 职位描述 / Job Description\n${job.description}`);
+  }
+  if (job.education) {
+    sections.push(`## 学历要求 / Education Requirement\n${job.education}`);
+  }
+  if (job.niceToHave) {
+    sections.push(`## 加分项 / Nice to Have\n${job.niceToHave}`);
+  }
+  if (job.evaluationRules) {
+    sections.push(`## 评估规则 / Evaluation Rules\n${job.evaluationRules}`);
+  }
+  return sections.join('\n\n');
 }
 
 function formatCandidatePreferences(prefs: any): string {
@@ -176,6 +210,7 @@ router.post('/run', requireAuth, async (req, res) => {
         id: true,
         name: true,
         resumeText: true,
+        parsedData: true,
         currentRole: true,
         experienceYears: true,
         tags: true,
@@ -361,20 +396,26 @@ router.post('/run', requireAuth, async (req, res) => {
 
     const matchingStart = Date.now();
 
-    const orchestratorResults = await orchestrateMatching(
-      resumesToMatch.map((r) => ({
+    // Enrich resume texts with system-verified university tier annotations
+    const enrichedResumes = resumesToMatch.map((r) => {
+      const parsedEducation = (r as any).parsedData?.education;
+      return {
         id: r.id,
         name: r.name,
-        resumeText: r.resumeText || '',
+        resumeText: universityTierService.annotateResumeEducation(r.resumeText || '', parsedEducation),
         currentRole: r.currentRole,
         experienceYears: r.experienceYears,
         tags: r.tags || [],
         preferences: (r as any).preferences,
-      })),
+      };
+    });
+
+    const orchestratorResults = await orchestrateMatching(
+      enrichedResumes,
       {
         id: jobId,
         title: job.title || '',
-        description: job.description!,
+        description: buildComprehensiveJD(job),
         jobMetadata,
       },
       formatCandidatePreferences,
@@ -610,6 +651,7 @@ router.get('/sessions/:sessionId', requireAuth, async (req, res) => {
             id: true,
             name: true,
             email: true,
+            preferences: true,
             currentRole: true,
             experienceYears: true,
             tags: true,
@@ -821,7 +863,7 @@ router.post('/results/:matchId/apply-invite', requireAuth, async (req, res) => {
       where: { id: matchId },
       include: {
         job: { select: { id: true, userId: true, title: true, description: true, passingScore: true } },
-        resume: { select: { id: true, name: true, email: true, resumeText: true } },
+        resume: { select: { id: true, name: true, email: true, preferences: true, resumeText: true } },
       },
     });
 
@@ -851,7 +893,7 @@ router.post('/results/:matchId/apply-invite', requireAuth, async (req, res) => {
           appliedBy: userId,
         },
         include: {
-          resume: { select: { id: true, name: true, email: true, currentRole: true } },
+          resume: { select: { id: true, name: true, email: true, preferences: true, currentRole: true } },
         },
       }),
       prisma.interview.create({
@@ -860,7 +902,7 @@ router.post('/results/:matchId/apply-invite', requireAuth, async (req, res) => {
           jobId: match.job.id,
           resumeId: match.resume.id,
           candidateName: match.resume.name,
-          candidateEmail: match.resume.email || null,
+          candidateEmail: getPreferredResumeEmail(match.resume),
           jobTitle: match.job.title,
           jobDescription: match.job.description || null,
           resumeText: match.resume.resumeText || null,

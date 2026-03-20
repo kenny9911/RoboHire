@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
+import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import ResumeUploadModal from '../components/ResumeUploadModal';
 import RefineDiffView from '../components/RefineDiffView';
 import { ResumeRenderer, parsedDataToMarkdown } from '../components/ResumeRenderer';
 import { formatDateTimeLabel } from '../utils/dateTime';
+import { getPreferredResumeEmail } from '../utils/resumeContact';
 import {
   IconChevronLeft,
   IconChevronDown,
@@ -99,6 +101,11 @@ interface ResumeData {
   name: string;
   email: string | null;
   phone: string | null;
+  preferences: {
+    email?: string | null;
+    phone?: string | null;
+    [key: string]: unknown;
+  } | null;
   currentRole: string | null;
   experienceYears: string | null;
   resumeText: string;
@@ -257,6 +264,7 @@ function normalizeResumeId(rawId?: string): string | undefined {
 
 export default function ResumeDetail() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { id: rawId } = useParams<{ id: string }>();
   const id = normalizeResumeId(rawId);
   const navigate = useNavigate();
@@ -471,7 +479,8 @@ export default function ResumeDetail() {
       const res = await axios.post('/api/v1/invite-candidate', {
         resume: resume.resumeText,
         jd: jdText,
-        recruiter_email: resume.email || undefined,
+        candidate_email: getPreferredResumeEmail(resume) || undefined,
+        recruiter_email: user?.email || undefined,
       });
       if (res.data.success) {
         setInviteResult(res.data.data);
@@ -514,7 +523,8 @@ export default function ResumeDetail() {
       const res = await axios.post('/api/v1/invite-candidate', {
         resume: resume.resumeText,
         jd: selectedJob.description || selectedJob.title,
-        recruiter_email: resume.email || undefined,
+        candidate_email: getPreferredResumeEmail(resume) || undefined,
+        recruiter_email: user?.email || undefined,
       });
       if (res.data.success) {
         setInviteResult(res.data.data);
@@ -773,6 +783,7 @@ export default function ResumeDetail() {
 
   const parsed = resume.parsedData as Record<string, unknown> | null;
   const hasOriginalDocument = canViewOriginalDocument(resume.fileName, resume.fileType, resume.resumeText);
+  const preferredResumeEmail = getPreferredResumeEmail(resume);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: t('resumeLibrary.detail.tabs.overview', 'Overview') },
@@ -816,7 +827,7 @@ export default function ResumeDetail() {
             <h1 className="text-xl font-bold text-gray-900">{resume.name}</h1>
             {resume.currentRole && <p className="text-sm text-gray-600 mt-1">{resume.currentRole}</p>}
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
-              {resume.email && <span>{resume.email}</span>}
+              {preferredResumeEmail && <span>{preferredResumeEmail}</span>}
               {resume.phone && <span>{resume.phone}</span>}
               {resume.fileName && <span>{resume.fileName}</span>}
             </div>
@@ -1041,7 +1052,16 @@ export default function ResumeDetail() {
       {tab === 'insights' && <InsightsTab data={resume.insightData} loading={insightLoading} onGenerate={() => generateInsights(true)} t={t} />}
       {tab === 'jobfit' && <JobFitTab data={resume.jobFitData} loading={jobFitLoading} onAnalyze={analyzeJobFit} onInvite={handleInviteFromFit} invitationsMap={invitationsMap} t={t} />}
       {tab === 'appliedJobs' && <AppliedJobsTab data={appliedJobsData} loading={appliedJobsLoading} onRefresh={fetchAppliedJobs} resumeId={resume.id} t={t} />}
-      {tab === 'invitations' && <InvitationsTab invitations={invitations} resumeText={resume.resumeText} onRefresh={fetchInvitations} t={t} />}
+      {tab === 'invitations' && (
+        <InvitationsTab
+          invitations={invitations}
+          resumeText={resume.resumeText}
+          candidateEmail={preferredResumeEmail}
+          recruiterEmail={user?.email || null}
+          onRefresh={fetchInvitations}
+          t={t}
+        />
+      )}
       {tab === 'notes' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="mb-6">
@@ -1117,7 +1137,7 @@ export default function ResumeDetail() {
               <div className="rounded-xl bg-gray-50 p-4">
                 <p className="text-sm font-medium text-gray-900">{resume.name}</p>
                 {resume.currentRole && <p className="text-xs text-gray-500 mt-0.5">{resume.currentRole}</p>}
-                {resume.email && <p className="text-xs text-gray-500">{resume.email}</p>}
+                {preferredResumeEmail && <p className="text-xs text-gray-500">{preferredResumeEmail}</p>}
               </div>
 
               {!inviteResult ? (
@@ -2707,7 +2727,21 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
 
 // ─── Invitations Tab ──────────────────────────────────────────────────
 
-function InvitationsTab({ invitations, resumeText, onRefresh, t }: { invitations: InvitationRecord[]; resumeText?: string; onRefresh?: () => void; t: (k: string, f: string, opts?: Record<string, unknown>) => string }) {
+function InvitationsTab({
+  invitations,
+  resumeText,
+  candidateEmail,
+  recruiterEmail,
+  onRefresh,
+  t,
+}: {
+  invitations: InvitationRecord[];
+  resumeText?: string;
+  candidateEmail?: string | null;
+  recruiterEmail?: string | null;
+  onRefresh?: () => void;
+  t: (k: string, f: string, opts?: Record<string, unknown>) => string;
+}) {
   const [viewingInvite, setViewingInvite] = useState<InvitationRecord | null>(null);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [resendResult, setResendResult] = useState<{ id: string; success: boolean; message: string } | null>(null);
@@ -2720,11 +2754,11 @@ function InvitationsTab({ invitations, resumeText, onRefresh, t }: { invitations
       const hrRes = await axios.get(`/api/v1/hiring-requests/${inv.hiringRequestId}`);
       const hr = hrRes.data.data;
       const jdText = hr.jobDescription || hr.requirements || inv.hiringRequestTitle;
-      const candidateEmail = inv.inviteData?.email || undefined;
       const res = await axios.post('/api/v1/invite-candidate', {
         resume: resumeText,
         jd: jdText,
-        recruiter_email: candidateEmail,
+        candidate_email: candidateEmail || undefined,
+        recruiter_email: recruiterEmail || undefined,
       });
       if (res.data.success) {
         setResendResult({ id: inv.id, success: true, message: t('resumeLibrary.detail.invitations.resendSuccess', 'Invitation resent successfully!') });

@@ -28,6 +28,12 @@ export class ExperienceMatchSkill extends BaseAgent<ExperienceMatchInput, Experi
 - Be skeptical of inflated titles or vague descriptions — look for concrete evidence.
 - Career gaps should be noted but not automatically penalized.
 
+## Education Level Rules:
+- If JD requires Master's (硕士/研究生) and candidate only has Bachelor's (本科/学士) → this is a hard experience/qualification gap with **Critical** severity. Flag it in experienceValidation gaps.
+- If JD requires 985/211 university background and candidate's education shows "[Not in 985/211/双一流 lists]" → flag as a gap.
+- Trust "[985/211/双一流]" and "[海外/International]" system-verified annotations in resume text.
+- Education level mismatches indicate the candidate may lack the depth of academic training expected for the role.
+
 ## Output Format
 Return ONLY valid JSON matching this structure:
 \`\`\`json

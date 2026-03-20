@@ -193,7 +193,10 @@ Only include the requested section(s). For generate_section/enhance: one section
         : '';
       parts.push(`\nPlease enhance the "${input.section}" section. Make it more professional, add relevant keywords, and improve clarity while preserving the original intent.${customInstructions}`);
     } else if (input.action === 'generate_all') {
-      parts.push(`\nPlease generate ALL sections (description, qualifications, hardRequirements, niceToHave, benefits, interviewRequirements, evaluationRules) based on the company and job title.`);
+      const sourceContext = input.instructions
+        ? `\n\n## Original Hiring Request / Source Context:\n${input.instructions.substring(0, 4000)}`
+        : '';
+      parts.push(`\nPlease generate ALL sections (description, qualifications, hardRequirements, niceToHave, benefits, interviewRequirements, evaluationRules) based on the company and job title. Be concise and focused — no generic filler. Every point must be specific to THIS role. For interviewRequirements and evaluationRules, keep them short and actionable.${sourceContext}`);
     } else if (input.action === 'observe_react') {
       parts.push(`\nPlease analyze all current content, identify gaps, and provide suggestions for improvement. Include improved sections where applicable.`);
     } else if (input.section) {

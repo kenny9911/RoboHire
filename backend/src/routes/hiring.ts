@@ -14,6 +14,7 @@ import { recruitmentIntelligenceService } from '../services/RecruitmentIntellige
 import { DocumentParsingService } from '../services/DocumentParsingService.js';
 import { fireHiringRequestWebhook } from '../services/WebhookService.js';
 import { getVisibilityScope, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
+import { getPreferredResumeEmail } from '../utils/resumeContact.js';
 // Import auth types to extend Express
 import '../types/auth.js';
 
@@ -1464,7 +1465,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
     // Fetch resumes
     const resumes = await prisma.resume.findMany({
       where: { id: { in: resumeIds }, userId },
-      select: { id: true, name: true, resumeText: true, email: true },
+      select: { id: true, name: true, resumeText: true, email: true, preferences: true },
     });
 
     if (resumes.length === 0) {
@@ -1486,12 +1487,14 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
 
     for (const resume of resumes) {
       try {
+        const candidateEmail = getPreferredResumeEmail(resume);
         const inviteResult = await inviteAgent.generateInvitation(
           resume.resumeText,
           jd,
           requestId,
           recruiter_email,
-          interviewer_requirement
+          interviewer_requirement,
+          candidateEmail || undefined,
         );
         const inviteApiMeta = (inviteResult as {
           __gohireApiMeta?: { endpoint?: string; deliveryMode?: 'remote_api' | 'fallback_local' };
@@ -1499,6 +1502,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
         const gohireInviteLog = buildGoHireInvitationCallLog({
           resume: resume.resumeText,
           jd,
+          candidateEmail: candidateEmail || undefined,
           recruiterEmail: recruiter_email,
           interviewerRequirement: interviewer_requirement,
           response: inviteResult,
@@ -1529,7 +1533,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
             hiringRequestId: id,
             resumeId: resume.id,
             candidateName: resume.name || 'Unknown',
-            candidateEmail: resume.email || null,
+            candidateEmail,
             jobTitle: inviteResult.job_title || hiringRequest.title || 'Interview',
             status: 'scheduled',
             type: 'ai_video',
@@ -1603,7 +1607,7 @@ router.get('/:id/invitations', async (req, res) => {
     const fits = await prisma.resumeJobFit.findMany({
       where: { hiringRequestId: id, pipelineStatus: 'invited' },
       include: {
-        resume: { select: { id: true, name: true, email: true, currentRole: true } },
+        resume: { select: { id: true, name: true, email: true, currentRole: true, preferences: true } },
       },
       orderBy: { invitedAt: 'desc' },
     });
@@ -1626,7 +1630,7 @@ router.get('/:id/invitations', async (req, res) => {
       id: f.id,
       resumeId: f.resumeId,
       candidateName: f.resume.name,
-      candidateEmail: f.resume.email,
+      candidateEmail: getPreferredResumeEmail(f.resume),
       candidateRole: f.resume.currentRole,
       invitedAt: f.invitedAt,
       fitScore: f.fitScore,

@@ -7,6 +7,7 @@ import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { JdRenderer } from '../../components/JdRenderer';
 import ResumeViewerModal from '../../components/ResumeViewerModal';
 import EvaluationShareExport from '../../components/EvaluationShareExport';
+import { highlightEvaluationKeywords } from '../../utils/evaluationHighlight';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -89,6 +90,7 @@ interface InterviewData {
   resumeUrl: string | null;
   resumeText: string | null;
   parsedResume: Record<string, unknown> | null;
+  parsedResumeText: string | null;
   jobDescription: string | null;
   jobRequirements: string | null;
   interviewRequirements: string | null;
@@ -99,7 +101,10 @@ interface InterviewData {
   evaluationVerdict: string | null;
   evaluationShareToken: string | null;
   interviewDatetime: string | null;
+  interviewEndDatetime: string | null;
+  duration: number | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface TranscriptSegment {
@@ -245,6 +250,29 @@ function parseTimestamp(ts: string): number {
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
   if (parts.length === 2) return parts[0] * 60 + parts[1];
   return 0;
+}
+
+/** Format a datetime string to localized date + time (e.g. "2026-03-21 14:30") */
+function formatDatetime(dt: string): string {
+  try {
+    const d = new Date(dt);
+    return d.toLocaleString(undefined, {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+  } catch {
+    return dt;
+  }
+}
+
+/** Format a datetime string to time only (e.g. "15:45") */
+function formatTime(dt: string): string {
+  try {
+    const d = new Date(dt);
+    return d.toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+  } catch {
+    return dt;
+  }
 }
 
 /** Try to parse transcript as JSON segments, otherwise return null */
@@ -547,6 +575,10 @@ export default function GoHireEvaluation() {
       .get(`/api/v1/gohire-interviews/${id}`)
       .then((res) => {
         setInterview(res.data.data);
+        // Initialize parsed resume from DB cache if available
+        if (res.data.data?.parsedResumeText) {
+          setParsedResumeMarkdown(res.data.data.parsedResumeText);
+        }
       })
       .catch((err) => {
         setError(err.response?.data?.error || t('goHireEval.fetchError', 'Failed to load interview'));
@@ -656,7 +688,7 @@ export default function GoHireEvaluation() {
         setIsParsingResume(true);
         setResumeParseError(null);
         try {
-          const res = await axios.post(`/api/v1/gohire-interviews/${id}/parse-resume`, { force: true });
+          const res = await axios.post(`/api/v1/gohire-interviews/${id}/parse-resume`, { force: false });
           if (res.data?.success && res.data.data?.markdown) {
             setParsedResumeMarkdown(res.data.data.markdown);
           } else {
@@ -1377,12 +1409,34 @@ export default function GoHireEvaluation() {
                     </div>
                   )}
 
-                {/* Score */}
-                <div className="px-5 py-4 bg-gray-50 flex items-center gap-3">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    {t('goHireEval.matchScore', 'Match Score')}
-                  </span>
-                  <span className="text-3xl font-bold text-cyan-600">{evaluation.score}<span className="text-lg text-gray-400 font-normal">/100</span></span>
+                {/* Score + Timestamps */}
+                <div className="px-5 py-4 bg-gray-50 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      {t('goHireEval.matchScore', 'Match Score')}
+                    </span>
+                    <span className="text-3xl font-bold text-cyan-600">{evaluation.score}<span className="text-lg text-gray-400 font-normal">/100</span></span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-slate-500">
+                    {interview.interviewDatetime && (
+                      <div className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span>{t('goHireEval.interviewTime', '面试时间')}: {formatDatetime(interview.interviewDatetime)}</span>
+                        {interview.interviewEndDatetime && (
+                          <span>– {formatTime(interview.interviewEndDatetime)}</span>
+                        )}
+                        {interview.duration && (
+                          <span className="text-slate-400">({interview.duration}{t('goHireEval.minutes', '分钟')})</span>
+                        )}
+                      </div>
+                    )}
+                    {interview.updatedAt && interview.evaluationData && (
+                      <div className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>{t('goHireEval.evaluationGenerated', '评估生成于')}: {formatDatetime(interview.updatedAt)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1478,28 +1532,52 @@ export default function GoHireEvaluation() {
                         <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${collapsedSections.has('strengthsWeaknesses') ? '' : 'rotate-180'}`} />
                       </button>
                       {!collapsedSections.has('strengthsWeaknesses') && (
-                        <div className="px-4 pb-4 space-y-4">
+                        <div className="grid gap-4 px-4 pb-4 lg:grid-cols-2">
                           {evaluation.strengths.length > 0 && (
-                            <div>
-                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('goHireEval.strengths', '优势')}</h5>
-                              <ul className="space-y-1.5">
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                              <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                <h5 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700">✓</span>
+                                  {t('goHireEval.strengths', '优势')}
+                                </h5>
+                                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                  {evaluation.strengths.length}
+                                </span>
+                              </div>
+                              <ul className="divide-y divide-slate-100">
                                 {evaluation.strengths.map((s, i) => (
-                                  <li key={i} className="text-xs text-gray-700 flex items-start gap-2">
-                                    <span className="block w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 flex-none" />
-                                    <MarkdownRenderer content={s} className="leading-relaxed" />
+                                  <li key={i} className="py-2.5 first:pt-0 last:pb-0">
+                                    <div className="flex items-start gap-3">
+                                      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">
+                                        {i + 1}
+                                      </span>
+                                      <p className="text-[13px] font-normal leading-6 text-slate-800 md:text-sm" dangerouslySetInnerHTML={{ __html: highlightEvaluationKeywords(s, 'green') }} />
+                                    </div>
                                   </li>
                                 ))}
                               </ul>
                             </div>
                           )}
                           {evaluation.weaknesses.length > 0 && (
-                            <div className={evaluation.strengths.length > 0 ? 'pt-3 border-t border-gray-100' : ''}>
-                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('goHireEval.weaknesses', '劣势')}</h5>
-                              <ul className="space-y-1.5">
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                              <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                <h5 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-sm font-semibold text-rose-700">!</span>
+                                  {t('goHireEval.weaknesses', '劣势')}
+                                </h5>
+                                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                  {evaluation.weaknesses.length}
+                                </span>
+                              </div>
+                              <ul className="divide-y divide-slate-100">
                                 {evaluation.weaknesses.map((w, i) => (
-                                  <li key={i} className="text-xs text-gray-700 flex items-start gap-2">
-                                    <span className="block w-1.5 h-1.5 bg-orange-400 rounded-full mt-1.5 flex-none" />
-                                    <MarkdownRenderer content={w} className="leading-relaxed" />
+                                  <li key={i} className="py-2.5 first:pt-0 last:pb-0">
+                                    <div className="flex items-start gap-3">
+                                      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">
+                                        {i + 1}
+                                      </span>
+                                      <p className="text-[13px] font-normal leading-6 text-slate-800 md:text-sm" dangerouslySetInnerHTML={{ __html: highlightEvaluationKeywords(w, 'red') }} />
+                                    </div>
                                   </li>
                                 ))}
                               </ul>

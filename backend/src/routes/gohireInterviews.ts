@@ -293,7 +293,7 @@ router.post('/import-csv', requireAdmin, csvUpload.single('file'), async (req, r
     }
 
     const overwrite = req.body.overwrite === 'true';
-    const csvText = req.file.buffer.toString('utf-8');
+    const csvText = req.file.buffer.toString('utf-8').replace(/^\uFEFF/, '');
 
     // Parse CSV — handle quoted fields with embedded newlines/commas
     const rows = parseCsv(csvText);

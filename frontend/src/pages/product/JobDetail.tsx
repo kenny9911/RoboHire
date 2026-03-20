@@ -3,8 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useAuth } from '../../context/AuthContext';
 import axios from '../../lib/axios';
 import MatchDetailModal from '../../components/MatchDetailModal';
+import { getPreferredResumeEmail } from '../../utils/resumeContact';
 import {
   getInterviewLanguageDisplay,
   INTERVIEW_LANGUAGE_OPTIONS,
@@ -66,6 +68,9 @@ interface MatchResult {
     id: string;
     name: string;
     email: string | null;
+    preferences?: {
+      email?: string | null;
+    } | null;
     currentRole: string | null;
     experienceYears: string | null;
     tags: string[];
@@ -131,6 +136,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
 export default function JobDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [job, setJob] = useState<Job | null>(null);
@@ -211,9 +217,12 @@ export default function JobDetail() {
     try {
       const resumeRes = await axios.get(`/api/v1/resumes/${match.resumeId}`);
       const resumeText = resumeRes.data.data?.resumeText || '';
+      const candidateEmail = getPreferredResumeEmail(resumeRes.data.data);
       const inviteRes = await axios.post('/api/v1/invite-candidate', {
         resume: resumeText,
         jd: job.description || job.title,
+        candidate_email: candidateEmail || undefined,
+        recruiter_email: user?.email || undefined,
       });
       const accessToken = inviteRes.data.data?.accessToken;
       if (accessToken) {
@@ -448,6 +457,8 @@ export default function JobDetail() {
                   experienceLevel: job.experienceLevel,
                   education: job.education,
                   headcount: job.headcount,
+                  salaryText: job.salaryText,
+                  notes: job.notes,
                   interviewLanguage: job.interviewLanguage,
                   interviewDuration: job.interviewDuration,
                   passingScore: job.passingScore,
@@ -560,6 +571,24 @@ export default function JobDetail() {
               editValue={basicInfoDraft.workType ?? ''}
               onEditChange={(v) => setBasicInfoDraft((d) => ({ ...d, workType: v || null }))}
             />
+            {/* Employment Type */}
+            <BasicInfoField
+              icon={<path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />}
+              iconBg="bg-rose-50" iconColor="text-rose-500"
+              label={t('product.jobDetail.employmentType', 'Employment Type')}
+              value={job.employmentType}
+              editing={editingBasicInfo}
+              editType="select"
+              selectOptions={[
+                { value: '', label: '—' },
+                { value: 'full-time', label: t('product.jobDetail.etFullTime', 'Full-time') },
+                { value: 'part-time', label: t('product.jobDetail.etPartTime', 'Part-time') },
+                { value: 'contract', label: t('product.jobDetail.etContract', 'Contract') },
+                { value: 'internship', label: t('product.jobDetail.etInternship', 'Internship') },
+              ]}
+              editValue={basicInfoDraft.employmentType ?? ''}
+              onEditChange={(v) => setBasicInfoDraft((d) => ({ ...d, employmentType: v || null }))}
+            />
             {/* Interview Duration */}
             <BasicInfoField
               icon={<path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />}
@@ -603,19 +632,28 @@ export default function JobDetail() {
               editValue={`${basicInfoDraft.passingScore ?? 60}`}
               onEditChange={(v) => setBasicInfoDraft((d) => ({ ...d, passingScore: Math.min(100, Math.max(0, parseInt(v) || 60)) }))}
             />
+            {/* Salary */}
+            <BasicInfoField
+              icon={<path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />}
+              iconBg="bg-emerald-50" iconColor="text-emerald-500"
+              label={t('product.jobDetail.salary', 'Salary')}
+              value={salaryDisplay}
+              editing={editingBasicInfo}
+              editValue={basicInfoDraft.salaryText ?? ''}
+              onEditChange={(v) => setBasicInfoDraft((d) => ({ ...d, salaryText: v || null }))}
+            />
+            {/* Notes */}
+            <BasicInfoField
+              icon={<path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" />}
+              iconBg="bg-yellow-50" iconColor="text-yellow-600"
+              label={t('product.jobs.notes', 'Notes')}
+              value={job.notes}
+              editing={editingBasicInfo}
+              editValue={basicInfoDraft.notes ?? ''}
+              onEditChange={(v) => setBasicInfoDraft((d) => ({ ...d, notes: v || null }))}
+            />
           </div>
         </div>
-        {job.notes && !editingBasicInfo && (
-          <div className="px-6 pb-4">
-            <div className="rounded-lg bg-amber-50 border border-amber-100 px-4 py-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <svg className="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6A2.25 2.25 0 016 3.75h1.5m9 0h-9" /></svg>
-                <span className="text-xs font-semibold text-amber-700">{t('product.jobs.notes', 'Notes')}</span>
-              </div>
-              <p className="text-sm text-amber-800 whitespace-pre-wrap">{job.notes}</p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Tab Bar */}
@@ -873,9 +911,9 @@ export default function JobDetail() {
             <p className="mt-2 text-sm text-slate-500">
               {t('product.jobDetail.confirmInviteMessage', 'Send an AI interview invitation to {{name}}?', { name: confirmInvite.resume.name })}
             </p>
-            {confirmInvite.resume.email && (
+            {getPreferredResumeEmail(confirmInvite.resume) && (
               <p className="mt-1.5 text-sm text-slate-600">
-                <span className="text-slate-400">{t('product.jobDetail.confirmInviteEmail', 'Email')}:</span> {confirmInvite.resume.email}
+                <span className="text-slate-400">{t('product.jobDetail.confirmInviteEmail', 'Email')}:</span> {getPreferredResumeEmail(confirmInvite.resume)}
               </p>
             )}
             <div className="mt-4 flex justify-end gap-2">
@@ -1511,7 +1549,7 @@ function ApplicantsTab({ matches, allMatches, loading, statusFilter, onStatusFil
                 </div>
                 <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
                   {m.resume.currentRole && <span>{m.resume.currentRole}</span>}
-                  {m.resume.email && <span>{m.resume.email}</span>}
+                  {getPreferredResumeEmail(m.resume) && <span>{getPreferredResumeEmail(m.resume)}</span>}
                 </div>
               </div>
               <div className="text-center shrink-0">

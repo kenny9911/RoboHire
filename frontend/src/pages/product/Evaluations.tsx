@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
 import { formatDateTimeLabel } from '../../utils/dateTime';
+import { highlightEvaluationKeywords } from '../../utils/evaluationHighlight';
 
 interface TranscriptTurn {
   role: string;
@@ -411,17 +412,24 @@ export default function Evaluations() {
                                 </div>
                               )}
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                                 {ev.strengths && Array.isArray(ev.strengths) && ev.strengths.length > 0 && (
-                                  <div>
-                                    <h4 className="text-xs font-semibold text-emerald-600 mb-1">{t('product.evaluations.strengths', 'Strengths')}</h4>
-                                    <ul className="space-y-1">
+                                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                    <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-2.5">
+                                      <h4 className="text-sm font-semibold text-slate-900">{t('product.evaluations.strengths', 'Strengths')}</h4>
+                                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                        {ev.strengths.length}
+                                      </span>
+                                    </div>
+                                    <ul className="divide-y divide-slate-100">
                                       {ev.strengths.map((s: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-1.5 text-xs text-slate-600">
-                                          <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                          </svg>
-                                          {s}
+                                        <li key={i} className="py-2.5 first:pt-0 last:pb-0">
+                                          <div className="flex items-start gap-2.5">
+                                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">
+                                              {i + 1}
+                                            </span>
+                                            <p className="text-xs font-normal leading-6 text-slate-800 sm:text-[13px]" dangerouslySetInnerHTML={{ __html: highlightEvaluationKeywords(s, 'green') }} />
+                                          </div>
                                         </li>
                                       ))}
                                     </ul>
@@ -429,15 +437,22 @@ export default function Evaluations() {
                                 )}
 
                                 {ev.weaknesses && Array.isArray(ev.weaknesses) && ev.weaknesses.length > 0 && (
-                                  <div>
-                                    <h4 className="text-xs font-semibold text-red-600 mb-1">{t('product.evaluations.weaknesses', 'Areas for Improvement')}</h4>
-                                    <ul className="space-y-1">
+                                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                    <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-100 pb-2.5">
+                                      <h4 className="text-sm font-semibold text-slate-900">{t('product.evaluations.weaknesses', 'Areas for Improvement')}</h4>
+                                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                        {ev.weaknesses.length}
+                                      </span>
+                                    </div>
+                                    <ul className="divide-y divide-slate-100">
                                       {ev.weaknesses.map((w: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-1.5 text-xs text-slate-600">
-                                          <svg className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                          </svg>
-                                          {w}
+                                        <li key={i} className="py-2.5 first:pt-0 last:pb-0">
+                                          <div className="flex items-start gap-2.5">
+                                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">
+                                              {i + 1}
+                                            </span>
+                                            <p className="text-xs font-normal leading-6 text-slate-800 sm:text-[13px]" dangerouslySetInnerHTML={{ __html: highlightEvaluationKeywords(w, 'red') }} />
+                                          </div>
                                         </li>
                                       ))}
                                     </ul>
