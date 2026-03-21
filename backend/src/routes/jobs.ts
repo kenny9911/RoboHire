@@ -12,6 +12,7 @@ import { jdParserService } from '../services/JDParserService.js';
 import { languageService } from '../services/LanguageService.js';
 import type { ParsedJD, RequirementsDetailed, QualificationsDetailed } from '../types/index.js';
 import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
+import { buildHiringRequestAccessWhere } from '../lib/hiringRequestVisibility.js';
 import '../types/auth.js';
 
 /**
@@ -638,8 +639,9 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     if (fields.hiringRequestId) {
+      const accessWhere = await buildHiringRequestAccessWhere(req.user!, fields.hiringRequestId);
       const hr = await prisma.hiringRequest.findFirst({
-        where: { id: fields.hiringRequestId, userId },
+        where: accessWhere,
       });
       if (!hr) {
         return res.status(404).json({ success: false, error: 'Hiring request not found' });
@@ -1128,8 +1130,9 @@ router.post('/from-request/:requestId', requireAuth, async (req, res) => {
   const logRequestId = req.requestId || generateRequestId();
   try {
     const userId = req.user!.id;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, req.params.requestId);
     const hr = await prisma.hiringRequest.findFirst({
-      where: { id: req.params.requestId, userId },
+      where: accessWhere,
     });
     if (!hr) {
       return res.status(404).json({ success: false, error: 'Hiring request not found' });

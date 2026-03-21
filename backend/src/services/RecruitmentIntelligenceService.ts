@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma.js';
+import { buildHiringRequestAccessWhere } from '../lib/hiringRequestVisibility.js';
 import { logger, generateRequestId } from './LoggerService.js';
 import { candidateProfileAgent } from '../agents/CandidateProfileAgent.js';
 import { sourcingStrategyAgent } from '../agents/SourcingStrategyAgent.js';
@@ -17,15 +18,16 @@ export class RecruitmentIntelligenceService {
    */
   async generate(
     hiringRequestId: string,
-    userId: string,
+    user: { id: string; role?: string | null; teamId?: string | null },
     options: { force?: boolean } = {},
     requestId?: string
   ): Promise<RecruitmentIntelligenceReport> {
     const rid = requestId || generateRequestId();
+    const accessWhere = await buildHiringRequestAccessWhere(user, hiringRequestId);
 
-    // 1. Fetch hiring request + verify ownership
+    // 1. Fetch hiring request + verify access
     const hr = await prisma.hiringRequest.findFirst({
-      where: { id: hiringRequestId, userId },
+      where: accessWhere,
       select: {
         id: true,
         title: true,

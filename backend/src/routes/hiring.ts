@@ -14,6 +14,7 @@ import { recruitmentIntelligenceService } from '../services/RecruitmentIntellige
 import { DocumentParsingService } from '../services/DocumentParsingService.js';
 import { fireHiringRequestWebhook } from '../services/WebhookService.js';
 import { getVisibilityScope, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
+import { buildHiringRequestAccessWhere } from '../lib/hiringRequestVisibility.js';
 import { getPreferredResumeEmail } from '../utils/resumeContact.js';
 // Import auth types to extend Express
 import '../types/auth.js';
@@ -496,10 +497,10 @@ router.get('/stats', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
     const hiringRequest = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
       include: {
         candidates: {
           orderBy: { matchScore: 'desc' },
@@ -555,12 +556,12 @@ router.get('/:id', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
     const { title, clientName, requirements, jobDescription, webhookUrl, status } = req.body;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
-    // Verify ownership
+    // Verify access
     const existing = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
     });
 
     if (!existing) {
@@ -614,11 +615,11 @@ router.patch('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
-    // Verify ownership
+    // Verify access
     const existing = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
     });
 
     if (!existing) {
@@ -652,12 +653,12 @@ router.delete('/:id', async (req, res) => {
 router.get('/:id/candidates', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
     const { status, limit = 50, offset = 0 } = req.query;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
-    // Verify ownership
+    // Verify access
     const hiringRequest = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
     });
 
     if (!hiringRequest) {
@@ -707,12 +708,12 @@ router.get('/:id/candidates', async (req, res) => {
 router.patch('/:id/candidates/:candidateId', async (req, res) => {
   try {
     const { id, candidateId } = req.params;
-    const userId = req.user!.id;
     const { status } = req.body;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
-    // Verify ownership
+    // Verify access
     const hiringRequest = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
     });
 
     if (!hiringRequest) {
@@ -755,12 +756,12 @@ router.patch('/:id/candidates/:candidateId', async (req, res) => {
 router.get('/:id/resume-fits', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
     const { sort = 'fitScore', order = 'desc', pipelineStatus, minScore, search } = req.query;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
-    // Verify ownership
+    // Verify access
     const hiringRequest = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
       select: { id: true },
     });
 
@@ -845,10 +846,11 @@ router.post('/:id/auto-match', async (req, res) => {
     const { id } = req.params;
     const userId = req.user!.id;
     const { force = false, resumeIds } = req.body || {};
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
-    // Fetch hiring request with ownership check
+    // Fetch hiring request with access check
     const hiringRequest = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
       select: { id: true, title: true, requirements: true, jobDescription: true, status: true },
     });
 
@@ -1381,12 +1383,12 @@ router.post('/:id/auto-match', async (req, res) => {
 router.patch('/:id/resume-fits/:fitId', async (req, res) => {
   try {
     const { id, fitId } = req.params;
-    const userId = req.user!.id;
     const { pipelineStatus } = req.body;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
-    // Verify hiring request ownership
+    // Verify hiring request access
     const hiringRequest = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
       select: { id: true },
     });
 
@@ -1438,6 +1440,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
     const { id } = req.params;
     const userId = req.user!.id;
     const { resumeIds, recruiter_email, interviewer_requirement } = req.body || {};
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
     if (!Array.isArray(resumeIds) || resumeIds.length === 0) {
       logger.endRequest(requestId, 'error', 400);
@@ -1449,9 +1452,9 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Maximum 50 resumes per batch' });
     }
 
-    // Fetch hiring request with JD
+    // Fetch hiring request with access check
     const hiringRequest = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
       select: { id: true, title: true, requirements: true, jobDescription: true },
     });
 
@@ -1594,10 +1597,10 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
 router.get('/:id/invitations', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
     const hiringRequest = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
       select: { id: true },
     });
     if (!hiringRequest) {
@@ -1655,11 +1658,10 @@ router.post('/:id/intelligence', async (req, res) => {
 
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
     const { force = false } = req.body || {};
 
     const report = await recruitmentIntelligenceService.generate(
-      id, userId, { force }, requestId
+      id, req.user!, { force }, requestId
     );
 
     logger.endRequest(requestId, 'success', 200);
@@ -1686,10 +1688,10 @@ router.post('/:id/intelligence', async (req, res) => {
 router.get('/:id/intelligence', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const accessWhere = await buildHiringRequestAccessWhere(req.user!, id);
 
     const hr = await prisma.hiringRequest.findFirst({
-      where: { id, userId },
+      where: accessWhere,
       select: { intelligenceData: true, intelligenceUpdatedAt: true },
     });
 
