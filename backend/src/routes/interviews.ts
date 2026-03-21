@@ -16,7 +16,7 @@ const MIN_INTERVIEW_DURATION_SECONDS = 300; // 5 minutes — interviews shorter 
 const LIVEKIT_USAGE_ENDPOINT = '/api/v1/interviews/live-session';
 const LIVEKIT_USAGE_MODULE = 'interview_livekit';
 const LIVEKIT_USAGE_API_NAME = 'interviews_live_session';
-const DEFAULT_PROMPT_GENERATION_TIMEOUT_MS = 15000;
+const DEFAULT_PROMPT_GENERATION_TIMEOUT_MS = 60000;
 
 type WorkerSessionUsagePayload = {
   sessionConfig?: {
