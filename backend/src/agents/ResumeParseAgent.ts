@@ -7,6 +7,17 @@ interface ResumeParseInput {
   resumeText: string;
 }
 
+const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+const PHONE_RE = /(?:\+?\d{1,3}[-\s]?)?(1[3-9]\d{9}|\d{3,4}[-\s]?\d{7,8})/;
+const DATE_RANGE_RE = /((?:19|20)\d{2}[./-]\d{1,2})\s*(?:-|–|—|~|至)\s*(至今|present|current|now|(?:19|20)\d{2}[./-]\d{1,2})/i;
+const CONTACT_BLOCK_NAME_RE = /^[\u3400-\u9fff·•]{2,6}$/;
+const DEMOGRAPHIC_RE = /^(?:男|女)\s*[|｜]/;
+const HEADING_RE = /^(?:个人优势|工作经历|工作经验|实习经历|教育背景|教育经历|项目经历|项目经验|专业技能|技能|证书|技能证书|荣誉奖项|自我评价|求职意向)$/;
+const TRAILING_ROLE_RE = /(经理|顾问|专家|工程师|架构师|总监|主任|主管|专员|助理|分析师|咨询师|实施|consultant|manager|engineer|architect|director|analyst|developer|lead|specialist)$/i;
+const CJK_TECH_TERMS = [
+  '用友', '金蝶', '数据治理', '财务共享', '低代码', '业财一体化', '业务再造',
+];
+
 /**
  * Agent for parsing resumes and extracting structured data
  * Extracts contact info, skills, experience, education, etc.
@@ -189,6 +200,185 @@ ${input.resumeText}
 Please parse this resume and extract structured information.`;
   }
 
+  private hasSkillContent(skills: ParsedResume['skills'] | undefined): boolean {
+    if (!skills) return false;
+    if (Array.isArray(skills)) return skills.some((item) => typeof item === 'string' && item.trim().length > 0);
+    return Object.values(skills).some((items) => Array.isArray(items) && items.some((item) => typeof item === 'string' && item.trim().length > 0));
+  }
+
+  private hasMeaningfulExperience(experience: ParsedResume['experience'] | undefined): boolean {
+    if (!Array.isArray(experience) || experience.length === 0) return false;
+
+    return experience.some((entry) => {
+      if (!entry || typeof entry !== 'object') return false;
+      const hasAchievements = Array.isArray(entry.achievements) && entry.achievements.some((item) => typeof item === 'string' && item.trim().length > 0);
+      const hasTechnologies = Array.isArray(entry.technologies) && entry.technologies.some((item) => typeof item === 'string' && item.trim().length > 0);
+
+      return [
+        entry.company,
+        entry.role,
+        entry.location,
+        entry.description,
+        entry.startDate,
+        entry.endDate,
+        entry.duration,
+      ].some((value) => typeof value === 'string' && value.trim().length > 0) || hasAchievements || hasTechnologies;
+    });
+  }
+
+  private normalizeLines(resumeText: string): string[] {
+    return resumeText
+      .split(/\r?\n/)
+      .map((line) => line.replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+  }
+
+  private findName(lines: string[]): string {
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = lines[i];
+      if (!CONTACT_BLOCK_NAME_RE.test(line)) continue;
+      const nextLines = lines.slice(i + 1, i + 4);
+      if (nextLines.some((item) => DEMOGRAPHIC_RE.test(item) || EMAIL_RE.test(item) || PHONE_RE.test(item) || /工作经验|求职意向|期望薪资|期望城市/.test(item))) {
+        return line;
+      }
+    }
+    return '';
+  }
+
+  private findAddress(lines: string[]): string {
+    for (const line of lines) {
+      const match = line.match(/(?:现居地|所在地|居住地|期望城市|城市)[:：]\s*([^|｜\s]+)/);
+      if (match?.[1]) return match[1].trim();
+    }
+    return '';
+  }
+
+  private findSummary(lines: string[]): string {
+    const firstExperienceIndex = lines.findIndex((line) => DATE_RANGE_RE.test(line));
+    const introLines = (firstExperienceIndex > 0 ? lines.slice(0, firstExperienceIndex) : lines.slice(0, 4))
+      .filter((line) => !EMAIL_RE.test(line))
+      .filter((line) => !PHONE_RE.test(line))
+      .filter((line) => !CONTACT_BLOCK_NAME_RE.test(line))
+      .filter((line) => !DEMOGRAPHIC_RE.test(line))
+      .filter((line) => !/工作经验|求职意向|期望薪资|期望城市/.test(line));
+    return introLines.join('\n').trim();
+  }
+
+  private extractSkillsFromText(resumeText: string): string[] {
+    const found = new Set<string>();
+
+    for (const match of resumeText.matchAll(/\b[A-Z][A-Z0-9.+/-]{2,}\b/g)) {
+      const token = match[0].trim();
+      if (token.length >= 3) found.add(token);
+    }
+
+    for (const term of CJK_TECH_TERMS) {
+      if (resumeText.includes(term)) found.add(term);
+    }
+
+    return [...found].slice(0, 12);
+  }
+
+  private splitCompanyRole(line: string): { company: string; role: string } {
+    const normalized = line.replace(/\s+/g, ' ').trim();
+    if (!normalized) return { company: '', role: '' };
+
+    const lastSpace = normalized.lastIndexOf(' ');
+    if (lastSpace > 0) {
+      const company = normalized.slice(0, lastSpace).trim();
+      const role = normalized.slice(lastSpace + 1).trim();
+      if (TRAILING_ROLE_RE.test(role) || role.length <= 18) {
+        return { company, role };
+      }
+    }
+
+    return { company: normalized, role: '' };
+  }
+
+  private extractExperience(lines: string[]): WorkExperience[] {
+    const entries: WorkExperience[] = [];
+
+    for (let i = 0; i < lines.length; i += 1) {
+      const dateMatch = lines[i].match(DATE_RANGE_RE);
+      if (!dateMatch) continue;
+
+      const startDate = dateMatch[1];
+      const endDate = dateMatch[2];
+      let nextIndex = i + 1;
+
+      while (nextIndex < lines.length && HEADING_RE.test(lines[nextIndex])) {
+        nextIndex += 1;
+      }
+
+      const headerLine = lines[nextIndex] || '';
+      const { company, role } = this.splitCompanyRole(headerLine);
+      const descriptionLines: string[] = [];
+      let scanIndex = headerLine ? nextIndex + 1 : nextIndex;
+
+      while (scanIndex < lines.length) {
+        const current = lines[scanIndex];
+        if (DATE_RANGE_RE.test(current)) break;
+        if (HEADING_RE.test(current) && descriptionLines.length > 0) break;
+        if (CONTACT_BLOCK_NAME_RE.test(current) || DEMOGRAPHIC_RE.test(current) || EMAIL_RE.test(current) || PHONE_RE.test(current)) break;
+        descriptionLines.push(current);
+        scanIndex += 1;
+      }
+
+      const description = descriptionLines.join('\n').trim();
+      if (company || role || description) {
+        entries.push({
+          company,
+          role,
+          startDate,
+          endDate,
+          duration: `${startDate}-${endDate}`,
+          description,
+          achievements: descriptionLines,
+          technologies: this.extractSkillsFromText([headerLine, description].filter(Boolean).join('\n')),
+          employmentType: /实习|intern/i.test([headerLine, description].join('\n')) ? 'internship' : 'full-time',
+        });
+      }
+
+      if (scanIndex > i) {
+        i = scanIndex - 1;
+      }
+    }
+
+    return entries;
+  }
+
+  private buildHeuristicFallback(resumeText: string, parsed: ParsedResume): ParsedResume {
+    const lines = this.normalizeLines(resumeText);
+    const fallbackSummary = this.findSummary(lines);
+    const fallbackSkills = this.extractSkillsFromText(resumeText);
+    const fallbackExperience = this.extractExperience(lines);
+    const intentLine = lines.find((line) => /求职意向|期望薪资|期望城市/.test(line)) || '';
+
+    const existingSummary = typeof parsed.summary === 'string' ? parsed.summary.trim() : '';
+    const summary = !existingSummary || existingSummary === 'Unable to parse resume' || existingSummary.length < Math.max(40, Math.floor(fallbackSummary.length * 0.4))
+      ? fallbackSummary || existingSummary
+      : existingSummary;
+
+    const otherSections = {
+      ...(parsed.otherSections || {}),
+      ...(intentLine ? { 求职概况: intentLine } : {}),
+    };
+
+    return {
+      ...parsed,
+      name: parsed.name || this.findName(lines),
+      email: parsed.email || (resumeText.match(EMAIL_RE)?.[0] ?? ''),
+      phone: parsed.phone || (resumeText.match(PHONE_RE)?.[0] ?? ''),
+      address: parsed.address || this.findAddress(lines),
+      summary,
+      skills: this.hasSkillContent(parsed.skills)
+        ? parsed.skills
+        : (fallbackSkills.length > 0 ? { technical: fallbackSkills } : parsed.skills),
+      experience: this.hasMeaningfulExperience(parsed.experience) ? parsed.experience : fallbackExperience,
+      otherSections: Object.keys(otherSections).length > 0 ? otherSections : undefined,
+    };
+  }
+
   protected parseOutput(response: string): ParsedResume {
     // Try to extract JSON from the response
     const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
@@ -327,15 +517,52 @@ Please parse this resume and extract structured information.`;
       return parsed;
     }
 
+    const heuristic = {
+      ...this.buildHeuristicFallback(resumeText, parsed),
+      rawText: resumeText,
+    };
+    if (!isParsedResumeLikelyIncomplete(heuristic, resumeText)) {
+      logger.warn('RESUME_PARSE', 'Sparse resume parse recovered with heuristic text fallback', {
+        resumeLength: resumeText.length,
+        experienceCount: heuristic.experience.length,
+        hasEmail: Boolean(heuristic.email),
+        hasPhone: Boolean(heuristic.phone),
+      }, requestId);
+      return heuristic;
+    }
+
     logger.warn('RESUME_PARSE', 'Sparse resume parse detected, retrying with stricter extraction prompt', {
       resumeLength: resumeText.length,
     }, requestId);
 
     const retried = await this.parseOnce(resumeText, requestId, true);
-    return {
+    const retriedParsed = {
       ...retried,
       rawText: resumeText,
     };
+
+    if (!isParsedResumeLikelyIncomplete(retriedParsed, resumeText)) {
+      return retriedParsed;
+    }
+
+    const repaired = {
+      ...this.buildHeuristicFallback(resumeText, retriedParsed),
+      rawText: resumeText,
+    };
+    if (!isParsedResumeLikelyIncomplete(repaired, resumeText)) {
+      logger.warn('RESUME_PARSE', 'Retry remained sparse, recovered with heuristic text fallback', {
+        resumeLength: resumeText.length,
+        experienceCount: repaired.experience.length,
+        hasEmail: Boolean(repaired.email),
+        hasPhone: Boolean(repaired.phone),
+      }, requestId);
+      return repaired;
+    }
+
+    logger.error('RESUME_PARSE', 'Retry and heuristic fallback still produced sparse resume parse', {
+      resumeLength: resumeText.length,
+    }, requestId);
+    return repaired;
   }
 
   private async parseOnce(resumeText: string, requestId?: string, retry = false): Promise<ParsedResume> {

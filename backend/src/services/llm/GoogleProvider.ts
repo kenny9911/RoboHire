@@ -13,7 +13,7 @@ export class GoogleProvider implements LLMProvider {
     this.defaultModel = defaultModel.includes('/') 
       ? defaultModel.split('/')[1] 
       : defaultModel;
-    this.requestTimeoutMs = Number(process.env.GOOGLE_LLM_TIMEOUT_MS || process.env.LLM_TIMEOUT_MS || 45000);
+    this.requestTimeoutMs = Number(process.env.GOOGLE_LLM_TIMEOUT_MS || process.env.LLM_TIMEOUT_MS || 120000);
   }
 
   getProviderName(): string {

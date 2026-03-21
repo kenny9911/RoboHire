@@ -40,14 +40,19 @@ export async function getOrParseResume(
   }
 
   // Global fallback: check any user's resume with same content hash
-  const globalMatch = await prisma.resume.findFirst({
+  const globalMatches = await prisma.resume.findMany({
     where: { contentHash, parsedData: { not: Prisma.DbNull } },
     select: { parsedData: true },
+    orderBy: { updatedAt: 'desc' },
+    take: 10,
   });
-  if (globalMatch?.parsedData && !isParsedResumeLikelyIncomplete(globalMatch.parsedData, resumeText)) {
+
+  const globalMatch = globalMatches.find((match) => match.parsedData && !isParsedResumeLikelyIncomplete(match.parsedData, resumeText));
+  if (globalMatch?.parsedData) {
     return { parsedData: globalMatch.parsedData, cached: true };
   }
-  if (globalMatch?.parsedData) {
+
+  if (globalMatches.some((match) => match.parsedData)) {
     logger.warn('RESUME_PARSE_CACHE', 'Ignoring sparse global cached resume parse', {
       contentHash,
     }, requestId);

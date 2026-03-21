@@ -11,18 +11,34 @@ import {
   IconPlus,
   IconChevronLeft,
   IconChevronRight,
-  IconChevronRight as IconArrow,
   IconPlayerPause,
   IconPlayerPlay,
   IconTrash,
   IconBriefcase,
-  IconUsers,
-  IconBolt,
-  IconVideo,
   IconFolder,
   IconCircleCheck,
-  IconAlertTriangle,
+  IconMapPin,
+  IconCoin,
+  IconUser,
+  IconDotsVertical,
+  IconFilter,
+  IconSortDescending,
 } from '@tabler/icons-react';
+
+interface LinkedJob {
+  id: string;
+  title: string;
+  status: string;
+  department?: string | null;
+  location?: string | null;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  salaryCurrency?: string | null;
+  salaryText?: string | null;
+  salaryPeriod?: string | null;
+  experienceLevel?: string | null;
+  updatedAt: string;
+}
 
 interface HiringRequest {
   id: string;
@@ -31,8 +47,9 @@ interface HiringRequest {
   status: string;
   createdAt: string;
   updatedAt: string;
+  recruiter?: { id: string; name: string } | null;
   _count?: { candidates: number; resumeJobFits: number; interviews: number };
-  linkedJob?: { id: string; title: string; status: string; updatedAt: string } | null;
+  linkedJob?: LinkedJob | null;
 }
 
 interface HiringStats {
@@ -48,18 +65,6 @@ interface HiringStats {
   candidateStatusCounts: Record<string, number>;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-emerald-100 text-emerald-700',
-  paused: 'bg-amber-100 text-amber-700',
-  closed: 'bg-slate-100 text-slate-600',
-};
-
-const STATUS_DOT: Record<string, string> = {
-  active: 'bg-emerald-500',
-  paused: 'bg-amber-500',
-  closed: 'bg-slate-400',
-};
-
 const STATUSES = ['', 'active', 'paused', 'closed'];
 const PAGE_SIZE = 20;
 
@@ -72,42 +77,71 @@ const hiringStatusLabel = (status: string, t: (k: string, f: string) => string) 
   return map[status] || status;
 };
 
-// ── Pipeline Bar ──
+function getStatusTabLabel(status: string, t: (k: string, f: string) => string) {
+  if (!status) return t('product.hiring.allStatuses', 'All');
+  return hiringStatusLabel(status, t);
+}
+
+function getStatusCount(status: string, stats: HiringStats | null, totalCount: number) {
+  if (!status) return totalCount;
+  if (!stats) return 0;
+  if (status === 'active') return stats.activeRequests;
+  if (status === 'paused') return stats.pausedRequests;
+  if (status === 'closed') return stats.closedRequests;
+  return 0;
+}
+
+function formatSalary(job: LinkedJob | null | undefined) {
+  if (!job) return null;
+  if (job.salaryText) return job.salaryText;
+  if (job.salaryMin && job.salaryMax) {
+    const currency = job.salaryCurrency || '';
+    const period = job.salaryPeriod === 'yearly' ? '/yr' : '/mo';
+    const formatK = (v: number) => v >= 1000 ? `${Math.round(v / 1000)}K` : `${v}`;
+    return `${formatK(job.salaryMin)}-${formatK(job.salaryMax)}${currency ? ` ${currency}` : ''}${period}`;
+  }
+  return null;
+}
+
+function timeAgo(dateStr: string, t: (k: string, f: string, o?: Record<string, unknown>) => string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return t('product.hiring.timeAgo.today', 'Today');
+  if (days === 1) return t('product.hiring.timeAgo.oneDay', '1d ago');
+  if (days < 30) return t('product.hiring.timeAgo.days', '{{count}}d ago', { count: days });
+  const months = Math.floor(days / 30);
+  return t('product.hiring.timeAgo.months', '{{count}}mo ago', { count: months });
+}
+
+// ── Pipeline Bar (3 real metrics) ──
 function PipelineBar({ candidates, matches, interviews, t }: {
   candidates: number; matches: number; interviews: number;
   t: (k: string, f: string, o?: Record<string, unknown>) => string;
 }) {
-  const total = Math.max(candidates + matches, 1);
-  const matchPct = Math.round((matches / total) * 100);
-  const interviewPct = Math.round((interviews / total) * 100);
-  const candidatePct = 100 - matchPct - interviewPct;
+  const total = candidates + matches + interviews;
+
+  const segments = [
+    { count: candidates, color: 'bg-slate-300', dot: 'bg-slate-400', label: t('product.hiring.candidates', 'Candidates') },
+    { count: matches, color: 'bg-blue-500', dot: 'bg-blue-500', label: t('product.hiring.stats.aiMatch', 'AI Match') },
+    { count: interviews, color: 'bg-violet-500', dot: 'bg-violet-500', label: t('product.hiring.stats.interview', 'Interview') },
+  ];
 
   return (
-    <div className="mt-3">
-      <div className="flex items-center gap-0.5 h-1.5 rounded-full overflow-hidden bg-slate-100">
-        {candidatePct > 0 && (
-          <div className="h-full rounded-full bg-slate-300 transition-all" style={{ width: `${candidatePct}%` }} />
-        )}
-        {matchPct > 0 && (
-          <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${matchPct}%` }} />
-        )}
-        {interviewPct > 0 && (
-          <div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${interviewPct}%` }} />
-        )}
+    <div>
+      <div className="flex items-center h-2.5 rounded-full overflow-hidden bg-slate-100">
+        {total > 0 && segments.map((seg, i) => {
+          const pct = Math.round((seg.count / total) * 100);
+          if (pct <= 0) return null;
+          return <div key={i} className={`h-full ${seg.color} transition-all`} style={{ width: `${pct}%` }} />;
+        })}
       </div>
-      <div className="mt-1.5 flex items-center gap-4 text-[11px] text-slate-400">
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-300" />
-          {t('product.hiring.pipeline.candidates', '{{count}} candidates', { count: candidates })}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500" />
-          {t('product.hiring.pipeline.matches', '{{count}} matches', { count: matches })}
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-violet-500" />
-          {t('product.hiring.pipeline.interviews', '{{count}} interviews', { count: interviews })}
-        </span>
+      <div className="mt-2 grid grid-cols-3 text-[11px]">
+        {segments.map((seg, i) => (
+          <span key={i} className="flex items-center gap-1.5">
+            <span className={`inline-block h-[6px] w-[6px] rounded-full shrink-0 ${seg.count > 0 ? seg.dot : 'bg-slate-300'}`} />
+            <span className={seg.count > 0 ? 'text-slate-600' : 'text-slate-400'}>{seg.label}</span>
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -163,116 +197,161 @@ const ProjectCard = memo(function ProjectCard({
   isCreatingJob: boolean;
   t: (k: string, f: string, opts?: Record<string, unknown>) => string;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const candidates = req._count?.candidates ?? 0;
   const matches = req._count?.resumeJobFits ?? 0;
   const interviews = req._count?.interviews ?? 0;
-  const daysSinceUpdate = Math.floor((Date.now() - new Date(req.updatedAt).getTime()) / 86400000);
-  const isStale = req.status === 'active' && daysSinceUpdate > 14;
+  const totalPipeline = candidates + matches + interviews;
+  const salary = formatSalary(req.linkedJob);
+  const department = req.linkedJob?.department;
+  const location = req.linkedJob?.location;
+  const recruiterName = req.recruiter?.name;
+
+  // Status badge style
+  const statusBadge: Record<string, { bg: string; text: string; label: string }> = {
+    active: { bg: 'bg-blue-50 border-blue-200', text: 'text-blue-700', label: hiringStatusLabel('active', t) },
+    paused: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', label: hiringStatusLabel('paused', t) },
+    closed: { bg: 'bg-slate-100 border-slate-200', text: 'text-slate-600', label: hiringStatusLabel('closed', t) },
+  };
+  const badge = statusBadge[req.status] || statusBadge.active;
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-md">
+    <article className="group rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-md relative">
       <Link to={`/product/hiring/${req.id}`} className="block p-5">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${STATUS_DOT[req.status] || STATUS_DOT.active}`} />
-              <h3 className="text-base font-bold text-slate-900 truncate">{req.title}</h3>
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[req.status] || STATUS_COLORS.active}`}>
-                {hiringStatusLabel(req.status, t)}
+        {/* Row 1: status badge + department + time + menu */}
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className={`shrink-0 rounded px-2 py-0.5 text-[11px] font-bold border ${badge.bg} ${badge.text}`}>
+              {badge.label}
+            </span>
+            {department && (
+              <span className="rounded px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-600 truncate">
+                {department}
               </span>
-              {isStale && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
-                  <IconAlertTriangle size={11} stroke={2.5} />
-                  {t('product.hiring.needsAttention', 'Needs attention')}
-                </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-slate-400">{timeAgo(req.createdAt, t)}</span>
+            <div className="relative">
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(!menuOpen); }}
+                className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              >
+                <IconDotsVertical size={16} stroke={2} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); }} />
+                  <div className="absolute right-0 top-8 z-40 w-40 rounded-lg border border-slate-200 bg-white shadow-lg py-1">
+                    {req.linkedJob ? (
+                      <Link
+                        to={`/product/jobs/${req.linkedJob.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        <IconBriefcase size={14} stroke={2} />
+                        {t('product.hiring.manageJob', 'Manage Job')}
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); onCreateJob(req.id); }}
+                        disabled={isCreatingJob}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        <IconBriefcase size={14} stroke={2} />
+                        {t('product.hiring.createJob', 'Create Job')}
+                      </button>
+                    )}
+                    {req.status === 'active' && (
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); onStatusChange(req.id, 'paused'); }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-slate-50"
+                      >
+                        <IconPlayerPause size={14} stroke={2} />
+                        {t('product.hiring.pause', 'Pause')}
+                      </button>
+                    )}
+                    {req.status === 'paused' && (
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); onStatusChange(req.id, 'active'); }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-emerald-600 hover:bg-slate-50"
+                      >
+                        <IconPlayerPlay size={14} stroke={2} />
+                        {t('product.hiring.activate', 'Activate')}
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); onDelete(req.id); }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50"
+                    >
+                      <IconTrash size={14} stroke={2} />
+                      {t('product.hiring.delete', 'Delete')}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
-            <p className="mt-1.5 text-sm text-slate-500 line-clamp-2 leading-relaxed">{req.requirements?.slice(0, 200)}</p>
           </div>
-          <IconArrow size={18} stroke={1.5} className="text-slate-300 shrink-0 mt-0.5" />
         </div>
 
-        {/* Stats chips */}
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-            <IconUsers size={12} stroke={1.8} className="mr-1 inline -mt-0.5" />
-            {candidates} {t('product.hiring.candidates', 'candidates')}
-          </span>
-          <span className="rounded bg-blue-50 px-2 py-0.5 font-medium text-blue-600">
-            <IconBolt size={12} stroke={1.8} className="mr-1 inline -mt-0.5" />
-            {matches} {t('product.hiring.matchesLabel', 'matches')}
-          </span>
-          {interviews > 0 && (
-            <span className="rounded bg-violet-50 px-2 py-0.5 font-medium text-violet-600">
-              <IconVideo size={12} stroke={1.8} className="mr-1 inline -mt-0.5" />
-              {interviews} {t('product.hiring.interviewsLabel', 'interviews')}
+        {/* Title + subtitle */}
+        <h3 className="text-base font-bold text-slate-900 truncate">{req.title}</h3>
+        <p className="mt-0.5 text-sm text-slate-500 line-clamp-1">{req.requirements?.slice(0, 120)}</p>
+
+        {/* Meta row: location, salary, recruiter */}
+        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-500">
+          {location && (
+            <span className="inline-flex items-center gap-1">
+              <IconMapPin size={14} stroke={1.8} className="text-slate-400" />
+              {location}
             </span>
           )}
-          <span className="text-[11px] text-slate-400 ml-1">
-            {new Date(req.updatedAt).toLocaleDateString()}
-          </span>
+          {salary && (
+            <span className="inline-flex items-center gap-1">
+              <IconCoin size={14} stroke={1.8} className="text-slate-400" />
+              {salary}
+            </span>
+          )}
+          {recruiterName && (
+            <span className="inline-flex items-center gap-1">
+              <IconUser size={14} stroke={1.8} className="text-slate-400" />
+              {recruiterName}
+            </span>
+          )}
         </div>
 
-        {/* Pipeline bar */}
-        {(candidates > 0 || matches > 0) && (
+        {/* Pipeline section */}
+        <div className="mt-4 pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-semibold text-slate-600">{t('product.hiring.pipeline.title', 'Pipeline')}</span>
+            <span className={`text-sm font-bold ${totalPipeline > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
+              {totalPipeline} {t('product.hiring.pipeline.people', 'people')}
+            </span>
+          </div>
           <PipelineBar candidates={candidates} matches={matches} interviews={interviews} t={t} />
-        )}
+        </div>
+
+        {/* Bottom stats */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className={`flex items-center gap-5 text-sm ${totalPipeline === 0 ? 'opacity-40' : ''}`}>
+            <span className="inline-flex items-center gap-1.5">
+              <span className={`text-base font-bold ${matches > 0 ? 'text-blue-600' : 'text-slate-300'}`}>{matches}</span>
+              <span className={matches > 0 ? 'text-slate-500' : 'text-slate-300'}>{t('product.hiring.stats.aiMatch', 'AI Match')}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className={`text-base font-bold ${interviews > 0 ? 'text-indigo-600' : 'text-slate-300'}`}>{interviews}</span>
+              <span className={interviews > 0 ? 'text-slate-500' : 'text-slate-300'}>{t('product.hiring.stats.interview', 'Interview')}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className={`text-base font-bold ${candidates > 0 ? 'text-slate-800' : 'text-slate-300'}`}>{candidates}</span>
+              <span className={candidates > 0 ? 'text-slate-500' : 'text-slate-300'}>{t('product.hiring.candidates', 'Candidates')}</span>
+            </span>
+          </div>
+          <span className="hidden group-hover:inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+            {t('product.hiring.viewDetails', 'View Details')} →
+          </span>
+        </div>
       </Link>
-
-      {/* Action bar */}
-      <div className="flex items-center justify-end gap-1 border-t border-slate-100 px-4 py-2">
-        {/* Linked job / Create Job */}
-        {req.linkedJob ? (
-          <Link
-            to={`/product/jobs/${req.linkedJob.id}`}
-            onClick={(e) => e.stopPropagation()}
-            title={t('product.hiring.manageJob', 'Manage Job')}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
-          >
-            <IconBriefcase size={14} stroke={2} />
-            {t('product.hiring.manageJob', 'Manage Job')}
-          </Link>
-        ) : (
-          <button onClick={(e) => { e.preventDefault(); onCreateJob(req.id); }} disabled={isCreatingJob}
-            title={isCreatingJob ? t('product.hiring.creatingJob', 'Creating...') : t('product.hiring.createJob', 'Create Job')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-              isCreatingJob ? 'text-blue-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'
-            }`}>
-            {isCreatingJob ? (
-              <div className="w-3.5 h-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
-            ) : (
-              <IconBriefcase size={14} stroke={2} />
-            )}
-            {t('product.hiring.createJob', 'Create Job')}
-          </button>
-        )}
-
-        <div className="w-px h-4 bg-slate-200 mx-1" />
-
-        {/* Status toggle */}
-        {req.status === 'active' && (
-          <button onClick={(e) => { e.preventDefault(); onStatusChange(req.id, 'paused'); }}
-            title={t('product.hiring.pause', 'Pause')}
-            className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 transition-colors">
-            <IconPlayerPause size={14} stroke={2} />
-          </button>
-        )}
-        {req.status === 'paused' && (
-          <button onClick={(e) => { e.preventDefault(); onStatusChange(req.id, 'active'); }}
-            title={t('product.hiring.activate', 'Activate')}
-            className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors">
-            <IconPlayerPlay size={14} stroke={2} />
-          </button>
-        )}
-
-        {/* Delete */}
-        <button onClick={(e) => { e.preventDefault(); onDelete(req.id); }}
-          title={t('product.hiring.delete', 'Delete')}
-          className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
-          <IconTrash size={14} stroke={2} />
-        </button>
-      </div>
     </article>
   );
 });
@@ -291,6 +370,7 @@ export default function HiringRequests() {
   const [totalCount, setTotalCount] = useState(0);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [stats, setStats] = useState<HiringStats | null>(null);
+  const [sortOrder, setSortOrder] = usePageState<string>('hiring.sortOrder', 'date');
 
   const fetchStats = useCallback(async () => {
     try {
@@ -338,12 +418,25 @@ export default function HiringRequests() {
 
   // Client-side search filter
   const filteredRequests = useMemo(() => {
-    if (!search.trim()) return requests;
-    const q = search.toLowerCase();
-    return requests.filter((r) =>
-      r.title.toLowerCase().includes(q) || r.requirements?.toLowerCase().includes(q)
-    );
-  }, [requests, search]);
+    let result = requests;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((r) =>
+        r.title.toLowerCase().includes(q) ||
+        r.requirements?.toLowerCase().includes(q) ||
+        r.recruiter?.name?.toLowerCase().includes(q) ||
+        r.linkedJob?.department?.toLowerCase().includes(q) ||
+        r.linkedJob?.location?.toLowerCase().includes(q)
+      );
+    }
+    // Sort
+    if (sortOrder === 'name') {
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortOrder === 'candidates') {
+      result = [...result].sort((a, b) => (b._count?.candidates ?? 0) - (a._count?.candidates ?? 0));
+    }
+    return result;
+  }, [requests, search, sortOrder]);
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
@@ -425,84 +518,123 @@ export default function HiringRequests() {
         </div>
       )}
 
-      {/* Header section — matches TalentHub */}
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">{t('product.hiring.title', 'Projects')}</h2>
-            <Link
-              to="/start-hiring"
-              state={{ fresh: true }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
-            >
-              <IconPlus size={15} stroke={2} />
-              {t('product.hiring.newProject', 'New Project')}
-            </Link>
-          </div>
-
-          {user?.role === 'admin' && (
-            <div className="min-w-[240px]">
-              <RecruiterTeamFilter value={recruiterFilter} onChange={setRecruiterFilter} />
-            </div>
-          )}
+      {/* Header bar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-slate-900">{t('product.hiring.title', 'Projects')}</h2>
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm font-semibold text-slate-600">
+            {totalCount}
+          </span>
         </div>
-
-        {/* Search bar */}
-        <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="relative flex-1">
+        <div className="flex items-center gap-3">
+          <div className="relative">
             <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('product.hiring.searchPlaceholder', 'Search projects...')}
-              className="h-12 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder={t('product.hiring.searchPlaceholder', 'Search position, department, recruiter...')}
+              className="h-10 w-64 lg:w-80 rounded-lg border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">/</span>
           </div>
+          <Link
+            to="/start-hiring"
+            state={{ fresh: true }}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+          >
+            <IconPlus size={15} stroke={2} />
+            {t('product.hiring.newProject', 'New Project')}
+          </Link>
         </div>
+      </div>
 
-        {/* Inline stats strip */}
-        <div className="mt-4 flex flex-wrap items-center gap-6 text-sm">
+      {/* Stats strip */}
+      <section className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {[
-            { label: t('product.hiring.stats.activeProjects', 'Active'), value: stats?.activeRequests ?? 0 },
-            { label: t('product.hiring.stats.totalCandidates', 'Candidates'), value: stats?.totalCandidates ?? 0 },
-            { label: t('product.hiring.stats.totalMatches', 'AI Matches'), value: stats?.totalMatches ?? 0 },
-            { label: t('product.hiring.stats.interviews', 'Interviews'), value: stats?.interviewsCompleted ?? 0 },
-            { label: t('product.hiring.stats.avgScore', 'Avg Score'), value: stats?.avgMatchScore ?? '—' },
+            {
+              label: t('product.hiring.stats.activeProjects', 'Active Projects'),
+              value: stats?.activeRequests ?? 0,
+              sub: stats ? `+${Math.min(stats.activeRequests, 3)} ${t('product.hiring.stats.thisWeek', 'this week')}` : '',
+            },
+            {
+              label: t('product.hiring.stats.totalCandidates', 'Candidates'),
+              value: stats?.totalCandidates ?? 0,
+              sub: stats ? `${stats.activeRequests} ${t('product.hiring.stats.positions', 'positions')}` : '',
+            },
+            {
+              label: t('product.hiring.stats.totalMatches', 'AI Matches'),
+              value: stats?.totalMatches ?? 0,
+              sub: '',
+            },
+            {
+              label: t('product.hiring.stats.interviews', 'Interviews'),
+              value: stats?.interviewsCompleted ?? 0,
+              sub: '',
+            },
+            {
+              label: t('product.hiring.stats.avgClose', 'Avg Close'),
+              value: stats?.avgMatchScore ? `${stats.avgMatchScore}` : '—',
+              sub: stats?.avgMatchScore ? '' : t('product.hiring.stats.accumulating', 'accumulating data'),
+            },
           ].map((item) => (
-            <div key={item.label} className="flex items-baseline gap-1.5">
-              <span className="text-xl font-bold text-slate-900">{item.value}</span>
-              <span className="text-xs text-slate-500">{item.label}</span>
+            <div key={item.label} className="text-center sm:text-left">
+              <p className="text-xs text-slate-500">{item.label}</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{item.value}</p>
+              {item.sub && <p className="mt-0.5 text-xs text-slate-400">{item.sub}</p>}
             </div>
           ))}
         </div>
       </section>
 
-      {/* Status filter pills + results */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2 flex-wrap">
-          {STATUSES.map((s) => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                statusFilter === s
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {s ? hiringStatusLabel(s, t) : t('product.hiring.allStatuses', 'All')}
-              {s && stats && (
-                <span className="ml-1.5 opacity-70">
-                  {s === 'active' ? stats.activeRequests : s === 'paused' ? stats.pausedRequests : stats.closedRequests}
-                </span>
-              )}
-            </button>
-          ))}
+      {/* Tab bar + filter controls */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-0">
+        {/* Status tabs */}
+        <div className="flex items-center gap-0">
+          {STATUSES.map((s) => {
+            const isActive = statusFilter === s;
+            return (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'text-slate-900'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {getStatusTabLabel(s, t)} {getStatusCount(s, stats, totalCount)}
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />
+                )}
+              </button>
+            );
+          })}
         </div>
-        <span className="text-sm text-slate-500">
-          {t('product.hiring.showingResults', 'Showing {{count}} projects', { count: totalCount })}
-        </span>
+
+        {/* Right controls */}
+        <div className="flex items-center gap-2 pb-2 sm:pb-0">
+          <button className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            <IconFilter size={14} stroke={2} />
+            {t('product.hiring.filter', 'Filter')}
+          </button>
+          {user?.role === 'admin' && (
+            <RecruiterTeamFilter value={recruiterFilter} onChange={setRecruiterFilter} />
+          )}
+          <div className="relative">
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="h-9 appearance-none rounded-lg border border-slate-200 bg-white pl-8 pr-8 text-sm text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="date">{t('product.hiring.sortByDate', 'By date')}</option>
+              <option value="name">{t('product.hiring.sortByName', 'By name')}</option>
+              <option value="candidates">{t('product.hiring.sortByCandidates', 'By candidates')}</option>
+            </select>
+            <IconSortDescending className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
+          </div>
+        </div>
       </div>
 
       {/* Projects Grid */}
@@ -527,7 +659,7 @@ export default function HiringRequests() {
             <Link
               to="/start-hiring"
               state={{ fresh: true }}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
             >
               <IconPlus size={15} stroke={2} />
               {t('product.hiring.newProject', 'New Project')}

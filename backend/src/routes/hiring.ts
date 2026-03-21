@@ -333,11 +333,22 @@ router.get('/', async (req, res) => {
       prisma.hiringRequest.findMany({
         where,
         include: {
+          user: {
+            select: { id: true, name: true, email: true },
+          },
           jobs: {
             select: {
               id: true,
               title: true,
               status: true,
+              department: true,
+              location: true,
+              salaryMin: true,
+              salaryMax: true,
+              salaryCurrency: true,
+              salaryText: true,
+              salaryPeriod: true,
+              experienceLevel: true,
               updatedAt: true,
             },
             orderBy: { updatedAt: 'desc' },
@@ -355,8 +366,9 @@ router.get('/', async (req, res) => {
     ]);
 
     // Trim heavy fields not needed in list view
-    const trimmed = hiringRequests.map(({ jobDescription, intelligenceData, webhookUrl, jobs, ...rest }) => ({
+    const trimmed = hiringRequests.map(({ jobDescription, intelligenceData, webhookUrl, jobs, user: hrUser, ...rest }) => ({
       ...rest,
+      recruiter: hrUser ? { id: hrUser.id, name: hrUser.name || hrUser.email } : null,
       linkedJob: jobs[0] || null,
     }));
 

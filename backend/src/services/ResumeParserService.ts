@@ -1,6 +1,8 @@
 import { llmService } from './llm/LLMService.js';
 import { logger } from './LoggerService.js';
 
+const extractModel = process.env.LLM_EXTRACT_MODEL || undefined;
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 export interface ContactInfo {
@@ -446,7 +448,7 @@ Parse this resume and return ONLY valid JSON (no markdown, no explanation):`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text },
       ],
-      { temperature: 0.0, requestId }
+      { temperature: 0.0, requestId, model: extractModel }
     );
 
     const duration = Date.now() - startTime;
@@ -502,7 +504,7 @@ Output beautifully formatted Markdown:`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: 'Format this resume into professional Markdown.' },
         ],
-        { temperature: 0.1, requestId }
+        { temperature: 0.1, requestId, model: extractModel }
       );
 
       const formatted = response.trim();
@@ -549,7 +551,7 @@ RESUME TEXT:`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: rawText },
         ],
-        { temperature: 0.1, requestId }
+        { temperature: 0.1, requestId, model: extractModel }
       );
 
       const formatted = response.trim();
