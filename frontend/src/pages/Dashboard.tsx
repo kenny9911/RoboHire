@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 import SEO from '../components/SEO';
@@ -306,9 +308,9 @@ function RichTextPanel({
               {parsed.intro.length > 0 && (
                 <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                   {parsed.intro.map((paragraph, index) => (
-                    <p key={`intro-${index}`} className="leading-6 text-slate-700">
-                      {paragraph}
-                    </p>
+                    <div key={`intro-${index}`} className="leading-6 text-slate-700 prose prose-sm prose-slate max-w-none [&>p]:my-0 [&>ul]:my-1 [&>ol]:my-1">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{paragraph}</ReactMarkdown>
+                    </div>
                   ))}
                 </div>
               )}
@@ -322,7 +324,7 @@ function RichTextPanel({
                     {section.items.map((item, itemIndex) => (
                       <li key={`${section.title}-${itemIndex}`} className="flex items-start gap-2.5 leading-6 text-slate-700">
                         <span className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${colorClass.dot}`} />
-                        <span>{item}</span>
+                        <span className="prose prose-sm prose-slate max-w-none [&>p]:my-0 [&>p]:inline"><ReactMarkdown remarkPlugins={[remarkGfm]}>{item}</ReactMarkdown></span>
                       </li>
                     ))}
                   </ul>
@@ -332,9 +334,9 @@ function RichTextPanel({
               {parsed.trailing.length > 0 && (
                 <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                   {parsed.trailing.map((paragraph, index) => (
-                    <p key={`trailing-${index}`} className="leading-6 text-slate-700">
-                      {paragraph}
-                    </p>
+                    <div key={`trailing-${index}`} className="leading-6 text-slate-700 prose prose-sm prose-slate max-w-none [&>p]:my-0 [&>ul]:my-1 [&>ol]:my-1">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{paragraph}</ReactMarkdown>
+                    </div>
                   ))}
                 </div>
               )}

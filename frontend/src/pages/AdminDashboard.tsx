@@ -45,6 +45,45 @@ interface UserSummary {
   effectiveMaxMatches?: number | null;
 }
 
+type UserTableColumnKey =
+  | 'email'
+  | 'name'
+  | 'company'
+  | 'role'
+  | 'plan'
+  | 'status'
+  | 'balance'
+  | 'interviews'
+  | 'matches'
+  | 'actions';
+
+type ResizableUserTableColumnKey = Exclude<UserTableColumnKey, 'actions'>;
+
+const USER_TABLE_DEFAULT_WIDTHS: Record<UserTableColumnKey, number> = {
+  email: 320,
+  name: 160,
+  company: 180,
+  role: 90,
+  plan: 100,
+  status: 110,
+  balance: 110,
+  interviews: 120,
+  matches: 110,
+  actions: 76,
+};
+
+const USER_TABLE_MIN_WIDTHS: Record<ResizableUserTableColumnKey, number> = {
+  email: 220,
+  name: 120,
+  company: 140,
+  role: 80,
+  plan: 84,
+  status: 96,
+  balance: 100,
+  interviews: 108,
+  matches: 100,
+};
+
 interface AdjustmentRecord {
   id: string;
   type: string;
@@ -1085,11 +1124,15 @@ function SimpleTable({
 function UsersTab() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [page, setPage] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [columnWidths, setColumnWidths] = useState<Record<UserTableColumnKey, number>>(() => ({
+    ...USER_TABLE_DEFAULT_WIDTHS,
+  }));
 
   const [selectedUser, setSelectedUser] = useState<UserSummary | null>(null);
   const [adjustments, setAdjustments] = useState<AdjustmentRecord[]>([]);
@@ -1110,11 +1153,17 @@ function UsersTab() {
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
 
-  const searchUsers = useCallback(async (searchTerm: string, pageNum: number) => {
+  const searchUsers = useCallback(async (searchTerm: string, companyTerm: string, pageNum: number) => {
     setIsSearching(true);
     setSearchError('');
     try {
-      const data = await adminFetch(`/users?search=${encodeURIComponent(searchTerm)}&page=${pageNum}&limit=20`);
+      const params = new URLSearchParams({
+        search: searchTerm,
+        company: companyTerm,
+        page: String(pageNum),
+        limit: '20',
+      });
+      const data = await adminFetch(`/users?${params.toString()}`);
       setUsers(data.data.users);
       setTotalUsers(data.data.pagination.total);
       setPage(pageNum);
@@ -1124,6 +1173,53 @@ function UsersTab() {
       setIsSearching(false);
     }
   }, []);
+
+  useEffect(() => {
+    void searchUsers('', '', 1);
+  }, [searchUsers]);
+
+  const runUserSearch = useCallback((pageNum = 1) => {
+    void searchUsers(search, companyFilter, pageNum);
+  }, [companyFilter, search, searchUsers]);
+
+  const startColumnResize = useCallback((column: ResizableUserTableColumnKey, event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const startX = event.clientX;
+    const startWidth = columnWidths[column];
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const nextWidth = Math.max(USER_TABLE_MIN_WIDTHS[column], startWidth + (moveEvent.clientX - startX));
+      setColumnWidths((prev) => ({ ...prev, [column]: nextWidth }));
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [columnWidths]);
+
+  const userTableColumns: Array<{ key: UserTableColumnKey; label: string; resizable: boolean; align?: 'left' | 'right' }> = [
+    { key: 'email', label: 'Email', resizable: true },
+    { key: 'name', label: 'Name', resizable: true },
+    { key: 'company', label: 'Company', resizable: true },
+    { key: 'role', label: 'Role', resizable: true },
+    { key: 'plan', label: 'Plan', resizable: true },
+    { key: 'status', label: 'Status', resizable: true },
+    { key: 'balance', label: 'Balance', resizable: true },
+    { key: 'interviews', label: 'Interviews', resizable: true },
+    { key: 'matches', label: 'Matches', resizable: true },
+    { key: 'actions', label: '', resizable: false, align: 'right' },
+  ];
+  const userTableMinWidth = userTableColumns.reduce((sum, column) => sum + columnWidths[column.key], 0);
 
   const loadUserDetail = async (userId: string) => {
     setIsLoadingDetail(true);
@@ -1245,17 +1341,25 @@ function UsersTab() {
       {/* Search */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">User Management</h2>
-        <div className="flex gap-3">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(220px,0.8fr)_auto]">
           <input
             type="text"
-            placeholder="Search by email, name, or company..."
+            placeholder="Search by email or name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && searchUsers(search, 1)}
+            onKeyDown={(e) => e.key === 'Enter' && runUserSearch(1)}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
+          <input
+            type="text"
+            placeholder="Filter by company..."
+            value={companyFilter}
+            onChange={(e) => setCompanyFilter(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && runUserSearch(1)}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
           <button
-            onClick={() => searchUsers(search, 1)}
+            onClick={() => runUserSearch(1)}
             disabled={isSearching}
             className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
           >
@@ -1267,18 +1371,29 @@ function UsersTab() {
         {/* User list */}
         {users.length > 0 && (
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full table-fixed text-sm" style={{ minWidth: `${userTableMinWidth}px` }}>
+              <colgroup>
+                {userTableColumns.map((column) => (
+                  <col key={column.key} style={{ width: `${columnWidths[column.key]}px` }} />
+                ))}
+              </colgroup>
               <thead>
                 <tr className="border-b border-gray-200 text-left text-gray-500">
-                  <th className="pb-2 font-medium">Email</th>
-                  <th className="pb-2 font-medium">Name</th>
-                  <th className="pb-2 font-medium">Role</th>
-                  <th className="pb-2 font-medium">Plan</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium">Balance</th>
-                  <th className="pb-2 font-medium">Interviews</th>
-                  <th className="pb-2 font-medium">Matches</th>
-                  <th className="pb-2 font-medium"></th>
+                  {userTableColumns.map((column) => (
+                    <th
+                      key={column.key}
+                      className={`relative pb-2 pr-4 font-medium ${column.align === 'right' ? 'text-right' : ''}`}
+                    >
+                      {column.label}
+                      {column.resizable && (
+                        <div
+                          onMouseDown={(event) => startColumnResize(column.key as ResizableUserTableColumnKey, event)}
+                          className="absolute right-0 top-0 h-full w-3 cursor-col-resize touch-none"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -1291,31 +1406,36 @@ function UsersTab() {
                       }`}
                       onClick={() => navigate(`/product/admin/users/${u.id}`)}
                     >
-                      <td className="py-2.5 text-gray-900">{u.email}</td>
-                      <td className="py-2.5 text-gray-600">{u.name || '-'}</td>
-                      <td className="py-2.5">
+                      <td className="py-2.5 pr-4 text-gray-900 truncate" title={u.email}>{u.email}</td>
+                      <td className="py-2.5 pr-4 text-gray-600 truncate" title={u.name || '-'}>
+                        {u.name || '-'}
+                      </td>
+                      <td className="py-2.5 pr-4 text-gray-600 truncate" title={u.company || '-'}>
+                        {u.company || '-'}
+                      </td>
+                      <td className="py-2.5 pr-4">
                         {u.role === 'admin' ? (
                           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700">admin</span>
                         ) : (
                           <span className="text-gray-400 text-xs">user</span>
                         )}
                       </td>
-                      <td className="py-2.5">{tierBadge(u.subscriptionTier)}</td>
-                      <td className="py-2.5">{statusBadge(u.subscriptionStatus)}</td>
-                      <td className="py-2.5 text-gray-900 font-mono">${u.topUpBalance.toFixed(2)}</td>
-                      <td className="py-2.5 text-gray-600">
+                      <td className="py-2.5 pr-4">{tierBadge(u.subscriptionTier)}</td>
+                      <td className="py-2.5 pr-4">{statusBadge(u.subscriptionStatus)}</td>
+                      <td className="py-2.5 pr-4 text-gray-900 font-mono">${u.topUpBalance.toFixed(2)}</td>
+                      <td className="py-2.5 pr-4 text-gray-600">
                         {u.interviewsUsed}/
                         {u.customMaxInterviews != null
                           ? <span className="text-amber-600 font-medium" title="Custom override">{u.customMaxInterviews}</span>
                           : formatUsageLimit(u.effectiveMaxInterviews)}
                       </td>
-                      <td className="py-2.5 text-gray-600">
+                      <td className="py-2.5 pr-4 text-gray-600">
                         {u.resumeMatchesUsed}/
                         {u.customMaxMatches != null
                           ? <span className="text-amber-600 font-medium" title="Custom override">{u.customMaxMatches}</span>
                           : formatUsageLimit(u.effectiveMaxMatches)}
                       </td>
-                      <td className="py-2.5">
+                      <td className="py-2.5 text-right">
                         <button className="text-indigo-600 hover:text-indigo-800 text-xs font-medium">View</button>
                       </td>
                     </tr>
@@ -1328,7 +1448,7 @@ function UsersTab() {
               <div className="flex gap-2">
                 <button
                   disabled={page <= 1}
-                  onClick={() => searchUsers(search, page - 1)}
+                  onClick={() => runUserSearch(page - 1)}
                   className="px-3 py-1 border border-gray-300 rounded text-xs disabled:opacity-40 hover:bg-gray-50"
                 >
                   Prev
@@ -1336,7 +1456,7 @@ function UsersTab() {
                 <span className="px-2 py-1 text-xs">Page {page}</span>
                 <button
                   disabled={page * 20 >= totalUsers}
-                  onClick={() => searchUsers(search, page + 1)}
+                  onClick={() => runUserSearch(page + 1)}
                   className="px-3 py-1 border border-gray-300 rounded text-xs disabled:opacity-40 hover:bg-gray-50"
                 >
                   Next
@@ -1360,6 +1480,7 @@ function UsersTab() {
                     {selectedUser.name || selectedUser.email}
                   </h3>
                   <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                  {selectedUser.company && <p className="text-sm text-gray-500">{selectedUser.company}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   {tierBadge(selectedUser.subscriptionTier)}

@@ -30,6 +30,12 @@ const FONT_DIR = path.resolve(__dirname, '..', '..', 'assets', 'fonts');
 const FONT_REGULAR = path.join(FONT_DIR, 'NotoSansSC-Regular.ttf');
 const FONT_BOLD = path.join(FONT_DIR, 'NotoSansSC-Bold.ttf');
 const HAS_PDF_FONTS = fs.existsSync(FONT_REGULAR) && fs.existsSync(FONT_BOLD);
+const LANGUAGE_FILTER_ALIASES: Record<string, string[]> = {
+  english: ['english', '英语', '英文'],
+  spanish: ['spanish', 'espanol', 'español', '西班牙语', '西班牙文'],
+  chinese: ['chinese', 'mandarin', 'mandarin chinese', '中文', '汉语', '漢語', '普通话', '普通話', '国语', '國語'],
+  mandarin: ['chinese', 'mandarin', 'mandarin chinese', '中文', '汉语', '漢語', '普通话', '普通話', '国语', '國語'],
+};
 
 const uploadDoc = multer({
   storage: multer.memoryStorage(),
@@ -62,6 +68,13 @@ function getProcessingMetrics(requestId?: string) {
 function computeHash(text: string): string {
   const normalized = text.trim().toLowerCase().replace(/\s+/g, ' ');
   return crypto.createHash('sha256').update(normalized).digest('hex').substring(0, 16);
+}
+
+function getLanguageFilterTerms(value: string): string[] {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return [];
+  const aliases = LANGUAGE_FILTER_ALIASES[normalized] || [normalized];
+  return [...new Set(aliases.map((term) => term.trim().toLowerCase()).filter(Boolean))];
 }
 
 function decodeFilename(raw: string): string {
@@ -825,6 +838,10 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       school,
       company,
       country,
+      location,
+      language,
+      fitScoreMin,
+      fitScoreMax,
     } = req.query as Record<string, string>;
 
     const pageNum = Math.max(1, parseInt(page) || 1);
@@ -853,13 +870,28 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     if (jobId) {
       where.jobMatches = { some: { jobId } };
     }
-    // Filter by pipeline status (via ResumeJobFit)
+    const resumeJobFitSome: Record<string, unknown> = {};
     if (pipelineStatus) {
-      where.resumeJobFits = { some: { pipelineStatus } };
+      resumeJobFitSome.pipelineStatus = pipelineStatus;
+    }
+    if (fitScoreMin || fitScoreMax) {
+      const fitScoreFilter: Record<string, number> = {};
+      if (fitScoreMin && !Number.isNaN(parseFloat(fitScoreMin))) {
+        fitScoreFilter.gte = parseFloat(fitScoreMin);
+      }
+      if (fitScoreMax && !Number.isNaN(parseFloat(fitScoreMax))) {
+        fitScoreFilter.lte = parseFloat(fitScoreMax);
+      }
+      if (Object.keys(fitScoreFilter).length > 0) {
+        resumeJobFitSome.fitScore = fitScoreFilter;
+      }
+    }
+    if (Object.keys(resumeJobFitSome).length > 0) {
+      where.resumeJobFits = { some: resumeJobFitSome };
     }
 
     // ── JSON-based filters via raw SQL pre-filter (uses GIN indexes on parsedData) ──
-    const hasJsonFilters = !!(skills || educationLevel || school || company || country);
+    const hasJsonFilters = !!(skills || educationLevel || school || company || country || location || language);
     if (hasJsonFilters) {
       const conditions: string[] = [`"parsedData" IS NOT NULL`];
       const params: any[] = [];
@@ -910,19 +942,43 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       }
 
       if (school) {
-        const ph = p(`%${school.toLowerCase()}%`);
-        conditions.push(`EXISTS (
-          SELECT 1 FROM jsonb_array_elements("parsedData"->'education') AS edu
-          WHERE LOWER(edu->>'institution') LIKE ${ph}
-        )`);
+        const schoolList = school.split(/[,，、]/).map((s) => s.trim()).filter(Boolean);
+        if (schoolList.length === 1) {
+          const ph = p(`%${schoolList[0].toLowerCase()}%`);
+          conditions.push(`EXISTS (
+            SELECT 1 FROM jsonb_array_elements("parsedData"->'education') AS edu
+            WHERE LOWER(edu->>'institution') LIKE ${ph}
+          )`);
+        } else if (schoolList.length > 1) {
+          const orClauses = schoolList.map((s) => {
+            const ph = p(`%${s.toLowerCase()}%`);
+            return `LOWER(edu->>'institution') LIKE ${ph}`;
+          });
+          conditions.push(`EXISTS (
+            SELECT 1 FROM jsonb_array_elements("parsedData"->'education') AS edu
+            WHERE ${orClauses.join(' OR ')}
+          )`);
+        }
       }
 
       if (company) {
-        const ph = p(`%${company.toLowerCase()}%`);
-        conditions.push(`EXISTS (
-          SELECT 1 FROM jsonb_array_elements("parsedData"->'experience') AS exp
-          WHERE LOWER(exp->>'company') LIKE ${ph}
-        )`);
+        const companyList = company.split(/[,，、]/).map((s) => s.trim()).filter(Boolean);
+        if (companyList.length === 1) {
+          const ph = p(`%${companyList[0].toLowerCase()}%`);
+          conditions.push(`EXISTS (
+            SELECT 1 FROM jsonb_array_elements("parsedData"->'experience') AS exp
+            WHERE LOWER(exp->>'company') LIKE ${ph}
+          )`);
+        } else if (companyList.length > 1) {
+          const orClauses = companyList.map((c) => {
+            const ph = p(`%${c.toLowerCase()}%`);
+            return `LOWER(exp->>'company') LIKE ${ph}`;
+          });
+          conditions.push(`EXISTS (
+            SELECT 1 FROM jsonb_array_elements("parsedData"->'experience') AS exp
+            WHERE ${orClauses.join(' OR ')}
+          )`);
+        }
       }
 
       if (country) {
@@ -940,6 +996,55 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
             WHERE LOWER(edu->>'institution') LIKE ${ph} OR LOWER(edu->>'location') LIKE ${ph}
           )
         )`);
+      }
+
+      if (location) {
+        const locationList = location.split(/[,，、]/).map((s) => s.trim()).filter(Boolean);
+        const locClauses = locationList.map((loc) => {
+          const ph = p(`%${loc.toLowerCase()}%`);
+          return `(
+            LOWER("parsedData"->>'address') LIKE ${ph}
+            OR LOWER("parsedData"->>'location') LIKE ${ph}
+            OR EXISTS (
+              SELECT 1 FROM jsonb_array_elements("parsedData"->'experience') AS exp
+              WHERE LOWER(exp->>'location') LIKE ${ph}
+            )
+            OR EXISTS (
+              SELECT 1 FROM jsonb_array_elements("parsedData"->'education') AS edu
+              WHERE LOWER(edu->>'location') LIKE ${ph}
+            )
+          )`;
+        });
+        conditions.push(`(${locClauses.join(' OR ')})`);
+      }
+
+      if (language) {
+        const languageList = language.split(',').map((item) => item.trim()).filter(Boolean);
+        if (languageList.length > 0) {
+          const languageClauses = languageList.map((lang) => {
+            const searchTerms = getLanguageFilterTerms(lang);
+            return `(${searchTerms.map((term) => {
+              const ph = p(`%${term}%`);
+              return `(
+                EXISTS (
+                  SELECT 1
+                  FROM jsonb_array_elements(COALESCE("parsedData"->'languages', '[]'::jsonb)) AS lang_entry
+                  WHERE LOWER(lang_entry->>'language') LIKE ${ph}
+                    OR LOWER(lang_entry->>'proficiency') LIKE ${ph}
+                )
+                OR (
+                  jsonb_typeof("parsedData"->'skills') = 'object'
+                  AND EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements_text(COALESCE("parsedData"->'skills'->'languages', '[]'::jsonb)) AS lang_skill
+                    WHERE LOWER(lang_skill) LIKE ${ph}
+                  )
+                )
+              )`;
+            }).join(' OR ')})`;
+          });
+          conditions.push(`(${languageClauses.join(' OR ')})`);
+        }
       }
 
       // Run raw SQL to get matching resume IDs
@@ -1097,6 +1202,13 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
           skills: r.parsedData.skills,
           summary: r.parsedData.summary,
           address: r.parsedData.address,
+          location: r.parsedData.location,
+          languages: Array.isArray(r.parsedData.languages)
+            ? r.parsedData.languages.map((lang: any) => ({
+                language: lang.language,
+                proficiency: lang.proficiency,
+              }))
+            : [],
           experience: Array.isArray(r.parsedData.experience)
             ? r.parsedData.experience.map((e: any) => ({
                 company: e.company,
@@ -1114,6 +1226,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
                 institution: e.institution,
                 degree: e.degree,
                 field: e.field,
+                location: e.location,
                 year: e.year,
                 startDate: e.startDate,
                 endDate: e.endDate,
@@ -2004,6 +2117,117 @@ router.delete('/:id/versions/:versionId', requireAuth, async (req: Request, res:
   } catch (error) {
     logger.error('RESUMES', 'Failed to delete version', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ success: false, error: 'Failed to delete version' });
+  }
+});
+
+// ─── Regenerate AI summary for a resume with optional instructions ─────
+router.post('/:id/regenerate-summary', requireAuth, async (req: Request, res: Response) => {
+  const requestId = req.requestId;
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    const scope = await getVisibilityScope(req.user);
+    const resume = await prisma.resume.findFirst({
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
+    });
+    if (!resume) {
+      return res.status(404).json({ success: false, error: 'Resume not found' });
+    }
+
+    const parsed = (resume.parsedData || {}) as unknown as ParsedResume;
+    const { instructions, jobId } = req.body || {};
+
+    // Fetch job context if provided
+    let jobContext = '';
+    if (jobId && typeof jobId === 'string') {
+      const job = await prisma.job.findFirst({
+        where: { id: jobId, ...buildUserIdFilter(scope) },
+      });
+      if (job) {
+        const jdParts: string[] = [`Job Title: ${job.title}`];
+        if (job.department) jdParts.push(`Department: ${job.department}`);
+        if (job.location) jdParts.push(`Location: ${job.location}`);
+        const jdParsed = (job.parsedData || {}) as Record<string, unknown>;
+        if (jdParsed.responsibilities) jdParts.push(`Key Responsibilities: ${JSON.stringify(jdParsed.responsibilities).substring(0, 300)}`);
+        if (jdParsed.requirements) jdParts.push(`Requirements: ${JSON.stringify(jdParsed.requirements).substring(0, 300)}`);
+        if (jdParsed.skills) jdParts.push(`Required Skills: ${JSON.stringify(jdParsed.skills).substring(0, 200)}`);
+        if (job.description) jdParts.push(`Job Description:\n${job.description.substring(0, 500)}`);
+        jobContext = `\n\nTarget Job:\n${jdParts.join('\n')}`;
+      }
+    }
+
+    // Build context from parsed resume
+    const parts: string[] = [];
+    parts.push(`Name: ${parsed.name || resume.name || 'Unknown'}`);
+    if (parsed.experience && Array.isArray(parsed.experience) && parsed.experience.length > 0) {
+      parts.push('Experience:');
+      for (const exp of parsed.experience.slice(0, 5)) {
+        const desc = exp.description ? ` — ${String(exp.description).substring(0, 120)}` : '';
+        parts.push(`- ${exp.role || ''} at ${exp.company || ''} (${exp.duration || exp.startDate || ''})${desc}`);
+      }
+    }
+    if (parsed.education && Array.isArray(parsed.education) && parsed.education.length > 0) {
+      parts.push('Education:');
+      for (const edu of parsed.education.slice(0, 3)) {
+        const eduParts = [edu.degree, edu.field, edu.institution].filter(Boolean).join(' ');
+        parts.push(`- ${eduParts}`);
+      }
+    }
+    const skills = Array.isArray(parsed.skills)
+      ? parsed.skills
+      : parsed.skills ? Object.values(parsed.skills).flat().filter(Boolean) : [];
+    if (skills.length > 0) {
+      parts.push(`Skills: ${skills.slice(0, 20).join(', ')}`);
+    }
+
+    const currentSummary = resume.summary || '';
+    const userInstructions = instructions && typeof instructions === 'string' && instructions.trim()
+      ? `\n\nAdditional instructions from the recruiter:\n${instructions.trim()}`
+      : '';
+
+    const jobOptimization = jobContext
+      ? `\nIMPORTANT: Tailor the summary specifically for the target job below. Emphasize the candidate's experience, skills, and achievements that are most relevant to this role. Position them as a strong fit for this specific position.`
+      : '';
+
+    const prompt = `You are a senior recruiter writing an executive summary of a candidate for a client pitch. Based on this resume data, generate TWO things:
+1. An executive summary (3-4 sentences, ~80-120 words) that a recruiter can use to pitch this candidate to a hiring manager. Highlight: notable skills and technical depth, relevant experience and achievements, education (only if prestigious or highly relevant), and what makes this candidate stand out. Write in the SAME LANGUAGE as the candidate's name and experience (if Chinese name/companies, write in Chinese; if English, write in English). Focus on what's impressive and sellable — skip generic filler.${jobOptimization}
+2. A one-line highlight (under 60 characters) — the single most compelling selling point of this candidate.
+${currentSummary ? `\nCurrent summary (for reference, regenerate a fresh one):\n${currentSummary}` : ''}${userInstructions}${jobContext}
+
+Resume data:
+${parts.join('\n')}
+
+Respond ONLY with JSON (no markdown):
+{"summary": "...", "highlight": "..."}`;
+
+    const response = await llmService.chat(
+      [{ role: 'user', content: prompt }],
+      { requestId },
+    );
+
+    const text = response.trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(500).json({ success: false, error: 'Failed to parse LLM response' });
+    }
+
+    const result = JSON.parse(jsonMatch[0]);
+    const newSummary = result.summary || '';
+    const newHighlight = result.highlight || '';
+
+    await prisma.resume.update({
+      where: { id: resume.id },
+      data: { summary: newSummary || null, highlight: newHighlight || null },
+    });
+
+    logger.info('RESUME', 'Summary regenerated', { resumeId: resume.id }, requestId);
+    res.json({ success: true, data: { summary: newSummary, highlight: newHighlight } });
+  } catch (error) {
+    logger.error('RESUME', 'Failed to regenerate summary', {
+      error: error instanceof Error ? error.message : String(error),
+    }, requestId);
+    res.status(500).json({ success: false, error: 'Failed to regenerate summary' });
   }
 });
 

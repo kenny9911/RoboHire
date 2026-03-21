@@ -1498,107 +1498,126 @@ export default function StartHiring() {
       </header>
 
       <div className="pt-14">
-      {/* Hero Section — Juicebox-inspired centered layout */}
-      <section className="flex flex-col items-center justify-center px-5 pt-16 pb-12 sm:px-6 sm:pt-20">
-        <div className="mx-auto w-full max-w-3xl text-center">
+      {/* Hero Section */}
+      <section className="flex flex-col items-center justify-center px-5 pt-20 pb-14 sm:px-6 sm:pt-28">
+        <div className="mx-auto w-full max-w-4xl text-center">
           {/* Heading */}
-          <h1 className="mb-10 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            {t('hiring.heroTitle', 'Hey, who are you looking for?')}
+          <h1 className="mb-5 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+            {t('hiring.heroTitle', 'Find your next')} <em className="not-italic text-blue-600">{t('hiring.heroAccent', 'stellar')}</em> {t('hiring.heroTitleEnd', 'hire.')}
           </h1>
 
-          {/* Quick action pills */}
-          <div className="mb-8 flex flex-wrap justify-center gap-2">
+          {/* Subtitle */}
+          <p className="mx-auto mb-12 max-w-2xl text-lg text-slate-500 sm:text-xl">
+            {t('hiring.heroSubtitle', 'Use natural language to describe the perfect candidate. Our AI agents will scan millions of profiles to find the precision match.')}
+          </p>
+
+          {/* Search Card */}
+          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white shadow-lg transition-all">
+            {/* Textarea area */}
+            <div className="px-6 pt-6 pb-2">
+              {attachedFile && (
+                <div className="mb-3 flex items-center gap-2 text-sm text-slate-600">
+                  <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                  <span className="truncate">{attachedFile.name}</span>
+                  <button onClick={() => setAttachedFile(null)} className="text-slate-400 transition-colors hover:text-slate-600 flex-shrink-0">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={attachedFile
+                  ? t('hiring.inputPlaceholderWithFile', 'Add instructions for this JD, or press send...')
+                  : t('hiring.inputPlaceholderLong', "Describe your ideal candidate... (e.g. 'A Senior Frontend Engineer with experience in Three.js and high-performance React apps')")}
+                rows={3}
+                className="w-full resize-none bg-transparent text-base text-slate-900 placeholder-slate-400 focus:outline-none leading-relaxed"
+                style={{ minHeight: '80px', maxHeight: '160px' }}
+              />
+            </div>
+
+            {/* Bottom bar: actions left, submit right */}
+            <div className="flex items-center justify-between px-6 pb-5 pt-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-100"
+                  title={t('hiring.uploadJd', 'Upload Job Description')}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                  {t('hiring.addJd', 'Add JD')}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.docx,.txt,.md,.markdown"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setAttachedFile(file);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+              <button
+                onClick={handleSubmit}
+                disabled={(!input.trim() && !attachedFile) || isBriefGenerating}
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                </svg>
+                {t('hiring.generateSearch', 'Generate Search')}
+              </button>
+            </div>
+          </div>
+
+          {/* Quick filters */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
+            <span className="text-sm text-slate-400">{t('hiring.quickFilters', 'Quick filters:')}</span>
             {quickRoles.slice(0, 5).map((role) => (
               <button
                 key={role.id}
                 onClick={() => handleQuickStart(role.label)}
                 disabled={isBriefGenerating}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-wait disabled:opacity-50"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-wait disabled:opacity-50"
               >
                 {role.label}
               </button>
             ))}
           </div>
 
-          {/* Main Input — large rounded container with accent border */}
-          <div className="relative mb-6 rounded-3xl border-2 border-indigo-200 bg-white shadow-sm transition-all focus-within:border-indigo-400 focus-within:shadow-[0_0_0_4px_rgba(99,102,241,0.08)]">
-            {attachedFile && (
-              <div className="mx-5 mt-4 mb-1 flex items-center gap-2 text-sm text-slate-600">
-                <svg className="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-                <span className="truncate">{attachedFile.name}</span>
-                <button onClick={() => setAttachedFile(null)} className="text-slate-400 transition-colors hover:text-slate-600 flex-shrink-0">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            )}
-            <div className="flex items-end gap-2 px-5 py-4">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="mb-0.5 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-                title={t('hiring.uploadJd', 'Upload Job Description')}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.docx,.txt,.md,.markdown"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setAttachedFile(file);
-                  }
-                  e.target.value = '';
-                }}
-              />
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={attachedFile ? t('hiring.inputPlaceholderWithFile', 'Add instructions for this JD, or press send...') : t('hiring.inputPlaceholder', 'Software Engineers with 5+ yrs of experience at fintech companies...')}
-                rows={2}
-                className="flex-1 resize-none bg-transparent text-base text-slate-900 placeholder-slate-400 focus:outline-none leading-relaxed"
-                style={{ minHeight: '56px', maxHeight: '140px' }}
-              />
-              <button
-                onClick={handleSubmit}
-                disabled={!input.trim() && !attachedFile}
-                className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Suggestions list — Juicebox-style clickable examples */}
-          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100 text-left shadow-sm">
-            {searchExamples.map((example, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleQuickStart(example)}
-                disabled={isBriefGenerating}
-                className="flex w-full items-center px-6 py-3.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50 first:rounded-t-2xl last:rounded-b-2xl"
-              >
-                {example}
-              </button>
-            ))}
-          </div>
-
           {isBriefGenerating && (
-            <p className="mt-3 text-center text-sm text-slate-500 animate-pulse">
+            <p className="mt-4 text-center text-sm text-slate-500 animate-pulse">
               {t('hiring.generatingBrief', 'Generating hiring brief...')}
             </p>
           )}
+        </div>
+      </section>
+
+      {/* Suggestions — clickable example prompts */}
+      <section className="px-5 pb-10 sm:px-6">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100 shadow-sm">
+          {searchExamples.map((example, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleQuickStart(example)}
+              disabled={isBriefGenerating}
+              className="flex w-full items-center px-6 py-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50 first:rounded-t-2xl last:rounded-b-2xl"
+            >
+              {example}
+            </button>
+          ))}
         </div>
       </section>
 
@@ -1606,7 +1625,7 @@ export default function StartHiring() {
       <section className="px-5 py-10 sm:px-6">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
-            <h2 className="mb-2 text-2xl font-semibold text-slate-900">
+            <h2 className="mb-2 text-2xl font-bold text-slate-900">
               {t('hiring.templatesTitle', 'Popular role templates')}
             </h2>
             <p className="text-slate-500">
@@ -1619,9 +1638,9 @@ export default function StartHiring() {
               <button
                 key={template.id}
                 onClick={() => handleTemplateSelect(template)}
-                className="group rounded-xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-indigo-200 hover:shadow-md"
+                className="group rounded-xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-blue-200 hover:shadow-md"
               >
-                <h3 className="mb-1.5 font-medium text-slate-900 group-hover:text-indigo-600">
+                <h3 className="mb-1.5 font-medium text-slate-900 group-hover:text-blue-600">
                   {template.title}
                 </h3>
                 <p className="mb-3 line-clamp-2 text-sm text-slate-500">
@@ -1629,7 +1648,7 @@ export default function StartHiring() {
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {template.skills.slice(0, 3).map((skill) => (
-                    <span key={skill} className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-600">
+                    <span key={skill} className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
                       {skill}
                     </span>
                   ))}
@@ -1643,7 +1662,7 @@ export default function StartHiring() {
               <button
                 type="button"
                 onClick={() => setShowAllTemplates(true)}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700"
               >
                 {t('hiring.viewAllTemplates', 'View all templates')}
               </button>

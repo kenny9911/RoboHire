@@ -141,18 +141,28 @@ function AIWandButton({ onClick, loading, hasContent, t }: {
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="inline-flex items-center justify-center h-6 w-6 rounded text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-50"
+      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-blue-500 transition-all hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
       title={hasContent ? t('product.jobs.enhance', 'Refine with AI') : t('product.jobs.generate', 'Generate with AI')}
     >
       {loading ? (
         <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-500" />
       ) : (
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a4.42 4.42 0 0 1 0-8.527l6.135-1.581a2 2 0 0 0 1.438-1.437l1.582-6.135a4.42 4.42 0 0 1 8.527 0l1.581 6.135a2 2 0 0 0 1.437 1.438l6.135 1.582a4.42 4.42 0 0 1 0 8.527l-6.135 1.581a2 2 0 0 0-1.438 1.437l-1.582 6.135a4.42 4.42 0 0 1-8.527 0z" />
-          <path d="M20 3v4" />
-          <path d="M22 5h-4" />
-          <path d="M4 17v2" />
-          <path d="M5 18H3" />
+        <svg
+          className="h-[18px] w-[18px]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M10 4.75h4a2.9 2.9 0 0 1 2.12.92l2.2 2.4a2.9 2.9 0 0 1 .76 1.96v3.94a2.9 2.9 0 0 1-.76 1.96l-2.2 2.4a2.9 2.9 0 0 1-2.12.92h-4a2.9 2.9 0 0 1-2.12-.92l-2.2-2.4a2.9 2.9 0 0 1-.76-1.96V10.03a2.9 2.9 0 0 1 .76-1.96l2.2-2.4A2.9 2.9 0 0 1 10 4.75Z" />
+          <path d="M12 8.55 13 10.8l2.25 1L13 12.8 12 15.05 11 12.8l-2.25-1L11 10.8 12 8.55Z" fill="currentColor" stroke="none" />
+          <path d="M18.25 4.5v2.1" />
+          <path d="M19.3 5.55h-2.1" />
+          <path d="M6.25 16.9v1.6" />
+          <path d="M7.05 17.7h-1.6" />
         </svg>
       )}
     </button>
@@ -341,6 +351,58 @@ export default function Jobs() {
   }, [clientFilter, dateRangeFilter, i18n.language, jobs, matchesDateRange, searchQuery, sortOrder]);
 
   const hasActiveFilters = Boolean(searchQuery.trim() || clientFilter || dateRangeFilter !== 'all');
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(i18n.language), [i18n.language]);
+
+  const recruiterOverviewStats = useMemo(() => {
+    const openCount = displayedJobs.filter((job) => job.status === 'open').length;
+    const totalHeadcount = displayedJobs.reduce((sum, job) => sum + Math.max(0, Number(job.headcount) || 0), 0);
+    const totalMatches = displayedJobs.reduce((sum, job) => sum + (job.stats?.matches ?? 0), 0);
+    const totalInterviews = displayedJobs.reduce((sum, job) => sum + (job.stats?.interviews ?? 0), 0);
+    const totalCompleted = displayedJobs.reduce((sum, job) => sum + (job.stats?.completedInterviews ?? 0), 0);
+
+    return [
+      {
+        key: 'open',
+        label: t('product.jobs.status.open', 'Open'),
+        value: numberFormatter.format(openCount),
+        cardClass: 'border-emerald-200 bg-emerald-50/70',
+        labelClass: 'text-emerald-700',
+        valueClass: 'text-emerald-950',
+      },
+      {
+        key: 'headcount',
+        label: t('product.jobs.statsHeadcount', 'Headcount'),
+        value: numberFormatter.format(totalHeadcount),
+        cardClass: 'border-sky-200 bg-sky-50/75',
+        labelClass: 'text-sky-700',
+        valueClass: 'text-slate-950',
+      },
+      {
+        key: 'matches',
+        label: t('product.jobs.statsMatches', 'Matches'),
+        value: numberFormatter.format(totalMatches),
+        cardClass: 'border-violet-200 bg-violet-50/70',
+        labelClass: 'text-violet-700',
+        valueClass: 'text-slate-950',
+      },
+      {
+        key: 'interviews',
+        label: t('product.jobs.statsInterviews', 'Interviews'),
+        value: numberFormatter.format(totalInterviews),
+        cardClass: 'border-amber-200 bg-amber-50/75',
+        labelClass: 'text-amber-700',
+        valueClass: 'text-slate-950',
+      },
+      {
+        key: 'completed',
+        label: t('product.jobs.statsCompleted', 'Completed'),
+        value: numberFormatter.format(totalCompleted),
+        cardClass: 'border-blue-200 bg-blue-50/75',
+        labelClass: 'text-blue-700',
+        valueClass: 'text-slate-950',
+      },
+    ];
+  }, [displayedJobs, numberFormatter, t]);
 
   const resetForm = () => {
     setForm(getInitialForm(i18n.language));
@@ -917,6 +979,24 @@ export default function Jobs() {
           {t('product.jobs.create', 'Create Job')}
         </button>
       </div>
+
+      {jobs.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {recruiterOverviewStats.map((stat) => (
+            <div
+              key={stat.key}
+              className={`rounded-2xl border px-4 py-4 shadow-[0_18px_38px_-34px_rgba(15,23,42,0.45)] ${stat.cardClass}`}
+            >
+              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${stat.labelClass}`}>
+                {stat.label}
+              </p>
+              <p className={`mt-3 text-3xl font-semibold leading-none ${stat.valueClass}`}>
+                {stat.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Status filter + toolbar */}
       <div className="space-y-3">

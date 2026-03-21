@@ -6,6 +6,21 @@ import '../types/auth.js';
 
 const router = Router();
 
+async function buildAgentAccessWhere(
+  user: { id: string; role?: string | null; teamId?: string | null },
+  agentId: string
+): Promise<Record<string, unknown>> {
+  const scope = await getVisibilityScope(
+    {
+      id: user.id,
+      role: user.role ?? undefined,
+      teamId: user.teamId ?? null,
+    },
+    true
+  );
+  return { id: agentId, ...buildUserIdFilter(scope) };
+}
+
 // ── List agents ──
 router.get('/', requireAuth, async (req, res) => {
   try {
@@ -48,8 +63,9 @@ router.get('/', requireAuth, async (req, res) => {
 // ── Get single agent ──
 router.get('/:id', requireAuth, async (req, res) => {
   try {
+    const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
     const agent = await prisma.agent.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: accessWhere,
       include: {
         job: { select: { id: true, title: true } },
         _count: { select: { candidates: true } },
@@ -111,8 +127,9 @@ router.post('/', requireAuth, async (req, res) => {
 // ── Update agent ──
 router.patch('/:id', requireAuth, async (req, res) => {
   try {
+    const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
     const agent = await prisma.agent.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: accessWhere,
     });
     if (!agent) return res.status(404).json({ error: 'Agent not found' });
 
@@ -143,8 +160,9 @@ router.patch('/:id', requireAuth, async (req, res) => {
 // ── Delete agent ──
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
+    const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
     const agent = await prisma.agent.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: accessWhere,
     });
     if (!agent) return res.status(404).json({ error: 'Agent not found' });
 
@@ -159,8 +177,9 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // ── List candidates for an agent ──
 router.get('/:id/candidates', requireAuth, async (req, res) => {
   try {
+    const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
     const agent = await prisma.agent.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: accessWhere,
     });
     if (!agent) return res.status(404).json({ error: 'Agent not found' });
 
@@ -197,8 +216,9 @@ router.get('/:id/candidates', requireAuth, async (req, res) => {
 // ── Update candidate status (approve/reject) ──
 router.patch('/:id/candidates/:candidateId', requireAuth, async (req, res) => {
   try {
+    const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
     const agent = await prisma.agent.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: accessWhere,
     });
     if (!agent) return res.status(404).json({ error: 'Agent not found' });
 
@@ -241,8 +261,9 @@ router.patch('/:id/candidates/:candidateId', requireAuth, async (req, res) => {
 // ── Agent stats summary ──
 router.get('/:id/stats', requireAuth, async (req, res) => {
   try {
+    const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
     const agent = await prisma.agent.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: accessWhere,
     });
     if (!agent) return res.status(404).json({ error: 'Agent not found' });
 

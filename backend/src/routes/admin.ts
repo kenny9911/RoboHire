@@ -88,17 +88,26 @@ router.get('/users', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const search = (req.query.search as string)?.trim() || '';
+    const company = (req.query.company as string)?.trim() || '';
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? {
-          OR: [
-            { email: { contains: search, mode: 'insensitive' as const } },
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { company: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    const filters: Prisma.UserWhereInput[] = [];
+    if (search) {
+      filters.push({
+        OR: [
+          { email: { contains: search, mode: 'insensitive' as const } },
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { company: { contains: search, mode: 'insensitive' as const } },
+        ],
+      });
+    }
+    if (company) {
+      filters.push({
+        company: { contains: company, mode: 'insensitive' as const },
+      });
+    }
+    const where: Prisma.UserWhereInput =
+      filters.length === 0 ? {} : filters.length === 1 ? filters[0] : { AND: filters };
 
     const [users, total, planLimits] = await Promise.all([
       prisma.user.findMany({

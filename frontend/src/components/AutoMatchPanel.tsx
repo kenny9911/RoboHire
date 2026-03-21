@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
 import axios from '../lib/axios';
+import { useAuth } from '../context/AuthContext';
+import RecruiterTeamFilter, { RecruiterTeamFilterValue } from './RecruiterTeamFilter';
 
 interface ResumeJobFit {
   id: string;
@@ -88,6 +90,8 @@ function getSeverityColor(severity: string): string {
 
 export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: AutoMatchPanelProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [fits, setFits] = useState<ResumeJobFit[]>([]);
   const [loading, setLoading] = useState(false);
   const [matching, setMatching] = useState(false);
@@ -119,6 +123,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
   const [loadingResumes, setLoadingResumes] = useState(false);
   const [resumeSelectedIds, setResumeSelectedIds] = useState<Set<string>>(new Set());
   const [resumeSearch, setResumeSearch] = useState('');
+  const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
 
   const getAuthHeaders = useCallback((): Record<string, string> => {
     const token = localStorage.getItem('auth_token');
@@ -147,14 +152,15 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
     fetchFits();
   }, [fetchFits]);
 
-  // Open resume selection dialog
-  const openResumeSelect = async (force: boolean) => {
-    setResumeSelectForce(force);
-    setShowResumeSelect(true);
-    setResumeSearch('');
+  // Fetch resumes with optional recruiter/team filter
+  const fetchResumesForSelect = useCallback(async (filter: RecruiterTeamFilterValue) => {
     try {
       setLoadingResumes(true);
-      const res = await axios.get('/api/v1/resumes', { params: { limit: 500 } });
+      const params: Record<string, string> = { limit: '9999' };
+      if (filter.filterUserId) params.filterUserId = filter.filterUserId;
+      if (filter.filterTeamId) params.filterTeamId = filter.filterTeamId;
+      if (filter.teamView) params.teamView = 'true';
+      const res = await axios.get('/api/v1/resumes', { params });
       const data = res.data.data || res.data.resumes || [];
       setAllResumes(data);
       setResumeSelectedIds(new Set(data.map((r: { id: string }) => r.id)));
@@ -163,6 +169,21 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
     } finally {
       setLoadingResumes(false);
     }
+  }, []);
+
+  // Open resume selection dialog
+  const openResumeSelect = async (force: boolean) => {
+    setResumeSelectForce(force);
+    setShowResumeSelect(true);
+    setResumeSearch('');
+    setRecruiterFilter({});
+    fetchResumesForSelect({});
+  };
+
+  // When recruiter filter changes, re-fetch resumes
+  const handleRecruiterFilterChange = (filter: RecruiterTeamFilterValue) => {
+    setRecruiterFilter(filter);
+    fetchResumesForSelect(filter);
   };
 
   const filteredResumesForSelect = useMemo(() => {
@@ -958,7 +979,13 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-              {/* Search + Select All */}
+              {/* Recruiter filter (admin only) + Search + Select All */}
+              {isAdmin && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-500">{t('dashboard.autoMatch.filterByRecruiter', 'Recruiter:')}</span>
+                  <RecruiterTeamFilter value={recruiterFilter} onChange={handleRecruiterFilterChange} />
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -991,7 +1018,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
                   {t('dashboard.autoMatch.noResumesToMatch', 'No resumes found. Upload resumes first in Talent Hub.')}
                 </div>
               ) : (
-                <div className="border border-slate-200 rounded-lg max-h-64 overflow-y-auto divide-y divide-slate-100">
+                <div className="border border-slate-200 rounded-lg max-h-[480px] overflow-y-auto divide-y divide-slate-100">
                   {filteredResumesForSelect.map((resume) => (
                     <label
                       key={resume.id}

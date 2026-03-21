@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import axios from '../../lib/axios';
 import { usePageState } from '../../hooks/usePageState';
 import { useAuth } from '../../context/AuthContext';
@@ -13,7 +15,6 @@ import {
   IconAdjustments,
   IconX,
   IconBookmark,
-  IconCopy,
   IconFiles,
   IconChevronLeft,
   IconChevronRight,
@@ -26,6 +27,10 @@ import {
   IconMailForward,
   IconCircleCheck,
   IconExternalLink,
+  IconEye,
+  IconCopy,
+  IconRefresh,
+  IconCheck,
   IconSend,
 } from '@tabler/icons-react';
 
@@ -88,12 +93,25 @@ const COUNTRY_LIST = [
 interface ExperienceEntry {
   company: string;
   role: string;
+  location?: string;
   startDate?: string;
   endDate?: string;
   duration: string;
   description?: string;
   technologies?: string[];
   employmentType?: string;
+}
+
+interface LanguageEntry {
+  language: string;
+  proficiency?: string;
+}
+
+interface ResumeJobFit {
+  fitScore: number | null;
+  fitGrade: string | null;
+  pipelineStatus?: string | null;
+  hiringRequest?: { title?: string | null } | null;
 }
 
 interface InterviewStatus {
@@ -119,12 +137,16 @@ interface Resume {
   preferences: CandidatePreferences | null;
   hasInvitations: boolean;
   interviewStatus?: InterviewStatus;
+  resumeJobFits?: ResumeJobFit[];
   notes: string | null;
   _versionCount?: number;
   createdAt: string;
   updatedAt: string;
   parsedData: {
     summary?: string;
+    address?: string;
+    location?: string;
+    languages?: LanguageEntry[];
     skills?: string[] | {
       technical?: string[];
       soft?: string[];
@@ -134,7 +156,7 @@ interface Resume {
       other?: string[];
     };
     experience?: ExperienceEntry[];
-    education?: Array<{ institution: string; degree?: string; field?: string }>;
+    education?: Array<{ institution: string; degree?: string; field?: string; location?: string }>;
   } | null;
 }
 
@@ -146,6 +168,13 @@ type EnrichedResume = Resume & {
   _industryTags: string[];
   _jobCategory: string | null;
   _parseWarning: boolean;
+  _location: string | null;
+  _languages: LanguageEntry[];
+  _matchScore: number | null;
+  _matchLabel: string;
+  _matchSummary: string | null;
+  _bestFitTitle: string | null;
+  _experienceValue: number | null;
 };
 
 // ── Notable companies for "Ex-XXX" tags ──
@@ -256,8 +285,36 @@ const SENTENCE_END_RE = /[.。！!？?]\s|[.。！!？?]$/;
 const YEARS_RE = /(\d+(?:\.\d+)?)\s*(?:year|年|yr)/i;
 const MONTHS_RE = /(\d+)\s*(?:month|月|mo)/i;
 const PRESENT_RE = /present|current|至今|现在/i;
+const RANGE_EXPERIENCE_MIN = 0;
+const RANGE_EXPERIENCE_MAX = 20;
+const RANGE_MATCH_MIN = 0;
+const RANGE_MATCH_MAX = 100;
+const LANGUAGE_FILTER_OPTIONS = [
+  { value: 'English', tKey: 'product.talent.filterLanguageEnglish', fallback: 'English' },
+  { value: 'Spanish', tKey: 'product.talent.filterLanguageSpanish', fallback: 'Spanish' },
+  { value: 'Chinese', tKey: 'product.talent.filterLanguageChinese', fallback: 'Chinese' },
+] as const;
 
 // ── Helper functions ──
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || '?';
+}
+
+function shortenText(text: string, limit = 170): string {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.slice(0, limit - 1).trim()}…`;
+}
 
 function hasResumeParseWarning(parsedData: Resume['parsedData']): boolean {
   const summary = parsedData?.summary?.trim().toLowerCase() || '';
@@ -316,6 +373,90 @@ function getHighlight(parsedData: Resume['parsedData']): string | null {
   if (parts.length === 0) return null;
   const result = parts.join(' · ');
   return result.length <= 80 ? result : result.substring(0, 77) + '...';
+}
+
+function getResumeLocation(parsedData: Resume['parsedData']): string | null {
+  const directLocation = parsedData?.location?.trim() || parsedData?.address?.trim();
+  if (directLocation) return directLocation;
+
+  const latestExperienceLocation = parsedData?.experience?.find((item) => item.location?.trim())?.location?.trim();
+  if (latestExperienceLocation) return latestExperienceLocation;
+
+  const educationLocation = parsedData?.education?.find((item) => item.location?.trim())?.location?.trim();
+  return educationLocation || null;
+}
+
+function getResumeLanguages(parsedData: Resume['parsedData']): LanguageEntry[] {
+  const normalized = new Map<string, LanguageEntry>();
+
+  for (const entry of parsedData?.languages || []) {
+    const label = entry.language?.trim();
+    if (!label) continue;
+    const key = label.toLowerCase();
+    if (!normalized.has(key)) {
+      normalized.set(key, { language: label, proficiency: entry.proficiency?.trim() || undefined });
+    }
+  }
+
+  if (normalized.size === 0 && parsedData?.skills && !Array.isArray(parsedData.skills)) {
+    for (const label of parsedData.skills.languages || []) {
+      const value = label.trim();
+      if (!value) continue;
+      const key = value.toLowerCase();
+      if (!normalized.has(key)) normalized.set(key, { language: value });
+    }
+  }
+
+  return [...normalized.values()].slice(0, 4);
+}
+
+function getPrimaryFit(resume: Resume): ResumeJobFit | null {
+  if (!Array.isArray(resume.resumeJobFits) || resume.resumeJobFits.length === 0) return null;
+  return resume.resumeJobFits.find((fit) => typeof fit.fitScore === 'number') || resume.resumeJobFits[0] || null;
+}
+
+function getMatchLabel(score: number | null): string {
+  if (score === null) return 'Manual review';
+  if (score >= 90) return 'Excellent fit';
+  if (score >= 75) return 'Strong fit';
+  if (score >= 60) return 'Qualified';
+  return 'Needs review';
+}
+
+function getMatchSummary(resume: Resume, highlight: string | null): string | null {
+  if (hasResumeParseWarning(resume.parsedData)) {
+    return 'Parsing confidence is low for this resume. Review the original file before relying on AI matching.';
+  }
+
+  const primaryFit = getPrimaryFit(resume);
+  const score = typeof primaryFit?.fitScore === 'number' ? Math.round(primaryFit.fitScore) : null;
+  const hiringTitle = primaryFit?.hiringRequest?.title?.trim();
+  const sourceText = resume.summary?.trim() || highlight?.trim() || resume.parsedData?.summary?.trim() || '';
+  const compactSource = sourceText ? shortenText(sourceText, 180) : '';
+
+  if (score !== null && hiringTitle) {
+    const lead = score >= 90
+      ? `High-confidence alignment for ${hiringTitle}.`
+      : score >= 75
+        ? `Strong alignment for ${hiringTitle}.`
+        : score >= 60
+          ? `Relevant profile for ${hiringTitle}, with some recruiter review recommended.`
+          : `Match signals are mixed for ${hiringTitle}.`;
+    return compactSource ? `${lead} ${compactSource}` : lead;
+  }
+
+  if (score !== null) {
+    const lead = score >= 90
+      ? 'High-confidence fit based on the current job-fit signals.'
+      : score >= 75
+        ? 'Promising fit based on the current job-fit signals.'
+        : score >= 60
+          ? 'Candidate shows partial alignment based on the current job-fit signals.'
+          : 'AI fit signals are limited, so this profile should be reviewed manually.';
+    return compactSource ? `${lead} ${compactSource}` : lead;
+  }
+
+  return compactSource || 'AI summary will improve after this candidate is matched against an active hiring request.';
 }
 
 function getWorkExperience(parsedData: Resume['parsedData']): { fullTimeYears: number; internshipMonths: number } | null {
@@ -403,6 +544,15 @@ function getJobCategory(currentRole: string | null, parsedData: Resume['parsedDa
   return null;
 }
 
+function getExperienceValue(resume: Pick<Resume, 'experienceYears'> & { parsedData: Resume['parsedData'] }, workExp: EnrichedResume['_workExp']): number | null {
+  if (workExp) {
+    return Math.round((workExp.fullTimeYears + (workExp.internshipMonths / 12)) * 10) / 10;
+  }
+
+  const match = resume.experienceYears?.match(/(\d+(?:\.\d+)?)/);
+  return match ? parseFloat(match[1]) : null;
+}
+
 function formatDateTimeShort(dateStr: string | null): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -410,165 +560,173 @@ function formatDateTimeShort(dateStr: string | null): string {
 }
 
 // ── Memoized Card Component ──
-const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, onApply, onInvite, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; onInvite: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
+const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, onApply, onInvite, onViewSummary, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; onInvite: (resume: EnrichedResume) => void; onViewSummary: (resumeId: string, name: string, summary: string) => void; t: (k: string, f: string) => string }) {
+  const [cardCopied, setCardCopied] = useState(false);
   const hasPrefs = resume.preferences && Object.values(resume.preferences).some(v => v && (Array.isArray(v) ? v.length > 0 : String(v).trim()));
   const ivStatus = resume.interviewStatus;
+
   return (
-    <Link
-      to={`/product/talent/${resume.id}`}
-      className="group flex flex-col rounded-xl border border-slate-200 bg-white hover:border-blue-300 hover:shadow-md transition-all duration-200"
-    >
-      {/* Header bar */}
-      <div className="px-4 sm:px-5 pt-4 pb-3 flex items-start justify-between gap-2">
+    <article className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+      <div className="flex gap-5">
+        {/* Avatar */}
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-base font-bold text-slate-500">
+          {getInitials(resume.name)}
+        </div>
+
+        {/* Info column */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="min-w-0 flex-1 truncate text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
-              {resume.name}
-            </h3>
-            {resume._parseWarning && (
-              <span className="inline-flex shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
-                {t('product.talent.parseWarning', 'Needs review')}
-              </span>
-            )}
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900">{resume.name}</h3>
+                {resume._parseWarning && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                    {t('product.talent.parseWarning', 'Needs review')}
+                  </span>
+                )}
+                {resume._jobCategory && (
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-700'}`}>
+                    {resume._jobCategory}
+                  </span>
+                )}
+                {ivStatus?.completed && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                    <IconCircleCheck size={11} stroke={2.5} className="mr-0.5 inline -mt-0.5" />
+                    {t('product.talent.interviewCompleted', 'Interviewed')}
+                  </span>
+                )}
+                {ivStatus?.invited && !ivStatus?.completed && (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                    {t('product.talent.invited', 'Invited')}
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 text-sm text-slate-500">
+                {resume.currentRole || t('product.talent.roleUnknown', 'Role not specified')}
+              </p>
+
+              {resume._topSkills.length > 0 && (
+                <p className="mt-2 text-sm text-slate-600">
+                  <span className="font-semibold text-slate-700">{t('product.talent.topSkills', 'Top Skills')}: </span>
+                  {resume._topSkills.join(', ')}
+                </p>
+              )}
+
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                {resume._experienceValue !== null && (
+                  <span className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+                    {resume._experienceValue} {t('product.talent.yearsWork', 'yrs')}
+                  </span>
+                )}
+                {resume._location && (
+                  <span className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+                    {resume._location}
+                  </span>
+                )}
+                {resume._notableCompanies.map((company) => (
+                  <span key={company} className="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
+                    Ex-{company}
+                  </span>
+                ))}
+                {resume._languages.slice(0, 2).map((entry) => (
+                  <span key={`${entry.language}-${entry.proficiency || ''}`} className="rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                    {entry.language}
+                  </span>
+                ))}
+                {resume._versionCount != null && resume._versionCount > 0 && (
+                  <span className="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+                    <IconFiles size={12} stroke={1.8} className="mr-1" />
+                    {resume._versionCount}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-1 shrink-0">
+              <button onClick={() => onInvite(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.inviteToInterview', 'Invite')}>
+                <IconSend size={16} stroke={1.5} />
+              </button>
+              <button onClick={() => onApply(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.applyToJob', 'Apply to Job')}>
+                <IconBriefcase size={16} stroke={1.5} />
+              </button>
+              <button onClick={() => onPreferences(resume)} className={`p-1.5 rounded-lg transition-colors ${hasPrefs ? 'text-blue-600 hover:bg-blue-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} title={t('product.talent.preferences.title', 'Preferences')}>
+                <IconAdjustments size={16} stroke={1.5} />
+              </button>
+              {!resume.hasInvitations && (
+                <button onClick={() => onDelete(resume.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title={t('common.delete', 'Delete')}>
+                  <IconX size={16} stroke={1.5} />
+                </button>
+              )}
+            </div>
           </div>
-          {resume.currentRole && (
-            <p className="mt-0.5 text-sm text-slate-600 truncate">{resume.currentRole}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {ivStatus?.completed ? (
-            <span
-              className="p-1 rounded text-emerald-600 bg-emerald-50"
-              title={`${t('product.talent.interviewCompleted', 'Interview completed')}: ${formatDateTimeShort(ivStatus.completedAt)}${ivStatus.durationSeconds ? ` (${Math.round(ivStatus.durationSeconds / 60)} min)` : ''}`}
-            >
-              <IconCircleCheck size={16} stroke={2} />
-            </span>
-          ) : ivStatus?.invited ? (
-            <span
-              className="p-1 rounded text-blue-600 bg-blue-50"
-              title={t('product.talent.interviewInvitedTooltip', 'Interview invitation has been sent. Awaiting candidate response.')}
-            >
-              <IconMailForward size={16} stroke={2} />
-            </span>
-          ) : (
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInvite(resume); }}
-              className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-              title={t('product.talent.inviteToInterviewTooltip', 'Invite this candidate to an AI interview. Navigate to arrange and send the invitation.')}
-            >
-              <IconSend size={16} stroke={1.5} />
-            </button>
-          )}
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onApply(resume); }}
-            className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-            title={t('product.talent.applyToJob', 'Apply to Job')}
-          >
-            <IconBriefcase size={16} stroke={1.5} />
-          </button>
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreferences(resume); }}
-            className={`p-1 rounded transition-colors ${hasPrefs ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
-            title={t('product.talent.preferences.title', 'Candidate Preferences')}
-          >
-            <IconAdjustments size={16} stroke={1.5} />
-          </button>
-          {!resume.hasInvitations && (
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
-              className="p-1 rounded text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-            >
-              <IconX size={16} stroke={1.5} />
-            </button>
+
+          {/* AI Summary box */}
+          <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-stretch">
+            <div className="relative flex-1 rounded-xl bg-blue-50 border border-blue-100 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-semibold text-blue-500">
+                  {t('product.talent.aiSummary', 'AI Summary')}:
+                </p>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {resume._matchSummary && (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(resume._matchSummary || '');
+                        setCardCopied(true);
+                        setTimeout(() => setCardCopied(false), 2000);
+                      }}
+                      className="rounded-md p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-colors"
+                      title={t('product.talent.copySummary', 'Copy summary')}
+                    >
+                      {cardCopied ? <IconCheck size={14} stroke={2} /> : <IconCopy size={14} stroke={1.8} />}
+                    </button>
+                  )}
+                  {resume._matchSummary && resume._matchSummary.length > 120 && (
+                    <button
+                      onClick={() => onViewSummary(resume.id, resume.name, resume._matchSummary || '')}
+                      className="rounded-md p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-colors"
+                      title={t('product.talent.viewFullSummary', 'View full summary')}
+                    >
+                      <IconEye size={15} stroke={1.8} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="mt-1 text-sm leading-relaxed text-slate-800 line-clamp-3 prose prose-sm prose-slate max-w-none [&>ul]:list-disc [&>ul]:pl-4 [&>ul]:my-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>ol]:my-1 [&>p]:my-0.5">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{resume._matchSummary || ''}</ReactMarkdown>
+              </div>
+              {resume._matchScore !== null && (
+                <p className="mt-2 text-sm font-bold text-slate-900">
+                  {resume._matchScore}% {t('product.talent.aiMatchScore', 'AI Match Score')}.
+                </p>
+              )}
+              {resume._bestFitTitle && (
+                <p className="mt-1 text-xs text-blue-500">
+                  {t('product.talent.bestMatch', 'Best match')}: {resume._bestFitTitle}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2 lg:w-[180px] shrink-0 justify-center">
+              <Link
+                to={`/product/talent/${resume.id}`}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+              >
+                {t('product.talent.viewProfile', 'View Full Profile')}
+              </Link>
+            </div>
+          </div>
+
+          {resume.notes && (
+            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              <IconBookmark className="mr-1.5 inline-block -translate-y-px" size={13} stroke={2} />
+              {resume.notes}
+            </p>
           )}
         </div>
       </div>
-
-      {/* Meta row: category + experience */}
-      <div className="px-4 sm:px-5 pb-3 flex items-center gap-2 text-sm text-slate-600">
-        {resume._jobCategory && (
-          <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-700'}`}>
-            {resume._jobCategory}
-          </span>
-        )}
-        {resume._workExp ? (
-          <span>
-            {resume._workExp.fullTimeYears > 0 && `${resume._workExp.fullTimeYears} ${t('product.talent.yearsWork', 'yrs')}`}
-            {resume._workExp.fullTimeYears > 0 && resume._workExp.internshipMonths > 0 && ' · '}
-            {resume._workExp.internshipMonths > 0 && `${resume._workExp.internshipMonths} ${t('product.talent.monthsIntern', 'mo intern')}`}
-          </span>
-        ) : resume.experienceYears ? (
-          <span>{resume.experienceYears}</span>
-        ) : null}
-        {resume._notableCompanies.length > 0 && (
-          <span className="text-slate-500">
-            {resume._notableCompanies.map(c => `Ex-${c}`).join(', ')}
-          </span>
-        )}
-      </div>
-
-      {/* Summary & Highlight */}
-      {resume._parseWarning ? (
-        <div className="px-4 sm:px-5 pb-3">
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-700">
-            {t('product.talent.parseWarningDesc', 'This resume was not parsed reliably. Review the original file before matching or inviting.')}
-          </p>
-        </div>
-      ) : (resume.summary || resume._highlight) ? (
-        <div className="px-4 sm:px-5 pb-3 space-y-1.5">
-          {resume.summary && (
-            <p className="text-[13px] text-slate-600 line-clamp-3 leading-relaxed">{resume.summary}</p>
-          )}
-          {resume._highlight && !resume.summary && (
-            <p className="text-[13px] text-slate-500 line-clamp-2 leading-relaxed">{resume._highlight}</p>
-          )}
-        </div>
-      ) : null}
-
-      {/* Skills + Industry tags */}
-      {(resume._topSkills.length > 0 || resume._industryTags.length > 0) && (
-        <div className="px-4 sm:px-5 pb-3 flex flex-wrap gap-1.5">
-          {resume._industryTags.map((tag) => (
-            <span key={tag} className="rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-              {tag}
-            </span>
-          ))}
-          {resume._topSkills.map((skill) => (
-            <span key={skill} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-              {skill}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Notes preview */}
-      {resume.notes && (
-        <div className="px-4 sm:px-5 pb-3">
-          <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-2.5 py-1.5 line-clamp-2 leading-relaxed">
-            <IconBookmark className="w-3 h-3 inline-block mr-1 -mt-0.5 shrink-0" size={12} stroke={2} />
-            {resume.notes}
-          </p>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="px-4 sm:px-5 py-3 border-t border-slate-100 flex items-center justify-between mt-auto">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">
-            {new Date(resume.createdAt).toLocaleDateString()}
-          </span>
-          {resume._versionCount != null && resume._versionCount > 0 && (
-            <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-              <IconCopy size={12} stroke={1.5} />
-              {resume._versionCount}
-            </span>
-          )}
-        </div>
-        <span className="p-1.5 rounded-lg text-blue-600 group-hover:text-blue-700 group-hover:bg-blue-50 transition-colors" title={t('product.talent.viewProfile', 'View Profile')}>
-          <IconExternalLink size={16} stroke={2} />
-        </span>
-      </div>
-    </Link>
+    </article>
   );
 });
 
@@ -785,32 +943,31 @@ export default function TalentHub() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [prefsResume, setPrefsResume] = useState<EnrichedResume | null>(null);
   const [applyResume, setApplyResume] = useState<EnrichedResume | null>(null);
+  const [summaryModal, setSummaryModal] = useState<{ resumeId: string; name: string; summary: string } | null>(null);
+  const [summaryRegenInstructions, setSummaryRegenInstructions] = useState('');
+  const [summaryRegenJobId, setSummaryRegenJobId] = useState('');
+  const [summaryRegenerating, setSummaryRegenerating] = useState(false);
+  const [summaryCopied, setSummaryCopied] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  // Filters
   const [expYearsMin, setExpYearsMin] = useState('');
   const [expYearsMax, setExpYearsMax] = useState('');
-  const [salaryMin, setSalaryMin] = useState('');
-  const [salaryMax, setSalaryMax] = useState('');
   const [filterJobId, setFilterJobId] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [filterLocation, setFilterLocation] = useState('');
+  const [filterCompany, setFilterCompany] = useState('');
+  const [filterLanguages, setFilterLanguages] = useState<string[]>([]);
+  const [filterEducation, setFilterEducation] = useState('');
+  const [matchScoreMin, setMatchScoreMin] = useState('');
+  const [matchScoreMax, setMatchScoreMax] = useState('');
   const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
-  // Advanced filters
   const [filterSkills, setFilterSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
-  const [filterEducation, setFilterEducation] = useState('');
-  const [filterSchool, setFilterSchool] = useState('');
-  const [filterCompany, setFilterCompany] = useState('');
-  const [filterCountry, setFilterCountry] = useState('');
-
-  // Stats for executive summary
   const [stats, setStats] = useState<{ total: number; thisWeek: number; analyzed: number } | null>(null);
   const [matchedCount, setMatchedCount] = useState(0);
   const [interviewedCount, setInterviewedCount] = useState(0);
 
-  // Fetch jobs and stats for the filter dropdown and summary
   useEffect(() => {
     axios.get('/api/v1/jobs', { params: { limit: 200 } })
       .then((res) => setJobs(res.data.data || []))
@@ -818,7 +975,6 @@ export default function TalentHub() {
     axios.get('/api/v1/resumes/stats')
       .then((res) => setStats(res.data.data))
       .catch(() => {});
-    // Get matched & interviewed counts for summary
     Promise.all([
       axios.get('/api/v1/resumes', { params: { limit: 1, pipelineStatus: 'matched' } }),
       axios.get('/api/v1/resumes', { params: { limit: 1, pipelineStatus: 'invited' } }),
@@ -829,34 +985,53 @@ export default function TalentHub() {
   }, []);
 
   const filtersRef = useRef({
-    expYearsMin: '', expYearsMax: '', salaryMin: '', salaryMax: '',
-    filterJobId: '', filterStatus: '', recruiterFilter: {} as RecruiterTeamFilterValue,
-    filterSkills: [] as string[], filterEducation: '', filterSchool: '', filterCompany: '', filterCountry: '',
+    expYearsMin: '',
+    expYearsMax: '',
+    filterJobId: '',
+    filterStatus: '',
+    filterLocation: '',
+    filterCompany: '',
+    filterLanguages: [] as string[],
+    filterEducation: '',
+    matchScoreMin: '',
+    matchScoreMax: '',
+    recruiterFilter: {} as RecruiterTeamFilterValue,
+    filterSkills: [] as string[],
   });
   filtersRef.current = {
-    expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus, recruiterFilter,
-    filterSkills, filterEducation, filterSchool, filterCompany, filterCountry,
+    expYearsMin,
+    expYearsMax,
+    filterJobId,
+    filterStatus,
+    filterLocation,
+    filterCompany,
+    filterLanguages,
+    filterEducation,
+    matchScoreMin,
+    matchScoreMax,
+    recruiterFilter,
+    filterSkills,
   };
 
   const fetchResumes = useCallback(async (query?: string, pageNum = 1) => {
     try {
       setLoading(true);
       const f = filtersRef.current;
-      const params: any = { limit: PAGE_SIZE, page: pageNum };
+      const params: Record<string, string | number> = { limit: PAGE_SIZE, page: pageNum };
       if (query) params.search = query;
       if (f.expYearsMin) params.expYearsMin = f.expYearsMin;
       if (f.expYearsMax) params.expYearsMax = f.expYearsMax;
-      if (f.salaryMin) params.salaryMin = f.salaryMin;
-      if (f.salaryMax) params.salaryMax = f.salaryMax;
       if (f.filterJobId) params.jobId = f.filterJobId;
       if (f.filterStatus) params.pipelineStatus = f.filterStatus;
+      if (f.filterLocation) params.location = f.filterLocation;
+      if (f.filterCompany) params.company = f.filterCompany;
+      if (f.filterLanguages.length > 0) params.language = f.filterLanguages.join(',');
+      if (f.filterEducation) params.educationLevel = f.filterEducation;
+      if (f.matchScoreMin) params.fitScoreMin = f.matchScoreMin;
+      if (f.matchScoreMax) params.fitScoreMax = f.matchScoreMax;
       if (f.recruiterFilter.filterUserId) params.filterUserId = f.recruiterFilter.filterUserId;
       if (f.recruiterFilter.filterTeamId) params.filterTeamId = f.recruiterFilter.filterTeamId;
       if (f.filterSkills.length > 0) params.skills = f.filterSkills.join(',');
-      if (f.filterEducation) params.educationLevel = f.filterEducation;
-      if (f.filterSchool) params.school = f.filterSchool;
-      if (f.filterCompany) params.company = f.filterCompany;
-      if (f.filterCountry) params.country = f.filterCountry;
       const res = await axios.get('/api/v1/resumes', { params });
       setResumes(res.data.data || []);
       const pag = res.data.pagination;
@@ -874,30 +1049,72 @@ export default function TalentHub() {
 
   useEffect(() => {
     if (resumes.length === 0) fetchResumes();
-  }, [fetchResumes]);
+  }, [fetchResumes, resumes.length]);
 
-  // Auto-backfill highlights for resumes missing them (runs once per session)
   const backfillTriggered = useRef(false);
   useEffect(() => {
     if (backfillTriggered.current || resumes.length === 0) return;
-    const missing = resumes.some(r => !r.highlight && !r.summary);
-    if (missing) {
-      backfillTriggered.current = true;
-      axios.post('/api/v1/resumes/backfill-highlights').then(() => {
-        fetchResumes(search || undefined, page);
-      }).catch(() => {});
-    }
-  }, [resumes, fetchResumes, search, page]);
+    const missing = resumes.some((resume) => !resume.highlight && !resume.summary);
+    if (!missing) return;
+
+    backfillTriggered.current = true;
+    axios.post('/api/v1/resumes/backfill-highlights')
+      .then(() => fetchResumes(search || undefined, page))
+      .catch(() => {});
+  }, [fetchResumes, page, resumes, search]);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
+  }, []);
 
   const handleSearch = (value: string) => {
     setSearch(value);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
-      fetchResumes(value, 1);
+      fetchResumes(value || undefined, 1);
     }, 300);
   };
 
+  const executeSearch = useCallback(() => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    fetchResumes(search || undefined, 1);
+  }, [fetchResumes, search]);
+
   const applyFilters = useCallback(() => {
+    fetchResumes(search || undefined, 1);
+  }, [fetchResumes, search]);
+
+  const clearAllFilters = useCallback(() => {
+    setExpYearsMin('');
+    setExpYearsMax('');
+    setFilterJobId('');
+    setFilterStatus('');
+    setFilterLocation('');
+    setFilterCompany('');
+    setFilterLanguages([]);
+    setFilterEducation('');
+    setMatchScoreMin('');
+    setMatchScoreMax('');
+    setFilterSkills([]);
+    setSkillInput('');
+    setRecruiterFilter({});
+    // Reset ref immediately so fetchResumes reads cleared values
+    filtersRef.current = {
+      expYearsMin: '',
+      expYearsMax: '',
+      filterJobId: '',
+      filterStatus: '',
+      filterLocation: '',
+      filterCompany: '',
+      filterLanguages: [],
+      filterEducation: '',
+      matchScoreMin: '',
+      matchScoreMax: '',
+      recruiterFilter: {} as RecruiterTeamFilterValue,
+      filterSkills: [],
+    };
     fetchResumes(search || undefined, 1);
   }, [fetchResumes, search]);
 
@@ -922,426 +1139,668 @@ export default function TalentHub() {
     navigate('/product/interview', { state: { inviteResumeId: resume.id, inviteResumeName: resume.name } });
   }, [navigate]);
 
+  const handleViewSummary = useCallback((resumeId: string, name: string, summary: string) => {
+    setSummaryModal({ resumeId, name, summary });
+    setSummaryRegenInstructions('');
+    setSummaryRegenJobId('');
+    setSummaryCopied(false);
+  }, []);
+
+  const handleRegenerateSummary = useCallback(async () => {
+    if (!summaryModal) return;
+    setSummaryRegenerating(true);
+    try {
+      const res = await axios.post(`/api/v1/resumes/${summaryModal.resumeId}/regenerate-summary`, {
+        instructions: summaryRegenInstructions.trim() || undefined,
+        jobId: summaryRegenJobId || undefined,
+      });
+      const newSummary = res.data.data?.summary || summaryModal.summary;
+      setSummaryModal((prev) => prev ? { ...prev, summary: newSummary } : null);
+      // Update the resume in local state
+      setResumes((prev) => prev.map((r) =>
+        r.id === summaryModal.resumeId ? { ...r, summary: newSummary } : r
+      ));
+      setSummaryRegenInstructions('');
+      setSummaryRegenJobId('');
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setSummaryRegenerating(false);
+    }
+  }, [summaryModal, summaryRegenInstructions, summaryRegenJobId, setResumes]);
+
   const confirmDelete = useCallback(async () => {
     if (!confirmDeleteId) return;
     try {
       await axios.delete(`/api/v1/resumes/${confirmDeleteId}`);
-      setResumes((prev) => prev.filter((r) => r.id !== confirmDeleteId));
+      setResumes((prev) => prev.filter((resume) => resume.id !== confirmDeleteId));
       setTotalCount((prev) => Math.max(0, prev - 1));
     } catch {
-      // handle error
+      // silently fail
     } finally {
       setConfirmDeleteId(null);
     }
   }, [confirmDeleteId]);
 
-  // Pre-compute enriched data for each resume
   const enrichedResumes = useMemo(() => {
-    return resumes.map(resume => ({
-      ...resume,
-      _topSkills: getTopSkills(resume.parsedData),
-      _highlight: resume.highlight || getHighlight(resume.parsedData),
-      _workExp: getWorkExperience(resume.parsedData),
-      _notableCompanies: getNotableCompanies(resume.parsedData),
-      _industryTags: getIndustryTags(resume.parsedData),
-      _jobCategory: getJobCategory(resume.currentRole, resume.parsedData),
-      _parseWarning: hasResumeParseWarning(resume.parsedData),
-    }));
+    return resumes.map((resume) => {
+      const highlight = resume.highlight || getHighlight(resume.parsedData);
+      const workExp = getWorkExperience(resume.parsedData);
+      const primaryFit = getPrimaryFit(resume);
+      const matchScore = typeof primaryFit?.fitScore === 'number' ? Math.round(primaryFit.fitScore) : null;
+
+      return {
+        ...resume,
+        _topSkills: getTopSkills(resume.parsedData),
+        _highlight: highlight,
+        _workExp: workExp,
+        _notableCompanies: getNotableCompanies(resume.parsedData),
+        _industryTags: getIndustryTags(resume.parsedData),
+        _jobCategory: getJobCategory(resume.currentRole, resume.parsedData),
+        _parseWarning: hasResumeParseWarning(resume.parsedData),
+        _location: getResumeLocation(resume.parsedData),
+        _languages: getResumeLanguages(resume.parsedData),
+        _matchScore: matchScore,
+        _matchLabel: getMatchLabel(matchScore),
+        _matchSummary: getMatchSummary(resume, highlight),
+        _bestFitTitle: primaryFit?.hiringRequest?.title?.trim() || null,
+        _experienceValue: getExperienceValue(resume, workExp),
+      };
+    });
   }, [resumes]);
 
-  const activeFilterCount = [expYearsMin, expYearsMax, salaryMin, salaryMax, filterJobId, filterStatus, filterEducation, filterSchool, filterCompany, filterCountry].filter(Boolean).length + (filterSkills.length > 0 ? 1 : 0);
+  const activeFilterCount = [
+    expYearsMin,
+    expYearsMax,
+    filterJobId,
+    filterStatus,
+    filterLocation,
+    filterCompany,
+    filterEducation,
+    matchScoreMin,
+    matchScoreMax,
+    recruiterFilter.filterUserId,
+    recruiterFilter.filterTeamId,
+  ].filter(Boolean).length + (filterSkills.length > 0 ? 1 : 0) + (filterLanguages.length > 0 ? 1 : 0);
   const hasActiveFilters = activeFilterCount > 0 || !!search;
 
-  // Compute top skills across current page for the summary
-  const topPoolSkills = useMemo(() => {
-    const skillMap = new Map<string, number>();
-    for (const r of resumes) {
-      const pd = r.parsedData;
-      if (!pd?.skills) continue;
-      const allSkills: string[] = Array.isArray(pd.skills)
-        ? pd.skills
-        : Object.values(pd.skills).flat().filter((s: any) => typeof s === 'string');
-      for (const s of allSkills) {
-        skillMap.set(s, (skillMap.get(s) || 0) + 1);
-      }
+  const topPoolSkills = useMemo(() => [
+    'A.I.', 'LLM', 'Agent', 'Prompt Engineering', 'Machine Learning',
+    'Python', 'TypeScript', 'JavaScript', 'Java', 'React', 'Vue', 'SQL',
+  ], []);
+
+  const languageOptions = useMemo(
+    () => LANGUAGE_FILTER_OPTIONS.map((option) => ({
+      value: option.value,
+      label: t(option.tKey, option.fallback),
+    })),
+    [t],
+  );
+
+  const selectedLanguageLabels = useMemo(
+    () => languageOptions
+      .filter((option) => filterLanguages.includes(option.value))
+      .map((option) => option.label),
+    [filterLanguages, languageOptions],
+  );
+
+  const currentJobLabel = useMemo(
+    () => jobs.find((job) => job.id === filterJobId)?.title || '',
+    [filterJobId, jobs],
+  );
+
+  const skillSuggestions = useMemo(
+    () => topPoolSkills.filter((skill) => !filterSkills.includes(skill)),
+    [filterSkills, topPoolSkills],
+  );
+
+  const experienceMinValue = clampNumber(
+    expYearsMin ? parseFloat(expYearsMin) : RANGE_EXPERIENCE_MIN,
+    RANGE_EXPERIENCE_MIN,
+    RANGE_EXPERIENCE_MAX,
+  );
+  const experienceMaxValue = clampNumber(
+    expYearsMax ? parseFloat(expYearsMax) : RANGE_EXPERIENCE_MAX,
+    experienceMinValue,
+    RANGE_EXPERIENCE_MAX,
+  );
+  const matchMinValue = clampNumber(
+    matchScoreMin ? parseFloat(matchScoreMin) : RANGE_MATCH_MIN,
+    RANGE_MATCH_MIN,
+    RANGE_MATCH_MAX,
+  );
+  const matchMaxValue = clampNumber(
+    matchScoreMax ? parseFloat(matchScoreMax) : RANGE_MATCH_MAX,
+    matchMinValue,
+    RANGE_MATCH_MAX,
+  );
+
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = [];
+    if (filterSkills.length > 0) labels.push(`Skills: ${filterSkills.join(', ')}`);
+    if (expYearsMin || expYearsMax) labels.push(`Experience: ${experienceMinValue}-${experienceMaxValue} yrs`);
+    if (filterLocation) labels.push(`Location: ${filterLocation}`);
+    if (filterCompany) labels.push(`Company: ${filterCompany}`);
+    if (matchScoreMin || matchScoreMax) labels.push(`AI score: ${matchMinValue}-${matchMaxValue}%`);
+    if (selectedLanguageLabels.length > 0) {
+      labels.push(`${t('product.talent.languageProficiency', 'Language')}: ${selectedLanguageLabels.join(', ')}`);
     }
-    return [...skillMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([s]) => s);
-  }, [resumes]);
+    if (filterEducation) labels.push(`Education: ${filterEducation}`);
+    if (filterStatus) labels.push(`Status: ${filterStatus}`);
+    if (currentJobLabel) labels.push(`Job: ${currentJobLabel}`);
+    if (recruiterFilter.filterUserId || recruiterFilter.filterTeamId) labels.push('Scoped to recruiter/team');
+    return labels;
+  }, [
+    currentJobLabel,
+    expYearsMax,
+    expYearsMin,
+    experienceMaxValue,
+    experienceMinValue,
+    filterCompany,
+    filterEducation,
+    filterLanguages,
+    filterLocation,
+    filterSkills,
+    filterStatus,
+    matchMaxValue,
+    matchMinValue,
+    matchScoreMax,
+    matchScoreMin,
+    recruiterFilter.filterTeamId,
+    recruiterFilter.filterUserId,
+    selectedLanguageLabels,
+    t,
+  ]);
 
   return (
-    <div className="mx-auto max-w-[1380px] space-y-4">
-      {/* Header row: title + upload */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900">{t('product.talent.title', 'Talent Hub')}</h2>
-          <p className="text-sm text-slate-500">{t('product.talent.subtitle', 'Your candidate repository with AI-powered insights.')}</p>
-        </div>
-        <button
-          onClick={() => setShowUpload(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shrink-0"
-        >
-          <IconUpload size={16} stroke={2} />
-          {t('product.talent.upload', 'Upload Resumes')}
-        </button>
-      </div>
+    <div className="mx-auto max-w-[1460px] space-y-5">
+      {/* Search + Stats header */}
+      <section className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">
+              {t('product.talent.title', 'Talent Hub')}
+            </h2>
+            <button
+              onClick={() => setShowUpload(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+            >
+              <IconUpload size={15} stroke={2} />
+              {t('product.talent.upload', 'Upload Resumes')}
+            </button>
+          </div>
 
-      {/* Executive Summary */}
-      {stats && (
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <div className="flex flex-wrap items-center gap-6">
-            {[
-              { label: t('product.talent.statTotal', 'Total Candidates'), value: stats.total, color: 'text-slate-900' },
-              { label: t('product.talent.statThisWeek', 'New This Week'), value: stats.thisWeek, color: 'text-blue-600' },
-              { label: t('product.talent.statMatched', 'Matched'), value: matchedCount, color: 'text-cyan-600' },
-              { label: t('product.talent.statInterviewed', 'Interview Invited'), value: interviewedCount, color: 'text-violet-600' },
-              { label: t('product.talent.statAnalyzed', 'AI Analyzed'), value: stats.analyzed, color: 'text-emerald-600' },
-            ].map((s) => (
-              <div key={s.label} className="text-center min-w-[80px]">
-                <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                <p className="text-[11px] text-slate-500 font-medium">{s.label}</p>
-              </div>
-            ))}
-            {topPoolSkills.length > 0 && (
-              <div className="flex-1 min-w-[200px] border-l border-slate-200 pl-6 ml-2">
-                <p className="text-[11px] text-slate-500 font-medium mb-1.5">{t('product.talent.statTopSkills', 'Top Skills')}</p>
-                <div className="flex flex-wrap gap-1">
-                  {topPoolSkills.map((skill) => (
-                    <span key={skill} className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">{skill}</span>
+          {user?.role === 'admin' && (
+            <div className="min-w-[240px]">
+              <RecruiterTeamFilter
+                value={recruiterFilter}
+                onChange={(next) => setRecruiterFilter(next)}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center">
+          <div className="relative flex-1">
+            <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  executeSearch();
+                }
+              }}
+              placeholder={t('product.talent.searchPlaceholder', 'Search for Candidates')}
+              className="h-12 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            onClick={executeSearch}
+            className="inline-flex h-12 items-center justify-center rounded-lg bg-blue-500 px-6 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+          >
+            {t('common.search', 'Search')}
+          </button>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-6 text-sm">
+          {[
+            { label: t('product.talent.statTotal', 'Total'), value: hasActiveFilters ? totalCount : (stats?.total ?? totalCount) },
+            { label: t('product.talent.statThisWeek', 'New This Week'), value: stats?.thisWeek ?? 0 },
+            { label: t('product.talent.statMatched', 'Matched'), value: matchedCount },
+            { label: t('product.talent.statInterviewed', 'Interviewed'), value: interviewedCount },
+            { label: t('product.talent.statAnalyzed', 'AI Analyzed'), value: stats?.analyzed ?? 0 },
+          ].map((item) => (
+            <div key={item.label} className="flex items-baseline gap-1.5">
+              <span className="text-xl font-bold text-slate-900">{item.value}</span>
+              <span className="text-xs text-slate-500">{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="xl:sticky xl:top-20 xl:self-start">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-900">
+                {t('product.talent.filters', 'Filters')}
+              </h3>
+            </div>
+
+            <div className="mt-5 space-y-5">
+              {/* Skills */}
+              <section className="space-y-2.5">
+                <p className="text-sm font-semibold text-slate-900">{t('product.talent.filterSkills', 'Skills')}</p>
+                <div className="relative">
+                  <IconSearch className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" size={14} stroke={2} />
+                  <input
+                    type="text"
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.key === 'Enter' || e.key === ',') && skillInput.trim()) {
+                        e.preventDefault();
+                        const next = skillInput.trim().replace(/,$/, '');
+                        if (next && !filterSkills.includes(next)) setFilterSkills((prev) => [...prev, next]);
+                        setSkillInput('');
+                      }
+                    }}
+                    placeholder={t('product.talent.filterSkillsPlaceholder', 'Search')}
+                    className="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                {filterSkills.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {filterSkills.map((skill) => (
+                      <span key={skill} className="inline-flex items-center gap-1 rounded-full bg-blue-500 px-2.5 py-1 text-xs font-medium text-white">
+                        {skill}
+                        <button type="button" onClick={() => setFilterSkills((prev) => prev.filter((item) => item !== skill))} className="rounded-full p-0.5 hover:bg-blue-600">
+                          <IconX size={10} stroke={2.5} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {skillSuggestions.length > 0 && (
+                  <div className="space-y-1">
+                    {skillSuggestions.slice(0, 6).map((skill) => (
+                      <label key={skill} className="flex cursor-pointer items-center gap-2 rounded py-1 text-sm text-slate-700 hover:text-blue-600">
+                        <input
+                          type="checkbox"
+                          checked={filterSkills.includes(skill)}
+                          onChange={() => setFilterSkills((prev) => prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill])}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        {skill}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* Experience */}
+              <section className="space-y-2.5 border-t border-slate-100 pt-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-slate-900">{t('product.talent.filterWorkYears', 'Experience')}</p>
+                  <span className="text-xs text-slate-500">
+                    {experienceMinValue}-{experienceMaxValue}+ {t('product.talent.years', 'Years')}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min={RANGE_EXPERIENCE_MIN}
+                    max={RANGE_EXPERIENCE_MAX}
+                    value={experienceMinValue}
+                    onChange={(e) => {
+                      const next = clampNumber(Number(e.target.value), RANGE_EXPERIENCE_MIN, experienceMaxValue);
+                      setExpYearsMin(next === RANGE_EXPERIENCE_MIN ? '' : String(next));
+                    }}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
+                  />
+                  <input
+                    type="range"
+                    min={experienceMinValue}
+                    max={RANGE_EXPERIENCE_MAX}
+                    value={experienceMaxValue}
+                    onChange={(e) => {
+                      const next = clampNumber(Number(e.target.value), experienceMinValue, RANGE_EXPERIENCE_MAX);
+                      setExpYearsMax(next === RANGE_EXPERIENCE_MAX ? '' : String(next));
+                    }}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
+                  />
+                </div>
+              </section>
+
+              {/* Location */}
+              <section className="space-y-2.5 border-t border-slate-100 pt-5">
+                <p className="text-sm font-semibold text-slate-900">{t('product.talent.location', 'Location')}</p>
+                <div className="relative">
+                  <IconSearch className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" size={14} stroke={2} />
+                  <input
+                    type="text"
+                    value={filterLocation}
+                    onChange={(e) => setFilterLocation(e.target.value)}
+                    placeholder={t('product.talent.locationPlaceholder', 'City, Country')}
+                    list="talent-location-suggestions"
+                    className="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <datalist id="talent-location-suggestions">
+                  {COUNTRY_LIST.map((country) => (
+                    <option key={country.value} value={country.value} />
+                  ))}
+                </datalist>
+                <div className="space-y-1">
+                  {['Remote', 'Hybrid', 'On-site'].map((opt) => (
+                    <label key={opt} className="flex cursor-pointer items-center gap-2 rounded py-1 text-sm text-slate-700 hover:text-blue-600">
+                      <input
+                        type="checkbox"
+                        checked={filterLocation === opt}
+                        onChange={() => setFilterLocation(filterLocation === opt ? '' : opt)}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      {opt}
+                    </label>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              </section>
 
-      {/* Toolbar: search + filters + view toggle — single row */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder={t('product.talent.searchPlaceholder', 'Search by name, company, etc.')}
-            className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Recruiter / Team filter (admin only) */}
-        {user?.role === 'admin' && (
-          <RecruiterTeamFilter
-            value={recruiterFilter}
-            onChange={(f) => { setRecruiterFilter(f); setTimeout(() => applyFilters(), 0); }}
-          />
-        )}
-
-        {/* Status */}
-        <div className="relative">
-          <select
-            value={filterStatus}
-            onChange={(e) => { setFilterStatus(e.target.value); setTimeout(() => applyFilters(), 0); }}
-            className="h-9 appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">{t('product.talent.filterAllStatus', 'All Status')}</option>
-            <option value="matched">{t('product.talent.filterMatched', 'Matched')}</option>
-            <option value="shortlisted">{t('product.talent.filterShortlisted', 'Shortlisted')}</option>
-            <option value="invited">{t('product.talent.filterInvited', 'Invited')}</option>
-            <option value="rejected">{t('product.talent.filterRejected', 'Rejected')}</option>
-          </select>
-          <IconChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
-        </div>
-
-        {/* Add Filter toggle */}
-        <button
-          onClick={() => setShowMoreFilters(!showMoreFilters)}
-          className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${showMoreFilters || activeFilterCount > 0 ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}
-        >
-          <IconAdjustments size={16} stroke={1.5} />
-          {t('product.talent.addFilter', 'Add Filter')}
-          {activeFilterCount > 0 && (
-            <span className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{activeFilterCount}</span>
-          )}
-        </button>
-
-        {/* View toggle */}
-        <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5">
-          <button
-            onClick={() => setViewMode('card')}
-            className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${viewMode === 'card' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-            title={t('product.talent.viewCard', 'Card View')}
-          >
-            <IconLayoutGrid size={16} stroke={1.5} />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-            title={t('product.talent.viewList', 'List View')}
-          >
-            <IconList size={16} stroke={1.5} />
-          </button>
-        </div>
-      </div>
-
-      {/* Filtered result count */}
-      {hasActiveFilters && !loading && (
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold text-slate-700">
-            {t('product.talent.filteredResults', '{{count}} candidates found', { count: totalCount })}
-          </span>
-          {activeFilterCount > 0 && (
-            <button
-              onClick={() => {
-                setExpYearsMin(''); setExpYearsMax(''); setSalaryMin(''); setSalaryMax('');
-                setFilterJobId(''); setFilterStatus(''); setFilterSkills([]); setSkillInput('');
-                setFilterEducation(''); setFilterSchool(''); setFilterCompany(''); setFilterCountry('');
-                setTimeout(() => fetchResumes(search || undefined, 1), 0);
-              }}
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-            >
-              {t('product.talent.clearFilters', 'Clear all filters')}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Collapsible filter panel */}
-      {showMoreFilters && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-4">
-          {/* Row 1: Skills, Education, School, Company */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Skills (multi-tag input) */}
-            <div className="space-y-1.5 lg:col-span-2">
-              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterSkills', 'Skills')}</label>
-              <div className="flex flex-wrap items-center gap-1.5 min-h-[36px] rounded-lg border border-slate-200 bg-white px-2 py-1 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-                {filterSkills.map((skill) => (
-                  <span key={skill} className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                    {skill}
-                    <button
-                      type="button"
-                      onClick={() => setFilterSkills(filterSkills.filter(s => s !== skill))}
-                      className="text-blue-400 hover:text-blue-600"
-                    >
-                      <IconX size={12} stroke={2} />
-                    </button>
+              {/* AI Match Score */}
+              <section className="space-y-2.5 border-t border-slate-100 pt-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-slate-900">{t('product.talent.aiMatchScore', 'AI Match Score')}</p>
+                  <span className="text-xs text-slate-500">
+                    {matchMinValue}-{matchMaxValue}%
                   </span>
-                ))}
-                <input
-                  type="text"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if ((e.key === 'Enter' || e.key === ',') && skillInput.trim()) {
-                      e.preventDefault();
-                      const val = skillInput.trim().replace(/,$/, '');
-                      if (val && !filterSkills.includes(val)) setFilterSkills([...filterSkills, val]);
-                      setSkillInput('');
-                    }
-                    if (e.key === 'Backspace' && !skillInput && filterSkills.length > 0) {
-                      setFilterSkills(filterSkills.slice(0, -1));
-                    }
-                  }}
-                  placeholder={filterSkills.length === 0 ? t('product.talent.filterSkillsPlaceholder', 'Type skill and press Enter') : ''}
-                  className="flex-1 min-w-[80px] h-7 border-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
-                />
-              </div>
-            </div>
+                </div>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min={RANGE_MATCH_MIN}
+                    max={RANGE_MATCH_MAX}
+                    value={matchMinValue}
+                    onChange={(e) => {
+                      const next = clampNumber(Number(e.target.value), RANGE_MATCH_MIN, matchMaxValue);
+                      setMatchScoreMin(next === RANGE_MATCH_MIN ? '' : String(next));
+                    }}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
+                  />
+                  <input
+                    type="range"
+                    min={matchMinValue}
+                    max={RANGE_MATCH_MAX}
+                    value={matchMaxValue}
+                    onChange={(e) => {
+                      const next = clampNumber(Number(e.target.value), matchMinValue, RANGE_MATCH_MAX);
+                      setMatchScoreMax(next === RANGE_MATCH_MAX ? '' : String(next));
+                    }}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
+                  />
+                </div>
+              </section>
 
-            {/* Education Level */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterEducation', 'Education')}</label>
-              <div className="relative">
-                <select
-                  value={filterEducation}
-                  onChange={(e) => setFilterEducation(e.target.value)}
-                  className="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">{t('product.talent.filterAllEducation', 'All Education')}</option>
-                  <option value="junior_high">{t('product.talent.eduJuniorHigh', 'Junior High & Below')}</option>
-                  <option value="vocational">{t('product.talent.eduVocational', 'Vocational / Technical')}</option>
-                  <option value="high_school">{t('product.talent.eduHighSchool', 'High School')}</option>
-                  <option value="associate">{t('product.talent.eduAssociate', 'Associate Degree')}</option>
-                  <option value="bachelor">{t('product.talent.eduBachelor', 'Bachelor\'s Degree')}</option>
-                  <option value="master">{t('product.talent.eduMaster', 'Master\'s Degree')}</option>
-                  <option value="doctorate">{t('product.talent.eduDoctorate', 'Doctorate / PhD')}</option>
-                </select>
-                <IconChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
-              </div>
-            </div>
+              {/* Language */}
+              <section className="space-y-2.5 border-t border-slate-100 pt-5">
+                <p className="text-sm font-semibold text-slate-900">{t('product.talent.languageProficiency', 'Language')}</p>
+                <div className="space-y-1">
+                  {languageOptions.map((option) => {
+                    const checked = filterLanguages.includes(option.value);
+                    return (
+                      <label key={option.value} className="flex cursor-pointer items-center gap-2 rounded py-1 text-sm text-slate-700 hover:text-blue-600">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            setFilterLanguages((prev) => (
+                              prev.includes(option.value)
+                                ? prev.filter((item) => item !== option.value)
+                                : [...prev, option.value]
+                            ));
+                          }}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        {option.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </section>
 
-            {/* School */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterSchool', 'School')}</label>
-              <input
-                type="text"
-                value={filterSchool}
-                onChange={(e) => setFilterSchool(e.target.value)}
-                placeholder={t('product.talent.filterSchoolPlaceholder', 'University name')}
-                className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Row 2: Company, Country, Work Years, Salary, Job, Apply */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            {/* Company */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterCompany', 'Company')}</label>
-              <input
-                type="text"
-                value={filterCompany}
-                onChange={(e) => setFilterCompany(e.target.value)}
-                placeholder={t('product.talent.filterCompanyPlaceholder', 'Company name')}
-                className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Country/Region */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterCountry', 'Country / Region')}</label>
-              <div className="relative">
-                <select
-                  value={filterCountry}
-                  onChange={(e) => setFilterCountry(e.target.value)}
-                  className="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">{t('product.talent.filterAllCountries', 'All Countries')}</option>
-                  {COUNTRY_LIST.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
+              {/* Education Level */}
+              <section className="space-y-2.5 border-t border-slate-100 pt-5">
+                <p className="text-sm font-semibold text-slate-900">{t('product.talent.filterEducation', 'Education')}</p>
+                <div className="space-y-1">
+                  {[
+                    { value: 'junior_high', label: t('product.talent.eduJuniorHigh', 'Junior High / 初中') },
+                    { value: 'vocational', label: t('product.talent.eduVocational', 'Vocational / 中专') },
+                    { value: 'high_school', label: t('product.talent.eduHighSchool', 'High School / 高中') },
+                    { value: 'associate', label: t('product.talent.eduAssociate', 'Associate / 大专') },
+                    { value: 'bachelor', label: t('product.talent.eduBachelor', 'Bachelor / 本科') },
+                    { value: 'master', label: t('product.talent.eduMaster', 'Master / 硕士') },
+                    { value: 'doctorate', label: t('product.talent.eduDoctorate', 'Doctorate / 博士') },
+                  ].map((edu) => (
+                    <label key={edu.value} className="flex cursor-pointer items-center gap-2 rounded py-1 text-sm text-slate-700 hover:text-blue-600">
+                      <input
+                        type="radio"
+                        name="educationLevel"
+                        checked={filterEducation === edu.value}
+                        onChange={() => setFilterEducation(filterEducation === edu.value ? '' : edu.value)}
+                        className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      {edu.label}
+                    </label>
                   ))}
-                </select>
-                <IconChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
-              </div>
-            </div>
+                </div>
+              </section>
 
-            {/* Work Years */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterWorkYears', 'Work Years')}</label>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  min="0"
-                  value={expYearsMin}
-                  onChange={(e) => setExpYearsMin(e.target.value)}
-                  placeholder={t('product.talent.filterMin', 'Min')}
-                  className="h-9 w-full rounded-lg border border-slate-200 px-2 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <span className="text-slate-300 shrink-0">—</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={expYearsMax}
-                  onChange={(e) => setExpYearsMax(e.target.value)}
-                  placeholder={t('product.talent.filterMax', 'Max')}
-                  className="h-9 w-full rounded-lg border border-slate-200 px-2 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-            </div>
+              {/* Additional signals - company, status, job */}
+              <section className="space-y-3 border-t border-slate-100 pt-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-500">{t('product.talent.filterCompany', 'Past company')}</label>
+                  <input
+                    type="text"
+                    value={filterCompany}
+                    onChange={(e) => setFilterCompany(e.target.value)}
+                    placeholder={t('product.talent.filterCompanyPlaceholder', 'Company name')}
+                    className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-500">{t('product.talent.filterStatus', 'Pipeline status')}</label>
+                  <div className="relative">
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">{t('product.talent.filterAllStatus', 'All Status')}</option>
+                      <option value="matched">{t('product.talent.filterMatched', 'Matched')}</option>
+                      <option value="shortlisted">{t('product.talent.filterShortlisted', 'Shortlisted')}</option>
+                      <option value="invited">{t('product.talent.filterInvited', 'Invited')}</option>
+                      <option value="rejected">{t('product.talent.filterRejected', 'Rejected')}</option>
+                    </select>
+                    <IconChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-500">{t('product.talent.filterJob', 'Linked job')}</label>
+                  <div className="relative">
+                    <select
+                      value={filterJobId}
+                      onChange={(e) => setFilterJobId(e.target.value)}
+                      className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">{t('product.talent.filterAllJobs', 'All Jobs')}</option>
+                      {jobs.map((job) => (
+                        <option key={job.id} value={job.id}>{job.title}</option>
+                      ))}
+                    </select>
+                    <IconChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
+                  </div>
+                </div>
+              </section>
 
-            {/* Expected Salary */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterSalary', 'Expected Salary')}</label>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  min="0"
-                  value={salaryMin}
-                  onChange={(e) => setSalaryMin(e.target.value)}
-                  placeholder={t('product.talent.filterMin', 'Min')}
-                  className="h-9 w-full rounded-lg border border-slate-200 px-2 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <span className="text-slate-300 shrink-0">—</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={salaryMax}
-                  onChange={(e) => setSalaryMax(e.target.value)}
-                  placeholder={t('product.talent.filterMax', 'Max')}
-                  className="h-9 w-full rounded-lg border border-slate-200 px-2 text-sm text-slate-700 text-center placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Job */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500">{t('product.talent.filterJob', 'Job')}</label>
-              <div className="relative">
-                <select
-                  value={filterJobId}
-                  onChange={(e) => setFilterJobId(e.target.value)}
-                  className="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">{t('product.talent.filterAllJobs', 'All Jobs')}</option>
-                  {jobs.map((j) => (
-                    <option key={j.id} value={j.id}>{j.title}</option>
-                  ))}
-                </select>
-                <IconChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" size={16} stroke={2} />
-              </div>
-            </div>
-
-            {/* Apply */}
-            <div className="flex items-end">
+              {/* Clear All Filters */}
               <button
+                type="button"
+                onClick={clearAllFilters}
+                className="mt-2 w-full rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                {t('product.talent.clearFilters', 'Clear All Filters')}
+              </button>
+
+              <button
+                type="button"
                 onClick={applyFilters}
-                className="h-9 w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+                className="w-full rounded-lg bg-blue-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
               >
                 {t('product.talent.applyFilters', 'Apply Filters')}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </aside>
 
-      {/* Resume Upload Modal */}
-      <ResumeUploadModal
-        open={showUpload}
-        onClose={() => setShowUpload(false)}
-        onUploaded={() => {
-          fetchResumes(search || undefined, 1);
-        }}
-        batch
-      />
+        <section className="space-y-4">
+          {/* Sort bar + view toggle */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-500">
+                {loading
+                  ? t('product.talent.loadingResults', 'Refreshing…')
+                  : t('product.talent.filteredResults', 'Showing {{count}} Candidates', { count: totalCount })}
+              </span>
+              {activeFilterLabels.length > 0 && (
+                <div className="hidden lg:flex flex-wrap gap-1.5">
+                  {activeFilterLabels.map((label) => (
+                    <span key={label} className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
-      {/* Loading */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
-        </div>
-      ) : enrichedResumes.length === 0 ? (
-        <div className="text-center py-16 rounded-2xl border border-slate-200 bg-white">
-          <IconUsers className="w-16 h-16 mx-auto text-slate-300 mb-4" size={64} stroke={1} />
-          <h3 className="text-lg font-semibold text-slate-900">{t('product.talent.empty', 'No candidates yet')}</h3>
-          <p className="mt-1 text-sm text-slate-600">{t('product.talent.emptyDesc', 'Upload resumes to build your talent pool.')}</p>
-          <button
-            onClick={() => setShowUpload(true)}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            {t('product.talent.upload', 'Upload Resumes')}
-          </button>
-        </div>
-      ) : viewMode === 'card' ? (
-        /* ── Card View ── */
-        <>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {enrichedResumes.map((resume) => (
-              <ResumeCard key={resume.id} resume={resume} onDelete={handleDelete} onPreferences={handlePreferences} onApply={handleApply} onInvite={handleInvite} t={t} />
-            ))}
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center rounded-lg border border-slate-200 p-0.5">
+                <button
+                  onClick={() => setViewMode('card')}
+                  className={`inline-flex h-8 items-center justify-center rounded-md px-2.5 text-sm font-medium transition-colors ${
+                    viewMode === 'card' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  <IconLayoutGrid size={15} stroke={1.8} className="mr-1.5" />
+                  {t('product.talent.viewCard', 'Cards')}
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`inline-flex h-8 items-center justify-center rounded-md px-2.5 text-sm font-medium transition-colors ${
+                    viewMode === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  <IconList size={15} stroke={1.8} className="mr-1.5" />
+                  {t('product.talent.viewList', 'List')}
+                </button>
+              </div>
+
+              {activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:text-slate-700"
+                >
+                  <IconX size={13} stroke={2} />
+                  {t('product.talent.reset', 'Reset')}
+                </button>
+              )}
+            </div>
           </div>
-          <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
-        </>
-      ) : (
-        /* ── List View ── */
-        <>
-          <div className="rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
-            {enrichedResumes.map((resume) => (
-              <ResumeListRow key={resume.id} resume={resume} onDelete={handleDelete} onPreferences={handlePreferences} onApply={handleApply} onInvite={handleInvite} t={t} />
-            ))}
-          </div>
-          <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
-        </>
-      )}
+
+          <ResumeUploadModal
+            open={showUpload}
+            onClose={() => setShowUpload(false)}
+            onUploaded={() => {
+              fetchResumes(search || undefined, 1);
+            }}
+            batch
+          />
+
+          {loading ? (
+            <div className="flex justify-center rounded-xl border border-slate-200 bg-white py-20">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500" />
+            </div>
+          ) : enrichedResumes.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
+              <IconUsers className="mx-auto mb-3 text-slate-300" size={48} stroke={1.2} />
+              <h3 className="text-lg font-semibold text-slate-900">{t('product.talent.empty', 'No candidates yet')}</h3>
+              <p className="mt-1.5 text-sm text-slate-500">
+                {hasActiveFilters
+                  ? t('product.talent.emptyFiltered', 'No candidates matched the current filters. Try resetting them.')
+                  : t('product.talent.emptyDesc', 'Upload resumes to build your talent pool.')}
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300"
+                  >
+                    <IconX size={14} stroke={2} />
+                    {t('product.talent.clearFilters', 'Clear all filters')}
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowUpload(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+                >
+                  <IconUpload size={15} stroke={2} />
+                  {t('product.talent.upload', 'Upload Resumes')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {viewMode === 'card' ? (
+                <div className="space-y-4">
+                  {enrichedResumes.map((resume) => (
+                    <ResumeCard
+                      key={resume.id}
+                      resume={resume}
+                      onDelete={handleDelete}
+                      onPreferences={handlePreferences}
+                      onApply={handleApply}
+                      onInvite={handleInvite}
+                      onViewSummary={handleViewSummary}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  {enrichedResumes.map((resume) => (
+                    <ResumeListRow
+                      key={resume.id}
+                      resume={resume}
+                      onDelete={handleDelete}
+                      onPreferences={handlePreferences}
+                      onApply={handleApply}
+                      onInvite={handleInvite}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+                <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
+              </div>
+            </>
+          )}
+        </section>
+      </div>
 
       {/* Candidate Preferences Modal */}
       {prefsResume && (
@@ -1368,6 +1827,86 @@ export default function TalentHub() {
           resumeName={applyResume.name}
           onApplied={() => setApplyResume(null)}
         />
+      )}
+
+      {/* AI Summary Modal */}
+      {summaryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSummaryModal(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">{t('product.talent.aiSummary', 'AI Summary')}</h3>
+                <p className="mt-0.5 text-sm text-slate-500">{summaryModal.name}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(summaryModal.summary);
+                    setSummaryCopied(true);
+                    setTimeout(() => setSummaryCopied(false), 2000);
+                  }}
+                  className="rounded-lg p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                  title={t('product.talent.copySummary', 'Copy summary')}
+                >
+                  {summaryCopied ? <IconCheck size={18} stroke={2} className="text-emerald-500" /> : <IconCopy size={18} stroke={1.8} />}
+                </button>
+                <button onClick={() => setSummaryModal(null)} className="rounded-lg p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                  <IconX size={18} stroke={2} />
+                </button>
+              </div>
+            </div>
+
+            {/* Summary content */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div className="prose prose-lg prose-slate max-w-none [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:my-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:my-2 [&>p]:my-2 [&>p]:leading-8 [&>p]:text-base [&>li]:text-base [&>h1]:text-xl [&>h2]:text-lg [&>h3]:text-base">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{summaryModal.summary}</ReactMarkdown>
+              </div>
+            </div>
+
+            {/* Regenerate section */}
+            <div className="px-6 py-4 border-t border-slate-200 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <IconChevronDown size={14} stroke={2} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <select
+                    value={summaryRegenJobId}
+                    onChange={(e) => setSummaryRegenJobId(e.target.value)}
+                    disabled={summaryRegenerating}
+                    className="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    <option value="">{t('product.talent.regenNoJob', 'No job context (general summary)')}</option>
+                    {jobs.map((job) => (
+                      <option key={job.id} value={job.id}>{job.title}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-end gap-3">
+                <textarea
+                  value={summaryRegenInstructions}
+                  onChange={(e) => setSummaryRegenInstructions(e.target.value)}
+                  placeholder={t('product.talent.regenPlaceholder', 'Instructions (e.g. "Focus on technical skills", "Make it shorter")...')}
+                  className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none placeholder:text-slate-400 disabled:opacity-50"
+                  rows={2}
+                  disabled={summaryRegenerating}
+                />
+                <button
+                  onClick={handleRegenerateSummary}
+                  disabled={summaryRegenerating}
+                  className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {summaryRegenerating ? (
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <IconRefresh size={14} stroke={2} />
+                  )}
+                  {t('product.talent.regenerate', 'Regenerate')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Delete Confirmation Modal */}
