@@ -314,9 +314,10 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const user = req.user!;
-    const { status, title, limit, offset = 0, filterUserId, filterTeamId, teamView } = req.query;
+    const { status, title, limit, offset = 0, filterUserId, filterTeamId, teamView, includeTotal } = req.query;
     const pageSize = Math.min(50, Math.max(1, parseInt(limit as string, 10) || 20));
     const pageOffset = Math.max(0, parseInt(offset as string, 10) || 0);
+    const shouldIncludeTotal = includeTotal !== 'false';
 
     const scope = await getVisibilityScope(user, teamView === 'true');
     const userFilter = await buildAdminOverrideFilter(scope, filterUserId as string, filterTeamId as string);
@@ -329,44 +330,56 @@ router.get('/', async (req, res) => {
       where.title = title;
     }
 
-    const [hiringRequests, total] = await Promise.all([
-      prisma.hiringRequest.findMany({
-        where,
-        include: {
-          user: {
-            select: { id: true, name: true, email: true },
-          },
-          jobs: {
-            select: {
-              id: true,
-              title: true,
-              status: true,
-              department: true,
-              location: true,
-              salaryMin: true,
-              salaryMax: true,
-              salaryCurrency: true,
-              salaryText: true,
-              salaryPeriod: true,
-              experienceLevel: true,
-              updatedAt: true,
-            },
-            orderBy: { updatedAt: 'desc' },
-            take: 1,
-          },
-          _count: {
-            select: { candidates: true, resumeJobFits: true, interviews: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: pageSize,
-        skip: pageOffset,
-      }),
-      prisma.hiringRequest.count({ where }),
-    ]);
+    const queryTake = shouldIncludeTotal ? pageSize : pageSize + 1;
 
-    // Trim heavy fields not needed in list view
-    const trimmed = hiringRequests.map(({ jobDescription, intelligenceData, webhookUrl, jobs, user: hrUser, ...rest }) => ({
+    const listPromise = prisma.hiringRequest.findMany({
+      where,
+      select: {
+        id: true,
+        title: true,
+        requirements: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+        jobs: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            department: true,
+            location: true,
+            salaryMin: true,
+            salaryMax: true,
+            salaryCurrency: true,
+            salaryText: true,
+            salaryPeriod: true,
+            experienceLevel: true,
+            updatedAt: true,
+          },
+          orderBy: { updatedAt: 'desc' },
+          take: 1,
+        },
+        _count: {
+          select: { candidates: true, resumeJobFits: true, interviews: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: queryTake,
+      skip: pageOffset,
+    });
+
+    const totalPromise = shouldIncludeTotal
+      ? prisma.hiringRequest.count({ where })
+      : Promise.resolve<number | null>(null);
+
+    const [hiringRequests, total] = await Promise.all([listPromise, totalPromise]);
+    const hasMore = !shouldIncludeTotal && hiringRequests.length > pageSize;
+    const pageItems = hasMore ? hiringRequests.slice(0, pageSize) : hiringRequests;
+
+    const trimmed = pageItems.map(({ jobs, user: hrUser, ...rest }) => ({
       ...rest,
       recruiter: hrUser ? { id: hrUser.id, name: hrUser.name || hrUser.email } : null,
       linkedJob: jobs[0] || null,
@@ -379,6 +392,7 @@ router.get('/', async (req, res) => {
         total,
         limit: pageSize,
         offset: pageOffset,
+        hasMore,
       },
     });
   } catch (error) {
@@ -397,33 +411,24 @@ router.get('/', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const user = req.user!;
-    const { filterUserId, filterTeamId, teamView } = req.query;
+    const { filterUserId, filterTeamId, teamView, includeRecent } = req.query;
 
     const scope = await getVisibilityScope(user, teamView === 'true');
     const userFilter = await buildAdminOverrideFilter(scope, filterUserId as string, filterTeamId as string);
     const hrWhere: any = { ...userFilter };
+    const shouldIncludeRecent = includeRecent === 'true';
 
     const [
-      totalRequests,
       requestStatusGroups,
-      totalCandidates,
       candidateStatusGroups,
       avgMatchScoreAgg,
       totalMatches,
       recentRequests,
     ] = await Promise.all([
-      prisma.hiringRequest.count({
-        where: hrWhere,
-      }),
       prisma.hiringRequest.groupBy({
         by: ['status'],
         where: hrWhere,
         _count: { _all: true },
-      }),
-      prisma.candidate.count({
-        where: {
-          hiringRequest: hrWhere,
-        },
       }),
       prisma.candidate.groupBy({
         by: ['status'],
@@ -444,16 +449,22 @@ router.get('/stats', async (req, res) => {
           hiringRequest: hrWhere,
         },
       }),
-      prisma.hiringRequest.findMany({
-        where: hrWhere,
-        include: {
-          _count: {
-            select: { candidates: true, resumeJobFits: true, interviews: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-      }),
+      shouldIncludeRecent
+        ? prisma.hiringRequest.findMany({
+            where: hrWhere,
+            select: {
+              id: true,
+              title: true,
+              status: true,
+              createdAt: true,
+              _count: {
+                select: { candidates: true },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+          })
+        : Promise.resolve([]),
     ]);
 
     const requestStatusCounts = requestStatusGroups.reduce(
@@ -472,6 +483,8 @@ router.get('/stats', async (req, res) => {
       {} as Record<string, number>
     );
 
+    const totalRequests = requestStatusGroups.reduce((sum, row) => sum + row._count._all, 0);
+    const totalCandidates = candidateStatusGroups.reduce((sum, row) => sum + row._count._all, 0);
     const avgMatchScoreRaw = avgMatchScoreAgg._avg.matchScore;
     const avgMatchScore = avgMatchScoreRaw === null
       ? null

@@ -1044,6 +1044,7 @@
       "selectResumesTitle": "Select Resumes to Match",
       "searchResumesPlaceholder": "Search by name, role, or tag...",
       "resumeSelectedCount": "{{count}} resumes selected",
+      "resumeSelectedFiltered": "{{selected}} of {{filtered}} filtered resumes selected ({{total}} total)",
       "noResumesToMatch": "No resumes found. Upload resumes first in Talent Hub.",
       "startMatchingCount": "Start Matching ({{count}} resumes)",
       "filterByRecruiter": "Recruiter:"

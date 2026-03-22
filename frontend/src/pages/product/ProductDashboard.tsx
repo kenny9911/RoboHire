@@ -86,12 +86,13 @@ export default function ProductDashboard() {
       if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
       if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
       if (recruiterFilter.teamView) params.teamView = 'true';
-      const [statsRes, enhancedRes] = await Promise.allSettled([
-        axios.get('/api/v1/dashboard/stats', { params }),
-        axios.get('/api/v1/dashboard/enhanced', { params }),
-      ]);
-      if (statsRes.status === 'fulfilled') setData(statsRes.value.data.data);
-      if (enhancedRes.status === 'fulfilled') setEnhanced(enhancedRes.value.data.data);
+      const res = await axios.get('/api/v1/dashboard/stats', { params });
+      const d = res.data.data;
+      if (d) {
+        const { enhanced: enhancedData, ...statsData } = d;
+        setData(statsData);
+        if (enhancedData) setEnhanced(enhancedData);
+      }
     } catch {
       // silent
     } finally {
@@ -234,6 +235,55 @@ export default function ProductDashboard() {
       </div>
 
       {/* ── Period Stats Row ── */}
+      {loading && !data && (
+        <div className="space-y-6 animate-pulse">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 border-l-4 border-l-slate-200">
+                <div className="h-3 w-20 rounded bg-slate-200 mb-2" />
+                <div className="h-7 w-12 rounded bg-slate-200" />
+              </div>
+            ))}
+          </div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-slate-200 bg-white p-5">
+                  <div className="h-4 w-32 rounded bg-slate-200 mb-4" />
+                  <div className="grid grid-cols-5 gap-3">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <div key={j} className="rounded-lg bg-slate-50 py-3 px-2 text-center">
+                        <div className="h-6 w-8 rounded bg-slate-200 mx-auto mb-1" />
+                        <div className="h-3 w-12 rounded bg-slate-100 mx-auto" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-6">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-slate-200 bg-white p-5">
+                  <div className="h-4 w-28 rounded bg-slate-200 mb-4" />
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, j) => (
+                      <div key={j} className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-slate-200" />
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3 w-3/4 rounded bg-slate-200" />
+                          <div className="h-2.5 w-1/2 rounded bg-slate-100" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!(loading && !data) && <>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: t('product.dashboard.newResumes', 'New Resumes'), value: ps?.newResumes, accent: 'border-l-indigo-400' },
@@ -692,6 +742,7 @@ export default function ProductDashboard() {
           )}
         </div>
       )}
+      </>}
     </div>
   );
 }

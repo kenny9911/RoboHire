@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo, useMemo } from 'react';
+import { useState, useEffect, useCallback, memo, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
@@ -148,12 +148,37 @@ function PipelineBar({ candidates, matches, interviews, t }: {
 }
 
 // ── Pagination ──
-function Pagination({ page, totalPages, total, onPageChange, t }: {
-  page: number; totalPages: number; total: number;
+function Pagination({ page, totalPages, total, hasMore, hasExactTotal, onPageChange, t }: {
+  page: number; totalPages: number; total: number; hasMore: boolean; hasExactTotal: boolean;
   onPageChange: (p: number) => void;
   t: (k: string, f: string, opts?: Record<string, unknown>) => string;
 }) {
-  if (totalPages <= 1) return null;
+  const canGoPrev = page > 1;
+  const canGoNext = hasExactTotal ? page < totalPages : hasMore;
+
+  if (hasExactTotal && totalPages <= 1) return null;
+  if (!hasExactTotal && !canGoPrev && !canGoNext) return null;
+
+  if (!hasExactTotal) {
+    return (
+      <div className="flex flex-col items-center gap-2 pt-4 sm:flex-row sm:justify-between">
+        <span className="text-sm text-slate-600">
+          {t('product.hiring.pageLabel', 'Page {{page}}', { page })}
+        </span>
+        <div className="flex items-center gap-1">
+          <button onClick={() => onPageChange(page - 1)} disabled={!canGoPrev}
+            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+            <IconChevronLeft size={16} stroke={2} />
+          </button>
+          <button onClick={() => onPageChange(page + 1)} disabled={!canGoNext}
+            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+            <IconChevronRight size={16} stroke={2} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const pages: number[] = [];
   const start = Math.max(1, page - 2);
   const end = Math.min(totalPages, start + 4);
@@ -368,9 +393,13 @@ export default function HiringRequests() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [hasMorePages, setHasMorePages] = useState(false);
+  const [hasExactTotal, setHasExactTotal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [stats, setStats] = useState<HiringStats | null>(null);
+  const [stats, setStats] = usePageState<HiringStats | null>('hiring.stats', null);
   const [sortOrder, setSortOrder] = usePageState<string>('hiring.sortOrder', 'date');
+  const requestsLoadingRef = useRef(false);
+  const statsRefreshPendingRef = useRef(true);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -378,6 +407,7 @@ export default function HiringRequests() {
       if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
       if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
       if (recruiterFilter.teamView) params.teamView = 'true';
+      params.includeRecent = 'false';
       const res = await axios.get('/api/v1/hiring-requests/stats', { params });
       setStats(res.data.data);
     } catch {
@@ -387,34 +417,62 @@ export default function HiringRequests() {
 
   const fetchRequests = useCallback(async (pageNum: number) => {
     try {
+      requestsLoadingRef.current = true;
       setLoading(true);
-      const params: Record<string, unknown> = { limit: PAGE_SIZE, offset: (pageNum - 1) * PAGE_SIZE };
+      const params: Record<string, unknown> = { limit: PAGE_SIZE, offset: (pageNum - 1) * PAGE_SIZE, includeTotal: 'false' };
       if (statusFilter) params.status = statusFilter;
       if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
       if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
       if (recruiterFilter.teamView) params.teamView = 'true';
       const res = await axios.get('/api/v1/hiring-requests', { params });
-      setRequests(res.data.data || []);
+      const items = res.data.data || [];
+      setRequests(items);
       const pag = res.data.pagination;
-      if (pag) {
+      const responseHasMore = Boolean(pag?.hasMore);
+      setHasMorePages(responseHasMore);
+      if (pag && typeof pag.total === 'number') {
+        setHasExactTotal(true);
         setTotalCount(pag.total || 0);
         setTotalPages(Math.ceil((pag.total || 0) / PAGE_SIZE) || 1);
+      } else {
+        const lowerBound = ((pageNum - 1) * PAGE_SIZE) + items.length + (responseHasMore ? 1 : 0);
+        setHasExactTotal(false);
+        setTotalCount(lowerBound);
+        setTotalPages(responseHasMore ? pageNum + 1 : pageNum);
       }
     } catch {
       // silently fail
     } finally {
+      requestsLoadingRef.current = false;
       setLoading(false);
     }
   }, [statusFilter, recruiterFilter]);
 
   useEffect(() => {
-    fetchStats();
+    setPage(1);
+    void fetchRequests(1);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    statsRefreshPendingRef.current = true;
   }, [fetchStats]);
 
   useEffect(() => {
-    setPage(1);
-    fetchRequests(1);
-  }, [fetchRequests]);
+    if (requestsLoadingRef.current || loading || !statsRefreshPendingRef.current) return;
+    statsRefreshPendingRef.current = false;
+    void fetchStats();
+  }, [fetchStats, loading]);
+
+  const exactTotalCountFromStats = useMemo(() => {
+    if (!stats) return null;
+    return statusFilter ? getStatusCount(statusFilter, stats, totalCount) : stats.totalRequests;
+  }, [stats, statusFilter, totalCount]);
+
+  const resolvedTotalCount = exactTotalCountFromStats ?? totalCount;
+  const resolvedTotalPages = exactTotalCountFromStats !== null
+    ? Math.max(1, Math.ceil(exactTotalCountFromStats / PAGE_SIZE) || 1)
+    : totalPages;
+  const totalIsExact = hasExactTotal || exactTotalCountFromStats !== null;
 
   // Client-side search filter
   const filteredRequests = useMemo(() => {
@@ -440,7 +498,7 @@ export default function HiringRequests() {
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
-    fetchRequests(newPage);
+    void fetchRequests(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [fetchRequests]);
 
@@ -461,7 +519,7 @@ export default function HiringRequests() {
     if (!confirmDeleteId) return;
     try {
       await axios.delete(`/api/v1/hiring-requests/${confirmDeleteId}`);
-      const nextTotal = Math.max(totalCount - 1, 0);
+      const nextTotal = Math.max(resolvedTotalCount - 1, 0);
       const nextPage = Math.min(page, Math.max(1, Math.ceil(nextTotal / PAGE_SIZE) || 1));
       if (nextPage !== page) {
         setPage(nextPage);
@@ -472,7 +530,7 @@ export default function HiringRequests() {
     } finally {
       setConfirmDeleteId(null);
     }
-  }, [confirmDeleteId, fetchRequests, fetchStats, page, totalCount]);
+  }, [confirmDeleteId, fetchRequests, fetchStats, page, resolvedTotalCount]);
 
   const [successMessage, setSuccessMessage] = useState('');
   const [creatingJobId, setCreatingJobId] = useState<string | null>(null);
@@ -523,7 +581,7 @@ export default function HiringRequests() {
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold text-slate-900">{t('product.hiring.title', 'Projects')}</h2>
           <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm font-semibold text-slate-600">
-            {totalCount}
+            {resolvedTotalCount}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -604,7 +662,7 @@ export default function HiringRequests() {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                {getStatusTabLabel(s, t)} {getStatusCount(s, stats, totalCount)}
+                {getStatusTabLabel(s, t)} {getStatusCount(s, stats, resolvedTotalCount)}
                 {isActive && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />
                 )}
@@ -682,7 +740,15 @@ export default function HiringRequests() {
         </div>
       )}
 
-      <Pagination page={page} totalPages={totalPages} total={totalCount} onPageChange={handlePageChange} t={t} />
+      <Pagination
+        page={page}
+        totalPages={resolvedTotalPages}
+        total={resolvedTotalCount}
+        hasMore={hasMorePages}
+        hasExactTotal={totalIsExact}
+        onPageChange={handlePageChange}
+        t={t}
+      />
 
       {/* Delete Confirmation Modal */}
       {confirmDeleteId && (

@@ -536,6 +536,7 @@ model Job {
   agents            Agent[]
 
   @@index([userId])
+  @@index([hiringRequestId, updatedAt])
   @@index([status])
   @@index([userId, status])
   @@index([userId, createdAt])

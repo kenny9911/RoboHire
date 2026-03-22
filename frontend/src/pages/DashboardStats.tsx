@@ -36,7 +36,7 @@ export default function DashboardStats() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`${API_BASE}/api/v1/hiring-requests/stats`, {
+        const response = await fetch(`${API_BASE}/api/v1/hiring-requests/stats?includeRecent=true`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           credentials: 'include',
         });

@@ -1104,6 +1104,7 @@
       "selectResumesTitle": "Seleccionar currículos para comparar",
       "searchResumesPlaceholder": "Buscar por nombre, puesto o etiqueta...",
       "resumeSelectedCount": "{{count}} currículos seleccionados",
+      "resumeSelectedFiltered": "{{selected}} de {{filtered}} currículums filtrados seleccionados ({{total}} en total)",
       "noResumesToMatch": "No se encontraron currículos. Suba currículos primero en Talent Hub.",
       "startMatchingCount": "Iniciar comparación ({{count}} currículos)",
       "filterByRecruiter": "Reclutador:"

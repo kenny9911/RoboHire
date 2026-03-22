@@ -1104,6 +1104,7 @@
       "selectResumesTitle": "Selecionar currículos para correspondência",
       "searchResumesPlaceholder": "Pesquisar por nome, cargo ou tag...",
       "resumeSelectedCount": "{{count}} currículos selecionados",
+      "resumeSelectedFiltered": "{{selected}} de {{filtered}} currículos filtrados selecionados ({{total}} no total)",
       "noResumesToMatch": "Nenhum currículo encontrado. Carregue currículos primeiro no Hub de Talentos.",
       "startMatchingCount": "Iniciar correspondência ({{count}} currículos)",
       "filterByRecruiter": "Recrutador:"

@@ -579,7 +579,56 @@ router.post('/run', requireAuth, async (req, res) => {
  */
 router.get('/sessions', requireAuth, async (req, res) => {
   try {
-    const { jobId, limit = '20', offset = '0', filterUserId, filterTeamId, teamView } = req.query;
+    const { jobId, limit = '20', offset = '0', filterUserId, filterTeamId, teamView, includeTotal } = req.query;
+    const scope = await getVisibilityScope(req.user!, (teamView as string) === 'true');
+    const visFilter = await buildAdminOverrideFilter(scope, filterUserId as string | undefined, filterTeamId as string | undefined);
+    const pageSize = Math.max(1, parseInt(limit as string, 10) || 20);
+    const pageOffset = Math.max(0, parseInt(offset as string, 10) || 0);
+    const shouldIncludeTotal = includeTotal !== 'false';
+    const queryTake = shouldIncludeTotal ? pageSize : pageSize + 1;
+
+    const where: any = { ...visFilter };
+    if (jobId && typeof jobId === 'string') {
+      where.jobId = jobId;
+    }
+
+    const sessionsPromise = prisma.matchingSession.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: queryTake,
+      skip: pageOffset,
+      include: {
+        job: { select: { id: true, title: true } },
+      },
+    });
+
+    const totalPromise = shouldIncludeTotal
+      ? prisma.matchingSession.count({ where })
+      : Promise.resolve<number | null>(null);
+
+    const [sessions, total] = await Promise.all([sessionsPromise, totalPromise]);
+    const hasMore = !shouldIncludeTotal && sessions.length > pageSize;
+    const pageItems = hasMore ? sessions.slice(0, pageSize) : sessions;
+
+    const hydratedSessions = pageItems.map((session) => ({
+      ...session,
+      criteriaSnapshot: buildMatchingCriteriaSnapshot(session),
+    }));
+
+    res.json({
+      success: true,
+      data: hydratedSessions,
+      meta: { total, hasMore },
+    });
+  } catch (err: any) {
+    logger.error('MATCHING', 'Failed to list sessions', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to list sessions' });
+  }
+});
+
+router.get('/sessions/count', requireAuth, async (req, res) => {
+  try {
+    const { jobId, filterUserId, filterTeamId, teamView } = req.query;
     const scope = await getVisibilityScope(req.user!, (teamView as string) === 'true');
     const visFilter = await buildAdminOverrideFilter(scope, filterUserId as string | undefined, filterTeamId as string | undefined);
 
@@ -588,28 +637,12 @@ router.get('/sessions', requireAuth, async (req, res) => {
       where.jobId = jobId;
     }
 
-    const [sessions, total] = await Promise.all([
-      prisma.matchingSession.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: parseInt(limit as string, 10),
-        skip: parseInt(offset as string, 10),
-        include: {
-          job: { select: { id: true, title: true } },
-        },
-      }),
-      prisma.matchingSession.count({ where }),
-    ]);
+    const total = await prisma.matchingSession.count({ where });
 
-    const hydratedSessions = sessions.map((session) => ({
-      ...session,
-      criteriaSnapshot: buildMatchingCriteriaSnapshot(session),
-    }));
-
-    res.json({ success: true, data: hydratedSessions, meta: { total } });
+    res.json({ success: true, meta: { total } });
   } catch (err: any) {
-    logger.error('MATCHING', 'Failed to list sessions', { error: err.message });
-    res.status(500).json({ success: false, error: 'Failed to list sessions' });
+    logger.error('MATCHING', 'Failed to count sessions', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to count sessions' });
   }
 });
 

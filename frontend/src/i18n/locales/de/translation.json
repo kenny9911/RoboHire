@@ -1104,6 +1104,7 @@
       "selectResumesTitle": "Lebensläufe zum Abgleich auswählen",
       "searchResumesPlaceholder": "Nach Name, Position oder Tag suchen...",
       "resumeSelectedCount": "{{count}} Lebensläufe ausgewählt",
+      "resumeSelectedFiltered": "{{selected}} von {{filtered}} gefilterten Lebensläufen ausgewählt ({{total}} gesamt)",
       "noResumesToMatch": "Keine Lebensläufe gefunden. Laden Sie zuerst Lebensläufe im Talent Hub hoch.",
       "startMatchingCount": "Abgleich starten ({{count}} Lebensläufe)",
       "filterByRecruiter": "Recruiter:"

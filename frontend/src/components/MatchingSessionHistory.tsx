@@ -60,7 +60,7 @@ export default function MatchingSessionHistory({
   const fetchSessions = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/v1/matching/sessions', { params: { limit, ...filterParams } });
+      const res = await axios.get('/api/v1/matching/sessions', { params: { limit, includeTotal: 'false', ...filterParams } });
       setSessions(res.data.data || []);
     } catch {
       setSessions([]);

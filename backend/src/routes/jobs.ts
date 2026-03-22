@@ -490,7 +490,19 @@ function extractJobFields(body: any) {
 router.get('/', requireAuth, async (req, res) => {
   const requestId = req.requestId || generateRequestId();
   try {
-    const { status, search, title, hiringRequestId, filterUserId, filterTeamId, teamView, page = '1', limit = '20' } = req.query;
+    const {
+      status,
+      search,
+      title,
+      hiringRequestId,
+      filterUserId,
+      filterTeamId,
+      teamView,
+      page = '1',
+      limit = '20',
+      fields,
+      includeTotal,
+    } = req.query;
 
     const scope = await getVisibilityScope(req.user!, teamView === 'true');
     const where: any = {
@@ -517,23 +529,61 @@ router.get('/', requireAuth, async (req, res) => {
       ];
     }
 
+    const isMinimal = fields === 'minimal';
     const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
-    const pageSize = Math.min(50, Math.max(1, parseInt(limit as string, 10) || 20));
+    const maxPageSize = isMinimal ? 100 : 50;
+    const pageSize = Math.min(maxPageSize, Math.max(1, parseInt(limit as string, 10) || 20));
+    const shouldIncludeTotal = includeTotal !== 'false';
+    const queryTake = shouldIncludeTotal ? pageSize : pageSize + 1;
 
-    const [jobs, total] = await Promise.all([
-      prisma.job.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip: (pageNum - 1) * pageSize,
-        take: pageSize,
-        include: {
-          hiringRequest: { select: { id: true, title: true } },
+    const jobsPromise = isMinimal
+      ? prisma.job.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (pageNum - 1) * pageSize,
+          take: queryTake,
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            department: true,
+            location: true,
+            passingScore: true,
+          },
+        })
+      : prisma.job.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (pageNum - 1) * pageSize,
+          take: queryTake,
+          include: {
+            hiringRequest: { select: { id: true, title: true } },
+          },
+        });
+
+    const totalPromise = shouldIncludeTotal
+      ? prisma.job.count({ where })
+      : Promise.resolve<number | null>(null);
+
+    const [jobs, total] = await Promise.all([jobsPromise, totalPromise]);
+    const hasMore = !shouldIncludeTotal && jobs.length > pageSize;
+    const pageItems = hasMore ? jobs.slice(0, pageSize) : jobs;
+
+    if (isMinimal) {
+      return res.json({
+        success: true,
+        data: pageItems,
+        pagination: {
+          page: pageNum,
+          limit: pageSize,
+          total,
+          totalPages: typeof total === 'number' ? Math.ceil(total / pageSize) : null,
+          hasMore,
         },
-      }),
-      prisma.job.count({ where }),
-    ]);
+      });
+    }
 
-    const jobIds = jobs.map((job) => job.id);
+    const jobIds = pageItems.map((job) => job.id);
 
     const [jobMatchCounts, interviewCounts, completedInterviewCounts] = jobIds.length > 0
       ? await Promise.all([
@@ -575,7 +625,7 @@ router.get('/', requireAuth, async (req, res) => {
       completedInterviewCountById.set(row.jobId, row._count._all);
     });
 
-    const jobsWithStats = jobs.map((job) => ({
+    const jobsWithStats = pageItems.map((job) => ({
       ...job,
       stats: {
         matches: jobMatchCountById.get(job.id) ?? 0,
@@ -591,7 +641,8 @@ router.get('/', requireAuth, async (req, res) => {
         page: pageNum,
         limit: pageSize,
         total,
-        totalPages: Math.ceil(total / pageSize),
+        totalPages: typeof total === 'number' ? Math.ceil(total / pageSize) : null,
+        hasMore,
       },
     });
   } catch (error) {

@@ -1104,6 +1104,7 @@
       "selectResumesTitle": "Sélectionner les CV à comparer",
       "searchResumesPlaceholder": "Rechercher par nom, poste ou tag...",
       "resumeSelectedCount": "{{count}} CV sélectionnés",
+      "resumeSelectedFiltered": "{{selected}} sur {{filtered}} CV filtrés sélectionnés ({{total}} au total)",
       "noResumesToMatch": "Aucun CV trouvé. Téléchargez d'abord des CV dans le Hub Talents.",
       "startMatchingCount": "Lancer la comparaison ({{count}} CV)",
       "filterByRecruiter": "Recruteur :"

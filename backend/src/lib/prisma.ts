@@ -15,8 +15,8 @@ function createPrismaClient(): PrismaClient {
     },
   });
 
-  // Keepalive is useful in production with serverless Postgres, but it adds
-  // noisy reconnect errors during local dev restarts and hot reloads.
+  // Keepalive avoids cold-start latency on serverless Postgres providers like
+  // Neon, including local development against a remote database.
   if (shouldEnableKeepalive()) {
     const keepaliveMs = parseKeepaliveMs();
     setInterval(async () => {
@@ -35,7 +35,17 @@ function shouldEnableKeepalive(): boolean {
   const override = process.env.PRISMA_KEEPALIVE_ENABLED?.trim().toLowerCase();
   if (override === 'true') return true;
   if (override === 'false') return false;
-  return process.env.NODE_ENV === 'production';
+  return process.env.NODE_ENV === 'production' || usesServerlessPostgres(process.env.DATABASE_URL || '');
+}
+
+function usesServerlessPostgres(url: string): boolean {
+  if (!url) return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host.includes('neon.tech');
+  } catch {
+    return url.toLowerCase().includes('neon.tech');
+  }
 }
 
 function parseKeepaliveMs(): number {

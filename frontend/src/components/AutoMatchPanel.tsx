@@ -156,7 +156,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
   const fetchResumesForSelect = useCallback(async (filter: RecruiterTeamFilterValue) => {
     try {
       setLoadingResumes(true);
-      const params: Record<string, string> = { limit: '9999' };
+      const params: Record<string, string> = { limit: '5000', fields: 'minimal' };
       if (filter.filterUserId) params.filterUserId = filter.filterUserId;
       if (filter.filterTeamId) params.filterTeamId = filter.filterTeamId;
       if (filter.teamView) params.teamView = 'true';
@@ -1005,7 +1005,13 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
               </div>
 
               <div className="text-xs text-slate-500">
-                {t('dashboard.autoMatch.resumeSelectedCount', '{{count}} resumes selected', { count: resumeSelectedIds.size })}
+                {resumeSearch.trim()
+                  ? t('dashboard.autoMatch.resumeSelectedFiltered', '{{selected}} of {{filtered}} filtered resumes selected ({{total}} total)', {
+                      selected: filteredResumesForSelect.filter((r) => resumeSelectedIds.has(r.id)).length,
+                      filtered: filteredResumesForSelect.length,
+                      total: resumeSelectedIds.size,
+                    })
+                  : t('dashboard.autoMatch.resumeSelectedCount', '{{count}} resumes selected', { count: resumeSelectedIds.size })}
               </div>
 
               {/* Resume List */}

@@ -842,10 +842,11 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       language,
       fitScoreMin,
       fitScoreMax,
+      fields,
     } = req.query as Record<string, string>;
 
     const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 20));
+    const limitNum = Math.min(5000, Math.max(1, parseInt(limit) || 20));
     const skip = (pageNum - 1) * limitNum;
 
     // Build where clause with team visibility (admin can narrow by user/team)
@@ -1073,33 +1074,40 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       orderBy.createdAt = sortOrder === 'asc' ? 'asc' : 'desc';
     }
 
-    const selectFields = {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      currentRole: true,
-      experienceYears: true,
-      summary: true,
-      highlight: true,
-      fileName: true,
-      fileType: true,
-      originalFileKey: true,
-      status: true,
-      source: true,
-      tags: true,
-      contentHash: true,
-      preferences: true,
-      createdAt: true,
-      updatedAt: true,
-      parsedData: true,
-      resumeJobFits: {
-        orderBy: { fitScore: 'desc' as const },
-        take: 1,
-        select: { fitScore: true, fitGrade: true, pipelineStatus: true, hiringRequest: { select: { title: true } } },
-      },
-      _count: { select: { resumeVersions: true } },
-    };
+    const isMinimal = fields === 'minimal';
+    const selectFields = isMinimal
+      ? {
+          id: true,
+          name: true,
+          currentRole: true,
+          experienceYears: true,
+          tags: true,
+        }
+      : {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          currentRole: true,
+          experienceYears: true,
+          summary: true,
+          highlight: true,
+          fileName: true,
+          fileType: true,
+          originalFileKey: true,
+          status: true,
+          tags: true,
+          preferences: true,
+          createdAt: true,
+          updatedAt: true,
+          parsedData: true,
+          resumeJobFits: {
+            orderBy: { fitScore: 'desc' as const },
+            take: 1,
+            select: { fitScore: true, fitGrade: true, pipelineStatus: true, hiringRequest: { select: { title: true } } },
+          },
+          _count: { select: { resumeVersions: true } },
+        };
 
     let resumes: any[];
     let total: number;
@@ -1153,6 +1161,15 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
         }),
         prisma.resume.count({ where }),
       ]);
+    }
+
+    // Minimal mode: return lightweight data immediately (for resume pickers)
+    if (isMinimal) {
+      return res.json({
+        success: true,
+        data: resumes,
+        pagination: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) },
+      });
     }
 
     // Batch-fetch interview status for all listed resumes
@@ -1215,8 +1232,6 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
                 role: e.role || e.title,
                 title: e.title || e.role,
                 location: e.location,
-                description: e.description,
-                technologies: Array.isArray(e.technologies) ? e.technologies : [],
                 employmentType: e.employmentType,
                 startDate: e.startDate, endDate: e.endDate, duration: e.duration,
               }))
@@ -1252,6 +1267,35 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.get('/count', requireAuth, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const {
+      status = 'active',
+      filterUserId,
+      filterTeamId,
+      teamView,
+    } = req.query as Record<string, string>;
+
+    const scope = await getVisibilityScope(req.user!, teamView === 'true');
+    const where: Record<string, unknown> = {
+      ...await buildAdminOverrideFilter(scope, filterUserId, filterTeamId),
+    };
+
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    const total = await prisma.resume.count({ where });
+    return res.json({ success: true, meta: { total } });
+  } catch {
+    return res.status(500).json({ success: false, error: 'Failed to count resumes' });
+  }
+});
+
 // ─── Resume stats ───────────────────────────────────────────────────────
 router.get('/stats', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -1264,13 +1308,15 @@ router.get('/stats', requireAuth, async (req: Request, res: Response) => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const [total, thisWeek, analyzed] = await Promise.all([
+    const [total, thisWeek, analyzed, matchedCount, interviewedCount] = await Promise.all([
       prisma.resume.count({ where: { ...userFilter, status: 'active' } }),
       prisma.resume.count({ where: { ...userFilter, status: 'active', createdAt: { gte: oneWeekAgo } } }),
       prisma.resume.count({ where: { ...userFilter, status: 'active', NOT: { insightData: { equals: Prisma.DbNull } } } }),
+      prisma.resume.count({ where: { ...userFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'matched' } } } }),
+      prisma.resume.count({ where: { ...userFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'invited' } } } }),
     ]);
 
-    return res.json({ success: true, data: { total, thisWeek, analyzed } });
+    return res.json({ success: true, data: { total, thisWeek, analyzed, matchedCount, interviewedCount } });
   } catch (error) {
     return res.status(500).json({ success: false, error: 'Failed to get stats' });
   }

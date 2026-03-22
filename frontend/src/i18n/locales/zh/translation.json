@@ -1045,6 +1045,7 @@
       "selectResumesTitle": "选择要匹配的简历",
       "searchResumesPlaceholder": "按姓名、职位或标签搜索...",
       "resumeSelectedCount": "已选择 {{count}} 份简历",
+      "resumeSelectedFiltered": "已选择 {{filtered}} 条筛选结果中的 {{selected}} 份简历（共 {{total}} 份）",
       "noResumesToMatch": "未找到简历，请先在人才库中上传简历。",
       "startMatchingCount": "开始匹配（{{count}} 份简历）",
       "filterByRecruiter": "招聘人员："

@@ -159,7 +159,8 @@ export default function SmartMatching() {
   const [selectedSessionMeta, setSelectedSessionMeta] = useState<SelectedMatchingSession | null>(null);
   const [resumeCount, setResumeCount] = useState(0);
   const [savedSessionCount, setSavedSessionCount] = useState(0);
-  const [loadingOverviewCounts, setLoadingOverviewCounts] = useState(true);
+  const [loadingResumeCount, setLoadingResumeCount] = useState(true);
+  const [loadingSessionCount, setLoadingSessionCount] = useState(true);
   const [modalLaunchJobIds, setModalLaunchJobIds] = useState<string[]>([]);
   const wasAIMatchModalOpenRef = useRef(false);
 
@@ -307,11 +308,18 @@ export default function SmartMatching() {
     return params;
   }, []);
 
+  const pageFilterParams = useMemo(
+    () => buildFilterParams(recruiterFilter),
+    [buildFilterParams, recruiterFilter]
+  );
+
   // Fetch jobs with optional filter
   const fetchModalJobs = useCallback(async (filter: RecruiterTeamFilterValue) => {
     setLoadingJobs(true);
     try {
-      const res = await axios.get('/api/v1/jobs', { params: { limit: 100, ...buildFilterParams(filter) } });
+      const res = await axios.get('/api/v1/jobs', {
+        params: { limit: 100, fields: 'minimal', includeTotal: 'false', ...buildFilterParams(filter) },
+      });
       setJobs(res.data.data || []);
     } catch {
       // silent
@@ -328,56 +336,42 @@ export default function SmartMatching() {
 
   useEffect(() => {
     let cancelled = false;
-    const fp = buildFilterParams(recruiterFilter);
 
     (async () => {
-      setLoadingOverviewCounts(true);
+      setLoadingResumeCount(true);
+      setLoadingSessionCount(true);
       const [resumesRes, sessionsRes] = await Promise.allSettled([
-        axios.get('/api/v1/resumes', { params: { limit: 1, ...fp } }),
-        axios.get('/api/v1/matching/sessions', { params: { limit: 1, ...fp } }),
+        axios.get('/api/v1/resumes/count', { params: { status: 'active', ...pageFilterParams } }),
+        axios.get('/api/v1/matching/sessions/count', { params: pageFilterParams }),
       ]);
 
       if (cancelled) return;
 
       if (resumesRes.status === 'fulfilled') {
-        setResumeCount(resumesRes.value.data.meta?.total || resumesRes.value.data.data?.length || 0);
+        setResumeCount(resumesRes.value.data.meta?.total || 0);
       }
+      setLoadingResumeCount(false);
 
       if (sessionsRes.status === 'fulfilled') {
-        setSavedSessionCount(sessionsRes.value.data.meta?.total || sessionsRes.value.data.data?.length || 0);
+        setSavedSessionCount(sessionsRes.value.data.meta?.total || 0);
       }
-
-      setLoadingOverviewCounts(false);
+      setLoadingSessionCount(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [sessionRefreshTrigger, recruiterFilter, buildFilterParams]);
+  }, [pageFilterParams, sessionRefreshTrigger]);
 
   const fetchModalResumes = useCallback(async (filter: RecruiterTeamFilterValue) => {
     setLoadingModalResumes(true);
     try {
-      const collected: Resume[] = [];
-      const seen = new Set<string>();
-      let page = 1;
-      let totalPages = 1;
-      const filterParams = buildFilterParams(filter);
-
-      do {
-        const res = await axios.get('/api/v1/resumes', { params: { page, limit: 50, ...filterParams } });
-        const data = res.data.data || res.data.resumes || [];
-        data.forEach((resume: Resume) => {
-          if (seen.has(resume.id)) return;
-          seen.add(resume.id);
-          collected.push(resume);
-        });
-        totalPages = Math.max(1, Number(res.data.pagination?.totalPages || 1));
-        page += 1;
-      } while (page <= totalPages);
-
-      setModalResumes(collected);
-      setModalSelectedResumeIds(new Set(collected.map((resume) => resume.id)));
+      const res = await axios.get('/api/v1/resumes', {
+        params: { page: 1, limit: 5000, fields: 'minimal', ...buildFilterParams(filter) },
+      });
+      const data = res.data.data || res.data.resumes || [];
+      setModalResumes(data);
+      setModalSelectedResumeIds(new Set(data.map((resume: Resume) => resume.id)));
     } catch {
       setModalResumes([]);
       setModalSelectedResumeIds(new Set());
@@ -846,6 +840,7 @@ export default function SmartMatching() {
       ? Math.max(8, (processedCount / matchProgress.total) * 100)
       : 8
     : 0;
+  const showRefreshingMatches = loadingMatches && matches.length > 0;
 
 
 
@@ -892,7 +887,7 @@ export default function SmartMatching() {
       .slice(0, 4);
   }, [jobs, openJobs, i18n.language]);
   const showOverview = !running && !selectedSessionId && selectedJobIds.length === 0;
-  const overviewLoading = showOverview && (loadingJobs || loadingOverviewCounts);
+  const overviewReadyLoading = showOverview && (loadingJobs || loadingResumeCount);
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
@@ -1077,7 +1072,7 @@ export default function SmartMatching() {
           <div className="grid grid-cols-3 gap-4">
             <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
               <p className="text-xs font-medium text-slate-500">{t('product.matching.overviewOpenRoles', 'Open roles')}</p>
-              {overviewLoading ? (
+              {loadingJobs ? (
                 <div className="mt-2 h-8 w-12 animate-pulse rounded-lg bg-slate-100" />
               ) : (
                 <p className="mt-1 text-2xl font-bold text-slate-900">{openJobs.length}</p>
@@ -1085,7 +1080,7 @@ export default function SmartMatching() {
             </div>
             <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
               <p className="text-xs font-medium text-slate-500">{t('product.matching.overviewTalentPool', 'Talent pool')}</p>
-              {overviewLoading ? (
+              {loadingResumeCount ? (
                 <div className="mt-2 h-8 w-12 animate-pulse rounded-lg bg-slate-100" />
               ) : (
                 <p className="mt-1 text-2xl font-bold text-slate-900">{resumeCount}</p>
@@ -1093,7 +1088,7 @@ export default function SmartMatching() {
             </div>
             <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
               <p className="text-xs font-medium text-slate-500">{t('product.matching.overviewSavedSessions', 'Saved sessions')}</p>
-              {overviewLoading ? (
+              {loadingSessionCount ? (
                 <div className="mt-2 h-8 w-12 animate-pulse rounded-lg bg-slate-100" />
               ) : (
                 <p className="mt-1 text-2xl font-bold text-slate-900">{savedSessionCount}</p>
@@ -1102,7 +1097,7 @@ export default function SmartMatching() {
           </div>
 
           {/* Quick Start CTA */}
-          {overviewLoading ? (
+          {overviewReadyLoading ? (
             <div className="rounded-xl border border-slate-200 bg-white px-6 py-10">
               <div className="animate-pulse">
                 <div className="mx-auto h-12 w-12 rounded-full bg-slate-100" />
@@ -1210,7 +1205,7 @@ export default function SmartMatching() {
               refreshTrigger={sessionRefreshTrigger}
               embedded
               limit={5}
-              filterParams={buildFilterParams(recruiterFilter)}
+              filterParams={pageFilterParams}
             />
           </div>
         </div>
@@ -1383,7 +1378,7 @@ export default function SmartMatching() {
       {/* Match Results */}
       {(selectedJobIds.length > 0 || selectedSessionId) && (
         <>
-          {loadingMatches ? (
+          {loadingMatches && matches.length === 0 ? (
             <div className="flex justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
             </div>
@@ -1411,6 +1406,12 @@ export default function SmartMatching() {
             )
           ) : (
             <div className="space-y-3">
+              {showRefreshingMatches && (
+                <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-sm text-blue-700">
+                  <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-600" />
+                  {t('product.matching.refreshingResults', 'Refreshing results...')}
+                </div>
+              )}
               {matches.map((match) => (
                 <div
                   key={match.id}
@@ -1984,7 +1985,7 @@ export default function SmartMatching() {
                 selectedSessionId={selectedSessionId}
                 refreshTrigger={sessionRefreshTrigger}
                 embedded
-                filterParams={buildFilterParams(recruiterFilter)}
+                filterParams={pageFilterParams}
               />
             </div>
           </div>

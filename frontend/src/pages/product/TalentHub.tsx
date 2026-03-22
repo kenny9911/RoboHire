@@ -964,9 +964,7 @@ export default function TalentHub() {
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
   const [filterSkills, setFilterSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
-  const [stats, setStats] = useState<{ total: number; thisWeek: number; analyzed: number } | null>(null);
-  const [matchedCount, setMatchedCount] = useState(0);
-  const [interviewedCount, setInterviewedCount] = useState(0);
+  const [stats, setStats] = useState<{ total: number; thisWeek: number; analyzed: number; matchedCount: number; interviewedCount: number } | null>(null);
 
   useEffect(() => {
     axios.get('/api/v1/jobs', { params: { limit: 200 } })
@@ -975,13 +973,6 @@ export default function TalentHub() {
     axios.get('/api/v1/resumes/stats')
       .then((res) => setStats(res.data.data))
       .catch(() => {});
-    Promise.all([
-      axios.get('/api/v1/resumes', { params: { limit: 1, pipelineStatus: 'matched' } }),
-      axios.get('/api/v1/resumes', { params: { limit: 1, pipelineStatus: 'invited' } }),
-    ]).then(([matchedRes, invitedRes]) => {
-      setMatchedCount(matchedRes.data.pagination?.total || 0);
-      setInterviewedCount(invitedRes.data.pagination?.total || 0);
-    }).catch(() => {});
   }, []);
 
   const filtersRef = useRef({
@@ -1369,8 +1360,8 @@ export default function TalentHub() {
           {[
             { label: t('product.talent.statTotal', 'Total'), value: hasActiveFilters ? totalCount : (stats?.total ?? totalCount) },
             { label: t('product.talent.statThisWeek', 'New This Week'), value: stats?.thisWeek ?? 0 },
-            { label: t('product.talent.statMatched', 'Matched'), value: matchedCount },
-            { label: t('product.talent.statInterviewed', 'Interviewed'), value: interviewedCount },
+            { label: t('product.talent.statMatched', 'Matched'), value: stats?.matchedCount ?? 0 },
+            { label: t('product.talent.statInterviewed', 'Interviewed'), value: stats?.interviewedCount ?? 0 },
             { label: t('product.talent.statAnalyzed', 'AI Analyzed'), value: stats?.analyzed ?? 0 },
           ].map((item) => (
             <div key={item.label} className="flex items-baseline gap-1.5">
@@ -1729,8 +1720,29 @@ export default function TalentHub() {
           />
 
           {loading ? (
-            <div className="flex justify-center rounded-xl border border-slate-200 bg-white py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500" />
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse rounded-xl border border-slate-200 bg-white p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="h-11 w-11 rounded-full bg-slate-200 shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-4 w-32 rounded bg-slate-200" />
+                        <div className="h-3 w-24 rounded bg-slate-100" />
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="h-5 w-16 rounded-full bg-slate-100" />
+                        <div className="h-5 w-20 rounded-full bg-slate-100" />
+                        <div className="h-5 w-14 rounded-full bg-slate-100" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-3 w-full rounded bg-slate-100" />
+                        <div className="h-3 w-3/4 rounded bg-slate-100" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : enrichedResumes.length === 0 ? (
             <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
