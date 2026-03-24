@@ -46,21 +46,24 @@ Verify changes manually: smoke test login/auth restore, `/start-hiring`, one API
 
 **Entry point** — `backend/src/index.ts`. Loads env from root `.env` first, then `backend/.env` if present. Applies raw body parser for Stripe webhook **before** `express.json()` — do not reorder or Stripe signature validation will break.
 
-**Agent Pattern** — All AI features use `BaseAgent<TInput, TOutput>` (`agents/BaseAgent.ts`). Subclasses implement `getAgentPrompt()`, `formatInput()`, and `parseOutput()`. Agents: ResumeMatch, ResumeParse, JDParse, Invite, Evaluation, CreateJD, CheatingDetector, RecruitmentConsultant. `RecruitmentConsultantAgent` emits action markers like `[[ACTION:CREATE_REQUEST]]` which the frontend detects.
+**Agent Pattern** — All AI features use `BaseAgent<TInput, TOutput>` (`agents/BaseAgent.ts`). Subclasses implement `getAgentPrompt()`, `formatInput()`, and `parseOutput()`. Override `getTemperature()` to control LLM output determinism — scoring agents (ResumeMatch, SkillMatch, ExperienceMatch, PreferenceMatch) use `0.1` for consistency; creative agents (RecruitmentConsultant) keep the default `0.7`. Agents: ResumeMatch, ResumeParse, JDParse, Invite, Evaluation, CreateJD, CheatingDetector, RecruitmentConsultant. `RecruitmentConsultantAgent` emits action markers like `[[ACTION:CREATE_REQUEST]]` which the frontend detects.
 
 **LLM Abstraction** — `services/llm/LLMService.ts` routes to provider implementations (OpenAI, OpenRouter, Google, Kimi) based on `LLM_PROVIDER` env var. Each provider implements a common interface.
 
 **Auth** — Multi-method auth in `middleware/auth.ts`. Priority: `X-API-Key` header → `Authorization: Bearer` → `session_token` cookie → `X-Session-Token` header → `?token=` query param. JWT (7-day), session tokens (30-day DB-backed), and API keys (`rh_` prefix) are all supported. Do not change precedence order.
 
+**Resume Parsing Pipeline** — Upload flow: `routes/resumes.ts` extracts text via `PDFService` → `getOrParseResume()` checks DB cache by content hash then calls `ResumeParseAgent` → `generateResumeSummaryHighlight()` creates AI summary. The reparse endpoint (`POST /:id/reparse`) bypasses cache by calling `resumeParseAgent.parse()` directly. Candidate name fallback from filename uses `cleanCandidateNameFromFilename()` which strips `【...】` prefixes and trailing experience years. Cache logic lives in `services/ResumeParsingCache.ts`; parse quality validation in `services/ResumeParseValidation.ts`.
+
 **Key services:**
 - `AuthService` — signup, login, OAuth, JWT/session management
 - `LoggerService` — JSON Lines logging with per-request cost tracking; `getRequestSnapshot()` aggregates token/cost data per request
 - `DocumentStorageService` — file-based caching of parsed resumes/JDs/matches by content hash; whitespace-only text transforms can change cache behavior
+- `ResumeParsingCache` — DB-backed cache for parsed resumes keyed by content hash; skips sparse parses via `isParsedResumeLikelyIncomplete()`
 - `LanguageService` — auto-detects language from text, adjusts LLM prompts
 - `PDFService` — extraction via `pdf-parse`; uses memory storage (multer), so large PDF changes can affect RAM
 - `WebhookService` — ATS integration webhook delivery
 
-**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`.
+**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`, `routes/interviews.ts` (LiveKit AI interviews), `routes/gohireInterviews.ts` (GoHire integration), `routes/dashboard.ts` (consolidated stats).
 
 **Request audit & analytics** — `middleware/requestAudit.ts` automatically logs every `/api/` request to `ApiRequestLog` after response completion, capturing tokens, cost, duration, and LLM call details. `lib/requestClassification.ts` maps URL paths to module names (e.g. `resume_parse`, `smart_matching`) for analytics grouping. For batch operations (e.g. auto-match processing multiple resumes), set `req.skipAudit = true` and create per-unit `ApiRequestLog` entries manually to get accurate per-item usage counts.
 
@@ -82,7 +85,7 @@ Verify changes manually: smoke test login/auth restore, `/start-hiring`, one API
 
 ### Database
 
-PostgreSQL with Prisma ORM. Schema at `backend/prisma/schema.prisma`. Key models: User, Session, HiringRequest, Candidate, HiringSession, ApiKey, ApiUsageRecord, ApiRequestLog, LLMCallLog, ResumeJobFit, Interview. `ApiRequestLog` is the source of truth for usage analytics (tokens, cost, duration per API call). `LLMCallLog` stores individual LLM invocations linked to their parent request. User model tracks subscription tier, Stripe IDs, and usage counters.
+PostgreSQL with Prisma ORM. Schema at `backend/prisma/schema.prisma`. Key models: User, Session, HiringRequest, Candidate, HiringSession, ApiKey, ApiUsageRecord, ApiRequestLog, LLMCallLog, ResumeJobFit, Interview, GoHireInterview. `ApiRequestLog` is the source of truth for usage analytics (tokens, cost, duration per API call). `LLMCallLog` stores individual LLM invocations linked to their parent request. User model tracks subscription tier, Stripe IDs, and usage counters. Resume model stores `contentHash` for dedup, `parsedData` (JSON) for structured parse, and `summary`/`highlight` for AI-generated pitch text.
 
 ### Deployment
 
@@ -106,6 +109,14 @@ Copy `.env.example` to `.env` at repo root. Key variable groups: `LLM_PROVIDER`/
 | Request classification | `backend/src/lib/requestClassification.ts` |
 | Usage analytics API | `backend/src/routes/usage.ts` |
 | ATS integrations | `backend/src/routes/ats.ts`, `backend/src/services/ats/` |
+| Resume upload + parsing | `backend/src/routes/resumes.ts` |
+| Resume parse agent | `backend/src/agents/ResumeParseAgent.ts` |
+| Resume parse cache | `backend/src/services/ResumeParsingCache.ts` |
+| AI interviews (LiveKit) | `backend/src/routes/interviews.ts` |
+| GoHire integration | `backend/src/routes/gohireInterviews.ts` |
+| Dashboard stats | `backend/src/routes/dashboard.ts` |
+| Smart matching | `frontend/src/pages/product/SmartMatching.tsx` |
+| Talent pool | `frontend/src/pages/product/TalentHub.tsx` |
 | Prisma schema | `backend/prisma/schema.prisma` |
 | Frontend routes | `frontend/src/App.tsx` |
 | Auth state | `frontend/src/context/AuthContext.tsx` |
@@ -126,6 +137,26 @@ These have dense logic and higher regression risk — read carefully before edit
 - `backend/src/agents/ResumeMatchAgent.ts`
 - `backend/src/middleware/requestAudit.ts`
 - `backend/src/lib/requestClassification.ts`
+- `backend/src/routes/resumes.ts`
+- `backend/src/routes/interviews.ts`
+- `frontend/src/pages/product/SmartMatching.tsx`
+- `frontend/src/pages/product/TalentHub.tsx`
+
+## Interview Status Flow
+
+LiveKit AI interviews follow this status lifecycle: `scheduled` → `in_progress` → `completed`. Two endpoints can mark completion:
+1. `POST /finalize/:accessToken` — candidate signals disconnect; only marks `completed` if `duration >= 300` seconds (5 min minimum)
+2. `POST /:id/transcript` — LiveKit agent posts transcript data; also marks `completed` if status is `scheduled` or `in_progress` (transcript receipt = interview concluded)
+
+The frontend has no polling — interview list only refreshes on user action (page load, manual refresh, post-evaluation).
+
+## GoHire Integration
+
+`routes/gohireInterviews.ts` syncs interview data from external GoHire APIs. Two API strategies:
+1. `/gohire-data/interviews/completed` + `/detail` by `user_id`
+2. Fallback: `/gohireApi/chat_logs` + `/chat_dialog` by `request_introduction_id` (no evaluation report available)
+
+Candidate name extraction uses a fallback chain: evaluation report JSON → `completedRecord.user_name` → `detailRecord.user_name` → `'Unknown'`. No typed interfaces for GoHire API responses — all `any` typed.
 
 ## API Contract Change Checklist
 

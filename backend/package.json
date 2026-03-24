@@ -14,6 +14,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "backfill:resume-summaries": "tsx src/scripts/backfillResumeSummaries.ts",
     "agent:start": "tsx src/interview-worker.ts start",
     "agent:download-files": "tsx src/interview-worker.ts download-files",
     "postinstall": "prisma generate"

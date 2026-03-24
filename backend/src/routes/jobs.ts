@@ -370,6 +370,137 @@ function parseSalaryDetails(text?: string | null): {
   return { salaryMin: null, salaryMax: null, salaryCurrency, salaryPeriod };
 }
 
+type JobStatsSnapshot = {
+  matches: number;
+  interviews: number;
+  completedInterviews: number;
+};
+
+async function buildJobStatsMap(jobs: Array<{ id: string; hiringRequestId: string | null }>) {
+  const statsByJobId = new Map<string, JobStatsSnapshot>();
+  if (jobs.length === 0) {
+    return statsByJobId;
+  }
+
+  const jobIds = jobs.map((job) => job.id);
+  const hiringRequestIds = [...new Set(
+    jobs
+      .map((job) => job.hiringRequestId)
+      .filter((hiringRequestId): hiringRequestId is string => Boolean(hiringRequestId)),
+  )];
+
+  const [
+    jobMatchCounts,
+    interviewCounts,
+    completedInterviewCounts,
+    resumeFitCounts,
+    hiringInterviewCounts,
+    completedHiringInterviewCounts,
+  ] = await Promise.all([
+    prisma.jobMatch.groupBy({
+      by: ['jobId'],
+      where: { jobId: { in: jobIds } },
+      _count: { _all: true },
+    }),
+    prisma.interview.groupBy({
+      by: ['jobId'],
+      where: { jobId: { in: jobIds } },
+      _count: { _all: true },
+    }),
+    prisma.interview.groupBy({
+      by: ['jobId'],
+      where: {
+        jobId: { in: jobIds },
+        status: 'completed',
+      },
+      _count: { _all: true },
+    }),
+    hiringRequestIds.length > 0
+      ? prisma.resumeJobFit.groupBy({
+          by: ['hiringRequestId'],
+          where: { hiringRequestId: { in: hiringRequestIds } },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+    hiringRequestIds.length > 0
+      ? prisma.interview.groupBy({
+          by: ['hiringRequestId'],
+          where: { hiringRequestId: { in: hiringRequestIds } },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+    hiringRequestIds.length > 0
+      ? prisma.interview.groupBy({
+          by: ['hiringRequestId'],
+          where: {
+            hiringRequestId: { in: hiringRequestIds },
+            status: 'completed',
+          },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const jobMatchCountById = new Map<string, number>();
+  for (const row of jobMatchCounts) {
+    jobMatchCountById.set(row.jobId, row._count._all);
+  }
+
+  const interviewCountById = new Map<string, number>();
+  for (const row of interviewCounts) {
+    if (!row.jobId) continue;
+    interviewCountById.set(row.jobId, row._count._all);
+  }
+
+  const completedInterviewCountById = new Map<string, number>();
+  for (const row of completedInterviewCounts) {
+    if (!row.jobId) continue;
+    completedInterviewCountById.set(row.jobId, row._count._all);
+  }
+
+  const resumeFitCountByHiringRequestId = new Map<string, number>();
+  for (const row of resumeFitCounts) {
+    resumeFitCountByHiringRequestId.set(row.hiringRequestId, row._count._all);
+  }
+
+  const hiringInterviewCountById = new Map<string, number>();
+  for (const row of hiringInterviewCounts) {
+    if (!row.hiringRequestId) continue;
+    hiringInterviewCountById.set(row.hiringRequestId, row._count._all);
+  }
+
+  const completedHiringInterviewCountById = new Map<string, number>();
+  for (const row of completedHiringInterviewCounts) {
+    if (!row.hiringRequestId) continue;
+    completedHiringInterviewCountById.set(row.hiringRequestId, row._count._all);
+  }
+
+  for (const job of jobs) {
+    const directMatches = jobMatchCountById.get(job.id) ?? 0;
+    const directInterviews = interviewCountById.get(job.id) ?? 0;
+    const directCompletedInterviews = completedInterviewCountById.get(job.id) ?? 0;
+    const linkedMatches = job.hiringRequestId
+      ? resumeFitCountByHiringRequestId.get(job.hiringRequestId) ?? 0
+      : 0;
+    const linkedInterviews = job.hiringRequestId
+      ? hiringInterviewCountById.get(job.hiringRequestId) ?? 0
+      : 0;
+    const linkedCompletedInterviews = job.hiringRequestId
+      ? completedHiringInterviewCountById.get(job.hiringRequestId) ?? 0
+      : 0;
+
+    statsByJobId.set(job.id, {
+      matches: job.hiringRequestId ? Math.max(directMatches, linkedMatches) : directMatches,
+      interviews: job.hiringRequestId ? Math.max(directInterviews, linkedInterviews) : directInterviews,
+      completedInterviews: job.hiringRequestId
+        ? Math.max(directCompletedInterviews, linkedCompletedInterviews)
+        : directCompletedInterviews,
+    });
+  }
+
+  return statsByJobId;
+}
+
 async function buildJobDraftFromHiringRequest(
   hiringRequest: { title: string; clientName?: string | null; requirements: string; jobDescription?: string | null },
   preferredLanguage?: string | null,
@@ -583,55 +714,14 @@ router.get('/', requireAuth, async (req, res) => {
       });
     }
 
-    const jobIds = pageItems.map((job) => job.id);
+    const detailedPageItems = pageItems as Array<(typeof pageItems)[number] & { hiringRequestId: string | null }>;
+    const jobStats = await buildJobStatsMap(
+      detailedPageItems.map((job) => ({ id: job.id, hiringRequestId: job.hiringRequestId ?? null })),
+    );
 
-    const [jobMatchCounts, interviewCounts, completedInterviewCounts] = jobIds.length > 0
-      ? await Promise.all([
-          prisma.jobMatch.groupBy({
-            by: ['jobId'],
-            where: { jobId: { in: jobIds } },
-            _count: { _all: true },
-          }),
-          prisma.interview.groupBy({
-            by: ['jobId'],
-            where: { jobId: { in: jobIds } },
-            _count: { _all: true },
-          }),
-          prisma.interview.groupBy({
-            by: ['jobId'],
-            where: {
-              jobId: { in: jobIds },
-              status: 'completed',
-            },
-            _count: { _all: true },
-          }),
-        ])
-      : [[], [], []];
-
-    const jobMatchCountById = new Map<string, number>();
-    jobMatchCounts.forEach((row) => {
-      jobMatchCountById.set(row.jobId, row._count._all);
-    });
-
-    const interviewCountById = new Map<string, number>();
-    interviewCounts.forEach((row) => {
-      if (!row.jobId) return;
-      interviewCountById.set(row.jobId, row._count._all);
-    });
-
-    const completedInterviewCountById = new Map<string, number>();
-    completedInterviewCounts.forEach((row) => {
-      if (!row.jobId) return;
-      completedInterviewCountById.set(row.jobId, row._count._all);
-    });
-
-    const jobsWithStats = pageItems.map((job) => ({
+    const jobsWithStats = detailedPageItems.map((job) => ({
       ...job,
-      stats: {
-        matches: jobMatchCountById.get(job.id) ?? 0,
-        interviews: interviewCountById.get(job.id) ?? 0,
-        completedInterviews: completedInterviewCountById.get(job.id) ?? 0,
-      },
+      stats: jobStats.get(job.id) ?? { matches: 0, interviews: 0, completedInterviews: 0 },
     }));
 
     res.json({
@@ -669,7 +759,15 @@ router.get('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
 
-    res.json({ success: true, data: job });
+    const stats = await buildJobStatsMap([{ id: job.id, hiringRequestId: job.hiringRequestId ?? null }]);
+
+    res.json({
+      success: true,
+      data: {
+        ...job,
+        stats: stats.get(job.id) ?? { matches: 0, interviews: 0, completedInterviews: 0 },
+      },
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to get job' });
   }

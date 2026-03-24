@@ -20,6 +20,7 @@ interface Interview {
   completedAt: string | null;
   duration: number | null;
   recordingUrl: string | null;
+  recordingViewUrl?: string | null;
   accessToken: string | null;
   gohireUserId: string | null;
   metadata: {
@@ -1204,9 +1205,9 @@ export default function AIInterview() {
                       </button>
                     )}
 
-                    {interview.recordingUrl && (
+                    {(interview.recordingViewUrl || interview.recordingUrl) && (
                       <a
-                        href={interview.recordingUrl}
+                        href={interview.recordingViewUrl || interview.recordingUrl || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}

@@ -49,6 +49,7 @@ interface HiringRequest {
   updatedAt: string;
   recruiter?: { id: string; name: string } | null;
   _count?: { candidates: number; resumeJobFits: number; interviews: number };
+  stats?: { candidates: number; matches: number; interviews: number };
   linkedJob?: LinkedJob | null;
 }
 
@@ -223,9 +224,9 @@ const ProjectCard = memo(function ProjectCard({
   t: (k: string, f: string, opts?: Record<string, unknown>) => string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const candidates = req._count?.candidates ?? 0;
-  const matches = req._count?.resumeJobFits ?? 0;
-  const interviews = req._count?.interviews ?? 0;
+  const candidates = req.stats?.candidates ?? req._count?.candidates ?? 0;
+  const matches = req.stats?.matches ?? req._count?.resumeJobFits ?? 0;
+  const interviews = req.stats?.interviews ?? req._count?.interviews ?? 0;
   const totalPipeline = candidates + matches + interviews;
   const salary = formatSalary(req.linkedJob);
   const department = req.linkedJob?.department;

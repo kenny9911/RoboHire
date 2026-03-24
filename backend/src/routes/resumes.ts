@@ -9,9 +9,15 @@ import { requireAuth } from '../middleware/auth.js';
 import { documentParsingService, DocumentParsingService } from '../services/DocumentParsingService.js';
 import { pdfService } from '../services/PDFService.js';
 import { getOrParseResume } from '../services/ResumeParsingCache.js';
+import { resumeParseAgent } from '../agents/ResumeParseAgent.js';
+import { normalizeExtractedText } from '../services/ResumeParserService.js';
 import { isParsedResumeLikelyIncomplete } from '../services/ResumeParseValidation.js';
 import { resumeInsightAgent } from '../agents/ResumeInsightAgent.js';
 import { jobFitAgent } from '../agents/JobFitAgent.js';
+import {
+  generateResumeSummaryHighlight,
+  isResumeSummaryLowSignal,
+} from '../services/ResumeSummaryService.js';
 import prisma from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
 import { logger } from '../services/LoggerService.js';
@@ -89,6 +95,19 @@ function decodeFilename(raw: string): string {
   } catch {
     return raw;
   }
+}
+
+/**
+ * Extract a candidate name from a filename by stripping common recruitment prefixes/suffixes.
+ * e.g. "【GR1008_Java开发工程师_上海 15-30K】黄沈杰 10年.pdf" → "黄沈杰"
+ */
+function cleanCandidateNameFromFilename(filename: string): string {
+  let name = filename.replace(/\.[^.]+$/, ''); // strip extension
+  // Strip 【...】 or [...] prefix (Chinese recruitment convention: 【jobCode_title_location salary】)
+  name = name.replace(/^[\[【][^\]】]*[\]】]\s*/, '');
+  // Strip trailing experience years like " 10年", " 3年以上", " 10年以上"
+  name = name.replace(/\s+\d+年[以上]*\s*$/, '');
+  return name.trim() || filename.replace(/\.[^.]+$/, '');
 }
 
 function buildInlineContentDisposition(filename: string): string {
@@ -254,127 +273,6 @@ function computeExperienceYears(experience: WorkExperience[]): string {
   return parts.join(' + ') || '0 years';
 }
 
-// ─── Generate summary & highlight for a resume ────────────────────────
-
-async function generateResumeSummaryHighlight(
-  parsed: ParsedResume,
-  requestId?: string,
-): Promise<{ summary: string; highlight: string }> {
-  // If parsed data already has a good summary, use it
-  const existingSummary = parsed.summary?.trim();
-  if (existingSummary && existingSummary.length > 30) {
-    // Still generate a short highlight from the existing summary
-    const highlight = existingSummary.length <= 80
-      ? existingSummary
-      : existingSummary.replace(/[。.!！？?]\s*$/, '').substring(0, 80) + '...';
-    return { summary: existingSummary, highlight };
-  }
-
-  // Build context from parsed resume for LLM
-  const parts: string[] = [];
-  parts.push(`Name: ${parsed.name || 'Unknown'}`);
-  if (parsed.experience && Array.isArray(parsed.experience) && parsed.experience.length > 0) {
-    parts.push('Experience:');
-    for (const exp of parsed.experience.slice(0, 5)) {
-      const desc = exp.description ? ` — ${String(exp.description).substring(0, 120)}` : '';
-      parts.push(`- ${exp.role || ''} at ${exp.company || ''} (${exp.duration || exp.startDate || ''})${desc}`);
-    }
-  }
-  if (parsed.education && Array.isArray(parsed.education) && parsed.education.length > 0) {
-    parts.push('Education:');
-    for (const edu of parsed.education.slice(0, 3)) {
-      const eduParts = [edu.degree, edu.field, edu.institution].filter(Boolean).join(' ');
-      const gpa = (edu as any).gpa ? ` (GPA: ${(edu as any).gpa})` : '';
-      const achievements = Array.isArray((edu as any).achievements) && (edu as any).achievements.length > 0
-        ? ` [${(edu as any).achievements.join(', ')}]` : '';
-      parts.push(`- ${eduParts}${gpa}${achievements}`);
-    }
-  }
-  const skills = Array.isArray(parsed.skills)
-    ? parsed.skills
-    : parsed.skills
-      ? Object.values(parsed.skills).flat().filter(Boolean)
-      : [];
-  if (skills.length > 0) {
-    parts.push(`Skills: ${skills.slice(0, 20).join(', ')}`);
-  }
-
-  const prompt = `You are a senior recruiter writing an executive summary of a candidate for a client pitch. Based on this resume data, generate TWO things:
-1. An executive summary (3-4 sentences, ~80-120 words) that a recruiter can use to pitch this candidate to a hiring manager. Highlight: notable skills and technical depth, relevant experience and achievements, education (only if prestigious or highly relevant), and what makes this candidate stand out. Write in the SAME LANGUAGE as the candidate's name and experience (if Chinese name/companies, write in Chinese; if English, write in English). Focus on what's impressive and sellable — skip generic filler.
-2. A one-line highlight (under 60 characters) — the single most compelling selling point of this candidate.
-
-Resume data:
-${parts.join('\n')}
-
-Respond ONLY with JSON (no markdown):
-{"summary": "...", "highlight": "..."}`;
-
-  try {
-    const response = await llmService.chat(
-      [{ role: 'user', content: prompt }],
-      { requestId },
-    );
-
-    const text = response.trim();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const result = JSON.parse(jsonMatch[0]);
-      return {
-        summary: result.summary || '',
-        highlight: result.highlight || '',
-      };
-    }
-  } catch (err) {
-    logger.error('RESUME', 'Failed to generate summary/highlight', {
-      error: err instanceof Error ? err.message : String(err),
-    }, requestId);
-  }
-
-  // Local fallback: construct from parsed data so we never return empty
-  return buildFallbackSummaryHighlight(parsed);
-}
-
-/**
- * Build summary & highlight from parsed data without LLM.
- * Used as fallback when LLM call fails or is unavailable.
- */
-function buildFallbackSummaryHighlight(parsed: ParsedResume): { summary: string; highlight: string } {
-  const parts: string[] = [];
-
-  if (parsed.experience && Array.isArray(parsed.experience) && parsed.experience.length > 0) {
-    const latest = parsed.experience[0];
-    const role = (latest.role as string) || '';
-    const company = (latest.company as string) || '';
-    if (role && company) {
-      parts.push(`${role} at ${company}`);
-    } else if (role) {
-      parts.push(role);
-    }
-  }
-
-  const skills = Array.isArray(parsed.skills)
-    ? parsed.skills
-    : parsed.skills
-      ? Object.values(parsed.skills).flat().filter(Boolean) as string[]
-      : [];
-  if (skills.length > 0) {
-    parts.push(`Skilled in ${skills.slice(0, 5).join(', ')}`);
-  }
-
-  if (parsed.education && Array.isArray(parsed.education) && parsed.education.length > 0) {
-    const edu = parsed.education[0];
-    const eduParts = [edu.degree, edu.field, edu.institution].filter(Boolean);
-    if (eduParts.length > 0) {
-      parts.push(eduParts.join(' — '));
-    }
-  }
-
-  const summary = parts.join('. ').trim() || '';
-  const highlight = (parts[0] || '').substring(0, 60) || '';
-
-  return { summary, highlight };
-}
-
 // ─── Upload single resume ──────────────────────────────────────────────
 router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Request, res: Response) => {
   try {
@@ -405,7 +303,7 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
     const { parsedData: parsed } = await getOrParseResume(resumeText, userId, req.requestId);
 
     // Extract metadata from parsed data
-    const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
+    const name = parsed.name || cleanCandidateNameFromFilename(decodedName);
     const email = parsed.email || null;
     const phone = parsed.phone || null;
     const currentRole = parsed.experience?.[0]?.role as string || null;
@@ -558,7 +456,7 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
         });
 
         const { parsedData: parsed } = await getOrParseResume(resumeText, userId, requestId);
-        const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
+        const name = parsed.name || cleanCandidateNameFromFilename(decodedName);
         const email = parsed.email || null;
         const phone = parsed.phone || null;
         const currentRole = parsed.experience?.[0]?.role as string || null;
@@ -740,7 +638,7 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
 
     // For reupload, always re-parse (user explicitly wants new parsing)
     const { parsedData: parsed } = await getOrParseResume(resumeText, userId, req.requestId);
-    const name = parsed.name || decodedName.replace(/\.[^.]+$/, '');
+    const name = parsed.name || cleanCandidateNameFromFilename(decodedName);
     const email = parsed.email || null;
     const phone = parsed.phone || null;
     const currentRole = parsed.experience?.[0]?.role as string || null;
@@ -1532,14 +1430,18 @@ router.post('/:id/reparse', requireAuth, async (req: Request, res: Response) => 
       return res.status(400).json({ success: false, error: 'No resume text available for re-parsing' });
     }
 
-    // Force fresh parse (bypass cache)
-    const { parsedData: parsed } = await getOrParseResume(resume.resumeText, req.user.id, req.requestId);
+    // Force fresh parse — call agent directly to bypass DB cache
+    const normalizedText = normalizeExtractedText(resume.resumeText);
+    const parsed = await resumeParseAgent.parse(normalizedText, req.requestId);
 
     // Extract metadata
     const name = parsed.name || resume.name || 'Unknown';
     const email = parsed.email || null;
     const phone = parsed.phone || null;
-    const currentRole = parsed.experience?.[0]?.role || parsed.experience?.[0]?.title || null;
+    const currentRole = parsed.experience?.[0]?.role || null;
+
+    // Regenerate summary & highlight from fresh parsed data
+    const { summary, highlight } = await generateResumeSummaryHighlight(parsed, req.requestId);
 
     // Update resume record
     await prisma.resume.update({
@@ -1550,12 +1452,14 @@ router.post('/:id/reparse', requireAuth, async (req: Request, res: Response) => 
         email,
         phone,
         currentRole,
+        summary: summary || null,
+        highlight: highlight || null,
       },
     });
 
-    logger.info('RESUMES', 'Resume re-parsed', { id: resume.id, name }, req.requestId);
+    logger.info('RESUMES', 'Resume re-parsed (cache bypassed)', { id: resume.id, name }, req.requestId);
 
-    res.json({ success: true, data: { parsedData: parsed, name, email, phone, currentRole } });
+    res.json({ success: true, data: { parsedData: parsed, name, email, phone, currentRole, summary, highlight } });
   } catch (error) {
     logger.error('RESUMES', 'Failed to re-parse resume', {
       id: req.params.id,
@@ -2277,7 +2181,7 @@ Respond ONLY with JSON (no markdown):
   }
 });
 
-// ─── Backfill highlights for resumes that are missing them ─────────────
+// ─── Backfill highlights and low-signal summaries ──────────────────────
 router.post('/backfill-highlights', requireAuth, async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -2285,28 +2189,35 @@ router.post('/backfill-highlights', requireAuth, async (req: Request, res: Respo
     }
 
     const userId = req.user.id;
+    const batchSize = Math.min(200, Math.max(1, Number.parseInt(String(req.body?.limit ?? '50'), 10) || 50));
+    const includeLowSignal = req.body?.includeLowSignal !== false;
     const resumes = await prisma.resume.findMany({
       where: {
         userId,
         status: 'active',
-        OR: [
-          { highlight: null },
-          { highlight: '' },
-          { summary: null },
-          { summary: '' },
-        ],
       },
-      select: { id: true, parsedData: true },
-      take: 50,
+      select: { id: true, userId: true, parsedData: true, resumeText: true, summary: true, highlight: true },
+      orderBy: { updatedAt: 'desc' },
+      take: batchSize,
     });
 
-    if (resumes.length === 0) {
+    const candidates = resumes.filter((resume) => {
+      const parsed = (resume.parsedData ?? {}) as unknown as ParsedResume;
+      const missingSummary = !resume.summary || !resume.summary.trim();
+      const missingHighlight = !resume.highlight || !resume.highlight.trim();
+      const lowSignalSummary = includeLowSignal && isResumeSummaryLowSignal(resume.summary, parsed);
+      return missingSummary || missingHighlight || lowSignalSummary;
+    });
+
+    if (candidates.length === 0) {
       return res.json({ success: true, updated: 0 });
     }
 
     let updated = 0;
-    for (const resume of resumes) {
-      const parsed = (resume.parsedData ?? {}) as unknown as ParsedResume;
+    for (const resume of candidates) {
+      const parsed = resume.parsedData
+        ? (resume.parsedData as unknown as ParsedResume)
+        : (await getOrParseResume(resume.resumeText, resume.userId, req.requestId)).parsedData;
       const { summary, highlight } = await generateResumeSummaryHighlight(parsed, req.requestId);
       if (summary || highlight) {
         await prisma.resume.update({
@@ -2320,7 +2231,7 @@ router.post('/backfill-highlights', requireAuth, async (req: Request, res: Respo
       }
     }
 
-    return res.json({ success: true, updated, total: resumes.length });
+    return res.json({ success: true, updated, total: candidates.length, scanned: resumes.length });
   } catch (error) {
     logger.error('RESUMES', 'Failed to backfill highlights', { error: error instanceof Error ? error.message : String(error) });
     return res.status(500).json({ success: false, error: 'Failed to backfill highlights' });

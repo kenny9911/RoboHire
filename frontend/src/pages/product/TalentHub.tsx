@@ -423,6 +423,20 @@ function getMatchLabel(score: number | null): string {
   return 'Needs review';
 }
 
+function isLowSignalSummary(summary: string | null | undefined): boolean {
+  if (!summary || !summary.trim()) return true;
+  const normalized = summary.replace(/\s+/g, ' ').trim();
+
+  if (
+    /给我一个支点|撬起整个地球|give me a place to stand|move the earth|i can move the earth|座右铭|人生格言|motto/i.test(normalized)
+  ) {
+    return true;
+  }
+
+  return normalized.length <= 80 &&
+    !/(测试|自动化|工程师|开发|证券|资管|银行|qa|test|testing|automation|python|java|sql|selenium|appium|linux)/i.test(normalized);
+}
+
 function getMatchSummary(resume: Resume, highlight: string | null): string | null {
   if (hasResumeParseWarning(resume.parsedData)) {
     return 'Parsing confidence is low for this resume. Review the original file before relying on AI matching.';
@@ -431,7 +445,9 @@ function getMatchSummary(resume: Resume, highlight: string | null): string | nul
   const primaryFit = getPrimaryFit(resume);
   const score = typeof primaryFit?.fitScore === 'number' ? Math.round(primaryFit.fitScore) : null;
   const hiringTitle = primaryFit?.hiringRequest?.title?.trim();
-  const sourceText = resume.summary?.trim() || highlight?.trim() || resume.parsedData?.summary?.trim() || '';
+  const safeSummary = isLowSignalSummary(resume.summary) ? '' : (resume.summary?.trim() || '');
+  const safeParsedSummary = isLowSignalSummary(resume.parsedData?.summary) ? '' : (resume.parsedData?.summary?.trim() || '');
+  const sourceText = safeSummary || highlight?.trim() || safeParsedSummary || '';
   const compactSource = sourceText ? shortenText(sourceText, 180) : '';
 
   if (score !== null && hiringTitle) {
@@ -765,7 +781,7 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
           <p className="text-sm text-amber-700 truncate">
             {t('product.talent.parseWarningDesc', 'This resume was not parsed reliably. Review the original file before matching or inviting.')}
           </p>
-        ) : resume.summary ? (
+        ) : resume.summary && !isLowSignalSummary(resume.summary) ? (
           <p className="text-sm text-slate-600 truncate">{resume.summary}</p>
         ) : resume._highlight ? (
           <p className="text-sm text-slate-500 truncate">{resume._highlight}</p>

@@ -304,13 +304,25 @@ function extractGoHireInviteLog(metadata: unknown): Record<string, unknown> | nu
   return metadata.gohireInviteLog;
 }
 
+function buildInterviewRecordingViewUrl(interviewId: string, recordingUrl?: string | null): string | null {
+  return recordingUrl ? `/api/v1/interviews/${interviewId}/recording-file` : null;
+}
+
 function serializeInterviewForResponse<T extends { metadata?: unknown }>(
   interview: T,
   isAdmin: boolean,
-): T & { gohireInviteLog?: Record<string, unknown> | null } {
+): T & { gohireInviteLog?: Record<string, unknown> | null; recordingViewUrl?: string | null } {
   const base = {
     ...interview,
     metadata: sanitizeInterviewMetadata(interview.metadata, isAdmin),
+    recordingViewUrl: 'id' in interview && typeof interview.id === 'string'
+      ? buildInterviewRecordingViewUrl(
+          interview.id,
+          'recordingUrl' in interview && typeof interview.recordingUrl === 'string'
+            ? interview.recordingUrl
+            : null,
+        )
+      : null,
   };
 
   if (!isAdmin) {
@@ -321,6 +333,50 @@ function serializeInterviewForResponse<T extends { metadata?: unknown }>(
     ...base,
     gohireInviteLog: extractGoHireInviteLog(interview.metadata),
   };
+}
+
+function resolveRecordingContentType(recordingUrl: string, headerContentType?: string | null): string {
+  const header = headerContentType?.split(';')[0].trim();
+  if (header && header !== 'application/octet-stream') {
+    return header;
+  }
+
+  try {
+    const pathname = new URL(recordingUrl).pathname.toLowerCase();
+    if (pathname.endsWith('.webm')) return 'video/webm';
+    if (pathname.endsWith('.mov')) return 'video/quicktime';
+    if (pathname.endsWith('.m3u8')) return 'application/vnd.apple.mpegurl';
+  } catch {
+    // Fall through to the default type below.
+  }
+
+  return 'video/mp4';
+}
+
+function buildRecordingFileName(interview: {
+  candidateName?: string | null;
+  jobTitle?: string | null;
+  recordingUrl?: string | null;
+}): string {
+  try {
+    if (interview.recordingUrl) {
+      const parsedUrl = new URL(interview.recordingUrl);
+      const fromUrl = decodeURIComponent(parsedUrl.pathname.split('/').pop() || '').trim();
+      if (fromUrl) {
+        return fromUrl.replace(/[\r\n"]/g, '');
+      }
+    }
+  } catch {
+    // Fall back to a generated file name.
+  }
+
+  const safeBase = `${interview.candidateName || 'candidate'}-${interview.jobTitle || 'interview-recording'}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
+  return `${safeBase || 'interview-recording'}.mp4`;
 }
 
 function normalizeWorkerUsagePayload(raw: unknown): WorkerSessionUsagePayload | null {
@@ -1114,6 +1170,62 @@ router.get('/', requireAuth, async (req, res) => {
   } catch (err: any) {
     logger.error('INTERVIEWS', 'Failed to list interviews', { error: err.message });
     res.status(500).json({ success: false, error: 'Failed to list interviews' });
+  }
+});
+
+/**
+ * GET /api/v1/interviews/:id/recording-file
+ * Proxy the recording through the RoboHire origin to avoid third-party browser warnings.
+ */
+router.get('/:id/recording-file', requireAuth, async (req, res) => {
+  try {
+    const scope = await getVisibilityScope(req.user!);
+    const interview = await prisma.interview.findFirst({
+      where: { id: req.params.id, ...buildUserIdFilter(scope) },
+      select: {
+        id: true,
+        recordingUrl: true,
+        candidateName: true,
+        jobTitle: true,
+      },
+    });
+
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+
+    if (!interview.recordingUrl) {
+      return res.status(400).json({ success: false, error: 'No recording available' });
+    }
+
+    const response = await fetch(interview.recordingUrl);
+    if (!response.ok) {
+      return res.status(502).json({
+        success: false,
+        error: `Failed to fetch recording: HTTP ${response.status}`,
+      });
+    }
+
+    const contentType = resolveRecordingContentType(
+      interview.recordingUrl,
+      response.headers.get('content-type'),
+    );
+    const contentLength = response.headers.get('content-length');
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${buildRecordingFileName(interview)}"`);
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    return res.send(Buffer.from(arrayBuffer));
+  } catch (err: any) {
+    logger.error('INTERVIEWS', 'Failed to proxy recording', {
+      interviewId: req.params.id,
+      error: err.message,
+    });
+    return res.status(500).json({ success: false, error: 'Failed to fetch recording' });
   }
 });
 
@@ -1993,6 +2105,24 @@ router.post('/:id/transcript', async (req, res) => {
     const updateData: Record<string, unknown> = {};
     if (Object.keys(nextMetadata).length > 0 || livekitUsageRequestLogId) {
       updateData.metadata = nextMetadata;
+    }
+
+    // Mark interview as completed when transcript arrives (if not already completed/cancelled).
+    // Receiving transcript data from the LiveKit agent is strong evidence the interview concluded.
+    const statusNeedsUpdate =
+      interview.status === 'scheduled' || interview.status === 'in_progress';
+    if (statusNeedsUpdate) {
+      updateData.status = 'completed';
+      updateData.completedAt = interview.completedAt || new Date();
+      if (interview.startedAt) {
+        updateData.duration = Math.round(
+          (Date.now() - interview.startedAt.getTime()) / 1000,
+        );
+      }
+      logger.info('INTERVIEWS', 'Marking interview completed via transcript receipt', {
+        interviewId: interview.id,
+        previousStatus: interview.status,
+      });
     }
 
     await prisma.$transaction(async (tx) => {

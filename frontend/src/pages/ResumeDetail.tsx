@@ -110,6 +110,8 @@ interface ResumeData {
   experienceYears: string | null;
   resumeText: string;
   parsedData: Record<string, unknown> | null;
+  summary: string | null;
+  highlight: string | null;
   insightData: Record<string, unknown> | null;
   jobFitData: Record<string, unknown> | null;
   fileName: string | null;
@@ -420,7 +422,13 @@ export default function ResumeDetail() {
     try {
       const res = await axios.post(`/api/v1/resumes/${resume.id}/reparse`);
       if (res.data.success) {
-        setResume(prev => prev ? { ...prev, parsedData: res.data.data.parsedData, name: res.data.data.name } : prev);
+        setResume(prev => prev ? {
+          ...prev,
+          parsedData: res.data.data.parsedData,
+          name: res.data.data.name,
+          summary: res.data.data.summary ?? prev.summary,
+          highlight: res.data.data.highlight ?? prev.highlight,
+        } : prev);
       }
     } catch (err) {
       console.error('Re-parse error:', err);

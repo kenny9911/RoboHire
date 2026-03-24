@@ -380,11 +380,22 @@ router.get('/', async (req, res) => {
     const hasMore = !shouldIncludeTotal && hiringRequests.length > pageSize;
     const pageItems = hasMore ? hiringRequests.slice(0, pageSize) : hiringRequests;
 
-    const trimmed = pageItems.map(({ jobs, user: hrUser, ...rest }) => ({
-      ...rest,
-      recruiter: hrUser ? { id: hrUser.id, name: hrUser.name || hrUser.email } : null,
-      linkedJob: jobs[0] || null,
-    }));
+    const trimmed = pageItems.map(({ jobs, user: hrUser, ...rest }) => {
+      const candidateCount = rest._count?.candidates ?? 0;
+      const matchCount = rest._count?.resumeJobFits ?? 0;
+      const interviewCount = rest._count?.interviews ?? 0;
+
+      return {
+        ...rest,
+        recruiter: hrUser ? { id: hrUser.id, name: hrUser.name || hrUser.email } : null,
+        linkedJob: jobs[0] || null,
+        stats: {
+          candidates: Math.max(candidateCount, matchCount),
+          matches: matchCount,
+          interviews: interviewCount,
+        },
+      };
+    });
 
     res.json({
       success: true,
@@ -424,6 +435,8 @@ router.get('/stats', async (req, res) => {
       candidateStatusGroups,
       avgMatchScoreAgg,
       totalMatches,
+      invitationsSent,
+      interviewsCompleted,
       recentRequests,
     ] = await Promise.all([
       prisma.hiringRequest.groupBy({
@@ -438,16 +451,28 @@ router.get('/stats', async (req, res) => {
         },
         _count: { _all: true },
       }),
-      prisma.candidate.aggregate({
+      prisma.resumeJobFit.aggregate({
         where: {
           hiringRequest: hrWhere,
-          matchScore: { not: null },
+          fitScore: { not: null },
         },
-        _avg: { matchScore: true },
+        _avg: { fitScore: true },
       }),
       prisma.resumeJobFit.count({
         where: {
           hiringRequest: hrWhere,
+        },
+      }),
+      prisma.resumeJobFit.count({
+        where: {
+          hiringRequest: hrWhere,
+          pipelineStatus: 'invited',
+        },
+      }),
+      prisma.interview.count({
+        where: {
+          hiringRequest: hrWhere,
+          status: 'completed',
         },
       }),
       shouldIncludeRecent
@@ -485,8 +510,9 @@ router.get('/stats', async (req, res) => {
     );
 
     const totalRequests = requestStatusGroups.reduce((sum, row) => sum + row._count._all, 0);
-    const totalCandidates = candidateStatusGroups.reduce((sum, row) => sum + row._count._all, 0);
-    const avgMatchScoreRaw = avgMatchScoreAgg._avg.matchScore;
+    const totalCandidatesFromCandidates = candidateStatusGroups.reduce((sum, row) => sum + row._count._all, 0);
+    const totalCandidates = Math.max(totalCandidatesFromCandidates, totalMatches);
+    const avgMatchScoreRaw = avgMatchScoreAgg._avg.fitScore;
     const avgMatchScore = avgMatchScoreRaw === null
       ? null
       : Math.round(avgMatchScoreRaw * 10) / 10;
@@ -500,8 +526,8 @@ router.get('/stats', async (req, res) => {
         closedRequests: requestStatusCounts.closed || 0,
         totalCandidates,
         totalMatches,
-        invitationsSent: candidateStatusCounts.screening || 0,
-        interviewsCompleted: candidateStatusCounts.interviewed || 0,
+        invitationsSent,
+        interviewsCompleted,
         avgMatchScore,
         candidateStatusCounts,
         recentRequests,

@@ -226,10 +226,15 @@ router.post('/sync-from-invite', async (req, res) => {
       else evaluationVerdict = 'weak_hire';
     }
 
-    // Extract candidate name from evaluation report if available
+    // Extract candidate name — try multiple sources with fallback chain
     const reportJson = evaluate?.result_json_parsed;
-    const candidateName = reportJson?.['报告元数据']?.['候选人姓名']
+    const candidateName =
+      reportJson?.['报告元数据']?.['候选人姓名']
       || reportJson?.['报告元数据']?.['candidateName']
+      || completedRecord?.user_name
+      || detailRecord?.user_name
+      || completedRecord?.candidate_name
+      || detailRecord?.candidate_name
       || 'Unknown';
 
     // Extract candidate email from video_url pattern (e.g., interview_471665598@qq.com_...)
