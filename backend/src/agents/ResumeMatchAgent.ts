@@ -10,6 +10,10 @@ export class ResumeMatchAgent extends BaseAgent<MatchResumeRequest, MatchResult>
     super('ResumeMatchAgent');
   }
 
+  protected getTemperature(): number {
+    return 0.1;
+  }
+
   protected getAgentPrompt(): string {
     return `You are an expert HR analyst and technical recruiter. Your task is to analyze how well a candidate's resume matches a job description.
 

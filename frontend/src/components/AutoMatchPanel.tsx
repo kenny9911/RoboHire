@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../config';
@@ -152,24 +152,46 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
     fetchFits();
   }, [fetchFits]);
 
-  // Fetch resumes with optional recruiter/team filter
-  const fetchResumesForSelect = useCallback(async (filter: RecruiterTeamFilterValue) => {
+  // Fetch resumes with optional recruiter/team filter and search
+  const fetchResumesForSelect = useCallback(async (filter: RecruiterTeamFilterValue, search?: string, keepSelection?: boolean) => {
     try {
       setLoadingResumes(true);
       const params: Record<string, string> = { limit: '5000', fields: 'minimal' };
       if (filter.filterUserId) params.filterUserId = filter.filterUserId;
       if (filter.filterTeamId) params.filterTeamId = filter.filterTeamId;
       if (filter.teamView) params.teamView = 'true';
+      if (search?.trim()) params.search = search.trim();
       const res = await axios.get('/api/v1/resumes', { params });
       const data = res.data.data || res.data.resumes || [];
       setAllResumes(data);
-      setResumeSelectedIds(new Set(data.map((r: { id: string }) => r.id)));
+      if (!keepSelection) {
+        setResumeSelectedIds(new Set(data.map((r: { id: string }) => r.id)));
+      }
     } catch {
       setAllResumes([]);
     } finally {
       setLoadingResumes(false);
     }
   }, []);
+
+  // Debounced server-side search
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const recruiterFilterRef = useRef(recruiterFilter);
+  recruiterFilterRef.current = recruiterFilter;
+
+  useEffect(() => {
+    if (!showResumeSelect) return;
+    clearTimeout(searchTimerRef.current);
+    if (!resumeSearch.trim()) {
+      // When search is cleared, re-fetch all resumes but keep selection
+      fetchResumesForSelect(recruiterFilterRef.current, undefined, true);
+      return;
+    }
+    searchTimerRef.current = setTimeout(() => {
+      fetchResumesForSelect(recruiterFilterRef.current, resumeSearch, true);
+    }, 300);
+    return () => clearTimeout(searchTimerRef.current);
+  }, [resumeSearch, showResumeSelect, fetchResumesForSelect]);
 
   // Open resume selection dialog
   const openResumeSelect = async (force: boolean) => {
@@ -186,6 +208,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
     fetchResumesForSelect(filter);
   };
 
+  // Client-side filter for immediate feedback while server search is in-flight
   const filteredResumesForSelect = useMemo(() => {
     if (!resumeSearch.trim()) return allResumes;
     const q = resumeSearch.toLowerCase();

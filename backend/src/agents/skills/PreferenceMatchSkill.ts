@@ -6,6 +6,10 @@ export class PreferenceMatchSkill extends BaseAgent<PreferenceMatchInput, Prefer
     super('PreferenceMatchSkill');
   }
 
+  protected getTemperature(): number {
+    return 0.1;
+  }
+
   protected getAgentPrompt(): string {
     return `You are an expert recruitment advisor specializing in preference alignment and interview preparation. Your task is to analyze how well a candidate's preferences match a job's attributes, and generate tailored interview questions.
 

@@ -12,7 +12,8 @@ import { pdfService } from '../services/PDFService.js';
 import { documentParsingService, DocumentParsingService } from '../services/DocumentParsingService.js';
 import { logger } from '../services/LoggerService.js';
 import { documentStorage } from '../services/DocumentStorageService.js';
-import { getOrParseResume, computeResumeHash } from '../services/ResumeParsingCache.js';
+import { getOrParseResume } from '../services/ResumeParsingCache.js';
+import { resolveResumeTextForInvitation } from '../services/InvitationResumeService.js';
 import { requireAuth, requireScopes, optionalAuth } from '../middleware/auth.js';
 import { trackUsage } from '../middleware/usageTracker.js';
 import { apiRateLimit } from '../middleware/rateLimiter.js';
@@ -163,9 +164,15 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
       hasInterviewerRequirement: !!interviewer_requirement,
     });
 
+    const invitationResume = await resolveResumeTextForInvitation({
+      rawResumeText: resume,
+      userId: req.user?.id || null,
+      requestId,
+    });
+
     // Step 2: Call RoboHire 一键邀约 API
     const result = await inviteAgent.generateInvitation(
-      resume,
+      invitationResume.resumeText,
       jd,
       requestId,
       recruiter_email,
@@ -176,7 +183,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
       __gohireApiMeta?: { endpoint?: string; deliveryMode?: 'remote_api' | 'fallback_local' };
     }).__gohireApiMeta;
     const gohireInviteLog = buildGoHireInvitationCallLog({
-      resume,
+      resume: invitationResume.resumeText,
       jd,
       candidateEmail: candidate_email,
       recruiterEmail: recruiter_email,
@@ -189,8 +196,10 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
 
     req.payloadCapture = {
       requestPayload: {
-        resumePreview: resume.slice(0, 10000),
-        resumeLength: resume.length,
+        resumePreview: invitationResume.resumeText.slice(0, 10000),
+        resumeLength: invitationResume.resumeText.length,
+        rawResumeLength: resume.length,
+        invitationResumeSource: invitationResume.source,
         jdPreview: jd.slice(0, 10000),
         jdLength: jd.length,
         candidate_email: candidate_email || null,
@@ -861,8 +870,13 @@ router.post('/batch-invite', requireAuth, requireScopes('write'), apiRateLimit()
 
     for (const { text, index } of validResumes) {
       try {
+        const invitationResume = await resolveResumeTextForInvitation({
+          rawResumeText: text,
+          userId: req.user?.id || null,
+          requestId: `${requestId}_${index}`,
+        });
         const result = await inviteAgent.generateInvitation(
-          text,
+          invitationResume.resumeText,
           jd,
           `${requestId}_${index}`,
           recruiter_email,

@@ -6,6 +6,10 @@ export class ExperienceMatchSkill extends BaseAgent<ExperienceMatchInput, Experi
     super('ExperienceMatchSkill');
   }
 
+  protected getTemperature(): number {
+    return 0.1;
+  }
+
   protected getAgentPrompt(): string {
     return `You are an expert HR analyst specializing in experience evaluation. Your task is to deeply analyze a candidate's work experience against a job description's requirements.
 

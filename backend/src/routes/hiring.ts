@@ -12,6 +12,7 @@ import { screeningAgent } from '../agents/ScreeningAgent.js';
 import { inviteAgent, buildGoHireInvitationCallLog } from '../agents/InviteAgent.js';
 import { recruitmentIntelligenceService } from '../services/RecruitmentIntelligenceService.js';
 import { DocumentParsingService } from '../services/DocumentParsingService.js';
+import { resolveResumeTextForInvitation } from '../services/InvitationResumeService.js';
 import { fireHiringRequestWebhook } from '../services/WebhookService.js';
 import { getVisibilityScope, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 import { buildHiringRequestAccessWhere } from '../lib/hiringRequestVisibility.js';
@@ -1493,7 +1494,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
     // Fetch resumes
     const resumes = await prisma.resume.findMany({
       where: { id: { in: resumeIds }, userId },
-      select: { id: true, name: true, resumeText: true, email: true, preferences: true },
+      select: { id: true, name: true, resumeText: true, email: true, preferences: true, parsedData: true },
     });
 
     if (resumes.length === 0) {
@@ -1516,8 +1517,14 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
     for (const resume of resumes) {
       try {
         const candidateEmail = getPreferredResumeEmail(resume);
+        const invitationResume = await resolveResumeTextForInvitation({
+          rawResumeText: resume.resumeText,
+          userId,
+          requestId,
+          preferredParsedResume: resume.parsedData,
+        });
         const inviteResult = await inviteAgent.generateInvitation(
-          resume.resumeText,
+          invitationResume.resumeText,
           jd,
           requestId,
           recruiter_email,
@@ -1528,7 +1535,7 @@ router.post('/:id/batch-invite-from-library', async (req, res) => {
           __gohireApiMeta?: { endpoint?: string; deliveryMode?: 'remote_api' | 'fallback_local' };
         }).__gohireApiMeta;
         const gohireInviteLog = buildGoHireInvitationCallLog({
-          resume: resume.resumeText,
+          resume: invitationResume.resumeText,
           jd,
           candidateEmail: candidateEmail || undefined,
           recruiterEmail: recruiter_email,

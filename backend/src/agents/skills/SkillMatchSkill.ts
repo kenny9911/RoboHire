@@ -6,6 +6,10 @@ export class SkillMatchSkill extends BaseAgent<SkillMatchInput, SkillMatchOutput
     super('SkillMatchSkill');
   }
 
+  protected getTemperature(): number {
+    return 0.1;
+  }
+
   protected getAgentPrompt(): string {
     return `You are an expert technical recruiter specializing in skills analysis. Your task is to deeply analyze skill alignment between a candidate's resume and a job description.
 

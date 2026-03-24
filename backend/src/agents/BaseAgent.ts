@@ -19,6 +19,13 @@ export abstract class BaseAgent<TInput, TOutput> {
   }
 
   /**
+   * LLM temperature. Override in subclasses that need deterministic output (e.g. scoring).
+   */
+  protected getTemperature(): number {
+    return 0.7;
+  }
+
+  /**
    * Get the agent-specific system prompt
    * Override this in subclasses to define the agent's behavior
    */
@@ -103,7 +110,7 @@ export abstract class BaseAgent<TInput, TOutput> {
 
     try {
       const response = await this.llm.chat(messages, {
-        temperature: 0.7,
+        temperature: this.getTemperature(),
         requestId,
         ...(model ? { model } : {}),
         ...(signal ? { signal } : {}),
@@ -168,7 +175,7 @@ export abstract class BaseAgent<TInput, TOutput> {
       // chatWithJsonResponse() throws on malformed JSON with no fallback,
       // whereas each agent's parseOutput() provides a safe default.
       const response = await this.llm.chat(messages, {
-        temperature: 0.7,
+        temperature: this.getTemperature(),
         requestId,
         ...(model ? { model } : {}),
       });

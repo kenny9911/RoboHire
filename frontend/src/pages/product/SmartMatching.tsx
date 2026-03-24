@@ -363,22 +363,42 @@ export default function SmartMatching() {
     };
   }, [pageFilterParams, sessionRefreshTrigger]);
 
-  const fetchModalResumes = useCallback(async (filter: RecruiterTeamFilterValue) => {
+  const fetchModalResumes = useCallback(async (filter: RecruiterTeamFilterValue, search?: string, keepSelection?: boolean) => {
     setLoadingModalResumes(true);
     try {
-      const res = await axios.get('/api/v1/resumes', {
-        params: { page: 1, limit: 5000, fields: 'minimal', ...buildFilterParams(filter) },
-      });
+      const params: Record<string, string | number> = { page: 1, limit: 5000, fields: 'minimal', ...buildFilterParams(filter) };
+      if (search?.trim()) params.search = search.trim();
+      const res = await axios.get('/api/v1/resumes', { params });
       const data = res.data.data || res.data.resumes || [];
       setModalResumes(data);
-      setModalSelectedResumeIds(new Set(data.map((resume: Resume) => resume.id)));
+      if (!keepSelection) {
+        setModalSelectedResumeIds(new Set(data.map((resume: Resume) => resume.id)));
+      }
     } catch {
       setModalResumes([]);
-      setModalSelectedResumeIds(new Set());
+      if (!keepSelection) setModalSelectedResumeIds(new Set());
     } finally {
       setLoadingModalResumes(false);
     }
   }, [buildFilterParams]);
+
+  // Debounced server-side search for modal resumes
+  const modalSearchTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const modalRecruiterFilterRef = useRef(modalRecruiterFilter);
+  modalRecruiterFilterRef.current = modalRecruiterFilter;
+
+  useEffect(() => {
+    if (!showAIMatchModal) return;
+    clearTimeout(modalSearchTimerRef.current);
+    if (!modalResumeSearch.trim()) {
+      fetchModalResumes(modalRecruiterFilterRef.current, undefined, true);
+      return;
+    }
+    modalSearchTimerRef.current = setTimeout(() => {
+      fetchModalResumes(modalRecruiterFilterRef.current, modalResumeSearch, true);
+    }, 300);
+    return () => clearTimeout(modalSearchTimerRef.current);
+  }, [modalResumeSearch, showAIMatchModal, fetchModalResumes]);
 
   // Fetch resumes when AI Match modal opens
   useEffect(() => {
@@ -769,6 +789,9 @@ export default function SmartMatching() {
       setMatches((prev) =>
         prev.map((m) => (m.id === matchId ? { ...m, status: newStatus } : m))
       );
+      if (newStatus === 'shortlisted') {
+        setSuccessMessage(t('product.matching.shortlistSuccess', 'Candidate shortlisted for next-round review'));
+      }
     } catch {
       // handle error
     }
@@ -1464,15 +1487,26 @@ export default function SmartMatching() {
                         </div>
                       )}
 
-                      {match.matchData?.preferenceAlignment && match.matchData.preferenceAlignment.overallScore < 100 && (
+                      {match.matchData && (
                         <div className="text-center">
-                          <div className={`text-lg font-bold ${
-                            match.matchData.preferenceAlignment.overallScore >= 80 ? 'text-emerald-600' :
-                            match.matchData.preferenceAlignment.overallScore >= 50 ? 'text-amber-600' : 'text-red-500'
-                          }`}>
-                            {match.matchData.preferenceAlignment.overallScore}
-                          </div>
-                          <div className="text-[10px] text-slate-400">{t('product.matching.prefScore', 'pref. fit')}</div>
+                          {match.matchData.preferenceAlignment && match.matchData.preferenceAlignment.overallScore < 100 ? (
+                            <>
+                              <div className={`text-lg font-bold ${
+                                match.matchData.preferenceAlignment.overallScore >= 80 ? 'text-emerald-600' :
+                                match.matchData.preferenceAlignment.overallScore >= 50 ? 'text-amber-600' : 'text-red-500'
+                              }`}>
+                                {match.matchData.preferenceAlignment.overallScore}
+                              </div>
+                              <div className="text-[10px] text-slate-400">{t('product.matching.prefScore', 'pref. fit')}</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-lg font-bold text-slate-300">—</div>
+                              <div className="text-[10px] text-slate-400" title={t('product.matching.prefScoreNoData', 'No candidate preferences on file')}>
+                                {t('product.matching.prefScore', 'pref. fit')}
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
 
@@ -1513,23 +1547,25 @@ export default function SmartMatching() {
                         {match.status !== 'shortlisted' && match.status !== 'applied' && (
                           <button
                             onClick={() => handleStatusUpdate(match.id, 'shortlisted')}
-                            title={t('product.matching.shortlist', 'Shortlist')}
-                            className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+                            title={t('product.matching.shortlistTooltip', 'Add to shortlist for next-round review')}
+                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
                           >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
+                            <span className="hidden sm:inline">{t('product.matching.shortlist', 'Shortlist')}</span>
                           </button>
                         )}
                         {match.status !== 'rejected' && match.status !== 'applied' && (
                           <button
                             onClick={() => handleStatusUpdate(match.id, 'rejected')}
                             title={t('product.matching.reject', 'Reject')}
-                            className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
                           >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
+                            <span className="hidden sm:inline">{t('product.matching.reject', 'Reject')}</span>
                           </button>
                         )}
                         {match.matchData && (
