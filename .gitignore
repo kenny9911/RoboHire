@@ -37,3 +37,5 @@ coverage/
 ai-fortunate-teller.md   
 pricing.md
 
+tmp/*.*
+temp/*.*
