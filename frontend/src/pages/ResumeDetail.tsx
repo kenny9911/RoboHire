@@ -489,9 +489,14 @@ export default function ResumeDetail() {
         jd: jdText,
         candidate_email: getPreferredResumeEmail(resume) || undefined,
         recruiter_email: user?.email || undefined,
+        resume_id: resume.id,
+        hiring_request_id: hiringRequestId,
       });
       if (res.data.success) {
         setInviteResult(res.data.data);
+        if (res.data.persistenceWarning) {
+          console.warn('Invite persistence warning:', res.data.persistenceWarning);
+        }
         fetchInvitations(); // Refresh invitation status
       } else {
         setInviteError(res.data.error || 'Failed to send invitation');
@@ -533,9 +538,13 @@ export default function ResumeDetail() {
         jd: selectedJob.description || selectedJob.title,
         candidate_email: getPreferredResumeEmail(resume) || undefined,
         recruiter_email: user?.email || undefined,
+        resume_id: resume.id,
       });
       if (res.data.success) {
         setInviteResult(res.data.data);
+        if (res.data.persistenceWarning) {
+          console.warn('Invite persistence warning:', res.data.persistenceWarning);
+        }
         fetchInvitations(); // Refresh invitation status
       } else {
         setInviteError(res.data.error || 'Failed to send invitation');

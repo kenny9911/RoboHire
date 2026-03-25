@@ -143,7 +143,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
   logger.startRequest(requestId, '/api/v1/invite-candidate', 'POST');
 
   try {
-    const { resume, jd, candidate_email, recruiter_email, interviewer_requirement } = req.body as InviteCandidateRequest;
+    const { resume, jd, candidate_email, recruiter_email, interviewer_requirement, resume_id, hiring_request_id } = req.body as InviteCandidateRequest;
 
     // Step 1: Validate input
     const validateStep = logger.startStep(requestId, 'Validate input');
@@ -221,34 +221,87 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
         // Parse resume with AI (DB cache first, then LLM)
         const { parsedData: parsed } = await getOrParseResume(resume, userId, requestId);
 
-        // Upsert Resume record (dedup by content hash)
-        const contentHash = computeContentHash(resume);
-        const resumeRecord = await prisma.resume.upsert({
-          where: { userId_contentHash: { userId, contentHash } },
-          create: {
-            userId,
-            name: parsed.name || result.name || 'Unknown',
-            email: parsed.email || result.email || null,
-            phone: parsed.phone || null,
-            currentRole: (parsed.experience as Array<{ role?: string }>)?.[0]?.role || null,
-            resumeText: resume,
-            parsedData: JSON.parse(JSON.stringify(parsed)),
-            contentHash,
-            source: 'quick-invite',
-          },
-          update: {},
-        });
+        // Resolve Resume record — use provided ID when available, fall back to content-hash upsert
+        let resumeRecord: { id: string; email?: string | null; phone?: string | null; preferences?: unknown };
+        if (resume_id) {
+          const existing = await prisma.resume.findUnique({
+            where: { id: resume_id },
+            select: { id: true, email: true, phone: true, preferences: true },
+          });
+          if (existing) {
+            resumeRecord = existing;
+          } else {
+            logger.warn('API', 'invite-candidate: provided resume_id not found, falling back to content-hash', { resume_id }, requestId);
+            const contentHash = computeContentHash(resume);
+            resumeRecord = await prisma.resume.upsert({
+              where: { userId_contentHash: { userId, contentHash } },
+              create: {
+                userId,
+                name: parsed.name || result.name || 'Unknown',
+                email: parsed.email || result.email || null,
+                phone: parsed.phone || null,
+                currentRole: (parsed.experience as Array<{ role?: string }>)?.[0]?.role || null,
+                resumeText: resume,
+                parsedData: JSON.parse(JSON.stringify(parsed)),
+                contentHash,
+                source: 'quick-invite',
+              },
+              update: {},
+            });
+          }
+        } else {
+          const contentHash = computeContentHash(resume);
+          resumeRecord = await prisma.resume.upsert({
+            where: { userId_contentHash: { userId, contentHash } },
+            create: {
+              userId,
+              name: parsed.name || result.name || 'Unknown',
+              email: parsed.email || result.email || null,
+              phone: parsed.phone || null,
+              currentRole: (parsed.experience as Array<{ role?: string }>)?.[0]?.role || null,
+              resumeText: resume,
+              parsedData: JSON.parse(JSON.stringify(parsed)),
+              contentHash,
+              source: 'quick-invite',
+            },
+            update: {},
+          });
+        }
         resumeId = resumeRecord.id;
         const preferredCandidateEmail =
           getPreferredResumeEmail(resumeRecord) || candidate_email || parsed.email || result.email || null;
 
-        // Find or create HiringRequest from JD (dedup by exact JD content)
-        let hiringRequest = await prisma.hiringRequest.findFirst({
-          where: { userId, jobDescription: jd.trim() },
-          select: { id: true, title: true },
-        });
-        if (!hiringRequest) {
-          hiringRequest = await prisma.hiringRequest.create({
+        // Resolve HiringRequest — use provided ID when available, fall back to JD text lookup
+        let hiringRequest: { id: string; title: string };
+        if (hiring_request_id) {
+          const existing = await prisma.hiringRequest.findUnique({
+            where: { id: hiring_request_id },
+            select: { id: true, title: true },
+          });
+          if (existing) {
+            hiringRequest = existing;
+          } else {
+            logger.warn('API', 'invite-candidate: provided hiring_request_id not found, falling back to JD lookup', { hiring_request_id }, requestId);
+            const found = await prisma.hiringRequest.findFirst({
+              where: { userId, jobDescription: jd.trim() },
+              select: { id: true, title: true },
+            });
+            hiringRequest = found || await prisma.hiringRequest.create({
+              data: {
+                userId,
+                title: result.job_title || 'Quick Invite Position',
+                requirements: jd.trim(),
+                jobDescription: jd.trim(),
+              },
+              select: { id: true, title: true },
+            });
+          }
+        } else {
+          const found = await prisma.hiringRequest.findFirst({
+            where: { userId, jobDescription: jd.trim() },
+            select: { id: true, title: true },
+          });
+          hiringRequest = found || await prisma.hiringRequest.create({
             data: {
               userId,
               title: result.job_title || 'Quick Invite Position',
@@ -313,9 +366,20 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
         });
       } catch (persistError) {
         // Log but don't fail the invitation — persistence is best-effort
+        const persistErrorMsg = persistError instanceof Error ? persistError.message : String(persistError);
         logger.error('API', 'invite-candidate persistence failed', {
-          error: persistError instanceof Error ? persistError.message : String(persistError),
+          error: persistErrorMsg,
+          resume_id,
+          hiring_request_id,
         }, requestId);
+        // Surface the persistence warning so the frontend can inform the user
+        logger.endRequest(requestId, 'success', 200);
+        return res.json({
+          success: true,
+          data: { ...result, resumeId, hiringRequestId, accessToken: interviewAccessToken },
+          persistenceWarning: `Invitation sent but failed to save record: ${persistErrorMsg}`,
+          requestId,
+        });
       }
     }
 

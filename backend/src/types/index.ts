@@ -700,6 +700,10 @@ export interface InviteCandidateRequest {
   candidate_email?: string;
   recruiter_email?: string;
   interviewer_requirement?: string;
+  /** When inviting from an existing resume record, pass its ID to avoid re-deriving from text */
+  resume_id?: string;
+  /** When inviting for a known hiring request, pass its ID to avoid re-deriving from JD text */
+  hiring_request_id?: string;
 }
 
 export interface EvaluateInterviewRequest {
