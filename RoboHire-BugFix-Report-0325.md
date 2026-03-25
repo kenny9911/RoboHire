@@ -200,6 +200,15 @@ function cleanCandidateNameFromFilename(filename: string): string {
 - 为避免未经确认直接批量修改云端数据，本次只完成了代码层面的回填能力和安全执行路径，未直接对云端数据库执行 `--apply`。
 - 建议先在目标环境执行 dry run，确认候选数量与样本后，再执行 live backfill。
 
+### Dry Run 结果
+
+- 已执行：
+  - `npm run backfill:resume-summaries --workspace=backend -- --dry-run --scan-limit=80 --limit=10`
+- 扫描结果：
+  - 扫描活跃简历 `80` 条
+  - 命中需修复摘要 `6` 条
+- 该步骤为只读扫描，未修改数据库。
+
 ---
 
 ## 六、修改文件总览

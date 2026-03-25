@@ -72,4 +72,6 @@
 
 ## Current Fix Status
 
-- In progress.
+- Implemented in code.
+- Backend and frontend builds passed.
+- Summary backfill dry run completed; live apply intentionally not run because the current `.env` points to a Neon cloud database.

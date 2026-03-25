@@ -92,7 +92,7 @@ async function main() {
 
   const candidates: ResumeRow[] = [];
   for (const resume of resumes) {
-    const parsed = (resume.parsedData ?? {}) as ParsedResume;
+    const parsed = (resume.parsedData ?? {}) as unknown as ParsedResume;
     const missingSummary = !resume.summary || !resume.summary.trim();
     const missingHighlight = !resume.highlight || !resume.highlight.trim();
     const lowSignalSummary = isResumeSummaryLowSignal(resume.summary, parsed);
@@ -125,7 +125,7 @@ async function main() {
   let updated = 0;
   for (const resume of candidates) {
     const parsed = resume.parsedData
-      ? (resume.parsedData as ParsedResume)
+      ? (resume.parsedData as unknown as ParsedResume)
       : (await getOrParseResume(resume.resumeText, resume.userId, 'resume-summary-backfill-script')).parsedData;
     const { summary, highlight } = await generateResumeSummaryHighlight(parsed, 'resume-summary-backfill-script');
 

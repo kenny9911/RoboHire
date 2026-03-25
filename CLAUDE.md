@@ -165,6 +165,10 @@ When changing API request/response shapes, update:
 2. Frontend consumer page/component
 3. Docs page examples (`frontend/src/pages/docs/*`) — not auto-generated
 
+## Bug Fix Workflow
+
+**MANDATORY**: Before starting ANY bug fix work (user reports a bug, attaches a bug report PDF, asks to fix/debug something), you MUST first read `BUG_FIX_WORKFLOW.md` in the project root and follow its phased workflow strictly. Do not skip phases or jump ahead to implementation.
+
 ## Coding Standards
 
 ### i18n — All user-facing text must be translated
