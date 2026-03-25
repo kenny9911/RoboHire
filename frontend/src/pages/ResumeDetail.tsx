@@ -1129,6 +1129,7 @@ export default function ResumeDetail() {
         fileName={resume.fileName}
         fileType={resume.fileType}
         resumeText={resume.resumeText}
+        hasOriginalFile={!!(resume as any).hasOriginalFile}
         onClose={() => setOriginalDocumentOpen(false)}
         t={t}
       />
@@ -1713,6 +1714,7 @@ function OriginalDocumentModal({
   fileName,
   fileType,
   resumeText,
+  hasOriginalFile,
   onClose,
   t,
 }: {
@@ -1721,13 +1723,17 @@ function OriginalDocumentModal({
   fileName?: string | null;
   fileType?: string | null;
   resumeText?: string | null;
+  hasOriginalFile?: boolean;
   onClose: () => void;
   t: (...args: any[]) => any;
 }) {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
-  const kind = getOriginalDocumentKind(fileName, fileType);
+  const detectedKind = getOriginalDocumentKind(fileName, fileType);
+  // When original file is stored, prefer PDF viewer — the backend will serve
+  // the actual PDF binary regardless of what fileName/fileType say
+  const kind = hasOriginalFile ? 'pdf' : detectedKind;
   const formatLabel = getOriginalDocumentFormatLabel(kind);
   const isMarkdown = kind === 'markdown';
   const content = resumeText?.trim() || '';

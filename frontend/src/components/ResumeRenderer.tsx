@@ -456,6 +456,18 @@ export function parsedDataToMarkdown(
   const { includeSummary = true, includeSkills = true } = options;
   const lines: string[] = [];
 
+  const sanitizeSummary = (value: unknown): string => {
+    if (typeof value !== 'string') return '';
+    const keptLines = value
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .filter((line) => !/^(男|女|闻)$/.test(line))
+      .filter((line) => !/^(出生年月|出生日期|政治面貌|联系电话|电话|邮箱|现居地|所在地|性别)\s*[:：]/i.test(line))
+      .filter((line) => line.length > 1);
+    return keptLines.join('\n').trim();
+  };
+
   // Name
   const name = parsed.candidateName || parsed.name || 'Unknown';
   lines.push(`# ${name}`);
@@ -484,9 +496,10 @@ export function parsedDataToMarkdown(
   }
 
   // Summary
-  if (includeSummary && parsed.summary) {
+  const safeSummary = sanitizeSummary(parsed.summary);
+  if (includeSummary && safeSummary) {
     lines.push('## 个人简介');
-    lines.push(parsed.summary);
+    lines.push(safeSummary);
     lines.push('');
   }
 

@@ -13,7 +13,7 @@ const DATE_RANGE_RE = /((?:19|20)\d{2}[./-]\d{1,2})\s*(?:-|–|—|~|至)\s*(至
 const CONTACT_BLOCK_NAME_RE = /^[\u3400-\u9fff·•]{2,6}$/;
 const DEMOGRAPHIC_RE = /^(?:男|女)\s*[|｜]/;
 const HEADING_RE = /^(?:个人优势|工作经历|工作经验|实习经历|教育背景|教育经历|项目经历|项目经验|专业技能|技能|证书|技能证书|荣誉奖项|自我评价|求职意向)$/;
-const TRAILING_ROLE_RE = /(经理|顾问|专家|工程师|架构师|总监|主任|主管|专员|助理|分析师|咨询师|实施|consultant|manager|engineer|architect|director|analyst|developer|lead|specialist)$/i;
+const TRAILING_ROLE_RE = /(经理|顾问|专家|工程师|架构师|总监|主任|主管|专员|助理|分析师|咨询师|实施|实习生|实习员|开发|设计师|运营|产品|研究员|测试|consultant|manager|engineer|architect|director|analyst|developer|lead|specialist|intern)$/i;
 const CJK_TECH_TERMS = [
   '用友', '金蝶', '数据治理', '财务共享', '低代码', '业财一体化', '业务再造',
 ];
@@ -233,15 +233,105 @@ Please parse this resume and extract structured information.`;
       .filter(Boolean);
   }
 
+  private looksLikeContactSignal(line: string): boolean {
+    return DEMOGRAPHIC_RE.test(line) ||
+      EMAIL_RE.test(line) ||
+      PHONE_RE.test(line) ||
+      /出生年月|出生日期|性别|政治面貌|现居地|所在地|联系电话|电话|邮箱|email|mail|求职意向|期望薪资|期望城市/i.test(line);
+  }
+
+  private isLikelySummaryNoise(line: string): boolean {
+    const normalized = line.replace(/\s+/g, '').trim();
+    if (!normalized) return true;
+    if (normalized.length === 1) return true;
+    if (/^(男|女)$/.test(normalized)) return true;
+    if (this.looksLikeContactSignal(line)) return true;
+    if (/^[•·▪▫◦]$/.test(normalized)) return true;
+    return false;
+  }
+
+  private mergeSplitChineseName(lines: string[], index: number, baseName: string): string {
+    const lookahead = lines.slice(index + 1, index + 7);
+    const hasContactSignal = lookahead.some((line) => this.looksLikeContactSignal(line));
+    if (!hasContactSignal) {
+      return baseName;
+    }
+
+    const trailingChars = lookahead.filter((line) => /^[\u3400-\u9fff·•]$/.test(line) && !/^(男|女)$/.test(line));
+    if (trailingChars.length !== 1) {
+      return baseName;
+    }
+
+    return `${baseName}${trailingChars[0]}`;
+  }
+
+  private resolveCandidateName(parsedName: string | undefined, fallbackName: string): string {
+    // For CJK names, remove all spaces (e.g. "崔 晋 闻" → "崔晋闻").
+    // For Latin names, collapse multiple spaces but preserve word separation.
+    const normalizeName = (n: string) => {
+      const trimmed = n.trim();
+      const hasCjk = /[\u3400-\u9fff]/.test(trimmed);
+      return hasCjk ? trimmed.replace(/\s+/g, '') : trimmed.replace(/\s+/g, ' ');
+    };
+    const existing = typeof parsedName === 'string' ? normalizeName(parsedName) : '';
+    const fallback = normalizeName(fallbackName);
+
+    if (!existing) return fallback;
+    if (!fallback) return existing;
+    if (existing === fallback) return existing;
+
+    // Prefer the longer name when one contains the other
+    // e.g. LLM returns "崔晋" but heuristic found "崔晋闻"
+    if (fallback.startsWith(existing) && fallback.length > existing.length) {
+      return fallback;
+    }
+    if (existing.startsWith(fallback) && existing.length > fallback.length) {
+      return existing;
+    }
+
+    return existing;
+  }
+
   private findName(lines: string[]): string {
+    // Strategy 1: standalone CJK name line followed by contact info
     for (let i = 0; i < lines.length; i += 1) {
       const line = lines[i];
       if (!CONTACT_BLOCK_NAME_RE.test(line)) continue;
       const nextLines = lines.slice(i + 1, i + 4);
-      if (nextLines.some((item) => DEMOGRAPHIC_RE.test(item) || EMAIL_RE.test(item) || PHONE_RE.test(item) || /工作经验|求职意向|期望薪资|期望城市/.test(item))) {
-        return line;
+      if (nextLines.some((item) => this.looksLikeContactSignal(item) || /工作经验/.test(item))) {
+        return this.mergeSplitChineseName(lines, i, line);
       }
     }
+
+    // Strategy 2: name at start of line followed by "个人简历" / "简历" / other common suffixes
+    // e.g. "崔晋闻 个人简历" or "张三 简历"
+    for (let i = 0; i < Math.min(lines.length, 5); i += 1) {
+      const match = lines[i].match(/^([\u3400-\u9fff]{2,4})\s+(?:个人简历|简历|resume|CV|履历)/i);
+      if (match) return match[1];
+    }
+
+    // Strategy 3: first CJK-only token (2-4 chars) in the first 3 lines, when contact info follows
+    for (let i = 0; i < Math.min(lines.length, 3); i += 1) {
+      const nameMatch = lines[i].match(/^([\u3400-\u9fff]{2,4})(?:\s|$)/);
+      if (!nameMatch) continue;
+      const nextLines = lines.slice(i, i + 5);
+      if (nextLines.some((item) => this.looksLikeContactSignal(item))) {
+        return nameMatch[1];
+      }
+    }
+
+    // Strategy 4: English name — 2-3 capitalized words on a standalone line near the top,
+    // followed by contact info (email/phone) within the next few lines.
+    // e.g. "Ding Yi", "John Smith", "Sarah Jane Parker"
+    for (let i = 0; i < Math.min(lines.length, 5); i += 1) {
+      const engName = lines[i].match(/^([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)$/);
+      if (!engName) continue;
+      const nextLines = lines.slice(i + 1, i + 5);
+      if (nextLines.some((item) => this.looksLikeContactSignal(item))) {
+        return engName[1];
+      }
+    }
+
     return '';
   }
 
@@ -260,6 +350,7 @@ Please parse this resume and extract structured information.`;
       .filter((line) => !PHONE_RE.test(line))
       .filter((line) => !CONTACT_BLOCK_NAME_RE.test(line))
       .filter((line) => !DEMOGRAPHIC_RE.test(line))
+      .filter((line) => !this.isLikelySummaryNoise(line))
       .filter((line) => !/工作经验|求职意向|期望薪资|期望城市/.test(line));
     return introLines.join('\n').trim();
   }
@@ -304,16 +395,53 @@ Please parse this resume and extract structured information.`;
 
       const startDate = dateMatch[1];
       const endDate = dateMatch[2];
+
+      // Check if company/role is on the same line after the date range
+      // e.g. "2025-07 ~ 2025-09 ＮＩＯ蔚来汽车（上海）" or "2025-07 ~ 2025-09 NIO蔚来汽车（上海） 全栈开发实习生"
+      const dateEndPos = lines[i].indexOf(dateMatch[2]) + dateMatch[2].length;
+      const sameLineRemainder = lines[i].slice(dateEndPos).trim();
+
+      let company = '';
+      let role = '';
       let nextIndex = i + 1;
 
-      while (nextIndex < lines.length && HEADING_RE.test(lines[nextIndex])) {
-        nextIndex += 1;
-      }
+      if (sameLineRemainder.length > 1) {
+        // Company (and possibly role) is on the same line as the date
+        const split = this.splitCompanyRole(sameLineRemainder);
+        company = split.company;
+        role = split.role;
 
-      const headerLine = lines[nextIndex] || '';
-      const { company, role } = this.splitCompanyRole(headerLine);
+        // If we only got company from the date line, check next line for role
+        // The next short non-bullet, non-date line is likely the job title
+        if (!role) {
+          while (nextIndex < lines.length && HEADING_RE.test(lines[nextIndex])) {
+            nextIndex += 1;
+          }
+          const nextLine = (lines[nextIndex] || '').trim();
+          const isLikelyRole = nextLine
+            && !DATE_RANGE_RE.test(nextLine)
+            && !nextLine.startsWith('·')
+            && !nextLine.startsWith('•')
+            && nextLine.length <= 20
+            && (TRAILING_ROLE_RE.test(nextLine) || /[\u4e00-\u9fff]/.test(nextLine));
+          if (isLikelyRole) {
+            role = nextLine;
+            nextIndex += 1;
+          }
+        }
+      } else {
+        // Company/role is on the next line (original behavior)
+        while (nextIndex < lines.length && HEADING_RE.test(lines[nextIndex])) {
+          nextIndex += 1;
+        }
+        const headerLine = lines[nextIndex] || '';
+        const split = this.splitCompanyRole(headerLine);
+        company = split.company;
+        role = split.role;
+        if (headerLine) nextIndex += 1;
+      }
       const descriptionLines: string[] = [];
-      let scanIndex = headerLine ? nextIndex + 1 : nextIndex;
+      let scanIndex = nextIndex;
 
       while (scanIndex < lines.length) {
         const current = lines[scanIndex];
@@ -334,8 +462,8 @@ Please parse this resume and extract structured information.`;
           duration: `${startDate}-${endDate}`,
           description,
           achievements: descriptionLines,
-          technologies: this.extractSkillsFromText([headerLine, description].filter(Boolean).join('\n')),
-          employmentType: /实习|intern/i.test([headerLine, description].join('\n')) ? 'internship' : 'full-time',
+          technologies: this.extractSkillsFromText([company, role, description].filter(Boolean).join('\n')),
+          employmentType: /实习|intern/i.test([company, role, description].join('\n')) ? 'internship' : 'full-time',
         });
       }
 
@@ -349,6 +477,7 @@ Please parse this resume and extract structured information.`;
 
   private buildHeuristicFallback(resumeText: string, parsed: ParsedResume): ParsedResume {
     const lines = this.normalizeLines(resumeText);
+    const fallbackName = this.findName(lines);
     const fallbackSummary = this.findSummary(lines);
     const fallbackSkills = this.extractSkillsFromText(resumeText);
     const fallbackExperience = this.extractExperience(lines);
@@ -366,7 +495,7 @@ Please parse this resume and extract structured information.`;
 
     return {
       ...parsed,
-      name: parsed.name || this.findName(lines),
+      name: this.resolveCandidateName(parsed.name, fallbackName),
       email: parsed.email || (resumeText.match(EMAIL_RE)?.[0] ?? ''),
       phone: parsed.phone || (resumeText.match(PHONE_RE)?.[0] ?? ''),
       address: parsed.address || this.findAddress(lines),

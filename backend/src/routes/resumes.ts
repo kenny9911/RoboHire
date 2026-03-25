@@ -1419,7 +1419,11 @@ router.post('/:id/reparse', requireAuth, async (req: Request, res: Response) => 
     const scope = await getVisibilityScope(req.user!);
     const resume = await prisma.resume.findFirst({
       where: { id: req.params.id, ...buildUserIdFilter(scope) },
-      select: { id: true, resumeText: true, name: true },
+      select: {
+        id: true, resumeText: true, name: true,
+        originalFileProvider: true, originalFileKey: true,
+        originalFileName: true, originalFileMimeType: true,
+      },
     });
 
     if (!resume) {
@@ -1430,8 +1434,37 @@ router.post('/:id/reparse', requireAuth, async (req: Request, res: Response) => 
       return res.status(400).json({ success: false, error: 'No resume text available for re-parsing' });
     }
 
+    // Re-extract text from original PDF if available (uses improved pdftotext pipeline)
+    let resumeText = resume.resumeText;
+    let reExtracted = false;
+    if (resume.originalFileProvider && resume.originalFileKey) {
+      try {
+        const { buffer, mimeType } = await resumeOriginalFileStorageService.readFile({
+          provider: resume.originalFileProvider,
+          key: resume.originalFileKey,
+          fileName: resume.originalFileName,
+          mimeType: resume.originalFileMimeType,
+        }, req.requestId);
+
+        if (mimeType === 'application/pdf' || resume.originalFileName?.toLowerCase().endsWith('.pdf')) {
+          const freshText = await pdfService.extractText(buffer, req.requestId);
+          if (freshText && freshText.length > 20) {
+            resumeText = freshText;
+            reExtracted = true;
+            logger.info('RESUMES', 'Re-extracted text from original PDF', {
+              id: resume.id, oldChars: resume.resumeText.length, newChars: freshText.length,
+            }, req.requestId);
+          }
+        }
+      } catch (err) {
+        logger.warn('RESUMES', 'Could not re-extract from original file, using stored text', {
+          id: resume.id, error: err instanceof Error ? err.message : String(err),
+        }, req.requestId);
+      }
+    }
+
     // Force fresh parse — call agent directly to bypass DB cache
-    const normalizedText = normalizeExtractedText(resume.resumeText);
+    const normalizedText = normalizeExtractedText(resumeText);
     const parsed = await resumeParseAgent.parse(normalizedText, req.requestId);
 
     // Extract metadata
@@ -1443,10 +1476,11 @@ router.post('/:id/reparse', requireAuth, async (req: Request, res: Response) => 
     // Regenerate summary & highlight from fresh parsed data
     const { summary, highlight } = await generateResumeSummaryHighlight(parsed, req.requestId);
 
-    // Update resume record
+    // Update resume record — also save fresh resumeText if re-extracted from PDF
     await prisma.resume.update({
       where: { id: resume.id },
       data: {
+        ...(reExtracted ? { resumeText } : {}),
         parsedData: JSON.parse(JSON.stringify(parsed)),
         name,
         email,
@@ -1457,7 +1491,9 @@ router.post('/:id/reparse', requireAuth, async (req: Request, res: Response) => 
       },
     });
 
-    logger.info('RESUMES', 'Resume re-parsed (cache bypassed)', { id: resume.id, name }, req.requestId);
+    logger.info('RESUMES', 'Resume re-parsed (cache bypassed)', {
+      id: resume.id, name, reExtracted,
+    }, req.requestId);
 
     res.json({ success: true, data: { parsedData: parsed, name, email, phone, currentRole, summary, highlight } });
   } catch (error) {
