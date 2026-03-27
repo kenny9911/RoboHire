@@ -189,8 +189,16 @@ router.post('/sync-from-invite', async (req, res) => {
     }
 
     if (!detailRecord) {
-      return res.status(404).json({
+      logger.info('GOHIRE_SYNC', 'GoHire interview data not ready yet', {
+        requestId,
+        gohireUserId: userId,
+        requestIntroductionId,
+        completedApiMatched: !!completedRecord,
+      });
+
+      return res.json({
         success: false,
+        code: 'GOHIRE_INTERVIEW_NOT_READY',
         error: 'No completed interview found on GoHire for this user',
       });
     }

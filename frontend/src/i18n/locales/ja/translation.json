@@ -2281,7 +2281,11 @@
       "evaluatedOf": "{{evaluated}} / {{total}} 評価済み",
       "copyLink": "招待リンクをコピー",
       "emailLabel": "メール",
+      "positionLabel": "ポジション",
+      "jdLabel": "職務内容",
       "typeLabel": "タイプ",
+      "invitedAt": "招待日時",
+      "completedAt": "完了日時",
       "startedLabel": "開始",
       "completedLabel": "終了",
       "durationLabel": "所要時間",
@@ -2289,7 +2293,12 @@
       "viewGoHireEvaluation": "GoHire 評価を表示",
       "syncingGoHireData": "面接データを同期中...",
       "goHireInterviewNotReady": "GoHireでの面接がまだ完了していません",
-      "goHireSyncFailed": "面接データの同期に失敗しました"
+      "goHireSyncFailed": "面接データの同期に失敗しました",
+      "searchPlaceholder": "名前、メール、職種で検索...",
+      "sortBy": "並べ替え",
+      "sortInviteTime": "招待日時",
+      "sortCompletedTime": "完了日時",
+      "sortName": "名前"
     },
     "videoInterview": {
       "title": "ビデオ面接",
@@ -3345,6 +3354,7 @@
           "expired": "期限切れ"
         },
         "viewResult": "結果を表示",
+        "viewInterview": "面接と評価を見る",
         "resendEmail": "メールを再送信",
         "resending": "送信中...",
         "resendSuccess": "招待を再送信しました！",
@@ -3375,6 +3385,8 @@
       "reanalyze": "適性を再分析",
       "inviteInterview": "面接に招待",
       "alreadyInvited": "{{date}} に招待済み",
+      "interviewCompleted": "面接完了",
+      "viewInterview": "面接を見る",
       "score": "スコア",
       "bestFit": "最適マッチ",
       "matchedSkills": "一致するスキル",
@@ -4090,7 +4102,8 @@
       "of": "/",
       "results": "件",
       "prev": "前へ",
-      "next": "次へ"
+      "next": "次へ",
+      "pageOf": "{{total}} ページ中 {{page}} ページ"
     },
     "import": {
       "button": "CSVインポート",

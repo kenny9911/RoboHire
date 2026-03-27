@@ -1906,7 +1906,11 @@
       "evaluatedOf": "{{evaluated}} de {{total}} avaliadas",
       "copyLink": "Copiar link de convite",
       "emailLabel": "E-mail",
+      "positionLabel": "Cargo",
+      "jdLabel": "Descrição do cargo",
       "typeLabel": "Tipo",
+      "invitedAt": "Convidado",
+      "completedAt": "Concluído",
       "startedLabel": "Início",
       "completedLabel": "Fim",
       "durationLabel": "Duração",
@@ -1914,7 +1918,12 @@
       "viewGoHireEvaluation": "Ver avaliação GoHire",
       "syncingGoHireData": "Sincronizando dados da entrevista...",
       "goHireInterviewNotReady": "A entrevista ainda não foi concluída no GoHire",
-      "goHireSyncFailed": "Falha ao sincronizar dados da entrevista"
+      "goHireSyncFailed": "Falha ao sincronizar dados da entrevista",
+      "searchPlaceholder": "Pesquisar por nome, email ou cargo...",
+      "sortBy": "Ordenar",
+      "sortInviteTime": "Data do convite",
+      "sortCompletedTime": "Concluído",
+      "sortName": "Nome"
     },
     "videoInterview": {
       "title": "Entrevista em Vídeo",
@@ -2886,6 +2895,7 @@
           "expired": "Expirada"
         },
         "viewResult": "Ver resultado",
+        "viewInterview": "Ver entrevista e avaliação",
         "resendEmail": "Reenviar email",
         "resending": "Enviando...",
         "resendSuccess": "Convite reenviado com sucesso!",
@@ -2916,6 +2926,8 @@
       "reanalyze": "Reanalisar adequação",
       "inviteInterview": "Convidar para entrevista",
       "alreadyInvited": "Convidado em {{date}}",
+      "interviewCompleted": "Entrevista concluída",
+      "viewInterview": "Ver entrevista",
       "score": "Pontuação",
       "bestFit": "Melhor Adequação",
       "matchedSkills": "Habilidades Correspondentes",
@@ -3631,7 +3643,8 @@
       "of": "de",
       "results": "resultados",
       "prev": "Anterior",
-      "next": "Próximo"
+      "next": "Próximo",
+      "pageOf": "Página {{page}} de {{total}}"
     },
     "import": {
       "button": "Importar CSV",

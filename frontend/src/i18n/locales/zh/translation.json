@@ -2373,7 +2373,11 @@
       "evaluatedOf": "{{evaluated}} / {{total}} 已评估",
       "copyLink": "复制邀请链接",
       "emailLabel": "邮箱",
+      "positionLabel": "职位",
+      "jdLabel": "职位描述",
       "typeLabel": "类型",
+      "invitedAt": "邀约时间",
+      "completedAt": "完成时间",
       "startedLabel": "开始",
       "completedLabel": "结束",
       "durationLabel": "时长",
@@ -2381,7 +2385,12 @@
       "viewGoHireEvaluation": "查看 GoHire 评估",
       "syncingGoHireData": "正在同步面试数据...",
       "goHireInterviewNotReady": "GoHire 上的面试尚未完成",
-      "goHireSyncFailed": "同步面试数据失败"
+      "goHireSyncFailed": "同步面试数据失败",
+      "searchPlaceholder": "搜索姓名、邮箱或职位...",
+      "sortBy": "排序",
+      "sortInviteTime": "邀约时间",
+      "sortCompletedTime": "完成时间",
+      "sortName": "姓名"
     },
     "videoInterview": {
       "title": "视频面试",
@@ -3444,6 +3453,7 @@
           "expired": "已过期"
         },
         "viewResult": "查看结果",
+        "viewInterview": "查看面试与评估",
         "resendEmail": "重新发送邮件",
         "resending": "发送中...",
         "resendSuccess": "邀请已重新发送！",
@@ -3474,6 +3484,8 @@
       "reanalyze": "重新分析匹配度",
       "inviteInterview": "邀请面试",
       "alreadyInvited": "已于 {{date}} 发送邀约",
+      "interviewCompleted": "面试已完成",
+      "viewInterview": "查看面试",
       "score": "评分",
       "bestFit": "最佳匹配",
       "matchedSkills": "匹配技能",
@@ -4189,7 +4201,8 @@
       "of": "/",
       "results": "条结果",
       "prev": "上一页",
-      "next": "下一页"
+      "next": "下一页",
+      "pageOf": "第 {{page}} 页，共 {{total}} 页"
     },
     "import": {
       "button": "导入 CSV",

@@ -2356,7 +2356,11 @@
       "evaluatedOf": "{{evaluated}} / {{total}} 已評估",
       "copyLink": "複製邀請連結",
       "emailLabel": "電子郵件",
+      "positionLabel": "職位",
+      "jdLabel": "職位描述",
       "typeLabel": "類型",
+      "invitedAt": "邀約時間",
+      "completedAt": "完成時間",
       "startedLabel": "開始",
       "completedLabel": "結束",
       "durationLabel": "時長",
@@ -2364,7 +2368,12 @@
       "viewGoHireEvaluation": "查看 GoHire 評估",
       "syncingGoHireData": "正在同步面試資料...",
       "goHireInterviewNotReady": "GoHire 上的面試尚未完成",
-      "goHireSyncFailed": "同步面試資料失敗"
+      "goHireSyncFailed": "同步面試資料失敗",
+      "searchPlaceholder": "搜尋姓名、郵箱或職位...",
+      "sortBy": "排序",
+      "sortInviteTime": "邀約時間",
+      "sortCompletedTime": "完成時間",
+      "sortName": "姓名"
     },
     "videoInterview": {
       "title": "視訊面試",
@@ -3406,6 +3415,7 @@
           "expired": "已過期"
         },
         "viewResult": "查看結果",
+        "viewInterview": "查看面試與評估",
         "resendEmail": "重新發送郵件",
         "resending": "發送中...",
         "resendSuccess": "邀請已重新發送！",
@@ -3436,6 +3446,8 @@
       "reanalyze": "重新分析匹配度",
       "inviteInterview": "邀請面試",
       "alreadyInvited": "已於 {{date}} 發送邀約",
+      "interviewCompleted": "面試已完成",
+      "viewInterview": "查看面試",
       "score": "評分",
       "bestFit": "最佳匹配",
       "matchedSkills": "匹配技能",
@@ -4151,7 +4163,8 @@
       "of": "/",
       "results": "筆結果",
       "prev": "上一頁",
-      "next": "下一頁"
+      "next": "下一頁",
+      "pageOf": "第 {{page}} 頁，共 {{total}} 頁"
     },
     "import": {
       "button": "匯入 CSV",

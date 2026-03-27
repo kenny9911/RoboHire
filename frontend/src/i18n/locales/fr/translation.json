@@ -1907,7 +1907,11 @@
       "evaluatedOf": "{{evaluated}} sur {{total}} évalués",
       "copyLink": "Copier le lien d'invitation",
       "emailLabel": "E-mail",
+      "positionLabel": "Poste",
+      "jdLabel": "Description du poste",
       "typeLabel": "Type",
+      "invitedAt": "Invité",
+      "completedAt": "Terminé",
       "startedLabel": "Début",
       "completedLabel": "Fin",
       "durationLabel": "Durée",
@@ -1915,7 +1919,12 @@
       "viewGoHireEvaluation": "Voir l'évaluation GoHire",
       "syncingGoHireData": "Synchronisation des données d'entretien...",
       "goHireInterviewNotReady": "L'entretien n'est pas encore terminé sur GoHire",
-      "goHireSyncFailed": "Échec de la synchronisation des données d'entretien"
+      "goHireSyncFailed": "Échec de la synchronisation des données d'entretien",
+      "searchPlaceholder": "Rechercher par nom, email ou poste...",
+      "sortBy": "Trier",
+      "sortInviteTime": "Date d'invitation",
+      "sortCompletedTime": "Terminé",
+      "sortName": "Nom"
     },
     "videoInterview": {
       "title": "Entretien Vidéo",
@@ -2887,6 +2896,7 @@
           "expired": "Expiré"
         },
         "viewResult": "Voir le résultat",
+        "viewInterview": "Voir l'entretien et l'évaluation",
         "resendEmail": "Renvoyer l'email",
         "resending": "Envoi en cours...",
         "resendSuccess": "Invitation renvoyée avec succès !",
@@ -2917,6 +2927,8 @@
       "reanalyze": "Réanalyser l'adéquation",
       "inviteInterview": "Inviter à un entretien",
       "alreadyInvited": "Invité le {{date}}",
+      "interviewCompleted": "Entretien terminé",
+      "viewInterview": "Voir l'entretien",
       "score": "Score",
       "bestFit": "Meilleure adéquation",
       "matchedSkills": "Compétences correspondantes",
@@ -3632,7 +3644,8 @@
       "of": "sur",
       "results": "résultats",
       "prev": "Précédent",
-      "next": "Suivant"
+      "next": "Suivant",
+      "pageOf": "Page {{page}} sur {{total}}"
     },
     "import": {
       "button": "Importer CSV",

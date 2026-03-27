@@ -164,10 +164,24 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
       hasInterviewerRequirement: !!interviewer_requirement,
     });
 
+    // If resume_id provided, load existing parsed data to avoid re-parsing
+    let preloadedParsedResume: unknown | undefined;
+    let preloadedResumeRecord: { id: string; email?: string | null; phone?: string | null; preferences?: unknown; parsedData?: unknown } | null = null;
+    if (resume_id && req.user?.id) {
+      preloadedResumeRecord = await prisma.resume.findUnique({
+        where: { id: resume_id },
+        select: { id: true, email: true, phone: true, preferences: true, parsedData: true },
+      });
+      if (preloadedResumeRecord?.parsedData) {
+        preloadedParsedResume = preloadedResumeRecord.parsedData;
+      }
+    }
+
     const invitationResume = await resolveResumeTextForInvitation({
       rawResumeText: resume,
       userId: req.user?.id || null,
       requestId,
+      preferredParsedResume: preloadedParsedResume,
     });
 
     // Step 2: Call RoboHire 一键邀约 API
@@ -218,38 +232,45 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
         const userId = req.user.id;
         const persistStep = logger.startStep(requestId, 'Persist invitation data');
 
-        // Parse resume with AI (DB cache first, then LLM)
-        const { parsedData: parsed } = await getOrParseResume(resume, userId, requestId);
-
-        // Resolve Resume record — use provided ID when available, fall back to content-hash upsert
+        // Parse resume with AI — skip if we already loaded parsed data from an existing resume record
+        let parsed: any;
         let resumeRecord: { id: string; email?: string | null; phone?: string | null; preferences?: unknown };
-        if (resume_id) {
-          const existing = await prisma.resume.findUnique({
-            where: { id: resume_id },
-            select: { id: true, email: true, phone: true, preferences: true },
-          });
-          if (existing) {
-            resumeRecord = existing;
+
+        if (preloadedResumeRecord) {
+          // resume_id was valid — use existing record, skip re-parsing if parsedData already exists
+          resumeRecord = preloadedResumeRecord;
+          if (preloadedParsedResume) {
+            parsed = preloadedParsedResume;
+            logger.info('API', 'invite-candidate: using existing parsedData from resume record, skipped re-parsing', { resume_id }, requestId);
           } else {
-            logger.warn('API', 'invite-candidate: provided resume_id not found, falling back to content-hash', { resume_id }, requestId);
-            const contentHash = computeContentHash(resume);
-            resumeRecord = await prisma.resume.upsert({
-              where: { userId_contentHash: { userId, contentHash } },
-              create: {
-                userId,
-                name: parsed.name || result.name || 'Unknown',
-                email: parsed.email || result.email || null,
-                phone: parsed.phone || null,
-                currentRole: (parsed.experience as Array<{ role?: string }>)?.[0]?.role || null,
-                resumeText: resume,
-                parsedData: JSON.parse(JSON.stringify(parsed)),
-                contentHash,
-                source: 'quick-invite',
-              },
-              update: {},
-            });
+            const result2 = await getOrParseResume(resume, userId, requestId);
+            parsed = result2.parsedData;
           }
+        } else if (resume_id) {
+          // resume_id was provided but not found — fall back to content-hash
+          logger.warn('API', 'invite-candidate: provided resume_id not found, falling back to content-hash', { resume_id }, requestId);
+          const result2 = await getOrParseResume(resume, userId, requestId);
+          parsed = result2.parsedData;
+          const contentHash = computeContentHash(resume);
+          resumeRecord = await prisma.resume.upsert({
+            where: { userId_contentHash: { userId, contentHash } },
+            create: {
+              userId,
+              name: parsed.name || result.name || 'Unknown',
+              email: parsed.email || result.email || null,
+              phone: parsed.phone || null,
+              currentRole: (parsed.experience as Array<{ role?: string }>)?.[0]?.role || null,
+              resumeText: resume,
+              parsedData: JSON.parse(JSON.stringify(parsed)),
+              contentHash,
+              source: 'quick-invite',
+            },
+            update: {},
+          });
         } else {
+          // No resume_id — parse and upsert by content hash
+          const result2 = await getOrParseResume(resume, userId, requestId);
+          parsed = result2.parsedData;
           const contentHash = computeContentHash(resume);
           resumeRecord = await prisma.resume.upsert({
             where: { userId_contentHash: { userId, contentHash } },
@@ -347,6 +368,7 @@ router.post('/invite-candidate', requireAuth, requireScopes('write'), apiRateLim
             candidateName: parsed.name || result.name || 'Unknown',
             candidateEmail: preferredCandidateEmail,
             jobTitle: result.job_title || hiringRequest.title || 'Interview',
+            jobDescription: jd.trim(),
             status: 'scheduled',
             type: 'ai_video',
             accessToken,

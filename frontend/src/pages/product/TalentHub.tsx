@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -10,6 +10,7 @@ import ResumeUploadModal from '../../components/ResumeUploadModal';
 import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 import CandidatePreferencesModal, { type CandidatePreferences } from '../../components/CandidatePreferencesModal';
 import ApplyToJobModal from '../../components/ApplyToJobModal';
+import InterviewInviteModal from '../../components/InterviewInviteModal';
 import {
   IconBriefcase,
   IconAdjustments,
@@ -32,6 +33,7 @@ import {
   IconRefresh,
   IconCheck,
   IconSend,
+  IconSchool,
 } from '@tabler/icons-react';
 
 // Country/region list for filter dropdown — covers major hiring markets
@@ -175,6 +177,7 @@ type EnrichedResume = Resume & {
   _matchSummary: string | null;
   _bestFitTitle: string | null;
   _experienceValue: number | null;
+  _eliteSchool: string | null;
 };
 
 // ── Notable companies for "Ex-XXX" tags ──
@@ -299,15 +302,6 @@ const LANGUAGE_FILTER_OPTIONS = [
 
 function clampNumber(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || '')
-    .join('') || '?';
 }
 
 function shortenText(text: string, limit = 170): string {
@@ -531,6 +525,105 @@ function getNotableCompanies(parsedData: Resume['parsedData']): string[] {
   return [...found].slice(0, 3);
 }
 
+// ── Elite / prestigious universities ──
+const ELITE_UNIVERSITIES: Array<{ display: string; keywords: string[] }> = [
+  // China 985
+  { display: '北京大学', keywords: ['北京大学', 'peking university', 'peking univ'] },
+  { display: '清华大学', keywords: ['清华大学', '清华', 'tsinghua'] },
+  { display: '复旦大学', keywords: ['复旦大学', '复旦', 'fudan'] },
+  { display: '上海交通大学', keywords: ['上海交通大学', '上海交大', 'shanghai jiao tong', 'shanghai jiaotong'] },
+  { display: '浙江大学', keywords: ['浙江大学', '浙大', 'zhejiang university'] },
+  { display: '中国科学技术大学', keywords: ['中国科学技术大学', '中科大', 'university of science and technology of china', 'ustc'] },
+  { display: '南京大学', keywords: ['南京大学', '南大', 'nanjing university'] },
+  { display: '武汉大学', keywords: ['武汉大学', '武大', 'wuhan university'] },
+  { display: '华中科技大学', keywords: ['华中科技大学', '华中科技', '华科', 'huazhong university'] },
+  { display: '中山大学', keywords: ['中山大学', '中大', 'sun yat-sen'] },
+  { display: '哈尔滨工业大学', keywords: ['哈尔滨工业大学', '哈工大', 'harbin institute of technology'] },
+  { display: '西安交通大学', keywords: ['西安交通大学', '西安交大', "xi'an jiaotong"] },
+  { display: '同济大学', keywords: ['同济大学', '同济', 'tongji'] },
+  { display: '北京航空航天大学', keywords: ['北京航空航天大学', '北航', 'beihang'] },
+  { display: '北京理工大学', keywords: ['北京理工大学', '北理工', 'beijing institute of technology'] },
+  { display: '天津大学', keywords: ['天津大学', 'tianjin university'] },
+  { display: '南开大学', keywords: ['南开大学', '南开', 'nankai'] },
+  { display: '东南大学', keywords: ['东南大学', 'southeast university'] },
+  { display: '中国人民大学', keywords: ['中国人民大学', '人大', 'renmin university'] },
+  { display: '四川大学', keywords: ['四川大学', '川大', 'sichuan university'] },
+  { display: '电子科技大学', keywords: ['电子科技大学', '电子科大', '成电', 'university of electronic science and technology'] },
+  { display: '北京师范大学', keywords: ['北京师范大学', '北师大', 'beijing normal university'] },
+  { display: '厦门大学', keywords: ['厦门大学', '厦大', 'xiamen university'] },
+  { display: '中南大学', keywords: ['中南大学', 'central south university'] },
+  { display: '大连理工大学', keywords: ['大连理工大学', '大连理工', 'dalian university of technology'] },
+  { display: '吉林大学', keywords: ['吉林大学', '吉大', 'jilin university'] },
+  { display: '山东大学', keywords: ['山东大学', '山大', 'shandong university'] },
+  { display: '华南理工大学', keywords: ['华南理工大学', '华南理工', 'south china university of technology'] },
+  { display: '重庆大学', keywords: ['重庆大学', '重大', 'chongqing university'] },
+  { display: '西北工业大学', keywords: ['西北工业大学', '西工大', 'northwestern polytechnical'] },
+  // China 211 (non-985 notable ones)
+  { display: '北京邮电大学', keywords: ['北京邮电大学', '北邮', 'beijing university of posts'] },
+  { display: '上海财经大学', keywords: ['上海财经大学', '上财', 'shanghai university of finance'] },
+  { display: '中央财经大学', keywords: ['中央财经大学', '央财', 'central university of finance'] },
+  { display: '对外经济贸易大学', keywords: ['对外经济贸易大学', '对外经贸', '贸大', 'uibe'] },
+  { display: '北京外国语大学', keywords: ['北京外国语大学', '北外', 'beijing foreign studies'] },
+  { display: '华东师范大学', keywords: ['华东师范大学', '华东师大', 'east china normal'] },
+  { display: '华东理工大学', keywords: ['华东理工大学', '华东理工', 'east china university of'] },
+  { display: '南京航空航天大学', keywords: ['南京航空航天大学', '南航', 'nanjing university of aeronautics'] },
+  { display: '南京理工大学', keywords: ['南京理工大学', '南理工', 'nanjing university of science'] },
+  { display: '西安电子科技大学', keywords: ['西安电子科技大学', '西电', 'xidian'] },
+  { display: '武汉理工大学', keywords: ['武汉理工大学', '武汉理工', 'wuhan university of technology'] },
+  // Global top universities
+  { display: 'MIT', keywords: ['massachusetts institute of technology', 'mit'] },
+  { display: 'Stanford', keywords: ['stanford university', 'stanford'] },
+  { display: 'Harvard', keywords: ['harvard university', 'harvard'] },
+  { display: 'Caltech', keywords: ['california institute of technology', 'caltech'] },
+  { display: 'Oxford', keywords: ['university of oxford', 'oxford university'] },
+  { display: 'Cambridge', keywords: ['university of cambridge', 'cambridge university'] },
+  { display: 'Princeton', keywords: ['princeton university', 'princeton'] },
+  { display: 'Yale', keywords: ['yale university', 'yale'] },
+  { display: 'Columbia', keywords: ['columbia university'] },
+  { display: 'UChicago', keywords: ['university of chicago'] },
+  { display: 'Penn', keywords: ['university of pennsylvania', 'upenn', 'u penn'] },
+  { display: 'Cornell', keywords: ['cornell university', 'cornell'] },
+  { display: 'Duke', keywords: ['duke university'] },
+  { display: 'Johns Hopkins', keywords: ['johns hopkins university', 'johns hopkins'] },
+  { display: 'Northwestern', keywords: ['northwestern university'] },
+  { display: 'UC Berkeley', keywords: ['uc berkeley', 'university of california, berkeley', 'university of california berkeley', 'berkeley'] },
+  { display: 'UCLA', keywords: ['ucla', 'university of california, los angeles'] },
+  { display: 'Carnegie Mellon', keywords: ['carnegie mellon university', 'carnegie mellon', 'cmu'] },
+  { display: 'Georgia Tech', keywords: ['georgia institute of technology', 'georgia tech'] },
+  { display: 'University of Michigan', keywords: ['university of michigan'] },
+  { display: 'ETH Zurich', keywords: ['eth zurich', 'eth zürich'] },
+  { display: 'Imperial College', keywords: ['imperial college london', 'imperial college'] },
+  { display: 'UCL', keywords: ['university college london', 'ucl'] },
+  { display: 'University of Toronto', keywords: ['university of toronto'] },
+  { display: 'NUS', keywords: ['national university of singapore', 'nus'] },
+  { display: 'NTU', keywords: ['nanyang technological university', 'ntu'] },
+  { display: 'University of Tokyo', keywords: ['university of tokyo', '東京大学', '东京大学'] },
+  { display: 'Kyoto University', keywords: ['kyoto university', '京都大学'] },
+  { display: 'Seoul National', keywords: ['seoul national university'] },
+  { display: 'KAIST', keywords: ['kaist', 'korea advanced institute'] },
+  { display: 'HKU', keywords: ['university of hong kong', 'hku'] },
+  { display: 'HKUST', keywords: ['hong kong university of science', 'hkust'] },
+  { display: 'CUHK', keywords: ['chinese university of hong kong', 'cuhk'] },
+  { display: 'HKBU', keywords: ['hong kong baptist university', '香港浸会大学', '香港浸會大學', 'hkbu'] },
+  { display: 'Melbourne', keywords: ['university of melbourne'] },
+  { display: 'Sydney', keywords: ['university of sydney'] },
+  { display: 'Waterloo', keywords: ['university of waterloo'] },
+];
+
+function getEliteSchool(parsedData: Resume['parsedData']): string | null {
+  if (!parsedData?.education) return null;
+  for (const edu of parsedData.education) {
+    const inst = (edu.institution || '').toLowerCase();
+    if (!inst) continue;
+    for (const uni of ELITE_UNIVERSITIES) {
+      if (uni.keywords.some(kw => inst.includes(kw.toLowerCase()))) {
+        return uni.display;
+      }
+    }
+  }
+  return null;
+}
+
 function getIndustryTags(parsedData: Resume['parsedData']): string[] {
   if (!parsedData?.experience) return [];
   const text = parsedData.experience
@@ -583,18 +676,15 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
-      <div className="flex gap-5">
-        {/* Avatar */}
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-base font-bold text-slate-500">
-          {getInitials(resume.name)}
-        </div>
-
+      <div>
         {/* Info column */}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-base font-bold text-slate-900">{resume.name}</h3>
+                <Link to={`/product/talent/${resume.id}`} className="text-base font-bold text-slate-900 hover:text-blue-600 transition-colors">
+                  {resume.name}
+                </Link>
                 {resume._parseWarning && (
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
                     {t('product.talent.parseWarning', 'Needs review')}
@@ -629,6 +719,12 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
               )}
 
               <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                {resume._eliteSchool && (
+                  <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-700 border border-amber-200">
+                    <IconSchool size={12} stroke={1.8} className="mr-1 shrink-0" />
+                    {resume._eliteSchool}
+                  </span>
+                )}
                 {resume._experienceValue !== null && (
                   <span className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
                     {resume._experienceValue} {t('product.talent.yearsWork', 'yrs')}
@@ -660,6 +756,9 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
 
             {/* Action buttons */}
             <div className="flex items-center gap-1 shrink-0">
+              <Link to={`/product/talent/${resume.id}`} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.viewProfile', 'View Full Profile')}>
+                <IconEye size={16} stroke={1.5} />
+              </Link>
               <button onClick={() => onInvite(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.inviteToInterview', 'Invite')}>
                 <IconSend size={16} stroke={1.5} />
               </button>
@@ -678,8 +777,8 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
           </div>
 
           {/* AI Summary box */}
-          <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-stretch">
-            <div className="relative flex-1 rounded-xl bg-blue-50 border border-blue-100 p-4">
+          <div className="mt-3">
+            <div className="relative rounded-xl bg-blue-50 border border-blue-100 p-4">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-xs font-semibold text-blue-500">
                   {t('product.talent.aiSummary', 'AI Summary')}:
@@ -704,7 +803,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
                       className="rounded-md p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-colors"
                       title={t('product.talent.viewFullSummary', 'View full summary')}
                     >
-                      <IconEye size={15} stroke={1.8} />
+                      <IconExternalLink size={14} stroke={1.8} />
                     </button>
                   )}
                 </div>
@@ -722,15 +821,6 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
                   {t('product.talent.bestMatch', 'Best match')}: {resume._bestFitTitle}
                 </p>
               )}
-            </div>
-
-            <div className="flex flex-col gap-2 lg:w-[180px] shrink-0 justify-center">
-              <Link
-                to={`/product/talent/${resume.id}`}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
-              >
-                {t('product.talent.viewProfile', 'View Full Profile')}
-              </Link>
             </div>
           </div>
 
@@ -946,7 +1036,7 @@ const PAGE_SIZE = 20;
 
 export default function TalentHub() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+
   const { user } = useAuth();
   const [resumes, setResumes] = usePageState<Resume[]>('talent.resumes', []);
   const [loading, setLoading] = useState(resumes.length > 0 ? false : true);
@@ -1142,9 +1232,11 @@ export default function TalentHub() {
     setApplyResume(resume);
   }, []);
 
+  const [inviteResume, setInviteResume] = useState<EnrichedResume | null>(null);
+
   const handleInvite = useCallback((resume: EnrichedResume) => {
-    navigate('/product/interview', { state: { inviteResumeId: resume.id, inviteResumeName: resume.name } });
-  }, [navigate]);
+    setInviteResume(resume);
+  }, []);
 
   const handleViewSummary = useCallback((resumeId: string, name: string, summary: string) => {
     setSummaryModal({ resumeId, name, summary });
@@ -1212,6 +1304,7 @@ export default function TalentHub() {
         _matchSummary: getMatchSummary(resume, highlight),
         _bestFitTitle: primaryFit?.hiringRequest?.title?.trim() || null,
         _experienceValue: getExperienceValue(resume, workExp),
+        _eliteSchool: getEliteSchool(resume.parsedData),
       };
     });
   }, [resumes]);
@@ -1843,6 +1936,16 @@ export default function TalentHub() {
           onSaved={(prefs) => {
             setResumes(prev => prev.map(r => r.id === prefsResume.id ? { ...r, preferences: prefs } : r));
           }}
+        />
+      )}
+
+      {/* Interview Invite Modal */}
+      {inviteResume && (
+        <InterviewInviteModal
+          resumeId={inviteResume.id}
+          candidateName={inviteResume.name}
+          candidateEmail={inviteResume.email}
+          onClose={() => setInviteResume(null)}
         />
       )}
 

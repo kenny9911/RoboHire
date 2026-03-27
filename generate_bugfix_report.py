@@ -116,7 +116,7 @@ def bug_section(number, title, priority, description, root_cause, fix, files, sc
     return elements
 
 # ── Build PDF ───────────────────────────────────────────────────────
-OUTPUT = os.path.join(os.path.dirname(__file__), "RoboHire-BugFix-Report-0326.pdf")
+OUTPUT = os.path.join(os.path.dirname(__file__), "RoboHire-BugFix-Report-0325.pdf")
 
 doc = SimpleDocTemplate(
     OUTPUT, pagesize=A4,
@@ -129,7 +129,7 @@ story = []
 # Title
 story.append(Spacer(1, 10))
 story.append(Paragraph("RoboHire 测试反馈修复报告", title_style))
-story.append(Paragraph("2026-03-26", subtitle_style))
+story.append(Paragraph("2026-03-25", subtitle_style))
 story.append(Paragraph("针对刘林提交的测试需求反馈 (0323) 的修复方案", subtitle_style))
 story.append(hr())
 

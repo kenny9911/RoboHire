@@ -272,3 +272,47 @@ function cleanCandidateNameFromFilename(filename: string): string {
 | 13 | 低质量摘要拦截 | 人才库中包含简历模板口号/装饰语的 summary 不再直接展示，后台会改为重建摘要 |
 | 14 | 查看录像 | “查看录像”改走 `/api/v1/interviews/:id/recording-file`，浏览器不再直接跳第三方视频地址 |
 | 15 | 摘要回填脚本 | `npm run backfill:resume-summaries --workspace=backend -- --dry-run` 可成功扫描候选记录而不落库 |
+
+---
+
+## 八、增补修复（2026-03-26）
+
+### 问题现象
+
+- 在 `/product/interview` 点击“同步面试数据”后，前端弹出“同步面试数据失败”。
+- 浏览器网络面板里对应请求为 `POST /api/v1/gohire-interviews/sync-from-invite`，返回 `404`。
+
+### 根因分析
+
+- 该 `404` 不是路由不存在，而是后端业务逻辑在 GoHire 侧还查不到 completed interview 数据时，主动返回了 `404`。
+- 前端 `AIInterview` 页面的调用代码本来把“还没有可同步数据”设计成普通分支处理，但 axios 遇到 `404` 会直接进入 `catch`，于是页面只能统一显示“同步失败”。
+- 实际对 GoHire 样本接口核查后，失败样本的 `interviews/detail` 返回“该用户暂无面试记录”，`chat_logs` 也返回空数组，说明当时确实尚无可同步数据。
+
+### 修复方案
+
+- 后端 `/api/v1/gohire-interviews/sync-from-invite`：
+  - 当 GoHire 暂无 completed interview 数据时，不再返回 HTTP `404`
+  - 改为返回 `200` + `{ success: false, code: 'GOHIRE_INTERVIEW_NOT_READY' }`
+  - 同时补充日志，明确记录这是“数据未就绪”，不是系统异常
+- 前端 `/product/interview`：
+  - 优先识别 `GOHIRE_INTERVIEW_NOT_READY`
+  - 对历史兼容场景，若仍收到 `404` 也按“GoHire 上的面试尚未完成”提示处理
+  - 仅将真正的异常保留为“同步面试数据失败”
+
+### 涉及文件
+
+| 文件 | 变更内容 |
+|------|----------|
+| `backend/src/routes/gohireInterviews.ts` | 将“GoHire 暂无已完成面试数据”从异常 `404` 改为显式业务态返回，并补充日志 |
+| `frontend/src/pages/product/AIInterview.tsx` | 区分“数据未就绪”和“真实失败”，避免把未完成面试误报为同步失败 |
+
+### 验证结果
+
+- 已通过外部接口核查失败样本：
+  - `GET /gohire-data/interviews/detail?user_id=15405` → `404`，提示该用户暂无面试记录
+  - `GET /gohire-data/gohireApi/chat_logs?request_introduction_id=35866ab4-6f85-43e9-b340-a8b6bf46f51c` → 空数组
+  - `GET /gohire-data/interviews/detail?user_id=15412` → `404`，提示该用户暂无面试记录
+  - `GET /gohire-data/gohireApi/chat_logs?request_introduction_id=37ee0612-e1c2-4f2b-a030-036c57842509` → 空数组
+- 编译验证通过：
+  - `npm run build --workspace=backend`
+  - `npm run build --workspace=frontend`

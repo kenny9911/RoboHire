@@ -1906,7 +1906,11 @@
       "evaluatedOf": "{{evaluated}} von {{total}} bewertet",
       "copyLink": "Einladungslink kopieren",
       "emailLabel": "E-Mail",
+      "positionLabel": "Position",
+      "jdLabel": "Stellenbeschreibung",
       "typeLabel": "Typ",
+      "invitedAt": "Eingeladen",
+      "completedAt": "Abgeschlossen",
       "startedLabel": "Beginn",
       "completedLabel": "Ende",
       "durationLabel": "Dauer",
@@ -1914,7 +1918,12 @@
       "viewGoHireEvaluation": "GoHire-Bewertung anzeigen",
       "syncingGoHireData": "Interviewdaten werden synchronisiert...",
       "goHireInterviewNotReady": "Das Interview ist auf GoHire noch nicht abgeschlossen",
-      "goHireSyncFailed": "Synchronisierung der Interviewdaten fehlgeschlagen"
+      "goHireSyncFailed": "Synchronisierung der Interviewdaten fehlgeschlagen",
+      "searchPlaceholder": "Suche nach Name, E-Mail oder Stelle...",
+      "sortBy": "Sortieren",
+      "sortInviteTime": "Einladungszeit",
+      "sortCompletedTime": "Abgeschlossen",
+      "sortName": "Name"
     },
     "videoInterview": {
       "title": "Video-Interview",
@@ -2886,6 +2895,7 @@
           "expired": "Abgelaufen"
         },
         "viewResult": "Ergebnis anzeigen",
+        "viewInterview": "Interview und Bewertung ansehen",
         "resendEmail": "E-Mail erneut senden",
         "resending": "Wird gesendet...",
         "resendSuccess": "Einladung erfolgreich erneut gesendet!",
@@ -2916,6 +2926,8 @@
       "reanalyze": "Eignung neu analysieren",
       "inviteInterview": "Zum Interview einladen",
       "alreadyInvited": "Eingeladen am {{date}}",
+      "interviewCompleted": "Interview abgeschlossen",
+      "viewInterview": "Interview ansehen",
       "score": "Bewertung",
       "bestFit": "Beste Eignung",
       "matchedSkills": "Übereinstimmende Fähigkeiten",
@@ -3631,7 +3643,8 @@
       "of": "von",
       "results": "Ergebnisse",
       "prev": "Zurück",
-      "next": "Weiter"
+      "next": "Weiter",
+      "pageOf": "Seite {{page}} von {{total}}"
     },
     "import": {
       "button": "CSV importieren",

@@ -2251,7 +2251,11 @@
       "evaluatedOf": "{{evaluated}} of {{total}} evaluated",
       "copyLink": "Copy invite link",
       "emailLabel": "Email",
+      "positionLabel": "Position",
+      "jdLabel": "JD",
       "typeLabel": "Type",
+      "invitedAt": "Invited",
+      "completedAt": "Completed",
       "startedLabel": "Started",
       "completedLabel": "Ended",
       "durationLabel": "Duration",
@@ -2259,7 +2263,12 @@
       "viewGoHireEvaluation": "View GoHire Evaluation",
       "syncingGoHireData": "Syncing interview data...",
       "goHireInterviewNotReady": "Interview not yet completed on GoHire",
-      "goHireSyncFailed": "Failed to sync interview data"
+      "goHireSyncFailed": "Failed to sync interview data",
+      "searchPlaceholder": "Search by name, email or job title...",
+      "sortBy": "Sort",
+      "sortInviteTime": "Invite Time",
+      "sortCompletedTime": "Completed",
+      "sortName": "Name"
     },
     "videoInterview": {
       "title": "Video Interview",
@@ -3325,6 +3334,7 @@
           "expired": "Expired"
         },
         "viewResult": "View Result",
+        "viewInterview": "View Interview & Evaluation",
         "resendEmail": "Resend Email",
         "resending": "Sending...",
         "resendSuccess": "Invitation resent successfully!",
@@ -3355,6 +3365,8 @@
       "reanalyze": "Re-analyze job fit",
       "inviteInterview": "Invite to Interview",
       "alreadyInvited": "Invited on {{date}}",
+      "interviewCompleted": "Interview completed",
+      "viewInterview": "View Interview",
       "score": "Score",
       "bestFit": "Best Fit",
       "matchedSkills": "Matched Skills",
@@ -4070,7 +4082,8 @@
       "of": "of",
       "results": "results",
       "prev": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
     },
     "import": {
       "button": "Import CSV",

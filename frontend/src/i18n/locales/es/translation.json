@@ -1907,7 +1907,11 @@
       "evaluatedOf": "{{evaluated}} de {{total}} evaluadas",
       "copyLink": "Copiar enlace de invitación",
       "emailLabel": "Email",
+      "positionLabel": "Puesto",
+      "jdLabel": "Descripción del puesto",
       "typeLabel": "Tipo",
+      "invitedAt": "Invitado",
+      "completedAt": "Completado",
       "startedLabel": "Inicio",
       "completedLabel": "Fin",
       "durationLabel": "Duración",
@@ -1915,7 +1919,12 @@
       "viewGoHireEvaluation": "Ver evaluación GoHire",
       "syncingGoHireData": "Sincronizando datos de entrevista...",
       "goHireInterviewNotReady": "La entrevista aún no se ha completado en GoHire",
-      "goHireSyncFailed": "Error al sincronizar los datos de la entrevista"
+      "goHireSyncFailed": "Error al sincronizar los datos de la entrevista",
+      "searchPlaceholder": "Buscar por nombre, email o puesto...",
+      "sortBy": "Ordenar",
+      "sortInviteTime": "Fecha de invitación",
+      "sortCompletedTime": "Completado",
+      "sortName": "Nombre"
     },
     "videoInterview": {
       "title": "Entrevista en Video",
@@ -2887,6 +2896,7 @@
           "expired": "Expirada"
         },
         "viewResult": "Ver resultado",
+        "viewInterview": "Ver entrevista y evaluación",
         "resendEmail": "Reenviar correo",
         "resending": "Enviando...",
         "resendSuccess": "¡Invitación reenviada exitosamente!",
@@ -2917,6 +2927,8 @@
       "reanalyze": "Reanalizar ajuste",
       "inviteInterview": "Invitar a entrevista",
       "alreadyInvited": "Invitado el {{date}}",
+      "interviewCompleted": "Entrevista completada",
+      "viewInterview": "Ver entrevista",
       "score": "Puntuación",
       "bestFit": "Mejor Ajuste",
       "matchedSkills": "Habilidades Coincidentes",
@@ -3632,7 +3644,8 @@
       "of": "de",
       "results": "resultados",
       "prev": "Anterior",
-      "next": "Siguiente"
+      "next": "Siguiente",
+      "pageOf": "Página {{page}} de {{total}}"
     },
     "import": {
       "button": "Importar CSV",

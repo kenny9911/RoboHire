@@ -7,7 +7,7 @@ import { generateRequestId, logger } from '../services/LoggerService.js';
 import { EvaluationAgent } from '../agents/EvaluationAgent.js';
 import { liveKitService } from '../services/LiveKitService.js';
 import { interviewPromptAgent } from '../agents/InterviewPromptAgent.js';
-import { getVisibilityScope, buildUserIdFilter } from '../lib/teamVisibility.js';
+import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 import { getPreferredResumeEmail } from '../utils/resumeContact.js';
 import '../types/auth.js';
 
@@ -1114,21 +1114,43 @@ async function findInterviewForJoin(joinCode: string) {
  */
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const { status, page = '1', limit = '20' } = req.query;
+    const { status, page = '1', limit = '20', filterUserId, filterTeamId, sort, sortDir, search } = req.query;
 
     const scope = await getVisibilityScope(req.user!);
-    const where: any = { ...buildUserIdFilter(scope) };
+    const userFilter = await buildAdminOverrideFilter(
+      scope,
+      typeof filterUserId === 'string' ? filterUserId : undefined,
+      typeof filterTeamId === 'string' ? filterTeamId : undefined,
+    );
+    const where: any = { ...userFilter };
     if (status && typeof status === 'string') {
       where.status = status;
     }
+    if (search && typeof search === 'string' && search.trim()) {
+      const term = search.trim();
+      where.OR = [
+        { candidateName: { contains: term, mode: 'insensitive' } },
+        { candidateEmail: { contains: term, mode: 'insensitive' } },
+        { jobTitle: { contains: term, mode: 'insensitive' } },
+      ];
+    }
+
+    const ALLOWED_SORT_FIELDS: Record<string, string> = {
+      scheduledAt: 'scheduledAt',
+      completedAt: 'completedAt',
+      candidateName: 'candidateName',
+      createdAt: 'createdAt',
+    };
+    const sortField = ALLOWED_SORT_FIELDS[typeof sort === 'string' ? sort : ''] || 'createdAt';
+    const direction = sortDir === 'asc' ? 'asc' : 'desc';
 
     const pageNum = Math.max(1, parseInt(page as string, 10));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit as string, 10)));
+    const limitNum = Math.min(200, Math.max(1, parseInt(limit as string, 10)));
 
     const [interviews, total] = await Promise.all([
       prisma.interview.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortField]: direction },
         skip: (pageNum - 1) * limitNum,
         take: limitNum,
         include: {
