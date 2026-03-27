@@ -1,0 +1,7 @@
+node_modules
+dist
+logs
+storage
+*.log
+.env
+.env.*

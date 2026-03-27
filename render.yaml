@@ -8,12 +8,11 @@ services:
   # ── Backend (Express API) ──────────────────────────────────────────
   - type: web
     name: robohire-api
-    runtime: node
+    runtime: docker
     region: ohio
     plan: starter
     rootDir: backend
-    buildCommand: apt-get update && apt-get install -y poppler-utils && npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run build
-    startCommand: node dist/index.js
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: NODE_ENV
         value: production
