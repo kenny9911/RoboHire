@@ -636,7 +636,6 @@ async function runInterview(ctx: JobContext) {
       preemptiveGeneration: resolvedConfig.preemptiveGeneration,
       minEndpointingDelay: resolvedConfig.minEndpointingDelayMs,
       maxEndpointingDelay: resolvedConfig.maxEndpointingDelayMs,
-      aecWarmupDuration: resolvedConfig.aecWarmupDurationMs,
       useTtsAlignedTranscript: resolvedConfig.useTtsAlignedTranscript,
     },
   });
