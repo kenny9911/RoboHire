@@ -636,8 +636,7 @@ async function runInterview(ctx: JobContext) {
       preemptiveGeneration: resolvedConfig.preemptiveGeneration,
       minEndpointingDelay: resolvedConfig.minEndpointingDelayMs,
       maxEndpointingDelay: resolvedConfig.maxEndpointingDelayMs,
-      useTtsAlignedTranscript: resolvedConfig.useTtsAlignedTranscript,
-    },
+    } as Record<string, unknown>,
   });
 
   session.on(voice.AgentSessionEventTypes.UserInputTranscribed, (ev) => {
