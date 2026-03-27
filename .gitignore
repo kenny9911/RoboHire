@@ -20,6 +20,9 @@ logs/
 # Parsed documents cache
 parsed-documents/
 
+# Local storage (uploaded resumes, etc.)
+backend/storage/
+
 # IDE
 .vscode/
 .idea/
@@ -39,3 +42,4 @@ pricing.md
 
 tmp/*.*
 temp/*.*
+tmp/pdfs
