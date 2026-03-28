@@ -35,6 +35,11 @@ import {
   IconCheck,
   IconSend,
   IconSchool,
+  IconBuildingSkyscraper,
+  IconCertificate,
+  IconSparkles,
+  IconCoin,
+  IconHome,
 } from '@tabler/icons-react';
 
 // Country/region list for filter dropdown — covers major hiring markets
@@ -179,6 +184,11 @@ type EnrichedResume = Resume & {
   _bestFitTitle: string | null;
   _experienceValue: number | null;
   _eliteSchool: string | null;
+  _degree: { label: string; field: string | null; institution: string | null } | null;
+  _currentCompany: string | null;
+  _isNew: boolean;
+  _salaryDisplay: string | null;
+  _workType: string | null;
 };
 
 // ── Notable companies for "Ex-XXX" tags ──
@@ -625,6 +635,70 @@ function getEliteSchool(parsedData: Resume['parsedData']): string | null {
   return null;
 }
 
+// ── Degree level detection ──
+const DEGREE_LEVELS: Array<{ level: number; label: string; keywords: string[] }> = [
+  { level: 4, label: 'PhD', keywords: ['phd', 'ph.d', 'doctor', '博士'] },
+  { level: 3, label: 'MBA', keywords: ['mba', 'm.b.a'] },
+  { level: 3, label: 'Master', keywords: ['master', 'ms', 'm.s.', 'm.eng', 'msc', '硕士', '研究生'] },
+  { level: 2, label: 'Bachelor', keywords: ['bachelor', 'bs', 'b.s.', 'b.eng', 'bsc', 'ba', 'b.a.', '本科', '学士'] },
+];
+
+function getHighestDegree(parsedData: Resume['parsedData']): { label: string; field: string | null; institution: string | null } | null {
+  if (!parsedData?.education || parsedData.education.length === 0) return null;
+
+  let best: { level: number; label: string; field: string | null; institution: string | null } | null = null;
+
+  for (const edu of parsedData.education) {
+    const degreeStr = (edu.degree || '').toLowerCase();
+    const instStr = edu.institution || null;
+    const fieldStr = edu.field || null;
+
+    for (const dl of DEGREE_LEVELS) {
+      if (dl.keywords.some(kw => degreeStr.includes(kw))) {
+        if (!best || dl.level > best.level) {
+          best = { level: dl.level, label: dl.label, field: fieldStr, institution: instStr };
+        }
+        break;
+      }
+    }
+  }
+
+  return best ? { label: best.label, field: best.field, institution: best.institution } : null;
+}
+
+function getCurrentCompany(parsedData: Resume['parsedData']): string | null {
+  if (!parsedData?.experience || parsedData.experience.length === 0) return null;
+  const latest = parsedData.experience[0];
+  if (!latest.company) return null;
+  const endDate = (latest.endDate || '').toLowerCase();
+  const isCurrent = !endDate || PRESENT_RE.test(endDate);
+  return isCurrent ? latest.company : null;
+}
+
+function isNewCandidate(createdAt: string): boolean {
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays <= 7;
+}
+
+function getSalaryDisplay(preferences: CandidatePreferences | null): string | null {
+  if (!preferences) return null;
+  const min = preferences.salaryMin?.toString().trim();
+  const max = preferences.salaryMax?.toString().trim();
+  if (!min && !max) return null;
+  if (min && max) return `${min}-${max}`;
+  if (min) return `${min}+`;
+  return `≤${max}`;
+}
+
+function getPreferredWorkType(preferences: CandidatePreferences | null): string | null {
+  if (!preferences?.workType) return null;
+  const types = Array.isArray(preferences.workType) ? preferences.workType : [preferences.workType];
+  const filtered = types.filter((t): t is string => typeof t === 'string' && t.trim().length > 0);
+  return filtered.length > 0 ? filtered[0] : null;
+}
+
 function getIndustryTags(parsedData: Resume['parsedData']): string[] {
   if (!parsedData?.experience) return [];
   const text = parsedData.experience
@@ -718,10 +792,29 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
               )}
 
               <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                {resume._isNew && (
+                  <span className="inline-flex items-center rounded bg-green-50 px-2 py-0.5 font-semibold text-green-700 border border-green-200">
+                    <IconSparkles size={11} stroke={2} className="mr-0.5 shrink-0" />
+                    {t('product.talent.badgeNew', 'New')}
+                  </span>
+                )}
                 {resume._eliteSchool && (
                   <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-700 border border-amber-200">
                     <IconSchool size={12} stroke={1.8} className="mr-1 shrink-0" />
                     {resume._eliteSchool}
+                    {resume._degree && <span className="ml-1 font-medium text-amber-600">· {resume._degree.label}</span>}
+                  </span>
+                )}
+                {!resume._eliteSchool && resume._degree && (resume._degree.label === 'PhD' || resume._degree.label === 'MBA' || resume._degree.label === 'Master') && (
+                  <span className="inline-flex items-center rounded bg-violet-50 px-2 py-0.5 font-semibold text-violet-700 border border-violet-200">
+                    <IconCertificate size={12} stroke={1.8} className="mr-1 shrink-0" />
+                    {resume._degree.label}{resume._degree.field ? ` · ${resume._degree.field}` : ''}
+                  </span>
+                )}
+                {resume._currentCompany && (
+                  <span className="inline-flex items-center rounded bg-blue-50 px-2 py-0.5 font-semibold text-blue-700 border border-blue-100">
+                    <IconBuildingSkyscraper size={12} stroke={1.8} className="mr-1 shrink-0" />
+                    @ {resume._currentCompany}
                   </span>
                 )}
                 {resume._experienceValue !== null && (
@@ -734,11 +827,23 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
                     {resume._location}
                   </span>
                 )}
-                {resume._notableCompanies.map((company) => (
+                {resume._notableCompanies.filter(c => c !== resume._currentCompany).map((company) => (
                   <span key={company} className="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
                     Ex-{company}
                   </span>
                 ))}
+                {resume._salaryDisplay && (
+                  <span className="inline-flex items-center rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700 border border-emerald-200">
+                    <IconCoin size={11} stroke={1.8} className="mr-0.5 shrink-0" />
+                    {resume._salaryDisplay}
+                  </span>
+                )}
+                {resume._workType && (
+                  <span className="inline-flex items-center rounded bg-sky-50 px-2 py-0.5 font-medium text-sky-700">
+                    <IconHome size={11} stroke={1.8} className="mr-0.5 shrink-0" />
+                    {t(`product.talent.preferences.workTypes.${resume._workType}`, resume._workType)}
+                  </span>
+                )}
                 {resume._languages.slice(0, 2).map((entry) => (
                   <span key={`${entry.language}-${entry.proficiency || ''}`} className="rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
                     {entry.language}
@@ -849,6 +954,12 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
           <span className="text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
             {resume.name}
           </span>
+          {resume._isNew && (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 border border-green-200">
+              <IconSparkles size={10} stroke={2} className="mr-0.5" />
+              {t('product.talent.badgeNew', 'New')}
+            </span>
+          )}
           {resume._parseWarning && (
             <span className="inline-flex shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
               {t('product.talent.parseWarning', 'Needs review')}
@@ -860,9 +971,22 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
             </span>
           )}
         </div>
-        {resume.currentRole && (
-          <p className="text-sm text-slate-600 truncate">{resume.currentRole}</p>
-        )}
+        <div className="flex items-center gap-1.5 mt-0.5">
+          {resume.currentRole && (
+            <p className="text-sm text-slate-600 truncate">{resume.currentRole}</p>
+          )}
+          {resume._eliteSchool && (
+            <span className="inline-flex shrink-0 items-center rounded bg-amber-50 px-1.5 py-0 text-[10px] font-semibold text-amber-700 border border-amber-200">
+              <IconSchool size={10} stroke={1.8} className="mr-0.5" />
+              {resume._eliteSchool}
+            </span>
+          )}
+          {!resume._eliteSchool && resume._degree && (resume._degree.label === 'PhD' || resume._degree.label === 'MBA') && (
+            <span className="inline-flex shrink-0 items-center rounded bg-violet-50 px-1.5 py-0 text-[10px] font-semibold text-violet-700 border border-violet-200">
+              {resume._degree.label}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="hidden xl:block min-w-0 flex-1">
@@ -912,7 +1036,12 @@ const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferen
       </div>
 
       <div className="hidden lg:flex gap-1.5 shrink-0 max-w-[200px] flex-wrap">
-        {resume._notableCompanies.map((company) => (
+        {resume._currentCompany && (
+          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 border border-blue-100">
+            @ {resume._currentCompany}
+          </span>
+        )}
+        {resume._notableCompanies.filter(c => c !== resume._currentCompany).map((company) => (
           <span key={company} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
             Ex-{company}
           </span>
@@ -1303,6 +1432,11 @@ export default function TalentHub() {
         _bestFitTitle: primaryFit?.hiringRequest?.title?.trim() || null,
         _experienceValue: getExperienceValue(resume, workExp),
         _eliteSchool: getEliteSchool(resume.parsedData),
+        _degree: getHighestDegree(resume.parsedData),
+        _currentCompany: getCurrentCompany(resume.parsedData),
+        _isNew: isNewCandidate(resume.createdAt),
+        _salaryDisplay: getSalaryDisplay(resume.preferences),
+        _workType: getPreferredWorkType(resume.preferences),
       };
     });
   }, [resumes]);

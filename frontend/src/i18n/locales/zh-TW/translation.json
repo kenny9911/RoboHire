@@ -2830,6 +2830,7 @@
       "inviteToInterview": "邀請",
       "invited": "已邀請",
       "parseWarning": "需要複核",
+      "badgeNew": "新",
       "parseWarningDesc": "這份履歷的解析結果不夠可靠。請在配對或邀請前先查看原始檔案。",
       "aiSummary": "AI 摘要",
       "copySummary": "複製摘要",

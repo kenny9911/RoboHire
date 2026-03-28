@@ -2343,6 +2343,7 @@
       "inviteToInterview": "Inviter",
       "invited": "Invité",
       "parseWarning": "À vérifier",
+      "badgeNew": "Nouveau",
       "parseWarningDesc": "Ce CV n’a pas été analysé de manière fiable. Vérifiez le fichier original avant de l’associer ou d’envoyer une invitation.",
       "aiSummary": "Résumé IA",
       "copySummary": "Copier le résumé",

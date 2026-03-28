@@ -132,7 +132,49 @@ export class PDFService {
       return true;
     }
 
+    // Multi-token: line is composed of space-separated hash-like tokens
+    // e.g. "a744c9d5f407585e1HZ-0t-... a744c9d5f407585e1HZ-0t-..."
+    if (spaces > 0 && trimmed.length > 40) {
+      const tokens = trimmed.split(/\s+/);
+      if (tokens.length <= 6 && tokens.every(t => /^[A-Za-z0-9+/=_-]{15,}$/.test(t))) {
+        return true;
+      }
+    }
+
     return false;
+  }
+
+  /**
+   * Find repeated long alphanumeric tokens that appear 3+ times — these are almost
+   * certainly watermarks / tracking codes. Returns the set of such tokens so callers
+   * can strip every occurrence (including fragments scattered by layout extraction).
+   */
+  private findWatermarkTokens(text: string): Set<string> {
+    // Match tokens of 20+ chars composed of alphanumerics, hyphens, underscores
+    const longTokens = text.match(/[A-Za-z0-9_-]{20,}/g) || [];
+    const freq = new Map<string, number>();
+    for (const token of longTokens) {
+      freq.set(token, (freq.get(token) || 0) + 1);
+    }
+    const watermarks = new Set<string>();
+    for (const [token, count] of freq) {
+      if (count >= 3 && this.isHashLikeGarbage(token)) {
+        watermarks.add(token);
+      }
+    }
+    return watermarks;
+  }
+
+  /**
+   * Strip all occurrences of known watermark tokens from text, including when
+   * they appear as part of a longer string or on a line with other content.
+   */
+  private stripWatermarks(text: string, watermarks: Set<string>): string {
+    if (watermarks.size === 0) return text;
+    // Build a regex that matches any of the watermark strings
+    const escaped = [...watermarks].map(w => w.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'));
+    const re = new RegExp(`\\s*(?:${escaped.join('|')})\\s*`, 'g');
+    return text.replace(re, ' ');
   }
 
   /**
@@ -140,6 +182,12 @@ export class PDFService {
    */
   private cleanText(text: string): string {
     let cleaned = text;
+
+    // Strip repeated watermark tokens before any other processing
+    const watermarks = this.findWatermarkTokens(cleaned);
+    if (watermarks.size > 0) {
+      cleaned = this.stripWatermarks(cleaned, watermarks);
+    }
 
     const cjkPattern = '\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\uac00-\ud7af';
 
@@ -248,12 +296,19 @@ export class PDFService {
           return;
         }
 
+        // Strip repeated watermark tokens before line-level cleanup
+        const watermarks = this.findWatermarkTokens(stdout);
+        let preClean = stdout;
+        if (watermarks.size > 0) {
+          preClean = this.stripWatermarks(stdout, watermarks);
+        }
+
         // Clean watermark noise — short alphanumeric-only fragments scattered
         // by -layout mode from watermark/tracking strings like
         // "6e72aef5715f42b81HZ709S6FFRUxYW-UfOZWOeqmP7VNxNg"
         const isAlnumToken = (s: string) => /^[A-Za-z0-9+/=_-]+$/.test(s);
 
-        const cleaned = stdout
+        const cleaned = preClean
           .split('\n')
           .filter(line => {
             const trimmed = line.trim();

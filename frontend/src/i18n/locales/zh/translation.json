@@ -2844,6 +2844,7 @@
       "inviteToInterview": "邀请",
       "invited": "已邀请",
       "parseWarning": "需要复核",
+      "badgeNew": "新",
       "parseWarningDesc": "这份简历解析结果不够可靠。请在匹配或邀请前先查看原始文件。",
       "aiSummary": "AI 摘要",
       "copySummary": "复制摘要",

@@ -2740,6 +2740,7 @@
       "inviteToInterview": "招待",
       "invited": "招待済み",
       "parseWarning": "要確認",
+      "badgeNew": "新着",
       "parseWarningDesc": "この履歴書は十分な精度で解析されていません。マッチングや招待の前に元のファイルを確認してください。",
       "aiSummary": "AI サマリー",
       "copySummary": "サマリーをコピー",

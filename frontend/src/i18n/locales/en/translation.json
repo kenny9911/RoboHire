@@ -2722,6 +2722,7 @@
       "inviteToInterview": "Invite",
       "invited": "Invited",
       "parseWarning": "Needs review",
+      "badgeNew": "New",
       "parseWarningDesc": "This resume was not parsed reliably. Review the original file before matching or inviting.",
       "aiSummary": "AI Summary",
       "copySummary": "Copy summary",

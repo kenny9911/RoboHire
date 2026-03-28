@@ -2342,6 +2342,7 @@
       "inviteToInterview": "Convidar",
       "invited": "Convidado",
       "parseWarning": "Precisa de revisão",
+      "badgeNew": "Novo",
       "parseWarningDesc": "Este currículo não foi analisado com confiabilidade. Revise o arquivo original antes de fazer match ou convidar.",
       "aiSummary": "Resumo IA",
       "copySummary": "Copiar resumo",
