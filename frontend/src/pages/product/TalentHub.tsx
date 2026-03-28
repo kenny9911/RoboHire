@@ -11,6 +11,8 @@ import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../compon
 import CandidatePreferencesModal, { type CandidatePreferences } from '../../components/CandidatePreferencesModal';
 import ApplyToJobModal from '../../components/ApplyToJobModal';
 import InterviewInviteModal from '../../components/InterviewInviteModal';
+import { HiOutlineDocumentText } from 'react-icons/hi2';
+import { PiPaperPlaneTiltBold, PiBriefcaseBold } from 'react-icons/pi';
 import {
   IconBriefcase,
   IconAdjustments,
@@ -751,8 +753,17 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
               </div>
             </div>
 
-            {/* Utility buttons */}
-            <div className="flex items-center gap-1 shrink-0">
+            {/* Action buttons */}
+            <div className="flex items-center gap-0.5 shrink-0">
+              <Link to={`/product/talent/${resume.id}`} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.viewProfile', 'View Full Profile')}>
+                <HiOutlineDocumentText size={16} />
+              </Link>
+              <button onClick={() => onInvite(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.inviteToInterview', 'Invite')}>
+                <PiPaperPlaneTiltBold size={15} />
+              </button>
+              <button onClick={() => onApply(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.applyToJob', 'Apply to Job')}>
+                <PiBriefcaseBold size={15} />
+              </button>
               <button onClick={() => onPreferences(resume)} className={`p-1.5 rounded-lg transition-colors ${hasPrefs ? 'text-blue-600 hover:bg-blue-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} title={t('product.talent.preferences.title', 'Preferences')}>
                 <IconAdjustments size={16} stroke={1.5} />
               </button>
@@ -811,29 +822,6 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
               )}
             </div>
 
-            <div className="flex flex-col gap-2 lg:w-[180px] shrink-0 justify-center">
-              <Link
-                to={`/product/talent/${resume.id}`}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
-              >
-                <IconExternalLink size={14} stroke={2} />
-                {t('product.talent.viewProfile', 'View Full Profile')}
-              </Link>
-              <button
-                onClick={() => onInvite(resume)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50"
-              >
-                <IconSend size={14} stroke={2} />
-                {t('product.talent.inviteToInterview', 'Invite')}
-              </button>
-              <button
-                onClick={() => onApply(resume)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
-              >
-                <IconBriefcase size={14} stroke={1.8} />
-                {t('product.talent.applyToJob', 'Apply to Job')}
-              </button>
-            </div>
           </div>
 
           {resume.notes && (

@@ -9,6 +9,7 @@ import { liveKitService } from '../services/LiveKitService.js';
 import { interviewPromptAgent } from '../agents/InterviewPromptAgent.js';
 import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 import { getPreferredResumeEmail } from '../utils/resumeContact.js';
+import { escapeHtml, emailService } from '../services/EmailService.js';
 import '../types/auth.js';
 
 const router = Router();
@@ -1192,6 +1193,108 @@ router.get('/', requireAuth, async (req, res) => {
   } catch (err: any) {
     logger.error('INTERVIEWS', 'Failed to list interviews', { error: err.message });
     res.status(500).json({ success: false, error: 'Failed to list interviews' });
+  }
+});
+
+/**
+ * POST /api/v1/interviews/send-reminders
+ * Send reminder emails to candidates whose interviews are overdue (>72h and still scheduled/in_progress)
+ */
+router.post('/send-reminders', requireAuth, async (req, res) => {
+  try {
+    const { interviewIds } = req.body as { interviewIds: string[] };
+    if (!Array.isArray(interviewIds) || interviewIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'interviewIds array is required' });
+    }
+
+    const scope = await getVisibilityScope(req.user!);
+    const userFilter = buildUserIdFilter(scope);
+
+    const interviews = await prisma.interview.findMany({
+      where: {
+        id: { in: interviewIds },
+        ...userFilter,
+        status: { in: ['scheduled', 'in_progress'] },
+      },
+      select: {
+        id: true,
+        candidateName: true,
+        candidateEmail: true,
+        jobTitle: true,
+        accessToken: true,
+        resumeId: true,
+        createdAt: true,
+      },
+    });
+
+    // Resolve emails from resume preferences if candidateEmail is missing
+    const resumeIds = interviews.filter(i => i.resumeId && !i.candidateEmail).map(i => i.resumeId!);
+    const resumes = resumeIds.length > 0
+      ? await prisma.resume.findMany({
+          where: { id: { in: resumeIds } },
+          select: { id: true, email: true, preferences: true },
+        })
+      : [];
+    const resumeById = new Map(resumes.map(r => [r.id, r]));
+
+    if (!emailService.isConfigured) {
+      return res.status(503).json({ success: false, error: 'Email service is not configured' });
+    }
+
+    const results: Array<{ interviewId: string; success: boolean; email?: string }> = [];
+
+    for (const interview of interviews) {
+      let email = interview.candidateEmail;
+      if (!email && interview.resumeId) {
+        const resume = resumeById.get(interview.resumeId);
+        email = getPreferredResumeEmail(resume || null) || null;
+      }
+      if (!email) {
+        results.push({ interviewId: interview.id, success: false });
+        continue;
+      }
+
+      const interviewUrl = interview.accessToken
+        ? `${process.env.FRONTEND_URL || process.env.BASE_URL || 'https://app.robohire.io'}/interview-room?token=${interview.accessToken}`
+        : null;
+
+      const sent = await emailService.send({
+        to: email,
+        subject: `Interview Reminder – ${interview.jobTitle || 'Your Interview'}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+            <h2 style="color: #1e293b; margin-bottom: 16px;">Interview Reminder</h2>
+            <p style="color: #475569; line-height: 1.6;">
+              Hi ${escapeHtml(interview.candidateName)},
+            </p>
+            <p style="color: #475569; line-height: 1.6;">
+              This is a friendly reminder that your AI interview${interview.jobTitle ? ` for <strong>${escapeHtml(interview.jobTitle)}</strong>` : ''} is still pending.
+              Please complete it at your earliest convenience.
+            </p>
+            ${interviewUrl ? `
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${interviewUrl}" style="display: inline-block; padding: 12px 28px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                  Start Interview
+                </a>
+              </div>
+            ` : ''}
+            <p style="color: #94a3b8; font-size: 13px; margin-top: 24px;">
+              – RoboHire Team
+            </p>
+          </div>
+        `,
+      });
+
+      results.push({ interviewId: interview.id, success: sent, email });
+    }
+
+    const sentCount = results.filter(r => r.success).length;
+    logger.info('INTERVIEWS', `Sent ${sentCount}/${results.length} reminder emails`, {});
+
+    res.json({ success: true, data: { sent: sentCount, total: results.length, results } });
+  } catch (err: any) {
+    logger.error('INTERVIEWS', 'Failed to send reminders', { error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to send reminders' });
   }
 });
 

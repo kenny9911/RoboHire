@@ -1916,6 +1916,17 @@
       "durationLabel": "Duração",
       "gradeLabel": "Nota",
       "evaluatedAtLabel": "Avaliado",
+      "searchPlaceholder": "Pesquisar por nome, cargo, email...",
+      "noResults": "Nenhuma entrevista encontrada.",
+      "pendingEval": "Pendente",
+      "col": {
+        "candidate": "Candidato",
+        "position": "Cargo",
+        "invitedAt": "Convidado",
+        "completedAt": "Concluído",
+        "status": "Status",
+        "evaluation": "Avaliação"
+      },
       "viewGoHireEvaluation": "Ver avaliação GoHire",
       "syncingGoHireData": "Sincronizando dados da entrevista...",
       "goHireInterviewNotReady": "A entrevista ainda não foi concluída no GoHire",
@@ -1924,7 +1935,17 @@
       "sortBy": "Ordenar",
       "sortInviteTime": "Data do convite",
       "sortCompletedTime": "Concluído",
-      "sortName": "Nome"
+      "sortName": "Nome",
+      "overdueTitle": "{{count}} candidato(s) não completaram a entrevista em mais de 72 horas",
+      "overdueDesc": "Envie um e-mail de lembrete para solicitar que completem a entrevista.",
+      "overdueShow": "Ver candidatos",
+      "overdueHide": "Ocultar lista",
+      "overdueSendAll": "Enviar lembretes",
+      "overdueSending": "Enviando...",
+      "overdueResultSuccess": "Enviados {{sent}} de {{total}} lembrete(s) com sucesso.",
+      "overdueResultFail": "Falha ao enviar lembretes. Os candidatos podem não ter e-mail cadastrado.",
+      "overdueDaysAgo": "há {{days}}d",
+      "overdueHoursAgo": "há {{hours}}h"
     },
     "videoInterview": {
       "title": "Entrevista em Vídeo",

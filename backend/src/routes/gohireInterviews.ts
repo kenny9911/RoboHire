@@ -252,6 +252,30 @@ router.post('/sync-from-invite', async (req, res) => {
       if (emailMatch) candidateEmail = emailMatch[1];
     }
 
+    // Fall back to the original Interview record's JD if GoHire API didn't return it
+    let fallbackJobDescription: string | null = null;
+    let fallbackJobTitle: string | null = null;
+    if (!jobInfo?.job_jd) {
+      const originalInterview = await prisma.interview.findFirst({
+        where: { gohireUserId: userId },
+        select: { jobDescription: true, jobTitle: true, hiringRequestId: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (originalInterview?.jobDescription) {
+        fallbackJobDescription = originalInterview.jobDescription;
+        fallbackJobTitle = originalInterview.jobTitle;
+      } else if (originalInterview?.hiringRequestId) {
+        const hr = await prisma.hiringRequest.findUnique({
+          where: { id: originalInterview.hiringRequestId },
+          select: { jobDescription: true, title: true },
+        });
+        if (hr?.jobDescription) {
+          fallbackJobDescription = hr.jobDescription;
+          fallbackJobTitle = hr.title || null;
+        }
+      }
+    }
+
     const created = await prisma.goHireInterview.create({
       data: {
         gohireUserId: userId,
@@ -262,8 +286,8 @@ router.post('/sync-from-invite', async (req, res) => {
         duration: durationMinutes,
         videoUrl: detailRecord.video_url || null,
         resumeUrl: detailRecord.resume_url || null,
-        jobTitle: jobInfo?.job_title || null,
-        jobDescription: jobInfo?.job_jd || null,
+        jobTitle: jobInfo?.job_title || fallbackJobTitle || null,
+        jobDescription: jobInfo?.job_jd || fallbackJobDescription || null,
         jobRequirements: jobInfo?.interview_requirements || null,
         transcript: segments.length > 0 ? JSON.stringify(segments) : null,
         evaluationData: evaluate ? (evaluate as any) : undefined,
@@ -1185,6 +1209,41 @@ router.get('/:id', async (req, res) => {
 
     if (!interview) {
       return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+
+    // Backfill JD from the original Interview record if missing
+    if (!interview.jobDescription && interview.gohireUserId) {
+      const originalInterview = await prisma.interview.findFirst({
+        where: { gohireUserId: interview.gohireUserId },
+        select: { jobDescription: true, jobTitle: true, hiringRequestId: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      let backfilledJd: string | null = null;
+      let backfilledTitle: string | null = null;
+      if (originalInterview?.jobDescription) {
+        backfilledJd = originalInterview.jobDescription;
+        backfilledTitle = originalInterview.jobTitle;
+      } else if (originalInterview?.hiringRequestId) {
+        const hr = await prisma.hiringRequest.findUnique({
+          where: { id: originalInterview.hiringRequestId },
+          select: { jobDescription: true, title: true },
+        });
+        if (hr?.jobDescription) {
+          backfilledJd = hr.jobDescription;
+          backfilledTitle = hr.title || null;
+        }
+      }
+      if (backfilledJd) {
+        await prisma.goHireInterview.update({
+          where: { id },
+          data: {
+            jobDescription: backfilledJd,
+            ...((!interview.jobTitle && backfilledTitle) ? { jobTitle: backfilledTitle } : {}),
+          },
+        });
+        interview.jobDescription = backfilledJd;
+        if (!interview.jobTitle && backfilledTitle) interview.jobTitle = backfilledTitle;
+      }
     }
 
     res.json({ success: true, data: interview });

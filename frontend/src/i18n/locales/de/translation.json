@@ -1916,6 +1916,17 @@
       "durationLabel": "Dauer",
       "gradeLabel": "Bewertung",
       "evaluatedAtLabel": "Bewertet",
+      "searchPlaceholder": "Nach Name, Position, E-Mail suchen...",
+      "noResults": "Keine Interviews gefunden.",
+      "pendingEval": "Ausstehend",
+      "col": {
+        "candidate": "Kandidat",
+        "position": "Position",
+        "invitedAt": "Eingeladen",
+        "completedAt": "Abgeschlossen",
+        "status": "Status",
+        "evaluation": "Bewertung"
+      },
       "viewGoHireEvaluation": "GoHire-Bewertung anzeigen",
       "syncingGoHireData": "Interviewdaten werden synchronisiert...",
       "goHireInterviewNotReady": "Das Interview ist auf GoHire noch nicht abgeschlossen",
@@ -1924,7 +1935,17 @@
       "sortBy": "Sortieren",
       "sortInviteTime": "Einladungszeit",
       "sortCompletedTime": "Abgeschlossen",
-      "sortName": "Name"
+      "sortName": "Name",
+      "overdueTitle": "{{count}} Kandidat(en) haben ihr Interview seit über 72 Stunden nicht abgeschlossen",
+      "overdueDesc": "Senden Sie eine Erinnerungsmail, um sie zur Durchführung des Interviews aufzufordern.",
+      "overdueShow": "Kandidaten anzeigen",
+      "overdueHide": "Liste ausblenden",
+      "overdueSendAll": "Erinnerungen senden",
+      "overdueSending": "Wird gesendet...",
+      "overdueResultSuccess": "{{sent}} von {{total}} Erinnerung(en) erfolgreich gesendet.",
+      "overdueResultFail": "Senden der Erinnerungen fehlgeschlagen. Kandidaten haben möglicherweise keine E-Mail-Adresse hinterlegt.",
+      "overdueDaysAgo": "vor {{days}}T",
+      "overdueHoursAgo": "vor {{hours}}Std"
     },
     "videoInterview": {
       "title": "Video-Interview",

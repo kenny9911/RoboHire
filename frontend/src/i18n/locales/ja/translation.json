@@ -2291,6 +2291,17 @@
       "durationLabel": "所要時間",
       "gradeLabel": "評価",
       "evaluatedAtLabel": "評価日時",
+      "searchPlaceholder": "候補者名、ポジション、メールで検索...",
+      "noResults": "検索条件に一致する面接がありません。",
+      "pendingEval": "評価待ち",
+      "col": {
+        "candidate": "候補者",
+        "position": "ポジション",
+        "invitedAt": "招待日時",
+        "completedAt": "完了日時",
+        "status": "ステータス",
+        "evaluation": "評価結果"
+      },
       "viewGoHireEvaluation": "GoHire 評価を表示",
       "syncingGoHireData": "面接データを同期中...",
       "goHireInterviewNotReady": "GoHireでの面接がまだ完了していません",
@@ -2299,7 +2310,17 @@
       "sortBy": "並べ替え",
       "sortInviteTime": "招待日時",
       "sortCompletedTime": "完了日時",
-      "sortName": "名前"
+      "sortName": "名前",
+      "overdueTitle": "{{count}} 名の候補者が72時間以上面接を完了していません",
+      "overdueDesc": "リマインダーメールを送信して、面接の完了を促しましょう。",
+      "overdueShow": "候補者を表示",
+      "overdueHide": "リストを非表示",
+      "overdueSendAll": "リマインダー送信",
+      "overdueSending": "送信中...",
+      "overdueResultSuccess": "{{total}} 件中 {{sent}} 件のリマインダーを送信しました。",
+      "overdueResultFail": "送信に失敗しました。候補者にメールアドレスが登録されていない可能性があります。",
+      "overdueDaysAgo": "{{days}}日前",
+      "overdueHoursAgo": "{{hours}}時間前"
     },
     "videoInterview": {
       "title": "ビデオ面接",

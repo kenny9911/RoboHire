@@ -2261,6 +2261,17 @@
       "durationLabel": "Duration",
       "gradeLabel": "Grade",
       "evaluatedAtLabel": "Evaluated",
+      "searchPlaceholder": "Search by name, position, email...",
+      "noResults": "No interviews match your search.",
+      "pendingEval": "Pending",
+      "col": {
+        "candidate": "Candidate",
+        "position": "Position",
+        "invitedAt": "Invited",
+        "completedAt": "Completed",
+        "status": "Status",
+        "evaluation": "Evaluation"
+      },
       "viewGoHireEvaluation": "View GoHire Evaluation",
       "syncingGoHireData": "Syncing interview data...",
       "goHireInterviewNotReady": "Interview not yet completed on GoHire",
@@ -2269,7 +2280,17 @@
       "sortBy": "Sort",
       "sortInviteTime": "Invite Time",
       "sortCompletedTime": "Completed",
-      "sortName": "Name"
+      "sortName": "Name",
+      "overdueTitle": "{{count}} candidate(s) have not completed their interview in over 72 hours",
+      "overdueDesc": "Send a reminder email to prompt them to complete the interview.",
+      "overdueShow": "View candidates",
+      "overdueHide": "Hide list",
+      "overdueSendAll": "Send Reminders",
+      "overdueSending": "Sending...",
+      "overdueResultSuccess": "Successfully sent {{sent}} of {{total}} reminder(s).",
+      "overdueResultFail": "Failed to send reminders. Candidates may not have email addresses on file.",
+      "overdueDaysAgo": "{{days}}d ago",
+      "overdueHoursAgo": "{{hours}}h ago"
     },
     "videoInterview": {
       "title": "Video Interview",

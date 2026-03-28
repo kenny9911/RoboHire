@@ -2383,6 +2383,17 @@
       "durationLabel": "时长",
       "gradeLabel": "评级",
       "evaluatedAtLabel": "评估时间",
+      "searchPlaceholder": "搜索候选人姓名、岗位、邮箱...",
+      "noResults": "没有匹配的面试记录。",
+      "pendingEval": "待评估",
+      "col": {
+        "candidate": "候选人",
+        "position": "岗位",
+        "invitedAt": "邀约时间",
+        "completedAt": "完成时间",
+        "status": "状态",
+        "evaluation": "评估结果"
+      },
       "viewGoHireEvaluation": "查看 GoHire 评估",
       "syncingGoHireData": "正在同步面试数据...",
       "goHireInterviewNotReady": "GoHire 上的面试尚未完成",
@@ -2391,7 +2402,17 @@
       "sortBy": "排序",
       "sortInviteTime": "邀约时间",
       "sortCompletedTime": "完成时间",
-      "sortName": "姓名"
+      "sortName": "姓名",
+      "overdueTitle": "{{count}} 位候选人超过 72 小时未完成面试",
+      "overdueDesc": "发送提醒邮件，提示候选人尽快完成面试。",
+      "overdueShow": "查看候选人",
+      "overdueHide": "收起列表",
+      "overdueSendAll": "发送提醒",
+      "overdueSending": "发送中...",
+      "overdueResultSuccess": "已成功发送 {{sent}} / {{total}} 封提醒邮件。",
+      "overdueResultFail": "发送失败，候选人可能没有邮箱地址。",
+      "overdueDaysAgo": "{{days}}天前",
+      "overdueHoursAgo": "{{hours}}小时前"
     },
     "videoInterview": {
       "title": "视频面试",

@@ -1917,6 +1917,17 @@
       "durationLabel": "Duración",
       "gradeLabel": "Calificación",
       "evaluatedAtLabel": "Evaluado",
+      "searchPlaceholder": "Buscar por nombre, puesto, correo...",
+      "noResults": "No se encontraron entrevistas.",
+      "pendingEval": "Pendiente",
+      "col": {
+        "candidate": "Candidato",
+        "position": "Puesto",
+        "invitedAt": "Invitado",
+        "completedAt": "Completado",
+        "status": "Estado",
+        "evaluation": "Evaluación"
+      },
       "viewGoHireEvaluation": "Ver evaluación GoHire",
       "syncingGoHireData": "Sincronizando datos de entrevista...",
       "goHireInterviewNotReady": "La entrevista aún no se ha completado en GoHire",
@@ -1925,7 +1936,17 @@
       "sortBy": "Ordenar",
       "sortInviteTime": "Fecha de invitación",
       "sortCompletedTime": "Completado",
-      "sortName": "Nombre"
+      "sortName": "Nombre",
+      "overdueTitle": "{{count}} candidato(s) no han completado su entrevista en más de 72 horas",
+      "overdueDesc": "Envía un correo recordatorio para que completen la entrevista.",
+      "overdueShow": "Ver candidatos",
+      "overdueHide": "Ocultar lista",
+      "overdueSendAll": "Enviar recordatorios",
+      "overdueSending": "Enviando...",
+      "overdueResultSuccess": "Se enviaron {{sent}} de {{total}} recordatorio(s) exitosamente.",
+      "overdueResultFail": "Error al enviar recordatorios. Los candidatos pueden no tener correo electrónico registrado.",
+      "overdueDaysAgo": "hace {{days}}d",
+      "overdueHoursAgo": "hace {{hours}}h"
     },
     "videoInterview": {
       "title": "Entrevista en Video",

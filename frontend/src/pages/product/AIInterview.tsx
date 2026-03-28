@@ -144,8 +144,12 @@ export default function AIInterview() {
   const [interviews, setInterviews] = usePageState<Interview[]>('interview.list', []);
   const [loading, setLoading] = useState(interviews.length > 0 ? false : true);
   const [statusFilter, setStatusFilter] = usePageState<string>('interview.statusFilter', '');
+  const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [evaluatingIds, setEvaluatingIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState<string>('createdAt');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   // Arrange interview state
   const [showArrange, setShowArrange] = useState(false);
@@ -168,16 +172,27 @@ export default function AIInterview() {
 
   const fetchInterviews = useCallback(async () => {
     try {
-      const params: Record<string, string | number> = { limit: 50 };
-      if (statusFilter) params.status = statusFilter;
-      const res = await axios.get('/api/v1/interviews', { params });
-      setInterviews(res.data.data || []);
+      const all: Interview[] = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const params: Record<string, string | number> = { limit: 200, page };
+        if (statusFilter) params.status = statusFilter;
+        if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
+        if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
+        const res = await axios.get('/api/v1/interviews', { params });
+        const data = res.data.data || [];
+        all.push(...data);
+        totalPages = res.data.meta?.totalPages || 1;
+        page++;
+      } while (page <= totalPages);
+      setInterviews(all);
     } catch {
       // silent
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, recruiterFilter]);
 
   useEffect(() => {
     fetchInterviews();
@@ -485,10 +500,81 @@ export default function AIInterview() {
   const sentCount = inviteResults.filter((r) => r.status === 'sent').length;
   const errorCount = inviteResults.filter((r) => r.status === 'error').length;
 
-  const interviewsByNewest = useMemo(
-    () => [...interviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [interviews]
-  );
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir(field === 'candidateName' || field === 'jobTitle' ? 'asc' : 'desc');
+    }
+  };
+
+  const filteredAndSorted = useMemo(() => {
+    let list = [...interviews];
+    // search
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter((i) =>
+        i.candidateName.toLowerCase().includes(q) ||
+        (i.jobTitle && i.jobTitle.toLowerCase().includes(q)) ||
+        (i.candidateEmail && i.candidateEmail.toLowerCase().includes(q))
+      );
+    }
+    // sort
+    list.sort((a, b) => {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      switch (sortField) {
+        case 'candidateName':
+          return dir * a.candidateName.localeCompare(b.candidateName);
+        case 'jobTitle':
+          return dir * (a.jobTitle || '').localeCompare(b.jobTitle || '');
+        case 'createdAt':
+          return dir * (new Date(a.scheduledAt || a.createdAt).getTime() - new Date(b.scheduledAt || b.createdAt).getTime());
+        case 'completedAt':
+          return dir * ((a.completedAt ? new Date(a.completedAt).getTime() : 0) - (b.completedAt ? new Date(b.completedAt).getTime() : 0));
+        case 'status':
+          return dir * a.status.localeCompare(b.status);
+        case 'evaluation': {
+          const sa = a.evaluation?.overallScore ?? -1;
+          const sb = b.evaluation?.overallScore ?? -1;
+          return dir * (sa - sb);
+        }
+        default:
+          return dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      }
+    });
+    return list;
+  }, [interviews, searchQuery, sortField, sortDir]);
+
+  // Overdue interviews: scheduled/in_progress for >72 hours
+  const OVERDUE_MS = 72 * 60 * 60 * 1000;
+  const overdueInterviews = useMemo(() => {
+    const now = Date.now();
+    return interviews.filter((i) =>
+      (i.status === 'scheduled' || i.status === 'in_progress') &&
+      now - new Date(i.scheduledAt || i.createdAt).getTime() > OVERDUE_MS
+    );
+  }, [interviews]);
+
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const [reminderResult, setReminderResult] = useState<{ sent: number; total: number } | null>(null);
+  const [showOverdueList, setShowOverdueList] = useState(false);
+
+  const handleSendReminders = async () => {
+    if (overdueInterviews.length === 0) return;
+    setSendingReminders(true);
+    setReminderResult(null);
+    try {
+      const res = await axios.post('/api/v1/interviews/send-reminders', {
+        interviewIds: overdueInterviews.map((i) => i.id),
+      });
+      setReminderResult({ sent: res.data.data?.sent || 0, total: res.data.data?.total || 0 });
+    } catch {
+      setReminderResult({ sent: 0, total: overdueInterviews.length });
+    } finally {
+      setSendingReminders(false);
+    }
+  };
 
   const statusCounts = useMemo(() => {
     return interviews.reduce<Record<string, number>>((acc, interview) => {
@@ -539,12 +625,14 @@ export default function AIInterview() {
   return (
     <div className="max-w-7xl mx-auto space-y-5">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">{t('product.interview.title', 'AI Interview')}</h2>
           <p className="mt-0.5 text-sm text-slate-500">{t('product.interview.subtitle', 'AI-powered interviews with automatic evaluation.')}</p>
         </div>
-        <button
+        <div className="flex items-center gap-3">
+          <RecruiterTeamFilter value={recruiterFilter} onChange={setRecruiterFilter} />
+          <button
           onClick={openArrange}
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
         >
@@ -553,6 +641,7 @@ export default function AIInterview() {
           </svg>
           {t('product.interview.arrangeInterview', 'Arrange Interview')}
         </button>
+        </div>
       </div>
 
       {/* ── Arrange Interview Modal ── */}
@@ -1011,6 +1100,102 @@ export default function AIInterview() {
         </div>
       )}
 
+      {/* ── Overdue Interview Reminders ── */}
+      {!loading && overdueInterviews.length > 0 && (
+        <div className="rounded-xl border border-orange-200 bg-orange-50/70 overflow-hidden">
+          <div className="flex items-center justify-between gap-4 px-5 py-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 shrink-0">
+                <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-orange-800">
+                  {t('product.interview.overdueTitle', '{{count}} candidate(s) have not completed their interview in over 72 hours', { count: overdueInterviews.length })}
+                </p>
+                <p className="text-xs text-orange-600 mt-0.5">
+                  {t('product.interview.overdueDesc', 'Send a reminder email to prompt them to complete the interview.')}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowOverdueList((v) => !v)}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-100 rounded-lg transition-colors"
+              >
+                {showOverdueList
+                  ? t('product.interview.overdueHide', 'Hide list')
+                  : t('product.interview.overdueShow', 'View candidates')}
+                <svg className={`w-3.5 h-3.5 transition-transform ${showOverdueList ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={handleSendReminders}
+                disabled={sendingReminders}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-orange-700 transition-colors disabled:opacity-50"
+              >
+                {sendingReminders ? (
+                  <>
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-white" />
+                    {t('product.interview.overdueSending', 'Sending...')}
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {t('product.interview.overdueSendAll', 'Send Reminders')}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Reminder result toast */}
+          {reminderResult && (
+            <div className={`mx-5 mb-3 rounded-lg px-3 py-2 text-xs font-medium ${
+              reminderResult.sent > 0
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {reminderResult.sent > 0
+                ? t('product.interview.overdueResultSuccess', 'Successfully sent {{sent}} of {{total}} reminder(s).', { sent: reminderResult.sent, total: reminderResult.total })
+                : t('product.interview.overdueResultFail', 'Failed to send reminders. Candidates may not have email addresses on file.')}
+            </div>
+          )}
+
+          {/* Expandable candidate list */}
+          {showOverdueList && (
+            <div className="border-t border-orange-200 divide-y divide-orange-100">
+              {overdueInterviews.map((interview) => {
+                const invitedAt = new Date(interview.scheduledAt || interview.createdAt);
+                const hoursAgo = Math.floor((Date.now() - invitedAt.getTime()) / (1000 * 60 * 60));
+                const daysAgo = Math.floor(hoursAgo / 24);
+                return (
+                  <div key={interview.id} className="flex items-center gap-4 px-5 py-2.5 text-sm">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 shrink-0">
+                      <span className="text-xs font-bold text-orange-600">{interview.candidateName[0]?.toUpperCase() || '?'}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-medium text-slate-900">{interview.candidateName}</span>
+                      {interview.candidateEmail && <span className="ml-2 text-xs text-slate-400">{interview.candidateEmail}</span>}
+                    </div>
+                    <div className="text-xs text-slate-500 truncate max-w-[160px]">{interview.jobTitle || '-'}</div>
+                    <div className="text-xs text-orange-600 font-medium shrink-0">
+                      {daysAgo > 0
+                        ? t('product.interview.overdueDaysAgo', '{{days}}d ago', { days: daysAgo })
+                        : t('product.interview.overdueHoursAgo', '{{hours}}h ago', { hours: hoursAgo })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Verdict Distribution (if there are evaluations) ── */}
       {!loading && evaluatedCount > 0 && (
         <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -1039,8 +1224,8 @@ export default function AIInterview() {
         </div>
       )}
 
-      {/* ── Status Filter Tabs + Interview List ── */}
-      <div className="flex items-center justify-between gap-4">
+      {/* ── Status Filter + Search ── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex gap-1.5 bg-slate-100 rounded-lg p-1">
           {statuses.map((s) => (
             <button
@@ -1057,12 +1242,29 @@ export default function AIInterview() {
             </button>
           ))}
         </div>
-        <span className="text-xs text-slate-400">
-          {t('product.interview.totalCount', '{{count}} total', { count: interviews.length })}
-        </span>
+        <div className="relative w-full sm:w-64">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('product.interview.searchPlaceholder', 'Search by name, position, email...')}
+            className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* ── Interview List ── */}
+      {/* ── Interview Table ── */}
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
@@ -1085,8 +1287,45 @@ export default function AIInterview() {
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white divide-y divide-slate-100 overflow-hidden">
-          {interviewsByNewest.map((interview) => {
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          {/* Table header */}
+          <div className="hidden md:grid md:grid-cols-12 gap-2 px-5 py-2.5 bg-slate-50 border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            {([
+              { field: 'candidateName', label: t('product.interview.col.candidate', 'Candidate'), span: 'col-span-2' },
+              { field: 'jobTitle', label: t('product.interview.col.position', 'Position'), span: 'col-span-2' },
+              { field: 'createdAt', label: t('product.interview.col.invitedAt', 'Invited'), span: 'col-span-2' },
+              { field: 'completedAt', label: t('product.interview.col.completedAt', 'Completed'), span: 'col-span-2' },
+              { field: 'status', label: t('product.interview.col.status', 'Status'), span: 'col-span-1' },
+              { field: 'evaluation', label: t('product.interview.col.evaluation', 'Evaluation'), span: 'col-span-2' },
+            ] as const).map((col) => (
+              <button
+                key={col.field}
+                onClick={() => toggleSort(col.field)}
+                className={`${col.span} flex items-center gap-1 hover:text-slate-700 transition-colors text-left`}
+              >
+                {col.label}
+                {sortField === col.field ? (
+                  <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={sortDir === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'} />
+                  </svg>
+                ) : (
+                  <svg className="w-3 h-3 shrink-0 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                )}
+              </button>
+            ))}
+            <span className="col-span-1" />
+          </div>
+
+          {/* Rows */}
+          {filteredAndSorted.length === 0 ? (
+            <div className="px-5 py-12 text-center text-sm text-slate-400">
+              {t('product.interview.noResults', 'No interviews match your search.')}
+            </div>
+          ) : (
+          <div className="divide-y divide-slate-100">
+          {filteredAndSorted.map((interview) => {
             const isExpanded = expandedId === interview.id;
             const isEvaluating = evaluatingIds.has(interview.id);
             const showAdminGoHireCall =
@@ -1095,77 +1334,88 @@ export default function AIInterview() {
 
             return (
               <div key={interview.id} className="group">
-                {/* Main row */}
+                {/* Table row */}
                 <div
-                  className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                  className="grid grid-cols-1 md:grid-cols-12 gap-2 px-5 py-3 hover:bg-slate-50/50 transition-colors cursor-pointer items-center"
                   onClick={() => setExpandedId(isExpanded ? null : interview.id)}
                 >
-                  {/* Avatar */}
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 ${
-                    interview.evaluation?.verdict && ['strong_hire', 'hire'].includes(interview.evaluation.verdict)
-                      ? 'bg-emerald-100'
-                      : interview.evaluation?.verdict === 'no_hire'
-                        ? 'bg-red-100'
-                        : 'bg-slate-100'
-                  }`}>
-                    <span className={`text-xs font-bold ${
+                  {/* Candidate */}
+                  <div className="md:col-span-2 flex items-center gap-2.5 min-w-0">
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 ${
                       interview.evaluation?.verdict && ['strong_hire', 'hire'].includes(interview.evaluation.verdict)
-                        ? 'text-emerald-600'
+                        ? 'bg-emerald-100'
                         : interview.evaluation?.verdict === 'no_hire'
-                          ? 'text-red-600'
-                          : 'text-slate-600'
+                          ? 'bg-red-100'
+                          : 'bg-slate-100'
                     }`}>
-                      {interview.candidateName[0]?.toUpperCase() || '?'}
+                      <span className={`text-xs font-bold ${
+                        interview.evaluation?.verdict && ['strong_hire', 'hire'].includes(interview.evaluation.verdict)
+                          ? 'text-emerald-600'
+                          : interview.evaluation?.verdict === 'no_hire'
+                            ? 'text-red-600'
+                            : 'text-slate-600'
+                      }`}>
+                        {interview.candidateName[0]?.toUpperCase() || '?'}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{interview.candidateName}</p>
+                      {interview.candidateEmail && (
+                        <p className="text-[11px] text-slate-400 truncate">{interview.candidateEmail}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Position */}
+                  <div className="md:col-span-2 min-w-0">
+                    <p className="text-sm text-slate-700 truncate">{interview.jobTitle || '-'}</p>
+                  </div>
+
+                  {/* Invited At */}
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-slate-500">{formatDateTimeLabel(interview.scheduledAt || interview.createdAt)}</p>
+                  </div>
+
+                  {/* Completed At */}
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-slate-500">
+                      {interview.completedAt ? formatDateTimeLabel(interview.completedAt) : '-'}
+                    </p>
+                  </div>
+
+                  {/* Status */}
+                  <div className="md:col-span-1">
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[interview.status] || STATUS_STYLES.scheduled}`}>
+                      {statusLabel(interview.status)}
                     </span>
                   </div>
 
-                  {/* Name + meta */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-slate-900">{interview.candidateName}</span>
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[interview.status] || STATUS_STYLES.scheduled}`}>
-                        {statusLabel(interview.status)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
-                      {interview.jobTitle && <span className="truncate max-w-[180px]">{interview.jobTitle}</span>}
-                      {interview.jobTitle && <span className="text-slate-300">·</span>}
-                      <span>{t('product.interview.invitedAt', 'Invited')}: {formatDateTimeLabel(interview.scheduledAt || interview.createdAt)}</span>
-                      {interview.status === 'completed' && interview.completedAt && (
-                        <>
-                          <span className="text-slate-300">·</span>
-                          <span>{t('product.interview.completedAt', 'Completed')}: {formatDateTimeLabel(interview.completedAt)}</span>
-                        </>
-                      )}
-                      {interview.duration && interview.duration > 0 && (
-                        <>
-                          <span className="text-slate-300">·</span>
-                          <span>{formatDuration(interview.duration)}</span>
-                        </>
-                      )}
-                    </div>
+                  {/* Evaluation */}
+                  <div className="md:col-span-2">
+                    {interview.evaluation?.verdict ? (
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-bold ${VERDICT_STYLES[interview.evaluation.verdict] || 'text-slate-600'}`}>
+                          {verdictLabel(interview.evaluation.verdict)}
+                        </span>
+                        {interview.evaluation.overallScore != null && (
+                          <span className={`text-sm font-bold ${
+                            interview.evaluation.overallScore >= 80 ? 'text-emerald-600' :
+                            interview.evaluation.overallScore >= 60 ? 'text-blue-600' :
+                            interview.evaluation.overallScore >= 40 ? 'text-amber-600' : 'text-red-600'
+                          }`}>
+                            {interview.evaluation.overallScore}
+                          </span>
+                        )}
+                      </div>
+                    ) : interview.status === 'completed' ? (
+                      <span className="text-[11px] text-amber-600 font-medium">{t('product.interview.pendingEval', 'Pending')}</span>
+                    ) : (
+                      <span className="text-xs text-slate-300">-</span>
+                    )}
                   </div>
 
-                  {/* Verdict + Score */}
-                  {interview.evaluation?.verdict && (
-                    <div className="text-right shrink-0 hidden sm:block">
-                      <span className={`text-xs font-bold ${VERDICT_STYLES[interview.evaluation.verdict] || 'text-slate-600'}`}>
-                        {verdictLabel(interview.evaluation.verdict)}
-                      </span>
-                      {interview.evaluation.overallScore != null && (
-                        <div className={`text-lg font-bold leading-none mt-0.5 ${
-                          interview.evaluation.overallScore >= 80 ? 'text-emerald-600' :
-                          interview.evaluation.overallScore >= 60 ? 'text-blue-600' :
-                          interview.evaluation.overallScore >= 40 ? 'text-amber-600' : 'text-red-600'
-                        }`}>
-                          {interview.evaluation.overallScore}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="md:col-span-1 flex items-center justify-end gap-1">
                     {interview.status === 'completed' && !interview.evaluation && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleEvaluate(interview.id); }}
@@ -1182,41 +1432,6 @@ export default function AIInterview() {
                         )}
                       </button>
                     )}
-
-                    {(interview.recordingViewUrl || interview.recordingUrl) && (
-                      <a
-                        href={interview.recordingViewUrl || interview.recordingUrl || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        title={t('product.interview.viewRecording', 'View Recording')}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </a>
-                    )}
-
-                    {interview.accessToken && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); copyToClipboard(getInviteLink(interview.accessToken!), `link-${interview.id}`); }}
-                        title={copiedId === `link-${interview.id}` ? t('common.copied', 'Copied!') : t('product.interview.copyLink', 'Copy invite link')}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                      >
-                        {copiedId === `link-${interview.id}` ? (
-                          <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                          </svg>
-                        )}
-                      </button>
-                    )}
-
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(interview.id); }}
                       title={t('common.delete', 'Delete')}
@@ -1226,8 +1441,6 @@ export default function AIInterview() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
-
-                    {/* Expand chevron */}
                     <svg className={`w-4 h-4 text-slate-300 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -1425,6 +1638,8 @@ export default function AIInterview() {
               </div>
             );
           })}
+          </div>
+          )}
         </div>
       )}
 
