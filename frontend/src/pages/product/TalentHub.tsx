@@ -10,11 +10,7 @@ import ResumeUploadModal from '../../components/ResumeUploadModal';
 import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
 import CandidatePreferencesModal, { type CandidatePreferences } from '../../components/CandidatePreferencesModal';
 import ApplyToJobModal from '../../components/ApplyToJobModal';
-<<<<<<< Updated upstream
 import InterviewInviteModal from '../../components/InterviewInviteModal';
-=======
-import { getPreferredResumeEmail } from '../../utils/resumeContact';
->>>>>>> Stashed changes
 import {
   IconBriefcase,
   IconAdjustments,
@@ -32,7 +28,6 @@ import {
   IconMailForward,
   IconCircleCheck,
   IconExternalLink,
-  IconEye,
   IconCopy,
   IconRefresh,
   IconCheck,
@@ -680,13 +675,7 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
-<<<<<<< Updated upstream
-      <div>
-        {/* Info column */}
-        <div className="min-w-0 flex-1">
-=======
       <div className="min-w-0">
->>>>>>> Stashed changes
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -764,18 +753,6 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
 
             {/* Utility buttons */}
             <div className="flex items-center gap-1 shrink-0">
-<<<<<<< Updated upstream
-              <Link to={`/product/talent/${resume.id}`} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.viewProfile', 'View Full Profile')}>
-                <IconEye size={16} stroke={1.5} />
-              </Link>
-              <button onClick={() => onInvite(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.inviteToInterview', 'Invite')}>
-                <IconSend size={16} stroke={1.5} />
-              </button>
-              <button onClick={() => onApply(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.applyToJob', 'Apply to Job')}>
-                <IconBriefcase size={16} stroke={1.5} />
-              </button>
-=======
->>>>>>> Stashed changes
               <button onClick={() => onPreferences(resume)} className={`p-1.5 rounded-lg transition-colors ${hasPrefs ? 'text-blue-600 hover:bg-blue-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} title={t('product.talent.preferences.title', 'Preferences')}>
                 <IconAdjustments size={16} stroke={1.5} />
               </button>
@@ -833,8 +810,6 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
                 </p>
               )}
             </div>
-<<<<<<< Updated upstream
-=======
 
             <div className="flex flex-col gap-2 lg:w-[180px] shrink-0 justify-center">
               <Link
@@ -859,7 +834,6 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
                 {t('product.talent.applyToJob', 'Apply to Job')}
               </button>
             </div>
->>>>>>> Stashed changes
           </div>
 
           {resume.notes && (
@@ -1073,10 +1047,6 @@ const PAGE_SIZE = 20;
 
 export default function TalentHub() {
   const { t } = useTranslation();
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
   const { user } = useAuth();
   const [resumes, setResumes] = usePageState<Resume[]>('talent.resumes', []);
   const [loading, setLoading] = useState(resumes.length > 0 ? false : true);
@@ -1111,16 +1081,6 @@ export default function TalentHub() {
   const [filterSkills, setFilterSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   const [stats, setStats] = useState<{ total: number; thisWeek: number; analyzed: number; matchedCount: number; interviewedCount: number } | null>(null);
-
-  // Invite modal state
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [inviteModalResume, setInviteModalResume] = useState<EnrichedResume | null>(null);
-  const [inviteJobs, setInviteJobs] = useState<Array<{ id: string; title: string; description: string | null; hiringRequestId?: string | null }>>([]);
-  const [inviteSelectedJobId, setInviteSelectedJobId] = useState('');
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteJobsLoading, setInviteJobsLoading] = useState(false);
-  const [inviteResult, setInviteResult] = useState<Record<string, unknown> | null>(null);
-  const [inviteError, setInviteError] = useState('');
 
   useEffect(() => {
     axios.get('/api/v1/jobs', { params: { limit: 200 } })
@@ -1282,70 +1242,11 @@ export default function TalentHub() {
     setApplyResume(resume);
   }, []);
 
-<<<<<<< Updated upstream
   const [inviteResume, setInviteResume] = useState<EnrichedResume | null>(null);
 
   const handleInvite = useCallback((resume: EnrichedResume) => {
     setInviteResume(resume);
   }, []);
-=======
-  const openInviteModal = useCallback(async (resume: EnrichedResume) => {
-    setInviteModalResume(resume);
-    setInviteModalOpen(true);
-    setInviteResult(null);
-    setInviteError('');
-    setInviteSelectedJobId('');
-    setInviteJobsLoading(true);
-    try {
-      const res = await axios.get('/api/v1/jobs', { params: { status: 'open', limit: 50 } });
-      const loadedJobs = (res.data.data || []).map((j: any) => ({ id: j.id, title: j.title, description: j.description, hiringRequestId: j.hiringRequestId || j.hiringRequest?.id || null }));
-      setInviteJobs(loadedJobs);
-      if (loadedJobs.length > 0) setInviteSelectedJobId(loadedJobs[0].id);
-    } catch {
-      setInviteJobs([]);
-    } finally {
-      setInviteJobsLoading(false);
-    }
-  }, []);
-
-  const handleInviteSubmit = useCallback(async () => {
-    if (!inviteModalResume || !inviteSelectedJobId) return;
-    const selectedJob = inviteJobs.find(j => j.id === inviteSelectedJobId);
-    if (!selectedJob) return;
-    setInviteLoading(true);
-    setInviteError('');
-    try {
-      // Fetch resumeText since EnrichedResume doesn't include it
-      const resumeRes = await axios.get(`/api/v1/resumes/${inviteModalResume.id}`);
-      const resumeText = resumeRes.data.data?.resumeText || '';
-      const candidateEmail = getPreferredResumeEmail(inviteModalResume) || undefined;
-
-      const res = await axios.post('/api/v1/invite-candidate', {
-        resume: resumeText,
-        jd: selectedJob.description || selectedJob.title,
-        candidate_email: candidateEmail,
-        recruiter_email: user?.email || undefined,
-        resume_id: inviteModalResume.id,
-        hiring_request_id: selectedJob.hiringRequestId || undefined,
-      });
-      if (res.data.success) {
-        setInviteResult(res.data.data);
-        // Refresh resumes to update interview status
-        fetchResumes(search || undefined, page);
-      } else {
-        setInviteError(res.data.error || 'Failed to send invitation');
-      }
-    } catch (err: any) {
-      setInviteError(err?.response?.data?.error || 'Failed to send invitation');
-    } finally {
-      setInviteLoading(false);
-    }
-  }, [inviteModalResume, inviteSelectedJobId, inviteJobs, user?.email, fetchResumes, search, page]);
-
-  const handleInvite = useCallback((resume: EnrichedResume) => {
-    openInviteModal(resume);
-  }, [openInviteModal]);
->>>>>>> Stashed changes
 
   const handleViewSummary = useCallback((resumeId: string, name: string, summary: string) => {
     setSummaryModal({ resumeId, name, summary });
@@ -2070,134 +1971,14 @@ export default function TalentHub() {
       )}
 
       {/* Invite Interview Modal */}
-      {inviteModalOpen && inviteModalResume && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {t('resumeLibrary.detail.invite.title', 'Invite to Interview')}
-              </h3>
-              <button
-                onClick={() => setInviteModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <IconX size={20} stroke={2} />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {/* Candidate info */}
-              <div className="rounded-xl bg-gray-50 p-4">
-                <p className="text-sm font-medium text-gray-900">{inviteModalResume.name}</p>
-                {inviteModalResume.currentRole && <p className="text-xs text-gray-500 mt-0.5">{inviteModalResume.currentRole}</p>}
-                {inviteModalResume.email && <p className="text-xs text-gray-500">{inviteModalResume.email}</p>}
-              </div>
-
-              {!inviteResult ? (
-                <>
-                  {/* Job selection */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      {t('resumeLibrary.detail.invite.selectJob', 'Select a job position')}
-                    </label>
-                    {inviteJobsLoading ? (
-                      <div className="flex items-center gap-2 py-3 text-sm text-gray-500">
-                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-indigo-600" />
-                        {t('resumeLibrary.detail.invite.loadingJobs', 'Loading jobs...')}
-                      </div>
-                    ) : inviteJobs.length === 0 ? (
-                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-                        {t('resumeLibrary.detail.invite.noJobs', 'No open jobs found. Please create and publish a job first.')}
-                      </div>
-                    ) : (
-                      <select
-                        value={inviteSelectedJobId}
-                        onChange={e => setInviteSelectedJobId(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                      >
-                        {inviteJobs.map(j => (
-                          <option key={j.id} value={j.id}>{j.title}</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-
-                  {inviteError && (
-                    <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">{inviteError}</div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex justify-end gap-3 pt-2">
-                    <button
-                      onClick={() => setInviteModalOpen(false)}
-                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      {t('resumeLibrary.detail.invite.cancel', 'Cancel')}
-                    </button>
-                    <button
-                      onClick={handleInviteSubmit}
-                      disabled={inviteLoading || !inviteSelectedJobId || inviteJobs.length === 0}
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors inline-flex items-center gap-2"
-                    >
-                      {inviteLoading && <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />}
-                      {inviteLoading
-                        ? t('resumeLibrary.detail.invite.sending', 'Sending...')
-                        : t('resumeLibrary.detail.invite.send', 'Send Invitation')}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                /* Success result */
-                <div className="space-y-4">
-                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <IconCircleCheck size={20} stroke={2} className="text-emerald-600" />
-                      <span className="text-sm font-semibold text-emerald-800">{t('resumeLibrary.detail.invite.success', 'Invitation sent successfully!')}</span>
-                    </div>
-                    {(inviteResult as any).job_title && (
-                      <p className="text-xs text-emerald-700">{t('resumeLibrary.detail.invite.position', 'Position')}: {(inviteResult as any).job_title}</p>
-                    )}
-                  </div>
-
-                  {(inviteResult as any).login_url && (
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">{t('resumeLibrary.detail.invite.interviewLink', 'Interview Link')}</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          readOnly
-                          value={(inviteResult as any).login_url}
-                          className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 font-mono"
-                        />
-                        <button
-                          onClick={() => { navigator.clipboard.writeText((inviteResult as any).login_url); }}
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"
-                        >
-                          {t('actions.copy', 'Copy')}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {(inviteResult as any).qrcode_url && (
-                    <div className="text-center">
-                      <p className="text-xs text-gray-500 mb-2">{t('resumeLibrary.detail.invite.qrCode', 'WeChat QR Code')}</p>
-                      <img src={(inviteResult as any).qrcode_url} alt="QR Code" className="w-32 h-32 mx-auto rounded-lg border border-gray-200" />
-                    </div>
-                  )}
-
-                  <div className="flex justify-end pt-2">
-                    <button
-                      onClick={() => setInviteModalOpen(false)}
-                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                    >
-                      {t('resumeLibrary.detail.invite.done', 'Done')}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {inviteResume && (
+        <InterviewInviteModal
+          resumeId={inviteResume.id}
+          candidateName={inviteResume.name}
+          candidateEmail={inviteResume.email}
+          onClose={() => setInviteResume(null)}
+          onSuccess={() => fetchResumes(search || undefined, page)}
+        />
       )}
 
       {/* AI Summary Modal */}

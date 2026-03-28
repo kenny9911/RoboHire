@@ -16,7 +16,7 @@ export default function InterviewInviteModal({ resumeId, candidateName, candidat
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const [jobs, setJobs] = useState<Array<{ id: string; title: string; description: string | null }>>([]);
+  const [jobs, setJobs] = useState<Array<{ id: string; title: string; description: string | null; hiringRequestId?: string | null }>>([]);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [jobsLoading, setJobsLoading] = useState(true);
   const [resumeText, setResumeText] = useState<string | null>(null);
@@ -30,7 +30,7 @@ export default function InterviewInviteModal({ resumeId, candidateName, candidat
     const fetchJobs = async () => {
       try {
         const res = await axios.get('/api/v1/jobs', { params: { status: 'open', limit: 50 } });
-        const list = (res.data.data || []).map((j: any) => ({ id: j.id, title: j.title, description: j.description }));
+        const list = (res.data.data || []).map((j: any) => ({ id: j.id, title: j.title, description: j.description, hiringRequestId: j.hiringRequestId || j.hiringRequest?.id || null }));
         setJobs(list);
         if (list.length > 0) setSelectedJobId(list[0].id);
       } catch {
@@ -68,6 +68,7 @@ export default function InterviewInviteModal({ resumeId, candidateName, candidat
         candidate_email: candidateEmail || undefined,
         recruiter_email: user?.email || undefined,
         resume_id: resumeId,
+        hiring_request_id: selectedJob.hiringRequestId || undefined,
       });
       if (res.data.success) {
         setResult(res.data.data);
