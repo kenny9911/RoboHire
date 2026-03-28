@@ -1322,7 +1322,7 @@ function InvitedCandidatesPanel({ hiringRequestId, t }: { hiringRequestId: strin
 
   const statusColors: Record<string, string> = {
     scheduled: 'bg-blue-100 text-blue-700',
-    in_progress: 'bg-amber-100 text-amber-700',
+    in_progress: 'bg-blue-100 text-blue-700',
     completed: 'bg-emerald-100 text-emerald-700',
     cancelled: 'bg-red-100 text-red-700',
     expired: 'bg-gray-100 text-gray-500',
@@ -1359,7 +1359,7 @@ function InvitedCandidatesPanel({ hiringRequestId, t }: { hiringRequestId: strin
               <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
                 statusColors[c.interview?.status || 'scheduled'] || 'bg-gray-100 text-gray-600'
               }`}>
-                {t(`dashboard.interviewStatus.${c.interview?.status || 'scheduled'}`, c.interview?.status || 'scheduled')}
+                {t(`dashboard.interviewStatus.${(c.interview?.status === 'in_progress' ? 'scheduled' : c.interview?.status) || 'scheduled'}`, c.interview?.status || 'scheduled')}
               </span>
             </div>
             <div className="md:col-span-3 text-sm text-slate-600">

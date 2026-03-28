@@ -281,7 +281,7 @@ export default function ResumeDetail() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [replaceUploadOpen, setReplaceUploadOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [inviteJobs, setInviteJobs] = useState<Array<{ id: string; title: string; description: string | null }>>([]);
+  const [inviteJobs, setInviteJobs] = useState<Array<{ id: string; title: string; description: string | null; hiringRequestId?: string | null }>>([]);
   const [inviteSelectedJobId, setInviteSelectedJobId] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteJobsLoading, setInviteJobsLoading] = useState(false);
@@ -516,7 +516,7 @@ export default function ResumeDetail() {
     setInviteJobsLoading(true);
     try {
       const res = await axios.get('/api/v1/jobs', { params: { status: 'open', limit: 50 } });
-      const jobs = (res.data.data || []).map((j: any) => ({ id: j.id, title: j.title, description: j.description }));
+      const jobs = (res.data.data || []).map((j: any) => ({ id: j.id, title: j.title, description: j.description, hiringRequestId: j.hiringRequestId || j.hiringRequest?.id || null }));
       setInviteJobs(jobs);
       if (jobs.length > 0) setInviteSelectedJobId(jobs[0].id);
     } catch {
@@ -539,6 +539,7 @@ export default function ResumeDetail() {
         candidate_email: getPreferredResumeEmail(resume) || undefined,
         recruiter_email: user?.email || undefined,
         resume_id: resume.id,
+        hiring_request_id: selectedJob.hiringRequestId || undefined,
       });
       if (res.data.success) {
         setInviteResult(res.data.data);
@@ -1072,6 +1073,7 @@ export default function ResumeDetail() {
       {tab === 'invitations' && (
         <InvitationsTab
           invitations={invitations}
+          resumeId={resume.id}
           resumeText={resume.resumeText}
           candidateEmail={preferredResumeEmail}
           recruiterEmail={user?.email || null}
@@ -2240,7 +2242,6 @@ function InsightsTab({ data, loading, onGenerate, t }: { data: Record<string, un
 // ─── Job Fit Tab ─────────────────────────────────────────────────────────
 
 function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { data: Record<string, unknown> | null; loading: boolean; onAnalyze: () => void; onInvite: (hiringRequestId: string, title: string) => void; invitationsMap: Record<string, InvitationRecord>; t: (k: string, f: string, opts?: Record<string, unknown>) => string }) {
-  const navigate = useNavigate();
   if (loading) {
     return (
       <div className="text-center py-16">
@@ -2414,28 +2415,23 @@ function JobFitTab({ data, loading, onAnalyze, onInvite, invitationsMap, t }: { 
             {fit.hiringRequestId && (() => {
               const inv = invitationsMap[fit.hiringRequestId as string];
               if (inv) {
-                const isCompleted = inv.interview?.status === 'completed';
+                const statusColors: Record<string, string> = {
+                  scheduled: 'bg-blue-100 text-blue-700',
+                  in_progress: 'bg-blue-100 text-blue-700',
+                  completed: 'bg-emerald-100 text-emerald-700',
+                  cancelled: 'bg-red-100 text-red-700',
+                  expired: 'bg-gray-100 text-gray-500',
+                };
                 return (
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    {isCompleted ? (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                        <IconCircleCheck size={14} stroke={2} />
-                        {t('resumeLibrary.jobFit.interviewCompleted', 'Interview completed')}
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
+                      <IconCircleCheck size={14} stroke={2} />
+                      {t('resumeLibrary.jobFit.alreadyInvited', 'Invited on {{date}}', { date: inv.invitedAt ? formatDateTimeLabel(inv.invitedAt) : '-' })}
+                    </span>
+                    {inv.interview && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[inv.interview.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {t(`resumeLibrary.detail.invitations.status.${inv.interview.status === 'in_progress' ? 'scheduled' : inv.interview.status}`, inv.interview.status)}
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg">
-                        <IconCircleCheck size={14} stroke={2} />
-                        {t('resumeLibrary.jobFit.alreadyInvited', 'Invited on {{date}}', { date: inv.invitedAt ? formatDateTimeLabel(inv.invitedAt) : '-' })}
-                      </span>
-                    )}
-                    {isCompleted && inv.interview && (
-                      <button
-                        onClick={() => navigate(`/product/interview`)}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors"
-                      >
-                        <IconEye size={14} stroke={2} />
-                        {t('resumeLibrary.jobFit.viewInterview', 'View Interview')}
-                      </button>
                     )}
                   </div>
                 );
@@ -2758,6 +2754,7 @@ function AppliedJobsTab({ data, loading, onRefresh, resumeId, t }: {
 
 function InvitationsTab({
   invitations,
+  resumeId,
   resumeText,
   candidateEmail,
   recruiterEmail,
@@ -2765,6 +2762,7 @@ function InvitationsTab({
   t,
 }: {
   invitations: InvitationRecord[];
+  resumeId?: string;
   resumeText?: string;
   candidateEmail?: string | null;
   recruiterEmail?: string | null;
@@ -2788,6 +2786,8 @@ function InvitationsTab({
         jd: jdText,
         candidate_email: candidateEmail || undefined,
         recruiter_email: recruiterEmail || undefined,
+        resume_id: resumeId || undefined,
+        hiring_request_id: inv.hiringRequestId || undefined,
       });
       if (res.data.success) {
         setResendResult({ id: inv.id, success: true, message: t('resumeLibrary.detail.invitations.resendSuccess', 'Invitation resent successfully!') });
@@ -2811,8 +2811,6 @@ function InvitationsTab({
     );
   }
 
-  const navigate = useNavigate();
-
   const statusColors: Record<string, string> = {
     scheduled: 'bg-blue-100 text-blue-700',
     in_progress: 'bg-blue-100 text-blue-700',
@@ -2821,21 +2819,10 @@ function InvitationsTab({
     expired: 'bg-gray-100 text-gray-500',
   };
 
-  const statusLabelMap: Record<string, string> = {
-    scheduled: t('resumeLibrary.detail.invitations.status.scheduled', 'Scheduled'),
-    in_progress: t('resumeLibrary.detail.invitations.status.scheduled', 'Scheduled'),
-    completed: t('resumeLibrary.detail.invitations.status.completed', 'Completed'),
-    cancelled: t('resumeLibrary.detail.invitations.status.cancelled', 'Cancelled'),
-    expired: t('resumeLibrary.detail.invitations.status.expired', 'Expired'),
-  };
-
   return (
     <>
       <div className="space-y-3">
-        {invitations.map((inv) => {
-          const interviewStatus = inv.interview?.status || 'scheduled';
-          const isCompleted = interviewStatus === 'completed';
-          return (
+        {invitations.map((inv) => (
           <div key={inv.id} className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -2848,26 +2835,21 @@ function InvitationsTab({
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColors[interviewStatus] || 'bg-gray-100 text-gray-600'}`}>
-                  {statusLabelMap[interviewStatus] || interviewStatus}
-                </span>
+                {inv.interview ? (
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColors[inv.interview.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {t(`resumeLibrary.detail.invitations.status.${inv.interview.status === 'in_progress' ? 'scheduled' : inv.interview.status}`, inv.interview.status)}
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+                    {t('resumeLibrary.detail.invitations.status.scheduled', 'Scheduled')}
+                  </span>
+                )}
               </div>
             </div>
-            {isCompleted && inv.interview?.completedAt && (
+            {inv.interview?.completedAt && (
               <p className="mt-2 text-xs text-gray-400">
                 {t('resumeLibrary.detail.invitations.completedAt', 'Completed')}: {new Date(inv.interview.completedAt).toLocaleString()}
               </p>
-            )}
-            {isCompleted && (
-              <div className="mt-2">
-                <button
-                  onClick={() => navigate('/product/interview')}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
-                >
-                  <IconEye size={14} stroke={2} />
-                  {t('resumeLibrary.detail.invitations.viewInterview', 'View Interview & Evaluation')}
-                </button>
-              </div>
             )}
 
             {/* Resend result toast */}
@@ -2904,8 +2886,7 @@ function InvitationsTab({
               </button>
             </div>
           </div>
-          );
-        })}
+        ))}
       </div>
 
       {/* View Invitation Result Modal */}

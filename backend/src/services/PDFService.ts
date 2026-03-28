@@ -308,6 +308,8 @@ export class PDFService {
             fixed = fixed.replace(/\b([A-Z][a-z]) ([a-z]{2,})/g, '$1$2');
             return fixed;
           }).join('\n')
+          // Strip Private Use Area characters (icon font glyphs from PDF templates)
+          .replace(/[\uE000-\uF8FF]/g, '')
           // Collapse excessive blank lines
           .replace(/\n{3,}/g, '\n\n')
           // Collapse excessive horizontal whitespace (layout padding)
@@ -407,8 +409,13 @@ export class PDFService {
     const layoutScore = contentScore(layoutText);
     const rawScore = contentScore(rawText);
 
-    const usedLayout = layoutScore.total >= rawScore.total;
-    logger.info('PDF_PDFTOTEXT', `Comparing layout vs raw mode → ${usedLayout ? 'layout' : 'raw'}`, {
+    // For CJK-heavy text, prefer layout mode when scores are close — layout
+    // preserves two-column structure and field labels, while raw mode interleaves
+    // columns and breaks field labels across lines.
+    const isCjkHeavy = layoutScore.cjk > 100 || rawScore.cjk > 100;
+    const margin = isCjkHeavy ? 0.05 : 0; // 5% margin for CJK
+    const usedLayout = layoutScore.total >= rawScore.total * (1 - margin);
+    logger.info('PDF_PDFTOTEXT', `Comparing layout vs raw mode → ${usedLayout ? 'layout' : 'raw'}${isCjkHeavy ? ' (CJK layout preference)' : ''}`, {
       layout: { chars: layoutText.length, ...layoutScore },
       raw: { chars: rawText.length, ...rawScore },
     }, requestId);

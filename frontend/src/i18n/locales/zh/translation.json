@@ -2382,6 +2382,7 @@
       "completedLabel": "结束",
       "durationLabel": "时长",
       "gradeLabel": "评级",
+      "evaluatedAtLabel": "评估时间",
       "viewGoHireEvaluation": "查看 GoHire 评估",
       "syncingGoHireData": "正在同步面试数据...",
       "goHireInterviewNotReady": "GoHire 上的面试尚未完成",

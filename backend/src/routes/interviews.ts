@@ -1155,7 +1155,7 @@ router.get('/', requireAuth, async (req, res) => {
         take: limitNum,
         include: {
           evaluation: {
-            select: { id: true, overallScore: true, grade: true, verdict: true, summary: true, strengths: true, weaknesses: true },
+            select: { id: true, overallScore: true, grade: true, verdict: true, summary: true, strengths: true, weaknesses: true, createdAt: true },
           },
         },
       }),

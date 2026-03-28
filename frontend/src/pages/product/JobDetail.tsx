@@ -223,6 +223,8 @@ export default function JobDetail() {
         jd: job.description || job.title,
         candidate_email: candidateEmail || undefined,
         recruiter_email: user?.email || undefined,
+        resume_id: match.resumeId,
+        hiring_request_id: job.hiringRequest?.id || undefined,
       });
       const accessToken = inviteRes.data.data?.accessToken;
       if (accessToken) {

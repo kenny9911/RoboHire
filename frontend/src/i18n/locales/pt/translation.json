@@ -1915,6 +1915,7 @@
       "completedLabel": "Fim",
       "durationLabel": "Duração",
       "gradeLabel": "Nota",
+      "evaluatedAtLabel": "Avaliado",
       "viewGoHireEvaluation": "Ver avaliação GoHire",
       "syncingGoHireData": "Sincronizando dados da entrevista...",
       "goHireInterviewNotReady": "A entrevista ainda não foi concluída no GoHire",

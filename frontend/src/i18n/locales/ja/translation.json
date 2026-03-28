@@ -2290,6 +2290,7 @@
       "completedLabel": "終了",
       "durationLabel": "所要時間",
       "gradeLabel": "評価",
+      "evaluatedAtLabel": "評価日時",
       "viewGoHireEvaluation": "GoHire 評価を表示",
       "syncingGoHireData": "面接データを同期中...",
       "goHireInterviewNotReady": "GoHireでの面接がまだ完了していません",

@@ -2260,6 +2260,7 @@
       "completedLabel": "Ended",
       "durationLabel": "Duration",
       "gradeLabel": "Grade",
+      "evaluatedAtLabel": "Evaluated",
       "viewGoHireEvaluation": "View GoHire Evaluation",
       "syncingGoHireData": "Syncing interview data...",
       "goHireInterviewNotReady": "Interview not yet completed on GoHire",

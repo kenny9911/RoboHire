@@ -1915,6 +1915,7 @@
       "completedLabel": "Ende",
       "durationLabel": "Dauer",
       "gradeLabel": "Bewertung",
+      "evaluatedAtLabel": "Bewertet",
       "viewGoHireEvaluation": "GoHire-Bewertung anzeigen",
       "syncingGoHireData": "Interviewdaten werden synchronisiert...",
       "goHireInterviewNotReady": "Das Interview ist auf GoHire noch nicht abgeschlossen",
