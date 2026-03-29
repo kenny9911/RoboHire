@@ -111,8 +111,10 @@ export class PDFService {
     const lowercase = (trimmed.match(/[a-z]/g) || []).length;
     const uppercase = (trimmed.match(/[A-Z]/g) || []).length;
     const digits = (trimmed.match(/[0-9]/g) || []).length;
+    const tildes = (trimmed.match(/~/g) || []).length;
 
-    const alphanumericRatio = (lowercase + uppercase + digits) / trimmed.length;
+    // Tildes and other non-meaningful symbols count toward the "hash" ratio
+    const alphanumericRatio = (lowercase + uppercase + digits + tildes) / trimmed.length;
 
     if (alphanumericRatio > 0.9 && spaces === 0 &&
         lowercase > 0 && uppercase > 0 && digits > 0 &&
@@ -128,7 +130,7 @@ export class PDFService {
       }
     }
 
-    if (/^[A-Za-z0-9+/=_-]{30,}$/.test(trimmed)) {
+    if (/^[A-Za-z0-9+/=_~-]{30,}$/.test(trimmed)) {
       return true;
     }
 
@@ -136,7 +138,7 @@ export class PDFService {
     // e.g. "a744c9d5f407585e1HZ-0t-... a744c9d5f407585e1HZ-0t-..."
     if (spaces > 0 && trimmed.length > 40) {
       const tokens = trimmed.split(/\s+/);
-      if (tokens.length <= 6 && tokens.every(t => /^[A-Za-z0-9+/=_-]{15,}$/.test(t))) {
+      if (tokens.length <= 6 && tokens.every(t => /^[A-Za-z0-9+/=_~-]{15,}$/.test(t))) {
         return true;
       }
     }
@@ -149,9 +151,9 @@ export class PDFService {
    * certainly watermarks / tracking codes. Returns the set of such tokens so callers
    * can strip every occurrence (including fragments scattered by layout extraction).
    */
-  private findWatermarkTokens(text: string): Set<string> {
-    // Match tokens of 20+ chars composed of alphanumerics, hyphens, underscores
-    const longTokens = text.match(/[A-Za-z0-9_-]{20,}/g) || [];
+  private findWatermarkTokens(text: string, requestId?: string): Set<string> {
+    // Match tokens of 20+ chars composed of alphanumerics, hyphens, underscores, tildes
+    const longTokens = text.match(/[A-Za-z0-9_~-]{20,}/g) || [];
     const freq = new Map<string, number>();
     for (const token of longTokens) {
       freq.set(token, (freq.get(token) || 0) + 1);
@@ -161,6 +163,12 @@ export class PDFService {
       if (count >= 3 && this.isHashLikeGarbage(token)) {
         watermarks.add(token);
       }
+    }
+    if (freq.size > 0) {
+      logger.info('PDF_WATERMARK', `Token scan: ${longTokens.length} long tokens, ${freq.size} unique, ${watermarks.size} identified as watermarks`, {
+        candidates: [...freq.entries()].filter(([, c]) => c >= 2).map(([t, c]) => ({ token: t.substring(0, 40) + (t.length > 40 ? '...' : ''), count: c, isGarbage: this.isHashLikeGarbage(t) })),
+        watermarks: [...watermarks].map(w => w.substring(0, 50)),
+      }, requestId);
     }
     return watermarks;
   }
@@ -180,13 +188,20 @@ export class PDFService {
   /**
    * Clean up extracted text by removing garbled characters
    */
-  private cleanText(text: string): string {
+  private cleanText(text: string, requestId?: string): string {
     let cleaned = text;
 
+    logger.info('PDF_CLEAN', `cleanText input: ${text.length} chars`, {
+      preview: text.substring(0, 300).replace(/\n/g, '\\n'),
+    }, requestId);
+
     // Strip repeated watermark tokens before any other processing
-    const watermarks = this.findWatermarkTokens(cleaned);
+    const watermarks = this.findWatermarkTokens(cleaned, requestId);
     if (watermarks.size > 0) {
       cleaned = this.stripWatermarks(cleaned, watermarks);
+      logger.info('PDF_CLEAN', `After watermark strip: ${cleaned.length} chars (removed ${text.length - cleaned.length})`, {
+        preview: cleaned.substring(0, 300).replace(/\n/g, '\\n'),
+      }, requestId);
     }
 
     const cjkPattern = '\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\uac00-\ud7af';
@@ -245,6 +260,10 @@ export class PDFService {
 
     cleaned = cleaned.trim();
 
+    logger.info('PDF_CLEAN', `cleanText output: ${cleaned.length} chars`, {
+      preview: cleaned.substring(0, 300).replace(/\n/g, '\\n'),
+    }, requestId);
+
     return cleaned;
   }
 
@@ -296,17 +315,24 @@ export class PDFService {
           return;
         }
 
+        logger.info('PDF_PDFTOTEXT', `Raw stdout: ${stdout.length} chars (${useLayout ? 'layout' : 'raw'})`, {
+          preview: stdout.substring(0, 400).replace(/\n/g, '\\n'),
+        }, requestId);
+
         // Strip repeated watermark tokens before line-level cleanup
-        const watermarks = this.findWatermarkTokens(stdout);
+        const watermarks = this.findWatermarkTokens(stdout, requestId);
         let preClean = stdout;
         if (watermarks.size > 0) {
           preClean = this.stripWatermarks(stdout, watermarks);
+          logger.info('PDF_PDFTOTEXT', `After watermark strip: ${preClean.length} chars (removed ${stdout.length - preClean.length})`, {
+            preview: preClean.substring(0, 400).replace(/\n/g, '\\n'),
+          }, requestId);
         }
 
         // Clean watermark noise — short alphanumeric-only fragments scattered
         // by -layout mode from watermark/tracking strings like
         // "6e72aef5715f42b81HZ709S6FFRUxYW-UfOZWOeqmP7VNxNg"
-        const isAlnumToken = (s: string) => /^[A-Za-z0-9+/=_-]+$/.test(s);
+        const isAlnumToken = (s: string) => /^[A-Za-z0-9+/=_~-]+$/.test(s);
 
         const cleaned = preClean
           .split('\n')
@@ -328,11 +354,11 @@ export class PDFService {
             // Strip inline watermark fragments: 1-2 char alnum tokens surrounded by 2+ spaces
             // Works for both CJK and English: "Education  Vd  Shanghai" → "Education  Shanghai"
             // Safe: normal English words have single spaces, not 2+
-            let cleaned = line.replace(/\s{2,}[A-Za-z0-9]{1,2}\s{2,}/g, '  ');
+            let cleaned = line.replace(/\s{2,}[A-Za-z0-9~]{1,2}\s{2,}/g, '  ');
             // Strip trailing watermark fragments (1-2 char for English, up to 3 for CJK)
             // e.g. "Ding Yi  W" → "Ding Yi", "崔晋闻  个人简历  O" → "崔晋闻  个人简历"
             const trailingLimit = hasCjk ? 3 : 2;
-            const trailingRe = new RegExp(`(\\s{2,}[A-Za-z0-9+/=_-]{1,${trailingLimit}})+\\s*$`);
+            const trailingRe = new RegExp(`(\\s{2,}[A-Za-z0-9+/=_~-]{1,${trailingLimit}})+\\s*$`);
             cleaned = cleaned.replace(trailingRe, '').trimEnd();
             return cleaned;
           })
@@ -790,7 +816,9 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
       try {
         localText = await this.extractBestPdftotext(buffer, requestId);
         localSource = 'pdftotext';
-        logger.info('PDF_EXTRACT', `pdftotext succeeded: ${localText.length} chars`, {}, requestId);
+        logger.info('PDF_EXTRACT', `pdftotext succeeded: ${localText.length} chars`, {
+          preview: localText.substring(0, 500).replace(/\n/g, '\\n'),
+        }, requestId);
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : 'Unknown';
         logger.warn('PDF_EXTRACT', `pdftotext failed: ${errMsg}, falling back to pdf-parse`, {}, requestId);
@@ -810,7 +838,10 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
         try {
           const startTime = Date.now();
           const data = await pdf(buffer);
-          localText = this.cleanText(data.text);
+          logger.info('PDF_EXTRACT', `pdf-parse raw output: ${data.text.length} chars`, {
+            preview: data.text.substring(0, 300).replace(/\n/g, '\\n'),
+          }, requestId);
+          localText = this.cleanText(data.text, requestId);
           localSource = 'pdf-parse';
           logger.info('PDF_EXTRACT', `pdf-parse completed in ${Date.now() - startTime}ms`, {
             rawChars: data.text.length, cleanedChars: localText.length,
@@ -935,7 +966,7 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
 
     // Step 2: Fallback to pdf-parse text if pdftotext didn't work
     if (!localText) {
-      localText = this.cleanText(data.text);
+      localText = this.cleanText(data.text, requestId);
       localSource = 'pdf-parse';
     }
 
