@@ -752,7 +752,7 @@ router.get('/:id', requireAuth, async (req, res) => {
       where: { id: req.params.id, ...buildUserIdFilter(scope) },
       include: {
         hiringRequest: { select: { id: true, title: true, requirements: true } },
-        alexSession: { select: { id: true, title: true, messages: true, requirements: true, updatedAt: true } },
+        alexSession: { select: { id: true, title: true, requirements: true, updatedAt: true } },
       },
     });
 
@@ -770,7 +770,8 @@ router.get('/:id', requireAuth, async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to get job' });
+    console.error('GET /jobs/:id error:', error instanceof Error ? error.message : error);
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to get job' });
   }
 });
 
