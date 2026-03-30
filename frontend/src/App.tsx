@@ -65,6 +65,9 @@ const EvaluateInterview = lazy(() => import('./pages/EvaluateInterview'));
 
 // Lazy-loaded Documentation
 const DocsLayout = lazy(() => import('./layouts/DocsLayout'));
+const DocsHub = lazy(() => import('./pages/docs/DocsHub'));
+const DocsProductGuide = lazy(() => import('./pages/docs/DocsProductGuide'));
+const DocsCommunity = lazy(() => import('./pages/docs/DocsCommunity'));
 const DocsOverview = lazy(() => import('./pages/docs/DocsOverview'));
 const DocsQuickStart = lazy(() => import('./pages/docs/DocsQuickStart'));
 const DocsAuthentication = lazy(() => import('./pages/docs/DocsAuthentication'));
@@ -184,21 +187,32 @@ function App() {
               <Route path="evaluate" element={<EvaluateInterview />} />
             </Route>
 
-            {/* Documentation Routes (Public) */}
-            <Route path="/docs" element={<DocsLayout />}>
-              <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview" element={<DocsOverview />} />
+            {/* Documentation Hub (standalone, no sidebar) */}
+            <Route path="/docs" element={<DocsHub />} />
+            <Route path="/docs/quick-start" element={<DocsProductGuide />} />
+            <Route path="/docs/community" element={<DocsCommunity />} />
+
+            {/* API Documentation (with sidebar layout) */}
+            <Route path="/docs/api" element={<DocsLayout />}>
+              <Route index element={<DocsOverview />} />
               <Route path="quick-start" element={<DocsQuickStart />} />
               <Route path="authentication" element={<DocsAuthentication />} />
-              <Route path="api/match-resume" element={<DocsMatchResume />} />
-              <Route path="api/parse-resume" element={<DocsParseResume />} />
-              <Route path="api/parse-jd" element={<DocsParseJD />} />
-              <Route path="api/invite-candidate" element={<DocsInviteCandidate />} />
-              <Route path="api/evaluate-interview" element={<DocsEvaluateInterview />} />
+              <Route path="match-resume" element={<DocsMatchResume />} />
+              <Route path="parse-resume" element={<DocsParseResume />} />
+              <Route path="parse-jd" element={<DocsParseJD />} />
+              <Route path="invite-candidate" element={<DocsInviteCandidate />} />
+              <Route path="evaluate-interview" element={<DocsEvaluateInterview />} />
               <Route path="webhooks" element={<DocsWebhooks />} />
               <Route path="ats-integrations" element={<DocsATSIntegrations />} />
               <Route path="errors" element={<DocsErrorHandling />} />
             </Route>
+
+            {/* Old docs URL redirects */}
+            <Route path="/docs/overview" element={<Navigate to="/docs/api" replace />} />
+            <Route path="/docs/authentication" element={<Navigate to="/docs/api/authentication" replace />} />
+            <Route path="/docs/webhooks" element={<Navigate to="/docs/api/webhooks" replace />} />
+            <Route path="/docs/ats-integrations" element={<Navigate to="/docs/api/ats-integrations" replace />} />
+            <Route path="/docs/errors" element={<Navigate to="/docs/api/errors" replace />} />
 
             {/* 404 */}
             <Route path="*" element={<NotFound />} />

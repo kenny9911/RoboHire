@@ -1,3 +1,6 @@
+export { default as DocsHub } from './DocsHub';
+export { default as DocsProductGuide } from './DocsProductGuide';
+export { default as DocsCommunity } from './DocsCommunity';
 export { default as DocsOverview } from './DocsOverview';
 export { default as DocsQuickStart } from './DocsQuickStart';
 export { default as DocsAuthentication } from './DocsAuthentication';

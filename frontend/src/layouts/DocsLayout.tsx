@@ -24,9 +24,9 @@ export default function DocsLayout() {
     {
       title: t('docs.nav.gettingStarted', 'Getting Started'),
       items: [
-        { title: t('docs.nav.overview', 'Overview'), href: '/docs/overview' },
-        { title: t('docs.nav.quickStart', 'Quick Start'), href: '/docs/quick-start' },
-        { title: t('docs.nav.authentication', 'Authentication'), href: '/docs/authentication' },
+        { title: t('docs.nav.apiOverview', 'API Overview'), href: '/docs/api' },
+        { title: t('docs.nav.quickStart', 'Quick Start'), href: '/docs/api/quick-start' },
+        { title: t('docs.nav.authentication', 'Authentication'), href: '/docs/api/authentication' },
       ],
     },
     {
@@ -42,9 +42,9 @@ export default function DocsLayout() {
     {
       title: t('docs.nav.advanced', 'Advanced'),
       items: [
-        { title: t('docs.nav.webhooks', 'Webhooks'), href: '/docs/webhooks' },
-        { title: t('docs.nav.atsIntegrations', 'ATS Integrations'), href: '/docs/ats-integrations' },
-        { title: t('docs.nav.errors', 'Error Handling'), href: '/docs/errors' },
+        { title: t('docs.nav.webhooks', 'Webhooks'), href: '/docs/api/webhooks' },
+        { title: t('docs.nav.atsIntegrations', 'ATS Integrations'), href: '/docs/api/ats-integrations' },
+        { title: t('docs.nav.errors', 'Error Handling'), href: '/docs/api/errors' },
       ],
     },
   ];
