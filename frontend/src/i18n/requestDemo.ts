@@ -1,0 +1,418 @@
+export const requestDemoTranslations = {
+  en: {
+    seo: {
+      requestDemo: {
+        title: "Book a Demo",
+        desc: "See how RoboHire automates resume screening, AI interviews, and candidate evaluation for fast-moving hiring teams.",
+      },
+    },
+    demo: {
+      headline1: "Keep great candidates",
+      headline2: "moving forward.",
+      headline3: "Let AI run the first pass.",
+      subtitle:
+        "Book a tailored walkthrough and see how RoboHire handles resume screening, candidate outreach, AI interviews, and structured scorecards before your team spends time on final rounds.",
+      trust: "Trusted by 500+ hiring teams",
+      success: {
+        title: "Thanks, you're in",
+        message: "Our team will reach out within 24 hours to schedule your demo.",
+      },
+      form: {
+        title: "Book a demo",
+        subtitle: "Tell us a bit about your hiring process and we'll tailor the walkthrough to your team.",
+        name: "Name",
+        namePlaceholder: "Alex Johnson",
+        email: "Work Email",
+        emailPlaceholder: "you@company.com",
+        company: "Company",
+        companyPlaceholder: "Acme, Inc.",
+        teamSize: "How many roles are you actively hiring for?",
+        source: "How did you hear about us?",
+        message: "What should we know before the demo?",
+        messagePlaceholder: "Share the roles you're hiring for, where the process slows down, or which ATS you're using.",
+        submitting: "Sending request...",
+        submit: "Request demo",
+      },
+      teamSize: {
+        placeholder: "Select hiring volume",
+      },
+      source: {
+        placeholder: "Select a source",
+        google: "Google Search",
+        linkedin: "LinkedIn",
+        referral: "Referral",
+        social: "Social Media",
+        blog: "Blog / Article",
+        other: "Other",
+      },
+      error: {
+        required: "Please enter your name and a valid work email.",
+        generic: "We couldn't send your request. Please try again.",
+      },
+    },
+  },
+  zh: {
+    seo: {
+      requestDemo: {
+        title: "预约产品演示",
+        desc: "看看 RoboHire 如何自动完成简历初筛、AI 面试与候选人评估，帮招聘团队更快推进流程。",
+      },
+    },
+    demo: {
+      headline1: "别再让",
+      headline2: "合适的人选",
+      headline3: "卡在冗长流程里",
+      subtitle:
+        "约一场产品演示，看看 RoboHire 如何自动完成简历初筛、候选人邀约、AI 面试和结构化评估，让团队把时间留给最后的判断。",
+      trust: "已有 500+ 招聘团队使用 RoboHire",
+      success: {
+        title: "已收到你的申请",
+        message: "我们会在 24 小时内联系你，确认演示时间。",
+      },
+      form: {
+        title: "预约产品演示",
+        subtitle: "告诉我们你们当前的招聘节奏，我们会按你的岗位场景来演示。",
+        name: "姓名",
+        namePlaceholder: "李明",
+        email: "工作邮箱",
+        emailPlaceholder: "you@company.com",
+        company: "公司名称",
+        companyPlaceholder: "你的公司",
+        teamSize: "你们当前有多少个岗位在招？",
+        source: "你是从哪里知道我们的？",
+        message: "补充一下你的情况",
+        messagePlaceholder: "比如正在招哪些岗位、目前卡在哪一步，或你们在用什么 ATS。",
+        submitting: "提交中...",
+        submit: "预约演示",
+      },
+      teamSize: {
+        placeholder: "请选择招聘规模",
+      },
+      source: {
+        placeholder: "请选择来源",
+        google: "Google 搜索",
+        linkedin: "LinkedIn",
+        referral: "朋友/同事推荐",
+        social: "社交媒体",
+        blog: "文章 / 博客",
+        other: "其他",
+      },
+      error: {
+        required: "请填写姓名和有效的工作邮箱。",
+        generic: "提交失败，请稍后再试。",
+      },
+    },
+  },
+  "zh-TW": {
+    seo: {
+      requestDemo: {
+        title: "預約產品演示",
+        desc: "看看 RoboHire 如何自動完成履歷初篩、AI 面談與候選人評估，幫招募團隊更快推進流程。",
+      },
+    },
+    demo: {
+      headline1: "別再讓",
+      headline2: "合適的人才",
+      headline3: "卡在冗長流程裡",
+      subtitle:
+        "預約一場產品演示，看看 RoboHire 如何自動完成履歷初篩、候選人邀約、AI 面談與結構化評估，讓團隊把時間留給真正重要的決策。",
+      trust: "已有 500+ 招募團隊使用 RoboHire",
+      success: {
+        title: "我們收到你的申請了",
+        message: "我們會在 24 小時內與你聯繫，安排演示時間。",
+      },
+      form: {
+        title: "預約產品演示",
+        subtitle: "告訴我們你們現在的招募節奏，我們會依你的職缺場景來安排演示。",
+        name: "姓名",
+        namePlaceholder: "王小婷",
+        email: "工作信箱",
+        emailPlaceholder: "you@company.com",
+        company: "公司名稱",
+        companyPlaceholder: "貴公司名稱",
+        teamSize: "目前有多少個職缺在招募中？",
+        source: "你是從哪裡認識我們的？",
+        message: "補充說明",
+        messagePlaceholder: "例如正在招募哪些角色、流程卡在哪一段，或目前使用的 ATS。",
+        submitting: "送出中...",
+        submit: "預約演示",
+      },
+      teamSize: {
+        placeholder: "請選擇招募規模",
+      },
+      source: {
+        placeholder: "請選擇來源",
+        google: "Google 搜尋",
+        linkedin: "LinkedIn",
+        referral: "同事推薦",
+        social: "社群媒體",
+        blog: "文章 / 部落格",
+        other: "其他",
+      },
+      error: {
+        required: "請填寫姓名與有效的工作信箱。",
+        generic: "送出失敗，請稍後再試。",
+      },
+    },
+  },
+  ja: {
+    seo: {
+      requestDemo: {
+        title: "デモを申し込む",
+        desc: "RoboHire のデモで、書類選考、AI 面接、評価レポート作成までをどう自動化できるかをご確認ください。",
+      },
+    },
+    demo: {
+      headline1: "有力な候補者を",
+      headline2: "選考の途中で",
+      headline3: "取りこぼさない。",
+      subtitle:
+        "RoboHire が書類選考、候補者への案内、AI 面接、評価レポート作成までをどう自動化するか、貴社の採用フローに合わせてご案内します。",
+      trust: "500社以上の採用チームが利用",
+      success: {
+        title: "お問い合わせを受け付けました",
+        message: "24時間以内を目安に、デモ日程のご案内をお送りします。",
+      },
+      form: {
+        title: "デモを申し込む",
+        subtitle: "現在の採用体制や課題に合わせて、デモ内容を調整します。",
+        name: "お名前",
+        namePlaceholder: "山田 花子",
+        email: "会社のメールアドレス",
+        emailPlaceholder: "you@company.com",
+        company: "会社名",
+        companyPlaceholder: "株式会社サンプル",
+        teamSize: "現在、何ポジション採用中ですか？",
+        source: "RoboHire を何で知りましたか？",
+        message: "補足があれば",
+        messagePlaceholder: "募集職種、今ボトルネックになっている工程、利用中の ATS などをご記入ください。",
+        submitting: "送信中...",
+        submit: "デモを申し込む",
+      },
+      teamSize: {
+        placeholder: "採用規模を選択",
+      },
+      source: {
+        placeholder: "選択してください",
+        google: "Google 検索",
+        linkedin: "LinkedIn",
+        referral: "ご紹介",
+        social: "SNS",
+        blog: "ブログ・記事",
+        other: "その他",
+      },
+      error: {
+        required: "お名前と有効な会社メールアドレスを入力してください。",
+        generic: "送信に失敗しました。時間をおいて再度お試しください。",
+      },
+    },
+  },
+  es: {
+    seo: {
+      requestDemo: {
+        title: "Solicita una demo",
+        desc: "Descubre cómo RoboHire automatiza el filtrado de CV, las entrevistas con IA y la evaluación de candidatos para acelerar tu proceso de selección.",
+      },
+    },
+    demo: {
+      headline1: "No dejes que",
+      headline2: "buenos candidatos",
+      headline3: "se enfríen en tu proceso.",
+      subtitle:
+        "Agenda una demo y mira cómo RoboHire automatiza el filtrado de CV, las invitaciones, las entrevistas con IA y los informes de evaluación para que tu equipo avance más rápido.",
+      trust: "Más de 500 equipos de selección confían en RoboHire",
+      success: {
+        title: "Hemos recibido tu solicitud",
+        message: "Nuestro equipo se pondrá en contacto contigo en menos de 24 horas para coordinar la demo.",
+      },
+      form: {
+        title: "Solicita una demo",
+        subtitle: "Cuéntanos cómo estáis contratando hoy y adaptaremos la demo a vuestro proceso.",
+        name: "Nombre",
+        namePlaceholder: "Lucía Pérez",
+        email: "Email profesional",
+        emailPlaceholder: "tu@empresa.com",
+        company: "Empresa",
+        companyPlaceholder: "Tu empresa",
+        teamSize: "¿Cuántas vacantes estáis cubriendo ahora mismo?",
+        source: "¿Cómo nos conociste?",
+        message: "Cuéntanos un poco más",
+        messagePlaceholder: "Indícanos qué perfiles buscáis, dónde se atasca el proceso o qué ATS utilizáis.",
+        submitting: "Enviando...",
+        submit: "Solicitar demo",
+      },
+      teamSize: {
+        placeholder: "Selecciona el volumen de contratación",
+      },
+      source: {
+        placeholder: "Selecciona una opción",
+        google: "Búsqueda en Google",
+        linkedin: "LinkedIn",
+        referral: "Recomendación",
+        social: "Redes sociales",
+        blog: "Blog / artículo",
+        other: "Otro",
+      },
+      error: {
+        required: "Introduce tu nombre y un email profesional válido.",
+        generic: "No hemos podido enviar tu solicitud. Inténtalo de nuevo en unos minutos.",
+      },
+    },
+  },
+  fr: {
+    seo: {
+      requestDemo: {
+        title: "Demander une démo",
+        desc: "Découvrez comment RoboHire automatise le tri des CV, les entretiens IA et l'évaluation des candidats pour accélérer votre recrutement.",
+      },
+    },
+    demo: {
+      headline1: "Ne laissez plus",
+      headline2: "les bons candidats",
+      headline3: "se perdre en route.",
+      subtitle:
+        "Réservez une démo et voyez comment RoboHire automatise le tri des CV, les invitations, les entretiens IA et les comptes rendus d'évaluation pour faire avancer votre recrutement plus vite.",
+      trust: "Déjà adopté par plus de 500 équipes recrutement",
+      success: {
+        title: "Demande bien reçue",
+        message: "Notre équipe vous recontactera sous 24 heures pour planifier la démo.",
+      },
+      form: {
+        title: "Demander une démo",
+        subtitle: "Parlez-nous de votre rythme de recrutement et nous adapterons la démo à votre contexte.",
+        name: "Nom",
+        namePlaceholder: "Camille Martin",
+        email: "Email professionnel",
+        emailPlaceholder: "vous@entreprise.com",
+        company: "Entreprise",
+        companyPlaceholder: "Votre entreprise",
+        teamSize: "Combien de postes recrutez-vous en ce moment ?",
+        source: "Comment avez-vous entendu parler de nous ?",
+        message: "Dites-nous en un peu plus",
+        messagePlaceholder: "Précisez les postes ouverts, les points de friction de votre process ou l'ATS que vous utilisez.",
+        submitting: "Envoi en cours...",
+        submit: "Demander une démo",
+      },
+      teamSize: {
+        placeholder: "Sélectionnez votre volume de recrutement",
+      },
+      source: {
+        placeholder: "Sélectionnez une option",
+        google: "Recherche Google",
+        linkedin: "LinkedIn",
+        referral: "Recommandation",
+        social: "Réseaux sociaux",
+        blog: "Article / blog",
+        other: "Autre",
+      },
+      error: {
+        required: "Veuillez renseigner votre nom et un email professionnel valide.",
+        generic: "Impossible d'envoyer votre demande pour le moment. Merci de réessayer.",
+      },
+    },
+  },
+  pt: {
+    seo: {
+      requestDemo: {
+        title: "Agende uma demo",
+        desc: "Veja como a RoboHire automatiza triagem de currículos, entrevistas com IA e avaliação de candidatos para acelerar sua contratação.",
+      },
+    },
+    demo: {
+      headline1: "Não deixe bons",
+      headline2: "candidatos esfriarem",
+      headline3: "no seu funil.",
+      subtitle:
+        "Agende uma demo e veja como a RoboHire automatiza triagem de currículos, convites, entrevistas com IA e relatórios de avaliação para o seu time contratar com mais velocidade.",
+      trust: "Mais de 500 times de recrutamento usam a RoboHire",
+      success: {
+        title: "Recebemos seu pedido",
+        message: "Nosso time vai falar com você em até 24 horas para marcar a demo.",
+      },
+      form: {
+        title: "Agende uma demo",
+        subtitle: "Conte como seu time está contratando hoje e a gente adapta a demo ao seu cenário.",
+        name: "Nome",
+        namePlaceholder: "Mariana Costa",
+        email: "E-mail corporativo",
+        emailPlaceholder: "voce@empresa.com",
+        company: "Empresa",
+        companyPlaceholder: "Sua empresa",
+        teamSize: "Quantas vagas vocês estão contratando agora?",
+        source: "Como você conheceu a RoboHire?",
+        message: "Conte um pouco mais",
+        messagePlaceholder: "Quais vagas estão abertas, onde o processo trava hoje ou qual ATS vocês usam.",
+        submitting: "Enviando...",
+        submit: "Solicitar demo",
+      },
+      teamSize: {
+        placeholder: "Selecione o volume de contratação",
+      },
+      source: {
+        placeholder: "Selecione uma opção",
+        google: "Busca no Google",
+        linkedin: "LinkedIn",
+        referral: "Indicação",
+        social: "Redes sociais",
+        blog: "Blog / artigo",
+        other: "Outro",
+      },
+      error: {
+        required: "Preencha seu nome e um e-mail corporativo válido.",
+        generic: "Não foi possível enviar seu pedido agora. Tente novamente em instantes.",
+      },
+    },
+  },
+  de: {
+    seo: {
+      requestDemo: {
+        title: "Demo anfragen",
+        desc: "Sehen Sie, wie RoboHire CV-Screening, KI-Interviews und Kandidatenbewertungen automatisiert, damit Ihr Recruiting schneller vorankommt.",
+      },
+    },
+    demo: {
+      headline1: "Verlieren Sie",
+      headline2: "starke Kandidaten",
+      headline3: "nicht im Prozess.",
+      subtitle:
+        "Buchen Sie eine Demo und sehen Sie, wie RoboHire Lebenslauf-Screening, Einladungen, KI-Interviews und strukturierte Auswertungen automatisiert, damit Ihr Team schneller entscheiden kann.",
+      trust: "Mehr als 500 Recruiting-Teams vertrauen auf RoboHire",
+      success: {
+        title: "Ihre Anfrage ist eingegangen",
+        message: "Unser Team meldet sich innerhalb von 24 Stunden, um Ihre Demo zu terminieren.",
+      },
+      form: {
+        title: "Demo anfragen",
+        subtitle: "Beschreiben Sie kurz Ihren aktuellen Recruiting-Prozess, dann passen wir die Demo an Ihr Szenario an.",
+        name: "Name",
+        namePlaceholder: "Anna Weber",
+        email: "Geschäftliche E-Mail",
+        emailPlaceholder: "sie@unternehmen.de",
+        company: "Unternehmen",
+        companyPlaceholder: "Ihr Unternehmen",
+        teamSize: "Wie viele Stellen besetzen Sie aktuell?",
+        source: "Wie sind Sie auf uns aufmerksam geworden?",
+        message: "Was sollten wir vorab wissen?",
+        messagePlaceholder: "Teilen Sie offene Rollen, aktuelle Engpässe oder Ihr ATS mit.",
+        submitting: "Wird gesendet...",
+        submit: "Demo anfragen",
+      },
+      teamSize: {
+        placeholder: "Recruiting-Volumen auswählen",
+      },
+      source: {
+        placeholder: "Quelle auswählen",
+        google: "Google-Suche",
+        linkedin: "LinkedIn",
+        referral: "Empfehlung",
+        social: "Soziale Medien",
+        blog: "Blog / Artikel",
+        other: "Sonstiges",
+      },
+      error: {
+        required: "Bitte geben Sie Ihren Namen und eine gültige geschäftliche E-Mail-Adresse ein.",
+        generic: "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+      },
+    },
+  },
+} as const;

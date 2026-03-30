@@ -10,16 +10,29 @@ import pt from './locales/pt/translation.json';
 import de from './locales/de/translation.json';
 import zhTW from './locales/zh-TW/translation.json';
 import { productIntroTranslations } from './productIntro';
+import { requestDemoTranslations } from './requestDemo';
+
+type TranslationResource = Record<string, any>;
+
+const composeTranslation = (base: TranslationResource, locale: keyof typeof requestDemoTranslations) => ({
+  ...base,
+  seo: {
+    ...(base.seo ?? {}),
+    ...requestDemoTranslations[locale].seo,
+  },
+  productIntro: productIntroTranslations[locale],
+  demo: requestDemoTranslations[locale].demo,
+});
 
 const resources = {
-  en: { translation: { ...en, productIntro: productIntroTranslations.en } },
-  zh: { translation: { ...zh, productIntro: productIntroTranslations.zh } },
-  'zh-TW': { translation: { ...zhTW, productIntro: productIntroTranslations['zh-TW'] } },
-  ja: { translation: { ...ja, productIntro: productIntroTranslations.ja } },
-  es: { translation: { ...es, productIntro: productIntroTranslations.es } },
-  fr: { translation: { ...fr, productIntro: productIntroTranslations.fr } },
-  pt: { translation: { ...pt, productIntro: productIntroTranslations.pt } },
-  de: { translation: { ...de, productIntro: productIntroTranslations.de } },
+  en: { translation: composeTranslation(en, 'en') },
+  zh: { translation: composeTranslation(zh, 'zh') },
+  'zh-TW': { translation: composeTranslation(zhTW, 'zh-TW') },
+  ja: { translation: composeTranslation(ja, 'ja') },
+  es: { translation: composeTranslation(es, 'es') },
+  fr: { translation: composeTranslation(fr, 'fr') },
+  pt: { translation: composeTranslation(pt, 'pt') },
+  de: { translation: composeTranslation(de, 'de') },
 };
 
 i18n
@@ -31,7 +44,8 @@ i18n
     supportedLngs: ['en', 'zh', 'zh-TW', 'ja', 'es', 'fr', 'pt', 'de'],
     interpolation: { escapeValue: false },
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['querystring', 'localStorage', 'navigator'],
+      lookupQuerystring: 'lang',
       caches: ['localStorage'],
     },
   });

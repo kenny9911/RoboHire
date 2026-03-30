@@ -28,6 +28,16 @@ export default function RequestDemo() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const getLocalizedError = (serverError?: string) => {
+    switch (serverError) {
+      case 'Name is required':
+      case 'A valid email is required':
+        return t('demo.error.required', 'Please enter your name and a valid work email.');
+      default:
+        return t('demo.error.generic', "We couldn't send your request. Please try again.");
+    }
+  };
+
   const teamSizeOptions = [
     { value: '', label: t('demo.teamSize.placeholder', 'How many open roles do you have?') },
     { value: '1-5', label: '1-5' },
@@ -54,7 +64,7 @@ export default function RequestDemo() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim()) {
-      setError(t('demo.error.required', 'Name and email are required.'));
+      setError(t('demo.error.required', 'Please enter your name and a valid work email.'));
       return;
     }
     setSubmitting(true);
@@ -69,10 +79,10 @@ export default function RequestDemo() {
       if (data.success) {
         setSubmitted(true);
       } else {
-        setError(data.error || t('demo.error.generic', 'Something went wrong. Please try again.'));
+        setError(getLocalizedError(data.error));
       }
     } catch {
-      setError(t('demo.error.generic', 'Something went wrong. Please try again.'));
+      setError(t('demo.error.generic', "We couldn't send your request. Please try again."));
     } finally {
       setSubmitting(false);
     }
