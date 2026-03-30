@@ -180,3 +180,44 @@ Every user-visible string in the frontend **must** use `t()` from i18next with a
 - Chat messages assembled in code (e.g. step-by-step instructions)
 
 When adding or changing any `t()` key, update **all 8 translation files** (`en`, `zh`, `zh-TW`, `ja`, `es`, `fr`, `pt`, `de`) in `frontend/src/i18n/locales/{lang}/translation.json`. Do not leave keys present only in English with fallback defaults — every key must have a proper translation in every language file.
+
+### SEO/GEO — Every public page must have structured data
+
+Every public-facing page **must** include proper SEO and GEO metadata using the `<SEO>` component (`frontend/src/components/SEO.tsx`). Required:
+
+- `title` — Page-specific title (appended to "| RoboHire")
+- `description` — Unique meta description per page
+- `url` — Canonical URL (e.g. `https://robohire.io/docs/community`)
+- `keywords` — Comma-separated relevant keywords
+- `type` — Use `'article'` for content pages, `'website'` for listings
+
+The SEO component automatically generates: hreflang tags for 8 languages (GEO), Open Graph tags, Twitter Card, Organization/SoftwareApplication/WebSite JSON-LD. For page-specific structured data, pass the `structuredData` prop or use `<Helmet>` from `react-helmet-async` to inject additional JSON-LD scripts.
+
+### Community Articles — Standard for adding new articles
+
+All articles in the Community knowledge hub (`frontend/src/pages/docs/DocsCommunity.tsx`) follow this standard:
+
+1. **Article interface fields**: Every article must have `id`, `slug` (URL-safe), `datePublished` (ISO date), `category`, `categoryLabel`, `title`, `excerpt`, `tags`, `icon`, `readTime`, and optionally `content` (full markdown).
+
+2. **SEO is automatic**: When an article has `slug` and `content`, the system automatically generates:
+   - Dynamic `<SEO>` meta tags (title, description, canonical URL, OG type=article, keywords)
+   - `Article` JSON-LD schema (headline, author, publisher, datePublished, articleSection, keywords, wordCount, timeRequired)
+   - `BreadcrumbList` JSON-LD schema (文档中心 → 社区 → Article)
+   - URL updates via `replaceState` to `/docs/community/{slug}` (shareable, crawlable)
+   - Direct navigation to `/docs/community/{slug}` auto-opens the article
+
+3. **Listing page SEO**: When no article is active, a `CollectionPage` JSON-LD lists all articles with content as `hasPart`.
+
+4. **Adding a new article**: Only requires adding an entry to the `articles` array. No extra SEO code needed.
+
+### Visibility & Team Scope — Use getVisibilityScope for cross-entity queries
+
+When querying resources that may belong to team members (jobs, resumes, interviews), always use `getVisibilityScope()` + `buildUserIdFilter()` from `backend/src/lib/teamVisibility.ts` instead of `userId: req.user.id`. This ensures admins see everything, team members see teammates' data, and solo users see only their own. Applies to all endpoints that cross-reference entities (e.g., resume refine uses job data, matching uses both resumes and jobs).
+
+### GoHire Candidate Name — Fallback chain includes resume parsing
+
+When importing GoHire interviews, the candidate name fallback chain is: evaluation report JSON → `completedRecord.user_name` → `detailRecord.user_name` → `'Unknown'`. Additionally, when a resume is parsed (via `POST /:id/parse-resume` or on `GET /:id`), if `candidateName` is still `'Unknown'`, the system extracts the name from the first `# heading` in the parsed markdown and updates the DB. The frontend updates its state from the `candidateName` field in the parse-resume response.
+
+### Content Rendering — Detect and render markdown
+
+When displaying user-generated or external content that may be in markdown format (e.g., job descriptions, resumes), detect markdown syntax (headings `#`, bold `**`, lists `*`) and render via `ReactMarkdown` or `MarkdownRenderer` component instead of plain text display. Check with `/^#+\s/m.test(content)` before choosing renderer.

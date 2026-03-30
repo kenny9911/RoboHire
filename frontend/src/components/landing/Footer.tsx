@@ -9,7 +9,7 @@ export default function Footer() {
     product: {
       title: t('landing.footer.product', 'Product'),
       links: [
-        { label: t('landing.footer.startHiring', 'Start Hiring'), href: '/start-hiring' },
+        { label: t('landing.footer.startHiring', 'Start Hiring'), href: '/agent-alex' },
         { label: t('landing.footer.api', 'API'), href: '/developers' },
         { label: t('landing.footer.playground', 'Playground'), href: '/api-playground' },
         { label: t('landing.footer.pricing', 'Pricing'), href: '/pricing' },
@@ -109,7 +109,7 @@ export default function Footer() {
                         {link.label}
                       </a>
                     ) : (
-                      <Link to={link.href} state={link.href === '/start-hiring' ? { fresh: true } : undefined} className="text-sm text-slate-400 transition-colors hover:text-white">
+                      <Link to={link.href} state={link.href === '/agent-alex' ? { fresh: true } : undefined} className="text-sm text-slate-400 transition-colors hover:text-white">
                         {link.label}
                       </Link>
                     )}

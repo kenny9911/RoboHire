@@ -4312,5 +4312,106 @@
     "pdf": "PDF (Print)",
     "word": "Word Document",
     "markdown": "Markdown"
+  },
+  "agentAlex": {
+    "title": "Agent Alex",
+    "subtitle": "Recruitment Requirements Analyst",
+    "floatingLabel": "AI Hiring Assistant",
+    "panels": {
+      "agentInteraction": "Agent Interaction"
+    },
+    "modes": {
+      "textChat": "Text Chat",
+      "liveVoice": "Live Voice"
+    },
+    "sessions": {
+      "recent": "Recent Sessions",
+      "newChat": "New Chat",
+      "cannotDelete": "Cannot delete — linked to a job"
+    },
+    "actions": {
+      "exportSpec": "Export Spec"
+    },
+    "mobile": {
+      "agent": "Agent",
+      "specification": "Specification"
+    },
+    "config": {
+      "setupRequired": "Gemini setup required.",
+      "checking": "Checking Gemini server configuration...",
+      "placeholder": "Gemini is disabled because GEMINI_API_KEY is still a placeholder. Copy .env.example to .env.local, add a real key, and restart the server.",
+      "missing": "Gemini is disabled because GEMINI_API_KEY is missing. Copy .env.example to .env.local, add your key, and restart the server."
+    },
+    "chat": {
+      "welcome": "Hello! I am your Recruitment Agent Alex. What role are you looking to fill today?",
+      "thinking": "Thinking...",
+      "placeholder": "Type your response...",
+      "disabled": "AI disabled until Gemini is configured.",
+      "send": "Send message",
+      "dictate": "Dictate (Speech to Text)",
+      "stopRecording": "Stop recording",
+      "recording": "Recording audio... Click stop when finished.",
+      "readAloud": "Read aloud"
+    },
+    "suggestions": {
+      "frontendEngineer": "We need a Senior Frontend Engineer",
+      "productManager": "Help me hire a Product Manager",
+      "dataScientist": "I'm looking for a Data Scientist",
+      "salary": "Let's discuss salary range",
+      "location": "Set work location / remote policy",
+      "mustHave": "Define must-have requirements",
+      "niceToHave": "Add nice-to-have qualifications",
+      "interview": "Outline the interview process",
+      "headcount": "Specify headcount needed",
+      "timeline": "Set hiring timeline / urgency",
+      "benefits": "Describe benefits & perks",
+      "finalize": "I'm done — finalize the specification"
+    },
+    "spec": {
+      "title": "Live Specification",
+      "createJob": "Create Job",
+      "viewJob": "View Job",
+      "updateJob": "Update Job",
+      "empty": "No requirements captured yet.",
+      "emptyHint": "Start chatting with the agent to build your hiring specification.",
+      "sections": {
+        "roleOverview": "1. Role Overview",
+        "responsibilities": "2. Core Responsibilities",
+        "requiredQualifications": "3. Required Qualifications (Must-Haves)",
+        "preferredQualifications": "4. Preferred Qualifications (Nice-to-Haves)",
+        "compensation": "5. Compensation & Benefits",
+        "logistics": "6. Logistics",
+        "hiringProcess": "7. Hiring Process",
+        "additionalContext": "8. Additional Context"
+      },
+      "fields": {
+        "jobTitle": "Job Title",
+        "department": "Department/Team",
+        "reportingLine": "Reporting Line",
+        "roleType": "Role Type",
+        "headcount": "Headcount",
+        "primaryResponsibilities": "Primary Responsibilities",
+        "secondaryResponsibilities": "Secondary / Stretch",
+        "yearsOfExperience": "Years of Experience",
+        "education": "Education",
+        "industryExperience": "Industry Experience",
+        "hardSkills": "Hard Skills",
+        "softSkills": "Soft Skills",
+        "niceToHave": "Nice-to-have Skills & Credentials",
+        "salaryRange": "Salary Range",
+        "equityBonus": "Equity / Bonus",
+        "benefits": "Key Benefits",
+        "workLocation": "Work Location",
+        "geographicRestrictions": "Geographic Restrictions",
+        "startDate": "Start Date / Urgency",
+        "travelRequirements": "Travel Requirements",
+        "interviewStages": "Interview Stages",
+        "keyStakeholders": "Key Stakeholders",
+        "timelineExpectations": "Timeline Expectations",
+        "teamCulture": "Team Culture",
+        "reasonForOpening": "Reason for Opening",
+        "dealBreakers": "Deal Breakers"
+      }
+    }
   }
 }

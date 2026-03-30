@@ -13,7 +13,8 @@ import Pricing from './pages/Pricing';
 import NotFound from './pages/NotFound';
 
 // Lazy-loaded public pages
-const StartHiring = lazy(() => import('./pages/StartHiring'));
+// StartHiring now redirects to AgentAlex
+const AgentAlex = lazy(() => import('./pages/AgentAlex'));
 const RequestDemo = lazy(() => import('./pages/RequestDemo'));
 const QuickInvite = lazy(() => import('./pages/QuickInvite'));
 const About = lazy(() => import('./pages/About'));
@@ -103,7 +104,8 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/start-hiring" element={<StartHiring />} />
+            <Route path="/agent-alex" element={<AgentAlex />} />
+            <Route path="/start-hiring" element={<Navigate to="/agent-alex" replace />} />
             <Route path="/developers" element={<APILanding />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/request-demo" element={<RequestDemo />} />
@@ -191,6 +193,7 @@ function App() {
             <Route path="/docs" element={<DocsHub />} />
             <Route path="/docs/quick-start" element={<DocsProductGuide />} />
             <Route path="/docs/community" element={<DocsCommunity />} />
+            <Route path="/docs/community/:slug" element={<DocsCommunity />} />
 
             {/* API Documentation (with sidebar layout) */}
             <Route path="/docs/api" element={<DocsLayout />}>

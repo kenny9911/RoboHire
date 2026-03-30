@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
 import SEO from '../../components/SEO';
 import Navbar from '../../components/landing/Navbar';
@@ -8,6 +9,8 @@ import Footer from '../../components/landing/Footer';
 
 interface Article {
   id: string;
+  slug: string;
+  datePublished: string;
   category: string;
   categoryLabel: string;
   title: string;
@@ -19,14 +22,11 @@ interface Article {
 }
 
 export default function DocsCommunity() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeArticle, setActiveArticle] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (activeArticle) window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeArticle]);
 
   const categories = [
     { key: 'all', label: t('docs.community.cat.all', '全部') },
@@ -41,7 +41,7 @@ export default function DocsCommunity() {
   const articles: Article[] = [
     // 招聘策略
     {
-      id: 'strategy-1', category: 'strategy',
+      id: 'strategy-1', slug: 'campus-screening-48h', datePublished: '2026-03-28', category: 'strategy',
       categoryLabel: t('docs.community.cat.strategy', '招聘策略'),
       title: t('docs.community.articles.s1.title', '如何在 48 小时内完成一轮校招初筛'),
       excerpt: t('docs.community.articles.s1.excerpt', '校招季简历量巨大，传统逐份筛选效率低下。本文分享如何利用 AI 简历匹配 + AI 面试，在 48 小时内完成 500+ 份简历的初筛和初面，效率提升 10 倍。'),
@@ -198,7 +198,7 @@ AI 三层校验：
 预建标准 + AI 批量处理 + 结构化人工复核 + 透明的候选人沟通 = 从两周压缩到两天，质量不降反升。`,
     },
     {
-      id: 'strategy-2', category: 'strategy',
+      id: 'strategy-2', slug: 'startup-recruitment-strategies', datePublished: '2026-03-28', category: 'strategy',
       categoryLabel: t('docs.community.cat.strategy', '招聘策略'),
       title: t('docs.community.articles.s2.title', '初创公司招聘的 5 个核心策略'),
       excerpt: t('docs.community.articles.s2.excerpt', '没有专职 HR 的初创团队如何高效招聘？从雇主品牌建设、岗位描述优化、候选人渠道拓展、面试流程设计到 offer 谈判，5 个策略帮你从零搭建招聘体系。'),
@@ -344,7 +344,7 @@ AI 三层校验：
 5. 💎 薪酬组合拳（现金+期权+成长空间）`,
     },
     {
-      id: 'strategy-3', category: 'strategy',
+      id: 'strategy-3', slug: 'structured-interview-guide', datePublished: '2026-03-28', category: 'strategy',
       categoryLabel: t('docs.community.cat.strategy', '招聘策略'),
       title: t('docs.community.articles.s3.title', '结构化面试设计完全指南'),
       excerpt: t('docs.community.articles.s3.excerpt', '为什么你的面试总是问不出候选人的真实水平？本文教你如何设计结构化面试问题库，确保每位面试官都能一致、公平地评估候选人。'),
@@ -558,59 +558,958 @@ AI 三层校验：
     },
     // 面试技巧
     {
-      id: 'interview-1', category: 'interview',
+      id: 'interview-1', slug: 'tech-interview-coding-assessment', datePublished: '2026-03-29', category: 'interview',
       categoryLabel: t('docs.community.cat.interview', '面试技巧'),
       title: t('docs.community.articles.i1.title', '技术岗面试：如何评估候选人的真实编码能力'),
       excerpt: t('docs.community.articles.i1.excerpt', '简历上写着"精通 Python"不代表真的精通。分享 5 种有效的技术面试方法：代码 Review、系统设计、场景模拟、项目深挖、算法思维，帮你找到真正的技术人才。'),
-      tags: ['技术面试', '编码能力', '评估方法'], icon: '💻', readTime: '7 min',
+      tags: ['技术面试', '编码能力', '评估方法'], icon: '💻', readTime: '16 min',
+      content: `## 为什么准确评估编码能力如此困难？
+
+技术招聘正面临信任危机：
+
+- **64% 的求职者** 承认在简历中对技能或经验撒过谎，IT 行业是重灾区
+- **38.5%** 的远程技术面试中已检测到 AI 作弊行为（2025-2026 年数据）
+- 一次错误的技术招聘代价惊人：高级技术岗错聘成本可达 **年薪的 150%-200%**
+
+Schmidt & Hunter 的经典元分析表明：非结构化面试的预测效度仅为 0.20，而结构化面试达到 **0.51**。如果你的面试没有经过结构化设计，你实际上在"随机"做招聘决策。
+
+---
+
+## 六大评估方法深度对比
+
+### 方法 1：现场编码（Live Coding）
+
+**适用**：初中级工程师筛选
+
+| 优势 | 劣势 |
+|---|---|
+| 实时观察问题分解和调试过程 | 62% 候选人经历显著焦虑 |
+| 同时评估沟通能力 | 容易演变为 LeetCode 竞赛 |
+| 降低作弊风险 | 技术故障影响发挥 |
+
+**建议**：选择与实际工作相关的题目（如实现一个 API 端点），而非纯算法谜题。评估重心从"是否完成"转向"如何思考和沟通"。
+
+### 方法 2：Take-home 项目
+
+**适用**：评估代码质量、架构思维
+
+开发者对此评价最高（3.7/5），但存在严重作弊风险。**Dropbox 的经验**：20% 的候选人从未提交作业，其中往往是最有竞争力的候选人放弃了。
+
+**建议**：严格控制工作量在 2-4 小时内。**必须安排后续面对面代码评审**——让候选人现场解释设计决策。
+
+### 方法 3：结对编程（Pair Programming）⭐ 推荐
+
+**适用**：中高级工程师
+
+这是目前研究证据支持最强的方法之一。工作样本测试 + 认知测试的复合效度可达 **0.63**。
+
+核心做法：
+- 候选人当"Driver"写代码，面试官当"Navigator"提问引导
+- 使用真实业务问题：修复 bug、实现小功能、优化代码
+- 面试官像同事一样参与，而非静默观察
+
+### 方法 4：代码审查面试（Code Review）
+
+**适用**：高级工程师、Tech Lead、架构师
+
+提供一段包含各种问题的代码，要求候选人审查。评估维度：
+
+- **Bug 发现**：边界条件、并发问题、安全漏洞
+- **性能意识**：N+1 查询、内存分配、算法复杂度
+- **反馈质量**：能否给出建设性的改进建议
+
+> 在实际工作中，高级工程师花在阅读和审查代码上的时间远多于编写代码。
+
+### 方法 5：系统设计面试
+
+**适用**：中高级（P6+）、架构师
+
+**推荐 4S 框架**：
+1. **Scenario**：用户量、功能范围、核心用例
+2. **Service**：微服务拆分、API 设计
+3. **Storage**：数据模型、数据库选型、缓存策略
+4. **Scale**：瓶颈分析、水平扩展、容灾方案
+
+### 方法 6：项目深挖 ⭐ 对抗简历注水最有效
+
+当 60%+ 候选人承认夸大技能时，项目深挖是验证真实性的最后一道防线。
+
+**"连环追问法"**：
+1. 从简历挑一个核心项目，请候选人概述
+2. 逐层深入：
+   - "QPS 是多少？怎么测量的？"
+   - "缓存策略是什么？缓存穿透怎么处理？"
+   - "上线后遇到过什么故障？怎么排查的？"
+3. 关注"故障边界"——真正做过的人能说出困难和失败
+
+**简历注水红旗信号**：
+- 对列出的技术栈无法回答实现细节
+- 只有"我们做了什么"，没有"我负责什么"
+- 对 QPS、延迟、错误率完全没概念
+- 被追问时频繁说"那部分是别人做的"
+
+---
+
+## AI 作弊时代的应对策略
+
+2025-2026 年数据：**技术岗位作弊率高达 48%**，初级候选人是资深的近两倍。
+
+| 应对策略 | 说明 |
+|---|---|
+| 增加互动深度 | AI 无法伪造实时深度追问 |
+| 关注行为信号 | AI 辅助回答通常有 3-5 秒延迟 |
+| 使用开放式问题 | 用真实业务场景替代标准化问题 |
+| 评估过程而非答案 | 分析候选人得出答案的完整过程 |
+
+---
+
+## 推荐四轮面试流程
+
+| 轮次 | 内容 | 时长 | 目标 |
+|---|---|---|---|
+| 第 1 轮 | 在线编码筛选 | 30-60min | 淘汰基础不合格者 |
+| 第 2 轮 | 结对编程 + 项目深挖 | 60-90min | 验证真实能力，识别注水 |
+| 第 3 轮 | 系统设计 | 45-60min | 评估架构思维 |
+| 第 4 轮 | 代码审查 + 文化匹配 | 60min | 工程判断力 + 团队适配 |
+
+### 评分标准
+
+| 维度 | 1 分（不通过） | 3 分（达标） | 5 分（优秀） |
+|---|---|---|---|
+| 问题解决 | 无法理解题意 | 需少量提示完成 | 独立识别所有边界情况 |
+| 代码质量 | 混乱无结构 | 合理命名和结构 | 高可读性，主动写测试 |
+| 沟通能力 | 沉默编码 | 能解释基本思路 | 主动讨论权衡和替代方案 |
+| 技术深度 | 无法回答深入问题 | 能回答大部分细节 | 展示深入理解和 tradeoff |
+
+---
+
+## 行动清单
+
+1. **立即停止**：用纯算法谜题作为唯一评估手段
+2. **立即开始**：使用标准化评分量表，每环节后独立评分再合议
+3. **逐步引入**：结对编程（替代白板编码）、代码审查（高级岗位）
+4. **持续优化**：跟踪"面试通过后入职表现"数据，定期校准标准
+5. **应对 AI 作弊**：增加互动性问题，使用开放式场景题`,
     },
     {
-      id: 'interview-2', category: 'interview',
+      id: 'interview-2', slug: 'star-interview-method', datePublished: '2026-03-29', category: 'interview',
       categoryLabel: t('docs.community.cat.interview', '面试技巧'),
       title: t('docs.community.articles.i2.title', 'STAR 面试法：行为面试的黄金标准'),
       excerpt: t('docs.community.articles.i2.excerpt', '用 STAR（情境-任务-行动-结果）框架提问，让候选人用具体案例展示能力。附带 20 个常用 STAR 面试问题模板，覆盖领导力、团队协作、问题解决等维度。'),
-      tags: ['STAR面试', '行为面试', '问题模板'], icon: '⭐', readTime: '6 min',
+      tags: ['STAR面试', '行为面试', '问题模板'], icon: '⭐', readTime: '15 min',
+      content: `## 什么是 STAR 面试法？
+
+STAR 是一种结构化行为面试框架：
+
+| 要素 | 含义 | 建议时间占比 |
+|---|---|---|
+| **S** - Situation | 描述事件背景 | 20% |
+| **T** - Task | 说明承担的任务 | 10% |
+| **A** - Action | 详细描述个人行动 | **60%** |
+| **R** - Result | 阐述结果（量化） | 10% |
+
+核心理论："过去的行为是未来行为的最佳预测"。结构化面试的预测效度 (r=0.51) 比非结构化 (r=0.38) 高 34%。
+
+---
+
+## 面试官评估框架
+
+### 五级评分量表
+
+| 分数 | 等级 | 描述 |
+|---|---|---|
+| 5 | 卓越 | 深度精通，战略影响力，"提升标准"型人选 |
+| 4 | 优秀 | 案例清晰完整，符合或超出要求 |
+| 3 | 合格 | 满足基本要求，但缺乏深度 |
+| 2 | 待发展 | 低于预期，存在关键缺口 |
+| 1 | 不合格 | 未能满足要求，存在重大红旗 |
+
+**Action 权重最高（60%）**——它最能预测候选人未来的行为模式。关注候选人是否在描述"自己做了什么"而非"团队做了什么"。
+
+---
+
+## 25 道实用 STAR 面试问题
+
+### 领导力（5 题）
+
+1. "请描述一次你带领团队完成高风险项目的经历。" → 评估：战略领导力
+2. "讲一个你激励业绩不佳团队成员的例子。" → 评估：绩效辅导
+3. "描述一次你在没有正式权限的情况下推动变革的经历。" → 评估：影响力
+4. "举一个你做出艰难领导决策的例子。" → 评估：决策力
+5. "请讲述一次你成功委派任务的经历。" → 评估：授权与信任
+
+### 团队协作（5 题）
+
+6. "描述一次你与难以相处的同事合作的经历。" → 评估：人际适应性
+7. "举一个跨部门协作成功的项目案例。" → 评估：跨职能协作
+8. "讲一次你支持压力很大的同事的经历。" → 评估：同理心
+9. "描述一次你改善团队沟通的情况。" → 评估：沟通优化
+10. "举一个你调解同事矛盾的例子。" → 评估：调解能力
+
+### 问题解决（5 题）
+
+11. "描述一次你在资源有限下解决复杂问题的经历。" → 评估：创造性思维
+12. "举一个你用数据驱动方法解决业务问题的例子。" → 评估：分析能力
+13. "讲述一次项目因意外障碍需要调整的经历。" → 评估：应变力
+14. "描述一次你发现流程低效并改进的经历。" → 评估：持续改进
+15. "举一个你在截止日期压力下快速决定的例子。" → 评估：决断力
+
+### 冲突解决（5 题）
+
+16. "描述一次你与上级意见不合的经历。" → 评估：向上管理
+17. "举一个你处理客户投诉的例子。" → 评估：危机处理
+18. "讲一次你为达成共识做出妥协的经历。" → 评估：谈判力
+19. "描述一次你缓和紧张局面的经历。" → 评估：情绪管理
+20. "举一个你坚持立场并最终被证明正确的例子。" → 评估：原则性
+
+### 适应力与创新（5 题）
+
+21. "描述一次你快速学习新技能的经历。" → 评估：学习敏锐度
+22. "举一个你帮助团队适应组织变革的例子。" → 评估：变革管理
+23. "讲一次你的创新想法被成功实施的经历。" → 评估：创新思维
+24. "描述一次你管理多个优先事项的经历。" → 评估：优先级判断
+25. "举一个你收到负面反馈后改进的例子。" → 评估：成长型思维
+
+---
+
+## STAR 进阶变体
+
+| 场景 | 推荐方法 | 说明 |
+|---|---|---|
+| 标准行为面试 | **STAR** | 四要素经典框架 |
+| 评估反思能力 | **STAR-L** | +Learning（你学到了什么？） |
+| 讨论失败和冲突 | **SPAR** | Task→Problem，强调克服障碍 |
+| 电话筛选/快节奏 | **CAR** | Challenge-Action-Result，精简高效 |
+| 战略/高管面试 | **SOAR** | Task→Objective，强调战略视野 |
+| 挫折中的领导力 | **SHARE** | +Hindrance+Evaluation，五要素深度 |
+
+---
+
+## 追问技巧：当回答模糊时
+
+### 八类追问句型
+
+**行动细化**："你能具体说说你个人做了什么？"
+
+**思维过程**："你考虑过哪些替代方案？为什么没选？"
+
+**结果量化**："这个结果可以用数字衡量吗？与之前相比改善了多少？"
+
+**反思性**："如果再次面对，你会做什么不同的事？"
+
+**困难深挖**："这个过程中最大的挑战是什么？"
+
+**验证性**："有没有其他人可以验证这个结果？"
+
+**情境扩展**："那个时间点你还面临哪些其他压力？"
+
+**策略性沉默**：回答后保持 3-5 秒沉默，给候选人时间补充更多细节。
+
+### 识别不完整回答
+
+| 缺失要素 | 候选人表现 | 追问策略 |
+|---|---|---|
+| 缺 S | 直接跳到行动 | "能回头说说当时的具体情境吗？" |
+| 缺 T | 个人职责不清 | "你在这件事中具体负责什么？" |
+| 缺 A | 用"我们"笼统概括 | "你个人的贡献是什么？" |
+| 缺 R | 回避结果 | "具体的成果是什么？可以量化吗？" |
+
+---
+
+## 高质量回答 vs 危险信号
+
+**高质量标志**：
+- 使用具体数字（"降低了 30% 投诉率"）
+- 清晰因果逻辑链
+- 提到具体工具和方法
+- 承认困难并展示如何克服
+- 主动反思学到了什么
+
+**危险信号**：
+- 只说"我们"从不说"我"
+- 回答过于泛化
+- 无法提供量化结果
+- 案例听起来像背诵的
+- 将所有功劳归于自己
+
+---
+
+## 面试官检查清单
+
+**面试前**：
+- ☐ 明确 3-5 个核心能力维度
+- ☐ 每个维度准备 2-3 个 STAR 问题
+- ☐ 准备标准化评分表和追问题库
+
+**面试中**：
+- ☐ 认真记录每个回答的 S-T-A-R 要素
+- ☐ 对不完整回答使用追问技巧
+- ☐ 同时询问成功案例和失败案例
+- ☐ 每个回答控制在 60-90 秒
+
+**面试后**：
+- ☐ 先独立评分，再与其他面试官讨论
+- ☐ 基于评分矩阵而非直觉做决策
+- ☐ 记录评分理由，确保可追溯
+
+> STAR 面试法将主观判断转化为结构化评估，将猜测预判转化为行为证据。掌握 STAR 及其变体，能显著提升招聘决策的准确性和一致性。`,
     },
     // 谈薪技巧
     {
-      id: 'salary-1', category: 'salary',
+      id: 'salary-1', slug: 'offer-negotiation-tactics', datePublished: '2026-03-29', category: 'salary',
       categoryLabel: t('docs.community.cat.salary', '谈薪技巧'),
       title: t('docs.community.articles.sal1.title', 'Offer 谈判：如何在预算内拿下心仪候选人'),
       excerpt: t('docs.community.articles.sal1.excerpt', '当候选人的期望薪资超出预算时怎么办？从了解候选人真实诉求、展示非现金价值、灵活运用期权/奖金/福利包，到把控谈判节奏，分享实战谈薪话术。'),
-      tags: ['薪资谈判', 'Offer管理', '话术'], icon: '💰', readTime: '6 min',
+      tags: ['薪资谈判', 'Offer管理', '话术'], icon: '💰', readTime: '14 min',
+      content: `## 核心数据
+
+- **73%** 的雇主预期候选人会谈判薪资，但 55% 的候选人实际不会
+- 成功谈判者平均比接受首次报价的人多获得 **18.83%** 薪酬
+- **63%** 的候选人表示接受 offer 后收到更好的也会反悔
+- 中国求职者最看重：成长机会(66.55%) > 价值感(52.61%) > 高薪(42.22%)
+
+> 薪资只是候选人决策的一部分。善用非薪资要素，是在预算内关闭候选人的关键杠杆。
+
+---
+
+## 谈判前准备（PREP 框架）
+
+### P - Position（定位）
+- 明确岗位薪资带宽（下限/中位/上限）
+- 确保内部薪酬公平性
+
+### R - Research（研究候选人）
+- 当前薪酬结构（base + 年终 + 股票 + 补贴 = 总包）
+- 跳槽真实动机（追薪？追成长？逃离现状？）
+- 手中是否有其他 offer
+
+### E - Envelope（定义谈判信封）
+- 你的 **BATNA**（最佳替代方案）：次选候选人是谁？
+- **保留价格**：能给出的绝对最高值
+- **ZOPA**（可能达成协议的区间）
+
+### P - Plan（准备非现金筹码清单）
+
+---
+
+## 读懂候选人的真实动机
+
+### 关键话术
+
+> "抛开薪资不谈，您理想中的下一份工作是什么样的？"
+
+> "您从现在的公司离开，最核心的原因是什么？"
+
+> "如果我们在所有条件上都能满足您，您今天能做出决定吗？"
+
+### 候选人动机分类
+
+| 动机类型 | 典型表现 | HR 应对 |
+|---|---|---|
+| **追薪型** | 反复强调数字 | 拆解总包，展示长期收益 |
+| **逃离型** | 主诉离开现公司 | 强调团队氛围、管理风格 |
+| **成长型** | 关注职级、权限 | 展示晋升路径、项目规模 |
+| **平衡型** | 关注加班、远程 | 明确弹性制度 |
+| **价值型** | 关注使命、影响力 | 讲好公司故事和愿景 |
+
+---
+
+## 非现金筹码工具箱
+
+### 高价值 / 低成本
+
+| 筹码 | 候选人感知价值 | 企业实际成本 |
+|---|---|---|
+| 弹性工作制（远程/混合） | 极高（84%偏好） | 几乎为零 |
+| 额外年假（+3-5天） | 高 | 低 |
+| Title 提升 | 中高 | 零 |
+| 入职签字费（一次性） | 高 | 可控 |
+| 试用期缩短（6→3个月） | 中 | 零 |
+| 提前绩效评估（6个月后调薪机会） | 高 | 延迟成本 |
+
+### 组合出击话术
+
+> "我理解您期望的 base 是 X 万，但岗位带宽上限是 Y 万。不过我可以争取：签字费 Z 万 + 额外 5 天年假 + 6 个月后提前调薪评估。算上这些，年度总收入基本持平，而且上升空间更大。"
+
+---
+
+## 五大场景谈判话术
+
+### 场景 1：首次报价
+
+> "基于您的经验和岗位薪酬体系，范围是 X-Y 万。结合您的情况，初步方案是 base Z 万/月，年终 N 个月，加上（福利）。您觉得怎么样？"
+
+### 场景 2：候选人要求涨薪
+
+> "我理解您的期望。这需要内部审批，我会尽力争取。给我 1-2 天时间确认？"
+
+（1-2天后）
+
+> "好消息：我跟领导特别沟通了。虽然 base 调整有限，但我们可以通过签字费/股票/年假来缩小差距。新方案是..."
+
+### 场景 3：候选人有竞品 Offer
+
+> "恭喜拿到多个 offer。除了薪资，您做最终决定时最看重什么？"
+
+> "我们不一定出价最高，但我想帮您分析整体价值：团队水平、项目规模、成长路径、长期回报..."
+
+**提前预防**：面试阶段就问"如果现公司涨薪挽留，您怎么考虑？"
+
+### 场景 4：候选人犹豫不决
+
+> "如果薪酬达成一致，还有其他因素影响您的决定吗？"
+
+> "Offer 有效期是一周。不是给您压力，是因为岗位紧急。希望您有充足时间思考。"
+
+### 场景 5：最后通牒
+
+> "我已尽最大努力争取了内部特批。这是我们能给出的最优条件。如果周五前确认，可以锁定方案。我真心希望能和您合作。"
+
+---
+
+## 反 Offer 应对
+
+### 预防（Offer 之前）
+
+1. 面试阶段让候选人说出想离开的原因——说出口后，现公司的 counter-offer 就很难翻盘
+2. 直接问"如果现公司涨薪 30% 挽留，您怎么做？"
+3. 分享数据：接受 counter-offer 的候选人，大多数 **12 个月内仍然会离开**
+
+### 应对话术
+
+> "这很正常。不过请思考：
+> 1. 如果这个涨薪是您应得的，为什么直到提离职才给？
+> 2. 您想离开的那些原因，counter-offer 能解决吗？
+> 3. 接受后，您在团队中的信任关系会不会变化？"
+
+---
+
+## 雇主常犯的七大错误
+
+| 错误 | 正确做法 |
+|---|---|
+| 首次报价过低 | 在带宽 40-60% 位置，有诚意有空间 |
+| 只谈钱不谈价值 | 先建立职位吸引力，再谈薪资 |
+| 拖延 Offer | 终面后同天或次日发 offer |
+| 忽视候选人体验 | 全程透明、及时、专业 |
+| 陷入价格战 | 用非现金筹码差异化竞争 |
+| 太早讨论薪资 | 先让候选人爱上机会 |
+| 不了解候选人 BATNA | 面试中持续收集动机和替代选项 |
+
+---
+
+## 中国市场特殊动态
+
+### 薪酬结构
+
+**总包 = 月薪 × 月数（含年终奖） + 签字费 + 股票/期权 + 补贴**
+
+| 公司 | 典型结构 |
+|---|---|
+| 字节跳动 | base × 15 + 签字费 + 期权 |
+| 腾讯/阿里 | base × 16-18 + RSU + 补贴 |
+| 中小企业 | base × 13-14 + 绩效奖金 |
+
+**关键**：候选人说"期望月薪 X 万"时，立即拆解——这是纯 base，还是总包除以 12？
+
+### "金三银四"时间变量
+
+招聘旺季（3-4月、9-10月）候选人手握多个 offer 概率显著增加：
+- **速度比价格更重要**——快速决策、快速发 offer
+- 独特价值主张（EVP）成为差异化武器
+
+---
+
+## 哈佛原则性谈判在招聘中的应用
+
+1. **把人和问题分开**：候选人不是对手，薪资分歧是"问题"
+2. **关注利益而非立场**："我要 3 万"是立场，背后可能是"供房贷"或"不低于同学"
+3. **创造双赢选项**："如果 base 定在 2.7 万，但增加保证调薪 + 签字费 5 万？"
+4. **使用客观标准**："根据市场薪资报告，这个职级中位值是 X 万..."
+
+---
+
+> 最好的谈判不是"赢了"候选人，而是让候选人觉得自己做出了最好的选择。一个被压价到极限的候选人，可能入职第一天就开始看新机会。**在预算内拿下心仪候选人的最高境界，是让候选人觉得自己拿到了超出预期的价值。**`,
     },
     {
-      id: 'salary-2', category: 'salary',
+      id: 'salary-2', slug: 'tech-salary-trends-2026', datePublished: '2026-03-30', category: 'salary',
       categoryLabel: t('docs.community.cat.salary', '谈薪技巧'),
       title: t('docs.community.articles.sal2.title', '2026 年技术岗薪资趋势与对标'),
       excerpt: t('docs.community.articles.sal2.excerpt', 'AI、大模型、全栈工程师的市场薪资区间是多少？一线城市 vs 新一线 vs 远程薪资差异如何？基于最新市场数据的薪资对标参考。'),
-      tags: ['薪资趋势', '市场行情', '技术岗'], icon: '📊', readTime: '5 min',
+      tags: ['薪资趋势', '市场行情', '技术岗'], icon: '📊', readTime: '14 min',
+      content: `## AI/ML 工程师薪资区间（2025-2026）
+
+### 一线城市（北上深杭）
+
+| 经验层级 | 年薪范围 |
+|---|---|
+| 初级（0-2年） | 25-40 万 |
+| 中级（3-5年） | 40-70 万 |
+| 高级（5年+） | 70-150 万+ |
+
+### 新一线城市（成都/武汉/西安/苏州）
+
+新一线城市薪资约为一线的 **80-90%**，但通常附带住房/搬迁补贴。二线城市约为一线的 **70-85%**。
+
+> AI 工程师在上海的年薪中位数约 **47 万元**，75 分位数可达 **85 万元**。
+
+---
+
+## 大模型/LLM 工程师：最火热的细分方向
+
+人才供需比高达 **1:10**，是当前涨薪最猛的方向。
+
+| 经验层级 | 月薪范围 | 年薪（含奖金） |
+|---|---|---|
+| 应届生 | 10-20K | 20-35 万 |
+| 3-5 年 | 30-50K | 60-100 万 |
+| 资深专家 | 50-80K | 100-200 万+ |
+| 首席科学家 | 80K+ | 200 万+ |
+
+**校招标杆**：字节跳动大模型岗月薪可达 **50K**（年薪约 75 万），百度卓越档 **70 万+**。
+
+LLM 专家比通用 ML 工程师薪资高出 **25-40%**，AI 安全/对齐方向自 2023 年以来涨幅达 **45%**。
+
+---
+
+## 主要大厂薪酬结构
+
+### 校招（2025 届，技术岗年总包，万元）
+
+| 公司 | 普通档 | 优先档 | 卓越档 | AI 岗卓越档 |
+|---|---|---|---|---|
+| 字节跳动 | 36-39 | 40-50 | 50+ | 55+ |
+| 腾讯 | 37-40 | 43 | 46-52 | 60+ |
+| 阿里巴巴 | 35-40 | 41-47 | 50+ | 52+ |
+| 百度 | 35-40 | 41-47 | 50+ | 70+（大模型） |
+| 拼多多 | 45-48 | 55-60 | 70+ | 80+ |
+
+### 社招（技术岗，万元/年）
+
+| 公司 | P5/初级 | P6/高级 | P7/专家 | P8/高级专家 |
+|---|---|---|---|---|
+| 字节跳动 | 40-60 | 60-84 | 84-128 | 142-210 |
+| 阿里巴巴 | 41-54 | 48-70 | 75-118 | 160-240 |
+| 腾讯 | 35-67 | 50-80 | 80-130 | 130-300 |
+
+### 薪酬构成模式
+
+| 公司 | 月薪制度 | 年终奖 | 股票/期权 |
+|---|---|---|---|
+| 字节跳动 | 15 薪 | 全年奖 + 绩效期权 | 4 年归属，按季度 |
+| 腾讯 | 16 薪 | 3-6 个月 | 3 年 RSU |
+| 阿里巴巴 | 13 薪 | 0-6 个月 | 4 年 RSU |
+
+---
+
+## AI 对薪资的结构性影响
+
+### 上行压力（AI 岗位）
+
+- AI 岗位较传统技术岗享有 **28% 薪资溢价**
+- 具备 AI 技能者比同级别无 AI 技能者收入高 **25-56%**
+- AI/ML 岗位在技术招聘中的占比从 10% 飙升至 **50%**
+
+### 下行压力（传统岗位）
+
+- 2025 上半年 **77,999 个**技术岗被归因于 AI 裁减
+- 初级开发岗位减少 **32%**
+- 传统测试、运维、初级前端受冲击最大
+
+**薪资溢价排序**：AI 大模型 > 算法 > 后端 > 数据 > 前端 > 测试/运维
+
+---
+
+## 远程办公薪资差异
+
+- 一线 vs 二线同岗位差距约 **30-45%**
+- 国内纯远程尚未形成系统性"远程折扣"，多数仍按总部所在城市定薪
+- 部分初创按二线标准定薪远程岗位（一线打 **7-8 折**）
+- 跨境远程：中国开发者为硅谷工作的成本比美国本土低 **50-70%**
+
+---
+
+## 国际对比
+
+| 国家/地区 | AI 工程师年薪（USD） | vs 中国 |
+|---|---|---|
+| 美国（硅谷） | $200,000-$230,000 | 3-5x |
+| 西欧 | $95,000-$102,000 | 1.3-1.5x |
+| 中国一线 | $50,000-$140,000 | 基准 |
+| 印度 | $13,000-$54,000 | 0.3-0.5x |
+
+---
+
+## 给 HR 的可操作建议
+
+1. **AI 岗位定薪**：传统技术岗基础上浮 **25-40%**，大模型方向再加 **15-25%**
+2. **竞争力门槛**：校招 AI 总包低于 **45 万** 难吸引 985 硕士；社招 3-5 年低于 **60 万** 竞争劣势明显
+3. **股权激励**：参考字节跳动按季度归属、提高首年比例的新模式
+4. **远程策略**：按一线 **80-90%** 定薪二线远程岗位
+5. **审计频率**：AI 人才快速涨薪环境下，从年度调整为 **半年度**对标
+6. **跨境招聘**：雇佣中国 AI 工程师预算 $50,000-$100,000 USD，具有显著成本优势`,
     },
     // 候选人吸引
     {
-      id: 'attract-1', category: 'attract',
+      id: 'attract-1', slug: 'write-compelling-jd', datePublished: '2026-03-30', category: 'attract',
       categoryLabel: t('docs.community.cat.attract', '候选人吸引'),
       title: t('docs.community.articles.a1.title', '写出让候选人心动的 JD：7 个实用技巧'),
       excerpt: t('docs.community.articles.a1.excerpt', '为什么你的 JD 发了一个月却收不到几份简历？问题可能出在 JD 本身。从标题吸引力、职责清晰度、成长空间描述、薪资透明度等 7 个维度优化你的岗位描述。'),
-      tags: ['JD优化', '雇主品牌', '候选人体验'], icon: '✍️', readTime: '5 min',
+      tags: ['JD优化', '雇主品牌', '候选人体验'], icon: '✍️', readTime: '13 min',
+      content: `## 为什么大多数 JD 招不到人？
+
+**69% 的雇主** 表示难以找到合格候选人（SHRM 2025），但问题往往不在市场——而在 JD 本身。
+
+- **44% 的求职者** 不会申请没有薪资范围的岗位
+- JD 使用性别中立语言可增加 **42%** 回复率
+- 提及远程工作可带来 **2.8 倍**申请量
+- 超过 **20%** 的候选人因 JD 质量差而放弃申请
+
+---
+
+## 技巧一：标题短而精准
+
+标题是 JD 最重要的元素——决定 SEO 排名和候选人点击率。
+
+**规则**：控制在 **1-4 个词**，使用候选人实际搜索的标准术语。
+
+| 差的标题 | 好的标题 |
+|---|---|
+| 代码忍者 / 全栈大神 | 高级全栈工程师 |
+| 首席快乐官 | 人力资源总监 |
+| 增长黑客专家 III | 数字营销经理 |
+
+> 1-3 个词的标题申请率是 12+ 个词标题的 **2 倍**。创意标题（如"代码忍者"）根本不会出现在候选人搜索结果中。
+
+---
+
+## 技巧二：开头就讲候选人关心的
+
+**不要以公司历史开头。** 直接告诉候选人：这个岗位做什么、为什么值得加入。
+
+**差的开头**：
+> "XX公司成立于2015年，是国内领先的..."
+
+**好的开头**：
+> "你将负责我们推荐引擎的核心算法，每天影响 200 万+ 用户的内容体验。团队 4 人，直接向 VP 汇报。薪资 40-60 万，支持远程。"
+
+---
+
+## 技巧三：控制在 300-700 字
+
+| JD 长度 | 申请率 |
+|---|---|
+| <170 字 | 6.7%（太短，信息不足） |
+| 300-700 字 | **8.4%**（最佳区间） |
+| 2000+ 字 | 显著下降 |
+
+**结构建议（6 个板块）**：
+1. 标题（1-4 词）
+2. 开头钩子（2-3 句）
+3. 核心职责（5-7 条 bullet）
+4. 任职要求（分"必须"和"加分"）
+5. 我们提供什么（薪资、福利、成长）
+6. 如何申请
+
+---
+
+## 技巧四：写上薪资范围
+
+- **61%** 的求职者说薪资是 JD 中最重要的信息
+- **44%** 不会申请未标明薪资的岗位
+- **45%** 认为不公开薪资是"不尊重"
+- **90%** 说薪资透明影响他们是否感到被重视
+
+> "面议"是一个红旗信号。它告诉候选人：要么你的薪资没竞争力，要么你的公司不够自信。
+
+---
+
+## 技巧五：用包容性语言
+
+性别中立的 JD 可增加 **42%** 回复率。
+
+| 避免使用 | 改为 |
+|---|---|
+| 有狼性的 | 有进取心的、目标导向的 |
+| 抗压能力强 | 能在多任务环境中有效工作 |
+| 年轻有活力 | （删除——描述技能而非特征） |
+| 数字原住民 | 熟练使用 React 和 TypeScript |
+| 他/她 | ta / 候选人 |
+
+**关键发现**：当任职要求从模糊变为具体时，女性申请率从 42% 跃升至 **62%**。
+
+**实操**：把"必须"和"加分"分开写。这一个动作就能显著提升女性申请量。
+
+---
+
+## 技巧六：像人说话，不像机器
+
+**用"你"和"我们"**："你将带领 5 人团队" 而非 "候选人将负责..."
+
+**动词开头**：
+- ✅ "设计可扩展的微服务架构"
+- ❌ "负责架构设计相关工作"
+
+**杀死套话**：
+
+| 删除 | 替换为具体描述 |
+|---|---|
+| 自驱力强 | "独立负责从需求到上线的完整交付" |
+| 团队合作 | "与 3 名前端 + 2 名后端工程师协作" |
+| 快节奏环境 | "每两周一个迭代，年发版 26 次" |
+| 有相关经验 | "3 年以上 Python 后端开发经验" |
+
+---
+
+## 技巧七：做好搜索引擎优化
+
+### 页面 SEO
+
+- 标题包含核心关键词（候选人会搜的词）
+- 正文自然包含相关同义词（"项目经理""项目负责人""PM"）
+- 在 70 字符内写好 meta title
+
+### 结构化数据（Google for Jobs）
+
+使用 JSON-LD \`JobPosting\` schema：
+
+- 必填：title, description, datePosted, hiringOrganization, jobLocation
+- 包含 \`baseSalary\` 可显著提升搜索可见度（最高 **+70%**）
+- 指定 \`employmentType\`（FULL_TIME）和 \`jobLocationType\`（TELECOMMUTE）
+- 每页只允许一个 JobPosting schema
+
+---
+
+## 干货速查表：7 个技巧一页纸
+
+| # | 技巧 | 关键数据 |
+|---|---|---|
+| 1 | 标题短而精准（1-4 词） | 短标题申请率 2x |
+| 2 | 开头讲候选人关心的 | 20% 候选人因 JD 差放弃 |
+| 3 | 300-700 字 | 最佳申请率 8.4% |
+| 4 | 写上薪资范围 | +44% 候选人吸引力 |
+| 5 | 包容性语言 | +42% 回复率 |
+| 6 | 像人说话 | 具体 > 模糊 |
+| 7 | SEO 优化 | 结构化数据 +70% 可见度 |`,
     },
     {
-      id: 'attract-2', category: 'attract',
+      id: 'attract-2', slug: 'passive-candidate-sourcing', datePublished: '2026-03-30', category: 'attract',
       categoryLabel: t('docs.community.cat.attract', '候选人吸引'),
       title: t('docs.community.articles.a2.title', '被动候选人触达策略：从不主动找工作的人手中挖人'),
       excerpt: t('docs.community.articles.a2.excerpt', '最优秀的人才往往不在投简历。如何通过技术社区、行业活动、内推网络、社交媒体精准触达被动候选人？分享猎头级别的人才挖掘方法论。'),
-      tags: ['被动候选人', '人才挖掘', '触达策略'], icon: '🎣', readTime: '7 min',
+      tags: ['被动候选人', '人才挖掘', '触达策略'], icon: '🎣', readTime: '15 min',
+      content: `## 为什么你必须关注被动候选人？
+
+**70-75% 的全球人才** 是被动候选人——不主动找工作，但对合适的机会持开放态度。如果你只发招聘广告等人投递，你只能触达 **25%** 的人才池。
+
+### 被动候选人为什么更优质？
+
+| 指标 | 被动 vs 主动 |
+|---|---|
+| 长期留存 | 被动候选人留存率高 **25%** |
+| 工作表现 | 表现好 **9%** |
+| 影响力动机 | 高 **120%** |
+| 技能准备度 | 需培训概率低 **17%** |
+
+> 被动候选人当前在职且表现良好，意味着他们已被另一个雇主"验证"过。他们不是在就业压力下做决定，所以一旦接受 offer，信念更强。
+
+---
+
+## 渠道一：LinkedIn
+
+主要的被动候选人触达平台。
+
+- InMail 平均回复率：**10-25%**
+- 个性化 outreach 可达 **35-50%**
+- **注意**：回复率在下降，因为候选人每周收到多封 InMail
+
+**关键**：不要群发模板。引用候选人的具体项目、文章或成就。
+
+---
+
+## 渠道二：GitHub（最被低估的渠道）
+
+适合技术岗位的精准触达：
+
+- 评估维度：贡献活跃度（绿色方格）、使用语言、代码质量、文档质量
+- 搜索技巧：按语言 + 地区 + 活跃度筛选
+- 交叉引用 LinkedIn 获取完整职业背景
+- **红旗**：缺乏近期活跃、虚假贡献
+
+---
+
+## 渠道三：技术社区
+
+- **Stack Overflow**：高声望用户 = 技术专家
+- **SegmentFault（思否）**：中国最大开发者问答社区，**1000 万+** 开发者
+- **掘金 / Dev.to / Hacker News**：活跃贡献者通常是高质量候选人
+- **会议演讲者、开源项目维护者**是大多数招聘者忽略的高质量目标
+
+---
+
+## 渠道四：中国特色平台
+
+### 脉脉（Maimai）
+
+- 中国领先的职业社交网络，类似 LinkedIn
+- 年薪 **30 万+** 的专业人士偏好被动发现而非主动投递
+- 年薪 **100 万+** 者中 **超过一半**是被动求职者
+- **70% 的猎头**在脉脉上付费寻人——行业最高采用率
+- "脉脉高聘"子品牌专注中高端（30 万+）人才
+
+### Boss 直聘
+
+- "直聊"模式允许直接与候选人对话
+- 适合中级岗位大量触达
+- 被动候选人角度：可主动 reach out 注册用户
+
+### 牛客网（Nowcoder）
+
+- 技术面试准备和编程挑战平台
+- 适合校招和初中级技术人才识别
+- 策略：赞助编程比赛，识别高分选手
+
+### SegmentFault（思否）
+
+- "酷工作"板块展示技术团队和岗位
+- 策略：通过回答问题和发布技术内容建立影响力
+
+---
+
+## Cold Outreach 话术模板
+
+### 原则
+
+- 控制在 **100 字以内**（75-100 字最佳）
+- 开头就说**最吸引人的点**（技术、团队、问题域、成长）
+- 用一句话 CTA："Worth a quick call?" 比 "什么时候方便聊？" 更有效
+- 个性化 CTA 转化率提升 **202%**
+- **3 封邮件序列**回复率最高——59% 的回复来自第 3 封
+
+### 模板 1：通用 InMail
+
+> Hi [Name]，看到你在 [具体项目/成就] 上的工作，印象深刻。
+>
+> 我们在 [公司] 正在做 [一句话描述]，寻找 [角色] 来 [关键影响]。
+>
+> 15 分钟聊一下？
+
+### 模板 2：GitHub 引用
+
+> Hi [Name]，你在 [具体 repo/项目] 上的贡献很出色——特别是 [具体细节]。
+>
+> 我在为 [公司] 招聘，技术栈是 [xxx]，团队 [规模]，薪资 [范围]。
+>
+> 快速聊聊看是否匹配？
+
+### 模板 3：熟人推荐
+
+> Hi [Name]，[共同联系人] 提到你在 [领域] 非常资深。我在帮 [公司] 找一个 [角色]。
+>
+> [一句话描述机会]。
+>
+> 方便聊几分钟吗？
+
+> 熟人推荐回复率达 **40-50%**，是 cold outreach 的 2-4 倍。
+
+### 跟进节奏
+
+- 间隔 **2-4 天**
+- 最多 **2-3 次**跟进
+- 第 1 次跟进：分享公司新闻或行业洞察（提供价值，不施压）
+- 第 2 次跟进：最后一封——"这是我关于这个机会的最后一封邮件"
+- **永远不要说"再次提醒"**——每次都加新内容
+
+---
+
+## Boolean 搜索实战模板
+
+### 全栈工程师
+
+\`\`\`
+("全栈工程师" OR "Full Stack Developer") AND
+(React OR Vue) AND (Node.js OR Python)
+NOT (实习 OR 应届 OR Junior)
+\`\`\`
+
+### 数据科学家 / ML 工程师
+
+\`\`\`
+("数据科学家" OR "Machine Learning Engineer") AND
+(Python OR R) AND ("机器学习" OR "深度学习" OR NLP)
+NOT (实习 OR 助理)
+\`\`\`
+
+### 产品经理（SaaS）
+
+\`\`\`
+("产品经理" OR "高级产品经理") AND
+(B2B OR SaaS OR "产品驱动")
+NOT (助理 OR 实习)
+\`\`\`
+
+---
+
+## 人才储备池建设
+
+### 70-20-10 法则
+
+理想的人才储备池构成：
+- **70%** 被动候选人（不在找但优秀）
+- **20%** 选择性求职者（开放但挑剔）
+- **10%** 主动求职者
+
+### 建设步骤
+
+1. **建立雇主品牌**：社交媒体、技术博客、员工故事
+2. **创建人才社区**：CRM 分类管理，每 **4-6 周** 一次低频触达
+3. **监控触发事件**：裁员、收购、换帅——这些时候候选人更可能重新考虑
+4. **激活内推**：在岗位公开前就启动内推
+5. **内容培育**：发送行业洞察和公司里程碑，不推销
+6. **定期 Career Check-in**：保持关系，成为候选人准备动的时候第一个想到的人
+
+### ROI
+
+- 有成熟储备池的公司 **填岗速度快 50%**
+- **招聘广告支出减少 40%**
+- **质量提升 70%**
+
+---
+
+## 关键指标对比
+
+| 指标 | 主动候选人 | 被动候选人 |
+|---|---|---|
+| Cold outreach 回复率 | N/A | 5-10%（通用），25-40%（个性化） |
+| InMail 回复率 | N/A | 10-25%（平均），35-50%（优化后） |
+| 熟人推荐回复率 | N/A | 40-50% |
+| 每次招聘耗时 | 60-80 小时 | 80-100 小时 |
+| 长期留存 | 基准 | +25% |
+| 工作表现 | 基准 | +9% |
+
+> 被动sourcing每次招聘多投入 20-30 小时，但在留存和绩效上的回报远超额外投入。
+
+---
+
+## 行动清单
+
+1. ✅ 认清现实：70-75% 人才是被动的，招聘广告只能触达 25%
+2. ✅ 多渠道覆盖：LinkedIn + GitHub + 技术社区 + 脉脉 + 牛客
+3. ✅ 个性化触达：100 字以内，引用具体成就，简单 CTA
+4. ✅ 掌握 Boolean 搜索：按角色建立搜索模板
+5. ✅ 提前建池：遵循 70-20-10 法则，每 4-6 周培育一次
+6. ✅ 跟踪正确指标：回复率 + 转化率 + 留存 + 绩效，而非只看填岗时间`,
     },
     // 市场动态
     {
-      id: 'market-1', category: 'market',
+      id: 'market-1', slug: 'ai-reshaping-recruitment-2026', datePublished: '2026-03-30', category: 'market',
       categoryLabel: t('docs.community.cat.market', '市场动态'),
       title: t('docs.community.articles.m1.title', 'AI 如何重塑招聘行业：2026 趋势报告'),
       excerpt: t('docs.community.articles.m1.excerpt', 'AI 面试官、自动化简历筛选、智能人才匹配 — AI 正在从根本上改变招聘的每一个环节。深度分析 AI 招聘的现状、趋势和对 HR 从业者的影响。'),
       tags: ['AI趋势', '行业报告', '招聘未来'], icon: '🤖', readTime: '10 min',
     },
     {
-      id: 'market-2', category: 'market',
+      id: 'market-2', slug: 'remote-hiring-best-practices', datePublished: '2026-03-30', category: 'market',
       categoryLabel: t('docs.community.cat.market', '市场动态'),
       title: t('docs.community.articles.m2.title', '远程招聘的最佳实践'),
       excerpt: t('docs.community.articles.m2.excerpt', '远程/混合办公已成为新常态。如何评估候选人的远程工作能力？如何设计远程面试流程？如何确保跨时区团队的文化契合？'),
@@ -618,20 +1517,96 @@ AI 三层校验：
     },
     // 常见问答
     {
-      id: 'faq-1', category: 'faq',
+      id: 'faq-1', slug: 'ai-interview-safety-fairness', datePublished: '2026-03-30', category: 'faq',
       categoryLabel: t('docs.community.cat.faq', '常见问答'),
       title: t('docs.community.articles.f1.title', 'RoboHire AI 面试的安全性和公平性'),
       excerpt: t('docs.community.articles.f1.excerpt', '候选人数据如何保护？AI 面试是否存在偏见？评估标准是否经过验证？本文回答关于 AI 面试安全性、公平性、合规性的常见问题。'),
       tags: ['数据安全', 'AI公平', '合规'], icon: '🔒', readTime: '4 min',
     },
     {
-      id: 'faq-2', category: 'faq',
+      id: 'faq-2', slug: 'improve-ai-interview-completion-rate', datePublished: '2026-03-30', category: 'faq',
       categoryLabel: t('docs.community.cat.faq', '常见问答'),
       title: t('docs.community.articles.f2.title', '如何提高 AI 面试的候选人完成率'),
       excerpt: t('docs.community.articles.f2.excerpt', '候选人收到 AI 面试邀请后不愿意做怎么办？从邀请话术、面试说明、候选人体验优化到跟进策略，提升完成率的实用建议。'),
       tags: ['完成率', '候选人体验', '邀请话术'], icon: '📈', readTime: '5 min',
     },
   ];
+
+  // ── URL-based article routing ──
+  // On mount: if URL has a slug path segment, auto-open that article
+  useEffect(() => {
+    const pathSlug = location.pathname.replace('/docs/community/', '').replace('/docs/community', '');
+    if (pathSlug) {
+      const match = articles.find((a) => a.slug === pathSlug);
+      if (match) setActiveArticle(match.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When article opens/closes, update URL and scroll
+  useEffect(() => {
+    if (activeArticle) {
+      const article = articles.find((a) => a.id === activeArticle);
+      if (article) {
+        window.history.replaceState({}, '', `/docs/community/${article.slug}`);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.history.replaceState({}, '', '/docs/community');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeArticle]);
+
+  // ── SEO: selected article or listing page ──
+  const selectedArticle = activeArticle ? articles.find((a) => a.id === activeArticle) : null;
+
+  const articleSchema = selectedArticle ? {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: selectedArticle.title,
+    description: selectedArticle.excerpt,
+    author: { '@type': 'Organization', name: 'RoboHire', url: 'https://robohire.io' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'RoboHire',
+      logo: { '@type': 'ImageObject', url: 'https://robohire.io/logo2.png' },
+    },
+    datePublished: selectedArticle.datePublished,
+    dateModified: '2026-03-30',
+    mainEntityOfPage: `https://robohire.io/docs/community/${selectedArticle.slug}`,
+    url: `https://robohire.io/docs/community/${selectedArticle.slug}`,
+    articleSection: selectedArticle.categoryLabel,
+    keywords: selectedArticle.tags.join(', '),
+    inLanguage: i18n.language === 'zh' ? 'zh-CN' : i18n.language,
+    wordCount: selectedArticle.content ? selectedArticle.content.length : undefined,
+    timeRequired: `PT${parseInt(selectedArticle.readTime)}M`,
+  } : null;
+
+  const breadcrumbSchema = selectedArticle ? {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: t('docs.hub.title', '文档中心'), item: 'https://robohire.io/docs' },
+      { '@type': 'ListItem', position: 2, name: t('docs.community.title', '招聘知识社区'), item: 'https://robohire.io/docs/community' },
+      { '@type': 'ListItem', position: 3, name: selectedArticle.title },
+    ],
+  } : null;
+
+  const collectionSchema = !selectedArticle ? {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: t('docs.community.seo.title', 'RoboHire 招聘知识社区'),
+    description: t('docs.community.seo.desc', '招聘策略、面试技巧、谈薪话术、候选人吸引、市场动态 — 帮助 HR 团队提升专业招聘能力的知识库。'),
+    url: 'https://robohire.io/docs/community',
+    publisher: { '@type': 'Organization', name: 'RoboHire' },
+    hasPart: articles.filter((a) => a.content).map((a) => ({
+      '@type': 'Article',
+      headline: a.title,
+      url: `https://robohire.io/docs/community/${a.slug}`,
+      datePublished: a.datePublished,
+      description: a.excerpt,
+    })),
+  } : null;
 
   const filtered = useMemo(() => {
     let list = articles;
@@ -652,12 +1627,26 @@ AI 三层校验：
 
   return (
     <>
+      {/* Dynamic SEO: article-specific or listing page */}
       <SEO
-        title={t('docs.community.seo.title', 'RoboHire 招聘知识社区')}
-        description={t('docs.community.seo.desc', '招聘策略、面试技巧、谈薪话术、候选人吸引、市场动态 — 帮助 HR 团队提升专业招聘能力的知识库。')}
-        url="https://robohire.io/docs/community"
-        keywords="招聘知识,面试技巧,HR学习,招聘策略,谈薪技巧,人力资源"
+        title={selectedArticle ? selectedArticle.title : t('docs.community.seo.title', 'RoboHire 招聘知识社区')}
+        description={selectedArticle ? selectedArticle.excerpt : t('docs.community.seo.desc', '招聘策略、面试技巧、谈薪话术、候选人吸引、市场动态 — 帮助 HR 团队提升专业招聘能力的知识库。')}
+        url={selectedArticle ? `https://robohire.io/docs/community/${selectedArticle.slug}` : 'https://robohire.io/docs/community'}
+        type={selectedArticle ? 'article' : 'website'}
+        keywords={selectedArticle ? selectedArticle.tags.join(',') : '招聘知识,面试技巧,HR学习,招聘策略,谈薪技巧,人力资源'}
       />
+      {/* Structured data: Article + Breadcrumb or CollectionPage */}
+      <Helmet>
+        {articleSchema && (
+          <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
+        )}
+        {breadcrumbSchema && (
+          <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+        )}
+        {collectionSchema && (
+          <script type="application/ld+json">{JSON.stringify(collectionSchema)}</script>
+        )}
+      </Helmet>
 
       <div className="min-h-screen bg-[#f6fbff]">
         <Navbar />
@@ -668,7 +1657,7 @@ AI 三层校验：
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.08),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.07),transparent_32%)]" />
 
             <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-              <Link to="/docs" className="mb-6 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-sky-700 transition-colors">
+              <Link to="/docs" className="mb-6 flex w-fit items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-sky-700">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                 {t('docs.community.backToDocs', '返回文档中心')}
               </Link>
@@ -728,6 +1717,17 @@ AI 三层校验：
               {activeArticle ? (() => {
                 const article = articles.find((a) => a.id === activeArticle);
                 if (!article?.content) return null;
+
+                // Extract h2 headings for table of contents
+                const toc = (article.content.match(/^## .+/gm) || []).map((h, i) => {
+                  const text = h.replace(/^## /, '');
+                  const id = `section-${i}`;
+                  return { text, id, num: i + 1 };
+                });
+
+                // Counter for assigning section ids to h2 elements
+                let h2Counter = 0;
+
                 return (
                   <div>
                     <button
@@ -738,25 +1738,111 @@ AI 三层校验：
                       {t('docs.community.backToArticles', '返回文章列表')}
                     </button>
 
-                    <div className="rounded-[24px] border border-slate-200/80 bg-white p-8 shadow-[0_20px_60px_-40px_rgba(37,99,235,0.14)] sm:p-10 lg:p-12">
-                      <div className="mb-6 flex flex-wrap items-center gap-3">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                          {article.categoryLabel}
-                        </span>
-                        <span className="text-xs text-slate-400">{article.readTime}</span>
+                    <div className="flex gap-8 lg:flex-row flex-col-reverse">
+                      {/* Main article content */}
+                      <div className="min-w-0 flex-1">
+                        <article className="rounded-[24px] border border-slate-200/80 bg-white shadow-[0_20px_60px_-40px_rgba(37,99,235,0.14)] overflow-hidden">
+                          {/* Article header */}
+                          <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-8 py-8 sm:px-10 sm:py-10">
+                            <div className="mb-4 flex flex-wrap items-center gap-3">
+                              <span className="rounded-full bg-sky-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-700">
+                                {article.categoryLabel}
+                              </span>
+                              <span className="text-xs text-slate-400">{article.readTime} {t('docs.community.readLabel', '阅读')}</span>
+                            </div>
+                            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl leading-tight">{article.title}</h1>
+                            <p className="mt-3 text-base text-slate-500 leading-relaxed">{article.excerpt}</p>
+                            <div className="mt-5 flex flex-wrap gap-2">
+                              {article.tags.map((tag) => (
+                                <span key={tag} className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Article body — professional textbook styling */}
+                          <div className="px-8 py-10 sm:px-10 sm:py-12 lg:px-12">
+                            <div className="
+                              prose prose-slate max-w-none
+                              prose-headings:text-slate-900 prose-headings:font-bold
+                              prose-h2:text-[1.35rem] prose-h2:mt-14 prose-h2:mb-5 prose-h2:pb-3 prose-h2:border-b prose-h2:border-slate-200
+                              prose-h3:text-base prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-800
+                              prose-p:text-[0.938rem] prose-p:leading-[1.8] prose-p:text-slate-600 prose-p:mb-4
+                              prose-strong:text-slate-800 prose-strong:font-semibold
+                              prose-li:text-[0.938rem] prose-li:text-slate-600 prose-li:leading-[1.75] prose-li:my-1
+                              prose-ul:my-4 prose-ol:my-4
+                              prose-table:text-sm prose-table:my-6 prose-table:border prose-table:border-slate-200 prose-table:rounded-xl prose-table:overflow-hidden
+                              prose-thead:bg-slate-800 prose-thead:text-white
+                              prose-th:px-4 prose-th:py-3 prose-th:text-left prose-th:font-semibold prose-th:text-xs prose-th:uppercase prose-th:tracking-wider prose-th:border-slate-700
+                              prose-td:px-4 prose-td:py-3 prose-td:border-t prose-td:border-slate-100
+                              prose-tr:even:bg-slate-50/60
+                              prose-blockquote:border-l-4 prose-blockquote:border-sky-400 prose-blockquote:bg-sky-50/60 prose-blockquote:rounded-r-xl prose-blockquote:px-5 prose-blockquote:py-4 prose-blockquote:my-6 prose-blockquote:not-italic prose-blockquote:text-slate-700 prose-blockquote:text-[0.938rem]
+                              prose-code:text-sky-700 prose-code:bg-sky-50 prose-code:rounded-md prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm prose-code:font-medium prose-code:before:content-none prose-code:after:content-none
+                              prose-pre:bg-slate-900 prose-pre:rounded-xl prose-pre:border prose-pre:border-slate-700
+                              prose-hr:border-slate-200 prose-hr:my-10
+                              prose-a:text-sky-600 prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+                              prose-img:rounded-xl prose-img:shadow-md
+                            ">
+                              <ReactMarkdown
+                                components={{
+                                  h2: ({ children }) => {
+                                    const id = `section-${h2Counter++}`;
+                                    return <h2 id={id} className="scroll-mt-24">{children}</h2>;
+                                  },
+                                }}
+                              >{article.content}</ReactMarkdown>
+                            </div>
+                          </div>
+
+                          {/* Article footer */}
+                          <div className="border-t border-slate-100 bg-slate-50/80 px-8 py-6 sm:px-10">
+                            <div className="flex items-center justify-between">
+                              <button
+                                onClick={() => setActiveArticle(null)}
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-sky-700 transition-colors"
+                              >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                                {t('docs.community.backToArticles', '返回文章列表')}
+                              </button>
+                              <button
+                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-sky-700 transition-colors"
+                              >
+                                {t('docs.community.backToTop', '回到顶部')}
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                              </button>
+                            </div>
+                          </div>
+                        </article>
                       </div>
 
-                      <h1 className="mb-4 text-2xl font-bold text-slate-900 sm:text-3xl">{article.title}</h1>
-
-                      <div className="mb-8 flex flex-wrap gap-2">
-                        {article.tags.map((tag) => (
-                          <span key={tag} className="rounded-md bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">{tag}</span>
-                        ))}
-                      </div>
-
-                      <div className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-lg prose-h3:mt-8 prose-h3:mb-3 prose-p:text-slate-600 prose-p:leading-relaxed prose-strong:text-slate-800 prose-table:text-sm prose-th:bg-slate-50 prose-th:px-4 prose-th:py-2.5 prose-td:px-4 prose-td:py-2 prose-blockquote:border-sky-300 prose-blockquote:text-slate-600 prose-code:text-sky-700 prose-code:bg-sky-50 prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none">
-                        <ReactMarkdown>{article.content}</ReactMarkdown>
-                      </div>
+                      {/* Table of contents sidebar */}
+                      {toc.length > 2 && (
+                        <aside className="lg:w-64 shrink-0 lg:sticky lg:top-24 lg:self-start">
+                          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                            <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">
+                              {t('docs.community.toc', '目录')}
+                            </h3>
+                            <nav className="space-y-1">
+                              {toc.map((item) => (
+                                <a
+                                  key={item.id}
+                                  href={`#${item.id}`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                  }}
+                                  className="flex items-start gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-700"
+                                >
+                                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-500">
+                                    {item.num}
+                                  </span>
+                                  <span className="leading-snug">{item.text}</span>
+                                </a>
+                              ))}
+                            </nav>
+                          </div>
+                        </aside>
+                      )}
                     </div>
                   </div>
                 );
@@ -820,7 +1906,7 @@ AI 三层校验：
                   {t('docs.community.comingSoon.text', '我们正在持续添加更多招聘知识文章、视频教程和实战案例。如果你有想看的主题，欢迎告诉我们。')}
                 </p>
                 <a
-                  href="mailto:support@robohire.io"
+                  href="mailto:kenny.chien@gmail.com"
                   className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700 hover:text-sky-900 transition-colors"
                 >
                   {t('docs.community.comingSoon.cta', '提交你感兴趣的主题')}

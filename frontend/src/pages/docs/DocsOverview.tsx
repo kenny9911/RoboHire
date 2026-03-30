@@ -158,7 +158,7 @@ export default function DocsOverview() {
             {t('docs.overview.tryPlayground', 'Try the Playground')}
           </Link>
           <a
-            href="mailto:support@robohire.io"
+            href="mailto:kenny.chien@gmail.com"
             className="text-sm font-medium text-blue-600 hover:text-blue-700"
           >
             {t('docs.overview.contactSupport', 'Contact Support')}

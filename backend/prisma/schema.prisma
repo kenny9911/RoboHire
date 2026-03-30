@@ -108,6 +108,7 @@ model User {
   agents             Agent[]
   teamMemberships    TeamMember[]
   teamInvitations    TeamInvitation[] @relation("TeamInviter")
+  alexSessions       AgentAlexSession[]
 
   @@index([email])
   @@index([provider, providerId])
@@ -534,6 +535,7 @@ model Job {
   jobMatches        JobMatch[]
   matchingSessions  MatchingSession[]
   agents            Agent[]
+  alexSession       AgentAlexSession?
 
   @@index([userId])
   @@index([hiringRequestId, updatedAt])
@@ -861,4 +863,20 @@ model GoHireInterview {
   @@index([interviewDatetime])
   @@index([gohireUserId])
   @@index([evaluationScore])
+}
+
+model AgentAlexSession {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String   @default("New Chat")
+  messages     Json     @default("[]")    // ChatMessage[]
+  requirements Json     @default("{}")    // HiringRequirements
+  linkedJobId  String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedJob    Job?     @relation(fields: [linkedJobId], references: [id], onDelete: SetNull)
+
+  @@index([userId, updatedAt])
 }

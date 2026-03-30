@@ -25,7 +25,7 @@ export default function CTA() {
 
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
-                onClick={() => navigate(isAuthenticated ? '/start-hiring' : '/login', { state: isAuthenticated ? { fresh: true } : { from: { pathname: '/start-hiring' } } })}
+                onClick={() => navigate(isAuthenticated ? '/agent-alex' : '/login', { state: isAuthenticated ? { fresh: true } : { from: { pathname: '/agent-alex' } } })}
                 type="button"
                 className="inline-flex w-full items-center justify-center rounded-full bg-white px-8 py-3.5 text-base font-semibold text-slate-900 transition-all hover:bg-slate-100 sm:w-auto"
               >

@@ -4393,5 +4393,92 @@
     "pdf": "PDF（列印）",
     "word": "Word 文件",
     "markdown": "Markdown"
+  },
+  "agentAlex": {
+    "title": "Agent Alex",
+    "subtitle": "招聘需求分析師",
+    "floatingLabel": "AI 招聘助手",
+    "panels": { "agentInteraction": "智能對話" },
+    "modes": { "textChat": "文字聊天", "liveVoice": "即時語音" },
+    "sessions": { "recent": "最近對話", "newChat": "新對話", "cannotDelete": "無法刪除 — 已關聯職位" },
+    "actions": { "exportSpec": "匯出需求" },
+    "mobile": { "agent": "對話", "specification": "需求規格" },
+    "config": {
+      "setupRequired": "需要設定 Gemini。",
+      "checking": "正在檢查 Gemini 伺服器設定...",
+      "placeholder": "GEMINI_API_KEY 仍為佔位符，Gemini 已停用。請將 .env.example 複製為 .env.local，新增真實金鑰後重啟伺服器。",
+      "missing": "缺少 GEMINI_API_KEY，Gemini 已停用。請將 .env.example 複製為 .env.local，新增金鑰後重啟伺服器。"
+    },
+    "chat": {
+      "welcome": "你好！我是你的招聘助手 Agent Alex。你今天想招聘什麼職位？",
+      "thinking": "思考中...",
+      "placeholder": "輸入你的回覆...",
+      "disabled": "Gemini 未設定，AI 已停用。",
+      "send": "傳送訊息",
+      "dictate": "語音輸入",
+      "stopRecording": "停止錄音",
+      "recording": "正在錄音…點擊停止按鈕結束。",
+      "readAloud": "朗讀"
+    },
+    "suggestions": {
+      "frontendEngineer": "我們需要一名資深前端工程師",
+      "productManager": "幫我招聘一名產品經理",
+      "dataScientist": "我在找一名資料科學家",
+      "salary": "討論一下薪資範圍",
+      "location": "設定工作地點 / 遠端政策",
+      "mustHave": "明確必要條件",
+      "niceToHave": "補充優先條件 / 加分項",
+      "interview": "規劃面試流程",
+      "headcount": "確定招聘人數",
+      "timeline": "設定招聘時間 / 緊急程度",
+      "benefits": "描述福利待遇",
+      "finalize": "我說完了，請整理需求規格"
+    },
+    "spec": {
+      "title": "即時需求規格",
+      "createJob": "建立職位",
+      "viewJob": "查看職位",
+      "updateJob": "更新職位",
+      "empty": "尚未記錄任何需求。",
+      "emptyHint": "開始與 Agent 對話，逐步建構你的招聘需求規格。",
+      "sections": {
+        "roleOverview": "1. 職位概述",
+        "responsibilities": "2. 核心職責",
+        "requiredQualifications": "3. 必要條件",
+        "preferredQualifications": "4. 優先條件",
+        "compensation": "5. 薪酬與福利",
+        "logistics": "6. 工作安排",
+        "hiringProcess": "7. 招聘流程",
+        "additionalContext": "8. 補充資訊"
+      },
+      "fields": {
+        "jobTitle": "職位名稱",
+        "department": "部門/團隊",
+        "reportingLine": "彙報關係",
+        "roleType": "職位類型",
+        "headcount": "招聘人數",
+        "primaryResponsibilities": "核心職責",
+        "secondaryResponsibilities": "次要/拓展職責",
+        "yearsOfExperience": "工作年資",
+        "education": "學歷要求",
+        "industryExperience": "產業經驗",
+        "hardSkills": "硬技能",
+        "softSkills": "軟技能",
+        "niceToHave": "加分項",
+        "salaryRange": "薪資範圍",
+        "equityBonus": "股權/獎金",
+        "benefits": "核心福利",
+        "workLocation": "工作地點",
+        "geographicRestrictions": "地域限制",
+        "startDate": "到職時間/緊急程度",
+        "travelRequirements": "出差要求",
+        "interviewStages": "面試環節",
+        "keyStakeholders": "關鍵面試官",
+        "timelineExpectations": "時間安排",
+        "teamCulture": "團隊文化",
+        "reasonForOpening": "招聘原因",
+        "dealBreakers": "一票否決項"
+      }
+    }
   }
 }

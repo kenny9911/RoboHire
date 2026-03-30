@@ -18,7 +18,7 @@ export default function ServiceCards() {
         t('landing.services.hiring.feature4', 'ATS & webhook integration'),
       ],
       cta: t('landing.services.hiring.cta', 'Start Hiring Now'),
-      href: '/start-hiring',
+      href: '/agent-alex',
       accentColor: 'indigo',
       badge: t('landing.services.hiring.badge', 'Most Popular'),
     },
@@ -132,7 +132,7 @@ export default function ServiceCards() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      navigate(service.href, service.href === '/start-hiring' ? { state: { fresh: true } } : undefined);
+                      navigate(service.href, service.href === '/agent-alex' ? { state: { fresh: true } } : undefined);
                     }}
                     className={`inline-flex items-center gap-2 text-lg font-semibold transition-colors ${tone.cta}`}
                   >

@@ -4332,5 +4332,92 @@
     "pdf": "PDF（印刷）",
     "word": "Word文書",
     "markdown": "Markdown"
+  },
+  "agentAlex": {
+    "title": "Agent Alex",
+    "subtitle": "採用要件アナリスト",
+    "floatingLabel": "AI採用アシスタント",
+    "panels": { "agentInteraction": "エージェント対話" },
+    "modes": { "textChat": "テキストチャット", "liveVoice": "ライブ音声" },
+    "sessions": { "recent": "最近のセッション", "newChat": "新規チャット", "cannotDelete": "削除不可 — 求人にリンク済み" },
+    "actions": { "exportSpec": "仕様をエクスポート" },
+    "mobile": { "agent": "エージェント", "specification": "仕様書" },
+    "config": {
+      "setupRequired": "Geminiのセットアップが必要です。",
+      "checking": "Geminiサーバーの設定を確認中...",
+      "placeholder": "GEMINI_API_KEYがプレースホルダーのままのため、Geminiは無効です。.env.exampleを.env.localにコピーし、実際のキーを追加してサーバーを再起動してください。",
+      "missing": "GEMINI_API_KEYが見つからないため、Geminiは無効です。.env.exampleを.env.localにコピーし、キーを追加してサーバーを再起動してください。"
+    },
+    "chat": {
+      "welcome": "こんにちは！採用エージェントAlexです。今日はどのようなポジションをお探しですか？",
+      "thinking": "考え中...",
+      "placeholder": "回答を入力...",
+      "disabled": "Geminiが未設定のため、AIは無効です。",
+      "send": "メッセージを送信",
+      "dictate": "音声入力",
+      "stopRecording": "録音を停止",
+      "recording": "録音中…停止ボタンをクリックして終了します。",
+      "readAloud": "読み上げ"
+    },
+    "suggestions": {
+      "frontendEngineer": "シニアフロントエンドエンジニアを採用したい",
+      "productManager": "プロダクトマネージャーの採用を手伝って",
+      "dataScientist": "データサイエンティストを探しています",
+      "salary": "給与レンジについて相談したい",
+      "location": "勤務地 / リモートポリシーを設定",
+      "mustHave": "必須要件を定義する",
+      "niceToHave": "歓迎要件を追加する",
+      "interview": "面接プロセスを設計する",
+      "headcount": "採用人数を決める",
+      "timeline": "採用スケジュール / 緊急度を設定",
+      "benefits": "福利厚生を説明する",
+      "finalize": "完了です — 仕様書を確定してください"
+    },
+    "spec": {
+      "title": "リアルタイム仕様書",
+      "createJob": "求人を作成",
+      "viewJob": "求人を表示",
+      "updateJob": "求人を更新",
+      "empty": "まだ要件が記録されていません。",
+      "emptyHint": "エージェントとチャットを始めて、採用要件の仕様書を作成しましょう。",
+      "sections": {
+        "roleOverview": "1. ポジション概要",
+        "responsibilities": "2. 主要な職責",
+        "requiredQualifications": "3. 必須要件",
+        "preferredQualifications": "4. 歓迎要件",
+        "compensation": "5. 報酬・福利厚生",
+        "logistics": "6. 勤務条件",
+        "hiringProcess": "7. 採用プロセス",
+        "additionalContext": "8. 補足情報"
+      },
+      "fields": {
+        "jobTitle": "職種名",
+        "department": "部門/チーム",
+        "reportingLine": "報告先",
+        "roleType": "雇用形態",
+        "headcount": "採用人数",
+        "primaryResponsibilities": "主要な職責",
+        "secondaryResponsibilities": "副次的な職責",
+        "yearsOfExperience": "経験年数",
+        "education": "学歴要件",
+        "industryExperience": "業界経験",
+        "hardSkills": "ハードスキル",
+        "softSkills": "ソフトスキル",
+        "niceToHave": "歓迎スキル・資格",
+        "salaryRange": "給与レンジ",
+        "equityBonus": "株式/ボーナス",
+        "benefits": "主要な福利厚生",
+        "workLocation": "勤務地",
+        "geographicRestrictions": "地域制限",
+        "startDate": "入社時期/緊急度",
+        "travelRequirements": "出張要件",
+        "interviewStages": "面接ステージ",
+        "keyStakeholders": "主要面接官",
+        "timelineExpectations": "スケジュール",
+        "teamCulture": "チーム文化",
+        "reasonForOpening": "採用理由",
+        "dealBreakers": "不採用基準"
+      }
+    }
   }
 }

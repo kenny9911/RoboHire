@@ -270,7 +270,7 @@ export default function About() {
 
               <div className="mt-8 text-center">
                 <Link
-                  to="/start-hiring"
+                  to="/agent-alex"
                   state={{ fresh: true }}
                   className="inline-flex rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5"
                 >
@@ -322,7 +322,7 @@ export default function About() {
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
-                  to="/start-hiring"
+                  to="/agent-alex"
                   state={{ fresh: true }}
                   className="w-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-4 font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 sm:w-auto"
                 >

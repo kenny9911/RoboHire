@@ -16,7 +16,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const productItems = [
-    { href: '/start-hiring', label: t('landing.nav.productMenu.requirements', 'Requirements Analysis'), icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', state: { fresh: true } as Record<string, boolean> },
+    { href: '/agent-alex', label: t('landing.nav.productMenu.requirements', 'Requirements Analysis'), icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', state: { fresh: true } as Record<string, boolean> },
     { href: '/product/agents', label: t('landing.nav.productMenu.agents', 'Agents'), icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z' },
     { href: '/product/talent', label: t('landing.nav.productMenu.resumeScreening', 'Resume Screening'), icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z' },
     { href: '/product/matching', label: t('landing.nav.productMenu.smartMatching', 'Smart Matching'), icon: 'M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5' },
@@ -153,7 +153,7 @@ export default function Navbar() {
               </Link>
               <Link
                 to="/login"
-                state={{ from: { pathname: '/start-hiring' } }}
+                state={{ from: { pathname: '/agent-alex' } }}
                 className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-16px_rgba(37,99,235,0.9)]"
               >
                 {t('landing.nav.getStarted', 'Get Started')}
@@ -260,7 +260,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/login"
-                  state={{ from: { pathname: '/start-hiring' } }}
+                  state={{ from: { pathname: '/agent-alex' } }}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
                 >

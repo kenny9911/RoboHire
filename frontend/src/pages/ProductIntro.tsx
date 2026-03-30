@@ -601,7 +601,7 @@ export default function ProductIntro({
                   </p>
 
                   <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-                    <Link to="/start-hiring" state={{ fresh: true }} className={primaryCtaClass}>
+                    <Link to="/agent-alex" state={{ fresh: true }} className={primaryCtaClass}>
                       {t('productIntro.hero.cta1', '免费开始使用')}
                     </Link>
                     <Link to="/request-demo" className={secondaryCtaClass}>
@@ -1041,7 +1041,7 @@ export default function ProductIntro({
               </p>
 
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Link to="/start-hiring" state={{ fresh: true }} className={primaryCtaClass}>
+                <Link to="/agent-alex" state={{ fresh: true }} className={primaryCtaClass}>
                   {t('productIntro.cta.primary', '免费开始使用')}
                 </Link>
                 <Link to="/request-demo" className={secondaryCtaClass}>

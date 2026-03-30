@@ -3873,5 +3873,92 @@
     "pdf": "PDF (Imprimir)",
     "word": "Documento Word",
     "markdown": "Markdown"
+  },
+  "agentAlex": {
+    "title": "Agent Alex",
+    "subtitle": "Analista de Requisitos de Contratação",
+    "floatingLabel": "Assistente de Contratação IA",
+    "panels": { "agentInteraction": "Interação do Agente" },
+    "modes": { "textChat": "Chat de Texto", "liveVoice": "Voz ao Vivo" },
+    "sessions": { "recent": "Sessões Recentes", "newChat": "Novo Chat", "cannotDelete": "Não é possível excluir — vinculada a uma vaga" },
+    "actions": { "exportSpec": "Exportar Especificação" },
+    "mobile": { "agent": "Agente", "specification": "Especificação" },
+    "config": {
+      "setupRequired": "Configuração do Gemini necessária.",
+      "checking": "Verificando a configuração do servidor Gemini...",
+      "placeholder": "Gemini está desabilitado porque GEMINI_API_KEY ainda é um marcador. Copie .env.example para .env.local, adicione uma chave real e reinicie o servidor.",
+      "missing": "Gemini está desabilitado porque GEMINI_API_KEY está ausente. Copie .env.example para .env.local, adicione sua chave e reinicie o servidor."
+    },
+    "chat": {
+      "welcome": "Olá! Sou o seu Agente de Recrutamento Alex. Que vaga você deseja preencher hoje?",
+      "thinking": "Pensando...",
+      "placeholder": "Digite sua resposta...",
+      "disabled": "IA desabilitada até o Gemini ser configurado.",
+      "send": "Enviar mensagem",
+      "dictate": "Ditado (Fala para Texto)",
+      "stopRecording": "Parar gravação",
+      "recording": "Gravando áudio... Clique em parar quando terminar.",
+      "readAloud": "Ler em voz alta"
+    },
+    "suggestions": {
+      "frontendEngineer": "Precisamos de um Engenheiro Frontend Sênior",
+      "productManager": "Me ajude a contratar um Product Manager",
+      "dataScientist": "Estou procurando um Cientista de Dados",
+      "salary": "Vamos discutir a faixa salarial",
+      "location": "Definir local de trabalho / política de trabalho remoto",
+      "mustHave": "Definir requisitos obrigatórios",
+      "niceToHave": "Adicionar qualificações desejáveis",
+      "interview": "Planejar o processo de entrevista",
+      "headcount": "Especificar número de vagas",
+      "timeline": "Definir cronograma / urgência",
+      "benefits": "Descrever benefícios e vantagens",
+      "finalize": "Pronto — finalizar a especificação"
+    },
+    "spec": {
+      "title": "Especificação ao Vivo",
+      "createJob": "Criar Vaga",
+      "viewJob": "Ver Vaga",
+      "updateJob": "Atualizar Vaga",
+      "empty": "Nenhum requisito registrado ainda.",
+      "emptyHint": "Comece a conversar com o agente para construir sua especificação de contratação.",
+      "sections": {
+        "roleOverview": "1. Visão Geral da Vaga",
+        "responsibilities": "2. Responsabilidades Principais",
+        "requiredQualifications": "3. Qualificações Obrigatórias",
+        "preferredQualifications": "4. Qualificações Desejáveis",
+        "compensation": "5. Remuneração e Benefícios",
+        "logistics": "6. Logística",
+        "hiringProcess": "7. Processo de Contratação",
+        "additionalContext": "8. Contexto Adicional"
+      },
+      "fields": {
+        "jobTitle": "Título da Vaga",
+        "department": "Departamento/Equipe",
+        "reportingLine": "Linha de Reporte",
+        "roleType": "Tipo de Vaga",
+        "headcount": "Número de Vagas",
+        "primaryResponsibilities": "Responsabilidades Principais",
+        "secondaryResponsibilities": "Responsabilidades Secundárias",
+        "yearsOfExperience": "Anos de Experiência",
+        "education": "Formação",
+        "industryExperience": "Experiência no Setor",
+        "hardSkills": "Competências Técnicas",
+        "softSkills": "Competências Comportamentais",
+        "niceToHave": "Competências e Certificações Desejáveis",
+        "salaryRange": "Faixa Salarial",
+        "equityBonus": "Ações / Bônus",
+        "benefits": "Benefícios Principais",
+        "workLocation": "Local de Trabalho",
+        "geographicRestrictions": "Restrições Geográficas",
+        "startDate": "Data de Início / Urgência",
+        "travelRequirements": "Requisitos de Viagem",
+        "interviewStages": "Etapas de Entrevista",
+        "keyStakeholders": "Partes Interessadas Chave",
+        "timelineExpectations": "Expectativas de Cronograma",
+        "teamCulture": "Cultura da Equipe",
+        "reasonForOpening": "Motivo da Abertura",
+        "dealBreakers": "Critérios de Eliminação"
+      }
+    }
   }
 }

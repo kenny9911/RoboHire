@@ -598,7 +598,7 @@ export default function HiringRequests() {
             <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">/</span>
           </div>
           <Link
-            to="/start-hiring"
+            to="/agent-alex"
             state={{ fresh: true }}
             className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
           >
@@ -716,7 +716,7 @@ export default function HiringRequests() {
           </p>
           {!search && (
             <Link
-              to="/start-hiring"
+              to="/agent-alex"
               state={{ fresh: true }}
               className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
             >

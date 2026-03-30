@@ -109,7 +109,7 @@ export default function DocsProductGuide() {
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  to="/start-hiring"
+                  to="/agent-alex"
                   state={{ fresh: true }}
                   className="rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_-16px_rgba(16,185,129,0.5)] transition-all hover:-translate-y-0.5"
                 >
@@ -168,7 +168,7 @@ export default function DocsProductGuide() {
                 </p>
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                   <Link
-                    to="/start-hiring"
+                    to="/agent-alex"
                     state={{ fresh: true }}
                     className="rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-[0_20px_48px_-20px_rgba(59,130,246,0.5)] transition-all hover:-translate-y-0.5"
                   >

@@ -1007,7 +1007,7 @@ export default function Dashboard() {
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <Link
-                to="/start-hiring"
+                to="/agent-alex"
                 state={{ fresh: true }}
                 className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-[28px] p-5 text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] hover:shadow-lg transition-shadow"
               >
@@ -1089,7 +1089,7 @@ export default function Dashboard() {
                   {t('dashboard.requests.title', 'Your Hiring Requests')}
                 </h2>
                 <Link
-                  to="/start-hiring"
+                  to="/agent-alex"
                   state={{ fresh: true }}
                   className="text-blue-600 hover:text-blue-700 font-medium text-xs flex items-center gap-1"
                 >
@@ -1123,7 +1123,7 @@ export default function Dashboard() {
                     {t('dashboard.requests.emptyDesc', 'Create your first hiring request to start finding candidates.')}
                   </p>
                   <Link
-                    to="/start-hiring"
+                    to="/agent-alex"
                     state={{ fresh: true }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] text-white font-medium transition-colors text-sm"
                   >

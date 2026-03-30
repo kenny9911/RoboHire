@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import LanguageSelector from '../components/LanguageSelector';
+import { FloatingAgentAlex } from '../components/agent-alex/FloatingAgentAlex';
 
 const navItems = [
   {
@@ -331,6 +332,8 @@ export default function ProductLayout() {
           <Outlet />
         </main>
       </div>
+
+      <FloatingAgentAlex />
     </div>
   );
 }

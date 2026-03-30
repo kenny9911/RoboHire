@@ -1,0 +1,78 @@
+export interface HiringRequirements {
+  jobTitle?: string;
+  department?: string;
+  reportingLine?: string;
+  roleType?: string;
+  headcount?: string;
+  primaryResponsibilities?: string[];
+  secondaryResponsibilities?: string[];
+  hardSkills?: string[];
+  softSkills?: string[];
+  yearsOfExperience?: string;
+  education?: string;
+  industryExperience?: string;
+  preferredQualifications?: string[];
+  salaryRange?: string;
+  equityBonus?: string;
+  benefits?: string[];
+  workLocation?: string;
+  geographicRestrictions?: string;
+  startDate?: string;
+  travelRequirements?: string;
+  interviewStages?: string[];
+  keyStakeholders?: string[];
+  timelineExpectations?: string;
+  teamCulture?: string;
+  reasonForOpening?: string;
+  dealBreakers?: string[];
+}
+
+export type ChatRole = "user" | "model";
+
+export interface ChatMessage {
+  id: string;
+  role: ChatRole;
+  text: string;
+  isThinking?: boolean;
+  isError?: boolean;
+  suggestions?: string[];
+}
+
+export interface Session {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  requirements: HiringRequirements;
+  linkedJobId?: string | null;
+  updatedAt: number;
+}
+
+export interface HistoryMessage {
+  role: ChatRole;
+  text: string;
+}
+
+export type ConfigReason = "missing_api_key" | "placeholder_api_key";
+
+export interface AppConfigStatus {
+  configured: boolean;
+  reason?: ConfigReason;
+}
+
+export type ChatStreamEvent =
+  | { type: "text-delta"; text: string }
+  | { type: "requirements-update"; data: Partial<HiringRequirements> }
+  | { type: "done" }
+  | { type: "error"; code: string; message: string };
+
+export type LiveClientMessage =
+  | { type: "init"; history: HistoryMessage[] }
+  | { type: "audio"; data: string }
+  | { type: "close" };
+
+export type LiveServerMessage =
+  | { type: "connected" }
+  | { type: "audio"; data: string }
+  | { type: "interrupted" }
+  | { type: "requirements-update"; data: Partial<HiringRequirements> }
+  | { type: "error"; code: string; message: string };

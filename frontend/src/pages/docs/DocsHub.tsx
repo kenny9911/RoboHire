@@ -102,23 +102,23 @@ export default function DocsHub() {
                   <Link
                     key={cat.href}
                     to={cat.href}
-                    className="group relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_24px_60px_-42px_rgba(37,99,235,0.18)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_-40px_rgba(37,99,235,0.28)]"
+                    className="group relative flex flex-col overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_24px_60px_-42px_rgba(37,99,235,0.18)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_-40px_rgba(37,99,235,0.28)]"
                   >
                     {/* Top accent bar */}
                     <div className={`absolute left-6 right-6 top-0 h-1 rounded-b-full bg-gradient-to-r ${cat.color}`} />
 
-                    {/* Badge */}
-                    <span className="mb-4 inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                      {cat.badge}
-                    </span>
-
-                    {/* Icon */}
-                    <div className={`mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl ${cat.iconBg}`}>
-                      {cat.icon}
+                    {/* Badge + Icon row */}
+                    <div className="mb-5 flex items-center justify-between">
+                      <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                        {cat.badge}
+                      </span>
+                      <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${cat.iconBg}`}>
+                        {cat.icon}
+                      </div>
                     </div>
 
                     <h2 className="mb-3 text-xl font-bold text-slate-900">{cat.title}</h2>
-                    <p className="mb-6 text-sm leading-relaxed text-slate-600">{cat.description}</p>
+                    <p className="mb-6 flex-1 text-sm leading-relaxed text-slate-600">{cat.description}</p>
 
                     <span className={`inline-flex items-center gap-2 text-sm font-semibold bg-gradient-to-r ${cat.color} bg-clip-text text-transparent transition-all group-hover:gap-3`}>
                       {cat.cta}

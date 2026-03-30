@@ -1376,7 +1376,7 @@ export default function StartHiring() {
                   <div className="flex justify-center pt-4">
                     <Link
                       to="/login"
-                      state={{ from: { pathname: '/start-hiring' } }}
+                      state={{ from: { pathname: '/agent-alex' } }}
                       className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_-16px_rgba(37,99,235,0.85)]"
                     >
                       {t('hiring.signInToContinue', 'Sign In to Continue')}
@@ -1470,7 +1470,7 @@ export default function StartHiring() {
   // Initial landing view
   return (
     <div className="relative min-h-screen overflow-hidden bg-white">
-      <SEO title={t('seo.startHiring.title', 'AI Hiring Agent')} description={t('seo.startHiring.desc', 'Let AI handle the heavy lifting. Our hiring agent screens resumes, conducts interviews, and delivers evaluation reports automatically.')} url="https://robohire.io/start-hiring" keywords={t('seo.startHiring.keywords', 'AI hiring agent, automated recruitment, resume screening, AI interview, hiring automation')} />
+      <SEO title={t('seo.startHiring.title', 'AI Hiring Agent')} description={t('seo.startHiring.desc', 'Let AI handle the heavy lifting. Our hiring agent screens resumes, conducts interviews, and delivers evaluation reports automatically.')} url="https://robohire.io/agent-alex" keywords={t('seo.startHiring.keywords', 'AI hiring agent, automated recruitment, resume screening, AI interview, hiring automation')} />
       {/* Header */}
       <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-5 sm:px-6">

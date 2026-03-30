@@ -3874,5 +3874,92 @@
     "pdf": "PDF (Imprimer)",
     "word": "Document Word",
     "markdown": "Markdown"
+  },
+  "agentAlex": {
+    "title": "Agent Alex",
+    "subtitle": "Analyste des Besoins en Recrutement",
+    "floatingLabel": "Assistant IA de Recrutement",
+    "panels": { "agentInteraction": "Interaction avec l'Agent" },
+    "modes": { "textChat": "Chat Texte", "liveVoice": "Voix en Direct" },
+    "sessions": { "recent": "Sessions Récentes", "newChat": "Nouveau Chat", "cannotDelete": "Suppression impossible — liée à un poste" },
+    "actions": { "exportSpec": "Exporter le Cahier des Charges" },
+    "mobile": { "agent": "Agent", "specification": "Spécification" },
+    "config": {
+      "setupRequired": "Configuration de Gemini requise.",
+      "checking": "Vérification de la configuration du serveur Gemini...",
+      "placeholder": "Gemini est désactivé car GEMINI_API_KEY est toujours un espace réservé. Copiez .env.example vers .env.local, ajoutez une vraie clé et redémarrez le serveur.",
+      "missing": "Gemini est désactivé car GEMINI_API_KEY est manquante. Copiez .env.example vers .env.local, ajoutez votre clé et redémarrez le serveur."
+    },
+    "chat": {
+      "welcome": "Bonjour ! Je suis votre Agent de Recrutement Alex. Quel poste cherchez-vous à pourvoir aujourd'hui ?",
+      "thinking": "Réflexion en cours...",
+      "placeholder": "Tapez votre réponse...",
+      "disabled": "IA désactivée en attente de la configuration de Gemini.",
+      "send": "Envoyer le message",
+      "dictate": "Dictée (Parole en Texte)",
+      "stopRecording": "Arrêter l'enregistrement",
+      "recording": "Enregistrement audio... Cliquez sur arrêter une fois terminé.",
+      "readAloud": "Lire à voix haute"
+    },
+    "suggestions": {
+      "frontendEngineer": "Nous recherchons un Ingénieur Frontend Senior",
+      "productManager": "Aidez-moi à recruter un Product Manager",
+      "dataScientist": "Je cherche un Data Scientist",
+      "salary": "Discutons de la fourchette salariale",
+      "location": "Définir le lieu de travail / politique de télétravail",
+      "mustHave": "Définir les exigences obligatoires",
+      "niceToHave": "Ajouter les qualifications souhaitées",
+      "interview": "Concevoir le processus d'entretien",
+      "headcount": "Préciser le nombre de postes",
+      "timeline": "Établir le calendrier / l'urgence",
+      "benefits": "Décrire les avantages sociaux",
+      "finalize": "C'est tout — finaliser le cahier des charges"
+    },
+    "spec": {
+      "title": "Spécification en Direct",
+      "createJob": "Créer un Poste",
+      "viewJob": "Voir le Poste",
+      "updateJob": "Mettre à jour le Poste",
+      "empty": "Aucun besoin enregistré pour le moment.",
+      "emptyHint": "Commencez à discuter avec l'agent pour construire votre cahier des charges de recrutement.",
+      "sections": {
+        "roleOverview": "1. Aperçu du Poste",
+        "responsibilities": "2. Responsabilités Principales",
+        "requiredQualifications": "3. Qualifications Requises",
+        "preferredQualifications": "4. Qualifications Souhaitées",
+        "compensation": "5. Rémunération et Avantages",
+        "logistics": "6. Logistique",
+        "hiringProcess": "7. Processus de Recrutement",
+        "additionalContext": "8. Contexte Supplémentaire"
+      },
+      "fields": {
+        "jobTitle": "Intitulé du Poste",
+        "department": "Département/Équipe",
+        "reportingLine": "Ligne Hiérarchique",
+        "roleType": "Type de Poste",
+        "headcount": "Nombre de Postes",
+        "primaryResponsibilities": "Responsabilités Principales",
+        "secondaryResponsibilities": "Responsabilités Secondaires",
+        "yearsOfExperience": "Années d'Expérience",
+        "education": "Formation",
+        "industryExperience": "Expérience Sectorielle",
+        "hardSkills": "Compétences Techniques",
+        "softSkills": "Compétences Comportementales",
+        "niceToHave": "Compétences et Certifications Souhaitées",
+        "salaryRange": "Fourchette Salariale",
+        "equityBonus": "Actions / Bonus",
+        "benefits": "Avantages Principaux",
+        "workLocation": "Lieu de Travail",
+        "geographicRestrictions": "Restrictions Géographiques",
+        "startDate": "Date de Début / Urgence",
+        "travelRequirements": "Exigences de Déplacement",
+        "interviewStages": "Étapes d'Entretien",
+        "keyStakeholders": "Parties Prenantes Clés",
+        "timelineExpectations": "Attentes de Calendrier",
+        "teamCulture": "Culture d'Équipe",
+        "reasonForOpening": "Raison de l'Ouverture",
+        "dealBreakers": "Critères Éliminatoires"
+      }
+    }
   }
 }

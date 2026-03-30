@@ -18,7 +18,7 @@ export default function Hero() {
       title: t('landing.services.hiring.title', 'Start Hiring'),
       detail: t('landing.services.hiring.feature1', 'Automated resume screening'),
       tone: 'from-blue-600 to-cyan-500',
-      href: '/start-hiring',
+      href: '/agent-alex',
       cta: t('landing.services.hiring.cta', 'Start Hiring Now'),
     },
     {
@@ -67,14 +67,14 @@ export default function Hero() {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
-              to={isAuthenticated ? '/start-hiring' : '/login'}
-              state={isAuthenticated ? { fresh: true } : { from: { pathname: '/start-hiring' } }}
+              to={isAuthenticated ? '/agent-alex' : '/login'}
+              state={isAuthenticated ? { fresh: true } : { from: { pathname: '/agent-alex' } }}
               className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 text-base font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-20px_rgba(37,99,235,0.95)]"
             >
               {t('landing.hero.ctaPrimary', 'Start Free Trial')}
             </Link>
             <Link
-              to="/start-hiring"
+              to="/agent-alex"
               state={{ fresh: true }}
               className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-8 py-3.5 text-base font-semibold text-slate-700 shadow-[0_16px_30px_-26px_rgba(15,23,42,0.7)] transition-all hover:border-blue-300 hover:text-blue-700"
             >

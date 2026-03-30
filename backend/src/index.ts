@@ -34,6 +34,21 @@ import agentsRouter from './routes/agents.js';
 import dashboardRouter from './routes/dashboard.js';
 import gohireInterviewsRouter from './routes/gohireInterviews.js';
 import teamsRouter from './routes/teams.js';
+import agentAlexRouter from './routes/agentAlex.js';
+import agentAlexSessionsRouter from './routes/agentAlexSessions.js';
+import { WebSocketServer, WebSocket } from 'ws';
+import { createServer as createHttpServer } from 'node:http';
+import { Modality } from '@google/genai';
+import {
+  MODELS,
+  SYSTEM_INSTRUCTION,
+  createGeminiClient,
+  getGeminiConfigStatus,
+  getUserFacingError,
+  normalizeHistory,
+  updateRequirementsDeclaration,
+} from './services/GeminiAgentService.js';
+import type { HistoryMessage, LiveClientMessage, LiveServerMessage } from './types/agentAlex.js';
 import { attachRequestId } from './middleware/requestId.js';
 import { beginRequestLogging, persistRequestAudit } from './middleware/requestAudit.js';
 import prisma from './lib/prisma.js';
@@ -96,6 +111,8 @@ app.use('/api/v1/agents', agentsRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/gohire-interviews', gohireInterviewsRouter);
 app.use('/api/v1/teams', teamsRouter);
+app.use('/api/v1/agent-alex', agentAlexRouter);
+app.use('/api/v1/agent-alex/sessions', agentAlexSessionsRouter);
 
 // Root endpoint
 app.get('/', (_req, res) => {
@@ -135,8 +152,142 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   });
 });
 
+// ── Agent Alex WebSocket (live voice) ──
+const httpServer = createHttpServer(app);
+const agentAlexWss = new WebSocketServer({ noServer: true });
+
+function sendWsMessage(socket: WebSocket, message: LiveServerMessage): void {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify(message));
+  }
+}
+
+function isHistoryMessageArray(value: unknown): value is HistoryMessage[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        item && typeof item === 'object' &&
+        ('role' in item ? item.role === 'user' || item.role === 'model' : false) &&
+        ('text' in item ? typeof item.text === 'string' : false),
+    )
+  );
+}
+
+agentAlexWss.on('connection', (socket) => {
+  const configStatus = getGeminiConfigStatus();
+  if (!configStatus.configured) {
+    sendWsMessage(socket, {
+      type: 'error',
+      code: configStatus.reason || 'missing_api_key',
+      message: 'Gemini API key is not configured.',
+    });
+    socket.close(1011, 'Gemini is not configured.');
+    return;
+  }
+
+  let liveSessionPromise: Promise<any> | null = null;
+  let isClosed = false;
+
+  const closeLiveSession = async () => {
+    if (isClosed) return;
+    isClosed = true;
+    if (liveSessionPromise) {
+      try {
+        const s = await liveSessionPromise;
+        s.close();
+      } catch { /* ignore */ }
+      liveSessionPromise = null;
+    }
+  };
+
+  socket.on('message', async (rawData) => {
+    try {
+      const message = JSON.parse(rawData.toString()) as LiveClientMessage;
+
+      if (message.type === 'init') {
+        if (!isHistoryMessageArray(message.history) || liveSessionPromise) return;
+
+        const ai = createGeminiClient();
+        liveSessionPromise = ai.live.connect({
+          model: MODELS.live,
+          config: {
+            responseModalities: [Modality.AUDIO],
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
+            systemInstruction: SYSTEM_INSTRUCTION,
+            tools: [{ functionDeclarations: [updateRequirementsDeclaration] }],
+          },
+          callbacks: {
+            onopen: () => {
+              void liveSessionPromise?.then((liveSession) => {
+                const history = normalizeHistory(message.history);
+                if (history.length > 0) liveSession.sendClientContent({ turns: history });
+                sendWsMessage(socket, { type: 'connected' });
+              });
+            },
+            onmessage: (event: any) => {
+              for (const part of event.serverContent?.modelTurn?.parts ?? []) {
+                const audioData = 'inlineData' in part ? part.inlineData?.data : undefined;
+                if (audioData) sendWsMessage(socket, { type: 'audio', data: audioData });
+              }
+              if (event.serverContent?.interrupted) sendWsMessage(socket, { type: 'interrupted' });
+              const functionCalls = event.toolCall?.functionCalls;
+              if (functionCalls?.length) {
+                const functionResponses: any[] = [];
+                for (const call of functionCalls) {
+                  if (call.name === 'update_hiring_requirements' && call.args) {
+                    sendWsMessage(socket, { type: 'requirements-update', data: call.args });
+                    functionResponses.push({ id: call.id, name: call.name, response: { result: 'success' } });
+                  }
+                }
+                if (functionResponses.length > 0) {
+                  void liveSessionPromise?.then((s) => s.sendToolResponse({ functionResponses }));
+                }
+              }
+            },
+            onerror: (event: any) => {
+              const { code, message } = getUserFacingError(event.error || event.message);
+              sendWsMessage(socket, { type: 'error', code, message });
+            },
+            onclose: () => { if (socket.readyState === WebSocket.OPEN) socket.close(); },
+          },
+        });
+        await liveSessionPromise;
+        return;
+      }
+
+      if (message.type === 'audio') {
+        if (!liveSessionPromise || typeof message.data !== 'string') return;
+        const s = await liveSessionPromise;
+        s.sendRealtimeInput({ audio: { data: message.data, mimeType: 'audio/pcm;rate=16000' } });
+        return;
+      }
+
+      if (message.type === 'close') {
+        await closeLiveSession();
+        if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) socket.close();
+      }
+    } catch (error) {
+      const { code, message } = getUserFacingError(error);
+      sendWsMessage(socket, { type: 'error', code, message });
+    }
+  });
+
+  socket.on('close', () => void closeLiveSession());
+  socket.on('error', () => void closeLiveSession());
+});
+
+httpServer.on('upgrade', (request, socket, head) => {
+  const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
+  if (pathname === '/api/v1/agent-alex/live') {
+    agentAlexWss.handleUpgrade(request, socket, head, (ws) => {
+      agentAlexWss.emit('connection', ws, request);
+    });
+  }
+});
+
 // Start server
-const server = app.listen(PORT, () => {
+const server = httpServer.listen(PORT, () => {
   const logDir = logger.getLogDirectory();
   const docDir = documentStorage.getStorageDirectory();
   const docStats = documentStorage.getStats();
