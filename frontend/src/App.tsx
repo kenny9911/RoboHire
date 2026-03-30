@@ -107,6 +107,7 @@ function App() {
             <Route path="/quick-invite" element={<QuickInvite />} />
             <Route path="/about" element={<About />} />
             <Route path="/product-intro" element={<ProductIntro />} />
+            <Route path="/product-info" element={<Navigate to="/product-intro" replace />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/blog" element={<Blog />} />

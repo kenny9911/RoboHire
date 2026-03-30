@@ -9,16 +9,17 @@ import fr from './locales/fr/translation.json';
 import pt from './locales/pt/translation.json';
 import de from './locales/de/translation.json';
 import zhTW from './locales/zh-TW/translation.json';
+import { productIntroTranslations } from './productIntro';
 
 const resources = {
-  en: { translation: en },
-  zh: { translation: zh },
-  'zh-TW': { translation: zhTW },
-  ja: { translation: ja },
-  es: { translation: es },
-  fr: { translation: fr },
-  pt: { translation: pt },
-  de: { translation: de },
+  en: { translation: { ...en, productIntro: productIntroTranslations.en } },
+  zh: { translation: { ...zh, productIntro: productIntroTranslations.zh } },
+  'zh-TW': { translation: { ...zhTW, productIntro: productIntroTranslations['zh-TW'] } },
+  ja: { translation: { ...ja, productIntro: productIntroTranslations.ja } },
+  es: { translation: { ...es, productIntro: productIntroTranslations.es } },
+  fr: { translation: { ...fr, productIntro: productIntroTranslations.fr } },
+  pt: { translation: { ...pt, productIntro: productIntroTranslations.pt } },
+  de: { translation: { ...de, productIntro: productIntroTranslations.de } },
 };
 
 i18n

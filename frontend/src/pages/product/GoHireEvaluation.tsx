@@ -691,6 +691,9 @@ export default function GoHireEvaluation() {
           const res = await axios.post(`/api/v1/gohire-interviews/${id}/parse-resume`, { force: false });
           if (res.data?.success && res.data.data?.markdown) {
             setParsedResumeMarkdown(res.data.data.markdown);
+            if (res.data.data.candidateName) {
+              setInterview((prev: any) => prev ? { ...prev, candidateName: res.data.data.candidateName } : prev);
+            }
           } else {
             setResumeParseError(res.data?.error || 'Parse failed');
           }
@@ -984,6 +987,9 @@ export default function GoHireEvaluation() {
                               const res = await axios.post(`/api/v1/gohire-interviews/${id}/parse-resume`, { force: true });
                               if (res.data?.success && res.data.data?.markdown) {
                                 setParsedResumeMarkdown(res.data.data.markdown);
+                                if (res.data.data.candidateName) {
+                                  setInterview((prev: any) => prev ? { ...prev, candidateName: res.data.data.candidateName } : prev);
+                                }
                               } else {
                                 setResumeParseError(res.data?.error || 'Parse failed');
                               }
@@ -1017,6 +1023,9 @@ export default function GoHireEvaluation() {
                               const res = await axios.post(`/api/v1/gohire-interviews/${id}/parse-resume`, { force: true });
                               if (res.data?.success && res.data.data?.markdown) {
                                 setParsedResumeMarkdown(res.data.data.markdown);
+                                if (res.data.data.candidateName) {
+                                  setInterview((prev: any) => prev ? { ...prev, candidateName: res.data.data.candidateName } : prev);
+                                }
                               }
                             } catch (err: any) {
                               setResumeParseError(err.response?.data?.error || err.message);
@@ -1059,6 +1068,9 @@ export default function GoHireEvaluation() {
                             const res = await axios.post(`/api/v1/gohire-interviews/${id}/parse-resume`, { force: true });
                             if (res.data?.success && res.data.data?.markdown) {
                               setParsedResumeMarkdown(res.data.data.markdown);
+                              if (res.data.data.candidateName) {
+                                setInterview((prev: any) => prev ? { ...prev, candidateName: res.data.data.candidateName } : prev);
+                              }
                             } else {
                               setResumeParseError(res.data?.error || 'Parse failed');
                             }
@@ -1102,7 +1114,11 @@ export default function GoHireEvaluation() {
                       {interview.jobTitle && (
                         <h2 className="text-lg font-bold text-slate-800 mb-3">{interview.jobTitle}</h2>
                       )}
-                      {jdData && <JdRenderer jd={jdData} />}
+                      {jdData && (/^#+\s/m.test(interview.jobDescription || '') ? (
+                        <MarkdownRenderer content={interview.jobDescription || ''} keywords={highlightKeywords} />
+                      ) : (
+                        <JdRenderer jd={jdData} />
+                      ))}
                       {/* AI Optimize placeholder */}
                       <div className="mt-4">
                         <button

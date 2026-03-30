@@ -2294,8 +2294,9 @@ router.post('/:id/refine', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Resume not found' });
     }
 
+    const jobScope = await getVisibilityScope(req.user);
     const job = await prisma.job.findFirst({
-      where: { id: jobId, userId: req.user.id },
+      where: { id: jobId, ...buildUserIdFilter(jobScope) },
       select: {
         title: true,
         description: true,

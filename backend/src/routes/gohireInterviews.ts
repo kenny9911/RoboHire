@@ -939,7 +939,7 @@ router.post('/:id/parse-resume', async (req, res) => {
 
     const interview = await prisma.goHireInterview.findUnique({
       where: { id },
-      select: { id: true, resumeUrl: true, parsedResumeText: true },
+      select: { id: true, resumeUrl: true, parsedResumeText: true, candidateName: true },
     });
 
     if (!interview) {
@@ -952,9 +952,25 @@ router.post('/:id/parse-resume', async (req, res) => {
 
     // Return cached result if available and not forcing reparse
     if (interview.parsedResumeText && !forceReparse) {
+      // If name is still "Unknown", try extracting from cached markdown (first # heading)
+      let updatedName: string | undefined;
+      if (interview.candidateName === 'Unknown') {
+        const nameMatch = interview.parsedResumeText.match(/^#\s+(.+)/m);
+        if (nameMatch && nameMatch[1].trim() && nameMatch[1].trim() !== 'Unknown') {
+          updatedName = nameMatch[1].trim();
+          await prisma.goHireInterview.update({
+            where: { id },
+            data: { candidateName: updatedName },
+          });
+        }
+      }
       return res.json({
         success: true,
-        data: { markdown: interview.parsedResumeText, cached: true },
+        data: {
+          markdown: interview.parsedResumeText,
+          cached: true,
+          ...(updatedName ? { candidateName: updatedName } : {}),
+        },
       });
     }
 
@@ -1028,21 +1044,36 @@ router.post('/:id/parse-resume', async (req, res) => {
     const structuredData = await resumeParserService.parseResumeStructured(normalizedText, requestId);
     const markdown = convertStructuredToMarkdown(structuredData);
 
-    // Save to DB for next time
+    // Save to DB — also update candidateName if it was "Unknown" and the resume has a name
+    const updateData: Record<string, string> = { parsedResumeText: markdown };
+    if (structuredData.candidateName) {
+      const current = await prisma.goHireInterview.findUnique({
+        where: { id },
+        select: { candidateName: true },
+      });
+      if (current?.candidateName === 'Unknown') {
+        updateData.candidateName = structuredData.candidateName;
+      }
+    }
     await prisma.goHireInterview.update({
       where: { id },
-      data: { parsedResumeText: markdown },
+      data: updateData,
     });
 
     logger.info('GOHIRE_INTERVIEWS', 'Resume parsed and cached', {
       requestId,
       id,
       markdownLength: markdown.length,
+      nameUpdated: 'candidateName' in updateData && updateData.candidateName !== undefined,
     });
 
     res.json({
       success: true,
-      data: { markdown, cached: false },
+      data: {
+        markdown,
+        cached: false,
+        ...(updateData.candidateName ? { candidateName: updateData.candidateName } : {}),
+      },
     });
   } catch (error) {
     logger.error('GOHIRE_INTERVIEWS', 'Failed to parse resume', {
@@ -1209,6 +1240,19 @@ router.get('/:id', async (req, res) => {
 
     if (!interview) {
       return res.status(404).json({ success: false, error: 'Interview not found' });
+    }
+
+    // Backfill candidateName from parsed resume if still "Unknown"
+    if (interview.candidateName === 'Unknown' && interview.parsedResumeText) {
+      const nameMatch = interview.parsedResumeText.match(/^#\s+(.+)/m);
+      if (nameMatch && nameMatch[1].trim() && nameMatch[1].trim() !== 'Unknown') {
+        const extractedName = nameMatch[1].trim();
+        await prisma.goHireInterview.update({
+          where: { id },
+          data: { candidateName: extractedName },
+        });
+        interview.candidateName = extractedName;
+      }
     }
 
     // Backfill JD from the original Interview record if missing
