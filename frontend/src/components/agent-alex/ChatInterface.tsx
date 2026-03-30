@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Send, Mic, Square, Play, Loader2, BrainCircuit, Lightbulb } from "lucide-react";
+import { Send, Mic, Square, Play, Loader2, BrainCircuit, Lightbulb, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -32,17 +32,24 @@ function ensureMarkdownParagraphs(text: string): string {
   return text.replace(/(?<!\n)\n(?!\n)/g, "\n\n");
 }
 
+const EXAMPLE_KEYS = [
+  'ex1', 'ex2', 'ex3', 'ex4', 'ex5', 'ex6', 'ex7', 'ex8', 'ex9', 'ex10', 'ex11', 'ex12',
+] as const;
+
+/** Pick n random unique items from an array */
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
 /** Generate contextual suggestion chips based on conversation history */
 function generateSuggestions(messages: ChatMessage[], t: (key: string, fallback: string) => string): string[] {
   const allText = messages.map((m) => m.text).join(" ").toLowerCase();
   const msgCount = messages.filter((m) => m.role === "user").length;
 
   if (msgCount <= 1) {
-    return [
-      t('agentAlex.suggestions.frontendEngineer', 'We need a Senior Frontend Engineer'),
-      t('agentAlex.suggestions.productManager', 'Help me hire a Product Manager'),
-      t('agentAlex.suggestions.dataScientist', "I'm looking for a Data Scientist"),
-    ];
+    const keys = pickRandom([...EXAMPLE_KEYS], 3);
+    return keys.map(k => t(`agentAlex.examples.${k}`, ''));
   }
 
   const suggestions: string[] = [];
@@ -79,6 +86,50 @@ function generateSuggestions(messages: ChatMessage[], t: (key: string, fallback:
   return suggestions.slice(0, 3);
 }
 
+function SuggestionChips({ messages, isProcessing, isAiEnabled, exampleSeed, onSend, onRefresh }: {
+  messages: ChatMessage[];
+  isProcessing: boolean;
+  isAiEnabled: boolean;
+  exampleSeed: number;
+  onSend: (text: string) => void;
+  onRefresh: () => void;
+}) {
+  const { t } = useTranslation();
+  const lastMsg = messages[messages.length - 1];
+  const showChips = !isProcessing && isAiEnabled && lastMsg?.role === "model" && !lastMsg.isThinking;
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const chips = React.useMemo(() => generateSuggestions(messages, t), [messages.length, exampleSeed, t]);
+
+  if (!showChips || chips.length === 0) return null;
+
+  const isInitial = messages.filter(m => m.role === "user").length === 0;
+
+  return (
+    <div className="px-3 sm:px-4 pt-2 pb-1 flex flex-wrap items-center gap-1.5 sm:gap-2 border-t border-slate-100 bg-slate-50/50">
+      <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+      {chips.map((chip) => (
+        <button
+          key={chip}
+          onClick={() => onSend(chip)}
+          className="px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full transition-colors"
+        >
+          {chip}
+        </button>
+      ))}
+      {isInitial && (
+        <button
+          onClick={onRefresh}
+          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors shrink-0"
+          title={t('agentAlex.suggestions.refresh', 'Show different examples')}
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function ChatInterface({
   messages,
   setMessages,
@@ -89,6 +140,7 @@ export function ChatInterface({
   const { t } = useTranslation();
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [exampleSeed, setExampleSeed] = useState(0); // bump to re-roll examples
   const [isProcessing, setIsProcessing] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -333,26 +385,14 @@ export function ChatInterface({
       </div>
 
       {/* Suggestion chips */}
-      {!isProcessing && isAiEnabled && messages.length > 1 && (() => {
-        const lastMsg = messages[messages.length - 1];
-        if (lastMsg?.role !== "model" || lastMsg.isThinking) return null;
-        const chips = generateSuggestions(messages, t);
-        if (chips.length === 0) return null;
-        return (
-          <div className="px-3 sm:px-4 pt-2 pb-1 flex flex-wrap gap-1.5 sm:gap-2 border-t border-slate-100 bg-slate-50/50">
-            <Lightbulb className="w-3.5 h-3.5 text-amber-500 mt-1.5 shrink-0" />
-            {chips.map((chip) => (
-              <button
-                key={chip}
-                onClick={() => void handleSend(chip)}
-                className="px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full transition-colors whitespace-nowrap"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-        );
-      })()}
+      <SuggestionChips
+        messages={messages}
+        isProcessing={isProcessing}
+        isAiEnabled={isAiEnabled}
+        exampleSeed={exampleSeed}
+        onSend={handleSend}
+        onRefresh={() => setExampleSeed(s => s + 1)}
+      />
 
       <div className="p-2.5 sm:p-4 bg-white border-t border-slate-100">
         <div className="relative flex items-end gap-1.5 sm:gap-2 bg-slate-50 p-1.5 sm:p-2 rounded-2xl border border-slate-200 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400 transition-all">

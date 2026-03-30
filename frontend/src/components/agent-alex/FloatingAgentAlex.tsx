@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import type { ChatMessage } from './types';
 import {
   buildHistoryFromMessages, streamChat,
@@ -38,6 +39,7 @@ function dbToMini(db: DbSession): MiniSession {
 export function FloatingAgentAlex() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [sessions, setSessions] = useState<MiniSession[]>([]);
   const [activeId, setActiveId] = useState<string>('');
@@ -289,7 +291,14 @@ export function FloatingAgentAlex() {
                 </div>
                 {/* Expand → new session on full page */}
                 <button
-                  onClick={() => { setIsOpen(false); navigate('/agent-alex'); }}
+                  onClick={() => {
+                    setIsOpen(false);
+                    if (isAuthenticated) {
+                      navigate('/agent-alex');
+                    } else {
+                      navigate('/login', { state: { from: { pathname: '/agent-alex' } } });
+                    }
+                  }}
                   className="px-2 py-1 text-[10px] font-semibold bg-white/20 hover:bg-white/30 rounded-md transition-colors"
                 >
                   {t('actions.expand', 'Expand')}

@@ -2621,6 +2621,8 @@
     },
     "jobDetail": {
       "backToJobs": "返回職位列表",
+      "alexChatHistory": "Agent Alex — 對話記錄",
+      "openAgentAlex": "開啟 Agent Alex",
       "edit": "編輯",
       "created": "建立時間",
       "updated": "更新時間",
@@ -4432,7 +4434,33 @@
       "headcount": "確定招聘人數",
       "timeline": "設定招聘時間 / 緊急程度",
       "benefits": "描述福利待遇",
-      "finalize": "我說完了，請整理需求規格"
+      "finalize": "我說完了，請整理需求規格",
+      "refresh": "換一批"
+    },
+    "examples": {
+      "ex1": "找一位舊金山的軟體工程師，Series B公司背景，熟練Python和Node.js",
+      "ex2": "北京的AI工程師，不限年資，要會Python、Vibe Coding和Agent工程",
+      "ex3": "全端開發，做高效能Agent工作流平台，2年以上經驗，碩士及以上",
+      "ex4": "資深產品經理，有B2B SaaS經驗，Base上海或遠端皆可",
+      "ex5": "DevOps工程師，熟悉Kubernetes和AWS，3-5年經驗，金融科技方向",
+      "ex6": "資料科學家，NLP方向，博士優先，加入我們的AI研究實驗室",
+      "ex7": "行銷總監，負責海外拓展，中英文流利",
+      "ex8": "行動端開發（iOS/Android），做消費級健康App，中階，紐約Hybrid辦公",
+      "ex9": "推薦系統方向的機器學習工程師，5年以上，有競爭力的股權方案",
+      "ex10": "UX設計師，有企業級後台設計經驗，遠端優先，需提供作品集",
+      "ex11": "VP of Engineering，帶30人團隊，C輪新創公司，坐標新加坡",
+      "ex12": "後端工程師，精通Go和分散式系統，做即時交易平台"
+    },
+    "jd": {
+      "responsibilities": "核心職責",
+      "additionalResponsibilities": "附加職責",
+      "teamCulture": "團隊文化",
+      "reasonForOpening": "招聘原因",
+      "experience": "工作經驗",
+      "industry": "產業經驗",
+      "hardSkills": "硬技能",
+      "softSkills": "軟技能",
+      "dealBreakers": "一票否決項"
     },
     "spec": {
       "title": "即時需求規格",

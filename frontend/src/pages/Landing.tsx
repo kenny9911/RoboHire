@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import ProductIntro from './ProductIntro';
+import { FloatingAgentAlex } from '../components/agent-alex/FloatingAgentAlex';
 
 const homepageSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebPage',
-  name: 'RoboHire - AI-Powered Hiring Platform',
+  name: 'RoboHire - AI Interview, AI Recruitment & AI Hiring Platform',
   url: 'https://robohire.io/',
   description:
-    'AI-powered recruitment platform that automates resume screening, conducts AI video interviews, and generates evaluation reports. Reduce hiring cycles from 42 days to 3.',
+    'AI-powered recruitment and hiring platform that automates resume screening, conducts AI video interviews, and generates evaluation reports. AI interview, AI recruitment, AI hiring — reduce hiring cycles from 42 days to 3.',
   mainEntity: {
     '@type': 'SoftwareApplication',
     name: 'RoboHire',
@@ -22,7 +23,7 @@ const homepageSchema = {
       offerCount: '4',
     },
     featureList:
-      'AI Resume Screening, AI Video Interviews, Automated Candidate Evaluation, Multi-language Support (7 languages), ATS Integration, Cheating Detection',
+      'AI Resume Screening, AI Video Interviews, AI Interview, AI Recruitment, AI Hiring, Automated Candidate Evaluation, Recruitment Automation, Multi-language Support (7 languages), ATS Integration, Cheating Detection',
     aggregateRating: {
       '@type': 'AggregateRating',
       ratingValue: '4.8',
@@ -46,11 +47,14 @@ export default function Landing() {
   }, [location.state]);
 
   return (
-    <ProductIntro
-      showDarkToggle={false}
-      showFAQ={true}
-      seoUrl="https://robohire.io/"
-      seoStructuredData={homepageSchema}
-    />
+    <>
+      <ProductIntro
+        showDarkToggle={false}
+        showFAQ={true}
+        seoUrl="https://robohire.io/"
+        seoStructuredData={homepageSchema}
+      />
+      <FloatingAgentAlex />
+    </>
   );
 }

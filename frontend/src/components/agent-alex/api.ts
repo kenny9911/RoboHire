@@ -157,13 +157,24 @@ export interface CreateJobFromSpecPayload {
   title: string;
   department?: string;
   location?: string;
+  workType?: string;
+  employmentType?: string;
+  experienceLevel?: string;
   education?: string;
   headcount?: number;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryCurrency?: string;
+  salaryPeriod?: string;
   salaryText?: string;
   description?: string;
   qualifications?: string;
   hardRequirements?: string;
   niceToHave?: string;
+  benefits?: string;
+  requirements?: { mustHave: string[]; niceToHave: string[] };
+  interviewRequirements?: string;
+  notes?: string;
   status?: string;
 }
 

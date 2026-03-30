@@ -2641,6 +2641,8 @@
     },
     "jobDetail": {
       "backToJobs": "返回职位列表",
+      "alexChatHistory": "Agent Alex — 对话记录",
+      "openAgentAlex": "打开 Agent Alex",
       "edit": "编辑",
       "created": "创建时间",
       "updated": "更新时间",
@@ -4470,7 +4472,33 @@
       "headcount": "确定招聘人数",
       "timeline": "设定招聘时间 / 紧急程度",
       "benefits": "描述福利待遇",
-      "finalize": "我说完了，请整理需求规格"
+      "finalize": "我说完了，请整理需求规格",
+      "refresh": "换一批"
+    },
+    "examples": {
+      "ex1": "招一个旧金山的软件工程师，Series B公司背景，熟练Python和Node.js",
+      "ex2": "北京的AI工程师，不限年资，要会Python、Vibe Coding和Agent工程",
+      "ex3": "全栈开发，做高性能Agent工作流平台，2年以上经验，硕士及以上",
+      "ex4": "资深产品经理，有B2B SaaS经验，Base上海或远程都行",
+      "ex5": "DevOps工程师，熟悉Kubernetes和AWS，3-5年经验，金融科技方向",
+      "ex6": "数据科学家，NLP方向，博士优先，加入我们的AI研究实验室",
+      "ex7": "市场总监，负责海外拓展，中英文流利",
+      "ex8": "移动端开发（iOS/Android），做消费级健康App，中级，纽约Hybrid办公",
+      "ex9": "推荐系统方向的机器学习工程师，5年以上，有竞争力的股权方案",
+      "ex10": "UX设计师，有企业级后台设计经验，远程优先，需提供作品集",
+      "ex11": "VP of Engineering，带30人团队，C轮创业公司，坐标新加坡",
+      "ex12": "后端工程师，精通Go和分布式系统，做实时交易平台"
+    },
+    "jd": {
+      "responsibilities": "核心职责",
+      "additionalResponsibilities": "附加职责",
+      "teamCulture": "团队文化",
+      "reasonForOpening": "招聘原因",
+      "experience": "工作经验",
+      "industry": "行业经验",
+      "hardSkills": "硬技能",
+      "softSkills": "软技能",
+      "dealBreakers": "一票否决项"
     },
     "spec": {
       "title": "实时需求规格",

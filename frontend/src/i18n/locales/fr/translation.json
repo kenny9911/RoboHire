@@ -2141,6 +2141,8 @@
     },
     "jobDetail": {
       "backToJobs": "Retour aux emplois",
+      "alexChatHistory": "Agent Alex — Historique de Conversation",
+      "openAgentAlex": "Ouvrir Agent Alex",
       "edit": "Modifier",
       "created": "Créé",
       "updated": "Mis à jour",
@@ -3913,7 +3915,33 @@
       "headcount": "Préciser le nombre de postes",
       "timeline": "Établir le calendrier / l'urgence",
       "benefits": "Décrire les avantages sociaux",
-      "finalize": "C'est tout — finaliser le cahier des charges"
+      "finalize": "C'est tout — finaliser le cahier des charges",
+      "refresh": "Afficher d'autres exemples"
+    },
+    "examples": {
+      "ex1": "Ingénieurs logiciels à San Francisco, entreprises Série B, compétences en Python et Node.js",
+      "ex2": "Ingénieur IA à Pékin, tout niveau, maîtrise de Python, Vibe Coding et Agent Engineering",
+      "ex3": "Développeur full-stack pour plateforme de workflows agents, 2+ ans, diplôme de master",
+      "ex4": "Product Manager Senior avec expérience B2B SaaS, basé à Shanghai ou en télétravail",
+      "ex5": "Ingénieur DevOps maîtrisant Kubernetes et AWS, 3-5 ans d'expérience, startup fintech",
+      "ex6": "Data Scientist spécialisé en NLP, doctorat apprécié, pour notre labo de recherche IA",
+      "ex7": "Directeur Marketing pour expansion internationale, bilingue anglais-mandarin",
+      "ex8": "Développeur mobile (iOS/Android) pour app santé, niveau intermédiaire, hybride à NYC",
+      "ex9": "Ingénieur ML pour systèmes de recommandation, 5+ ans, package actions attractif",
+      "ex10": "Designer UX avec expérience dashboards entreprise, full remote, portfolio requis",
+      "ex11": "VP Engineering pour diriger une équipe de 30, startup Série C, basé à Singapour",
+      "ex12": "Ingénieur backend maîtrisant Go et systèmes distribués, plateforme de trading temps réel"
+    },
+    "jd": {
+      "responsibilities": "Responsabilités",
+      "additionalResponsibilities": "Responsabilités Supplémentaires",
+      "teamCulture": "Culture d'Équipe",
+      "reasonForOpening": "Raison de l'Ouverture",
+      "experience": "Expérience",
+      "industry": "Expérience Sectorielle",
+      "hardSkills": "Compétences Techniques",
+      "softSkills": "Compétences Comportementales",
+      "dealBreakers": "Critères Éliminatoires"
     },
     "spec": {
       "title": "Spécification en Direct",

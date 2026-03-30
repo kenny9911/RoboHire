@@ -2519,6 +2519,8 @@
     },
     "jobDetail": {
       "backToJobs": "Back to Jobs",
+      "alexChatHistory": "Agent Alex — Conversation History",
+      "openAgentAlex": "Open Agent Alex",
       "edit": "Edit",
       "created": "Created",
       "updated": "Updated",
@@ -4365,7 +4367,33 @@
       "headcount": "Specify headcount needed",
       "timeline": "Set hiring timeline / urgency",
       "benefits": "Describe benefits & perks",
-      "finalize": "I'm done — finalize the specification"
+      "finalize": "I'm done — finalize the specification",
+      "refresh": "Show different examples"
+    },
+    "examples": {
+      "ex1": "Software Engineers in SF working at Series B companies, skilled in Python and Node.js",
+      "ex2": "AI Engineer in Beijing, any level, proficient in Python, Vibe Coding, and Agent Engineering",
+      "ex3": "Full-stack developer for a high-performance agent workflow platform, 2+ years, Master's degree",
+      "ex4": "Senior Product Manager with B2B SaaS experience, based in Shanghai or remote",
+      "ex5": "DevOps Engineer skilled in Kubernetes and AWS, 3-5 years experience, for our fintech startup",
+      "ex6": "Data Scientist with NLP expertise, PhD preferred, to join our AI research lab",
+      "ex7": "Marketing Director for overseas expansion, fluent in English and Mandarin",
+      "ex8": "Mobile Engineer (iOS/Android) for a consumer health app, mid-level, hybrid in NYC",
+      "ex9": "Machine Learning Engineer for recommendation systems, 5+ years, competitive equity package",
+      "ex10": "UX Designer with enterprise dashboard experience, remote-first, portfolio required",
+      "ex11": "VP of Engineering to lead a 30-person team, Series C startup, based in Singapore",
+      "ex12": "Backend Engineer proficient in Go and distributed systems, for real-time trading platform"
+    },
+    "jd": {
+      "responsibilities": "Responsibilities",
+      "additionalResponsibilities": "Additional Responsibilities",
+      "teamCulture": "Team Culture",
+      "reasonForOpening": "Reason for Opening",
+      "experience": "Experience",
+      "industry": "Industry Experience",
+      "hardSkills": "Hard Skills",
+      "softSkills": "Soft Skills",
+      "dealBreakers": "Deal Breakers"
     },
     "spec": {
       "title": "Live Specification",

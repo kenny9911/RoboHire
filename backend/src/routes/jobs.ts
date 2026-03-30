@@ -752,6 +752,7 @@ router.get('/:id', requireAuth, async (req, res) => {
       where: { id: req.params.id, ...buildUserIdFilter(scope) },
       include: {
         hiringRequest: { select: { id: true, title: true, requirements: true } },
+        alexSession: { select: { id: true, title: true, messages: true, requirements: true, updatedAt: true } },
       },
     });
 

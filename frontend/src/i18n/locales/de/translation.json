@@ -2140,6 +2140,8 @@
     },
     "jobDetail": {
       "backToJobs": "Zurück zu Stellen",
+      "alexChatHistory": "Agent Alex — Gesprächsverlauf",
+      "openAgentAlex": "Agent Alex öffnen",
       "edit": "Bearbeiten",
       "created": "Erstellt",
       "updated": "Aktualisiert",
@@ -3912,7 +3914,33 @@
       "headcount": "Anzahl der offenen Stellen festlegen",
       "timeline": "Einstellungszeitplan / Dringlichkeit festlegen",
       "benefits": "Leistungen und Vorteile beschreiben",
-      "finalize": "Fertig — Spezifikation abschließen"
+      "finalize": "Fertig — Spezifikation abschließen",
+      "refresh": "Andere Beispiele anzeigen"
+    },
+    "examples": {
+      "ex1": "Software-Ingenieure in San Francisco, Serie-B-Unternehmen, versiert in Python und Node.js",
+      "ex2": "KI-Ingenieur in Peking, jedes Level, Kenntnisse in Python, Vibe Coding und Agent Engineering",
+      "ex3": "Full-Stack-Entwickler für Agent-Workflow-Plattform, 2+ Jahre Erfahrung, Masterabschluss",
+      "ex4": "Senior Product Manager mit B2B-SaaS-Erfahrung, Standort Shanghai oder remote",
+      "ex5": "DevOps-Ingenieur mit Kubernetes und AWS, 3-5 Jahre Erfahrung, für Fintech-Startup",
+      "ex6": "Data Scientist mit NLP-Schwerpunkt, Promotion bevorzugt, für unser KI-Forschungslabor",
+      "ex7": "Marketingdirektor für internationale Expansion, fließend Englisch und Mandarin",
+      "ex8": "Mobile-Entwickler (iOS/Android) für Consumer-Health-App, Mid-Level, hybrid in NYC",
+      "ex9": "ML-Ingenieur für Empfehlungssysteme, 5+ Jahre, attraktives Aktienpaket",
+      "ex10": "UX-Designer mit Enterprise-Dashboard-Erfahrung, Remote-First, Portfolio erforderlich",
+      "ex11": "VP Engineering, Leitung eines 30-köpfigen Teams, Serie-C-Startup, Standort Singapur",
+      "ex12": "Backend-Ingenieur mit Go und verteilten Systemen, für Echtzeit-Handelsplattform"
+    },
+    "jd": {
+      "responsibilities": "Verantwortlichkeiten",
+      "additionalResponsibilities": "Zusätzliche Aufgaben",
+      "teamCulture": "Teamkultur",
+      "reasonForOpening": "Grund für die Besetzung",
+      "experience": "Berufserfahrung",
+      "industry": "Branchenerfahrung",
+      "hardSkills": "Fachkompetenzen",
+      "softSkills": "Sozialkompetenzen",
+      "dealBreakers": "Ausschlusskriterien"
     },
     "spec": {
       "title": "Live-Spezifikation",

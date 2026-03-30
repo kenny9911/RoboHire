@@ -2141,6 +2141,8 @@
     },
     "jobDetail": {
       "backToJobs": "Volver a empleos",
+      "alexChatHistory": "Agent Alex — Historial de Conversación",
+      "openAgentAlex": "Abrir Agent Alex",
       "edit": "Editar",
       "created": "Creado",
       "updated": "Actualizado",
@@ -3913,7 +3915,33 @@
       "headcount": "Especificar número de vacantes",
       "timeline": "Establecer cronograma / urgencia",
       "benefits": "Describir beneficios y ventajas",
-      "finalize": "Listo — finalizar la especificación"
+      "finalize": "Listo — finalizar la especificación",
+      "refresh": "Mostrar otros ejemplos"
+    },
+    "examples": {
+      "ex1": "Ingenieros de software en San Francisco, empresas Serie B, con experiencia en Python y Node.js",
+      "ex2": "Ingeniero de IA en Beijing, cualquier nivel, experto en Python, Vibe Coding y Agent Engineering",
+      "ex3": "Desarrollador full-stack para plataforma de workflows con agentes, 2+ años, maestría",
+      "ex4": "Product Manager Senior con experiencia en B2B SaaS, basado en Shanghai o remoto",
+      "ex5": "Ingeniero DevOps con Kubernetes y AWS, 3-5 años de experiencia, para startup fintech",
+      "ex6": "Científico de datos con experiencia en NLP, doctorado preferido, para laboratorio de IA",
+      "ex7": "Director de Marketing para expansión internacional, bilingüe inglés-mandarín",
+      "ex8": "Ingeniero móvil (iOS/Android) para app de salud, nivel medio, híbrido en NYC",
+      "ex9": "Ingeniero de Machine Learning para sistemas de recomendación, 5+ años, paquete de acciones",
+      "ex10": "Diseñador UX con experiencia en dashboards empresariales, remoto, portafolio requerido",
+      "ex11": "VP de Ingeniería para liderar equipo de 30 personas, startup Serie C, en Singapur",
+      "ex12": "Ingeniero backend experto en Go y sistemas distribuidos, para plataforma de trading"
+    },
+    "jd": {
+      "responsibilities": "Responsabilidades",
+      "additionalResponsibilities": "Responsabilidades Adicionales",
+      "teamCulture": "Cultura del Equipo",
+      "reasonForOpening": "Motivo de la Vacante",
+      "experience": "Experiencia",
+      "industry": "Experiencia en la Industria",
+      "hardSkills": "Habilidades Técnicas",
+      "softSkills": "Habilidades Blandas",
+      "dealBreakers": "Criterios de Descalificación"
     },
     "spec": {
       "title": "Especificación en Vivo",

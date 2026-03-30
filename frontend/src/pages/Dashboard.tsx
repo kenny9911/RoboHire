@@ -223,7 +223,7 @@ function RichTextPanel({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex-1 flex flex-col">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${colorClass.strip}`} />
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <h2 className="text-sm font-semibold tracking-wide text-slate-900">{title}</h2>
@@ -287,7 +287,7 @@ function RichTextPanel({
           </div>
         </div>
       ) : (
-        <div className="max-h-[620px] space-y-4 overflow-auto px-5 py-4 text-sm text-slate-700">
+        <div className="flex-1 space-y-4 overflow-auto px-5 py-4 text-sm text-slate-700">
           {!content?.trim() ? (
             <div className="text-center py-8">
               <p className="text-sm text-slate-500">{emptyText}</p>
@@ -869,8 +869,8 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="flex flex-col lg:flex-row" ref={splitContainerRef}>
-                  <div style={{ width: `${splitPercent}%` }} className="max-lg:!w-full flex-shrink-0 lg:pr-0">
+                <div className="flex flex-col lg:flex-row lg:items-stretch" ref={splitContainerRef}>
+                  <div style={{ width: `${splitPercent}%` }} className="max-lg:!w-full flex-shrink-0 lg:pr-0 flex flex-col">
                     <RichTextPanel
                       title={t('dashboard.detail.hiringRequirements', 'Hiring Requirements')}
                       content={selectedRequest.requirements}
@@ -909,7 +909,7 @@ export default function Dashboard() {
                   >
                     <div className="w-1 h-8 rounded-full bg-slate-300 group-hover:bg-blue-400 transition-colors" />
                   </div>
-                  <div className="mt-4 min-w-0 flex-1 lg:mt-0">
+                  <div className="mt-4 min-w-0 flex-1 lg:mt-0 flex flex-col">
                     <RichTextPanel
                       title={t('dashboard.detail.jobDescription', 'Job Description')}
                       content={selectedRequest.jobDescription}

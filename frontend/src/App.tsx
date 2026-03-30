@@ -104,7 +104,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/agent-alex" element={<AgentAlex />} />
+            <Route path="/agent-alex" element={<ProtectedRoute><AgentAlex /></ProtectedRoute>} />
             <Route path="/start-hiring" element={<Navigate to="/agent-alex" replace />} />
             <Route path="/developers" element={<APILanding />} />
             <Route path="/pricing" element={<Pricing />} />

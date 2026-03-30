@@ -2140,6 +2140,8 @@
     },
     "jobDetail": {
       "backToJobs": "Voltar para vagas",
+      "alexChatHistory": "Agent Alex — Histórico de Conversa",
+      "openAgentAlex": "Abrir Agent Alex",
       "edit": "Editar",
       "created": "Criado",
       "updated": "Atualizado",
@@ -3912,7 +3914,33 @@
       "headcount": "Especificar número de vagas",
       "timeline": "Definir cronograma / urgência",
       "benefits": "Descrever benefícios e vantagens",
-      "finalize": "Pronto — finalizar a especificação"
+      "finalize": "Pronto — finalizar a especificação",
+      "refresh": "Mostrar outros exemplos"
+    },
+    "examples": {
+      "ex1": "Engenheiros de software em São Francisco, empresas Série B, com Python e Node.js",
+      "ex2": "Engenheiro de IA em Pequim, qualquer nível, proficiente em Python, Vibe Coding e Agent Engineering",
+      "ex3": "Desenvolvedor full-stack para plataforma de workflows com agentes, 2+ anos, mestrado",
+      "ex4": "Product Manager Sênior com experiência em B2B SaaS, em Shanghai ou remoto",
+      "ex5": "Engenheiro DevOps com Kubernetes e AWS, 3-5 anos de experiência, startup fintech",
+      "ex6": "Cientista de dados com expertise em NLP, doutorado preferencial, para lab de pesquisa IA",
+      "ex7": "Diretor de Marketing para expansão internacional, fluente em inglês e mandarim",
+      "ex8": "Engenheiro mobile (iOS/Android) para app de saúde, nível pleno, híbrido em NYC",
+      "ex9": "Engenheiro de ML para sistemas de recomendação, 5+ anos, pacote de ações competitivo",
+      "ex10": "Designer UX com experiência em dashboards corporativos, remoto, portfólio obrigatório",
+      "ex11": "VP de Engenharia para liderar time de 30 pessoas, startup Série C, em Singapura",
+      "ex12": "Engenheiro backend proficiente em Go e sistemas distribuídos, plataforma de trading"
+    },
+    "jd": {
+      "responsibilities": "Responsabilidades",
+      "additionalResponsibilities": "Responsabilidades Adicionais",
+      "teamCulture": "Cultura da Equipe",
+      "reasonForOpening": "Motivo da Abertura",
+      "experience": "Experiência",
+      "industry": "Experiência no Setor",
+      "hardSkills": "Competências Técnicas",
+      "softSkills": "Competências Comportamentais",
+      "dealBreakers": "Critérios de Eliminação"
     },
     "spec": {
       "title": "Especificação ao Vivo",

@@ -2507,6 +2507,8 @@
     },
     "jobDetail": {
       "backToJobs": "求人一覧に戻る",
+      "alexChatHistory": "Agent Alex — 会話履歴",
+      "openAgentAlex": "Agent Alexを開く",
       "edit": "編集",
       "created": "作成日",
       "updated": "更新日",
@@ -4371,7 +4373,33 @@
       "headcount": "採用人数を決める",
       "timeline": "採用スケジュール / 緊急度を設定",
       "benefits": "福利厚生を説明する",
-      "finalize": "完了です — 仕様書を確定してください"
+      "finalize": "完了です — 仕様書を確定してください",
+      "refresh": "別の例を表示"
+    },
+    "examples": {
+      "ex1": "サンフランシスコのソフトウェアエンジニア、Series B企業、PythonとNode.jsに精通",
+      "ex2": "北京のAIエンジニア、経験不問、Python・Vibe Coding・Agent開発が得意な人",
+      "ex3": "フルスタック開発者、高性能Agentワークフロープラットフォーム向け、2年以上、修士以上",
+      "ex4": "シニアプロダクトマネージャー、B2B SaaS経験あり、上海またはリモート勤務",
+      "ex5": "DevOpsエンジニア、KubernetesとAWSに精通、3-5年経験、フィンテックスタートアップ",
+      "ex6": "データサイエンティスト、NLP専門、博士号歓迎、AI研究チームに参加",
+      "ex7": "マーケティングディレクター、海外展開担当、英語と中国語が堪能",
+      "ex8": "モバイルエンジニア（iOS/Android）、ヘルスケアアプリ向け、中堅、NYCハイブリッド勤務",
+      "ex9": "レコメンドシステム向けMLエンジニア、5年以上、魅力的なストックオプション",
+      "ex10": "UXデザイナー、業務系ダッシュボード経験あり、リモート優先、ポートフォリオ必須",
+      "ex11": "VP of Engineering、30名チームを率いる、Series Cスタートアップ、シンガポール勤務",
+      "ex12": "バックエンドエンジニア、Goと分散システムに精通、リアルタイム取引プラットフォーム向け"
+    },
+    "jd": {
+      "responsibilities": "主要な職責",
+      "additionalResponsibilities": "副次的な職責",
+      "teamCulture": "チーム文化",
+      "reasonForOpening": "採用理由",
+      "experience": "経験年数",
+      "industry": "業界経験",
+      "hardSkills": "ハードスキル",
+      "softSkills": "ソフトスキル",
+      "dealBreakers": "不採用基準"
     },
     "spec": {
       "title": "リアルタイム仕様書",

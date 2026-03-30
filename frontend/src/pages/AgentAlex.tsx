@@ -19,40 +19,180 @@ import { useNavigate } from 'react-router-dom';
 
 // --- helpers ---
 
-function buildJobDescription(req: HiringRequirements): string {
+type TFunc = (key: string, fallback: string) => string;
+
+function buildJobDescription(req: HiringRequirements, t: TFunc): string {
   const lines: string[] = [];
   if (req.primaryResponsibilities?.length) {
-    lines.push('## Responsibilities', ...req.primaryResponsibilities.map(r => `- ${r}`), '');
+    lines.push(`## ${t('agentAlex.jd.responsibilities', '核心职责')}`, ...req.primaryResponsibilities.map(r => `- ${r}`), '');
   }
   if (req.secondaryResponsibilities?.length) {
-    lines.push('## Additional Responsibilities', ...req.secondaryResponsibilities.map(r => `- ${r}`), '');
+    lines.push(`## ${t('agentAlex.jd.additionalResponsibilities', '附加职责')}`, ...req.secondaryResponsibilities.map(r => `- ${r}`), '');
   }
-  if (req.teamCulture) lines.push('## Team Culture', req.teamCulture, '');
-  if (req.reasonForOpening) lines.push('## Reason for Opening', req.reasonForOpening, '');
+  if (req.teamCulture) lines.push(`## ${t('agentAlex.jd.teamCulture', '团队文化')}`, req.teamCulture, '');
+  if (req.reasonForOpening) lines.push(`## ${t('agentAlex.jd.reasonForOpening', '招聘原因')}`, req.reasonForOpening, '');
   return lines.join('\n');
 }
 
-function buildQualifications(req: HiringRequirements): string {
+function buildQualifications(req: HiringRequirements, t: TFunc): string {
   const lines: string[] = [];
-  if (req.hardSkills?.length) lines.push('**Hard Skills:**', ...req.hardSkills.map(s => `- ${s}`), '');
-  if (req.softSkills?.length) lines.push('**Soft Skills:**', ...req.softSkills.map(s => `- ${s}`), '');
-  if (req.yearsOfExperience) lines.push(`**Experience:** ${req.yearsOfExperience}`);
-  if (req.industryExperience) lines.push(`**Industry:** ${req.industryExperience}`);
+  if (req.yearsOfExperience) lines.push(`**${t('agentAlex.jd.experience', '工作经验')}:** ${req.yearsOfExperience}`, '');
+  if (req.industryExperience) lines.push(`**${t('agentAlex.jd.industry', '行业经验')}:** ${req.industryExperience}`, '');
   return lines.join('\n');
 }
 
-function buildJobPayload(req: HiringRequirements) {
+function buildHardRequirements(req: HiringRequirements, t: TFunc): string {
+  const lines: string[] = [];
+  if (req.hardSkills?.length) {
+    lines.push(`**${t('agentAlex.jd.hardSkills', '硬技能')}:**`, ...req.hardSkills.map(s => `- ${s}`), '');
+  }
+  if (req.softSkills?.length) {
+    lines.push(`**${t('agentAlex.jd.softSkills', '软技能')}:**`, ...req.softSkills.map(s => `- ${s}`), '');
+  }
+  if (req.dealBreakers?.length) {
+    lines.push(`**${t('agentAlex.jd.dealBreakers', '一票否决项')}:**`, ...req.dealBreakers.map(s => `- ${s}`), '');
+  }
+  return lines.join('\n');
+}
+
+/** Infer workType enum from free-text location/workLocation */
+function inferWorkType(text?: string): string | undefined {
+  if (!text) return undefined;
+  const lower = text.toLowerCase();
+  if (/\bremote\b|远程|遠端/.test(lower)) return 'remote';
+  if (/\bhybrid\b|混合/.test(lower)) return 'hybrid';
+  if (/\bonsite\b|\bon-site\b|现场|現場|办公室|辦公室/.test(lower)) return 'onsite';
+  return undefined;
+}
+
+/** Infer employmentType enum from roleType string */
+function inferEmploymentType(text?: string): string | undefined {
+  if (!text) return undefined;
+  const lower = text.toLowerCase();
+  if (/\bfull[- ]?time\b|全职|全職/.test(lower)) return 'full-time';
+  if (/\bpart[- ]?time\b|兼职|兼職/.test(lower)) return 'part-time';
+  if (/\bcontract\b|合同|合約|外包/.test(lower)) return 'contract';
+  if (/\bintern\b|实习|實習/.test(lower)) return 'internship';
+  if (/\bfreelance\b|自由/.test(lower)) return 'contract';
+  return undefined;
+}
+
+/** Infer experienceLevel enum from yearsOfExperience string */
+function inferExperienceLevel(text?: string): string | undefined {
+  if (!text) return undefined;
+  // extract first number
+  const match = text.match(/(\d+)/);
+  if (!match) return undefined;
+  const years = parseInt(match[1], 10);
+  if (years <= 1) return 'entry';
+  if (years <= 4) return 'mid';
+  if (years <= 8) return 'senior';
+  if (years <= 12) return 'lead';
+  return 'executive';
+}
+
+/** Normalize education string to enum value */
+function inferEducation(text?: string): string | undefined {
+  if (!text) return undefined;
+  const lower = text.toLowerCase();
+  if (/\bphd\b|\bdoctor\b|博士/.test(lower)) return 'phd';
+  if (/\bmaster\b|\bmba\b|硕士|碩士|研究生/.test(lower)) return 'master';
+  if (/\bbachelor\b|本科|学士|學士/.test(lower)) return 'bachelor';
+  if (/\bassociate\b|大专|大專/.test(lower)) return 'associate';
+  if (/\bhigh.?school\b|高中/.test(lower)) return 'high_school';
+  return undefined;
+}
+
+/** Try to parse salary range into min/max numbers. Handles "40万-60万", "400k-600k", "40000-60000", etc. */
+function parseSalaryRange(text?: string): { salaryMin?: number; salaryMax?: number; salaryCurrency?: string; salaryPeriod?: string } {
+  if (!text) return {};
+
+  let currency: string | undefined;
+  if (/\$|USD|美[元金]/.test(text)) currency = 'USD';
+  else if (/€|EUR/.test(text)) currency = 'EUR';
+  else if (/£|GBP|英镑/.test(text)) currency = 'GBP';
+  else if (/¥|CNY|RMB|人民币|元|万/.test(text)) currency = 'CNY';
+  else if (/JPY|日[元円]/.test(text)) currency = 'JPY';
+
+  let period: string | undefined;
+  if (/year|annual|年薪|每年|annually/i.test(text)) period = 'yearly';
+  else if (/month|月薪|每月|monthly/i.test(text)) period = 'monthly';
+
+  // Extract numbers, handle 万 (10k) and k multipliers
+  const numbers: number[] = [];
+  const regex = /([\d,.]+)\s*(?:万|w|k)?/gi;
+  let m;
+  while ((m = regex.exec(text)) !== null) {
+    let num = parseFloat(m[1].replace(/,/g, ''));
+    if (!isNaN(num)) {
+      const suffix = text.substring(m.index + m[1].length, m.index + m[1].length + 2).toLowerCase();
+      if (/万|w/i.test(suffix)) num *= 10000;
+      else if (/k/i.test(suffix)) num *= 1000;
+      numbers.push(Math.round(num));
+    }
+  }
+
+  return {
+    salaryMin: numbers[0] || undefined,
+    salaryMax: numbers[1] || numbers[0] || undefined,
+    salaryCurrency: currency,
+    salaryPeriod: period,
+  };
+}
+
+/** Strip workType keywords from location text to get clean location string */
+function cleanLocation(text?: string): string | undefined {
+  if (!text) return undefined;
+  return text
+    .replace(/\b(remote|hybrid|on-?site|远程|遠端|混合|现场|現場)\b[,;/\s]*/gi, '')
+    .replace(/[,;/\s]+$/, '')
+    .trim() || undefined;
+}
+
+function buildJobPayload(req: HiringRequirements, t: TFunc) {
+  const salary = parseSalaryRange(req.salaryRange);
+
   return {
     title: req.jobTitle!,
     department: req.department,
-    location: req.workLocation,
-    education: req.education,
+    location: cleanLocation(req.workLocation) || req.geographicRestrictions,
+    workType: inferWorkType(req.workLocation),
+    employmentType: inferEmploymentType(req.roleType),
+    experienceLevel: inferExperienceLevel(req.yearsOfExperience),
+    education: inferEducation(req.education),
     headcount: req.headcount ? parseInt(req.headcount, 10) || 1 : 1,
+    salaryMin: salary.salaryMin,
+    salaryMax: salary.salaryMax,
+    salaryCurrency: salary.salaryCurrency,
+    salaryPeriod: salary.salaryPeriod,
     salaryText: req.salaryRange,
-    description: buildJobDescription(req),
-    qualifications: buildQualifications(req),
-    hardRequirements: req.dealBreakers?.join('\n'),
-    niceToHave: req.preferredQualifications?.join('\n'),
+    description: buildJobDescription(req, t),
+    qualifications: buildQualifications(req, t),
+    hardRequirements: buildHardRequirements(req, t),
+    niceToHave: req.preferredQualifications?.length
+      ? req.preferredQualifications.map(s => `- ${s}`).join('\n')
+      : undefined,
+    benefits: req.benefits?.length
+      ? req.benefits.map(s => `- ${s}`).join('\n')
+      : undefined,
+    requirements: {
+      mustHave: [
+        ...(req.hardSkills || []),
+        ...(req.softSkills || []),
+        ...(req.dealBreakers || []),
+      ],
+      niceToHave: req.preferredQualifications || [],
+    },
+    interviewRequirements: req.interviewStages?.length
+      ? req.interviewStages.join('\n')
+      : undefined,
+    notes: [
+      req.reportingLine ? `${t('agentAlex.spec.fields.reportingLine', 'Reporting Line')}: ${req.reportingLine}` : '',
+      req.travelRequirements ? `${t('agentAlex.spec.fields.travelRequirements', 'Travel')}: ${req.travelRequirements}` : '',
+      req.keyStakeholders?.length ? `${t('agentAlex.spec.fields.keyStakeholders', 'Stakeholders')}: ${req.keyStakeholders.join(', ')}` : '',
+      req.timelineExpectations ? `${t('agentAlex.spec.fields.timelineExpectations', 'Timeline')}: ${req.timelineExpectations}` : '',
+      req.equityBonus ? `${t('agentAlex.spec.fields.equityBonus', 'Equity/Bonus')}: ${req.equityBonus}` : '',
+    ].filter(Boolean).join('\n') || undefined,
   };
 }
 
@@ -266,7 +406,7 @@ export default function AgentAlex() {
     if (!req.jobTitle) return;
     setIsCreatingJob(true);
     try {
-      const payload = buildJobPayload(req);
+      const payload = buildJobPayload(req, t);
       if (activeSession.linkedJobId) {
         // Update existing linked job
         await updateJobFromSpec(activeSession.linkedJobId, payload);

@@ -126,8 +126,10 @@ export default function ProductIntro({
   seoUrl,
   seoStructuredData,
 }: ProductIntroProps = {}) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
+  const currentLanguage = i18n.resolvedLanguage || i18n.language || 'en';
+  const isChineseHero = currentLanguage === 'zh' || currentLanguage === 'zh-TW';
 
   const isLight = showDarkToggle ? themeMode === 'light' : true;
   const accents = isLight ? lightAccents : darkAccents;
@@ -155,8 +157,10 @@ export default function ProductIntro({
     ? 'mb-6 inline-flex rounded-full border border-sky-200 bg-white/90 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-[0_14px_28px_-24px_rgba(37,99,235,0.35)]'
     : 'mb-6 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200';
   const heroTitleClass = isLight
-    ? 'landing-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-[4.1rem] lg:leading-[1.02]'
-    : 'landing-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-[4.1rem] lg:leading-[1.02]';
+    ? `landing-display text-4xl font-bold text-slate-900 sm:text-5xl ${isChineseHero ? 'tracking-[-0.035em] lg:text-[2.9rem] lg:leading-[1.12] xl:text-[3.7rem] xl:leading-[1.08]' : 'tracking-tight lg:text-[3.2rem] lg:leading-[1.08] xl:text-[4.1rem] xl:leading-[1.02]'}`
+    : `landing-display text-4xl font-bold text-white sm:text-5xl ${isChineseHero ? 'tracking-[-0.035em] lg:text-[2.9rem] lg:leading-[1.12] xl:text-[3.7rem] xl:leading-[1.08]' : 'tracking-tight lg:text-[3.2rem] lg:leading-[1.08] xl:text-[4.1rem] xl:leading-[1.02]'}`;
+  const heroTitleLineClass = isChineseHero ? 'block lg:whitespace-nowrap' : 'block';
+  const heroTitleSecondLineClass = isChineseHero ? 'mt-4 lg:mt-5' : 'mt-3';
   const heroGradientClass = isLight
     ? 'bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 bg-clip-text text-transparent'
     : 'bg-gradient-to-r from-cyan-200 via-sky-300 to-indigo-300 bg-clip-text text-transparent';
@@ -174,8 +178,8 @@ export default function ProductIntro({
     : 'rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5';
   const heroStatValueClass = isLight ? 'text-2xl font-bold text-slate-900 sm:text-3xl' : 'text-2xl font-bold text-white sm:text-3xl';
   const heroStatLabelClass = isLight
-    ? 'mt-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500'
-    : 'mt-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-400';
+    ? 'mt-2 text-xs font-medium uppercase tracking-[0.18em] leading-snug text-slate-500'
+    : 'mt-2 text-xs font-medium uppercase tracking-[0.18em] leading-snug text-slate-400';
   const heroPanelGlowClass = isLight
     ? 'absolute -inset-6 rounded-full bg-sky-300/30 blur-3xl'
     : 'absolute -inset-6 rounded-full bg-cyan-400/10 blur-3xl';
@@ -545,7 +549,7 @@ export default function ProductIntro({
         title={t('productIntro.seo.title', 'RoboHire | 让 AI 把招聘流程跑起来')}
         description={t('productIntro.seo.description', '从岗位澄清、JD 生成、简历初筛，到自动邀约、AI 面试和评估报告，RoboHire 帮你把 42 天的招聘周期压缩到 3 天。')}
         url={seoUrl || 'https://robohire.io/product-intro'}
-        keywords="AI招聘,智能招聘,AI面试,简历筛选,招聘自动化,AI hiring,resume screening,AI interview"
+        keywords="AI招聘,智能招聘,AI面试,简历筛选,招聘自动化,AI hiring,AI recruitment,AI interview,AI resume screening,AI candidate evaluation,automated hiring,recruitment automation,AI video interview,intelligent recruitment"
         {...(seoStructuredData ? { structuredData: seoStructuredData } : {})}
       />
 
@@ -584,14 +588,15 @@ export default function ProductIntro({
                 </div>
               )}
 
-              <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+              <div className={`grid gap-12 lg:items-center ${isChineseHero ? 'lg:grid-cols-[1.14fr_0.86fr]' : 'lg:grid-cols-[1.05fr_0.95fr]'}`}>
                 <div className="max-w-3xl">
                   <p className={heroBadgeClass}>{t('productIntro.hero.badge', 'AI 招聘代理')}</p>
 
                   <h1 className={heroTitleClass}>
-                    {t('productIntro.hero.title1', '从需求到录用')}
-                    <br />
-                    <span className={heroGradientClass}>
+                    <span className={heroTitleLineClass}>
+                      {t('productIntro.hero.title1', '从需求到录用')}
+                    </span>
+                    <span className={`${heroTitleLineClass} ${heroTitleSecondLineClass} ${heroGradientClass}`}>
                       {t('productIntro.hero.title2', '全流程 AI 自动化')}
                     </span>
                   </h1>
