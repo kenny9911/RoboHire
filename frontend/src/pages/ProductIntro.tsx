@@ -4,6 +4,14 @@ import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
+import FAQ from '../components/landing/FAQ';
+
+export interface ProductIntroProps {
+  showDarkToggle?: boolean;
+  showFAQ?: boolean;
+  seoUrl?: string;
+  seoStructuredData?: Record<string, unknown>;
+}
 
 type IconProps = {
   className?: string;
@@ -112,11 +120,16 @@ const darkAccents = [
   },
 ] as const;
 
-export default function ProductIntro() {
+export default function ProductIntro({
+  showDarkToggle = true,
+  showFAQ = false,
+  seoUrl,
+  seoStructuredData,
+}: ProductIntroProps = {}) {
   const { t } = useTranslation();
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
 
-  const isLight = themeMode === 'light';
+  const isLight = showDarkToggle ? themeMode === 'light' : true;
   const accents = isLight ? lightAccents : darkAccents;
 
   const pageShellClass = isLight
@@ -531,7 +544,9 @@ export default function ProductIntro() {
       <SEO
         title={t('productIntro.seo.title', 'RoboHire | 让 AI 把招聘流程跑起来')}
         description={t('productIntro.seo.description', '从岗位澄清、JD 生成、简历初筛，到自动邀约、AI 面试和评估报告，RoboHire 帮你把 42 天的招聘周期压缩到 3 天。')}
-        url="https://robohire.io/product-intro"
+        url={seoUrl || 'https://robohire.io/product-intro'}
+        keywords="AI招聘,智能招聘,AI面试,简历筛选,招聘自动化,AI hiring,resume screening,AI interview"
+        {...(seoStructuredData ? { structuredData: seoStructuredData } : {})}
       />
 
       <div className={pageShellClass}>
@@ -555,17 +570,19 @@ export default function ProductIntro() {
             <div className={heroOverlayClass} />
 
             <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="mb-8 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setThemeMode((current) => (current === 'light' ? 'dark' : 'light'))}
-                  aria-label={themeToggleLabel}
-                  className={themeToggleClass}
-                >
-                  {isLight ? <IconMoon className="text-slate-600" /> : <IconSun className="text-amber-300" />}
-                  <span>{themeToggleLabel}</span>
-                </button>
-              </div>
+              {showDarkToggle && (
+                <div className="mb-8 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setThemeMode((current) => (current === 'light' ? 'dark' : 'light'))}
+                    aria-label={themeToggleLabel}
+                    className={themeToggleClass}
+                  >
+                    {isLight ? <IconMoon className="text-slate-600" /> : <IconSun className="text-amber-300" />}
+                    <span>{themeToggleLabel}</span>
+                  </button>
+                </div>
+              )}
 
               <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                 <div className="max-w-3xl">
@@ -628,7 +645,7 @@ export default function ProductIntro() {
                         <p className={cycleEyebrowClass}>
                           {t('productIntro.hero.cycleLabel', '周期缩短')}
                         </p>
-                        <p className={cycleValueClass}>42 → 3</p>
+                        <p className={`${cycleValueClass} whitespace-nowrap`}>42 → 3</p>
                       </div>
                     </div>
 
@@ -722,7 +739,7 @@ export default function ProductIntro() {
             </div>
           </section>
 
-          <section className={`${sectionAltClass} py-20 sm:py-28`}>
+          <section id="services" className={`${sectionAltClass} py-20 sm:py-28`}>
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
               <div className="mx-auto mb-16 max-w-3xl text-center">
                 <p className={heroBadgeClass}>
@@ -760,7 +777,7 @@ export default function ProductIntro() {
             </div>
           </section>
 
-          <section className="relative py-20 sm:py-24">
+          <section id="how-it-works" className="relative py-20 sm:py-24">
             <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
               <div className="mb-10 text-center">
                 <p className={scenarioBadgeClass}>
@@ -1046,6 +1063,8 @@ export default function ProductIntro() {
             </div>
           </section>
         </main>
+
+        {showFAQ && <FAQ />}
 
         <Footer />
       </div>

@@ -17,7 +17,7 @@ const StartHiring = lazy(() => import('./pages/StartHiring'));
 const RequestDemo = lazy(() => import('./pages/RequestDemo'));
 const QuickInvite = lazy(() => import('./pages/QuickInvite'));
 const About = lazy(() => import('./pages/About'));
-const ProductIntro = lazy(() => import('./pages/ProductIntro'));
+// ProductIntro is now rendered inline by Landing.tsx as the homepage
 const InterviewRoom = lazy(() => import('./pages/InterviewRoom'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
@@ -106,8 +106,8 @@ function App() {
             <Route path="/request-demo" element={<RequestDemo />} />
             <Route path="/quick-invite" element={<QuickInvite />} />
             <Route path="/about" element={<About />} />
-            <Route path="/product-intro" element={<ProductIntro />} />
-            <Route path="/product-info" element={<Navigate to="/product-intro" replace />} />
+            <Route path="/product-intro" element={<Navigate to="/" replace />} />
+            <Route path="/product-info" element={<Navigate to="/" replace />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/blog" element={<Blog />} />

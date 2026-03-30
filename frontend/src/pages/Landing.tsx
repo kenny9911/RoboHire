@@ -1,16 +1,36 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import SEO from '../components/SEO';
-import Navbar from '../components/landing/Navbar';
-import Hero from '../components/landing/Hero';
-import ServiceCards from '../components/landing/ServiceCards';
-import HowItWorks from '../components/landing/HowItWorks';
-import ProductSection from '../components/landing/ProductSection';
-import Features from '../components/landing/Features';
-import Testimonials from '../components/landing/Testimonials';
-import FAQ from '../components/landing/FAQ';
-import CTA from '../components/landing/CTA';
-import Footer from '../components/landing/Footer';
+import ProductIntro from './ProductIntro';
+
+const homepageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'RoboHire - AI-Powered Hiring Platform',
+  url: 'https://robohire.io/',
+  description:
+    'AI-powered recruitment platform that automates resume screening, conducts AI video interviews, and generates evaluation reports. Reduce hiring cycles from 42 days to 3.',
+  mainEntity: {
+    '@type': 'SoftwareApplication',
+    name: 'RoboHire',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: '0',
+      highPrice: '2799',
+      priceCurrency: 'CNY',
+      offerCount: '4',
+    },
+    featureList:
+      'AI Resume Screening, AI Video Interviews, Automated Candidate Evaluation, Multi-language Support (7 languages), ATS Integration, Cheating Detection',
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      reviewCount: '500',
+      bestRating: '5',
+    },
+  },
+};
 
 export default function Landing() {
   const location = useLocation();
@@ -26,22 +46,11 @@ export default function Landing() {
   }, [location.state]);
 
   return (
-    <>
-      <SEO url="https://robohire.io/" />
-      <div className="landing-page min-h-screen">
-        <Navbar />
-        <main>
-          <Hero />
-          <ServiceCards />
-          <ProductSection />
-          <HowItWorks />
-          <Features />
-          <Testimonials />
-          <FAQ />
-          <CTA />
-        </main>
-        <Footer />
-      </div>
-    </>
+    <ProductIntro
+      showDarkToggle={false}
+      showFAQ={true}
+      seoUrl="https://robohire.io/"
+      seoStructuredData={homepageSchema}
+    />
   );
 }
