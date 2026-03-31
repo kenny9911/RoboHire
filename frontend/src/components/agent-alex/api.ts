@@ -4,6 +4,7 @@ import type {
   ChatStreamEvent,
   HistoryMessage,
 } from "./types";
+import { API_BASE } from "../../config";
 
 interface JsonErrorBody {
   error?: {
@@ -38,7 +39,7 @@ export function buildHistoryFromMessages(messages: ChatMessage[]): HistoryMessag
 }
 
 export async function fetchAppConfig(): Promise<AppConfigStatus> {
-  const response = await fetch("/api/v1/agent-alex/config");
+  const response = await fetch(`${API_BASE}/api/v1/agent-alex/config`);
   if (!response.ok) {
     await parseJsonError(response);
   }
@@ -54,7 +55,7 @@ export async function streamChat(
   const htmlLang = document.documentElement.lang;
   const locale = htmlLang || localStorage.getItem("i18nextLng") || navigator.language || "en";
 
-  const response = await fetch("/api/v1/agent-alex/chat/stream", {
+  const response = await fetch(`${API_BASE}/api/v1/agent-alex/chat/stream`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -115,7 +116,7 @@ export async function streamChat(
 }
 
 export async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
-  const response = await fetch("/api/v1/agent-alex/transcribe", {
+  const response = await fetch(`${API_BASE}/api/v1/agent-alex/transcribe`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -132,7 +133,7 @@ export async function transcribeAudio(audioBase64: string, mimeType: string): Pr
 }
 
 export async function generateSpeech(text: string): Promise<string | undefined> {
-  const response = await fetch("/api/v1/agent-alex/tts", {
+  const response = await fetch(`${API_BASE}/api/v1/agent-alex/tts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -149,6 +150,13 @@ export async function generateSpeech(text: string): Promise<string | undefined> 
 }
 
 export function getLiveWebSocketUrl(): string {
+  if (API_BASE) {
+    // Production: API_BASE is a full URL like https://api.robohire.io
+    const url = new URL("/api/v1/agent-alex/live", API_BASE);
+    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    return url.toString();
+  }
+  // Dev: same host, proxy handles it
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.host}/api/v1/agent-alex/live`;
 }
@@ -186,7 +194,7 @@ export interface CreateJobResponse {
 
 export async function createJobFromSpec(payload: CreateJobFromSpecPayload): Promise<CreateJobResponse> {
   const token = localStorage.getItem("auth_token");
-  const response = await fetch("/api/v1/jobs", {
+  const response = await fetch(`${API_BASE}/api/v1/jobs`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -223,7 +231,7 @@ export interface DbSession {
 }
 
 export async function fetchSessions(): Promise<DbSession[]> {
-  const res = await fetch("/api/v1/agent-alex/sessions", { headers: authHeaders() });
+  const res = await fetch(`${API_BASE}/api/v1/agent-alex/sessions`, { headers: authHeaders() });
   if (!res.ok) return [];
   const body = (await res.json()) as { data?: DbSession[] };
   return body.data ?? [];
@@ -234,7 +242,7 @@ export async function createSession(data: {
   messages?: unknown[];
   requirements?: Record<string, unknown>;
 }): Promise<DbSession> {
-  const res = await fetch("/api/v1/agent-alex/sessions", {
+  const res = await fetch(`${API_BASE}/api/v1/agent-alex/sessions`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(data),
@@ -247,7 +255,7 @@ export async function updateSession(
   id: string,
   data: Partial<{ title: string; messages: unknown[]; requirements: Record<string, unknown>; linkedJobId: string | null }>,
 ): Promise<void> {
-  await fetch(`/api/v1/agent-alex/sessions/${id}`, {
+  await fetch(`${API_BASE}/api/v1/agent-alex/sessions/${id}`, {
     method: "PATCH",
     headers: authHeaders(),
     body: JSON.stringify(data),
@@ -255,7 +263,7 @@ export async function updateSession(
 }
 
 export async function deleteSession(id: string): Promise<{ success: boolean; error?: string; linkedJob?: { id: string; title: string } }> {
-  const res = await fetch(`/api/v1/agent-alex/sessions/${id}`, {
+  const res = await fetch(`${API_BASE}/api/v1/agent-alex/sessions/${id}`, {
     method: "DELETE",
     headers: authHeaders(),
   });
@@ -263,7 +271,7 @@ export async function deleteSession(id: string): Promise<{ success: boolean; err
 }
 
 export async function updateJobFromSpec(jobId: string, payload: Partial<CreateJobFromSpecPayload>): Promise<CreateJobResponse> {
-  const res = await fetch(`/api/v1/jobs/${jobId}`, {
+  const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}`, {
     method: "PATCH",
     headers: authHeaders(),
     body: JSON.stringify(payload),
