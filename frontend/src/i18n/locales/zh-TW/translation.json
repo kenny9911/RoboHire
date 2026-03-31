@@ -11,7 +11,8 @@
     "inviteCandidate": "邀請候選人面試",
     "evaluateInterview": "面試評估",
     "parseResume": "解析簡歷",
-    "parseJd": "解析JD"
+    "parseJd": "解析JD",
+    "agents": "招聘 Agents"
   },
   "actions": {
     "paste": "貼上",

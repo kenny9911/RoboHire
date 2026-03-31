@@ -19,6 +19,7 @@ interface Agent {
   createdAt: string;
   updatedAt: string;
   job: { id: string; title: string } | null;
+  user?: { id: string; name: string | null; email: string };
   _count: { candidates: number };
   accessLevel?: 'shared' | 'private';
   collaborators?: string[];
@@ -395,12 +396,13 @@ export default function Agents() {
                     <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
                       <div className="flex items-center gap-2 text-sm text-slate-500">
                         <div className="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center text-xs font-medium text-violet-600">
-                          {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+                          {(agent.user?.name || agent.user?.email || 'U').charAt(0).toUpperCase()}
                         </div>
-                        <span className="truncate max-w-[100px]">{user?.name || user?.email || ''}</span>
+                        <span className="truncate max-w-[100px]">{agent.user?.name || agent.user?.email || ''}</span>
                       </div>
-                      <span className="text-sm text-slate-400">
-                        {new Date(agent.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      <span className="text-sm text-slate-400" title={new Date(agent.createdAt).toLocaleString()}>
+                        {new Date(agent.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{' '}
+                        {new Date(agent.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
                       </span>
                       <span className="ml-auto flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full ${agent.status === 'active' ? 'bg-green-500' : agent.status === 'paused' ? 'bg-amber-400' : agent.status === 'configuring' ? 'bg-blue-400' : agent.status === 'failed' ? 'bg-red-500' : agent.status === 'closed' ? 'bg-slate-400' : agent.status === 'out_of_leads' ? 'bg-orange-400' : 'bg-slate-300'}`} />
@@ -439,12 +441,13 @@ export default function Agents() {
                   <span className="text-sm text-slate-500 text-center">{pendingCount || '-'}</span>
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center text-[10px] font-medium text-violet-600 shrink-0">
-                      {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+                      {(agent.user?.name || agent.user?.email || 'U').charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-xs text-slate-500 truncate">{user?.name || user?.email || ''}</span>
+                    <span className="text-xs text-slate-500 truncate">{agent.user?.name || agent.user?.email || ''}</span>
                   </div>
-                  <span className="text-xs text-slate-400 text-center">
-                    {new Date(agent.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  <span className="text-xs text-slate-400 text-center" title={new Date(agent.createdAt).toLocaleString()}>
+                    {new Date(agent.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{' '}
+                    {new Date(agent.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </span>
                   <span className="flex items-center justify-center gap-1.5">
                     <span className={`w-2 h-2 rounded-full ${agent.status === 'active' ? 'bg-green-500' : agent.status === 'paused' ? 'bg-amber-400' : agent.status === 'configuring' ? 'bg-blue-400' : agent.status === 'failed' ? 'bg-red-500' : agent.status === 'closed' ? 'bg-slate-400' : agent.status === 'out_of_leads' ? 'bg-orange-400' : 'bg-slate-300'}`} />

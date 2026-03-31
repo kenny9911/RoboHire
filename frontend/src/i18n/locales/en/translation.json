@@ -11,7 +11,8 @@
     "inviteCandidate": "Invite Candidate to Interview",
     "evaluateInterview": "Evaluate Interview",
     "parseResume": "Parse Resume",
-    "parseJd": "Parse JD"
+    "parseJd": "Parse JD",
+    "agents": "Agents"
   },
   "actions": {
     "paste": "Paste",
@@ -1275,6 +1276,7 @@
       "parseJd": "Parse JD",
       "inviteCandidate": "Invite Candidate",
       "evaluateInterview": "Evaluate Interview",
+      "agents": "Agents",
       "advanced": "Advanced",
       "webhooks": "Webhooks",
       "atsIntegrations": "ATS Integrations",
@@ -1627,6 +1629,20 @@
       "bodyParams": "Body Parameters",
       "responseFields": "Response Fields",
       "exampleResponse": "Example Response"
+    }
+  },
+  "playground": {
+    "agents": {
+      "title": "Agents API",
+      "desc": "Create, list, update, and delete AI recruitment agents.",
+      "list": "List Agents",
+      "get": "Get Agent",
+      "create": "Create Agent",
+      "update": "Update Agent",
+      "delete": "Delete Agent",
+      "running": "Executing...",
+      "run": "Execute Request",
+      "response": "Response"
     }
   },
   "pages": {

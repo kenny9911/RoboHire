@@ -12,6 +12,7 @@ const navItems: Array<{ path: string; labelKey: string; usageKey?: UsageKey }> =
   { path: '/api-playground/evaluate', labelKey: 'nav.evaluateInterview' },
   { path: '/api-playground/parse-resume', labelKey: 'nav.parseResume' },
   { path: '/api-playground/parse-jd', labelKey: 'nav.parseJd' },
+  { path: '/api-playground/agents', labelKey: 'nav.agents' },
 ];
 
 export default function APIPlayground() {

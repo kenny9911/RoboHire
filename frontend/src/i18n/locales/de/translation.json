@@ -44,7 +44,8 @@
     "inviteCandidate": "Kandidaten zum Interview einladen",
     "evaluateInterview": "Interview bewerten",
     "parseResume": "Lebenslauf parsen",
-    "parseJd": "JD parsen"
+    "parseJd": "JD parsen",
+    "agents": "Agenten"
   },
   "actions": {
     "paste": "Einfugen",

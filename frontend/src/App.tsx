@@ -63,6 +63,7 @@ const InviteCandidate = lazy(() => import('./pages/InviteCandidate'));
 const ParseResume = lazy(() => import('./pages/ParseResume'));
 const ParseJD = lazy(() => import('./pages/ParseJD'));
 const EvaluateInterview = lazy(() => import('./pages/EvaluateInterview'));
+const AgentsPlayground = lazy(() => import('./pages/AgentsPlayground'));
 
 // Lazy-loaded Documentation
 const DocsLayout = lazy(() => import('./layouts/DocsLayout'));
@@ -80,6 +81,7 @@ const DocsEvaluateInterview = lazy(() => import('./pages/docs/DocsEvaluateInterv
 const DocsWebhooks = lazy(() => import('./pages/docs/DocsWebhooks'));
 const DocsErrorHandling = lazy(() => import('./pages/docs/DocsErrorHandling'));
 const DocsATSIntegrations = lazy(() => import('./pages/docs/DocsATSIntegrations'));
+const DocsAgentsAPI = lazy(() => import('./pages/docs/DocsAgentsAPI'));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -187,6 +189,7 @@ function App() {
               <Route path="parse-resume" element={<ParseResume />} />
               <Route path="parse-jd" element={<ParseJD />} />
               <Route path="evaluate" element={<EvaluateInterview />} />
+              <Route path="agents" element={<AgentsPlayground />} />
             </Route>
 
             {/* Documentation Hub (standalone, no sidebar) */}
@@ -208,6 +211,7 @@ function App() {
               <Route path="webhooks" element={<DocsWebhooks />} />
               <Route path="ats-integrations" element={<DocsATSIntegrations />} />
               <Route path="errors" element={<DocsErrorHandling />} />
+              <Route path="agents" element={<DocsAgentsAPI />} />
             </Route>
 
             {/* Old docs URL redirects */}

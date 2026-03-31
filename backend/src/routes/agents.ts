@@ -25,13 +25,25 @@ async function buildAgentAccessWhere(
 router.get('/', requireAuth, async (req, res) => {
   try {
     const user = req.user!;
-    const { status, limit = '20', page = '1', filterUserId, filterTeamId, teamView } = req.query;
+    const { status, taskType, createdBefore, createdAfter, limit = '20', page = '1', filterUserId, filterTeamId, teamView } = req.query;
 
     const scope = await getVisibilityScope(user, teamView === 'true');
     const userFilter = await buildAdminOverrideFilter(scope, filterUserId as string, filterTeamId as string);
 
     const where: any = { ...userFilter };
     if (status && typeof status === 'string') where.status = status;
+    if (taskType && typeof taskType === 'string') where.taskType = taskType;
+    if (createdBefore || createdAfter) {
+      where.createdAt = {};
+      if (createdBefore && typeof createdBefore === 'string') {
+        const d = new Date(createdBefore);
+        if (!isNaN(d.getTime())) where.createdAt.lte = d;
+      }
+      if (createdAfter && typeof createdAfter === 'string') {
+        const d = new Date(createdAfter);
+        if (!isNaN(d.getTime())) where.createdAt.gte = d;
+      }
+    }
 
     const take = Math.min(parseInt(limit as string) || 20, 100);
     const skip = (Math.max(parseInt(page as string) || 1, 1) - 1) * take;
@@ -44,6 +56,7 @@ router.get('/', requireAuth, async (req, res) => {
         skip,
         include: {
           job: { select: { id: true, title: true } },
+          user: { select: { id: true, name: true, email: true } },
           _count: { select: { candidates: true } },
         },
       }),
@@ -68,6 +81,7 @@ router.get('/:id', requireAuth, async (req, res) => {
       where: accessWhere,
       include: {
         job: { select: { id: true, title: true } },
+        user: { select: { id: true, name: true, email: true } },
         _count: { select: { candidates: true } },
       },
     });

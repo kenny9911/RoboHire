@@ -11,7 +11,8 @@
     "inviteCandidate": "邀请候选人面试",
     "evaluateInterview": "面试评估",
     "parseResume": "解析简历",
-    "parseJd": "解析JD"
+    "parseJd": "解析JD",
+    "agents": "招聘 Agents"
   },
   "actions": {
     "paste": "粘贴",
@@ -1276,6 +1277,7 @@
       "parseJd": "解析JD",
       "inviteCandidate": "邀请候选人",
       "evaluateInterview": "面试评估",
+      "agents": "招聘 Agents",
       "advanced": "高级功能",
       "webhooks": "Webhooks",
       "atsIntegrations": "ATS 集成",
@@ -1628,6 +1630,20 @@
       "bodyParams": "请求体参数",
       "responseFields": "响应字段",
       "exampleResponse": "响应示例"
+    }
+  },
+  "playground": {
+    "agents": {
+      "title": "招聘 Agents 接口",
+      "desc": "创建、查询、编辑和删除 AI 招聘 Agent。",
+      "list": "查询列表",
+      "get": "获取详情",
+      "create": "新建 Agent",
+      "update": "编辑 Agent",
+      "delete": "删除 Agent",
+      "running": "请求中...",
+      "run": "发送请求",
+      "response": "返回结果"
     }
   },
   "pages": {

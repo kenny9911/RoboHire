@@ -37,6 +37,7 @@ export default function DocsLayout() {
         { title: t('docs.nav.parseJd', 'Parse JD'), href: '/docs/api/parse-jd' },
         { title: t('docs.nav.inviteCandidate', 'Invite Candidate'), href: '/docs/api/invite-candidate' },
         { title: t('docs.nav.evaluateInterview', 'Evaluate Interview'), href: '/docs/api/evaluate-interview' },
+        { title: t('docs.nav.agents', 'Agents'), href: '/docs/api/agents' },
       ],
     },
     {

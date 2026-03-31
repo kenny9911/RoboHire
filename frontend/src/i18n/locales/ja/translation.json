@@ -44,7 +44,8 @@
     "inviteCandidate": "候補者を面接に招待",
     "evaluateInterview": "面接評価",
     "parseResume": "レジュメ解析",
-    "parseJd": "JD解析"
+    "parseJd": "JD解析",
+    "agents": "採用エージェント"
   },
   "actions": {
     "paste": "貼り付け",

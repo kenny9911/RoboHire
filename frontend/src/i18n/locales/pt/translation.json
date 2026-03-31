@@ -44,7 +44,8 @@
     "inviteCandidate": "Convidar para entrevista",
     "evaluateInterview": "Avaliar Entrevista",
     "parseResume": "Analisar Curriculo",
-    "parseJd": "Analisar JD"
+    "parseJd": "Analisar JD",
+    "agents": "Agentes"
   },
   "actions": {
     "paste": "Colar",
