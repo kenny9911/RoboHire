@@ -62,6 +62,7 @@ export interface AppConfigStatus {
 export type ChatStreamEvent =
   | { type: "text-delta"; text: string }
   | { type: "requirements-update"; data: Partial<HiringRequirements> }
+  | { type: "suggestions"; data: string[] }
   | { type: "done" }
   | { type: "error"; code: string; message: string };
 

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Send, Mic, Square, Play, Loader2, BrainCircuit, Lightbulb, RefreshCw } from "lucide-react";
+import { Send, Mic, Square, Play, Loader2, BrainCircuit, Lightbulb, RefreshCw, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -42,96 +42,34 @@ function pickRandom<T>(arr: T[], n: number): T[] {
   return shuffled.slice(0, n);
 }
 
-/** Extract suggested answers from the agent's last response by analyzing the questions asked */
-function extractAnswerSuggestions(lastAgentText: string): string[] {
-  const suggestions: string[] = [];
 
-  // Detect question topics and suggest concise answers
-  const questionPatterns: Array<{ pattern: RegExp; answers: string[] }> = [
-    // Tech stack / skills
-    { pattern: /技术栈|技术方向|编程语言|框架|工具|tech stack|programming|framework/i,
-      answers: ['Python, PyTorch, TensorFlow', 'Java, Spring Boot, Kubernetes', 'TypeScript, React, Node.js', 'Go, Rust, 分布式系统'] },
-    // Work location / remote
-    { pattern: /办公模式|工作地点|远程|混合|坐班|remote|hybrid|on-?site|location/i,
-      answers: ['坐班，北京', '混合办公，每周到岗 3 天', '支持全远程', '上海，Hybrid'] },
-    // Responsibilities / business goals
-    { pattern: /核心职责|业务目标|业务挑战|负责什么|主要工作|responsibilit|goal|challenge/i,
-      answers: ['从 0 到 1 搭建', '优化现有系统性能和稳定性', '带团队，管理 5-10 人', '负责核心算法研发'] },
-    // Must-have vs nice-to-have
-    { pattern: /硬性要求|必须|must.?have|加分项|优先条件|nice.?to.?have|preferred/i,
-      answers: ['以上都是必须的', '框架是加分项，语言是必须的', '学历是加分项，经验更重要'] },
-    // Salary / compensation
-    { pattern: /薪资|薪酬|salary|compensation|待遇|offer/i,
-      answers: ['40-60 万/年', '月薪 30-50K', '有竞争力即可，可谈', '参考市场中位数'] },
-    // Timeline / urgency
-    { pattern: /紧急|时间|尽快|timeline|urgency|着急|start date|开始/i,
-      answers: ['越快越好，ASAP', '1-2 个月内到岗', '不急，慢慢筛选最优人选', '下个季度开始'] },
-    // Headcount
-    { pattern: /人数|headcount|几个|多少人|how many/i,
-      answers: ['1 人', '2-3 人', '5 人以上'] },
-    // Education
-    { pattern: /学历|教育|学位|education|degree|本科|硕士|博士/i,
-      answers: ['本科及以上', '硕士优先', '不限学历，看能力', '985/211 优先'] },
-    // Industry experience
-    { pattern: /行业经验|行业背景|industry|领域/i,
-      answers: ['电商/零售', '金融/支付', '不限行业', '互联网/SaaS'] },
-    // Interview process
-    { pattern: /面试流程|面试安排|interview process|interview stage/i,
-      answers: ['电话初筛 → 技术面 → 终面', '2 轮技术 + 1 轮 HR', '先做题再面试'] },
-    // Team culture
-    { pattern: /团队文化|团队氛围|team culture|团队规模/i,
-      answers: ['扁平管理，注重自驱', '技术氛围浓，鼓励开源', '结果导向，弹性工作'] },
-  ];
-
-  for (const { pattern, answers } of questionPatterns) {
-    if (pattern.test(lastAgentText)) {
-      suggestions.push(...pickRandom(answers, 1));
-      if (suggestions.length >= 3) break;
-    }
-  }
-
-  return suggestions.slice(0, 3);
-}
-
-/** Generate contextual suggestion chips based on conversation history */
-function generateSuggestions(messages: ChatMessage[], t: (key: string, fallback: string) => string): string[] {
-  const msgCount = messages.filter((m) => m.role === "user").length;
-
-  // Before first message: show example job prompts
-  if (msgCount === 0) {
-    const keys = pickRandom([...EXAMPLE_KEYS], 3);
-    return keys.map(k => t(`agentAlex.examples.${k}`, ''));
-  }
-
-  // After conversation starts: suggest answers to the agent's last questions
-  const lastAgentMsg = [...messages].reverse().find((m) => m.role === "model" && !m.isThinking);
-  if (lastAgentMsg?.text) {
-    const answerSuggestions = extractAnswerSuggestions(lastAgentMsg.text);
-    if (answerSuggestions.length > 0) return answerSuggestions;
-  }
-
-  // Fallback: offer to finalize
-  if (msgCount >= 3) {
-    return [t('agentAlex.suggestions.finalize', "I'm done — finalize the specification")];
-  }
-
-  return [];
-}
-
-function SuggestionChips({ messages, isProcessing, isAiEnabled, exampleSeed, onSend, onRefresh }: {
+function SuggestionChips({ messages, isProcessing, isAiEnabled, exampleSeed, onSend, onInsert, onRefresh }: {
   messages: ChatMessage[];
   isProcessing: boolean;
   isAiEnabled: boolean;
   exampleSeed: number;
   onSend: (text: string) => void;
+  onInsert: (text: string) => void;
   onRefresh: () => void;
 }) {
   const { t } = useTranslation();
   const lastMsg = messages[messages.length - 1];
   const showChips = !isProcessing && isAiEnabled && lastMsg?.role === "model" && !lastMsg.isThinking;
+  const msgCount = messages.filter((m) => m.role === "user").length;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const chips = React.useMemo(() => generateSuggestions(messages, t), [messages.length, exampleSeed, t]);
+  const chips = React.useMemo(() => {
+    // Before first user message: show example job prompts
+    if (msgCount === 0) {
+      const keys = pickRandom([...EXAMPLE_KEYS], 3);
+      return keys.map(k => t(`agentAlex.examples.${k}`, ''));
+    }
+    // After conversation: use LLM-generated suggestions from the last model message
+    if (lastMsg?.suggestions?.length) {
+      return lastMsg.suggestions.slice(0, 3);
+    }
+    return [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, exampleSeed, t, lastMsg?.suggestions]);
 
   if (!showChips || chips.length === 0) return null;
 
@@ -141,13 +79,26 @@ function SuggestionChips({ messages, isProcessing, isAiEnabled, exampleSeed, onS
     <div className="px-3 sm:px-4 pt-2 pb-1 flex flex-wrap items-center gap-1.5 sm:gap-2 border-t border-slate-100 bg-slate-50/50">
       <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" />
       {chips.map((chip) => (
-        <button
+        <div
           key={chip}
-          onClick={() => onSend(chip)}
-          className="px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full transition-colors"
+          className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 shadow-[0_6px_16px_-12px_rgba(79,70,229,0.4)]"
         >
-          {chip}
-        </button>
+          <button
+            onClick={() => onSend(chip)}
+            className="px-2.5 py-1.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100 rounded-l-full"
+            title={t('agentAlex.suggestions.sendDirectly', 'Send this suggestion now')}
+          >
+            {chip}
+          </button>
+          <button
+            onClick={() => onInsert(chip)}
+            className="mr-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-indigo-200/80 bg-white/85 text-indigo-500 transition-colors hover:bg-white hover:text-indigo-700"
+            title={t('agentAlex.suggestions.insertToInput', 'Add to input without sending')}
+            aria-label={t('agentAlex.suggestions.insert', 'Add to input')}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        </div>
       ))}
       {isInitial && (
         <button
@@ -178,6 +129,7 @@ export function ChatInterface({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -213,6 +165,18 @@ export function ChatInterface({
             return;
           }
 
+          if (event.type === "suggestions") {
+            // Attach LLM-generated suggestions to the current model message
+            setMessages((prev) =>
+              prev.map((message) =>
+                message.id === modelMsgId
+                  ? { ...message, suggestions: event.data }
+                  : message,
+              ),
+            );
+            return;
+          }
+
           if (event.type === "text-delta") {
             fullText += event.text;
             setMessages((prev) =>
@@ -243,6 +207,21 @@ export function ChatInterface({
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const insertSuggestion = (text: string) => {
+    setInput((prev) => {
+      const trimmedPrev = prev.trimEnd();
+      return trimmedPrev ? `${trimmedPrev}\n${text}` : text;
+    });
+
+    window.setTimeout(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      textarea.focus();
+      const cursor = textarea.value.length;
+      textarea.setSelectionRange(cursor, cursor);
+    }, 0);
   };
 
   const startRecording = async () => {
@@ -423,12 +402,14 @@ export function ChatInterface({
         isAiEnabled={isAiEnabled}
         exampleSeed={exampleSeed}
         onSend={handleSend}
+        onInsert={insertSuggestion}
         onRefresh={() => setExampleSeed(s => s + 1)}
       />
 
       <div className="p-2.5 sm:p-4 bg-white border-t border-slate-100">
         <div className="relative flex items-end gap-1.5 sm:gap-2 bg-slate-50 p-1.5 sm:p-2 rounded-2xl border border-slate-200 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400 transition-all">
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {

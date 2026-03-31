@@ -147,6 +147,23 @@ export const updateRequirementsDeclaration: FunctionDeclaration = {
   },
 };
 
+export const suggestNextStepsDeclaration: FunctionDeclaration = {
+  name: "suggest_next_steps",
+  description:
+    "After each response, call this to provide 2-3 short, actionable suggestion chips that the user can click. Suggestions should be DIRECT ANSWERS or PROACTIVE OFFERS relevant to the questions you just asked or the topic at hand — NOT generic topic labels. Examples: '帮我拟一份技术要求清单', '建议薪资范围 40-60万', '先聊聊面试流程设计'. Keep each suggestion under 20 characters.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      suggestions: {
+        type: Type.ARRAY,
+        items: { type: Type.STRING },
+        description: "2-3 short actionable suggestions the user can click as quick replies",
+      },
+    },
+    required: ["suggestions"],
+  },
+};
+
 export const SYSTEM_INSTRUCTION = `You are a Recruitment Requirements Analyst — an expert at eliciting, structuring, and finalizing hiring requirements through conversational inquiry with recruiters and hiring managers. You combine deep knowledge of talent acquisition across industries with a structured interviewing methodology to transform vague hiring intent into precise, actionable job requirement specifications.
 
 You are embedded within a recruitment automation platform. The recruiter or hiring manager will initiate a conversation with a general idea of a role they need to fill. Your job is to conduct a guided, conversational interview — not a rigid questionnaire — to extract a complete and structured hiring requirements document.
@@ -181,7 +198,14 @@ Response Formatting (IMPORTANT — your output is rendered as Markdown):
 - Use **bold** (**text**) for labels, categories, or key terms (e.g., **硬性要求（必须）：**, **职位与目标：**).
 - Separate distinct topics or sections with a blank line between paragraphs.
 - When summarizing or confirming requirements, always use a structured format with bullet points or numbered lists — never a wall of text.
-- Keep conversational paragraphs short (2–3 sentences max per paragraph).`;
+- Keep conversational paragraphs short (2–3 sentences max per paragraph).
+
+Suggestion Chips (CRITICAL — call \`suggest_next_steps\` after EVERY response):
+After every response, you MUST call the \`suggest_next_steps\` tool with 2-3 short, actionable suggestions. These are NOT generic topic labels — they must be:
+- Direct answers to the questions you just asked (e.g., "开发客服 Agent 方向", "薪资预算 40-60 万")
+- Proactive offers to help (e.g., "帮我拟一份技术要求", "建议一个面试流程方案")
+- Concrete next steps (e.g., "先看看类似岗位的 JD", "可以了，生成最终 JD")
+Keep each suggestion concise (under 20 Chinese characters or 8 English words). Match the user's language.`;
 
 export class GeminiConfigError extends Error {
   reason: ConfigReason;
@@ -323,7 +347,7 @@ The user's interface language is ${langLabel}. You MUST:
     config: {
       systemInstruction: systemPrompt,
       thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
-      tools: [{ functionDeclarations: [updateRequirementsDeclaration] }],
+      tools: [{ functionDeclarations: [updateRequirementsDeclaration, suggestNextStepsDeclaration] }],
     },
   });
 
@@ -345,6 +369,18 @@ The user's interface language is ${langLabel}. You MUST:
               type: "requirements-update",
               data: call.args as Partial<HiringRequirements>,
             });
+            functionResponses.push({
+              functionResponse: {
+                id: call.id,
+                name: call.name,
+                response: { result: "success" },
+              },
+            });
+          } else if (call.name === "suggest_next_steps" && call.args) {
+            const suggestions = (call.args as { suggestions?: string[] }).suggestions;
+            if (suggestions?.length) {
+              onEvent({ type: "suggestions", data: suggestions.slice(0, 3) });
+            }
             functionResponses.push({
               functionResponse: {
                 id: call.id,

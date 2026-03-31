@@ -4368,7 +4368,10 @@
       "timeline": "Set hiring timeline / urgency",
       "benefits": "Describe benefits & perks",
       "finalize": "I'm done — finalize the specification",
-      "refresh": "Show different examples"
+      "refresh": "Show different examples",
+      "sendDirectly": "Send this suggestion now",
+      "insert": "Add to input",
+      "insertToInput": "Add to input without sending"
     },
     "examples": {
       "ex1": "Software Engineers in SF working at Series B companies, skilled in Python and Node.js",

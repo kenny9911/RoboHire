@@ -4473,7 +4473,10 @@
       "timeline": "设定招聘时间 / 紧急程度",
       "benefits": "描述福利待遇",
       "finalize": "我说完了，请整理需求规格",
-      "refresh": "换一批"
+      "refresh": "换一批",
+      "sendDirectly": "立即发送这条建议",
+      "insert": "加入输入框",
+      "insertToInput": "加入输入框但不发送"
     },
     "examples": {
       "ex1": "招一个旧金山的软件工程师，Series B公司背景，熟练Python和Node.js",

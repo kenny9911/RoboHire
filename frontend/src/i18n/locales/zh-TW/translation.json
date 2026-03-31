@@ -4435,7 +4435,10 @@
       "timeline": "設定招聘時間 / 緊急程度",
       "benefits": "描述福利待遇",
       "finalize": "我說完了，請整理需求規格",
-      "refresh": "換一批"
+      "refresh": "換一批",
+      "sendDirectly": "立即送出這條建議",
+      "insert": "加入輸入框",
+      "insertToInput": "加入輸入框但不送出"
     },
     "examples": {
       "ex1": "找一位舊金山的軟體工程師，Series B公司背景，熟練Python和Node.js",

@@ -47,6 +47,7 @@ import {
   getUserFacingError,
   normalizeHistory,
   updateRequirementsDeclaration,
+  suggestNextStepsDeclaration,
 } from './services/GeminiAgentService.js';
 import type { HistoryMessage, LiveClientMessage, LiveServerMessage } from './types/agentAlex.js';
 import { attachRequestId } from './middleware/requestId.js';
@@ -215,7 +216,7 @@ agentAlexWss.on('connection', (socket) => {
             responseModalities: [Modality.AUDIO],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
             systemInstruction: SYSTEM_INSTRUCTION,
-            tools: [{ functionDeclarations: [updateRequirementsDeclaration] }],
+            tools: [{ functionDeclarations: [updateRequirementsDeclaration, suggestNextStepsDeclaration] }],
           },
           callbacks: {
             onopen: () => {
@@ -237,6 +238,9 @@ agentAlexWss.on('connection', (socket) => {
                 for (const call of functionCalls) {
                   if (call.name === 'update_hiring_requirements' && call.args) {
                     sendWsMessage(socket, { type: 'requirements-update', data: call.args });
+                    functionResponses.push({ id: call.id, name: call.name, response: { result: 'success' } });
+                  } else if (call.name === 'suggest_next_steps' && call.args) {
+                    // Suggestions not used in live voice mode — acknowledge silently
                     functionResponses.push({ id: call.id, name: call.name, response: { result: 'success' } });
                   }
                 }
