@@ -5,10 +5,29 @@ import {
   streamChatResponse,
   transcribeAudio,
   generateSpeech,
+  type GeminiUsageMetrics,
 } from '../services/GeminiAgentService.js';
 import type { ChatStreamEvent, HistoryMessage } from '../types/agentAlex.js';
+import { logger } from '../services/LoggerService.js';
 
 const router = Router();
+
+/** Log Gemini usage through the standard LoggerService so it appears in ApiRequestLog + LLMCallLog */
+function logGeminiUsage(requestId: string, endpoint: string, usage: GeminiUsageMetrics, status: 'success' | 'error' = 'success', errorMessage?: string) {
+  logger.logLLMCall({
+    requestId,
+    model: usage.model,
+    provider: 'google-gemini',
+    promptTokens: usage.promptTokens,
+    completionTokens: usage.completionTokens,
+    duration: usage.durationMs,
+    status,
+    messages: undefined,
+    options: { endpoint },
+    responseText: undefined,
+    errorMessage: errorMessage || undefined,
+  });
+}
 
 function isHistoryMessageArray(value: unknown): value is HistoryMessage[] {
   return (
@@ -55,12 +74,13 @@ router.post('/chat/stream', async (req: Request, res: Response) => {
       return;
     }
 
-    await streamChatResponse({
+    const usage = await streamChatResponse({
       history,
       message,
       locale: typeof locale === 'string' ? locale : undefined,
       onEvent: writeEvent,
     });
+    logGeminiUsage(req.requestId || 'unknown', '/agent-alex/chat/stream', usage);
     writeEvent({ type: 'done' });
   } catch (error) {
     const { code, message } = getUserFacingError(error);
@@ -88,8 +108,9 @@ router.post('/transcribe', async (req: Request, res: Response) => {
       return;
     }
 
-    const text = await transcribeAudio(audioBase64, mimeType);
-    res.json({ text });
+    const result = await transcribeAudio(audioBase64, mimeType);
+    logGeminiUsage(req.requestId || 'unknown', '/agent-alex/transcribe', result.usage);
+    res.json({ text: result.text });
   } catch (error) {
     const { status, code, message } = getUserFacingError(error);
     res.status(status).json({ error: { code, message } });
@@ -111,8 +132,9 @@ router.post('/tts', async (req: Request, res: Response) => {
       return;
     }
 
-    const audioBase64 = await generateSpeech(text);
-    res.json({ audioBase64 });
+    const result = await generateSpeech(text);
+    logGeminiUsage(req.requestId || 'unknown', '/agent-alex/tts', result.usage);
+    res.json({ audioBase64: result.audioBase64 });
   } catch (error) {
     const { status, code, message } = getUserFacingError(error);
     res.status(status).json({ error: { code, message } });

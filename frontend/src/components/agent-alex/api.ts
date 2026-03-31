@@ -39,7 +39,7 @@ export function buildHistoryFromMessages(messages: ChatMessage[]): HistoryMessag
 }
 
 export async function fetchAppConfig(): Promise<AppConfigStatus> {
-  const response = await fetch(`${API_BASE}/api/v1/agent-alex/config`);
+  const response = await fetch(`${API_BASE}/api/v1/agent-alex/config`, { credentials: 'include' });
   if (!response.ok) {
     await parseJsonError(response);
   }
@@ -60,6 +60,7 @@ export async function streamChat(
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: 'include',
     body: JSON.stringify({ ...payload, locale }),
   });
 
@@ -121,6 +122,7 @@ export async function transcribeAudio(audioBase64: string, mimeType: string): Pr
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: 'include',
     body: JSON.stringify({ audioBase64, mimeType }),
   });
 
@@ -138,6 +140,7 @@ export async function generateSpeech(text: string): Promise<string | undefined> 
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: 'include',
     body: JSON.stringify({ text }),
   });
 
@@ -193,13 +196,10 @@ export interface CreateJobResponse {
 }
 
 export async function createJobFromSpec(payload: CreateJobFromSpecPayload): Promise<CreateJobResponse> {
-  const token = localStorage.getItem("auth_token");
   const response = await fetch(`${API_BASE}/api/v1/jobs`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: authHeaders(),
+    credentials: 'include',
     body: JSON.stringify(payload),
   });
 
@@ -231,7 +231,7 @@ export interface DbSession {
 }
 
 export async function fetchSessions(): Promise<DbSession[]> {
-  const res = await fetch(`${API_BASE}/api/v1/agent-alex/sessions`, { headers: authHeaders() });
+  const res = await fetch(`${API_BASE}/api/v1/agent-alex/sessions`, { headers: authHeaders(), credentials: 'include' });
   if (!res.ok) return [];
   const body = (await res.json()) as { data?: DbSession[] };
   return body.data ?? [];
@@ -245,6 +245,7 @@ export async function createSession(data: {
   const res = await fetch(`${API_BASE}/api/v1/agent-alex/sessions`, {
     method: "POST",
     headers: authHeaders(),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   const body = (await res.json()) as { data: DbSession };
@@ -258,6 +259,7 @@ export async function updateSession(
   await fetch(`${API_BASE}/api/v1/agent-alex/sessions/${id}`, {
     method: "PATCH",
     headers: authHeaders(),
+    credentials: 'include',
     body: JSON.stringify(data),
   });
 }
@@ -266,6 +268,7 @@ export async function deleteSession(id: string): Promise<{ success: boolean; err
   const res = await fetch(`${API_BASE}/api/v1/agent-alex/sessions/${id}`, {
     method: "DELETE",
     headers: authHeaders(),
+    credentials: 'include',
   });
   return (await res.json()) as { success: boolean; error?: string; linkedJob?: { id: string; title: string } };
 }
@@ -274,6 +277,7 @@ export async function updateJobFromSpec(jobId: string, payload: Partial<CreateJo
   const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}`, {
     method: "PATCH",
     headers: authHeaders(),
+    credentials: 'include',
     body: JSON.stringify(payload),
   });
   const body = (await res.json()) as CreateJobResponse;

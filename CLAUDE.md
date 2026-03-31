@@ -221,3 +221,48 @@ When importing GoHire interviews, the candidate name fallback chain is: evaluati
 ### Content Rendering — Detect and render markdown
 
 When displaying user-generated or external content that may be in markdown format (e.g., job descriptions, resumes), detect markdown syntax (headings `#`, bold `**`, lists `*`) and render via `ReactMarkdown` or `MarkdownRenderer` component instead of plain text display. Check with `/^#+\s/m.test(content)` before choosing renderer.
+
+### Frontend API Calls — Always use API_BASE prefix
+
+All `fetch()` calls in the frontend **must** use the `API_BASE` prefix from `frontend/src/config.ts`. In dev, `API_BASE` is empty (Vite proxy handles `/api` → backend). In production on Render, `API_BASE` is `VITE_API_URL` (e.g. `https://api.robohire.io`) because the frontend is a separate static site.
+
+```typescript
+import { API_BASE } from '../../config';
+
+// Correct:
+fetch(`${API_BASE}/api/v1/some-endpoint`, { ... })
+
+// WRONG — will hit the static site server in production:
+fetch('/api/v1/some-endpoint', { ... })
+```
+
+This applies to all API clients including `agent-alex/api.ts`. WebSocket URLs must also derive from `API_BASE` when set:
+```typescript
+if (API_BASE) {
+  const url = new URL("/api/v1/agent-alex/live", API_BASE);
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+}
+```
+
+The `axios` instance in `frontend/src/lib/axios.ts` already has `baseURL = API_BASE` configured globally, so axios calls are safe. Only raw `fetch()` calls need manual prefixing.
+
+### Agent Alex — Architecture and Environment
+
+Agent Alex (`/agent-alex`) is the AI recruitment requirements agent, powered by Google Gemini. Key files:
+
+| Layer | Files |
+|---|---|
+| Backend service | `backend/src/services/GeminiAgentService.ts` |
+| Backend routes | `backend/src/routes/agentAlex.ts`, `backend/src/routes/agentAlexSessions.ts` |
+| Backend WebSocket | `backend/src/index.ts` (upgrade handler for `/api/v1/agent-alex/live`) |
+| Backend types | `backend/src/types/agentAlex.ts` |
+| Frontend page | `frontend/src/pages/AgentAlex.tsx` |
+| Frontend components | `frontend/src/components/agent-alex/` (ChatInterface, LiveVoiceInterface, SpecificationPanel, FloatingAgentAlex, api, types) |
+| Audio capture | `frontend/public/audio-capture-processor.js` |
+| DB model | `AgentAlexSession` in `backend/prisma/schema.prisma` |
+
+**Required env var**: `GEMINI_API_KEY` (falls back to `GOOGLE_API_KEY`). Without it, the agent shows a configuration error.
+
+**All `/start-hiring` references** have been replaced with `/agent-alex`. The old URL redirects to `/agent-alex`. The route is wrapped in `<ProtectedRoute>` (requires authentication).
+
+Full documentation: `docs/agent-alex.md`

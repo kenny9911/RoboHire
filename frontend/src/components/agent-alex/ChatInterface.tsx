@@ -42,48 +42,80 @@ function pickRandom<T>(arr: T[], n: number): T[] {
   return shuffled.slice(0, n);
 }
 
+/** Extract suggested answers from the agent's last response by analyzing the questions asked */
+function extractAnswerSuggestions(lastAgentText: string): string[] {
+  const suggestions: string[] = [];
+
+  // Detect question topics and suggest concise answers
+  const questionPatterns: Array<{ pattern: RegExp; answers: string[] }> = [
+    // Tech stack / skills
+    { pattern: /技术栈|技术方向|编程语言|框架|工具|tech stack|programming|framework/i,
+      answers: ['Python, PyTorch, TensorFlow', 'Java, Spring Boot, Kubernetes', 'TypeScript, React, Node.js', 'Go, Rust, 分布式系统'] },
+    // Work location / remote
+    { pattern: /办公模式|工作地点|远程|混合|坐班|remote|hybrid|on-?site|location/i,
+      answers: ['坐班，北京', '混合办公，每周到岗 3 天', '支持全远程', '上海，Hybrid'] },
+    // Responsibilities / business goals
+    { pattern: /核心职责|业务目标|业务挑战|负责什么|主要工作|responsibilit|goal|challenge/i,
+      answers: ['从 0 到 1 搭建', '优化现有系统性能和稳定性', '带团队，管理 5-10 人', '负责核心算法研发'] },
+    // Must-have vs nice-to-have
+    { pattern: /硬性要求|必须|must.?have|加分项|优先条件|nice.?to.?have|preferred/i,
+      answers: ['以上都是必须的', '框架是加分项，语言是必须的', '学历是加分项，经验更重要'] },
+    // Salary / compensation
+    { pattern: /薪资|薪酬|salary|compensation|待遇|offer/i,
+      answers: ['40-60 万/年', '月薪 30-50K', '有竞争力即可，可谈', '参考市场中位数'] },
+    // Timeline / urgency
+    { pattern: /紧急|时间|尽快|timeline|urgency|着急|start date|开始/i,
+      answers: ['越快越好，ASAP', '1-2 个月内到岗', '不急，慢慢筛选最优人选', '下个季度开始'] },
+    // Headcount
+    { pattern: /人数|headcount|几个|多少人|how many/i,
+      answers: ['1 人', '2-3 人', '5 人以上'] },
+    // Education
+    { pattern: /学历|教育|学位|education|degree|本科|硕士|博士/i,
+      answers: ['本科及以上', '硕士优先', '不限学历，看能力', '985/211 优先'] },
+    // Industry experience
+    { pattern: /行业经验|行业背景|industry|领域/i,
+      answers: ['电商/零售', '金融/支付', '不限行业', '互联网/SaaS'] },
+    // Interview process
+    { pattern: /面试流程|面试安排|interview process|interview stage/i,
+      answers: ['电话初筛 → 技术面 → 终面', '2 轮技术 + 1 轮 HR', '先做题再面试'] },
+    // Team culture
+    { pattern: /团队文化|团队氛围|team culture|团队规模/i,
+      answers: ['扁平管理，注重自驱', '技术氛围浓，鼓励开源', '结果导向，弹性工作'] },
+  ];
+
+  for (const { pattern, answers } of questionPatterns) {
+    if (pattern.test(lastAgentText)) {
+      suggestions.push(...pickRandom(answers, 1));
+      if (suggestions.length >= 3) break;
+    }
+  }
+
+  return suggestions.slice(0, 3);
+}
+
 /** Generate contextual suggestion chips based on conversation history */
 function generateSuggestions(messages: ChatMessage[], t: (key: string, fallback: string) => string): string[] {
-  const allText = messages.map((m) => m.text).join(" ").toLowerCase();
   const msgCount = messages.filter((m) => m.role === "user").length;
 
-  if (msgCount <= 1) {
+  // Before first message: show example job prompts
+  if (msgCount === 0) {
     const keys = pickRandom([...EXAMPLE_KEYS], 3);
     return keys.map(k => t(`agentAlex.examples.${k}`, ''));
   }
 
-  const suggestions: string[] = [];
-
-  if (!allText.includes("salary") && !allText.includes("薪") && !allText.includes("compensation")) {
-    suggestions.push(t('agentAlex.suggestions.salary', "Let's discuss salary range"));
-  }
-  if (!allText.includes("remote") && !allText.includes("hybrid") && !allText.includes("onsite") && !allText.includes("办公")) {
-    suggestions.push(t('agentAlex.suggestions.location', 'Set work location / remote policy'));
-  }
-  if (!allText.includes("must-have") && !allText.includes("必要") && !allText.includes("hard requirement")) {
-    suggestions.push(t('agentAlex.suggestions.mustHave', 'Define must-have requirements'));
-  }
-  if (!allText.includes("nice-to-have") && !allText.includes("优先") && !allText.includes("preferred")) {
-    suggestions.push(t('agentAlex.suggestions.niceToHave', 'Add nice-to-have qualifications'));
-  }
-  if (!allText.includes("interview") && !allText.includes("面试") && !allText.includes("hiring process")) {
-    suggestions.push(t('agentAlex.suggestions.interview', 'Outline the interview process'));
-  }
-  if (!allText.includes("headcount") && !allText.includes("人数") && !allText.includes("how many")) {
-    suggestions.push(t('agentAlex.suggestions.headcount', 'Specify headcount needed'));
-  }
-  if (!allText.includes("timeline") && !allText.includes("urgency") && !allText.includes("紧急") && !allText.includes("start date")) {
-    suggestions.push(t('agentAlex.suggestions.timeline', 'Set hiring timeline / urgency'));
-  }
-  if (!allText.includes("benefit") && !allText.includes("福利") && !allText.includes("perk")) {
-    suggestions.push(t('agentAlex.suggestions.benefits', 'Describe benefits & perks'));
+  // After conversation starts: suggest answers to the agent's last questions
+  const lastAgentMsg = [...messages].reverse().find((m) => m.role === "model" && !m.isThinking);
+  if (lastAgentMsg?.text) {
+    const answerSuggestions = extractAnswerSuggestions(lastAgentMsg.text);
+    if (answerSuggestions.length > 0) return answerSuggestions;
   }
 
-  if (suggestions.length <= 2 && msgCount >= 3) {
-    suggestions.push(t('agentAlex.suggestions.finalize', "I'm done — finalize the specification"));
+  // Fallback: offer to finalize
+  if (msgCount >= 3) {
+    return [t('agentAlex.suggestions.finalize', "I'm done — finalize the specification")];
   }
 
-  return suggestions.slice(0, 3);
+  return [];
 }
 
 function SuggestionChips({ messages, isProcessing, isAiEnabled, exampleSeed, onSend, onRefresh }: {

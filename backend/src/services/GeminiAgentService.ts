@@ -281,6 +281,14 @@ function resolveLocaleLabel(locale?: string): string | null {
   return LOCALE_LABELS[base] || null;
 }
 
+export interface GeminiUsageMetrics {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  model: string;
+  durationMs: number;
+}
+
 interface StreamChatOptions {
   history: HistoryMessage[];
   message: string;
@@ -293,8 +301,11 @@ export async function streamChatResponse({
   message,
   locale,
   onEvent,
-}: StreamChatOptions): Promise<void> {
+}: StreamChatOptions): Promise<GeminiUsageMetrics> {
+  const startTime = Date.now();
   const ai = createGeminiClient();
+  let totalPromptTokens = 0;
+  let totalCompletionTokens = 0;
 
   let systemPrompt = SYSTEM_INSTRUCTION;
   const langLabel = resolveLocaleLabel(locale);
@@ -348,6 +359,13 @@ The user's interface language is ${langLabel}. You MUST:
       if (response.text) {
         onEvent({ type: "text-delta", text: response.text });
       }
+
+      // Capture token usage from the response
+      const usage = (response as any).usageMetadata;
+      if (usage) {
+        totalPromptTokens += usage.promptTokenCount || 0;
+        totalCompletionTokens += usage.candidatesTokenCount || 0;
+      }
     }
 
     if (functionResponses.length > 0) {
@@ -355,9 +373,18 @@ The user's interface language is ${langLabel}. You MUST:
       hasMoreTurns = true;
     }
   }
+
+  return {
+    promptTokens: totalPromptTokens,
+    completionTokens: totalCompletionTokens,
+    totalTokens: totalPromptTokens + totalCompletionTokens,
+    model: MODELS.chat,
+    durationMs: Date.now() - startTime,
+  };
 }
 
-export async function transcribeAudio(base64Audio: string, mimeType: string): Promise<string> {
+export async function transcribeAudio(base64Audio: string, mimeType: string): Promise<{ text: string; usage: GeminiUsageMetrics }> {
+  const startTime = Date.now();
   const ai = createGeminiClient();
   const response = await ai.models.generateContent({
     model: MODELS.transcribe,
@@ -378,10 +405,21 @@ export async function transcribeAudio(base64Audio: string, mimeType: string): Pr
     ],
   });
 
-  return response.text || "";
+  const um = (response as any).usageMetadata;
+  return {
+    text: response.text || "",
+    usage: {
+      promptTokens: um?.promptTokenCount || 0,
+      completionTokens: um?.candidatesTokenCount || 0,
+      totalTokens: (um?.promptTokenCount || 0) + (um?.candidatesTokenCount || 0),
+      model: MODELS.transcribe,
+      durationMs: Date.now() - startTime,
+    },
+  };
 }
 
-export async function generateSpeech(text: string): Promise<string | undefined> {
+export async function generateSpeech(text: string): Promise<{ audioBase64: string | undefined; usage: GeminiUsageMetrics }> {
+  const startTime = Date.now();
   const ai = createGeminiClient();
   const response = await ai.models.generateContent({
     model: MODELS.tts,
@@ -396,7 +434,17 @@ export async function generateSpeech(text: string): Promise<string | undefined> 
     },
   });
 
-  return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  const um = (response as any).usageMetadata;
+  return {
+    audioBase64: response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data,
+    usage: {
+      promptTokens: um?.promptTokenCount || 0,
+      completionTokens: um?.candidatesTokenCount || 0,
+      totalTokens: (um?.promptTokenCount || 0) + (um?.candidatesTokenCount || 0),
+      model: MODELS.tts,
+      durationMs: Date.now() - startTime,
+    },
+  };
 }
 
 function errorToString(error: unknown): string {

@@ -127,6 +127,11 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   // Google direct
   'gemini-pro': { input: 0.50, output: 1.50 },
   'gemini-1.5-pro': { input: 3.50, output: 10.50 },
+  // Agent Alex (Google Gemini direct)
+  'gemini-3.1-pro-preview': { input: 2.00, output: 12.00 },
+  'gemini-3-flash-preview': { input: 0.50, output: 3.00 },
+  'gemini-2.5-flash-preview-tts': { input: 0.15, output: 0.60 },
+  'gemini-2.5-flash-native-audio-preview-12-2025': { input: 0.15, output: 0.60 },
   // Default fallback
   'default': { input: 1.00, output: 3.00 },
 };
