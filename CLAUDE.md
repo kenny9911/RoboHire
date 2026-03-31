@@ -38,7 +38,7 @@ npm run db:seed --workspace=backend       # Seed database with demo data
 
 ### No test or lint commands are configured.
 
-Verify changes manually: smoke test login/auth restore, `/start-hiring`, one API playground endpoint, and dashboard page load after auth/data changes.
+Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API playground endpoint, and dashboard page load after auth/data changes.
 
 ## Architecture
 
@@ -63,7 +63,7 @@ Verify changes manually: smoke test login/auth restore, `/start-hiring`, one API
 - `PDFService` — extraction via `pdf-parse`; uses memory storage (multer), so large PDF changes can affect RAM
 - `WebhookService` — ATS integration webhook delivery
 
-**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`, `routes/interviews.ts` (LiveKit AI interviews), `routes/gohireInterviews.ts` (GoHire integration), `routes/dashboard.ts` (consolidated stats).
+**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`, `routes/interviews.ts` (LiveKit AI interviews), `routes/gohireInterviews.ts` (GoHire integration), `routes/dashboard.ts` (consolidated stats), `routes/agentAlex.ts` (Gemini chat/transcribe/TTS), `routes/agentAlexSessions.ts` (session CRUD), `routes/agents.ts` (recruitment agents CRUD).
 
 **Request audit & analytics** — `middleware/requestAudit.ts` automatically logs every `/api/` request to `ApiRequestLog` after response completion, capturing tokens, cost, duration, and LLM call details. `lib/requestClassification.ts` maps URL paths to module names (e.g. `resume_parse`, `smart_matching`) for analytics grouping. For batch operations (e.g. auto-match processing multiple resumes), set `req.skipAudit = true` and create per-unit `ApiRequestLog` entries manually to get accurate per-item usage counts.
 
@@ -79,7 +79,16 @@ Verify changes manually: smoke test login/auth restore, `/start-hiring`, one API
 
 **HTTP client** — `lib/axios.ts` creates an Axios instance that auto-injects JWT from localStorage into `Authorization` header. In dev, Vite proxies `/api` to backend (`http://localhost:4607`). In prod, `VITE_API_URL` sets the base URL.
 
-**`StartHiring.tsx`** — Most complex page. AI consultant chat intake, optional auth-persisted sessions, file attachment reading (PDF/doc/txt via `file.text()`), role templates, action marker detection (`create_request`), and a confirmation/edit step before final API submission. High regression risk.
+**Homepage** — `Landing.tsx` renders `<ProductIntro>` (from `pages/ProductIntro.tsx`) with `showDarkToggle={false}`, `showFAQ={true}`, and homepage-specific JSON-LD schema. The old landing sub-components (Hero.tsx, ServiceCards.tsx, etc.) are deprecated. `/product-intro` and `/product-info` redirect to `/`.
+
+**Agent Alex** (`/agent-alex`) — Replaces the old `/start-hiring`. AI recruitment requirements agent with text chat + live voice (Gemini). Split-panel layout: chat on left, live specification document on right. Sessions persisted in DB (`AgentAlexSession`). Route wrapped in `<ProtectedRoute>`.
+
+**Documentation Hub** — Three-tier structure:
+- `/docs` → `DocsHub.tsx` (3-category landing: Quick Start, API, Community)
+- `/docs/quick-start` → `DocsProductGuide.tsx` (8-step product guide for HR users)
+- `/docs/community` → `DocsCommunity.tsx` (knowledge hub with search, 13 articles, 6 with deep content)
+- `/docs/api/*` → Existing API docs with `DocsLayout` sidebar
+- `/docs/community/:slug` → Individual article with Article JSON-LD + BreadcrumbList SEO
 
 **Docs pages** — `frontend/src/pages/docs/*`. Static content with hardcoded examples — not generated from backend schemas. Update manually if API contracts change.
 
@@ -120,7 +129,17 @@ Copy `.env.example` to `.env` at repo root. Key variable groups: `LLM_PROVIDER`/
 | Prisma schema | `backend/prisma/schema.prisma` |
 | Frontend routes | `frontend/src/App.tsx` |
 | Auth state | `frontend/src/context/AuthContext.tsx` |
-| Start Hiring flow | `frontend/src/pages/StartHiring.tsx` |
+| Agent Alex page | `frontend/src/pages/AgentAlex.tsx` |
+| Agent Alex components | `frontend/src/components/agent-alex/` |
+| Agent Alex backend | `backend/src/services/GeminiAgentService.ts`, `backend/src/routes/agentAlex.ts` |
+| Agent Alex sessions | `backend/src/routes/agentAlexSessions.ts` |
+| Homepage | `frontend/src/pages/Landing.tsx` → `ProductIntro.tsx` |
+| Docs hub | `frontend/src/pages/docs/DocsHub.tsx` |
+| Community knowledge hub | `frontend/src/pages/docs/DocsCommunity.tsx` |
+| Product guide | `frontend/src/pages/docs/DocsProductGuide.tsx` |
+| Agents API docs | `frontend/src/pages/docs/DocsAgentsAPI.tsx` |
+| Agents playground | `frontend/src/pages/AgentsPlayground.tsx` |
+| Start Hiring (legacy) | `frontend/src/pages/StartHiring.tsx` (redirects to `/agent-alex`) |
 
 ## High-Risk Files
 
@@ -141,6 +160,10 @@ These have dense logic and higher regression risk — read carefully before edit
 - `backend/src/routes/interviews.ts`
 - `frontend/src/pages/product/SmartMatching.tsx`
 - `frontend/src/pages/product/TalentHub.tsx`
+- `frontend/src/pages/AgentAlex.tsx`
+- `frontend/src/components/agent-alex/ChatInterface.tsx`
+- `backend/src/services/GeminiAgentService.ts`
+- `backend/src/index.ts` (WebSocket handler for Agent Alex live voice)
 
 ## Interview Status Flow
 
