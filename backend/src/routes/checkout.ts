@@ -225,8 +225,8 @@ router.post('/checkout/alipay', requireAuth, async (req, res) => {
     const uid = Math.random().toString(36).slice(2, 10);
     const outTradeNo = `ORDER_${ts}_${user.id.slice(0, 8)}_${uid}`;
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4607';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3607';
+    const backendUrl = process.env.BACKEND_URL || 'https://api.robohire.io';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://robohire.io';
 
     const alipayPayload = {
       out_trade_no: outTradeNo,
@@ -403,8 +403,8 @@ router.post('/topup/alipay', requireAuth, async (req, res) => {
     const uid = Math.random().toString(36).slice(2, 10);
     const outTradeNo = `TOPUP_${ts}_${user.id.slice(0, 8)}_${uid}`;
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4607';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3607';
+    const backendUrl = process.env.BACKEND_URL || 'https://api.robohire.io';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://robohire.io';
 
     const alipayPayload = {
       out_trade_no: outTradeNo,
