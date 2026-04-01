@@ -621,7 +621,14 @@ export default function Account() {
                   const receiptLink = item.invoiceUrl || item.receiptUrl;
                   return (
                     <tr key={item.id} className="text-gray-700">
-                      <td className="py-2.5">{item.date ? new Date(item.date).toLocaleDateString() : '—'}</td>
+                      <td className="py-2.5 whitespace-nowrap">
+                        {item.date ? (
+                          <div>
+                            <div>{new Date(item.date).toLocaleDateString()}</div>
+                            <div className="text-xs text-gray-400">{new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                          </div>
+                        ) : '—'}
+                      </td>
                       <td className="py-2.5">
                         <div className="flex items-center gap-2">
                           <span>{item.description}</span>
