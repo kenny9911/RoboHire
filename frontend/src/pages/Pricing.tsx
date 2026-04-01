@@ -336,6 +336,10 @@ export default function Pricing() {
         navigate('/login', { state: { from: { pathname: '/pricing' }, trial: startTrial, tier: plan.id } });
         return;
       }
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server error (${response.status})`);
+      }
       const data = await response.json();
       if (data.success && data.data?.url) {
         window.location.href = data.data.url;

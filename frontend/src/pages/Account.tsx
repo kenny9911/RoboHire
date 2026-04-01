@@ -252,6 +252,10 @@ export default function Account() {
         method: 'POST',
         body: JSON.stringify({ amount }),
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server error (${res.status})`);
+      }
       const data = await res.json();
       if (data.success && data.data?.url) {
         window.location.href = data.data.url;
