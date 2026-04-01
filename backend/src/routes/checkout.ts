@@ -143,7 +143,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'link'],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${frontendUrl}/dashboard?welcome=1`,
       cancel_url: `${frontendUrl}/pricing`,
@@ -172,6 +172,184 @@ router.post('/checkout', requireAuth, async (req, res) => {
   }
 });
 
+const ALIPAY_TIER_SUBJECTS: Record<string, string> = {
+  starter: 'RoboHire Starter 月度订阅',
+  growth:  'RoboHire Growth 月度订阅',
+  business: 'RoboHire Business 月度订阅',
+};
+
+/**
+ * POST /api/v1/checkout/alipay
+ * Create an Alipay payment order for a subscription tier.
+ * Only used when the user's display currency is CNY.
+ */
+router.post('/checkout/alipay', requireAuth, async (req, res) => {
+  try {
+    const { tier } = req.body;
+    if (!tier || !['starter', 'growth', 'business'].includes(tier)) {
+      return res.status(400).json({ success: false, error: 'Invalid tier' });
+    }
+    const requestedTier = tier as 'starter' | 'growth' | 'business';
+
+    const user = req.user!;
+    const currentTier = resolveEffectiveTier(user);
+    if (currentTier === 'custom') {
+      return res.status(400).json({
+        success: false,
+        error: 'Custom plan is managed by sales. Please contact support.',
+      });
+    }
+    if (currentTier !== 'free' && TIER_RANK[requestedTier] <= TIER_RANK[currentTier]) {
+      return res.status(400).json({
+        success: false,
+        error: 'You are already on this plan or a higher plan.',
+      });
+    }
+
+    // Resolve CNY price from pricing config
+    const pricingConfig = await loadPricingConfigFromDb();
+    const cnyPrices = pricingConfig.prices?.CNY ?? { starter: 199, growth: 1369, business: 2749 };
+    let amount: number = (cnyPrices as Record<string, number>)[requestedTier] ?? 0;
+    if (amount <= 0) {
+      return res.status(400).json({ success: false, error: 'Price not configured for this plan.' });
+    }
+
+    // Apply discount if active
+    if (isDiscountActive(pricingConfig.discount) && pricingConfig.discount.percentOff > 0) {
+      amount = Math.round(amount * (1 - pricingConfig.discount.percentOff / 100) * 100) / 100;
+    }
+
+    // Generate unique order ID
+    const now = new Date();
+    const ts = now.toISOString().replace(/[-T:.Z]/g, '').slice(0, 14);
+    const uid = Math.random().toString(36).slice(2, 10);
+    const outTradeNo = `ORDER_${ts}_${user.id.slice(0, 8)}_${uid}`;
+
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4607';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3607';
+
+    const alipayPayload = {
+      out_trade_no: outTradeNo,
+      total_amount: amount,
+      subject: ALIPAY_TIER_SUBJECTS[requestedTier] || `RoboHire ${requestedTier} 月度订阅`,
+      pay_channel: 'alipay',
+      user_name: user.name || user.email,
+      user_email: user.email,
+      user_id: user.id,
+      platform: 'gohire',
+      package_data: {
+        package_id: requestedTier,
+        package_name: requestedTier,
+        package_type: '1',
+        package_price: String(amount),
+      },
+      notify_url: `${backendUrl}/api/v1/payment/callback`,
+      return_url: `${frontendUrl}/dashboard?welcome=1`,
+    };
+
+    const alipayApiUrl = process.env.ALIPAY_API_URL || 'https://worker.gohire.top/payment/payment/create';
+    const alipayRes = await fetch(alipayApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(alipayPayload),
+    });
+    const alipayData = await alipayRes.json() as { code: number; data?: { pay_url: string; trade_status: string }; message?: string };
+
+    if (alipayData.code !== 0 || !alipayData.data?.pay_url) {
+      console.error('Alipay API error:', alipayData);
+      return res.status(502).json({
+        success: false,
+        error: alipayData.message || 'Failed to create Alipay payment order.',
+      });
+    }
+
+    // Persist order for idempotent callback handling
+    await prisma.alipayOrder.create({
+      data: {
+        userId: user.id,
+        outTradeNo,
+        tier: requestedTier,
+        amount,
+        status: 'pending',
+      },
+    });
+
+    res.json({ success: true, data: { url: alipayData.data.pay_url } });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Failed to create Alipay order';
+    console.error('Alipay checkout error:', msg, error);
+    res.status(500).json({ success: false, error: msg });
+  }
+});
+
+/**
+ * GET /api/v1/payment/callback
+ * POST /api/v1/payment/callback
+ * Alipay payment callback. Called by the Alipay payment service after payment.
+ * Params (query or body): pay_status, out_trade_no
+ */
+async function handleAlipayCallback(req: import('express').Request, res: import('express').Response) {
+  try {
+    const pay_status = (req.query.pay_status || req.body?.pay_status) as string | undefined;
+    const out_trade_no = (req.query.out_trade_no || req.body?.out_trade_no) as string | undefined;
+
+    if (!pay_status || !out_trade_no) {
+      return res.status(400).json({ code: 40001, message: 'invalid callback params' });
+    }
+
+    const order = await prisma.alipayOrder.findUnique({ where: { outTradeNo: out_trade_no } });
+    if (!order) {
+      return res.status(400).json({ code: 40002, message: 'order not found' });
+    }
+
+    if (pay_status === 'TRADE_SUCCESS' && order.status !== 'completed') {
+      await prisma.$transaction(async (tx) => {
+        const current = await tx.alipayOrder.findUnique({ where: { outTradeNo: out_trade_no } });
+        if (current && current.status === 'completed') return; // idempotent
+        await tx.alipayOrder.update({
+          where: { outTradeNo: out_trade_no },
+          data: { status: 'completed', completedAt: new Date() },
+        });
+
+        if (order.tier === 'topup') {
+          // Credit the user's balance with the CNY amount
+          await tx.user.update({
+            where: { id: order.userId },
+            data: { topUpBalance: { increment: order.amount } },
+          });
+          console.log(`Alipay topup: credited ¥${order.amount} to user ${order.userId} (order ${out_trade_no})`);
+        } else {
+          // Subscription activation
+          const periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          await tx.user.update({
+            where: { id: order.userId },
+            data: {
+              subscriptionTier: order.tier,
+              subscriptionStatus: 'active',
+              currentPeriodEnd: periodEnd,
+            },
+          });
+          console.log(`Alipay: activated ${order.tier} for user ${order.userId} (order ${out_trade_no})`);
+        }
+      });
+      if (order.tier !== 'topup') await resetUsageCounters(order.userId);
+    } else if (pay_status === 'TRADE_CLOSED' && order.status === 'pending') {
+      await prisma.alipayOrder.update({
+        where: { outTradeNo: out_trade_no },
+        data: { status: 'closed' },
+      });
+    }
+
+    res.json({ code: 0, message: 'success' });
+  } catch (error) {
+    console.error('Alipay callback error:', error);
+    res.status(500).json({ code: 50001, message: 'internal error' });
+  }
+}
+
+router.get('/payment/callback', handleAlipayCallback);
+router.post('/payment/callback', handleAlipayCallback);
+
 /**
  * GET /api/v1/config/pricing
  * Public endpoint — returns current subscription prices.
@@ -198,6 +376,80 @@ router.get('/config/pricing', async (_req, res) => {
         },
       },
     });
+  }
+});
+
+const ALIPAY_TOPUP_MIN = 10;    // ¥10 CNY minimum
+const ALIPAY_TOPUP_MAX = 10000; // ¥10,000 CNY maximum
+
+/**
+ * POST /api/v1/topup/alipay
+ * Create an Alipay payment for a one-time credit top-up.
+ * amount: CNY amount (number, e.g. 100 for ¥100)
+ */
+router.post('/topup/alipay', requireAuth, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || typeof amount !== 'number' || !isFinite(amount) || amount < ALIPAY_TOPUP_MIN || amount > ALIPAY_TOPUP_MAX) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid top-up amount. Must be between ¥${ALIPAY_TOPUP_MIN} and ¥${ALIPAY_TOPUP_MAX}.`,
+      });
+    }
+
+    const user = req.user!;
+    const now = new Date();
+    const ts = now.toISOString().replace(/[-T:.Z]/g, '').slice(0, 14);
+    const uid = Math.random().toString(36).slice(2, 10);
+    const outTradeNo = `TOPUP_${ts}_${user.id.slice(0, 8)}_${uid}`;
+
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4607';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3607';
+
+    const alipayPayload = {
+      out_trade_no: outTradeNo,
+      total_amount: amount,
+      subject: `RoboHire 充值 ¥${amount}`,
+      pay_channel: 'alipay',
+      user_name: user.name || user.email,
+      user_email: user.email,
+      user_id: user.id,
+      platform: 'gohire',
+      notify_url: `${backendUrl}/api/v1/payment/callback`,
+      return_url: `${frontendUrl}/dashboard/account?topup=success`,
+    };
+
+    const alipayApiUrl = process.env.ALIPAY_API_URL || 'https://worker.gohire.top/payment/payment/create';
+    const alipayRes = await fetch(alipayApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(alipayPayload),
+    });
+    const alipayData = await alipayRes.json() as { code: number; data?: { pay_url: string }; message?: string };
+
+    if (alipayData.code !== 0 || !alipayData.data?.pay_url) {
+      console.error('Alipay topup API error:', alipayData);
+      return res.status(502).json({
+        success: false,
+        error: alipayData.message || 'Failed to create Alipay top-up order.',
+      });
+    }
+
+    await prisma.alipayOrder.create({
+      data: {
+        userId: user.id,
+        outTradeNo,
+        tier: 'topup',
+        amount,
+        status: 'pending',
+      },
+    });
+
+    res.json({ success: true, data: { url: alipayData.data.pay_url } });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Failed to create Alipay top-up';
+    console.error('Alipay topup error:', msg, error);
+    res.status(500).json({ success: false, error: msg });
   }
 });
 
@@ -230,7 +482,7 @@ router.post('/topup', requireAuth, async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'link', 'alipay', 'wechat_pay'],
       line_items: [{
         price_data: {
           currency: 'usd',

@@ -1918,6 +1918,15 @@
       "q7": "提供定製方案嗎？",
       "a7": "是的！定製版包含無限使用量、自定義工作流、ATS 整合、專屬支援等。聯絡銷售團隊獲取定製報價。"
     },
+    "paymentModal": {
+      "title": "選擇付款方式",
+      "subtitle": "請選擇您希望使用的付款方式完成訂閱",
+      "alipay": "支付寶",
+      "alipayDesc": "使用支付寶快速付款",
+      "card": "信用卡 / 扣帳卡",
+      "cardDesc": "Visa、Mastercard、American Express",
+      "cancel": "取消"
+    },
     "cta": {
       "title": "準備好簡化招聘了嗎？",
       "subtitle": "加入數千家使用 AI 更快更聰明地招聘的公司。",

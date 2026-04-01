@@ -29,6 +29,18 @@ export interface HiringRequirements {
 
 export type ChatRole = "user" | "model";
 
+export interface SearchState {
+  status: 'running' | 'completed';
+  searchId: string;
+  agentId: string;
+  totalResumes: number;
+  filteredCount: number;
+  completed: number;
+  candidates: SearchCandidate[];
+  totalMatched?: number;
+  totalScreened?: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: ChatRole;
@@ -36,6 +48,7 @@ export interface ChatMessage {
   isThinking?: boolean;
   isError?: boolean;
   suggestions?: string[];
+  searchState?: SearchState;
 }
 
 export interface Session {
@@ -59,10 +72,24 @@ export interface AppConfigStatus {
   reason?: ConfigReason;
 }
 
+export interface SearchCandidate {
+  name: string;
+  score: number;
+  grade: string;
+  resumeId: string;
+  verdict: string;
+  highlights: string[];
+  gaps: string[];
+}
+
 export type ChatStreamEvent =
   | { type: "text-delta"; text: string }
   | { type: "requirements-update"; data: Partial<HiringRequirements> }
   | { type: "suggestions"; data: string[] }
+  | { type: "search-started"; data: { searchId: string; agentId: string; totalResumes: number; filteredCount: number } }
+  | { type: "search-progress"; data: { searchId: string; completed: number; total: number } }
+  | { type: "search-result"; data: { searchId: string; candidate: SearchCandidate } }
+  | { type: "search-completed"; data: { searchId: string; agentId: string; totalMatched: number; totalScreened: number; topCandidates: SearchCandidate[] } }
   | { type: "done" }
   | { type: "error"; code: string; message: string };
 

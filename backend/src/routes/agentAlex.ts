@@ -7,8 +7,9 @@ import {
   generateSpeech,
   type GeminiUsageMetrics,
 } from '../services/GeminiAgentService.js';
-import type { ChatStreamEvent, HistoryMessage } from '../types/agentAlex.js';
+import type { ChatStreamEvent, HiringRequirements, HistoryMessage } from '../types/agentAlex.js';
 import { logger } from '../services/LoggerService.js';
+import { executeInstantSearch } from '../services/InstantSearchMatchService.js';
 
 const router = Router();
 
@@ -74,11 +75,30 @@ router.post('/chat/stream', async (req: Request, res: Response) => {
       return;
     }
 
+    const userId = req.user?.id;
+
     const usage = await streamChatResponse({
       history,
       message,
       locale: typeof locale === 'string' ? locale : undefined,
       onEvent: writeEvent,
+      onSearchRequested: userId
+        ? async (criteria: Partial<HiringRequirements>, source: string) => {
+            if (source === 'upload') {
+              return 'User wants to upload resumes. Please ask them to upload files.';
+            }
+            const result = await executeInstantSearch(
+              {
+                userId,
+                requirements: criteria as HiringRequirements,
+                requestId: req.requestId || undefined,
+              },
+              writeEvent,
+            );
+            if (result.error) return `Search failed: ${result.error}`;
+            return `Search completed. Screened ${result.filteredCount} resumes from talent pool (${result.totalResumes} total). Found ${result.matchedCount} qualified candidates above threshold. Top candidate: ${result.candidates[0]?.name || 'none'} (${result.candidates[0]?.score || 0} points, ${result.candidates[0]?.grade || '-'}). Agent ID: ${result.agentId}`;
+          }
+        : undefined,
     });
     logGeminiUsage(req.requestId || 'unknown', '/agent-alex/chat/stream', usage);
     writeEvent({ type: 'done' });

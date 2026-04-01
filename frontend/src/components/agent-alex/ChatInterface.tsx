@@ -5,7 +5,8 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "react-i18next";
-import type { ChatMessage, HiringRequirements } from "./types";
+import type { ChatMessage, HiringRequirements, SearchState, SearchCandidate } from "./types";
+import { Link } from "react-router-dom";
 import {
   buildHistoryFromMessages,
   generateSpeech,
@@ -42,6 +43,105 @@ function pickRandom<T>(arr: T[], n: number): T[] {
   return shuffled.slice(0, n);
 }
 
+
+function SearchProgressCard({ searchState }: { searchState: SearchState }) {
+  const { t } = useTranslation();
+  const progress = searchState.filteredCount > 0
+    ? Math.round((searchState.completed / searchState.filteredCount) * 100)
+    : 0;
+  const isRunning = searchState.status === 'running';
+
+  return (
+    <div className="space-y-3 w-full max-w-md">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        {isRunning ? (
+          <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
+        ) : (
+          <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+        )}
+        <span className="text-sm font-semibold text-slate-800">
+          {isRunning
+            ? t('agentAlex.search.running', '正在匹配候选人...')
+            : t('agentAlex.search.completed', '匹配完成')}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-xs text-slate-500">
+          <span>{t('agentAlex.search.pool', '人才库')}: {searchState.totalResumes} → {t('agentAlex.search.filtered', '预筛')}: {searchState.filteredCount}</span>
+          <span>{searchState.completed}/{searchState.filteredCount}</span>
+        </div>
+        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+      </div>
+
+      {/* Candidate results */}
+      {searchState.candidates.length > 0 && (
+        <div className="space-y-2 mt-3">
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            {t('agentAlex.search.qualifiedCandidates', '合格候选人')} ({searchState.candidates.length})
+          </span>
+          {searchState.candidates.slice(0, 8).map((c, i) => (
+            <CandidateCard key={c.resumeId} candidate={c} rank={i + 1} />
+          ))}
+          {searchState.candidates.length > 8 && (
+            <p className="text-xs text-slate-400 text-center">
+              +{searchState.candidates.length - 8} {t('agentAlex.search.more', 'more')}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Summary */}
+      {searchState.status === 'completed' && (
+        <div className="text-xs text-slate-500 pt-2 border-t border-slate-100">
+          {t('agentAlex.search.summary', '共筛选 {{screened}} 份简历，找到 {{matched}} 位合格候选人', {
+            screened: searchState.totalScreened || searchState.filteredCount,
+            matched: searchState.totalMatched || searchState.candidates.length,
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CandidateCard({ candidate, rank }: { candidate: SearchCandidate; rank: number }) {
+  const medals = ['🏆', '🥈', '🥉'];
+  const medal = rank <= 3 ? medals[rank - 1] : `#${rank}`;
+
+  return (
+    <Link
+      to={`/product/talent/${candidate.resumeId}`}
+      className="flex items-start gap-3 p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-indigo-50/50 hover:border-indigo-200 transition-colors group"
+    >
+      <span className="text-lg leading-none mt-0.5 shrink-0 w-6 text-center">{medal}</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-slate-800 truncate group-hover:text-indigo-700">{candidate.name}</span>
+          <span className={cn(
+            "px-1.5 py-0.5 rounded text-[10px] font-bold",
+            candidate.score >= 80 ? "bg-emerald-100 text-emerald-700" :
+            candidate.score >= 65 ? "bg-blue-100 text-blue-700" :
+            "bg-amber-100 text-amber-700"
+          )}>
+            {candidate.score} ({candidate.grade})
+          </span>
+        </div>
+        {candidate.highlights.length > 0 && (
+          <p className="text-xs text-slate-500 mt-0.5 truncate">{candidate.highlights.join(' · ')}</p>
+        )}
+      </div>
+    </Link>
+  );
+}
 
 function SuggestionChips({ messages, isProcessing, isAiEnabled, exampleSeed, onSend, onInsert, onRefresh }: {
   messages: ChatMessage[];
@@ -166,7 +266,6 @@ export function ChatInterface({
           }
 
           if (event.type === "suggestions") {
-            // Attach LLM-generated suggestions to the current model message
             setMessages((prev) =>
               prev.map((message) =>
                 message.id === modelMsgId
@@ -174,6 +273,66 @@ export function ChatInterface({
                   : message,
               ),
             );
+            return;
+          }
+
+          // ── Search events ──
+          if (event.type === "search-started") {
+            setMessages((prev) => [...prev, {
+              id: `search-${event.data.searchId}`,
+              role: "model" as const,
+              text: '',
+              searchState: {
+                status: 'running',
+                searchId: event.data.searchId,
+                agentId: event.data.agentId,
+                totalResumes: event.data.totalResumes,
+                filteredCount: event.data.filteredCount,
+                completed: 0,
+                candidates: [],
+              },
+            }]);
+            return;
+          }
+
+          if (event.type === "search-progress") {
+            setMessages((prev) => prev.map((msg) =>
+              (msg as any).searchState?.searchId === event.data.searchId
+                ? { ...msg, searchState: { ...(msg as any).searchState, completed: event.data.completed } }
+                : msg,
+            ));
+            return;
+          }
+
+          if (event.type === "search-result") {
+            setMessages((prev) => prev.map((msg) =>
+              (msg as any).searchState?.searchId === event.data.searchId
+                ? {
+                    ...msg,
+                    searchState: {
+                      ...(msg as any).searchState,
+                      candidates: [...((msg as any).searchState?.candidates || []), event.data.candidate],
+                    },
+                  }
+                : msg,
+            ));
+            return;
+          }
+
+          if (event.type === "search-completed") {
+            setMessages((prev) => prev.map((msg) =>
+              (msg as any).searchState?.searchId === event.data.searchId
+                ? {
+                    ...msg,
+                    searchState: {
+                      ...(msg as any).searchState,
+                      status: 'completed',
+                      totalMatched: event.data.totalMatched,
+                      totalScreened: event.data.totalScreened,
+                    },
+                  }
+                : msg,
+            ));
             return;
           }
 
@@ -344,7 +503,9 @@ export function ChatInterface({
                     : "px-4 py-3.5 sm:px-6 sm:py-5 bg-white border border-slate-200 text-slate-800 rounded-bl-sm",
                 )}
               >
-                {message.isThinking ? (
+                {(message as any).searchState ? (
+                  <SearchProgressCard searchState={(message as any).searchState} />
+                ) : message.isThinking ? (
                   <div className="flex items-center gap-2 text-slate-500">
                     <BrainCircuit className="w-4 h-4 animate-pulse" />
                     <span className="text-sm font-medium">{t('agentAlex.chat.thinking', 'Thinking...')}</span>

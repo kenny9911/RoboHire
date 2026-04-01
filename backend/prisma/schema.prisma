@@ -93,6 +93,7 @@ model User {
   apiRequestLogs  ApiRequestLog[]
   llmCallLogs     LLMCallLog[]
   topUpRecords    TopUpRecord[]
+  alipayOrders    AlipayOrder[]
   resumes         Resume[]
   recruiterResumes Resume[]  @relation("ResumeRecruiter")
   adminAdjustmentsReceived  AdminAdjustment[] @relation("AdminAdjustmentsReceived")
@@ -342,6 +343,23 @@ model TopUpRecord {
   @@index([stripeSessionId])
   @@index([stripePaymentIntent])
   @@index([userId, createdAt])
+}
+
+model AlipayOrder {
+  id           String    @id @default(cuid())
+  userId       String
+  outTradeNo   String    @unique
+  tier         String    // starter, growth, business
+  amount       Float     // payment amount in CNY
+  status       String    @default("pending") // pending, completed, failed, closed
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([outTradeNo])
+  @@index([status])
 }
 
 model AdminAdjustment {

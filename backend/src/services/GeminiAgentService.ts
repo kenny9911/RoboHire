@@ -164,9 +164,54 @@ export const suggestNextStepsDeclaration: FunctionDeclaration = {
   },
 };
 
-export const SYSTEM_INSTRUCTION = `You are a Recruitment Requirements Analyst — an expert at eliciting, structuring, and finalizing hiring requirements through conversational inquiry with recruiters and hiring managers. You combine deep knowledge of talent acquisition across industries with a structured interviewing methodology to transform vague hiring intent into precise, actionable job requirement specifications.
+export const startCandidateSearchDeclaration: FunctionDeclaration = {
+  name: "start_candidate_search",
+  description:
+    `When the user expresses intent to find, match, search, or screen candidates — for example:
+    "帮我匹配候选人", "开始筛选", "有没有匹配的人", "find matching candidates", "start matching",
+    "帮我从人才库找", "run the search", "有哪些匹配的候选人", "搜索候选人" —
+    call this function to initiate an instant search against the talent pool.
 
-You are embedded within a recruitment automation platform. The recruiter or hiring manager will initiate a conversation with a general idea of a role they need to fill. Your job is to conduct a guided, conversational interview — not a rigid questionnaire — to extract a complete and structured hiring requirements document.
+    IMPORTANT: Before calling, ensure you have gathered enough hiring requirements (at minimum: jobTitle and some hardSkills or qualifications).
+    If the Live Specification is too sparse, ask the user to provide more details first.
+
+    Pass the current hiring requirements as searchCriteria. The system will:
+    1. Query the talent pool for relevant resumes
+    2. Run parallel AI matching agents
+    3. Return ranked candidates in real-time
+
+    After search completes, summarize results and suggest next actions (e.g., invite top candidates for interviews).`,
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      searchCriteria: {
+        type: Type.OBJECT,
+        description: "The current hiring requirements / Live Specification to match against. Include all fields gathered so far.",
+        properties: {
+          jobTitle: { type: Type.STRING, description: "Target job title" },
+          hardSkills: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Must-have technical skills" },
+          softSkills: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Must-have soft skills" },
+          yearsOfExperience: { type: Type.STRING, description: "Required experience range" },
+          education: { type: Type.STRING, description: "Education requirements" },
+          workLocation: { type: Type.STRING, description: "Work location preference" },
+          preferredQualifications: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Nice-to-have qualifications" },
+          dealBreakers: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Deal-breaker requirements" },
+        },
+      },
+      source: {
+        type: Type.STRING,
+        description: "Where to search: 'talent_pool' (default) or 'upload' (user will upload resumes)",
+      },
+    },
+    required: ["searchCriteria"],
+  },
+};
+
+export const SYSTEM_INSTRUCTION = `You are a Recruitment Requirements Analyst and Orchestrator Agent — an expert at eliciting, structuring, and finalizing hiring requirements, AND at autonomously finding matching candidates. You combine deep knowledge of talent acquisition with a structured methodology to transform vague hiring intent into precise specifications, and then ACT on them by dispatching search agents. — an expert at eliciting, structuring, and finalizing hiring requirements through conversational inquiry with recruiters and hiring managers. You combine deep knowledge of talent acquisition across industries with a structured interviewing methodology to transform vague hiring intent into precise, actionable job requirement specifications.
+
+You are embedded within a recruitment automation platform called RoboHire. The recruiter or hiring manager will initiate a conversation with a general idea of a role they need to fill. Your job is to:
+1. Conduct a guided, conversational interview to extract a complete hiring requirements document.
+2. When the user wants to find candidates, orchestrate an instant search by calling \`start_candidate_search\`.
 
 Skills:
 1. Role decomposition: Break any job title into its constituent skill domains, responsibility areas, and competency dimensions before asking questions.
@@ -205,7 +250,24 @@ After every response, you MUST call the \`suggest_next_steps\` tool with 2-3 sho
 - Direct answers to the questions you just asked (e.g., "开发客服 Agent 方向", "薪资预算 40-60 万")
 - Proactive offers to help (e.g., "帮我拟一份技术要求", "建议一个面试流程方案")
 - Concrete next steps (e.g., "先看看类似岗位的 JD", "可以了，生成最终 JD")
-Keep each suggestion concise (under 20 Chinese characters or 8 English words). Match the user's language.`;
+Keep each suggestion concise (under 20 Chinese characters or 8 English words). Match the user's language.
+
+Candidate Search Orchestration (via \`start_candidate_search\`):
+You have the ability to search for matching candidates from the RoboHire talent pool. When the user expresses intent to find candidates:
+1. First check if the Live Specification has enough detail (at minimum jobTitle + some skills). If not, ask for more info.
+2. Ask the user: "从 RoboHire 人才库中搜索，还是要上传新简历？" (if not already clear).
+3. Call \`start_candidate_search\` with the current requirements as searchCriteria and source as 'talent_pool'.
+4. While the search runs, the system will stream progress events. You will receive results back in the function response.
+5. After search completes, summarize the ACTUAL results returned by the function — how many candidates found, highlight top matches, and suggest next actions.
+6. When suggesting next steps after a search, offer proactive actions like "帮您邀请前3名面试" or "查看详细匹配报告".
+
+CRITICAL ANTI-HALLUCINATION RULES:
+- You MUST NEVER invent, fabricate, or make up candidate names, scores, or match results. EVER.
+- You MUST NEVER pretend to have search results without actually calling the \`start_candidate_search\` function first.
+- If asked about candidates, matching results, or search outcomes, you MUST call \`start_candidate_search\` and wait for the real results.
+- Only reference candidates that were returned in the function response. If the function returned 0 results, say so honestly.
+- If the function is not available or fails, tell the user honestly that the search could not be completed.
+- Do NOT generate fictional example candidates "for demonstration". The system returns REAL data from the actual talent pool.`;
 
 export class GeminiConfigError extends Error {
   reason: ConfigReason;
@@ -318,6 +380,7 @@ interface StreamChatOptions {
   message: string;
   locale?: string;
   onEvent: (event: ChatStreamEvent) => void;
+  onSearchRequested?: (criteria: Partial<HiringRequirements>, source: string) => Promise<string>;
 }
 
 export async function streamChatResponse({
@@ -325,6 +388,7 @@ export async function streamChatResponse({
   message,
   locale,
   onEvent,
+  onSearchRequested,
 }: StreamChatOptions): Promise<GeminiUsageMetrics> {
   const startTime = Date.now();
   const ai = createGeminiClient();
@@ -347,7 +411,7 @@ The user's interface language is ${langLabel}. You MUST:
     config: {
       systemInstruction: systemPrompt,
       thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
-      tools: [{ functionDeclarations: [updateRequirementsDeclaration, suggestNextStepsDeclaration] }],
+      tools: [{ functionDeclarations: [updateRequirementsDeclaration, suggestNextStepsDeclaration, startCandidateSearchDeclaration] }],
     },
   });
 
@@ -386,6 +450,24 @@ The user's interface language is ${langLabel}. You MUST:
                 id: call.id,
                 name: call.name,
                 response: { result: "success" },
+              },
+            });
+          } else if (call.name === "start_candidate_search" && call.args) {
+            // Delegate to the onSearchRequested callback (provided by route handler)
+            const args = call.args as { searchCriteria?: Partial<HiringRequirements>; source?: string };
+            let searchSummary = 'Search function not available in this context.';
+            if (onSearchRequested) {
+              try {
+                searchSummary = await onSearchRequested(args.searchCriteria || {}, args.source || 'talent_pool');
+              } catch (err) {
+                searchSummary = `Search failed: ${err instanceof Error ? err.message : String(err)}`;
+              }
+            }
+            functionResponses.push({
+              functionResponse: {
+                id: call.id,
+                name: call.name,
+                response: { result: "success", summary: searchSummary },
               },
             });
           }

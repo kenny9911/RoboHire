@@ -1521,6 +1521,15 @@
       "q7": "¿Ofrecen planes personalizados?",
       "a7": "¡Sí! El plan Personalizado incluye uso ilimitado, flujos personalizados, integraciones ATS, soporte dedicado y más. Contáctenos para un presupuesto a medida."
     },
+    "paymentModal": {
+      "title": "Seleccionar método de pago",
+      "subtitle": "Elige cómo deseas completar tu suscripción",
+      "alipay": "Alipay",
+      "alipayDesc": "Paga rápido con Alipay",
+      "card": "Tarjeta de crédito / débito",
+      "cardDesc": "Visa, Mastercard, American Express",
+      "cancel": "Cancelar"
+    },
     "cta": {
       "title": "¿Listo para agilizar tu contratación?",
       "subtitle": "Únete a miles de empresas que usan IA para contratar más rápido e inteligente.",

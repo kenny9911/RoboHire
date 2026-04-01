@@ -1520,6 +1520,15 @@
       "q7": "Bieten Sie individuelle Plaene an?",
       "a7": "Ja! Der individuelle Plan umfasst unbegrenzte Nutzung, individuelle Workflows, ATS-Integrationen, dedizierten Support und mehr. Kontaktieren Sie unser Team fuer ein massgeschneidertes Angebot."
     },
+    "paymentModal": {
+      "title": "Zahlungsmethode wählen",
+      "subtitle": "Wählen Sie, wie Sie Ihr Abonnement abschließen möchten",
+      "alipay": "Alipay",
+      "alipayDesc": "Schnell mit Alipay bezahlen",
+      "card": "Kredit- / Debitkarte",
+      "cardDesc": "Visa, Mastercard, American Express",
+      "cancel": "Abbrechen"
+    },
     "cta": {
       "title": "Bereit, Ihr Recruiting zu optimieren?",
       "subtitle": "Schliessen Sie sich Tausenden von Unternehmen an, die KI nutzen, um schneller und intelligenter einzustellen.",

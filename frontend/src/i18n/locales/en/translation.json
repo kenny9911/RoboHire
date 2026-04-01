@@ -3467,6 +3467,17 @@
       "saved": "Saved!"
     }
   },
+  "pricing": {
+    "paymentModal": {
+      "title": "Select Payment Method",
+      "subtitle": "Choose how you'd like to complete your subscription",
+      "alipay": "Alipay",
+      "alipayDesc": "Pay quickly with Alipay",
+      "card": "Credit / Debit Card",
+      "cardDesc": "Visa, Mastercard, American Express",
+      "cancel": "Cancel"
+    }
+  },
   "notFound": {
     "title": "Page Not Found",
     "heading": "Page not found",

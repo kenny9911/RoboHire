@@ -44,7 +44,7 @@ function authFetch(endpoint: string, options: RequestInit = {}): Promise<Respons
 }
 
 export default function Profile() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -63,6 +63,7 @@ export default function Profile() {
   const [topupLoading, setTopupLoading] = useState<number | null>(null);
   const [topupMsg, setTopupMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [customAmount, setCustomAmount] = useState('');
+  const [topupPaymentModal, setTopupPaymentModal] = useState<number | null>(null);
 
   // Sync state
   const [syncing, setSyncing] = useState(false);
@@ -167,6 +168,14 @@ export default function Profile() {
   };
 
   const handleTopup = async (dollars: number) => {
+    if (i18n.language === 'zh') {
+      setTopupPaymentModal(dollars);
+      return;
+    }
+    await proceedStripeTopup(dollars);
+  };
+
+  const proceedStripeTopup = async (dollars: number) => {
     const cents = Math.round(dollars * 100);
     if (cents < 1000 || cents > 100000) {
       setTopupMsg({ type: 'error', text: t('account.topup.invalidAmount', 'Amount must be between $10 and $1,000.') });
@@ -187,6 +196,31 @@ export default function Profile() {
       }
     } catch (err) {
       setTopupMsg({ type: 'error', text: err instanceof Error ? err.message : 'Top-up failed' });
+      setTopupLoading(null);
+    }
+  };
+
+  const proceedAlipayTopup = async (amount: number) => {
+    setTopupPaymentModal(null);
+    if (amount < 10 || amount > 10000) {
+      setTopupMsg({ type: 'error', text: t('account.topup.invalidAmountCNY', 'Amount must be between ¥10 and ¥10,000.') });
+      return;
+    }
+    setTopupLoading(amount);
+    setTopupMsg(null);
+    try {
+      const res = await authFetch('/api/v1/topup/alipay', {
+        method: 'POST',
+        body: JSON.stringify({ amount }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.url) {
+        window.location.href = data.data.url;
+      } else {
+        throw new Error(data.error || 'Failed to create Alipay top-up');
+      }
+    } catch (err) {
+      setTopupMsg({ type: 'error', text: err instanceof Error ? err.message : 'Alipay top-up failed' });
       setTopupLoading(null);
     }
   };
@@ -569,6 +603,49 @@ export default function Profile() {
           )}
         </div>
       </section>
+
+      {/* Alipay vs Stripe topup modal — zh users only */}
+      {topupPaymentModal !== null && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setTopupPaymentModal(null)}>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">{t('pricing.paymentModal.title', 'Select Payment Method')}</h3>
+            <p className="text-sm text-slate-500 mb-6">{t('pricing.paymentModal.subtitle', 'Choose how you\'d like to complete your payment')}</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => proceedAlipayTopup(topupPaymentModal)}
+                className="w-full flex items-center gap-4 p-4 border-2 border-[#00A0E9] rounded-xl hover:bg-blue-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-[#00A0E9] flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21.422 15.358c-3.83-1.153-6.055-1.84-6.055-1.84.805-1.4 1.347-3.048 1.554-4.85H20V7.33h-4.32V5.45h-2.39v1.88H9.03V5.45H6.64v1.88H2v1.338h4.55c-.14 2.34-1.07 4.38-2.59 5.73C2.84 15.22 2 16.52 2 17.88c0 2.3 2.43 3.67 5.28 3.67 2.25 0 4.62-.87 6.56-2.74 2.23 1.05 4.93 2 7.16 2.74V18.4c-1.19-.37-4.23-1.37-4.23-1.37.72-.99 1.22-1.7 1.22-1.7l3.43 1.03v-1.995zM9.17 17.7c-1.96 0-3.55-1.08-3.55-2.4 0-.9.65-1.7 1.64-2.24 1.04.43 2.17.8 3.37 1.08-.45 2.13-1.46 3.56-1.46 3.56zm4.41-2.43c-1.04-.26-2.02-.58-2.93-.97.41-1.5.62-3.12.62-4.8H9.3c0 1.26-.12 2.49-.36 3.63-.9-.22-1.74-.48-2.52-.78.86-1.1 1.44-2.49 1.62-4.06h5.23V7.33h-2.33v1.88H8.07v-1.88H6.64v1.88H6.18c.1-.97.15-1.96.15-2.96h9.3c-.18 1.87-.64 3.6-1.32 5.05z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">{t('pricing.paymentModal.alipay', 'Alipay')}</div>
+                  <div className="text-xs text-slate-500">{t('pricing.paymentModal.alipayDesc', 'Pay quickly with Alipay')}</div>
+                </div>
+              </button>
+              <button
+                onClick={() => { setTopupPaymentModal(null); proceedStripeTopup(topupPaymentModal); }}
+                className="w-full flex items-center gap-4 p-4 border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">{t('pricing.paymentModal.card', 'Credit / Debit Card')}</div>
+                  <div className="text-xs text-slate-500">{t('pricing.paymentModal.cardDesc', 'Visa, Mastercard, Amex')}</div>
+                </div>
+              </button>
+            </div>
+            <button onClick={() => setTopupPaymentModal(null)} className="mt-5 w-full text-sm text-slate-400 hover:text-slate-600 transition-colors">
+              {t('pricing.paymentModal.cancel', 'Cancel')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

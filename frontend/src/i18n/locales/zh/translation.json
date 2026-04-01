@@ -1953,6 +1953,15 @@
       "q7": "提供定制方案吗？",
       "a7": "是的！定制版包含无限使用量、自定义工作流、ATS 集成、专属支持等。联系销售团队获取定制报价。"
     },
+    "paymentModal": {
+      "title": "选择支付方式",
+      "subtitle": "请选择您希望使用的支付方式完成订阅",
+      "alipay": "支付宝",
+      "alipayDesc": "使用支付宝快捷支付",
+      "card": "信用卡 / 借记卡",
+      "cardDesc": "Visa、Mastercard、American Express",
+      "cancel": "取消"
+    },
     "cta": {
       "title": "准备好简化招聘了吗？",
       "subtitle": "加入数千家使用 AI 更快更聪明地招聘的公司。",

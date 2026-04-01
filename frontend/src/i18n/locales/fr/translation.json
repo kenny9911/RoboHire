@@ -1521,6 +1521,15 @@
       "q7": "Proposez-vous des plans personnalises ?",
       "a7": "Oui ! Le plan Personnalise comprend un usage illimite, des workflows personnalises, des integrations ATS, un support dedie et plus. Contactez notre equipe commerciale pour un devis sur mesure."
     },
+    "paymentModal": {
+      "title": "Choisir un mode de paiement",
+      "subtitle": "Choisissez comment compléter votre abonnement",
+      "alipay": "Alipay",
+      "alipayDesc": "Payer rapidement avec Alipay",
+      "card": "Carte de crédit / débit",
+      "cardDesc": "Visa, Mastercard, American Express",
+      "cancel": "Annuler"
+    },
     "cta": {
       "title": "Pret a optimiser votre recrutement ?",
       "subtitle": "Rejoignez des milliers d'entreprises qui utilisent l'IA pour recruter plus vite et mieux.",

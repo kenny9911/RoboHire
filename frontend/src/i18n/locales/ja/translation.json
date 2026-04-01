@@ -1893,6 +1893,15 @@
       "q7": "カスタムプランはありますか？",
       "a7": "はい！カスタムプランには無制限利用、カスタムワークフロー、ATS連携、専任サポートなどが含まれます。お問い合わせください。"
     },
+    "paymentModal": {
+      "title": "お支払い方法を選択",
+      "subtitle": "サブスクリプションの完了方法を選択してください",
+      "alipay": "Alipay",
+      "alipayDesc": "Alipayで素早くお支払い",
+      "card": "クレジット / デビットカード",
+      "cardDesc": "Visa、Mastercard、American Express",
+      "cancel": "キャンセル"
+    },
     "cta": {
       "title": "採用を効率化しませんか？",
       "subtitle": "AIでより速く賢く採用する企業が続々参加中。",
