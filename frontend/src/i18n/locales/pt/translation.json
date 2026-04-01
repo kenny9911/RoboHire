@@ -1592,7 +1592,11 @@
       "empty": "Nenhum histórico de cobrança ainda.",
       "loading": "Carregando histórico de cobrança...",
       "viewInvoice": "Ver",
-      "viewReceipt": "Recibo"
+      "viewReceipt": "Recibo",
+      "method": {
+        "alipay": "Alipay",
+        "stripe": "Stripe"
+      }
     }
   },
   "usage": {

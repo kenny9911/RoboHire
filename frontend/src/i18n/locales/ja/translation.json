@@ -1965,7 +1965,11 @@
       "empty": "請求履歴はまだありません。",
       "loading": "請求履歴を読み込み中...",
       "viewInvoice": "表示",
-      "viewReceipt": "領収書"
+      "viewReceipt": "領収書",
+      "method": {
+        "alipay": "Alipay",
+        "stripe": "Stripe"
+      }
     }
   },
   "usage": {

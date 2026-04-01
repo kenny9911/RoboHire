@@ -289,16 +289,21 @@ router.post('/checkout/alipay', requireAuth, async (req, res) => {
  * Params (query or body): pay_status, out_trade_no
  */
 async function handleAlipayCallback(req: import('express').Request, res: import('express').Response) {
-  try {
-    const pay_status = (req.query.pay_status || req.body?.pay_status) as string | undefined;
-    const out_trade_no = (req.query.out_trade_no || req.body?.out_trade_no) as string | undefined;
+  const callbackTime = new Date();
+  const pay_status = (req.query.pay_status || req.body?.pay_status) as string | undefined;
+  const out_trade_no = (req.query.out_trade_no || req.body?.out_trade_no) as string | undefined;
 
+  console.log('[Alipay callback]', JSON.stringify({ time: callbackTime, pay_status, out_trade_no, query: req.query, body: req.body }));
+
+  try {
     if (!pay_status || !out_trade_no) {
+      console.warn('[Alipay callback] invalid params', { pay_status, out_trade_no });
       return res.status(400).json({ code: 40001, message: 'invalid callback params' });
     }
 
     const order = await prisma.alipayOrder.findUnique({ where: { outTradeNo: out_trade_no } });
     if (!order) {
+      console.warn('[Alipay callback] order not found', { out_trade_no });
       return res.status(400).json({ code: 40002, message: 'order not found' });
     }
 
@@ -333,16 +338,20 @@ async function handleAlipayCallback(req: import('express').Request, res: import(
         }
       });
       if (order.tier !== 'topup') await resetUsageCounters(order.userId);
+      console.log('[Alipay callback] processed TRADE_SUCCESS', { out_trade_no, tier: order.tier, userId: order.userId, durationMs: Date.now() - callbackTime.getTime() });
     } else if (pay_status === 'TRADE_CLOSED' && order.status === 'pending') {
       await prisma.alipayOrder.update({
         where: { outTradeNo: out_trade_no },
         data: { status: 'closed' },
       });
+      console.log('[Alipay callback] order closed', { out_trade_no });
+    } else {
+      console.log('[Alipay callback] no action taken', { pay_status, currentStatus: order.status, out_trade_no });
     }
 
     res.json({ code: 0, message: 'success' });
   } catch (error) {
-    console.error('Alipay callback error:', error);
+    console.error('[Alipay callback] error', { out_trade_no, pay_status, error });
     res.status(500).json({ code: 50001, message: 'internal error' });
   }
 }
@@ -564,9 +573,8 @@ async function syncTopUpRecord(
 
 /**
  * GET /api/v1/topup/status
- * Poll for top-up completion. Frontend calls this after redirect from Stripe.
- * If the latest top-up is still pending, actively checks Stripe to credit it.
- * If no TopUpRecord exists at all (legacy payment), checks Stripe sessions directly.
+ * Poll for top-up completion. Covers both Stripe and Alipay top-ups.
+ * Returns the most recent top-up record regardless of payment method.
  */
 router.get('/topup/status', requireAuth, async (req, res) => {
   try {
@@ -574,17 +582,45 @@ router.get('/topup/status', requireAuth, async (req, res) => {
     const stripe = getStripe();
     const customerId = user.stripeCustomerId as string | null;
 
-    // Find the most recent top-up record
-    let latestTopup = await prisma.topUpRecord.findFirst({
+    // Find the most recent Stripe top-up record
+    let latestStripe = await prisma.topUpRecord.findFirst({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
     });
 
-    // If still pending and Stripe is available, check Stripe directly
-    if (latestTopup && latestTopup.status === 'pending' && stripe) {
-      await syncTopUpRecord(stripe, latestTopup);
-      const updated = await prisma.topUpRecord.findUnique({ where: { id: latestTopup.id } });
-      if (updated) latestTopup = updated;
+    // Find the most recent Alipay top-up order
+    const latestAlipay = await prisma.alipayOrder.findFirst({
+      where: { userId: user.id, tier: 'topup' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Determine which is more recent
+    const useAlipay = latestAlipay
+      ? !latestStripe || latestAlipay.createdAt > latestStripe.createdAt
+      : false;
+
+    // For Stripe pending records, actively sync with Stripe
+    if (!useAlipay && latestStripe && latestStripe.status === 'pending' && stripe) {
+      await syncTopUpRecord(stripe, latestStripe);
+      const updated = await prisma.topUpRecord.findUnique({ where: { id: latestStripe.id } });
+      if (updated) latestStripe = updated;
+    }
+
+    let latestTopup: { status: string; amount: number; creditedAt: Date | null; method: string } | null = null;
+    if (useAlipay && latestAlipay) {
+      latestTopup = {
+        status: latestAlipay.status,
+        amount: latestAlipay.amount,
+        creditedAt: latestAlipay.completedAt,
+        method: 'alipay',
+      };
+    } else if (latestStripe) {
+      latestTopup = {
+        status: latestStripe.status,
+        amount: latestStripe.amountDollars,
+        creditedAt: latestStripe.creditedAt,
+        method: 'stripe',
+      };
     }
 
     // Fallback: if no TopUpRecord at all but customer has Stripe sessions,
@@ -620,10 +656,18 @@ router.get('/topup/status', requireAuth, async (req, res) => {
               data: { topUpBalance: { increment: amountCents / 100 } },
             });
           });
-          latestTopup = await prisma.topUpRecord.findFirst({
+          const created = await prisma.topUpRecord.findFirst({
             where: { userId: user.id },
             orderBy: { createdAt: 'desc' },
           });
+          if (created) {
+            latestTopup = {
+              status: created.status,
+              amount: created.amountDollars,
+              creditedAt: created.creditedAt,
+              method: 'stripe',
+            };
+          }
         }
       }
     }
@@ -637,11 +681,7 @@ router.get('/topup/status', requireAuth, async (req, res) => {
       success: true,
       data: {
         balance: freshUser?.topUpBalance ?? 0,
-        latestTopup: latestTopup ? {
-          status: latestTopup.status,
-          amount: latestTopup.amountDollars,
-          creditedAt: latestTopup.creditedAt,
-        } : null,
+        latestTopup,
       },
     });
   } catch (error) {
@@ -779,6 +819,28 @@ router.post('/sync', requireAuth, async (req, res) => {
       }
     }
 
+    // 3. Sync Alipay subscription — activate if completed order not yet reflected in user tier
+    const latestAlipaySubscription = await prisma.alipayOrder.findFirst({
+      where: { userId: user.id, tier: { in: ['starter', 'growth', 'business'] }, status: 'completed' },
+      orderBy: { completedAt: 'desc' },
+    });
+    if (latestAlipaySubscription && latestAlipaySubscription.completedAt) {
+      const periodEnd = new Date(latestAlipaySubscription.completedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const isStillActive = periodEnd > new Date();
+      if (isStillActive && user.subscriptionTier !== latestAlipaySubscription.tier) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            subscriptionTier: latestAlipaySubscription.tier,
+            subscriptionStatus: 'active',
+            currentPeriodEnd: periodEnd,
+          },
+        });
+        await resetUsageCounters(user.id);
+        synced.subscription = true;
+      }
+    }
+
     // Return fresh user data
     const freshUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -807,55 +869,107 @@ router.post('/sync', requireAuth, async (req, res) => {
 
 /**
  * GET /api/v1/billing-history
- * Fetch billing history (invoices and standalone charges) from Stripe.
+ * Unified payment history: Stripe invoices + charges + Alipay orders.
  */
 router.get('/billing-history', requireAuth, async (req, res) => {
+  type PaymentItem = {
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    description: string;
+    date: string | null;
+    method: 'stripe' | 'alipay';
+    paymentType: 'subscription' | 'topup';
+    invoiceUrl?: string | null;
+    pdfUrl?: string | null;
+    receiptUrl?: string | null;
+    orderNo?: string;
+  };
+
   try {
+    const user = req.user!;
+    const items: PaymentItem[] = [];
+
+    // --- Stripe ---
     const stripe = getStripe();
-    if (!stripe) {
-      return res.status(503).json({
-        success: false,
-        error: 'Payment processing is not configured.',
+    const customerId = user.stripeCustomerId as string | null;
+    if (stripe && customerId) {
+      const [invoices, charges] = await Promise.all([
+        stripe.invoices.list({ customer: customerId, limit: 24 }),
+        stripe.charges.list({ customer: customerId, limit: 24 }),
+      ]);
+
+      for (const inv of invoices.data) {
+        items.push({
+          id: inv.id,
+          amount: inv.amount_paid / 100,
+          currency: (inv.currency || 'usd').toUpperCase(),
+          status: inv.status === 'paid' ? 'paid' : (inv.status || 'unknown'),
+          description: inv.description || inv.lines?.data?.[0]?.description || 'Subscription',
+          date: inv.created ? new Date(inv.created * 1000).toISOString() : null,
+          method: 'stripe',
+          paymentType: 'subscription',
+          invoiceUrl: inv.hosted_invoice_url,
+          pdfUrl: inv.invoice_pdf,
+        });
+      }
+
+      for (const ch of charges.data) {
+        if ((ch as any).invoice) continue; // Skip — already covered by invoice above
+        items.push({
+          id: ch.id,
+          amount: ch.amount / 100,
+          currency: (ch.currency || 'usd').toUpperCase(),
+          status: ch.status === 'succeeded' ? 'paid' : ch.status,
+          description: ch.description || 'Top-up',
+          date: new Date(ch.created * 1000).toISOString(),
+          method: 'stripe',
+          paymentType: 'topup',
+          receiptUrl: ch.receipt_url,
+        });
+      }
+    }
+
+    // --- Alipay ---
+    const alipayOrders = await prisma.alipayOrder.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 24,
+    });
+
+    const TIER_LABELS: Record<string, string> = {
+      starter: 'Starter 月度订阅',
+      growth:  'Growth 月度订阅',
+      business: 'Business 月度订阅',
+      topup:   '支付宝充值',
+    };
+
+    const ALIPAY_STATUS_MAP: Record<string, string> = {
+      completed: 'paid',
+      pending:   'pending',
+      closed:    'closed',
+      failed:    'failed',
+    };
+
+    for (const order of alipayOrders) {
+      items.push({
+        id: order.outTradeNo,
+        amount: order.amount,
+        currency: 'CNY',
+        status: ALIPAY_STATUS_MAP[order.status] ?? order.status,
+        description: TIER_LABELS[order.tier] ?? order.tier,
+        date: order.createdAt.toISOString(),
+        method: 'alipay',
+        paymentType: order.tier === 'topup' ? 'topup' : 'subscription',
+        orderNo: order.outTradeNo,
       });
     }
 
-    const user = req.user!;
-    const customerId = user.stripeCustomerId as string | null;
-    if (!customerId) {
-      return res.json({ success: true, data: { invoices: [], charges: [] } });
-    }
+    // Sort all items newest-first
+    items.sort((a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime());
 
-    const [invoices, charges] = await Promise.all([
-      stripe.invoices.list({ customer: customerId, limit: 20 }),
-      stripe.charges.list({ customer: customerId, limit: 20 }),
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        invoices: invoices.data.map(inv => ({
-          id: inv.id,
-          amount: inv.amount_paid / 100,
-          currency: inv.currency,
-          status: inv.status,
-          description: inv.description || inv.lines?.data?.[0]?.description || 'Subscription',
-          date: inv.created ? new Date(inv.created * 1000).toISOString() : null,
-          invoiceUrl: inv.hosted_invoice_url,
-          pdfUrl: inv.invoice_pdf,
-        })),
-        charges: charges.data
-          .filter(ch => !(ch as any).invoice) // Only standalone charges (top-ups)
-          .map(ch => ({
-            id: ch.id,
-            amount: ch.amount / 100,
-            currency: ch.currency,
-            status: ch.status,
-            description: ch.description || 'Top-up',
-            date: new Date(ch.created * 1000).toISOString(),
-            receiptUrl: ch.receipt_url,
-          })),
-      },
-    });
+    res.json({ success: true, data: { items } });
   } catch (error) {
     console.error('Billing history error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch billing history' });

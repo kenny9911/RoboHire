@@ -1991,7 +1991,11 @@
       "empty": "暫無賬單記錄。",
       "loading": "載入賬單歷史...",
       "viewInvoice": "檢視",
-      "viewReceipt": "收據"
+      "viewReceipt": "收據",
+      "method": {
+        "alipay": "支付寶",
+        "stripe": "Stripe"
+      }
     }
   },
   "usage": {

@@ -1895,7 +1895,11 @@
       "empty": "No billing history yet.",
       "loading": "Loading billing history...",
       "viewInvoice": "View",
-      "viewReceipt": "Receipt"
+      "viewReceipt": "Receipt",
+      "method": {
+        "alipay": "Alipay",
+        "stripe": "Stripe"
+      }
     }
   },
   "usage": {

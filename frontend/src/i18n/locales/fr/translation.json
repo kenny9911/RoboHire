@@ -1593,7 +1593,11 @@
       "empty": "Aucun historique de facturation.",
       "loading": "Chargement de l'historique...",
       "viewInvoice": "Voir",
-      "viewReceipt": "Reçu"
+      "viewReceipt": "Reçu",
+      "method": {
+        "alipay": "Alipay",
+        "stripe": "Stripe"
+      }
     }
   },
   "usage": {

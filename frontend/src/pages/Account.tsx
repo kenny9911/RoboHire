@@ -21,10 +21,12 @@ interface BillingItem {
   status: string;
   description: string;
   date: string | null;
+  method: 'stripe' | 'alipay';
+  paymentType: 'subscription' | 'topup';
   invoiceUrl?: string | null;
   pdfUrl?: string | null;
   receiptUrl?: string | null;
-  type: 'invoice' | 'charge';
+  orderNo?: string;
 }
 
 function authFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
@@ -146,12 +148,7 @@ export default function Account() {
         const res = await authFetch('/api/v1/billing-history');
         const data = await res.json();
         if (data.success) {
-          const invoices: BillingItem[] = (data.data.invoices || []).map((inv: any) => ({ ...inv, type: 'invoice' }));
-          const charges: BillingItem[] = (data.data.charges || []).map((ch: any) => ({ ...ch, type: 'charge' }));
-          const combined = [...invoices, ...charges].sort(
-            (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
-          );
-          setBillingItems(combined);
+          setBillingItems(data.data.items || []);
         }
       } catch {
         // Silently fail — billing may not be configured
@@ -620,35 +617,49 @@ export default function Account() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {billingItems.map((item) => {
-                  const link = item.type === 'invoice' ? item.invoiceUrl : item.receiptUrl;
+                  const currencySymbol = item.currency === 'CNY' ? '¥' : '$';
+                  const receiptLink = item.invoiceUrl || item.receiptUrl;
                   return (
                     <tr key={item.id} className="text-gray-700">
                       <td className="py-2.5">{item.date ? new Date(item.date).toLocaleDateString() : '—'}</td>
-                      <td className="py-2.5">{item.description}</td>
-                      <td className="py-2.5 font-medium">${item.amount.toFixed(2)}</td>
+                      <td className="py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span>{item.description}</span>
+                          <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                            item.method === 'alipay'
+                              ? 'bg-[#e6f7ff] text-[#00A0E9]'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {item.method === 'alipay' ? t('account.billing.method.alipay', 'Alipay') : t('account.billing.method.stripe', 'Stripe')}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 font-medium">{currencySymbol}{item.amount.toFixed(2)}</td>
                       <td className="py-2.5">
                         <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                          item.status === 'paid' || item.status === 'succeeded'
+                          item.status === 'paid'
                             ? 'bg-emerald-100 text-emerald-700'
-                            : item.status === 'open' || item.status === 'pending'
+                            : item.status === 'pending'
                               ? 'bg-amber-100 text-amber-700'
-                              : 'bg-gray-100 text-gray-600'
+                              : item.status === 'closed' || item.status === 'failed'
+                                ? 'bg-red-50 text-red-600'
+                                : 'bg-gray-100 text-gray-600'
                         }`}>
                           {item.status}
                         </span>
                       </td>
                       <td className="py-2.5">
-                        {link ? (
+                        {receiptLink ? (
                           <a
-                            href={link}
+                            href={receiptLink}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-indigo-600 hover:text-indigo-800 text-xs font-medium"
                           >
-                            {item.type === 'invoice'
-                              ? t('account.billing.viewInvoice', 'View')
-                              : t('account.billing.viewReceipt', 'Receipt')}
+                            {t('account.billing.viewReceipt', 'Receipt')}
                           </a>
+                        ) : item.orderNo ? (
+                          <span className="text-xs text-gray-400 font-mono">{item.orderNo.slice(-12)}</span>
                         ) : '—'}
                       </td>
                     </tr>

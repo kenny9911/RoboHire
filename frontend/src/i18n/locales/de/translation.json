@@ -1592,7 +1592,11 @@
       "empty": "Noch keine Rechnungshistorie.",
       "loading": "Rechnungshistorie wird geladen...",
       "viewInvoice": "Anzeigen",
-      "viewReceipt": "Beleg"
+      "viewReceipt": "Beleg",
+      "method": {
+        "alipay": "Alipay",
+        "stripe": "Stripe"
+      }
     }
   },
   "usage": {

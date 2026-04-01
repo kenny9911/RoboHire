@@ -2026,7 +2026,11 @@
       "empty": "暂无账单记录。",
       "loading": "加载账单历史...",
       "viewInvoice": "查看",
-      "viewReceipt": "收据"
+      "viewReceipt": "收据",
+      "method": {
+        "alipay": "支付宝",
+        "stripe": "Stripe"
+      }
     }
   },
   "usage": {
