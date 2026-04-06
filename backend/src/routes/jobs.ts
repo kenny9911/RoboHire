@@ -637,7 +637,6 @@ router.get('/', requireAuth, async (req, res) => {
       sortDir,
       companyName,
       dateRange,
-      includeAggregates,
     } = req.query;
 
     const scope = await getVisibilityScope(req.user!, teamView === 'true');
@@ -728,18 +727,17 @@ router.get('/', requireAuth, async (req, res) => {
       ? prisma.job.count({ where })
       : Promise.resolve<number | null>(null);
 
-    // Build a base visibility filter (without client/dateRange/search/status) for the company name dropdown
-    const baseWhere: any = {
-      ...await buildAdminOverrideFilter(
-        scope,
-        filterUserId as string | undefined,
-        filterTeamId as string | undefined,
-      ),
-    };
-
-    // Aggregate stats query (lightweight: runs on the same `where` filter, no joins)
-    const aggregatesPromise = includeAggregates === 'true'
+    // Aggregate stats for non-minimal responses (always computed — no opt-in needed)
+    const aggregatesPromise = !isMinimal
       ? (async () => {
+          // Base visibility filter (without client/dateRange/search/status) for company name dropdown
+          const baseWhere: any = {
+            ...await buildAdminOverrideFilter(
+              scope,
+              filterUserId as string | undefined,
+              filterTeamId as string | undefined,
+            ),
+          };
           const [agg, openCount, allJobIds, companyNames] = await Promise.all([
             prisma.job.aggregate({ where, _count: { _all: true }, _sum: { headcount: true } }),
             prisma.job.count({ where: { ...where, status: 'open' } }),

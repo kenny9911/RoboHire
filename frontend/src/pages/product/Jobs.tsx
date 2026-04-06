@@ -242,7 +242,7 @@ export default function Jobs() {
   const fetchJobs = useCallback(async (pageNum = 1) => {
     try {
       setLoading(true);
-      const params: Record<string, string | number> = { page: pageNum, limit: 20, includeAggregates: 'true' };
+      const params: Record<string, string | number> = { page: pageNum, limit: 20 };
       if (statusFilter) params.status = statusFilter;
       if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
       if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
