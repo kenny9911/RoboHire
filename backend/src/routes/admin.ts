@@ -1666,8 +1666,8 @@ router.post('/users/:userId/set-role', async (req, res) => {
   try {
     const { role, reason } = req.body;
 
-    if (role !== 'admin' && role !== 'user') {
-      res.status(400).json({ success: false, error: 'role must be "admin" or "user"' });
+    if (role !== 'admin' && role !== 'internal' && role !== 'user') {
+      res.status(400).json({ success: false, error: 'role must be "admin", "internal", or "user"' });
       return;
     }
     if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {

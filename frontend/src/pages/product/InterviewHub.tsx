@@ -367,7 +367,7 @@ export default function InterviewHub() {
           <RecruiterTeamFilter value={adminFilter} onChange={(f) => { setAdminFilter(f); setPage(1); }} />
 
           {/* Import CSV button (admin only) */}
-          {user?.role === 'admin' && (
+          {(user?.role === 'admin' || user?.role === 'internal') && (
             <>
               <input
                 ref={fileInputRef}

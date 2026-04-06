@@ -505,17 +505,35 @@ export default function GoHireEvaluation() {
   const [showResumeViewer, setShowResumeViewer] = useState(false);
   const [cheatingWarningCollapsed, setCheatingWarningCollapsed] = useState(false);
 
-  // Draggable panel divider
+  // Panel layout preference (persisted)
+  type PanelLayout = 'both' | 'left' | 'right';
+  const [panelLayout, setPanelLayout] = useState<PanelLayout>(() => {
+    try { return (localStorage.getItem('evalPanelLayout') as PanelLayout) || 'both'; } catch { return 'both'; }
+  });
+  const updateLayout = useCallback((layout: PanelLayout) => {
+    setPanelLayout(layout);
+    try { localStorage.setItem('evalPanelLayout', layout); } catch { /* silent */ }
+  }, []);
+
+  // Draggable panel dividers
   const [leftPanelPercent, setLeftPanelPercent] = useState(40);
-  const isDraggingDivider = useRef(false);
+  const [videoPanelPercent, setVideoPanelPercent] = useState(45);
+  const isDraggingDivider = useRef<'col' | 'row' | false>(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingDivider.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const pct = ((e.clientX - rect.left) / rect.width) * 100;
-      setLeftPanelPercent(Math.min(70, Math.max(25, pct)));
+      if (!isDraggingDivider.current) return;
+      if (isDraggingDivider.current === 'col' && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const pct = ((e.clientX - rect.left) / rect.width) * 100;
+        setLeftPanelPercent(Math.min(70, Math.max(25, pct)));
+      } else if (isDraggingDivider.current === 'row' && leftPanelRef.current) {
+        const rect = leftPanelRef.current.getBoundingClientRect();
+        const pct = ((e.clientY - rect.top) / rect.height) * 100;
+        setVideoPanelPercent(Math.min(75, Math.max(20, pct)));
+      }
     };
     const handleMouseUp = () => {
       if (isDraggingDivider.current) {
@@ -532,9 +550,9 @@ export default function GoHireEvaluation() {
     };
   }, []);
 
-  const startDraggingDivider = useCallback((e: React.MouseEvent) => {
+  const startDraggingCol = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    isDraggingDivider.current = true;
+    isDraggingDivider.current = 'col';
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
   }, []);
@@ -872,26 +890,51 @@ export default function GoHireEvaluation() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-slate-50">
       {/* Header */}
-      <header className="h-14 px-4 bg-white border-b border-slate-200 flex items-center justify-between flex-none">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+      <header className="h-16 px-5 bg-gradient-to-r from-white via-white to-slate-50 border-b border-slate-200/80 flex items-center justify-between flex-none">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
           <button
             onClick={() => navigate('/product/interview-hub')}
-            className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors flex-none"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition-colors flex-none rounded-lg hover:bg-slate-100 px-2 py-1.5 -ml-2"
           >
             <ArrowLeftIcon />
             {t('goHireEval.back', 'Back')}
           </button>
-          <span className="text-slate-300 flex-none">|</span>
+          <div className="w-px h-6 bg-slate-200 flex-none" />
           <div className="min-w-0">
-            <h1 className="text-sm sm:text-lg font-bold text-slate-800 truncate">
+            <h1 className="text-base font-bold text-slate-900 truncate">
               {interview.candidateName}
             </h1>
             {interview.jobTitle && (
-              <p className="text-xs text-slate-500 truncate">{interview.jobTitle}</p>
+              <p className="text-xs text-slate-500 truncate mt-0.5">{interview.jobTitle}</p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-3 flex-none print:hidden">
+          {/* Panel layout toggle */}
+          <div className="hidden lg:inline-flex items-center rounded-lg border border-slate-200 p-0.5">
+            <button
+              onClick={() => updateLayout('left')}
+              title={t('goHireEval.showLeft', 'Show resume only')}
+              className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors ${panelLayout === 'left' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="12" y1="3" x2="12" y2="21" /><line x1="7" y1="8" x2="10" y2="8" /><line x1="7" y1="12" x2="10" y2="12" /><line x1="7" y1="16" x2="10" y2="16" /></svg>
+            </button>
+            <button
+              onClick={() => updateLayout('both')}
+              title={t('goHireEval.showBoth', 'Show both panels')}
+              className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors ${panelLayout === 'both' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" /></svg>
+            </button>
+            <button
+              onClick={() => updateLayout('right')}
+              title={t('goHireEval.showRight', 'Show evaluation only')}
+              className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors ${panelLayout === 'right' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="12" y1="3" x2="12" y2="21" /><line x1="15" y1="8" x2="19" y2="8" /><line x1="15" y1="12" x2="19" y2="12" /><line x1="15" y1="16" x2="19" y2="16" /></svg>
+            </button>
+          </div>
+
           {interview.evaluationData && (
             <EvaluationShareExport
               interviewId={interview.id}
@@ -916,49 +959,49 @@ export default function GoHireEvaluation() {
       </header>
 
       {/* Main two-column layout */}
-      <div ref={containerRef} className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div ref={containerRef} className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-100 p-3 gap-3">
         {/* ================================================================ */}
         {/* LEFT PANEL - Video + Context Tabs                                */}
         {/* ================================================================ */}
-        <div className="w-full flex flex-col overflow-hidden" style={{ flex: `0 0 ${leftPanelPercent}%` }}>
+        {panelLayout !== 'right' && (
+        <div ref={leftPanelRef} className="w-full flex flex-col gap-4 overflow-hidden" style={panelLayout === 'both' ? { flex: `0 0 ${leftPanelPercent}%` } : undefined}>
           {/* Video player */}
-          <div className="bg-black flex-none">
-            <div className="aspect-video">
+          <div className="bg-gradient-to-b from-slate-900 to-slate-800 rounded-xl overflow-hidden border border-slate-200/80 shadow-sm" style={{ flex: `0 0 ${videoPanelPercent}%` }}>
               {interview.videoUrl ? (
                 <video
                   ref={videoRef}
                   src={interview.videoUrl}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   controls
                   poster="https://placehold.co/600x400/1e293b/94a3b8/png?text=Interview+Recording"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
-                  {t('goHireEval.noVideo', 'No video available')}
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-slate-500">
+                  <svg className="w-10 h-10 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  <span className="text-sm">{t('goHireEval.noVideo', 'No video available')}</span>
                 </div>
               )}
-            </div>
           </div>
 
           {/* Context tabs */}
-          <div className="flex-1 flex flex-col min-h-0 bg-white">
+          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
             {/* Tab buttons */}
-            <div className="flex border-b border-slate-200 flex-none">
+            <div className="flex gap-1 px-3 py-2 border-b border-slate-200 bg-slate-50/50 flex-none">
               {(['resume', 'jd', 'transcript'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                     activeTab === tab
-                      ? 'text-slate-800 border-b-2 border-cyan-600 bg-slate-50'
-                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                      ? 'text-slate-900 bg-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-white/60'
                   }`}
                 >
                   {tab === 'resume'
                     ? t('goHireEval.tabResume', '简历')
                     : tab === 'jd'
                     ? t('goHireEval.tabJD', '职位描述')
-                    : t('goHireEval.tabTranscript', '面试实录')}
+                    : t('goHireEval.tabTranscript', '面试记录')}
                 </button>
               ))}
             </div>
@@ -1272,26 +1315,30 @@ export default function GoHireEvaluation() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Draggable vertical divider */}
+        {panelLayout === 'both' && (
         <div
-          className="hidden lg:flex w-1.5 flex-none cursor-col-resize items-center justify-center group hover:bg-slate-200 active:bg-slate-300 transition-colors"
-          onMouseDown={startDraggingDivider}
+          className="hidden lg:flex w-1.5 flex-none cursor-col-resize items-center justify-center group rounded-full my-4 hover:bg-slate-200 active:bg-slate-300 transition-colors"
+          onMouseDown={startDraggingCol}
         >
-          <div className="w-px h-full bg-slate-300 group-hover:bg-slate-400 transition-colors" />
+          <div className="w-0.5 h-8 rounded-full bg-slate-300 group-hover:bg-slate-400 transition-colors" />
         </div>
+        )}
 
         {/* ================================================================ */}
         {/* RIGHT PANEL - Evaluation Report                                  */}
         {/* ================================================================ */}
-        <div className="w-full flex-1 flex flex-col overflow-hidden bg-white">
+        {panelLayout !== 'left' && (
+        <div className="w-full flex-1 flex flex-col overflow-hidden rounded-xl border border-slate-200/80 shadow-sm bg-gradient-to-b from-white to-slate-50">
           {/* Report header */}
-          <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100 flex-none">
+          <div className="px-5 py-4 flex items-center justify-between border-b border-slate-200/80 bg-white flex-none rounded-t-xl">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-purple-50 text-purple-600 rounded-md">
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-lg shadow-sm">
                 <BrainIcon className="w-4 h-4" />
               </div>
-              <h2 className="text-sm font-bold text-slate-800">
+              <h2 className="text-base font-bold text-slate-900">
                 {t('goHireEval.evaluation', 'Evaluation')}
               </h2>
             </div>
@@ -1299,7 +1346,7 @@ export default function GoHireEvaluation() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={toggleAll}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${allExpanded ? 'rotate-180' : ''}`} />
                   {allExpanded ? t('goHireEval.collapseAll', 'Collapse') : t('goHireEval.expandAll', 'Expand All')}
@@ -1307,9 +1354,9 @@ export default function GoHireEvaluation() {
                 <button
                   onClick={handleGenerateEvaluation}
                   disabled={isGenerating}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50"
                 >
-                  <RefreshIcon className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                  <RefreshIcon className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
                   {t('goHireEval.regenerate', 'Re-generate')}
                 </button>
               </div>
@@ -1320,16 +1367,21 @@ export default function GoHireEvaluation() {
           {!evaluation ? (
             /* ---------- Empty state ---------- */
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <BrainIcon className="w-12 h-12 text-slate-200 mb-4" />
-              <h3 className="text-lg font-medium text-slate-800 mb-2">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center mb-5">
+                <BrainIcon className="w-9 h-9 text-purple-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-1.5">
                 {isGenerating
                   ? t('goHireEval.generating', 'Generating evaluation...')
                   : t('goHireEval.noEvaluation', '暂无评估')}
               </h3>
+              <p className="text-sm text-slate-500 mb-6 max-w-xs">
+                {!isGenerating && t('goHireEval.noEvaluationDesc', 'Generate an AI-powered evaluation report based on the interview recording.')}
+              </p>
               <button
                 onClick={handleGenerateEvaluation}
                 disabled={isGenerating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-md shadow-purple-200 transition-all disabled:opacity-50"
               >
                 {isGenerating ? (
                   <>
@@ -1426,30 +1478,39 @@ export default function GoHireEvaluation() {
                   )}
 
                 {/* Score + Timestamps */}
-                <div className="px-5 py-4 bg-gray-50 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      {t('goHireEval.matchScore', 'Match Score')}
-                    </span>
-                    <span className="text-3xl font-bold text-cyan-600">{evaluation.score}<span className="text-lg text-gray-400 font-normal">/100</span></span>
+                <div className="px-5 py-5 bg-white flex items-center gap-6">
+                  {/* Score ring */}
+                  <div className="relative flex-none">
+                    <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                      <circle cx="40" cy="40" r="34" fill="none" stroke="#f1f5f9" strokeWidth="6" />
+                      <circle
+                        cx="40" cy="40" r="34" fill="none"
+                        stroke={evaluation.score >= 70 ? '#10b981' : evaluation.score >= 40 ? '#f59e0b' : '#ef4444'}
+                        strokeWidth="6" strokeLinecap="round"
+                        strokeDasharray={`${(evaluation.score / 100) * 213.6} 213.6`}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-xl font-bold text-slate-900">{evaluation.score}</span>
+                      <span className="text-[10px] text-slate-400 -mt-0.5">/100</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-slate-500">
+                  {/* Meta */}
+                  <div className="flex flex-col gap-1.5 text-xs text-slate-500 min-w-0">
                     {interview.interviewDatetime && (
-                      <div className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        <span>{t('goHireEval.interviewTime', '面试时间')}: {formatDatetime(interview.interviewDatetime)}</span>
-                        {interview.interviewEndDatetime && (
-                          <span>– {formatTime(interview.interviewEndDatetime)}</span>
-                        )}
-                        {interview.duration && (
-                          <span className="text-slate-400">({interview.duration}{t('goHireEval.minutes', '分钟')})</span>
-                        )}
+                      <div className="flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-400 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span className="truncate">
+                          {t('goHireEval.interviewTime', '面试时间')}: {formatDatetime(interview.interviewDatetime)}
+                          {interview.interviewEndDatetime && ` – ${formatTime(interview.interviewEndDatetime)}`}
+                          {interview.duration && ` (${interview.duration}${t('goHireEval.minutes', '分钟')})`}
+                        </span>
                       </div>
                     )}
                     {interview.updatedAt && interview.evaluationData && (
-                      <div className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        <span>{t('goHireEval.evaluationGenerated', '评估生成于')}: {formatDatetime(interview.updatedAt)}</span>
+                      <div className="flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-slate-400 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span className="truncate">{t('goHireEval.evaluationGenerated', '评估生成于')}: {formatDatetime(interview.updatedAt)}</span>
                       </div>
                     )}
                   </div>
@@ -1458,10 +1519,10 @@ export default function GoHireEvaluation() {
 
               {/* ---- Scrollable report body ---- */}
               <div className="flex-1 overflow-y-auto p-5 min-h-0">
-                <div className="space-y-5">
+                <div className="space-y-3">
                   {/* 1. Recommendation */}
                   <div
-                    className="rounded-lg bg-white shadow-md"
+                    className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <button onClick={() => toggleSection('recommendation')} className="w-full flex items-center justify-between p-4 text-left">
                       <h4 className="text-sm font-bold flex items-center gap-2 text-gray-900">
@@ -1507,7 +1568,7 @@ export default function GoHireEvaluation() {
 
                   {/* 3. Expert Insight */}
                   {(evaluation.levelAssessment || evaluation.expertAdvice) && (
-                    <div className="rounded-lg bg-white shadow-md">
+                    <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                       <button onClick={() => toggleSection('expertInsight')} className="w-full flex items-center justify-between p-4 text-left">
                         <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                           <LightbulbIcon className="w-4 h-4 text-purple-500" />
@@ -1539,7 +1600,7 @@ export default function GoHireEvaluation() {
 
                   {/* 4. Strengths & Weaknesses */}
                   {(evaluation.strengths.length > 0 || evaluation.weaknesses.length > 0) && (
-                    <div className="rounded-lg bg-white shadow-md">
+                    <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                       <button onClick={() => toggleSection('strengthsWeaknesses')} className="w-full flex items-center justify-between p-4 text-left">
                         <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                           <CheckCircleIcon className="w-4 h-4 text-green-500" />
@@ -1609,7 +1670,7 @@ export default function GoHireEvaluation() {
 
                   {/* 6. Technical Analysis */}
                   {evaluation.technicalAnalysis && (
-                    <div className="rounded-lg bg-white shadow-md">
+                    <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                       <button onClick={() => toggleSection('technical')} className="w-full flex items-center justify-between p-4 text-left">
                         <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                           <CodeIcon className="w-4 h-4 text-cyan-500" />
@@ -1735,7 +1796,7 @@ export default function GoHireEvaluation() {
                   {/* 7. Hard Requirements Check */}
                   {evaluation.jdMatch?.hardRequirementsAnalysis &&
                     evaluation.jdMatch.hardRequirementsAnalysis.length > 0 && (
-                      <div className="rounded-lg bg-white shadow-md">
+                      <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                         <button onClick={() => toggleSection('hardRequirements')} className="w-full flex items-center justify-between p-4 text-left">
                           <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                             <WarningIcon className="w-4 h-4 text-amber-500" />
@@ -1778,7 +1839,7 @@ export default function GoHireEvaluation() {
 
                   {/* 8. JD Requirements Match */}
                   {evaluation.jdMatch && (
-                    <div className="rounded-lg bg-white shadow-md">
+                    <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                       <button onClick={() => toggleSection('jdMatch')} className="w-full flex items-center justify-between p-4 text-left">
                         <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                           <ListCheckIcon className="w-4 h-4 text-teal-500" />
@@ -1845,7 +1906,7 @@ export default function GoHireEvaluation() {
 
                   {/* 9. Behavioral Analysis */}
                   {evaluation.behavioralAnalysis && (
-                    <div className="rounded-lg bg-white shadow-md">
+                    <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                       <button onClick={() => toggleSection('behavioral')} className="w-full flex items-center justify-between p-4 text-left">
                         <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                           <UsersIcon className="w-4 h-4 text-blue-500" />
@@ -1896,7 +1957,7 @@ export default function GoHireEvaluation() {
 
                   {/* 10. Interviewer's Kit */}
                   {evaluation.interviewersKit && (
-                    <div className="rounded-lg bg-white shadow-md">
+                    <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                       <button onClick={() => toggleSection('interviewersKit')} className="w-full flex items-center justify-between p-4 text-left">
                         <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                           <HelpCircleIcon className="w-4 h-4 text-indigo-500" />
@@ -1951,7 +2012,7 @@ export default function GoHireEvaluation() {
                   {/* 11. Suitable Work Types */}
                   {evaluation.suitableWorkTypes &&
                     evaluation.suitableWorkTypes.length > 0 && (
-                      <div className="rounded-lg bg-white shadow-md">
+                      <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                         <button onClick={() => toggleSection('suitableWorkTypes')} className="w-full flex items-center justify-between p-4 text-left">
                           <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                             <BriefcaseIcon className="w-4 h-4 text-slate-500" />
@@ -1976,7 +2037,7 @@ export default function GoHireEvaluation() {
 
                   {/* Personality Assessment (性格测试) */}
                   {evaluation.personalityAssessment && (
-                    <div className="rounded-lg bg-white shadow-md">
+                    <div className="rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
                       <button onClick={() => toggleSection('personality')} className="w-full flex items-center justify-between p-4 text-left">
                         <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                           <UsersIcon className="w-4 h-4 text-indigo-500" />
@@ -2104,6 +2165,7 @@ export default function GoHireEvaluation() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Resume Viewer Modal */}

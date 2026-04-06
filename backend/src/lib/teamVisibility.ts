@@ -3,11 +3,13 @@ import prisma from './prisma.js';
 export interface VisibilityScope {
   userIds: string[];
   isAdmin: boolean;
+  isInternal: boolean;
 }
 
 /**
  * Compute the set of user IDs whose data the current user can see.
  * - Admin: sees everything (isAdmin = true, empty userIds)
+ * - Internal: sees all interviews but scoped data for other entities
  * - Team member with teamView=true: sees own + all teammates' data
  * - Team member with teamView=false: sees only own data
  * - No team: sees only own data
@@ -18,11 +20,15 @@ export async function getVisibilityScope(user: {
   teamId?: string | null;
 }, teamView = true): Promise<VisibilityScope> {
   if (user.role === 'admin') {
-    return { userIds: [], isAdmin: true };
+    return { userIds: [], isAdmin: true, isInternal: false };
+  }
+
+  if (user.role === 'internal') {
+    return { userIds: [user.id], isAdmin: false, isInternal: true };
   }
 
   if (!user.teamId || !teamView) {
-    return { userIds: [user.id], isAdmin: false };
+    return { userIds: [user.id], isAdmin: false, isInternal: false };
   }
 
   const teammates = await prisma.user.findMany({
@@ -33,6 +39,7 @@ export async function getVisibilityScope(user: {
   return {
     userIds: teammates.map((t) => t.id),
     isAdmin: false,
+    isInternal: false,
   };
 }
 

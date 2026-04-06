@@ -633,6 +633,11 @@ router.get('/', requireAuth, async (req, res) => {
       limit = '20',
       fields,
       includeTotal,
+      sortBy,
+      sortDir,
+      companyName,
+      dateRange,
+      includeAggregates,
     } = req.query;
 
     const scope = await getVisibilityScope(req.user!, teamView === 'true');
@@ -649,6 +654,25 @@ router.get('/', requireAuth, async (req, res) => {
     if (hiringRequestId && typeof hiringRequestId === 'string') {
       where.hiringRequestId = hiringRequestId;
     }
+    if (companyName && typeof companyName === 'string') {
+      where.companyName = companyName;
+    }
+    if (dateRange && typeof dateRange === 'string' && dateRange !== 'all') {
+      const now = new Date();
+      let dateFrom: Date | null = null;
+      if (dateRange === 'today') {
+        dateFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (dateRange === 'week') {
+        const day = now.getDay();
+        const diffToMonday = (day + 6) % 7;
+        dateFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+      } else if (dateRange === 'month') {
+        dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      if (dateFrom) {
+        where.createdAt = { gte: dateFrom };
+      }
+    }
     if (title && typeof title === 'string') {
       where.title = title;
     } else if (search && typeof search === 'string') {
@@ -660,9 +684,17 @@ router.get('/', requireAuth, async (req, res) => {
       ];
     }
 
+    // Sorting
+    let orderBy: any = { createdAt: 'desc' };
+    if (sortBy === 'title') {
+      orderBy = { title: sortDir === 'desc' ? 'desc' : 'asc' };
+    } else if (sortBy === 'created') {
+      orderBy = { createdAt: sortDir === 'asc' ? 'asc' : 'desc' };
+    }
+
     const isMinimal = fields === 'minimal';
     const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
-    const maxPageSize = isMinimal ? 100 : 50;
+    const maxPageSize = isMinimal ? 500 : 50;
     const pageSize = Math.min(maxPageSize, Math.max(1, parseInt(limit as string, 10) || 20));
     const shouldIncludeTotal = includeTotal !== 'false';
     const queryTake = shouldIncludeTotal ? pageSize : pageSize + 1;
@@ -670,7 +702,7 @@ router.get('/', requireAuth, async (req, res) => {
     const jobsPromise = isMinimal
       ? prisma.job.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
+          orderBy,
           skip: (pageNum - 1) * pageSize,
           take: queryTake,
           select: {
@@ -684,7 +716,7 @@ router.get('/', requireAuth, async (req, res) => {
         })
       : prisma.job.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
+          orderBy,
           skip: (pageNum - 1) * pageSize,
           take: queryTake,
           include: {
@@ -696,7 +728,52 @@ router.get('/', requireAuth, async (req, res) => {
       ? prisma.job.count({ where })
       : Promise.resolve<number | null>(null);
 
-    const [jobs, total] = await Promise.all([jobsPromise, totalPromise]);
+    // Build a base visibility filter (without client/dateRange/search/status) for the company name dropdown
+    const baseWhere: any = {
+      ...await buildAdminOverrideFilter(
+        scope,
+        filterUserId as string | undefined,
+        filterTeamId as string | undefined,
+      ),
+    };
+
+    // Aggregate stats query (lightweight: runs on the same `where` filter, no joins)
+    const aggregatesPromise = includeAggregates === 'true'
+      ? (async () => {
+          const [agg, openCount, allJobIds, companyNames] = await Promise.all([
+            prisma.job.aggregate({ where, _count: { _all: true }, _sum: { headcount: true } }),
+            prisma.job.count({ where: { ...where, status: 'open' } }),
+            prisma.job.findMany({ where, select: { id: true, hiringRequestId: true } }),
+            // Distinct company names from ALL user's jobs (not filtered) for dropdown
+            prisma.job.findMany({
+              where: { ...baseWhere, companyName: { not: null } },
+              select: { companyName: true },
+              distinct: ['companyName'],
+              orderBy: { companyName: 'asc' },
+            }),
+          ]);
+          const ids = allJobIds.map((j) => j.id);
+          const hrIds = [...new Set(allJobIds.map((j) => j.hiringRequestId).filter((id): id is string => Boolean(id)))];
+          const [matchCount, interviewCount, completedCount, fitCount, hrInterviewCount, hrCompletedCount] = await Promise.all([
+            ids.length > 0 ? prisma.jobMatch.count({ where: { jobId: { in: ids } } }) : 0,
+            ids.length > 0 ? prisma.interview.count({ where: { jobId: { in: ids } } }) : 0,
+            ids.length > 0 ? prisma.interview.count({ where: { jobId: { in: ids }, status: 'completed' } }) : 0,
+            hrIds.length > 0 ? prisma.resumeJobFit.count({ where: { hiringRequestId: { in: hrIds } } }) : 0,
+            hrIds.length > 0 ? prisma.interview.count({ where: { hiringRequestId: { in: hrIds } } }) : 0,
+            hrIds.length > 0 ? prisma.interview.count({ where: { hiringRequestId: { in: hrIds }, status: 'completed' } }) : 0,
+          ]);
+          return {
+            openCount,
+            totalHeadcount: agg._sum.headcount ?? 0,
+            totalMatches: Math.max(matchCount, fitCount),
+            totalInterviews: Math.max(interviewCount, hrInterviewCount),
+            totalCompleted: Math.max(completedCount, hrCompletedCount),
+            companyNames: companyNames.map((c) => c.companyName).filter(Boolean) as string[],
+          };
+        })()
+      : Promise.resolve(null);
+
+    const [jobs, total, aggregates] = await Promise.all([jobsPromise, totalPromise, aggregatesPromise]);
     const hasMore = !shouldIncludeTotal && jobs.length > pageSize;
     const pageItems = hasMore ? jobs.slice(0, pageSize) : jobs;
 
@@ -734,6 +811,7 @@ router.get('/', requireAuth, async (req, res) => {
         totalPages: typeof total === 'number' ? Math.ceil(total / pageSize) : null,
         hasMore,
       },
+      ...(aggregates ? { aggregates } : {}),
     });
   } catch (error) {
     logger.error('JOBS', 'Failed to list jobs', { error: error instanceof Error ? error.message : String(error) }, requestId);
@@ -813,7 +891,6 @@ router.post('/', requireAuth, async (req, res) => {
         headcount: fields.headcount ? Math.max(1, parseInt(fields.headcount, 10) || 1) : 1,
         salaryMin: fields.salaryMin ? parseInt(fields.salaryMin, 10) : null,
         salaryMax: fields.salaryMax ? parseInt(fields.salaryMax, 10) : null,
-        salaryCurrency: fields.salaryCurrency?.trim() || 'USD',
         salaryPeriod: fields.salaryPeriod?.trim() || 'monthly',
         salaryText: fields.salaryText?.trim() || null,
         description: fields.description?.trim() || null,
@@ -830,6 +907,11 @@ router.post('/', requireAuth, async (req, res) => {
           fields.qualifications,
           fields.hardRequirements,
         ),
+        salaryCurrency: fields.salaryCurrency?.trim()
+          || LANG_CURRENCY_DEFAULT[resolveInterviewLanguage(
+              fields.interviewLanguage, fields.title, fields.description,
+              fields.qualifications, fields.hardRequirements)]
+          || 'USD',
         interviewDuration: fields.interviewDuration ? parseInt(fields.interviewDuration, 10) : 30,
         interviewRequirements: fields.interviewRequirements?.trim() || null,
         evaluationRules: fields.evaluationRules?.trim() || null,
@@ -1008,8 +1090,8 @@ router.post('/generate-content', requireAuth, async (req, res) => {
 router.post('/:id/generate-content', requireAuth, async (req, res) => {
   const requestId = req.requestId || generateRequestId();
   try {
-    const userId = req.user!.id;
-    const job = await prisma.job.findFirst({ where: { id: req.params.id, userId } });
+    const scope = await getVisibilityScope(req.user!);
+    const job = await prisma.job.findFirst({ where: { id: req.params.id, ...buildUserIdFilter(scope) } });
     if (!job) {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }

@@ -26,8 +26,8 @@ async function buildRecruiterEmailFilter(
   filterUserId?: string,
   filterTeamId?: string,
 ): Promise<Record<string, unknown>> {
-  // Admin with no filter → show all
-  if (scope.isAdmin && !filterUserId && !filterTeamId) return {};
+  // Admin or internal with no filter → show all
+  if ((scope.isAdmin || scope.isInternal) && !filterUserId && !filterTeamId) return {};
 
   let targetUserIds: string[];
   if (filterUserId) {

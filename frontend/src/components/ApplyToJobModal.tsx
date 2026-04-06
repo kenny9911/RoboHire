@@ -44,7 +44,7 @@ export default function ApplyToJobModal({ open, onClose, resumeId, resumeName, o
     setResult(null);
     setProgress(null);
     setLoading(true);
-    axios.get('/api/v1/jobs', { params: { limit: 200 } })
+    axios.get('/api/v1/jobs', { params: { limit: 200, fields: 'minimal', includeTotal: 'false' } })
       .then((res) => setJobs(res.data.data || []))
       .catch(() => setJobs([]))
       .finally(() => setLoading(false));

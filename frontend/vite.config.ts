@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const packageJsonPath = fileURLToPath(new URL('./package.json', import.meta.url));
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version?: string };
@@ -36,7 +40,12 @@ function releaseVersionPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), releaseVersionPlugin()],
+  plugins: [react(), tailwindcss(), releaseVersionPlugin()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
   define: {
     __APP_RELEASE__: JSON.stringify(releaseVersion),
   },

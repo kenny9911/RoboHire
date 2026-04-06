@@ -11,10 +11,10 @@ import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../compon
 import CandidatePreferencesModal, { type CandidatePreferences } from '../../components/CandidatePreferencesModal';
 import ApplyToJobModal from '../../components/ApplyToJobModal';
 import InterviewInviteModal from '../../components/InterviewInviteModal';
+import { getPreferredResumeEmail } from '../../utils/resumeContact';
 import { HiOutlineDocumentText } from 'react-icons/hi2';
 import { PiPaperPlaneTiltBold, PiBriefcaseBold } from 'react-icons/pi';
 import {
-  IconBriefcase,
   IconAdjustments,
   IconX,
   IconBookmark,
@@ -27,7 +27,6 @@ import {
   IconLayoutGrid,
   IconList,
   IconUsers,
-  IconMailForward,
   IconCircleCheck,
   IconExternalLink,
   IconCopy,
@@ -40,6 +39,7 @@ import {
   IconSparkles,
   IconCoin,
   IconHome,
+  IconFilter,
 } from '@tabler/icons-react';
 
 // Country/region list for filter dropdown — covers major hiring markets
@@ -737,12 +737,6 @@ function getExperienceValue(resume: Pick<Resume, 'experienceYears'> & { parsedDa
   return match ? parseFloat(match[1]) : null;
 }
 
-function formatDateTimeShort(dateStr: string | null): string {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-
 // ── Memoized Card Component ──
 const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, onApply, onInvite, onViewSummary, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; onInvite: (resume: EnrichedResume) => void; onViewSummary: (resumeId: string, name: string, summary: string) => void; t: (k: string, f: string) => string }) {
   const [cardCopied, setCardCopied] = useState(false);
@@ -750,359 +744,296 @@ const ResumeCard = memo(function ResumeCard({ resume, onDelete, onPreferences, o
   const ivStatus = resume.interviewStatus;
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+    <article className="grid grid-rows-subgrid row-span-4 rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+      {/* Row 1: Header — name, badges, role, action buttons */}
       <div className="min-w-0">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <Link to={`/product/talent/${resume.id}`} className="text-base font-bold text-slate-900 hover:text-blue-600 transition-colors">
-                  {resume.name}
-                </Link>
-                {resume._parseWarning && (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
-                    {t('product.talent.parseWarning', 'Needs review')}
-                  </span>
-                )}
-                {resume._jobCategory && (
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-700'}`}>
-                    {resume._jobCategory}
-                  </span>
-                )}
-                {ivStatus?.completed && (
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                    <IconCircleCheck size={11} stroke={2.5} className="mr-0.5 inline -mt-0.5" />
-                    {t('product.talent.interviewCompleted', 'Interviewed')}
-                  </span>
-                )}
-                {ivStatus?.invited && !ivStatus?.completed && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
-                    {t('product.talent.invited', 'Invited')}
-                  </span>
-                )}
-              </div>
-              <p className="mt-0.5 text-sm text-slate-500">
-                {resume.currentRole || t('product.talent.roleUnknown', 'Role not specified')}
-              </p>
-
-              {resume._topSkills.length > 0 && (
-                <p className="mt-2 text-sm text-slate-600">
-                  <span className="font-semibold text-slate-700">{t('product.talent.topSkills', 'Top Skills')}: </span>
-                  {resume._topSkills.join(', ')}
-                </p>
-              )}
-
-              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                {resume._isNew && (
-                  <span className="inline-flex items-center rounded bg-green-50 px-2 py-0.5 font-semibold text-green-700 border border-green-200">
-                    <IconSparkles size={11} stroke={2} className="mr-0.5 shrink-0" />
-                    {t('product.talent.badgeNew', 'New')}
-                  </span>
-                )}
-                {resume._eliteSchool && (
-                  <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-700 border border-amber-200">
-                    <IconSchool size={12} stroke={1.8} className="mr-1 shrink-0" />
-                    {resume._eliteSchool}
-                    {resume._degree && <span className="ml-1 font-medium text-amber-600">· {resume._degree.label}</span>}
-                  </span>
-                )}
-                {!resume._eliteSchool && resume._degree && (resume._degree.label === 'PhD' || resume._degree.label === 'MBA' || resume._degree.label === 'Master') && (
-                  <span className="inline-flex items-center rounded bg-violet-50 px-2 py-0.5 font-semibold text-violet-700 border border-violet-200">
-                    <IconCertificate size={12} stroke={1.8} className="mr-1 shrink-0" />
-                    {resume._degree.label}{resume._degree.field ? ` · ${resume._degree.field}` : ''}
-                  </span>
-                )}
-                {resume._currentCompany && (
-                  <span className="inline-flex items-center rounded bg-blue-50 px-2 py-0.5 font-semibold text-blue-700 border border-blue-100">
-                    <IconBuildingSkyscraper size={12} stroke={1.8} className="mr-1 shrink-0" />
-                    @ {resume._currentCompany}
-                  </span>
-                )}
-                {resume._experienceValue !== null && (
-                  <span className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-                    {resume._experienceValue} {t('product.talent.yearsWork', 'yrs')}
-                  </span>
-                )}
-                {resume._location && (
-                  <span className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-                    {resume._location}
-                  </span>
-                )}
-                {resume._notableCompanies.filter(c => c !== resume._currentCompany).map((company) => (
-                  <span key={company} className="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                    Ex-{company}
-                  </span>
-                ))}
-                {resume._salaryDisplay && (
-                  <span className="inline-flex items-center rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700 border border-emerald-200">
-                    <IconCoin size={11} stroke={1.8} className="mr-0.5 shrink-0" />
-                    {resume._salaryDisplay}
-                  </span>
-                )}
-                {resume._workType && (
-                  <span className="inline-flex items-center rounded bg-sky-50 px-2 py-0.5 font-medium text-sky-700">
-                    <IconHome size={11} stroke={1.8} className="mr-0.5 shrink-0" />
-                    {t(`product.talent.preferences.workTypes.${resume._workType}`, resume._workType)}
-                  </span>
-                )}
-                {resume._languages.slice(0, 2).map((entry) => (
-                  <span key={`${entry.language}-${entry.proficiency || ''}`} className="rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
-                    {entry.language}
-                  </span>
-                ))}
-                {resume._versionCount != null && resume._versionCount > 0 && (
-                  <span className="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
-                    <IconFiles size={12} stroke={1.8} className="mr-1" />
-                    {resume._versionCount}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-0.5 shrink-0">
-              <Link to={`/product/talent/${resume.id}`} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.viewProfile', 'View Full Profile')}>
-                <HiOutlineDocumentText size={16} />
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link to={`/product/talent/${resume.id}`} className="text-base font-bold text-slate-900 hover:text-blue-600 transition-colors">
+                {resume.name}
               </Link>
-              <button onClick={() => onInvite(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.inviteToInterview', 'Invite')}>
-                <PiPaperPlaneTiltBold size={15} />
+              {resume._parseWarning && (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                  {t('product.talent.parseWarning', 'Needs review')}
+                </span>
+              )}
+              {resume._jobCategory && (
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-700'}`}>
+                  {resume._jobCategory}
+                </span>
+              )}
+              {ivStatus?.completed && (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                  <IconCircleCheck size={11} stroke={2.5} className="mr-0.5 inline -mt-0.5" />
+                  {t('product.talent.interviewCompleted', 'Interviewed')}
+                </span>
+              )}
+              {ivStatus?.invited && !ivStatus?.completed && (
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                  {t('product.talent.invited', 'Invited')}
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 text-sm text-slate-500">
+              {resume.currentRole || t('product.talent.roleUnknown', 'Role not specified')}
+            </p>
+          </div>
+          {/* Action buttons */}
+          <div className="flex items-center gap-0.5 shrink-0">
+            <Link to={`/product/talent/${resume.id}`} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.viewProfile', 'View Full Profile')}>
+              <HiOutlineDocumentText size={16} />
+            </Link>
+            <button onClick={() => onInvite(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.inviteToInterview', 'Invite')}>
+              <PiPaperPlaneTiltBold size={15} />
+            </button>
+            <button onClick={() => onApply(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.applyToJob', 'Apply to Job')}>
+              <PiBriefcaseBold size={15} />
+            </button>
+            <button onClick={() => onPreferences(resume)} className={`p-1.5 rounded-lg transition-colors ${hasPrefs ? 'text-blue-600 hover:bg-blue-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} title={t('product.talent.preferences.title', 'Preferences')}>
+              <IconAdjustments size={16} stroke={1.5} />
+            </button>
+            {!resume.hasInvitations && (
+              <button onClick={() => onDelete(resume.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title={t('common.delete', 'Delete')}>
+                <IconX size={16} stroke={1.5} />
               </button>
-              <button onClick={() => onApply(resume)} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title={t('product.talent.applyToJob', 'Apply to Job')}>
-                <PiBriefcaseBold size={15} />
-              </button>
-              <button onClick={() => onPreferences(resume)} className={`p-1.5 rounded-lg transition-colors ${hasPrefs ? 'text-blue-600 hover:bg-blue-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`} title={t('product.talent.preferences.title', 'Preferences')}>
-                <IconAdjustments size={16} stroke={1.5} />
-              </button>
-              {!resume.hasInvitations && (
-                <button onClick={() => onDelete(resume.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title={t('common.delete', 'Delete')}>
-                  <IconX size={16} stroke={1.5} />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2: Top Skills */}
+      <div className="min-w-0">
+        {resume._topSkills.length > 0 && (
+          <p className="text-sm text-slate-600">
+            <span className="font-semibold text-slate-700">{t('product.talent.topSkills', 'Top Skills')}: </span>
+            {resume._topSkills.join(', ')}
+          </p>
+        )}
+      </div>
+
+      {/* Row 3: Tags */}
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          {resume._isNew && (
+            <span className="inline-flex items-center rounded bg-green-50 px-2 py-0.5 font-semibold text-green-700 border border-green-200">
+              <IconSparkles size={11} stroke={2} className="mr-0.5 shrink-0" />
+              {t('product.talent.badgeNew', 'New')}
+            </span>
+          )}
+          {resume._eliteSchool && (
+            <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-700 border border-amber-200">
+              <IconSchool size={12} stroke={1.8} className="mr-1 shrink-0" />
+              {resume._eliteSchool}
+              {resume._degree && <span className="ml-1 font-medium text-amber-600">· {resume._degree.label}</span>}
+            </span>
+          )}
+          {!resume._eliteSchool && resume._degree && (resume._degree.label === 'PhD' || resume._degree.label === 'MBA' || resume._degree.label === 'Master') && (
+            <span className="inline-flex items-center rounded bg-violet-50 px-2 py-0.5 font-semibold text-violet-700 border border-violet-200">
+              <IconCertificate size={12} stroke={1.8} className="mr-1 shrink-0" />
+              {resume._degree.label}{resume._degree.field ? ` · ${resume._degree.field}` : ''}
+            </span>
+          )}
+          {resume._currentCompany && (
+            <span className="inline-flex items-center rounded bg-blue-50 px-2 py-0.5 font-semibold text-blue-700 border border-blue-100">
+              <IconBuildingSkyscraper size={12} stroke={1.8} className="mr-1 shrink-0" />
+              @ {resume._currentCompany}
+            </span>
+          )}
+          {resume._experienceValue !== null && (
+            <span className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+              {resume._experienceValue} {t('product.talent.yearsWork', 'yrs')}
+            </span>
+          )}
+          {resume._location && (
+            <span className="rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+              {resume._location}
+            </span>
+          )}
+          {resume._notableCompanies.filter(c => c !== resume._currentCompany).map((company) => (
+            <span key={company} className="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
+              Ex-{company}
+            </span>
+          ))}
+          {resume._salaryDisplay && (
+            <span className="inline-flex items-center rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700 border border-emerald-200">
+              <IconCoin size={11} stroke={1.8} className="mr-0.5 shrink-0" />
+              {resume._salaryDisplay}
+            </span>
+          )}
+          {resume._workType && (
+            <span className="inline-flex items-center rounded bg-sky-50 px-2 py-0.5 font-medium text-sky-700">
+              <IconHome size={11} stroke={1.8} className="mr-0.5 shrink-0" />
+              {t(`product.talent.preferences.workTypes.${resume._workType}`, resume._workType)}
+            </span>
+          )}
+          {resume._languages.slice(0, 2).map((entry) => (
+            <span key={`${entry.language}-${entry.proficiency || ''}`} className="rounded bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+              {entry.language}
+            </span>
+          ))}
+          {resume._versionCount != null && resume._versionCount > 0 && (
+            <span className="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 font-medium text-slate-600">
+              <IconFiles size={12} stroke={1.8} className="mr-1" />
+              {resume._versionCount}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Row 4: AI Summary + Notes */}
+      <div className="min-w-0">
+        <div className="relative rounded-xl bg-blue-50 border border-blue-100 p-4">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs font-semibold text-blue-500">
+              {t('product.talent.aiSummary', 'AI Summary')}:
+            </p>
+            <div className="flex items-center gap-0.5 shrink-0">
+              {resume._matchSummary && (
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(resume._matchSummary || '');
+                    setCardCopied(true);
+                    setTimeout(() => setCardCopied(false), 2000);
+                  }}
+                  className="rounded-md p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-colors"
+                  title={t('product.talent.copySummary', 'Copy summary')}
+                >
+                  {cardCopied ? <IconCheck size={14} stroke={2} /> : <IconCopy size={14} stroke={1.8} />}
+                </button>
+              )}
+              {resume._matchSummary && resume._matchSummary.length > 120 && (
+                <button
+                  onClick={() => onViewSummary(resume.id, resume.name, resume._matchSummary || '')}
+                  className="rounded-md p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-colors"
+                  title={t('product.talent.viewFullSummary', 'View full summary')}
+                >
+                  <IconExternalLink size={14} stroke={1.8} />
                 </button>
               )}
             </div>
           </div>
-
-          {/* AI Summary box */}
-          <div className="mt-3">
-            <div className="relative rounded-xl bg-blue-50 border border-blue-100 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-xs font-semibold text-blue-500">
-                  {t('product.talent.aiSummary', 'AI Summary')}:
-                </p>
-                <div className="flex items-center gap-0.5 shrink-0">
-                  {resume._matchSummary && (
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(resume._matchSummary || '');
-                        setCardCopied(true);
-                        setTimeout(() => setCardCopied(false), 2000);
-                      }}
-                      className="rounded-md p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-colors"
-                      title={t('product.talent.copySummary', 'Copy summary')}
-                    >
-                      {cardCopied ? <IconCheck size={14} stroke={2} /> : <IconCopy size={14} stroke={1.8} />}
-                    </button>
-                  )}
-                  {resume._matchSummary && resume._matchSummary.length > 120 && (
-                    <button
-                      onClick={() => onViewSummary(resume.id, resume.name, resume._matchSummary || '')}
-                      className="rounded-md p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-colors"
-                      title={t('product.talent.viewFullSummary', 'View full summary')}
-                    >
-                      <IconExternalLink size={14} stroke={1.8} />
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="mt-1 text-sm leading-relaxed text-slate-800 line-clamp-3 prose prose-sm prose-slate max-w-none [&>ul]:list-disc [&>ul]:pl-4 [&>ul]:my-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>ol]:my-1 [&>p]:my-0.5">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{resume._matchSummary || ''}</ReactMarkdown>
-              </div>
-              {resume._matchScore !== null && (
-                <p className="mt-2 text-sm font-bold text-slate-900">
-                  {resume._matchScore}% {t('product.talent.aiMatchScore', 'AI Match Score')}.
-                </p>
-              )}
-              {resume._bestFitTitle && (
-                <p className="mt-1 text-xs text-blue-500">
-                  {t('product.talent.bestMatch', 'Best match')}: {resume._bestFitTitle}
-                </p>
-              )}
-            </div>
-
+          <div className="mt-1 text-sm leading-relaxed text-slate-800 line-clamp-3 prose prose-sm prose-slate max-w-none [&>ul]:list-disc [&>ul]:pl-4 [&>ul]:my-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>ol]:my-1 [&>p]:my-0.5">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{resume._matchSummary || ''}</ReactMarkdown>
           </div>
-
-          {resume.notes && (
-            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
-              <IconBookmark className="mr-1.5 inline-block -translate-y-px" size={13} stroke={2} />
-              {resume.notes}
+          {resume._matchScore !== null && (
+            <p className="mt-2 text-sm font-bold text-slate-900">
+              {resume._matchScore}% {t('product.talent.aiMatchScore', 'AI Match Score')}.
             </p>
           )}
+          {resume._bestFitTitle && (
+            <p className="mt-1 text-xs text-blue-500">
+              {t('product.talent.bestMatch', 'Best match')}: {resume._bestFitTitle}
+            </p>
+          )}
+        </div>
+        {resume.notes && (
+          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            <IconBookmark className="mr-1.5 inline-block -translate-y-px" size={13} stroke={2} />
+            {resume.notes}
+          </p>
+        )}
       </div>
     </article>
   );
 });
 
 // ── Memoized List Row Component ──
-const ResumeListRow = memo(function ResumeListRow({ resume, onDelete, onPreferences, onApply, onInvite, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; onInvite: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
-  const hasPrefs = resume.preferences && Object.values(resume.preferences).some(v => v && (Array.isArray(v) ? v.length > 0 : String(v).trim()));
+const ResumeListRow = memo(function ResumeListRow({ resume, onDelete: _onDelete, onPreferences: _onPreferences, onApply: _onApply, onInvite, t }: { resume: EnrichedResume; onDelete: (id: string) => void; onPreferences: (resume: EnrichedResume) => void; onApply: (resume: EnrichedResume) => void; onInvite: (resume: EnrichedResume) => void; t: (k: string, f: string) => string }) {
   const ivStatus = resume.interviewStatus;
+  const bestFit = resume.resumeJobFits?.[0];
+  const aiScore = bestFit?.fitScore ?? resume._matchScore;
+
+  // Status label
+  const statusLabel = ivStatus?.completed
+    ? t('product.talent.statusCompleted', 'Completed')
+    : ivStatus?.invited
+      ? t('product.talent.statusInvited', 'Invited')
+      : resume._isNew
+        ? t('product.talent.badgeNew', 'New')
+        : t('product.talent.statusActive', 'Active');
+  const statusColor = ivStatus?.completed
+    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    : ivStatus?.invited
+      ? 'bg-blue-50 text-blue-700 border-blue-200'
+      : resume._isNew
+        ? 'bg-purple-50 text-purple-700 border-purple-200'
+        : 'bg-slate-50 text-slate-600 border-slate-200';
+
+  // Source (from tags or fallback)
+  const source = resume.tags.find(tag => ['LinkedIn', 'Referral', 'Job Board', 'AI Sourced', 'Agency', 'Direct'].includes(tag)) || '—';
+
+  // Date
+  const dateStr = new Date(resume.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
   return (
     <Link
       to={`/product/talent/${resume.id}`}
-      className="group px-4 sm:px-5 py-4 hover:bg-slate-50/50 transition-colors flex items-center gap-3 sm:gap-4 block"
+      className="group grid grid-cols-[minmax(220px,2fr)_minmax(160px,1.5fr)_90px_100px_120px_90px_80px] min-w-[900px] gap-2 items-center px-5 py-3.5 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors"
     >
-      <div className="min-w-0 w-32 sm:w-48 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
-            {resume.name}
-          </span>
-          {resume._isNew && (
-            <span className="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 border border-green-200">
-              <IconSparkles size={10} stroke={2} className="mr-0.5" />
-              {t('product.talent.badgeNew', 'New')}
-            </span>
-          )}
-          {resume._parseWarning && (
-            <span className="inline-flex shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
-              {t('product.talent.parseWarning', 'Needs review')}
-            </span>
-          )}
-          {resume._jobCategory && (
-            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold shrink-0 ${CATEGORY_COLORS[resume._jobCategory] || 'bg-slate-100 text-slate-700'}`}>
-              {resume._jobCategory}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          {resume.currentRole && (
-            <p className="text-sm text-slate-600 truncate">{resume.currentRole}</p>
-          )}
-          {resume._eliteSchool && (
-            <span className="inline-flex shrink-0 items-center rounded bg-amber-50 px-1.5 py-0 text-[10px] font-semibold text-amber-700 border border-amber-200">
-              <IconSchool size={10} stroke={1.8} className="mr-0.5" />
-              {resume._eliteSchool}
-            </span>
-          )}
-          {!resume._eliteSchool && resume._degree && (resume._degree.label === 'PhD' || resume._degree.label === 'MBA') && (
-            <span className="inline-flex shrink-0 items-center rounded bg-violet-50 px-1.5 py-0 text-[10px] font-semibold text-violet-700 border border-violet-200">
-              {resume._degree.label}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="hidden xl:block min-w-0 flex-1">
-        {resume._parseWarning ? (
-          <p className="text-sm text-amber-700 truncate">
-            {t('product.talent.parseWarningDesc', 'This resume was not parsed reliably. Review the original file before matching or inviting.')}
-          </p>
-        ) : resume.summary && !isLowSignalSummary(resume.summary) ? (
-          <p className="text-sm text-slate-600 truncate">{resume.summary}</p>
-        ) : resume._highlight ? (
-          <p className="text-sm text-slate-500 truncate">{resume._highlight}</p>
-        ) : null}
-        {resume.notes && (
-          <p className="text-xs text-amber-600 truncate mt-0.5">
-            <IconBookmark className="w-3 h-3 inline-block mr-0.5 -mt-0.5" size={12} stroke={2} />
-            {resume.notes.slice(0, 60)}{resume.notes.length > 60 ? '...' : ''}
-          </p>
-        )}
-      </div>
-
-      <div className="hidden lg:flex gap-1.5 shrink-0 max-w-[220px] flex-wrap">
-        {resume._topSkills.slice(0, 3).map((skill) => (
-          <span key={skill} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-            {skill}
-          </span>
-        ))}
-        {resume._topSkills.length > 3 && (
-          <span className="text-xs text-slate-500">+{resume._topSkills.length - 3}</span>
-        )}
-      </div>
-
-      <div className="hidden md:block shrink-0 w-28 text-sm text-slate-600">
-        {resume._workExp ? (
-          <div>
-            {resume._workExp.fullTimeYears > 0 && (
-              <span>{resume._workExp.fullTimeYears} {t('product.talent.yearsWork', 'yrs')}</span>
-            )}
-            {resume._workExp.internshipMonths > 0 && (
-              <span className="text-slate-500 block text-xs">+ {resume._workExp.internshipMonths} {t('product.talent.monthsIntern', 'mo intern')}</span>
-            )}
+      {/* Name + Email */}
+      <div className="min-w-0">
+        <div className="flex items-center gap-1.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+            {resume.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
           </div>
-        ) : resume.experienceYears ? (
-          <span>{resume.experienceYears}</span>
-        ) : (
-          <span className="text-slate-400">—</span>
-        )}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 transition-colors truncate">{resume.name}</p>
+            <p className="text-xs text-slate-400 truncate">{resume.email || '—'}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="hidden lg:flex gap-1.5 shrink-0 max-w-[200px] flex-wrap">
-        {resume._currentCompany && (
-          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 border border-blue-100">
-            @ {resume._currentCompany}
-          </span>
-        )}
-        {resume._notableCompanies.filter(c => c !== resume._currentCompany).map((company) => (
-          <span key={company} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
-            Ex-{company}
-          </span>
-        ))}
+      {/* Current Title / Company */}
+      <div className="min-w-0">
+        <p className="text-sm text-slate-700 truncate">{resume.currentRole || '—'}</p>
+        <p className="text-xs text-slate-400 truncate">{resume._currentCompany || ''}</p>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0 ml-auto">
-        {ivStatus?.completed ? (
-          <span
-            className="p-1 rounded text-emerald-600 bg-emerald-50"
-            title={`${t('product.talent.interviewCompleted', 'Interview completed')}: ${formatDateTimeShort(ivStatus.completedAt)}${ivStatus.durationSeconds ? ` (${Math.round(ivStatus.durationSeconds / 60)} min)` : ''}`}
-          >
-            <IconCircleCheck size={16} stroke={2} />
-          </span>
-        ) : ivStatus?.invited ? (
-          <span
-            className="p-1 rounded text-blue-600 bg-blue-50"
-            title={t('product.talent.interviewInvitedTooltip', 'Interview invitation has been sent. Awaiting candidate response.')}
-          >
-            <IconMailForward size={16} stroke={2} />
-          </span>
-        ) : (
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInvite(resume); }}
-            className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-            title={t('product.talent.inviteToInterviewTooltip', 'Invite this candidate to an AI interview. Navigate to arrange and send the invitation.')}
-          >
-            <IconSend size={16} stroke={1.5} />
-          </button>
-        )}
-        {resume._versionCount != null && resume._versionCount > 0 && (
-          <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-0.5 mr-1">
-            <IconFiles size={14} stroke={1.5} />
-            {resume._versionCount}
-          </span>
-        )}
-        <span className="p-1 rounded-lg text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" title={t('product.talent.viewProfile', 'View Profile')}>
-          <IconExternalLink size={16} stroke={2} />
+      {/* Status */}
+      <div>
+        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${statusColor}`}>
+          {statusLabel}
         </span>
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onApply(resume); }}
-          className="p-1.5 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-          title={t('product.talent.applyToJob', 'Apply to Job')}
-        >
-          <IconBriefcase size={16} stroke={1.5} />
-        </button>
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreferences(resume); }}
-          className={`p-1.5 rounded transition-colors ${hasPrefs ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
-          title={t('product.talent.preferences.title', 'Candidate Preferences')}
-        >
-          <IconAdjustments size={16} stroke={1.5} />
-        </button>
-        {!resume.hasInvitations && (
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(resume.id); }}
-            className="p-1.5 rounded text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <IconX size={16} stroke={1.5} />
-          </button>
+      </div>
+
+      {/* Source */}
+      <div>
+        <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600">
+          {source}
+        </span>
+      </div>
+
+      {/* Date */}
+      <div className="text-sm text-slate-600">{dateStr}</div>
+
+      {/* AI Score */}
+      <div>
+        {aiScore != null && aiScore > 0 ? (
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${aiScore >= 80 ? 'border-purple-200 bg-purple-50 text-purple-700' : 'text-slate-600'}`}>
+            {aiScore >= 80 && <IconSparkles size={11} stroke={2} />}
+            {aiScore}%
+          </span>
+        ) : (
+          <span className="text-sm text-slate-400">—</span>
         )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-0.5">
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInvite(resume); }}
+          className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          title={t('product.talent.inviteToInterviewTooltip', 'Invite to interview')}
+        >
+          <IconSend size={15} stroke={1.5} />
+        </button>
+        <span
+          className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          title={t('product.talent.viewProfile', 'View')}
+        >
+          <IconExternalLink size={15} stroke={1.5} />
+        </span>
       </div>
     </Link>
   );
@@ -1181,7 +1112,7 @@ export default function TalentHub() {
   const [summaryRegenJobId, setSummaryRegenJobId] = useState('');
   const [summaryRegenerating, setSummaryRegenerating] = useState(false);
   const [summaryCopied, setSummaryCopied] = useState(false);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [expYearsMin, setExpYearsMin] = useState('');
   const [expYearsMax, setExpYearsMax] = useState('');
@@ -1197,14 +1128,13 @@ export default function TalentHub() {
   const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
   const [filterSkills, setFilterSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
   const [stats, setStats] = useState<{ total: number; thisWeek: number; analyzed: number; matchedCount: number; interviewedCount: number } | null>(null);
 
   useEffect(() => {
-    axios.get('/api/v1/jobs', { params: { limit: 200 } })
+    axios.get('/api/v1/jobs', { params: { limit: 200, fields: 'minimal', includeTotal: 'false' } })
       .then((res) => setJobs(res.data.data || []))
-      .catch(() => {});
-    axios.get('/api/v1/resumes/stats')
-      .then((res) => setStats(res.data.data))
       .catch(() => {});
   }, []);
 
@@ -1237,11 +1167,11 @@ export default function TalentHub() {
     filterSkills,
   };
 
-  const fetchResumes = useCallback(async (query?: string, pageNum = 1) => {
+  const fetchResumes = useCallback(async (query?: string, pageNum = 1, options?: { silent?: boolean }) => {
     try {
-      setLoading(true);
+      if (!options?.silent) setLoading(true);
       const f = filtersRef.current;
-      const params: Record<string, string | number> = { limit: PAGE_SIZE, page: pageNum };
+      const params: Record<string, string | number> = { limit: PAGE_SIZE, page: pageNum, includeStats: 'true' };
       if (query) params.search = query;
       if (f.expYearsMin) params.expYearsMin = f.expYearsMin;
       if (f.expYearsMax) params.expYearsMax = f.expYearsMax;
@@ -1263,6 +1193,7 @@ export default function TalentHub() {
         setTotalPages(pag.totalPages || 1);
         setTotalCount(pag.total || 0);
       }
+      if (res.data.stats) setStats(res.data.stats);
       setPage(pageNum);
     } catch {
       // silently fail
@@ -1272,8 +1203,11 @@ export default function TalentHub() {
   }, []);
 
   useEffect(() => {
-    if (resumes.length === 0) fetchResumes();
-  }, [fetchResumes, resumes.length]);
+    // Always fetch on mount to get fresh stats and data.
+    // Cached resumes from usePageState render immediately while this loads.
+    fetchResumes(undefined, 1, resumes.length > 0 ? { silent: true } : undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const backfillTriggered = useRef(false);
   useEffect(() => {
@@ -1283,7 +1217,7 @@ export default function TalentHub() {
 
     backfillTriggered.current = true;
     axios.post('/api/v1/resumes/backfill-highlights')
-      .then(() => fetchResumes(search || undefined, page))
+      .then(() => fetchResumes(search || undefined, page, { silent: true }))
       .catch(() => {});
   }, [fetchResumes, page, resumes, search]);
 
@@ -1407,6 +1341,18 @@ export default function TalentHub() {
       setConfirmDeleteId(null);
     }
   }, [confirmDeleteId]);
+
+  // Close filter panel on click outside
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (filterPanelRef.current && !filterPanelRef.current.contains(e.target as Node)) {
+        setFiltersOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [filtersOpen]);
 
   const enrichedResumes = useMemo(() => {
     return resumes.map((resume) => {
@@ -1549,27 +1495,27 @@ export default function TalentHub() {
       {/* Search + Stats header */}
       <section className="rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">
-              {t('product.talent.title', 'Talent Hub')}
-            </h2>
+          <h2 className="text-2xl font-bold text-slate-900">
+            {t('product.talent.title', 'Talent Hub')}
+          </h2>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:justify-end">
+            {user?.role === 'admin' && (
+              <div className="min-w-[240px]">
+                <RecruiterTeamFilter
+                  value={recruiterFilter}
+                  onChange={(next) => setRecruiterFilter(next)}
+                />
+              </div>
+            )}
             <button
               onClick={() => setShowUpload(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
             >
               <IconUpload size={15} stroke={2} />
               {t('product.talent.upload', 'Upload Resumes')}
             </button>
           </div>
-
-          {user?.role === 'admin' && (
-            <div className="min-w-[240px]">
-              <RecruiterTeamFilter
-                value={recruiterFilter}
-                onChange={(next) => setRecruiterFilter(next)}
-              />
-            </div>
-          )}
         </div>
 
         <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center">
@@ -1613,14 +1559,80 @@ export default function TalentHub() {
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="xl:sticky xl:top-20 xl:self-start">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-900">
-                {t('product.talent.filters', 'Filters')}
-              </h3>
+      <div>
+
+        <section className="space-y-4">
+          {/* Sort bar + view toggle + filter button */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-500">
+                {loading
+                  ? t('product.talent.loadingResults', 'Refreshing…')
+                  : t('product.talent.filteredResults', 'Showing {{count}} Candidates', { count: totalCount })}
+              </span>
+              {activeFilterLabels.length > 0 && (
+                <div className="hidden lg:flex flex-wrap gap-1.5">
+                  {activeFilterLabels.map((label) => (
+                    <span key={label} className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center rounded-lg border border-slate-200 p-0.5">
+                <button
+                  onClick={() => setViewMode('card')}
+                  className={`inline-flex h-8 items-center justify-center rounded-md px-2.5 text-sm font-medium transition-colors ${
+                    viewMode === 'card' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  <IconLayoutGrid size={15} stroke={1.8} className="mr-1.5" />
+                  {t('product.talent.viewCard', 'Cards')}
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`inline-flex h-8 items-center justify-center rounded-md px-2.5 text-sm font-medium transition-colors ${
+                    viewMode === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  <IconList size={15} stroke={1.8} className="mr-1.5" />
+                  {t('product.talent.viewList', 'List')}
+                </button>
+              </div>
+
+              {/* Filter toggle button */}
+              <div className="relative" ref={filterPanelRef}>
+                <button
+                  onClick={() => setFiltersOpen((prev) => !prev)}
+                  className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${
+                    filtersOpen || activeFilterCount > 0
+                      ? 'border-blue-300 bg-blue-50 text-blue-700'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <IconFilter size={15} stroke={1.8} />
+                  {t('product.talent.filters', 'Filters')}
+                  {activeFilterCount > 0 && (
+                    <span className="ml-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Filter dropdown panel */}
+                {filtersOpen && (
+                  <div className="absolute right-0 top-full mt-2 z-50 w-80 max-h-[calc(100vh-200px)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-semibold text-slate-900">
+                        {t('product.talent.filters', 'Filters')}
+                      </h3>
+                      <button onClick={() => setFiltersOpen(false)} className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                        <IconX size={16} stroke={2} />
+                      </button>
+                    </div>
 
             <div className="mt-5 space-y-5">
               {/* Skills */}
@@ -1887,55 +1899,14 @@ export default function TalentHub() {
 
               <button
                 type="button"
-                onClick={applyFilters}
+                onClick={() => { applyFilters(); setFiltersOpen(false); }}
                 className="w-full rounded-lg bg-blue-500 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
               >
                 {t('product.talent.applyFilters', 'Apply Filters')}
               </button>
             </div>
-          </div>
-        </aside>
-
-        <section className="space-y-4">
-          {/* Sort bar + view toggle */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-500">
-                {loading
-                  ? t('product.talent.loadingResults', 'Refreshing…')
-                  : t('product.talent.filteredResults', 'Showing {{count}} Candidates', { count: totalCount })}
-              </span>
-              {activeFilterLabels.length > 0 && (
-                <div className="hidden lg:flex flex-wrap gap-1.5">
-                  {activeFilterLabels.map((label) => (
-                    <span key={label} className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="inline-flex items-center rounded-lg border border-slate-200 p-0.5">
-                <button
-                  onClick={() => setViewMode('card')}
-                  className={`inline-flex h-8 items-center justify-center rounded-md px-2.5 text-sm font-medium transition-colors ${
-                    viewMode === 'card' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  <IconLayoutGrid size={15} stroke={1.8} className="mr-1.5" />
-                  {t('product.talent.viewCard', 'Cards')}
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`inline-flex h-8 items-center justify-center rounded-md px-2.5 text-sm font-medium transition-colors ${
-                    viewMode === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  <IconList size={15} stroke={1.8} className="mr-1.5" />
-                  {t('product.talent.viewList', 'List')}
-                </button>
+                  </div>
+                )}
               </div>
 
               {activeFilterCount > 0 && (
@@ -2017,7 +1988,7 @@ export default function TalentHub() {
           ) : (
             <>
               {viewMode === 'card' ? (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-x-4 gap-y-3">
                   {enrichedResumes.map((resume) => (
                     <ResumeCard
                       key={resume.id}
@@ -2032,7 +2003,17 @@ export default function TalentHub() {
                   ))}
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div className="rounded-xl border border-slate-200 bg-white overflow-x-auto">
+                  {/* Table header */}
+                  <div className="grid grid-cols-[minmax(220px,2fr)_minmax(160px,1.5fr)_90px_100px_120px_90px_80px] min-w-[900px] gap-2 px-5 py-3 border-b border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-500">
+                    <span>{t('product.talent.colName', 'Name')}</span>
+                    <span>{t('product.talent.colTitle', 'Current Title')}</span>
+                    <span>{t('product.talent.colStatus', 'Status')}</span>
+                    <span>{t('product.talent.colSource', 'Source')}</span>
+                    <span>{t('product.talent.colDate', 'Date')}</span>
+                    <span>{t('product.talent.colScore', 'AI Score')}</span>
+                    <span>{t('product.talent.colActions', 'Actions')}</span>
+                  </div>
                   {enrichedResumes.map((resume) => (
                     <ResumeListRow
                       key={resume.id}
@@ -2076,7 +2057,7 @@ export default function TalentHub() {
         <InterviewInviteModal
           resumeId={inviteResume.id}
           candidateName={inviteResume.name}
-          candidateEmail={inviteResume.email}
+          candidateEmail={getPreferredResumeEmail(inviteResume)}
           onClose={() => setInviteResume(null)}
         />
       )}
@@ -2097,7 +2078,7 @@ export default function TalentHub() {
         <InterviewInviteModal
           resumeId={inviteResume.id}
           candidateName={inviteResume.name}
-          candidateEmail={inviteResume.email}
+          candidateEmail={getPreferredResumeEmail(inviteResume)}
           onClose={() => setInviteResume(null)}
           onSuccess={() => fetchResumes(search || undefined, page)}
         />

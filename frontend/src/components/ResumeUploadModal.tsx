@@ -76,7 +76,7 @@ export default function ResumeUploadModal({ open, onClose, onUploaded, batch = f
   // Fetch available jobs for the selector
   useEffect(() => {
     if (!open || isReplaceMode) return;
-    axios.get('/api/v1/jobs', { params: { status: 'open', limit: 100 } })
+    axios.get('/api/v1/jobs', { params: { status: 'open', limit: 100, fields: 'minimal', includeTotal: 'false' } })
       .then(res => setJobs(res.data.data || []))
       .catch(() => {});
   }, [open, isReplaceMode]);

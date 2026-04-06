@@ -3,7 +3,7 @@
 ## 接口地址
 
 ```
-POST https://worker.gohire.top/payment/payment/create
+POSTaliaa
 ```
 
 ## 请求头

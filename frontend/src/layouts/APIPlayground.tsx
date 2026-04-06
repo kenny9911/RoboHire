@@ -63,7 +63,7 @@ export default function APIPlayground() {
           </p>
           <ul className="flex flex-row md:flex-col gap-2 md:gap-0 md:space-y-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
             {navItems.map((item) => {
-              let usageBadge: React.ReactNode = null;
+              let usageBadge: JSX.Element | null = null;
 
               if (user && item.usageKey) {
                 const limit = item.usageKey === 'matches'

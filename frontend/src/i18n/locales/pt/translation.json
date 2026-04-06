@@ -114,11 +114,12 @@
       "product": "Recursos",
       "productMenu": {
         "requirements": "Análise de requisitos",
-        "agents": "Agentes",
-        "resumeScreening": "Triagem de currículos",
-        "smartMatching": "Matching inteligente",
-        "aiInterview": "Entrevista IA",
-        "smartEvaluation": "Avaliação inteligente",
+        "agents": "AI Agent",
+        "resumeScreening": "Talent Hub",
+        "smartMatching": "Seleção AI",
+        "aiInterview": "Entrevista AI",
+        "smartEvaluation": "Avaliações AI",
+        "quickInvite": "Convite rápido",
         "api": "API"
       }
     },
@@ -130,6 +131,7 @@
       "subheadline": "Chega de perder horas analisando pilhas de currículos. Nosso agente de IA filtra candidatos, conduz entrevistas e entrega relatórios completos de avaliação de forma totalmente automática.",
       "ctaPrimary": "Teste gratuito",
       "ctaSecondary": "Começar a contratar",
+      "quickInviteCta": "Convite rápido",
       "stat1": "Tempo economizado",
       "stat2": "Triagem mais rápida",
       "stat3": "Empresas",
@@ -249,15 +251,15 @@
         "desc": "Fluxo de contratação com IA que triagem currículos, gerencia candidatos e otimiza todo o processo."
       },
       "smartMatching": {
-        "title": "Matching Inteligente",
+        "title": "Seleção AI",
         "desc": "A IA combina candidatos com vagas usando pontuação precisa para que você não perca nenhum talento."
       },
       "aiInterview": {
-        "title": "Entrevista IA",
+        "title": "Entrevista AI",
         "desc": "Entrevistas em vídeo conduzidas por IA com voz natural. Os candidatos falam com nosso entrevistador IA."
       },
       "evaluation": {
-        "title": "Avaliação",
+        "title": "Avaliações AI",
         "desc": "Avaliação multi-agente que analisa habilidades, experiência e fit cultural com relatórios completos."
       }
     },
@@ -1683,12 +1685,13 @@
       "projects": "Projetos",
       "talentHub": "Hub de Talentos",
       "jobs": "Vagas",
-      "aiInterview": "Entrevista IA",
+      "aiInterview": "Entrevista AI",
       "profile": "Perfil",
       "settings": "Configurações",
       "devDashboard": "Painel do Desenvolvedor",
-      "smartMatching": "Matching Inteligente",
-      "evaluations": "Avaliações",
+      "smartMatching": "Seleção AI",
+      "evaluations": "Avaliações AI",
+      "quickInvite": "Convite rápido",
       "candidateDetail": "Detalhe do Candidato",
       "jobDetail": "Detalhe da Vaga",
       "interviewRoom": "Sala de Entrevista",
@@ -1818,7 +1821,7 @@
       "integrations": "Integrações ATS"
     },
     "interview": {
-      "title": "Entrevista IA",
+      "title": "Entrevista AI",
       "subtitle": "Entrevistas com IA e avaliação automática.",
       "status": {
         "scheduled": "Agendada",
@@ -2044,6 +2047,7 @@
       "pause": "Pausar",
       "resume": "Retomar",
       "allStatuses": "Todos",
+      "resultsCountPaginated": "Página {{page}} de {{totalPages}} ({{total}} vagas)",
       "status": {
         "draft": "Rascunho",
         "open": "Aberto",
@@ -2495,7 +2499,7 @@
       "clearFilters": "Limpar todos os filtros"
     },
     "matching": {
-      "title": "Matching Inteligente",
+      "title": "Seleção AI",
       "subtitle": "Matching candidato-vaga com IA e análise detalhada.",
       "selectJob": "Selecionar uma Vaga",
       "selectJobs": "Selecionar vagas",
@@ -2644,7 +2648,7 @@
       "passedThreshold": "Atende a pontuação mínima"
     },
     "evaluations": {
-      "title": "Avaliações",
+      "title": "Avaliações AI",
       "subtitle": "Relatórios de avaliação multi-agente com IA.",
       "empty": "Sem avaliações ainda",
       "emptyDesc": "Complete entrevistas primeiro, depois execute avaliações IA.",
@@ -3391,8 +3395,11 @@
     "confirmDeleteMessage": "Tem certeza de que deseja excluir este item? Esta ação não pode ser desfeita.",
     "cancel": "Cancelar",
     "delete": "Excluir",
+    "search": "Pesquisar",
     "save": "Salvar",
     "saving": "Salvando...",
+    "previous": "Anterior",
+    "next": "Próximo",
     "filters": {
       "allRecruiters": "Todos os recrutadores",
       "recruiterGroup": "Recrutadores",
@@ -3894,6 +3901,7 @@
     "title": "Agent Alex",
     "subtitle": "Analista de Requisitos de Contratação",
     "floatingLabel": "Assistente de Contratação IA",
+    "quickInvite": "Convite rápido",
     "panels": { "agentInteraction": "Interação do Agente" },
     "modes": { "textChat": "Chat de Texto", "liveVoice": "Voz ao Vivo" },
     "sessions": { "recent": "Sessões Recentes", "newChat": "Novo Chat", "cannotDelete": "Não é possível excluir — vinculada a uma vaga" },
@@ -4001,6 +4009,53 @@
         "reasonForOpening": "Motivo da Abertura",
         "dealBreakers": "Critérios de Eliminação"
       }
+    }
+  },
+  "contacts": {
+    "title": "Contatos e Empresas",
+    "subtitle": "Gerencie seus gerentes de contratação, clientes, referências e empresas parceiras.",
+    "contactsTab": "Contatos",
+    "companiesTab": "Empresas",
+    "searchPlaceholder": "Pesquisar contatos por nome, e-mail ou empresa...",
+    "searchCompanyPlaceholder": "Pesquisar empresas por nome, setor ou localização...",
+    "allTypes": "Todos os Tipos",
+    "addContact": "Adicionar Contato",
+    "addCompany": "Adicionar Empresa",
+    "editContact": "Editar Contato",
+    "editCompany": "Editar Empresa",
+    "noContacts": "Nenhum contato ainda",
+    "noContactsDesc": "Adicione seu primeiro contato para começar.",
+    "noCompanies": "Nenhuma empresa ainda",
+    "noCompaniesDesc": "Adicione sua primeira empresa para começar.",
+    "confirmDelete": "Tem certeza de que deseja excluir este contato?",
+    "confirmDeleteCompany": "Tem certeza de que deseja excluir esta empresa?",
+    "cancel": "Cancelar",
+    "saving": "Salvando...",
+    "update": "Atualizar",
+    "create": "Criar",
+    "type": {
+      "hiringManager": "Gerente de Contratação",
+      "client": "Cliente",
+      "vendor": "Fornecedor",
+      "reference": "Referência"
+    },
+    "form": {
+      "firstName": "Nome",
+      "lastName": "Sobrenome",
+      "email": "E-mail",
+      "phone": "Telefone",
+      "jobTitle": "Cargo",
+      "type": "Tipo",
+      "company": "Empresa",
+      "noCompany": "Sem empresa",
+      "companyName": "Nome da Empresa",
+      "industry": "Setor",
+      "size": "Tamanho da Empresa",
+      "location": "Localização",
+      "website": "Site",
+      "openJobs": "Vagas Abertas",
+      "totalPlaced": "Total Colocados",
+      "notes": "Notas"
     }
   }
 }

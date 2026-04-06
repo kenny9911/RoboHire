@@ -7,7 +7,7 @@ interface NavItem {
   labelKey: string;
   fallback: string;
   exact?: boolean;
-  icon: React.ReactNode;
+  icon: JSX.Element;
 }
 
 interface NavSection {

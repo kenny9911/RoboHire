@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bot, X, Send, Loader2, Plus, History, Link2 } from 'lucide-react';
+import { Bot, X, Send, Loader2, Plus, History, Link2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -289,6 +289,17 @@ export function FloatingAgentAlex() {
                     )}
                   </AnimatePresence>
                 </div>
+                {/* Quick Invite shortcut */}
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate(isAuthenticated ? '/product/quick-invite' : '/quick-invite');
+                  }}
+                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                  title={t('agentAlex.quickInvite', 'Quick Invite')}
+                >
+                  <Zap className="w-4 h-4" />
+                </button>
                 {/* Expand → new session on full page */}
                 <button
                   onClick={() => {

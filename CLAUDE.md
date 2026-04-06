@@ -63,7 +63,11 @@ Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API p
 - `PDFService` — extraction via `pdf-parse`; uses memory storage (multer), so large PDF changes can affect RAM
 - `WebhookService` — ATS integration webhook delivery
 
-**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`, `routes/interviews.ts` (LiveKit AI interviews), `routes/gohireInterviews.ts` (GoHire integration), `routes/dashboard.ts` (consolidated stats), `routes/agentAlex.ts` (Gemini chat/transcribe/TTS), `routes/agentAlexSessions.ts` (session CRUD), `routes/agents.ts` (recruitment agents CRUD).
+**Batch Matching** — `services/MatchOrchestratorService.ts` orchestrates multi-job resume screening and matching. Two-phase pipeline: screening with A/B/C tier classification by threshold scores, then full matching for qualified candidates. Config via env: `MATCH_SCREEN_MODEL`, `MATCH_SKILL_DECOMPOSITION`, batch sizes, concurrency limits. Tracks progress in `MatchingBatchRun` model.
+
+**CRM Module** — `routes/contacts.ts` provides CRUD for Contacts and Companies. Contacts have types (client, hiring_manager, vendor, reference) and link to companies. Uses `getVisibilityScope()` for team-scoped access.
+
+**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`, `routes/interviews.ts` (LiveKit AI interviews), `routes/gohireInterviews.ts` (GoHire integration), `routes/dashboard.ts` (consolidated stats), `routes/agentAlex.ts` (Gemini chat/transcribe/TTS), `routes/agentAlexSessions.ts` (session CRUD), `routes/agents.ts` (recruitment agents CRUD), `routes/contacts.ts` (CRM contacts + companies).
 
 **Request audit & analytics** — `middleware/requestAudit.ts` automatically logs every `/api/` request to `ApiRequestLog` after response completion, capturing tokens, cost, duration, and LLM call details. `lib/requestClassification.ts` maps URL paths to module names (e.g. `resume_parse`, `smart_matching`) for analytics grouping. For batch operations (e.g. auto-match processing multiple resumes), set `req.skipAudit = true` and create per-unit `ApiRequestLog` entries manually to get accurate per-item usage counts.
 
@@ -94,7 +98,7 @@ Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API p
 
 ### Database
 
-PostgreSQL with Prisma ORM. Schema at `backend/prisma/schema.prisma`. Key models: User, Session, HiringRequest, Candidate, HiringSession, ApiKey, ApiUsageRecord, ApiRequestLog, LLMCallLog, ResumeJobFit, Interview, GoHireInterview. `ApiRequestLog` is the source of truth for usage analytics (tokens, cost, duration per API call). `LLMCallLog` stores individual LLM invocations linked to their parent request. User model tracks subscription tier, Stripe IDs, and usage counters. Resume model stores `contentHash` for dedup, `parsedData` (JSON) for structured parse, and `summary`/`highlight` for AI-generated pitch text.
+PostgreSQL with Prisma ORM. Schema at `backend/prisma/schema.prisma`. Key models: User, Session, HiringRequest, Candidate, HiringSession, ApiKey, ApiUsageRecord, ApiRequestLog, LLMCallLog, ResumeJobFit, Interview, GoHireInterview, MatchingBatchRun, MatchingSession, Contact, Company. `ApiRequestLog` is the source of truth for usage analytics (tokens, cost, duration per API call). `LLMCallLog` stores individual LLM invocations linked to their parent request. User model tracks subscription tier, Stripe IDs, and usage counters. Resume model stores `contentHash` for dedup, `parsedData` (JSON) for structured parse, and `summary`/`highlight` for AI-generated pitch text. `MatchingBatchRun` tracks batch orchestration jobs with per-task progress counters; each `MatchingSession` can link to a batch run via `batchRunId`.
 
 ### Deployment
 
@@ -140,6 +144,11 @@ Copy `.env.example` to `.env` at repo root. Key variable groups: `LLM_PROVIDER`/
 | Agents API docs | `frontend/src/pages/docs/DocsAgentsAPI.tsx` |
 | Agents playground | `frontend/src/pages/AgentsPlayground.tsx` |
 | Start Hiring (legacy) | `frontend/src/pages/StartHiring.tsx` (redirects to `/agent-alex`) |
+| Batch matching orchestrator | `backend/src/services/MatchOrchestratorService.ts` |
+| CRM contacts + companies | `backend/src/routes/contacts.ts` |
+| Team visibility | `backend/src/lib/teamVisibility.ts` |
+| Design system reference | `DESIGN.md` |
+| Bug fix workflow | `BUG_FIX_WORKFLOW.md` |
 
 ## High-Risk Files
 
@@ -163,6 +172,9 @@ These have dense logic and higher regression risk — read carefully before edit
 - `frontend/src/pages/AgentAlex.tsx`
 - `frontend/src/components/agent-alex/ChatInterface.tsx`
 - `backend/src/services/GeminiAgentService.ts`
+- `backend/src/services/MatchOrchestratorService.ts`
+- `backend/src/routes/matching.ts`
+- `backend/src/routes/jobs.ts`
 - `backend/src/index.ts` (WebSocket handler for Agent Alex live voice)
 
 ## Interview Status Flow
@@ -235,7 +247,7 @@ All articles in the Community knowledge hub (`frontend/src/pages/docs/DocsCommun
 
 ### Visibility & Team Scope — Use getVisibilityScope for cross-entity queries
 
-When querying resources that may belong to team members (jobs, resumes, interviews), always use `getVisibilityScope()` + `buildUserIdFilter()` from `backend/src/lib/teamVisibility.ts` instead of `userId: req.user.id`. This ensures admins see everything, team members see teammates' data, and solo users see only their own. Applies to all endpoints that cross-reference entities (e.g., resume refine uses job data, matching uses both resumes and jobs).
+When querying resources that may belong to team members (jobs, resumes, interviews), always use `getVisibilityScope()` + `buildUserIdFilter()` from `backend/src/lib/teamVisibility.ts` instead of `userId: req.user.id`. Three role levels: `admin` (sees everything, `isAdmin: true`), `internal` (sees own data but has special interview viewing rights, `isInternal: true`), and regular users (own data or team data based on `teamView`). Applies to all endpoints that cross-reference entities (e.g., resume refine uses job data, matching uses both resumes and jobs).
 
 ### GoHire Candidate Name — Fallback chain includes resume parsing
 

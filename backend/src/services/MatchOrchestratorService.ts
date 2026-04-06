@@ -41,6 +41,12 @@ export interface MatchTaskResult {
   llmMs?: number;
 }
 
+export interface TierCounts {
+  A: number;
+  B: number;
+  C: number;
+}
+
 export interface OrchestratorCallbacks {
   onScreeningStart?: (total: number) => void;
   onScreeningComplete?: (tierCounts: { A: number; B: number; C: number }) => void;
@@ -48,11 +54,18 @@ export interface OrchestratorCallbacks {
   onMatchComplete?: (completed: number, failed: number) => void;
 }
 
+export interface ScreeningPhaseResult {
+  tieredResumes: TieredResume[];
+  tierCounts: TierCounts;
+  durationMs: number;
+  screeningEnabled: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
 
-function getConfig() {
+export function getMatchOrchestratorConfig() {
   const screenModel = process.env.LLM_MATCH_SCREEN || '';
   const matchModel = process.env.LLM_MATCH_RESUME || undefined;
   const skillDecomposition = process.env.MATCH_SKILL_DECOMPOSITION === 'true';
@@ -115,7 +128,7 @@ async function runConcurrent<T>(
 async function runBatchScreening(
   resumes: MatchResumeInput[],
   job: MatchJobInput,
-  config: ReturnType<typeof getConfig>,
+  config: ReturnType<typeof getMatchOrchestratorConfig>,
   requestId?: string,
   locale?: string,
 ): Promise<TieredResume[]> {
@@ -186,6 +199,54 @@ async function runBatchScreening(
   });
 }
 
+export async function screenMatchingResumes(
+  resumes: MatchResumeInput[],
+  job: MatchJobInput,
+  requestId?: string,
+  locale?: string,
+  config = getMatchOrchestratorConfig(),
+): Promise<ScreeningPhaseResult> {
+  if (!config.screeningEnabled) {
+    return {
+      tieredResumes: resumes.map((r) => ({
+        ...r,
+        tier: 'B' as const,
+        quickScore: 50,
+        keyFindings: [],
+      })),
+      tierCounts: {
+        A: 0,
+        B: resumes.length,
+        C: 0,
+      },
+      durationMs: 0,
+      screeningEnabled: false,
+    };
+  }
+
+  const screenStart = Date.now();
+  const tieredResumes = await runBatchScreening(resumes, job, config, requestId, locale);
+  const durationMs = Date.now() - screenStart;
+
+  const tierCounts: TierCounts = { A: 0, B: 0, C: 0 };
+  for (const resume of tieredResumes) {
+    tierCounts[resume.tier]++;
+  }
+
+  logger.info('MATCHING_ORCHESTRATOR', `Phase 1 complete: A=${tierCounts.A} B=${tierCounts.B} C=${tierCounts.C} (${durationMs}ms)`, {
+    requestId,
+    ...tierCounts,
+    durationMs,
+  });
+
+  return {
+    tieredResumes,
+    tierCounts,
+    durationMs,
+    screeningEnabled: true,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Phase 2: Deep Analysis
 // ---------------------------------------------------------------------------
@@ -240,6 +301,60 @@ async function matchWithResumeMatchAgent(
   );
 }
 
+export async function matchTieredResume(
+  resume: TieredResume,
+  job: MatchJobInput,
+  formatCandidatePrefs: (prefs: any) => string,
+  requestId?: string,
+  locale?: string,
+  config = getMatchOrchestratorConfig(),
+): Promise<MatchTaskResult> {
+  const taskStart = Date.now();
+
+  try {
+    if (resume.tier === 'C') {
+      return {
+        resumeId: resume.id,
+        resumeName: resume.name,
+        matchResult: buildTierCResult(resume.quickScore, resume.keyFindings, resume.name),
+        tier: 'C',
+        llmMs: 0,
+      };
+    }
+
+    const candidatePrefs = formatCandidatePrefs(resume.preferences);
+    const matchResult = resume.tier === 'A' && config.skillDecomposition
+      ? await matchWithSkillDecomposition(resume, job, candidatePrefs, requestId, locale, config.matchModel)
+      : await matchWithResumeMatchAgent(resume, job, candidatePrefs, requestId, locale, config.matchModel);
+
+    return {
+      resumeId: resume.id,
+      resumeName: resume.name,
+      matchResult,
+      tier: resume.tier,
+      llmMs: Date.now() - taskStart,
+    };
+  } catch (err: any) {
+    const llmMs = Date.now() - taskStart;
+
+    logger.error('MATCHING_ORCHESTRATOR', `Failed to match ${resume.name}`, {
+      requestId,
+      resumeId: resume.id,
+      error: err.message,
+      durationMs: llmMs,
+    });
+
+    return {
+      resumeId: resume.id,
+      resumeName: resume.name,
+      matchResult: null,
+      error: 'Matching failed',
+      tier: resume.tier,
+      llmMs,
+    };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main Orchestrator
 // ---------------------------------------------------------------------------
@@ -252,34 +367,18 @@ export async function orchestrateMatching(
   requestId?: string,
   locale?: string,
 ): Promise<MatchTaskResult[]> {
-  const config = getConfig();
+  const config = getMatchOrchestratorConfig();
 
   // Phase 1: Batch screening (if enabled)
   let tieredResumes: TieredResume[];
 
   if (config.screeningEnabled) {
     callbacks.onScreeningStart?.(resumes.length);
-
-    const screenStart = Date.now();
-    tieredResumes = await runBatchScreening(resumes, job, config, requestId, locale);
-    const screenDuration = Date.now() - screenStart;
-
-    const tierCounts = { A: 0, B: 0, C: 0 };
-    for (const r of tieredResumes) tierCounts[r.tier]++;
-
-    logger.info('MATCHING_ORCHESTRATOR', `Phase 1 complete: A=${tierCounts.A} B=${tierCounts.B} C=${tierCounts.C} (${screenDuration}ms)`, {
-      requestId, ...tierCounts, durationMs: screenDuration,
-    });
-
-    callbacks.onScreeningComplete?.(tierCounts);
-  } else {
-    // No screening — all resumes go through as Tier B (standard path)
-    tieredResumes = resumes.map((r) => ({
-      ...r,
-      tier: 'B' as const,
-      quickScore: 50,
-      keyFindings: [],
-    }));
+  }
+  const screeningResult = await screenMatchingResumes(resumes, job, requestId, locale, config);
+  tieredResumes = screeningResult.tieredResumes;
+  if (screeningResult.screeningEnabled) {
+    callbacks.onScreeningComplete?.(screeningResult.tierCounts);
   }
 
   // Phase 2: Deep analysis (tiered dispatch)
@@ -306,54 +405,15 @@ export async function orchestrateMatching(
   const tierAB = tieredResumes.filter((r) => r.tier !== 'C');
 
   const matchTasks = tierAB.map((resume) => async (): Promise<MatchTaskResult> => {
-    const taskStart = Date.now();
     callbacks.onMatchStart?.(resume.name);
-
-    try {
-      const candidatePrefs = formatCandidatePrefs(resume.preferences);
-      let matchResult: MatchResult;
-
-      if (resume.tier === 'A' && config.skillDecomposition) {
-        // Tier A: 3 parallel skills → merge
-        matchResult = await matchWithSkillDecomposition(
-          resume, job, candidatePrefs, requestId, locale, config.matchModel,
-        );
-      } else {
-        // Tier B (or Tier A without skill decomposition): single ResumeMatchAgent
-        matchResult = await matchWithResumeMatchAgent(
-          resume, job, candidatePrefs, requestId, locale, config.matchModel,
-        );
-      }
-
-      const llmMs = Date.now() - taskStart;
+    const result = await matchTieredResume(resume, job, formatCandidatePrefs, requestId, locale, config);
+    if (result.matchResult) {
       completed++;
-      callbacks.onMatchComplete?.(completed, failed);
-
-      return {
-        resumeId: resume.id,
-        resumeName: resume.name,
-        matchResult,
-        tier: resume.tier,
-        llmMs,
-      };
-    } catch (err: any) {
-      const llmMs = Date.now() - taskStart;
+    } else {
       failed++;
-      callbacks.onMatchComplete?.(completed, failed);
-
-      logger.error('MATCHING_ORCHESTRATOR', `Failed to match ${resume.name}`, {
-        requestId, resumeId: resume.id, error: err.message, durationMs: llmMs,
-      });
-
-      return {
-        resumeId: resume.id,
-        resumeName: resume.name,
-        matchResult: null,
-        error: 'Matching failed',
-        tier: resume.tier,
-        llmMs,
-      };
     }
+    callbacks.onMatchComplete?.(completed, failed);
+    return result;
   });
 
   // Use skill concurrency for Tier A (more tasks per resume), standard for others

@@ -39,6 +39,7 @@ const ProductEvaluationCenter = lazy(() => import('./pages/product/EvaluationCen
 const EvaluationSharedReport = lazy(() => import('./pages/EvaluationSharedReport'));
 const ProductInterviewHub = lazy(() => import('./pages/product/InterviewHub'));
 const ProductGoHireEvaluation = lazy(() => import('./pages/product/GoHireEvaluation'));
+const ProductContacts = lazy(() => import('./pages/product/Contacts'));
 const ProductProfile = lazy(() => import('./pages/product/Profile'));
 const ProfileLayout = lazy(() => import('./layouts/ProfileLayout'));
 const ProfileSecurity = lazy(() => import('./pages/product/ProfileSecurity'));
@@ -145,6 +146,8 @@ function App() {
               <Route path="interview-hub" element={<ProductInterviewHub />} />
               <Route path="interview-hub/:id" element={<ProductGoHireEvaluation />} />
               <Route path="evaluations" element={<ProductEvaluationCenter />} />
+              <Route path="quick-invite" element={<QuickInvite />} />
+              <Route path="contacts" element={<ProductContacts />} />
               <Route path="profile" element={<ProfileLayout />}>
                 <Route index element={<ProductProfile />} />
                 <Route path="security" element={<ProfileSecurity />} />

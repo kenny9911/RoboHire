@@ -116,11 +116,12 @@
       "product": "功能",
       "productMenu": {
         "requirements": "需求分析",
-        "agents": "智能代理",
-        "resumeScreening": "履歷篩選",
-        "smartMatching": "智慧匹配",
+        "agents": "AI Agent",
+        "resumeScreening": "人才庫",
+        "smartMatching": "AI 篩選匹配",
         "aiInterview": "AI 面試",
-        "smartEvaluation": "智慧評估",
+        "smartEvaluation": "AI 評估",
+        "quickInvite": "一鍵邀約",
         "api": "API"
       }
     },
@@ -132,6 +133,7 @@
       "subheadline": "不必再埋頭翻閱成堆的履歷——AI 招募助手替你完成候選人篩選、線上面試和完整評估，全程自動化。",
       "ctaPrimary": "開始免費試用",
       "ctaSecondary": "立即開始招聘",
+      "quickInviteCta": "一鍵邀約",
       "stat1": "節省時間",
       "stat2": "篩選更快",
       "stat3": "合作企業",
@@ -251,7 +253,7 @@
         "desc": "AI驅動的招聘流程，自動篩選履歷、管理候選人，全面優化您的招聘流程。"
       },
       "smartMatching": {
-        "title": "智慧匹配",
+        "title": "AI 篩選匹配",
         "desc": "AI精準匹配候選人與職位，智慧評分排名，讓您不錯過任何頂尖人才。"
       },
       "aiInterview": {
@@ -259,7 +261,7 @@
         "desc": "AI主持的視訊面試，自然語音對話。候選人與AI面試官交流——您只需查看結果。"
       },
       "evaluation": {
-        "title": "綜合評估",
+        "title": "AI 評估",
         "desc": "多智能體AI評估系統，全面評估技能、經驗、文化契合度，提供詳盡的招聘報告。"
       }
     },
@@ -2091,8 +2093,9 @@
       "profile": "個人檔案",
       "settings": "設定",
       "devDashboard": "開發者控制台",
-      "smartMatching": "智慧配對",
-      "evaluations": "評估",
+      "smartMatching": "AI 篩選匹配",
+      "evaluations": "AI 評估",
+      "quickInvite": "一鍵邀約",
       "candidateDetail": "候選人詳情",
       "jobDetail": "職缺詳情",
       "interviewRoom": "面試房間",
@@ -2620,6 +2623,7 @@
       "sortTitleDesc": "職位名稱：Z 到 A",
       "resultsCount": "共 {{count}} 個職位",
       "resultsCountFiltered": "顯示 {{shown}} / {{total}} 個職位",
+      "resultsCountPaginated": "第 {{page}} 頁，共 {{totalPages}} 頁（{{total}} 個職位）",
       "clearFilters": "清除篩選",
       "viewLabel": "檢視",
       "viewList": "列表",
@@ -2983,7 +2987,7 @@
       "clearFilters": "清除所有篩選"
     },
     "matching": {
-      "title": "智慧配對",
+      "title": "AI 篩選匹配",
       "subtitle": "AI 驅動的候選人與職位配對與詳細分析。",
       "description": "AI驅動的候選人職缺配對",
       "selectJob": "選擇職缺",
@@ -3152,7 +3156,7 @@
       "passedThreshold": "達標"
     },
     "evaluations": {
-      "title": "評估",
+      "title": "AI 評估",
       "description": "AI驅動的多代理候選人評估報告",
       "noEvaluations": "暫無評估",
       "empty": "先完成面試",
@@ -3911,8 +3915,11 @@
     "confirmDeleteMessage": "確定要刪除此項目嗎？此操作無法撤銷。",
     "cancel": "取消",
     "delete": "刪除",
+    "search": "搜尋",
     "save": "儲存",
     "saving": "儲存中...",
+    "previous": "上一頁",
+    "next": "下一頁",
     "filters": {
       "allRecruiters": "所有招聘官",
       "recruiterGroup": "招聘官",
@@ -4414,6 +4421,7 @@
     "title": "Agent Alex",
     "subtitle": "招聘需求分析師",
     "floatingLabel": "AI 招聘助手",
+    "quickInvite": "一鍵邀約",
     "panels": { "agentInteraction": "智能對話" },
     "modes": { "textChat": "文字聊天", "liveVoice": "即時語音" },
     "sessions": { "recent": "最近對話", "newChat": "新對話", "cannotDelete": "無法刪除 — 已關聯職位" },
@@ -4524,6 +4532,53 @@
         "reasonForOpening": "招聘原因",
         "dealBreakers": "一票否決項"
       }
+    }
+  },
+  "contacts": {
+    "title": "聯絡人與公司",
+    "subtitle": "管理您的招聘經理、客戶、推薦人和合作公司。",
+    "contactsTab": "聯絡人",
+    "companiesTab": "公司",
+    "searchPlaceholder": "按姓名、電子郵件或公司搜尋聯絡人...",
+    "searchCompanyPlaceholder": "按名稱、產業或地點搜尋公司...",
+    "allTypes": "所有類型",
+    "addContact": "新增聯絡人",
+    "addCompany": "新增公司",
+    "editContact": "編輯聯絡人",
+    "editCompany": "編輯公司",
+    "noContacts": "尚無聯絡人",
+    "noContactsDesc": "新增您的第一位聯絡人以開始使用。",
+    "noCompanies": "尚無公司",
+    "noCompaniesDesc": "新增您的第一家公司以開始使用。",
+    "confirmDelete": "確定要刪除此聯絡人嗎？",
+    "confirmDeleteCompany": "確定要刪除此公司嗎？",
+    "cancel": "取消",
+    "saving": "儲存中...",
+    "update": "更新",
+    "create": "建立",
+    "type": {
+      "hiringManager": "招聘經理",
+      "client": "客戶",
+      "vendor": "供應商",
+      "reference": "推薦人"
+    },
+    "form": {
+      "firstName": "名",
+      "lastName": "姓",
+      "email": "電子郵件",
+      "phone": "電話",
+      "jobTitle": "職稱",
+      "type": "類型",
+      "company": "公司",
+      "noCompany": "無公司",
+      "companyName": "公司名稱",
+      "industry": "產業",
+      "size": "公司規模",
+      "location": "地點",
+      "website": "網站",
+      "openJobs": "開放職缺",
+      "totalPlaced": "已錄用總數",
+      "notes": "備註"
     }
   }
 }

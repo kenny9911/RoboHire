@@ -114,11 +114,12 @@
       "product": "機能",
       "productMenu": {
         "requirements": "要件分析",
-        "agents": "エージェント",
-        "resumeScreening": "履歴書スクリーニング",
-        "smartMatching": "スマートマッチング",
+        "agents": "AI Agent",
+        "resumeScreening": "タレントハブ",
+        "smartMatching": "AIスクリーニング",
         "aiInterview": "AI面接",
-        "smartEvaluation": "スマート評価",
+        "smartEvaluation": "AI 評価",
+        "quickInvite": "ワンクリック招待",
         "api": "API"
       }
     },
@@ -130,6 +131,7 @@
       "subheadline": "膨大な履歴書に目を通す時間はもう不要。AI が候補者のスクリーニングから面接、評価レポート作成まで、すべて自動でこなします。",
       "ctaPrimary": "無料トライアル開始",
       "ctaSecondary": "採用を始める",
+      "quickInviteCta": "ワンクリック招待",
       "stat1": "時間削減",
       "stat2": "選考スピード",
       "stat3": "導入企業",
@@ -249,7 +251,7 @@
         "desc": "AIが履歴書を選考し、候補者を管理し、採用プロセス全体を効率化します。"
       },
       "smartMatching": {
-        "title": "スマートマッチング",
+        "title": "AIスクリーニング",
         "desc": "AIが候補者と求人を精密にスコアリングし、最適な人材を見逃しません。"
       },
       "aiInterview": {
@@ -257,7 +259,7 @@
         "desc": "自然な音声会話によるAI主導のビデオ面接。候補者はAI面接官と対話し、結果はあなたが確認します。"
       },
       "evaluation": {
-        "title": "総合評価",
+        "title": "AI 評価",
         "desc": "マルチエージェントAIがスキル、経験、カルチャーフィットを評価し、包括的な採用レポートを提供します。"
       }
     },
@@ -2060,8 +2062,9 @@
       "profile": "プロフィール",
       "settings": "設定",
       "devDashboard": "開発者ダッシュボード",
-      "smartMatching": "スマートマッチング",
-      "evaluations": "評価レポート",
+      "smartMatching": "AIスクリーニング",
+      "evaluations": "AI 評価",
+      "quickInvite": "ワンクリック招待",
       "candidateDetail": "候補者詳細",
       "jobDetail": "求人詳細",
       "interviewRoom": "面接ルーム",
@@ -2440,6 +2443,7 @@
       "manager": "マネージャー",
       "director": "ディレクター",
       "executive": "エグゼクティブ",
+      "resultsCountPaginated": "{{totalPages}} ページ中 {{page}} ページ目（{{total}} 件）",
       "status": {
         "draft": "下書き",
         "open": "公開中",
@@ -2893,7 +2897,7 @@
       "clearFilters": "すべてのフィルタをクリア"
     },
     "matching": {
-      "title": "スマートマッチング",
+      "title": "AIスクリーニング",
       "subtitle": "AI による候補者と求人のマッチングと詳細分析。",
       "selectJob": "求人を選択",
       "selectJobs": "求人を選択",
@@ -3079,7 +3083,7 @@
       "viewSelectionsAndCriteria": "マッチング詳細"
     },
     "evaluations": {
-      "title": "評価レポート",
+      "title": "AI 評価",
       "allEvaluations": "すべての評価",
       "runEvaluation": "評価を実行",
       "evaluationResults": "評価結果",
@@ -3850,8 +3854,11 @@
     "confirmDeleteMessage": "このアイテムを削除してもよろしいですか？この操作は元に戻せません。",
     "cancel": "キャンセル",
     "delete": "削除",
+    "search": "検索",
     "save": "保存",
     "saving": "保存中...",
+    "previous": "前へ",
+    "next": "次へ",
     "filters": {
       "allRecruiters": "すべてのリクルーター",
       "recruiterGroup": "リクルーター",
@@ -4353,6 +4360,7 @@
     "title": "Agent Alex",
     "subtitle": "採用要件アナリスト",
     "floatingLabel": "AI採用アシスタント",
+    "quickInvite": "ワンクリック招待",
     "panels": { "agentInteraction": "エージェント対話" },
     "modes": { "textChat": "テキストチャット", "liveVoice": "ライブ音声" },
     "sessions": { "recent": "最近のセッション", "newChat": "新規チャット", "cannotDelete": "削除不可 — 求人にリンク済み" },
@@ -4460,6 +4468,53 @@
         "reasonForOpening": "採用理由",
         "dealBreakers": "不採用基準"
       }
+    }
+  },
+  "contacts": {
+    "title": "連絡先と企業",
+    "subtitle": "採用担当者、クライアント、推薦者、パートナー企業を管理します。",
+    "contactsTab": "連絡先",
+    "companiesTab": "企業",
+    "searchPlaceholder": "名前、メール、企業で連絡先を検索...",
+    "searchCompanyPlaceholder": "名前、業界、所在地で企業を検索...",
+    "allTypes": "すべてのタイプ",
+    "addContact": "連絡先を追加",
+    "addCompany": "企業を追加",
+    "editContact": "連絡先を編集",
+    "editCompany": "企業を編集",
+    "noContacts": "連絡先がありません",
+    "noContactsDesc": "最初の連絡先を追加して始めましょう。",
+    "noCompanies": "企業がありません",
+    "noCompaniesDesc": "最初の企業を追加して始めましょう。",
+    "confirmDelete": "この連絡先を削除してもよろしいですか？",
+    "confirmDeleteCompany": "この企業を削除してもよろしいですか？",
+    "cancel": "キャンセル",
+    "saving": "保存中...",
+    "update": "更新",
+    "create": "作成",
+    "type": {
+      "hiringManager": "採用担当者",
+      "client": "クライアント",
+      "vendor": "ベンダー",
+      "reference": "推薦者"
+    },
+    "form": {
+      "firstName": "名",
+      "lastName": "姓",
+      "email": "メール",
+      "phone": "電話",
+      "jobTitle": "役職",
+      "type": "タイプ",
+      "company": "企業",
+      "noCompany": "企業なし",
+      "companyName": "企業名",
+      "industry": "業界",
+      "size": "企業規模",
+      "location": "所在地",
+      "website": "ウェブサイト",
+      "openJobs": "募集中の求人",
+      "totalPlaced": "採用実績",
+      "notes": "メモ"
     }
   }
 }

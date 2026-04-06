@@ -612,6 +612,13 @@ export default function ProductIntro({
                     <Link to="/request-demo" className={secondaryCtaClass}>
                       {t('productIntro.hero.cta2', '预约产品演示')}
                     </Link>
+                    <Link
+                      to="/quick-invite"
+                      className={`w-full rounded-full border px-8 py-4 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 sm:w-auto ${isLight ? 'border-amber-200 bg-amber-50 text-amber-700 shadow-[0_20px_42px_-34px_rgba(217,119,6,0.35)] hover:border-amber-300 hover:bg-amber-100' : 'border-amber-400/30 bg-amber-500/10 text-amber-300 hover:border-amber-400/50 hover:bg-amber-500/20'}`}
+                    >
+                      <svg className="mr-2 -mt-0.5 inline-block h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      {t('productIntro.hero.cta3', '一键邀约')}
+                    </Link>
                   </div>
 
                   <div className="mt-12 grid max-w-3xl grid-cols-2 gap-4 xl:grid-cols-4">

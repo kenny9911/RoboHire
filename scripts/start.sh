@@ -56,15 +56,28 @@ wait_for_http() {
 }
 
 cleanup() {
+    # Send SIGINT if process is still alive (covers EXIT without prior signal, e.g. TERM)
     if [ -n "${DEV_PID:-}" ] && kill -0 "$DEV_PID" 2>/dev/null; then
-        echo ""
-        echo -e "${YELLOW}⏹  Stopping dev services...${NC}"
-        kill "$DEV_PID" 2>/dev/null || true
+        kill -INT "$DEV_PID" 2>/dev/null || true
         wait "$DEV_PID" 2>/dev/null || true
     fi
+    echo -e "${GREEN}✓ All services stopped${NC}"
 }
 
-trap cleanup EXIT INT TERM
+# On first Ctrl+C: let children handle SIGINT from the terminal; don't re-signal.
+# On second Ctrl+C: force exit.
+handle_int() {
+    if [ "${INT_RECEIVED:-}" = "1" ]; then
+        echo -e "\n${RED}Force exit${NC}"
+        exit 1
+    fi
+    INT_RECEIVED=1
+    echo -e "\n${YELLOW}⏹  Shutting down (press Ctrl+C again to force)...${NC}"
+    # Children already got SIGINT from terminal; just wait
+}
+
+trap handle_int INT
+trap cleanup EXIT TERM
 
 # Start backend, frontend, and agent worker
 echo -e "${BLUE}🚀 Starting backend, frontend, and agent worker...${NC}"
@@ -83,7 +96,7 @@ echo -e "${GREEN}║                 Services Started Successfully              
 echo -e "${GREEN}╠════════════════════════════════════════════════════════════╣${NC}"
 echo -e "${GREEN}║  Backend:       http://localhost:${BACKEND_PORT}                      ║${NC}"
 echo -e "${GREEN}║  Frontend:      http://localhost:${FRONTEND_PORT}                      ║${NC}"
-echo -e "${GREEN}║  Agent Worker:  LiveKit interview agent                   ║${NC}"
+echo -e "${GREEN}║  Agent Worker:  LiveKit interview agent                    ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${BLUE}Press Ctrl+C to stop all services${NC}"

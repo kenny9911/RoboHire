@@ -34,6 +34,7 @@ import agentsRouter from './routes/agents.js';
 import dashboardRouter from './routes/dashboard.js';
 import gohireInterviewsRouter from './routes/gohireInterviews.js';
 import teamsRouter from './routes/teams.js';
+import contactsRouter from './routes/contacts.js';
 import agentAlexRouter from './routes/agentAlex.js';
 import agentAlexSessionsRouter from './routes/agentAlexSessions.js';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -112,6 +113,7 @@ app.use('/api/v1/agents', agentsRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/gohire-interviews', gohireInterviewsRouter);
 app.use('/api/v1/teams', teamsRouter);
+app.use('/api/v1/contacts', contactsRouter);
 app.use('/api/v1/agent-alex', agentAlexRouter);
 app.use('/api/v1/agent-alex/sessions', agentAlexSessionsRouter);
 
@@ -312,7 +314,7 @@ const server = httpServer.listen(PORT, () => {
   console.log(`║  📁 File Logging:      ${fileLogging.padEnd(56)}║`);
   console.log(`║  📂 Log Directory:     ${logDir.padEnd(56)}║`);
   console.log(`║  📄 Document Storage:  ${docDir.padEnd(56)}║`);
-  console.log(`║  🗂️ Resume Originals:  ${originalResumeStorage.padEnd(56)}║`);
+  console.log(`║  🗂️  Resume Originals:  ${originalResumeStorage.padEnd(56)}║`);
   console.log(`║  📊 Cached Documents:  ${`${docStats.resumeCount} resumes, ${docStats.jdCount} JDs, ${docStats.matchResultCount} matches`.padEnd(56)}║`);
   console.log('╠════════════════════════════════════════════════════════════════════════════════╣');
   console.log('║  Endpoints:                                                                    ║');
@@ -340,6 +342,18 @@ const server = httpServer.listen(PORT, () => {
     cachedResumes: docStats.resumeCount,
     cachedJDs: docStats.jdCount,
   });
+});
+
+server.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(
+      `Port ${PORT} is already in use. Stop the existing RoboHire dev server with ` +
+      '`npm run services:stop` and retry.',
+    );
+    process.exit(1);
+  }
+
+  throw error;
 });
 
 let isShuttingDown = false;

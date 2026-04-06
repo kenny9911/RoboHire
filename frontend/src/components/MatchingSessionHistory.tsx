@@ -36,6 +36,7 @@ interface MatchingSessionHistoryProps {
   embedded?: boolean;
   limit?: number;
   filterParams?: Record<string, string>;
+  allowDelete?: boolean;
 }
 
 const STATUS_BADGES: Record<string, string> = {
@@ -51,11 +52,20 @@ export default function MatchingSessionHistory({
   embedded = false,
   limit = 50,
   filterParams,
+  allowDelete = true,
 }: MatchingSessionHistoryProps) {
   const { t } = useTranslation();
   const [sessions, setSessions] = useState<MatchingSession[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const formatSessionTime = useCallback(
+    (value: string | null | undefined) => (
+      value
+        ? new Date(value).toLocaleString()
+        : t('product.matching.sessionEndPending', 'In progress')
+    ),
+    [t]
+  );
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -203,7 +213,12 @@ export default function MatchingSessionHistory({
                     {session.job?.title && (
                       <span className="font-semibold text-slate-700">{session.job.title}</span>
                     )}
-                    <span>{new Date(session.createdAt).toLocaleString()}</span>
+                    <span>
+                      {t('product.matching.sessionStartedAt', 'Started')}: {formatSessionTime(session.createdAt)}
+                    </span>
+                    <span>
+                      {t('product.matching.sessionEndedAt', 'Ended')}: {formatSessionTime(session.completedAt)}
+                    </span>
                     {session.preFilterModel && (
                       <span>{t('product.matching.prefilterEnabled', 'AI pre-filter enabled')}</span>
                     )}
@@ -275,21 +290,23 @@ export default function MatchingSessionHistory({
               </div>
             </button>
 
-            <button
-              type="button"
-              onClick={(event) => handleDelete(session.id, event)}
-              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
-              title={t('product.matching.deleteSession', 'Delete session')}
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-            </button>
+            {allowDelete && (
+              <button
+                type="button"
+                onClick={(event) => handleDelete(session.id, event)}
+                className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                title={t('product.matching.deleteSession', 'Delete session')}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
         );
       })}

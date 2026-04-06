@@ -593,10 +593,12 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
 
     const userId = req.user.id;
     const resumeId = req.params.id;
+    const scope = await getVisibilityScope(req.user!);
     const existingResume = await prisma.resume.findFirst({
-      where: { id: resumeId, userId },
+      where: { id: resumeId, ...buildUserIdFilter(scope) },
       select: {
         id: true,
+        userId: true,
         source: true,
         status: true,
         originalFileProvider: true,
@@ -610,6 +612,9 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
       return res.status(404).json({ success: false, error: 'Resume not found' });
     }
 
+    // Use the resume's owner for content-hash dedup, not the acting user
+    const ownerUserId = existingResume.userId;
+
     const { buffer, mimetype, originalname, size } = req.file;
     const decodedName = decodeFilename(originalname);
 
@@ -621,7 +626,7 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
     const contentHash = computeHash(resumeText);
     const duplicate = await prisma.resume.findFirst({
       where: {
-        userId,
+        userId: ownerUserId,
         contentHash,
         NOT: { id: resumeId },
       },
@@ -637,7 +642,7 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
     }
 
     // For reupload, always re-parse (user explicitly wants new parsing)
-    const { parsedData: parsed } = await getOrParseResume(resumeText, userId, req.requestId);
+    const { parsedData: parsed } = await getOrParseResume(resumeText, ownerUserId, req.requestId);
     const name = parsed.name || cleanCandidateNameFromFilename(decodedName);
     const email = parsed.email || null;
     const phone = parsed.phone || null;
@@ -998,7 +1003,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
           preferences: true,
           createdAt: true,
           updatedAt: true,
-          parsedData: true,
+          // parsedData is fetched separately via raw SQL to avoid loading the full TOAST blob
           resumeJobFits: {
             orderBy: { fitScore: 'desc' as const },
             take: 1,
@@ -1070,25 +1075,77 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       });
     }
 
-    // Batch-fetch interview status for all listed resumes
+    // Batch-fetch interview status and trimmed parsedData for all listed resumes
     const resumeIds = resumes.map((r: any) => r.id);
-    const interviews = resumeIds.length > 0
-      ? await prisma.interview.findMany({
-          where: { resumeId: { in: resumeIds } },
-          select: { resumeId: true, status: true, scheduledAt: true, completedAt: true, duration: true, createdAt: true },
-          orderBy: { createdAt: 'desc' },
-        })
-      : [];
+
+    // Fetch interviews and lightweight parsedData fields in parallel
+    const [interviews, parsedDataMap] = await Promise.all([
+      resumeIds.length > 0
+        ? prisma.interview.findMany({
+            where: { resumeId: { in: resumeIds } },
+            select: { resumeId: true, status: true, scheduledAt: true, completedAt: true, duration: true, createdAt: true },
+            orderBy: { createdAt: 'desc' },
+          })
+        : Promise.resolve([]),
+      // Fetch only the needed JSON paths from parsedData (avoids detoasting the full blob)
+      resumeIds.length > 0
+        ? (async () => {
+            const rows: Array<{ id: string; pd_skills: any; pd_summary: string | null; pd_address: string | null; pd_location: string | null; pd_languages: any; pd_experience: any; pd_education: any }> = await prisma.$queryRawUnsafe(
+              `SELECT "id",
+                "parsedData"->'skills' AS pd_skills,
+                "parsedData"->>'summary' AS pd_summary,
+                "parsedData"->>'address' AS pd_address,
+                "parsedData"->>'location' AS pd_location,
+                "parsedData"->'languages' AS pd_languages,
+                "parsedData"->'experience' AS pd_experience,
+                "parsedData"->'education' AS pd_education
+              FROM "Resume"
+              WHERE "id" = ANY($1::text[])`,
+              resumeIds,
+            );
+            const map = new Map<string, any>();
+            for (const row of rows) {
+              const languages = Array.isArray(row.pd_languages)
+                ? row.pd_languages.map((lang: any) => ({ language: lang.language, proficiency: lang.proficiency }))
+                : [];
+              const experience = Array.isArray(row.pd_experience)
+                ? row.pd_experience.map((e: any) => ({
+                    company: e.company, role: e.role || e.title, title: e.title || e.role,
+                    location: e.location, employmentType: e.employmentType,
+                    startDate: e.startDate, endDate: e.endDate, duration: e.duration,
+                  }))
+                : [];
+              const education = Array.isArray(row.pd_education)
+                ? row.pd_education.map((e: any) => ({
+                    institution: e.institution, degree: e.degree, field: e.field,
+                    location: e.location, year: e.year, startDate: e.startDate, endDate: e.endDate,
+                  }))
+                : [];
+              map.set(row.id, {
+                skills: row.pd_skills,
+                summary: row.pd_summary,
+                address: row.pd_address,
+                location: row.pd_location,
+                languages,
+                experience,
+                education,
+              });
+            }
+            return map;
+          })()
+        : Promise.resolve(new Map<string, any>()),
+    ]);
 
     // Group interviews by resumeId
-    const interviewsByResume = new Map<string, typeof interviews>();
+    type InterviewRow = (typeof interviews)[number];
+    const interviewsByResume = new Map<string, InterviewRow[]>();
     for (const iv of interviews) {
       if (!iv.resumeId) continue;
       if (!interviewsByResume.has(iv.resumeId)) interviewsByResume.set(iv.resumeId, []);
       interviewsByResume.get(iv.resumeId)!.push(iv);
     }
 
-    // Trim parsedData to only fields needed by the list view
+    // Build final response objects
     const trimmedResumes = resumes.map((r: any) => {
       const ivs = interviewsByResume.get(r.id) || [];
       const hasInvited = ivs.some((iv) => iv.status === 'scheduled' || iv.status === 'in_progress');
@@ -1113,43 +1170,11 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
           completedAt: latestCompleted?.completedAt || null,
           durationSeconds: latestCompleted?.duration || null,
         },
-        parsedData: r.parsedData ? {
-          skills: r.parsedData.skills,
-          summary: r.parsedData.summary,
-          address: r.parsedData.address,
-          location: r.parsedData.location,
-          languages: Array.isArray(r.parsedData.languages)
-            ? r.parsedData.languages.map((lang: any) => ({
-                language: lang.language,
-                proficiency: lang.proficiency,
-              }))
-            : [],
-          experience: Array.isArray(r.parsedData.experience)
-            ? r.parsedData.experience.map((e: any) => ({
-                company: e.company,
-                role: e.role || e.title,
-                title: e.title || e.role,
-                location: e.location,
-                employmentType: e.employmentType,
-                startDate: e.startDate, endDate: e.endDate, duration: e.duration,
-              }))
-            : [],
-          education: Array.isArray(r.parsedData.education)
-            ? r.parsedData.education.map((e: any) => ({
-                institution: e.institution,
-                degree: e.degree,
-                field: e.field,
-                location: e.location,
-                year: e.year,
-                startDate: e.startDate,
-                endDate: e.endDate,
-              }))
-            : [],
-        } : null,
+        parsedData: parsedDataMap.get(r.id) || null,
       };
     });
 
-    return res.json({
+    const response: Record<string, unknown> = {
       success: true,
       data: trimmedResumes,
       pagination: {
@@ -1158,7 +1183,25 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
         total,
         totalPages: Math.ceil(total / limitNum),
       },
-    });
+    };
+
+    // Optionally include aggregate stats inline to avoid a separate /stats round-trip
+    const { includeStats } = req.query as Record<string, string>;
+    if (includeStats === 'true') {
+      const userFilter = buildUserIdFilter(scope);
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      const [statTotal, thisWeek, analyzed, matchedCount, interviewedCount] = await Promise.all([
+        prisma.resume.count({ where: { ...userFilter, status: 'active' } }),
+        prisma.resume.count({ where: { ...userFilter, status: 'active', createdAt: { gte: oneWeekAgo } } }),
+        prisma.resume.count({ where: { ...userFilter, status: 'active', NOT: { insightData: { equals: Prisma.DbNull } } } }),
+        prisma.resume.count({ where: { ...userFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'matched' } } } }),
+        prisma.resume.count({ where: { ...userFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'invited' } } } }),
+      ]);
+      response.stats = { total: statTotal, thisWeek, analyzed, matchedCount, interviewedCount };
+    }
+
+    return res.json(response);
   } catch (error) {
     console.error('List resumes error:', error);
     return res.status(500).json({ success: false, error: 'Failed to list resumes' });

@@ -114,11 +114,12 @@
       "product": "Funktionen",
       "productMenu": {
         "requirements": "Anforderungsanalyse",
-        "agents": "Agenten",
-        "resumeScreening": "Lebenslauf-Screening",
-        "smartMatching": "Intelligentes Matching",
-        "aiInterview": "KI-Interview",
-        "smartEvaluation": "Intelligente Bewertung",
+        "agents": "AI Agent",
+        "resumeScreening": "Talent Hub",
+        "smartMatching": "AI-Screening",
+        "aiInterview": "AI-Interview",
+        "smartEvaluation": "AI-Bewertungen",
+        "quickInvite": "Schnelleinladung",
         "api": "API"
       }
     },
@@ -130,6 +131,7 @@
       "subheadline": "Schluss mit stundenlangem Lebenslauf-Sichten. Unser KI-Recruiter übernimmt die Vorauswahl, führt Interviews und liefert umfassende Bewertungsberichte – vollautomatisch.",
       "ctaPrimary": "Kostenlos testen",
       "ctaSecondary": "Jetzt einstellen",
+      "quickInviteCta": "Schnelleinladung",
       "stat1": "Zeit gespart",
       "stat2": "Schnelleres Screening",
       "stat3": "Unternehmen",
@@ -249,15 +251,15 @@
         "desc": "KI-gestützter Recruiting-Workflow, der Lebensläufe sichtet, Kandidaten verwaltet und Ihren gesamten Prozess optimiert."
       },
       "smartMatching": {
-        "title": "Intelligentes Matching",
+        "title": "AI-Screening",
         "desc": "KI ordnet Kandidaten Stellen mit präzisem Scoring zu, damit Sie kein Top-Talent verpassen."
       },
       "aiInterview": {
-        "title": "KI-Interview",
+        "title": "AI-Interview",
         "desc": "KI-geführte Video-Interviews mit natürlicher Stimme. Kandidaten sprechen mit unserer KI — Sie prüfen die Ergebnisse."
       },
       "evaluation": {
-        "title": "Bewertung",
+        "title": "AI-Bewertungen",
         "desc": "Multi-Agenten-Bewertung, die Fähigkeiten, Erfahrung und kulturelle Passung analysiert und umfassende Berichte liefert."
       }
     },
@@ -1683,12 +1685,13 @@
       "projects": "Projekte",
       "talentHub": "Talent-Hub",
       "jobs": "Stellen",
-      "aiInterview": "KI-Interview",
+      "aiInterview": "AI-Interview",
       "profile": "Profil",
       "settings": "Einstellungen",
       "devDashboard": "Entwickler-Dashboard",
-      "smartMatching": "Intelligentes Matching",
-      "evaluations": "Bewertungen",
+      "smartMatching": "AI-Screening",
+      "evaluations": "AI-Bewertungen",
+      "quickInvite": "Schnelleinladung",
       "candidateDetail": "Kandidatendetail",
       "jobDetail": "Stellendetail",
       "interviewRoom": "Interviewraum",
@@ -1818,7 +1821,7 @@
       "integrations": "ATS-Integrationen"
     },
     "interview": {
-      "title": "KI-Interview",
+      "title": "AI-Interview",
       "subtitle": "KI-gestützte Interviews mit automatischer Bewertung.",
       "status": {
         "scheduled": "Geplant",
@@ -2044,6 +2047,7 @@
       "pause": "Pausieren",
       "resume": "Fortsetzen",
       "allStatuses": "Alle",
+      "resultsCountPaginated": "Seite {{page}} von {{totalPages}} ({{total}} Stellen)",
       "status": {
         "draft": "Entwurf",
         "open": "Offen",
@@ -2495,7 +2499,7 @@
       "clearFilters": "Alle Filter löschen"
     },
     "matching": {
-      "title": "Intelligentes Matching",
+      "title": "AI-Screening",
       "subtitle": "KI-gestütztes Kandidaten-Stellen-Matching mit detaillierter Analyse.",
       "selectJob": "Stelle auswählen",
       "selectJobs": "Stellen auswählen",
@@ -2644,7 +2648,7 @@
       "passedThreshold": "Erfüllt die Mindestpunktzahl"
     },
     "evaluations": {
-      "title": "Bewertungen",
+      "title": "AI-Bewertungen",
       "subtitle": "KI-gestützte Multi-Agenten-Bewertungsberichte.",
       "empty": "Noch keine Bewertungen",
       "emptyDesc": "Schließen Sie zuerst Interviews ab, dann starten Sie KI-Bewertungen.",
@@ -3391,8 +3395,11 @@
     "confirmDeleteMessage": "Sind Sie sicher, dass Sie dieses Element löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "cancel": "Abbrechen",
     "delete": "Löschen",
+    "search": "Suchen",
     "save": "Speichern",
     "saving": "Speichern...",
+    "previous": "Zurück",
+    "next": "Weiter",
     "filters": {
       "allRecruiters": "Alle Recruiter",
       "recruiterGroup": "Recruiter",
@@ -3894,6 +3901,7 @@
     "title": "Agent Alex",
     "subtitle": "Anforderungsanalyst für Personalbeschaffung",
     "floatingLabel": "KI-Recruiting-Assistent",
+    "quickInvite": "Schnelleinladung",
     "panels": { "agentInteraction": "Agenten-Interaktion" },
     "modes": { "textChat": "Text-Chat", "liveVoice": "Live-Sprache" },
     "sessions": { "recent": "Letzte Sitzungen", "newChat": "Neuer Chat", "cannotDelete": "Löschen nicht möglich — mit einer Stelle verknüpft" },
@@ -4001,6 +4009,53 @@
         "reasonForOpening": "Grund für die Besetzung",
         "dealBreakers": "Ausschlusskriterien"
       }
+    }
+  },
+  "contacts": {
+    "title": "Kontakte und Unternehmen",
+    "subtitle": "Verwalten Sie Ihre Personalverantwortlichen, Kunden, Referenzen und Partnerunternehmen.",
+    "contactsTab": "Kontakte",
+    "companiesTab": "Unternehmen",
+    "searchPlaceholder": "Kontakte nach Name, E-Mail oder Unternehmen suchen...",
+    "searchCompanyPlaceholder": "Unternehmen nach Name, Branche oder Standort suchen...",
+    "allTypes": "Alle Typen",
+    "addContact": "Kontakt hinzufügen",
+    "addCompany": "Unternehmen hinzufügen",
+    "editContact": "Kontakt bearbeiten",
+    "editCompany": "Unternehmen bearbeiten",
+    "noContacts": "Noch keine Kontakte",
+    "noContactsDesc": "Fügen Sie Ihren ersten Kontakt hinzu, um loszulegen.",
+    "noCompanies": "Noch keine Unternehmen",
+    "noCompaniesDesc": "Fügen Sie Ihr erstes Unternehmen hinzu, um loszulegen.",
+    "confirmDelete": "Sind Sie sicher, dass Sie diesen Kontakt löschen möchten?",
+    "confirmDeleteCompany": "Sind Sie sicher, dass Sie dieses Unternehmen löschen möchten?",
+    "cancel": "Abbrechen",
+    "saving": "Speichern...",
+    "update": "Aktualisieren",
+    "create": "Erstellen",
+    "type": {
+      "hiringManager": "Personalverantwortlicher",
+      "client": "Kunde",
+      "vendor": "Lieferant",
+      "reference": "Referenz"
+    },
+    "form": {
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "jobTitle": "Berufsbezeichnung",
+      "type": "Typ",
+      "company": "Unternehmen",
+      "noCompany": "Kein Unternehmen",
+      "companyName": "Unternehmensname",
+      "industry": "Branche",
+      "size": "Unternehmensgröße",
+      "location": "Standort",
+      "website": "Webseite",
+      "openJobs": "Offene Stellen",
+      "totalPlaced": "Gesamt Vermittelt",
+      "notes": "Notizen"
     }
   }
 }

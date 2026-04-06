@@ -1745,6 +1745,7 @@ function UsersTab() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         >
                           <option value="user">User</option>
+                          <option value="internal">Internal</option>
                           <option value="admin">Admin</option>
                         </select>
                       </div>

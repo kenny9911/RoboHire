@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { API_BASE } from '../config';
 
 interface ResumeViewerModalProps {
   /** The gohire interview ID to fetch the resume for */
@@ -37,7 +38,7 @@ export default function ResumeViewerModal({ interviewId, resumeUrl, onClose, key
   const [textContent, setTextContent] = useState<string | null>(null);
   const [textLoading, setTextLoading] = useState(false);
 
-  const proxyUrl = `/api/v1/gohire-interviews/${interviewId}/resume-file`;
+  const proxyUrl = `${API_BASE}/api/v1/gohire-interviews/${interviewId}/resume-file`;
 
   // For text/md files, fetch content directly
   useEffect(() => {

@@ -8,7 +8,7 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:agent\"",
+    "dev": "concurrently --kill-others --kill-signal SIGINT \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:agent\"",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:agent": "npm run agent:start --workspace=backend",
@@ -22,10 +22,13 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "prisma": "^7.5.0"
+    "prisma": "6.9.0"
   },
   "dependencies": {
-    "@prisma/client": "^7.5.0",
+    "@prisma/client": "6.9.0",
     "multer": "^2.0.2"
+  },
+  "optionalDependencies": {
+    "@esbuild/darwin-arm64": "^0.27.2"
   }
 }

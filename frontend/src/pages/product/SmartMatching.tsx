@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import axios from '../../lib/axios';
 import { API_BASE } from '../../config';
 import { usePageState } from '../../hooks/usePageState';
+import MatchingBatchHistory from '../../components/MatchingBatchHistory';
 import MatchingSessionHistory from '../../components/MatchingSessionHistory';
 import MatchDetailModal from '../../components/MatchDetailModal';
 import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
@@ -45,17 +46,11 @@ interface MatchResult {
   };
 }
 
-interface MatchProgress {
-  total: number;
-  completed: number;
-  failed: number;
-  currentCandidateName: string | null;
-  jobTitle: string;
-  jobIndex?: number;
-  jobCount?: number;
-}
-
 interface PreFilterProgress {
+  batchId?: string;
+  jobId?: string;
+  jobTitle?: string;
+  sessionId?: string;
   status: string;
   total: number;
   passed?: number;
@@ -64,11 +59,16 @@ interface PreFilterProgress {
 }
 
 interface ScreeningProgress {
+  batchId?: string;
+  jobId?: string;
+  jobTitle?: string;
+  sessionId?: string;
   status: string;
   total?: number;
   A?: number;
   B?: number;
   C?: number;
+  durationMs?: number;
 }
 
 interface MatchingCriteriaSnapshot {
@@ -77,6 +77,11 @@ interface MatchingCriteriaSnapshot {
   jobTypes: string[];
   freeText: string | null;
   hasPreFilter: boolean;
+}
+
+interface MatchingBatchConfigSnapshot extends MatchingCriteriaSnapshot {
+  selectedJobCount: number;
+  maxAgents: number;
 }
 
 interface SessionCriteriaResume {
@@ -110,6 +115,85 @@ interface SelectedMatchingSession {
   selectedResumes: SessionCriteriaResume[];
 }
 
+interface BatchSessionSummary {
+  id: string;
+  title: string | null;
+  status: string;
+  createdAt: string;
+  completedAt: string | null;
+  totalMatched: number;
+  totalFailed: number;
+  totalFiltered: number;
+  criteriaSnapshot?: MatchingCriteriaSnapshot;
+  job: {
+    id: string;
+    title: string;
+    description?: string | null;
+  };
+}
+
+interface SelectedMatchingBatch {
+  id: string;
+  title: string | null;
+  status: string;
+  createdAt: string;
+  startedAt: string;
+  completedAt: string | null;
+  totalJobs: number;
+  totalTasks: number;
+  completedTasks: number;
+  failedTasks: number;
+  filteredTasks: number;
+  configSnapshot?: MatchingBatchConfigSnapshot;
+  matchingSessions?: BatchSessionSummary[];
+}
+
+interface BatchJobProgress {
+  jobId: string;
+  jobTitle: string;
+  sessionId: string;
+  sessionTitle: string | null;
+  status: string;
+  totalResumes: number;
+  totalTasks: number;
+  completedTasks: number;
+  failedTasks: number;
+  filteredTasks: number;
+  startedAt: string;
+  completedAt: string | null;
+}
+
+interface BatchAgentLane {
+  slot: number;
+  status: 'idle' | 'running' | 'done' | 'error';
+  jobId: string | null;
+  jobTitle: string | null;
+  sessionId: string | null;
+  resumeId: string | null;
+  resumeName: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  error: string | null;
+}
+
+interface BatchProgressState {
+  batchId: string;
+  title: string | null;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  totalJobs: number;
+  totalTasks: number;
+  completedTasks: number;
+  failedTasks: number;
+  filteredTasks: number;
+  maxAgents: number;
+  activeAgents: number;
+  peakActiveAgents: number;
+  jobs: BatchJobProgress[];
+  agents: BatchAgentLane[];
+}
+
 const GRADE_COLORS: Record<string, string> = {
   'A+': 'bg-emerald-100 text-emerald-700',
   A: 'bg-emerald-100 text-emerald-700',
@@ -134,6 +218,35 @@ const DEFAULT_MATCH_MIN_SCORE = '60';
 const DEFAULT_MAX_JOB_MATCHES_PER_RESUME = '3';
 const DEFAULT_MAX_RESUME_MATCHES_PER_JOB = '3';
 
+function createAgentLanes(count = 6): BatchAgentLane[] {
+  return Array.from({ length: count }, (_, index) => ({
+    slot: index + 1,
+    status: 'idle',
+    jobId: null,
+    jobTitle: null,
+    sessionId: null,
+    resumeId: null,
+    resumeName: null,
+    startedAt: null,
+    finishedAt: null,
+    error: null,
+  }));
+}
+
+function upsertJobProgress(jobs: BatchJobProgress[], job: BatchJobProgress): BatchJobProgress[] {
+  const existingIndex = jobs.findIndex((item) => item.jobId === job.jobId);
+  if (existingIndex === -1) {
+    return [...jobs, job].sort((left, right) => left.jobTitle.localeCompare(right.jobTitle));
+  }
+
+  const next = [...jobs];
+  next[existingIndex] = {
+    ...next[existingIndex],
+    ...job,
+  };
+  return next;
+}
+
 export default function SmartMatching() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -144,12 +257,15 @@ export default function SmartMatching() {
   const [loadingJobs, setLoadingJobs] = useState(jobs.length > 0 ? false : true);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [running, setRunning] = useState(false);
-  const [matchProgress, setMatchProgress] = useState<MatchProgress | null>(null);
+  const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
+  const [selectedBatchMeta, setSelectedBatchMeta] = useState<SelectedMatchingBatch | null>(null);
+  const [batchProgress, setBatchProgress] = useState<BatchProgressState | null>(null);
   const [preFilterProgress, setPreFilterProgress] = useState<PreFilterProgress | null>(null);
   const [screeningProgress, setScreeningProgress] = useState<ScreeningProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = usePageState<string>('matching.statusFilter', '');
+  const [jobFilter, setJobFilter] = usePageState<string>('matching.jobFilter', '');
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [sessionRefreshTrigger, setSessionRefreshTrigger] = useState(0);
   const [detailMatch, setDetailMatch] = useState<MatchResult | null>(null);
@@ -158,9 +274,9 @@ export default function SmartMatching() {
   const [showSessionCriteriaModal, setShowSessionCriteriaModal] = useState(false);
   const [selectedSessionMeta, setSelectedSessionMeta] = useState<SelectedMatchingSession | null>(null);
   const [resumeCount, setResumeCount] = useState(0);
-  const [savedSessionCount, setSavedSessionCount] = useState(0);
+  const [savedBatchCount, setSavedBatchCount] = useState(0);
   const [loadingResumeCount, setLoadingResumeCount] = useState(true);
-  const [loadingSessionCount, setLoadingSessionCount] = useState(true);
+  const [loadingBatchCount, setLoadingBatchCount] = useState(true);
   const [modalLaunchJobIds, setModalLaunchJobIds] = useState<string[]>([]);
   const wasAIMatchModalOpenRef = useRef(false);
 
@@ -251,6 +367,14 @@ export default function SmartMatching() {
   }, [filteredModalResumes, modalResumeSearch]);
 
   const allModalVisibleSelected = filteredModalResumes.length > 0 && filteredModalResumes.every((r) => modalSelectedResumeIds.has(r.id));
+  const formatSessionTime = useCallback(
+    (value: string | null | undefined) => (
+      value
+        ? new Date(value).toLocaleString()
+        : t('product.matching.sessionEndPending', 'In progress')
+    ),
+    [t]
+  );
 
   const getJobStatusLabel = useCallback((status: string) => {
     return t(
@@ -339,10 +463,10 @@ export default function SmartMatching() {
 
     (async () => {
       setLoadingResumeCount(true);
-      setLoadingSessionCount(true);
-      const [resumesRes, sessionsRes] = await Promise.allSettled([
+      setLoadingBatchCount(true);
+      const [resumesRes, batchesRes] = await Promise.allSettled([
         axios.get('/api/v1/resumes/count', { params: { status: 'active', ...pageFilterParams } }),
-        axios.get('/api/v1/matching/sessions/count', { params: pageFilterParams }),
+        axios.get('/api/v1/matching/batches/count', { params: pageFilterParams }),
       ]);
 
       if (cancelled) return;
@@ -352,10 +476,10 @@ export default function SmartMatching() {
       }
       setLoadingResumeCount(false);
 
-      if (sessionsRes.status === 'fulfilled') {
-        setSavedSessionCount(sessionsRes.value.data.meta?.total || 0);
+      if (batchesRes.status === 'fulfilled') {
+        setSavedBatchCount(batchesRes.value.data.meta?.total || 0);
       }
-      setLoadingSessionCount(false);
+      setLoadingBatchCount(false);
     })();
 
     return () => {
@@ -383,7 +507,7 @@ export default function SmartMatching() {
   }, [buildFilterParams]);
 
   // Debounced server-side search for modal resumes
-  const modalSearchTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const modalSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const modalRecruiterFilterRef = useRef(modalRecruiterFilter);
   modalRecruiterFilterRef.current = modalRecruiterFilter;
 
@@ -411,7 +535,11 @@ export default function SmartMatching() {
     fetchModalJobs(recruiterFilter);
     setSelectedJobIds([]);
     setMatches([]);
+    setSelectedBatchId(null);
+    setSelectedBatchMeta(null);
+    setBatchProgress(null);
     setSelectedSessionId(null);
+    setSelectedSessionMeta(null);
   }, [recruiterFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Re-fetch jobs and resumes when recruiter filter changes in modal
@@ -451,44 +579,14 @@ export default function SmartMatching() {
   }, [buildAutoMatchName, modalJobIds, modalMatchNameEdited, showAIMatchModal]);
 
   // Fetch match results for all selected jobs
-  const [passingScoreMap, setPassingScoreMap] = useState<Record<string, number>>({});
+  const passingScoreMap: Record<string, number> = {};
   const [applyingIds, setApplyingIds] = useState<Set<string>>(new Set());
-
-  const fetchMatches = useCallback(async (jobIds: string[]) => {
-    if (jobIds.length === 0) {
-      setMatches([]);
-      return;
-    }
-    try {
-      setLoadingMatches(true);
-      const params: any = { sort: 'score', order: 'desc', ...buildFilterParams(recruiterFilter) };
-      if (statusFilter) params.status = statusFilter;
-      const results = await Promise.all(
-        jobIds.map((jobId) => axios.get(`/api/v1/matching/results/${jobId}`, { params }).catch(() => ({ data: { data: [], meta: {} } })))
-      );
-      const scoreMap: Record<string, number> = {};
-      results.forEach((res) => {
-        const meta = res.data.meta;
-        if (meta?.jobId && meta?.passingScore != null) {
-          scoreMap[meta.jobId] = meta.passingScore;
-        }
-      });
-      setPassingScoreMap((prev) => ({ ...prev, ...scoreMap }));
-      const allMatches = results.flatMap((res) => res.data.data || []);
-      allMatches.sort((a: any, b: any) => (b.score ?? 0) - (a.score ?? 0));
-      setMatches(allMatches);
-    } catch {
-      setMatches([]);
-    } finally {
-      setLoadingMatches(false);
-    }
-  }, [statusFilter, recruiterFilter, buildFilterParams]);
 
   // Load session-specific matches
   const fetchSessionMatches = useCallback(async (sessionId: string) => {
     try {
       setLoadingMatches(true);
-      const res = await axios.get(`/api/v1/matching/sessions/${sessionId}`);
+      const res = await axios.get(`/api/v1/matching/sessions/${sessionId}`, { params: pageFilterParams });
       const session = res.data.data?.session;
       setMatches(res.data.data?.matches || []);
       setSelectedSessionMeta(
@@ -505,18 +603,42 @@ export default function SmartMatching() {
     } finally {
       setLoadingMatches(false);
     }
-  }, []);
+  }, [pageFilterParams]);
+
+  const fetchBatchDetail = useCallback(async (batchId: string) => {
+    try {
+      const res = await axios.get(`/api/v1/matching/batches/${batchId}`, { params: pageFilterParams });
+      const batch = res.data.data?.batch;
+      const sessions = (res.data.data?.sessions || []) as BatchSessionSummary[];
+      setSelectedBatchMeta(
+        batch
+          ? {
+              ...batch,
+              matchingSessions: sessions,
+            }
+          : null
+      );
+      setSelectedJobIds(sessions.map((session) => session.job.id));
+      return batch ? { ...batch, matchingSessions: sessions } as SelectedMatchingBatch : null;
+    } catch {
+      setSelectedBatchMeta(null);
+      return null;
+    }
+  }, [pageFilterParams, setSelectedJobIds]);
 
   useEffect(() => {
-    if (running) return; // Don't fetch while matching is in progress
+    if (running) return;
     if (selectedSessionId) {
       fetchSessionMatches(selectedSessionId);
-    } else if (selectedJobIds.length > 0) {
-      fetchMatches(selectedJobIds);
+    } else if (selectedBatchId) {
+      setMatches([]);
+      setSelectedSessionMeta(null);
+      fetchBatchDetail(selectedBatchId);
     } else {
       setMatches([]);
+      setSelectedBatchMeta(null);
     }
-  }, [selectedJobIds, selectedSessionId, fetchMatches, fetchSessionMatches, running]);
+  }, [selectedBatchId, selectedSessionId, fetchBatchDetail, fetchSessionMatches, running, setSelectedJobIds]);
 
   // Keyboard handler for modals
   useEffect(() => {
@@ -576,43 +698,43 @@ export default function SmartMatching() {
     });
   }, []);
 
-  // Run AI matching for each selected job sequentially with SSE
-  const runMatchingForJob = async (
-    jobId: string,
-    jobTitle: string,
-    jobIndex: number,
-    jobCount: number,
-    config: {
-      resumeIds: string[];
-      preFilter?: { locations?: string[]; jobTypes?: string[]; freeText?: string };
-      sessionName?: string;
-    }
-  ) => {
-    setPreFilterProgress(null);
-    setScreeningProgress(null);
-    setMatchProgress({
-      total: 0,
-      completed: 0,
-      failed: 0,
-      currentCandidateName: null,
-      jobTitle,
-      jobIndex,
-      jobCount,
-    });
+  const runBatchMatching = useCallback(async (config: {
+    jobIds: string[];
+    resumeIds: string[];
+    preFilter?: { locations?: string[]; jobTypes?: string[]; freeText?: string };
+    sessionName?: string;
+  }) => {
+    const ensureProgress = () => {
+      setBatchProgress((prev) => prev ?? {
+        batchId: '',
+        title: config.sessionName || null,
+        status: 'running',
+        startedAt: new Date().toISOString(),
+        completedAt: null,
+        totalJobs: config.jobIds.length,
+        totalTasks: config.jobIds.length * config.resumeIds.length,
+        completedTasks: 0,
+        failedTasks: 0,
+        filteredTasks: 0,
+        maxAgents: 6,
+        activeAgents: 0,
+        peakActiveAgents: 0,
+        jobs: [],
+        agents: createAgentLanes(),
+      });
+    };
 
-    const sessionName = jobCount > 1
-      ? `${config.sessionName ? config.sessionName + ' — ' : ''}${jobTitle}`
-      : config.sessionName;
+    ensureProgress();
 
-    const response = await fetch(`${API_BASE}/api/v1/matching/run`, {
+    const response = await fetch(`${API_BASE}/api/v1/matching/run-batch`, {
       method: 'POST',
       headers: getAuthHeaders(true),
       credentials: 'include',
       body: JSON.stringify({
-        jobId,
+        jobIds: config.jobIds,
         resumeIds: config.resumeIds,
         preFilter: config.preFilter,
-        sessionName,
+        sessionName: config.sessionName,
         locale: i18n.language,
       }),
     });
@@ -629,10 +751,50 @@ export default function SmartMatching() {
       throw new Error(formatRunMatchingError(payload, response.status));
     }
 
-    let matchedCount = 0;
-    let failedCount = 0;
-    let totalCount = 0;
-    let filteredCount = 0;
+    let completedPayload: any = null;
+
+    const mergeBatchMeta = (payload: any) => {
+      setBatchProgress((prev) => ({
+        ...(prev ?? {
+          batchId: payload.batchId || '',
+          title: payload.title || null,
+          status: payload.status || 'running',
+          startedAt: payload.startedAt || new Date().toISOString(),
+          completedAt: payload.completedAt || null,
+          totalJobs: payload.totalJobs || config.jobIds.length,
+          totalTasks: payload.totalTasks || config.jobIds.length * config.resumeIds.length,
+          completedTasks: payload.completedTasks || 0,
+          failedTasks: payload.failedTasks || 0,
+          filteredTasks: payload.filteredTasks || 0,
+          maxAgents: payload.maxAgents || 6,
+          activeAgents: 0,
+          peakActiveAgents: 0,
+          jobs: [],
+          agents: createAgentLanes(payload.maxAgents || 6),
+        }),
+        batchId: payload.batchId ?? prev?.batchId ?? '',
+        title: payload.title ?? prev?.title ?? null,
+        status: payload.status ?? prev?.status ?? 'running',
+        startedAt: payload.startedAt ?? prev?.startedAt ?? new Date().toISOString(),
+        completedAt: payload.completedAt ?? prev?.completedAt ?? null,
+        totalJobs: payload.totalJobs ?? prev?.totalJobs ?? config.jobIds.length,
+        totalTasks: payload.totalTasks ?? prev?.totalTasks ?? config.jobIds.length * config.resumeIds.length,
+        completedTasks: payload.completedTasks ?? prev?.completedTasks ?? 0,
+        failedTasks: payload.failedTasks ?? prev?.failedTasks ?? 0,
+        filteredTasks: payload.filteredTasks ?? prev?.filteredTasks ?? 0,
+        maxAgents: payload.maxAgents ?? prev?.maxAgents ?? 6,
+        agents:
+          prev?.agents && prev.agents.length > 0
+            ? prev.agents
+            : createAgentLanes(payload.maxAgents || 6),
+        activeAgents: prev?.activeAgents ?? 0,
+        peakActiveAgents: prev?.peakActiveAgents ?? 0,
+        jobs: prev?.jobs ?? [],
+      }));
+      if (payload.batchId) {
+        setSelectedBatchId(payload.batchId);
+      }
+    };
 
     if (contentType.includes('text/event-stream') && response.body) {
       const reader = response.body.getReader();
@@ -655,8 +817,14 @@ export default function SmartMatching() {
             try {
               const eventData = JSON.parse(line.slice(6));
 
-              if (currentEvent === 'prefilter') {
+              if (currentEvent === 'batch') {
+                mergeBatchMeta(eventData);
+              } else if (currentEvent === 'prefilter') {
                 setPreFilterProgress({
+                  batchId: eventData.batchId,
+                  jobId: eventData.jobId,
+                  jobTitle: eventData.jobTitle,
+                  sessionId: eventData.sessionId,
                   status: eventData.status,
                   total: eventData.total ?? 0,
                   passed: eventData.passed,
@@ -665,27 +833,144 @@ export default function SmartMatching() {
                 });
               } else if (currentEvent === 'screening') {
                 setScreeningProgress({
+                  batchId: eventData.batchId,
+                  jobId: eventData.jobId,
+                  jobTitle: eventData.jobTitle,
+                  sessionId: eventData.sessionId,
                   status: eventData.status,
                   total: eventData.total,
                   A: eventData.A,
                   B: eventData.B,
                   C: eventData.C,
+                  durationMs: eventData.durationMs,
+                });
+              } else if (currentEvent === 'job_session') {
+                setBatchProgress((prev) => {
+                  const next = prev ?? {
+                    batchId: eventData.batchId || '',
+                    title: config.sessionName || null,
+                    status: 'running',
+                    startedAt: new Date().toISOString(),
+                    completedAt: null,
+                    totalJobs: config.jobIds.length,
+                    totalTasks: config.jobIds.length * config.resumeIds.length,
+                    completedTasks: 0,
+                    failedTasks: 0,
+                    filteredTasks: 0,
+                    maxAgents: 6,
+                    activeAgents: 0,
+                    peakActiveAgents: 0,
+                    jobs: [],
+                    agents: createAgentLanes(),
+                  };
+
+                  return {
+                    ...next,
+                    jobs: upsertJobProgress(next.jobs, {
+                      jobId: eventData.jobId,
+                      jobTitle: eventData.jobTitle,
+                      sessionId: eventData.sessionId,
+                      sessionTitle: eventData.sessionTitle ?? null,
+                      status: eventData.status,
+                      totalResumes: eventData.totalResumes ?? eventData.totalTasks ?? 0,
+                      totalTasks: eventData.totalTasks ?? eventData.totalResumes ?? 0,
+                      completedTasks: eventData.completedTasks ?? 0,
+                      failedTasks: eventData.failedTasks ?? 0,
+                      filteredTasks: eventData.filteredTasks ?? 0,
+                      startedAt: eventData.startedAt,
+                      completedAt: eventData.completedAt ?? null,
+                    }),
+                  };
                 });
               } else if (currentEvent === 'progress') {
-                setMatchProgress({
-                  total: eventData.total ?? 0,
-                  completed: eventData.completed ?? 0,
-                  failed: eventData.failed ?? 0,
-                  currentCandidateName: eventData.currentCandidateName ?? null,
-                  jobTitle: eventData.jobTitle || jobTitle,
-                  jobIndex,
-                  jobCount,
-                });
+                setBatchProgress((prev) => ({
+                  ...(prev ?? {
+                    batchId: eventData.batchId || '',
+                    title: config.sessionName || null,
+                    status: eventData.status || 'running',
+                    startedAt: new Date().toISOString(),
+                    completedAt: null,
+                    totalJobs: eventData.totalJobs ?? config.jobIds.length,
+                    totalTasks: eventData.totalTasks ?? config.jobIds.length * config.resumeIds.length,
+                    completedTasks: 0,
+                    failedTasks: 0,
+                    filteredTasks: 0,
+                    maxAgents: 6,
+                    activeAgents: 0,
+                    peakActiveAgents: 0,
+                    jobs: [],
+                    agents: createAgentLanes(),
+                  }),
+                  batchId: eventData.batchId ?? prev?.batchId ?? '',
+                  status: eventData.status ?? prev?.status ?? 'running',
+                  totalJobs: eventData.totalJobs ?? prev?.totalJobs ?? config.jobIds.length,
+                  totalTasks: eventData.totalTasks ?? prev?.totalTasks ?? config.jobIds.length * config.resumeIds.length,
+                  completedTasks: eventData.completedTasks ?? prev?.completedTasks ?? 0,
+                  failedTasks: eventData.failedTasks ?? prev?.failedTasks ?? 0,
+                  filteredTasks: eventData.filteredTasks ?? prev?.filteredTasks ?? 0,
+                  jobs: Array.isArray(eventData.jobs)
+                    ? eventData.jobs.map((job: BatchJobProgress) => ({ ...job }))
+                    : (prev?.jobs ?? []),
+                }));
+              } else if (currentEvent === 'agent_pool') {
+                setBatchProgress((prev) => ({
+                  ...(prev ?? {
+                    batchId: eventData.batchId || '',
+                    title: config.sessionName || null,
+                    status: 'running',
+                    startedAt: new Date().toISOString(),
+                    completedAt: null,
+                    totalJobs: config.jobIds.length,
+                    totalTasks: config.jobIds.length * config.resumeIds.length,
+                    completedTasks: 0,
+                    failedTasks: 0,
+                    filteredTasks: 0,
+                    maxAgents: eventData.maxAgents ?? 6,
+                    activeAgents: 0,
+                    peakActiveAgents: 0,
+                    jobs: [],
+                    agents: createAgentLanes(eventData.maxAgents ?? 6),
+                  }),
+                  batchId: eventData.batchId ?? prev?.batchId ?? '',
+                  maxAgents: eventData.maxAgents ?? prev?.maxAgents ?? 6,
+                  activeAgents: eventData.activeAgents ?? prev?.activeAgents ?? 0,
+                  peakActiveAgents: eventData.peakActiveAgents ?? prev?.peakActiveAgents ?? 0,
+                  agents: Array.isArray(eventData.agents)
+                    ? eventData.agents.map((agent: BatchAgentLane) => ({ ...agent }))
+                    : (prev?.agents ?? createAgentLanes(eventData.maxAgents ?? 6)),
+                }));
               } else if (currentEvent === 'complete' && eventData.success) {
-                matchedCount = eventData.data?.totalMatched ?? 0;
-                failedCount = eventData.data?.totalFailed ?? 0;
-                totalCount = eventData.data?.total ?? matchedCount + failedCount;
-                filteredCount = eventData.data?.totalFiltered ?? 0;
+                completedPayload = eventData.data;
+                mergeBatchMeta(eventData.data || {});
+                setBatchProgress((prev) => ({
+                  ...(prev ?? {
+                    batchId: eventData.data?.batchId || '',
+                    title: eventData.data?.title || null,
+                    status: eventData.data?.status || 'completed',
+                    startedAt: eventData.data?.startedAt || new Date().toISOString(),
+                    completedAt: eventData.data?.completedAt || null,
+                    totalJobs: eventData.data?.totalJobs || config.jobIds.length,
+                    totalTasks: eventData.data?.totalTasks || config.jobIds.length * config.resumeIds.length,
+                    completedTasks: eventData.data?.completedTasks || 0,
+                    failedTasks: eventData.data?.failedTasks || 0,
+                    filteredTasks: eventData.data?.filteredTasks || 0,
+                    maxAgents: eventData.data?.maxAgents || 6,
+                    activeAgents: 0,
+                    peakActiveAgents: 0,
+                    jobs: [],
+                    agents: createAgentLanes(eventData.data?.maxAgents || 6),
+                  }),
+                  status: eventData.data?.status ?? prev?.status ?? 'completed',
+                  completedAt: eventData.data?.completedAt ?? prev?.completedAt ?? null,
+                  totalJobs: eventData.data?.totalJobs ?? prev?.totalJobs ?? config.jobIds.length,
+                  totalTasks: eventData.data?.totalTasks ?? prev?.totalTasks ?? config.jobIds.length * config.resumeIds.length,
+                  completedTasks: eventData.data?.completedTasks ?? prev?.completedTasks ?? 0,
+                  failedTasks: eventData.data?.failedTasks ?? prev?.failedTasks ?? 0,
+                  filteredTasks: eventData.data?.filteredTasks ?? prev?.filteredTasks ?? 0,
+                  jobs: Array.isArray(eventData.data?.jobs)
+                    ? eventData.data.jobs.map((job: BatchJobProgress) => ({ ...job }))
+                    : (prev?.jobs ?? []),
+                }));
               } else if (currentEvent === 'error') {
                 throw new Error(eventData.error || 'Matching failed');
               }
@@ -701,19 +986,50 @@ export default function SmartMatching() {
       if (!response.ok || !data.success) {
         throw new Error(formatRunMatchingError(data, response.status));
       }
-      matchedCount = data.data?.totalMatched ?? 0;
-      failedCount = data.data?.totalFailed ?? 0;
-      totalCount = matchedCount + failedCount;
+      completedPayload = data.data;
+      mergeBatchMeta(data.data || {});
+      setBatchProgress((prev) => ({
+        ...(prev ?? {
+          batchId: data.data?.batchId || '',
+          title: data.data?.title || null,
+          status: data.data?.status || 'completed',
+          startedAt: data.data?.startedAt || new Date().toISOString(),
+          completedAt: data.data?.completedAt || null,
+          totalJobs: data.data?.totalJobs || config.jobIds.length,
+          totalTasks: data.data?.totalTasks || config.jobIds.length * config.resumeIds.length,
+          completedTasks: data.data?.completedTasks || 0,
+          failedTasks: data.data?.failedTasks || 0,
+          filteredTasks: data.data?.filteredTasks || 0,
+          maxAgents: data.data?.maxAgents || 6,
+          activeAgents: 0,
+          peakActiveAgents: 0,
+          jobs: [],
+          agents: createAgentLanes(data.data?.maxAgents || 6),
+        }),
+        jobs: Array.isArray(data.data?.jobs)
+          ? data.data.jobs.map((job: BatchJobProgress) => ({ ...job }))
+          : (prev?.jobs ?? []),
+      }));
     }
 
-    return { matched: matchedCount, failed: failedCount, total: totalCount, filtered: filteredCount };
-  };
+    return completedPayload;
+  }, [formatRunMatchingError, getAuthHeaders, i18n.language]);
 
   const handleRunFromModal = async () => {
     const jobIds = Array.from(modalJobIds);
     if (jobIds.length === 0) return;
 
-    // Update selected jobs in page state
+    setRunning(true);
+    setError(null);
+    setSuccessMessage(null);
+    setMatches([]);
+    setSelectedBatchMeta(null);
+    setBatchProgress(null);
+    setSelectedSessionId(null);
+    setSelectedSessionMeta(null);
+    setShowSessionCriteriaModal(false);
+    setSelectedBatchId(null);
+
     setSelectedJobIds(jobIds);
     setShowAIMatchModal(false);
 
@@ -731,54 +1047,32 @@ export default function SmartMatching() {
     }
 
     const config = {
+      jobIds,
       resumeIds,
       preFilter: hasPreFilter ? preFilter : undefined,
       sessionName: modalSessionName.trim() || undefined,
-      minScore: modalMinScore ? Number(modalMinScore) : undefined,
-      maxJobMatchesPerResume: modalMaxJobMatchesPerResume ? Number(modalMaxJobMatchesPerResume) : undefined,
-      maxResumeMatchesPerJob: modalMaxResumeMatchesPerJob ? Number(modalMaxResumeMatchesPerJob) : undefined,
     };
 
-    const matchJobs = jobs.filter((j) => modalJobIds.has(j.id));
-
     try {
-      setRunning(true);
-      setError(null);
-      setSuccessMessage(null);
-      setMatches([]);
-
-      let totalMatched = 0;
-      let totalFailed = 0;
-      let totalAll = 0;
-      let totalFiltered = 0;
-
-      for (let i = 0; i < matchJobs.length; i++) {
-        const job = matchJobs[i];
-        try {
-          const result = await runMatchingForJob(job.id, job.title, i + 1, matchJobs.length, config);
-          totalMatched += result.matched;
-          totalFailed += result.failed;
-          totalAll += result.total;
-          totalFiltered += result.filtered;
-        } catch (err: any) {
-          setError((prev) => (prev ? prev + '\n' : '') + `${job.title}: ${err.message}`);
+      const result = await runBatchMatching(config);
+      if (result) {
+        setSuccessMessage(
+          getCompletionMessage(
+            result.completedTasks ?? 0,
+            result.failedTasks ?? 0,
+            result.totalTasks ?? 0,
+            result.filteredTasks ?? 0,
+          )
+        );
+        if (result.batchId) {
+          setSelectedBatchId(result.batchId);
         }
+        setSessionRefreshTrigger((prev) => prev + 1);
       }
-
-      setSuccessMessage(getCompletionMessage(totalMatched, totalFailed, totalAll, totalFiltered));
-
-      setSelectedSessionId(null);
-      setSelectedSessionMeta(null);
-      setShowSessionCriteriaModal(false);
-      await fetchMatches(jobIds);
-      setSessionRefreshTrigger((prev) => prev + 1);
     } catch {
       setError(t('product.matching.errorGeneric', 'Matching failed. Please try again.'));
     } finally {
       setRunning(false);
-      setMatchProgress(null);
-      setPreFilterProgress(null);
-      setScreeningProgress(null);
     }
   };
 
@@ -819,6 +1113,15 @@ export default function SmartMatching() {
     }
   };
 
+  const handleSelectBatch = useCallback((batchId: string | null) => {
+    setSelectedBatchId(batchId);
+    setSelectedSessionId(null);
+    setSelectedSessionMeta(null);
+    setMatches([]);
+    setShowSessionCriteriaModal(false);
+    setShowHistoryDrawer(false);
+  }, []);
+
   const handleSelectSession = useCallback((sessionId: string | null) => {
     setSelectedSessionId(sessionId);
     if (!sessionId) {
@@ -837,11 +1140,28 @@ export default function SmartMatching() {
         setSelectedSessionId(null);
         setSelectedSessionMeta(null);
         setShowSessionCriteriaModal(false);
+        setMatches([]);
+      }
+      if (selectedBatchId) {
+        fetchBatchDetail(selectedBatchId);
       }
       setSessionRefreshTrigger((n) => n + 1);
     } catch { /* silent */ }
     setConfirmDeleteSessionId(null);
-  }, [selectedSessionId]);
+  }, [fetchBatchDetail, selectedBatchId, selectedSessionId]);
+
+  const handleDeletedBatch = useCallback((batchId: string) => {
+    if (selectedBatchId === batchId) {
+      setSelectedBatchId(null);
+      setSelectedBatchMeta(null);
+      setSelectedSessionId(null);
+      setSelectedSessionMeta(null);
+      setSelectedJobIds([]);
+      setMatches([]);
+      setShowSessionCriteriaModal(false);
+    }
+    setSessionRefreshTrigger((value) => value + 1);
+  }, [selectedBatchId, setSelectedJobIds]);
 
   const openAIMatchModal = useCallback((jobIds?: string[]) => {
     setModalLaunchJobIds(jobIds && jobIds.length > 0 ? jobIds : []);
@@ -849,23 +1169,47 @@ export default function SmartMatching() {
   }, []);
 
   const handleBack = useCallback(() => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-    navigate('/product');
+    setSelectedJobIds([]);
+    setSelectedBatchId(null);
+    setSelectedBatchMeta(null);
+    setBatchProgress(null);
+    setSelectedSessionId(null);
+    setSelectedSessionMeta(null);
+    setMatches([]);
+    setStatusFilter('');
+    setJobFilter('');
+    setShowSessionCriteriaModal(false);
+    setShowHistoryDrawer(false);
+    setDetailMatch(null);
+    setError(null);
+    setSuccessMessage(null);
+    navigate('/product/matching', { replace: true });
   }, [navigate]);
 
   const statuses = ['', 'new', 'reviewed', 'shortlisted', 'applied', 'rejected', 'invited'];
-  const processedCount = matchProgress ? matchProgress.completed + matchProgress.failed : 0;
-  const progressPercent = matchProgress
-    ? matchProgress.total > 0
-      ? Math.max(8, (processedCount / matchProgress.total) * 100)
+
+  const filteredMatches = useMemo(() => {
+    let result = [...matches];
+    if (statusFilter) result = result.filter((match) => match.status === statusFilter);
+    if (jobFilter) result = result.filter((match) => match.jobId === jobFilter);
+    if (!jobFilter && selectedJobIds.length > 1) {
+      result = [...result].sort((a, b) => {
+        if (a.jobId !== b.jobId) return a.jobId.localeCompare(b.jobId);
+        return (b.score ?? 0) - (a.score ?? 0);
+      });
+    }
+    return result;
+  }, [jobFilter, matches, selectedJobIds, statusFilter]);
+
+  const batchResolvedCount = batchProgress
+    ? batchProgress.completedTasks + batchProgress.failedTasks + batchProgress.filteredTasks
+    : 0;
+  const batchProgressPercent = batchProgress
+    ? batchProgress.totalTasks > 0
+      ? Math.max(8, (batchResolvedCount / batchProgress.totalTasks) * 100)
       : 8
     : 0;
   const showRefreshingMatches = loadingMatches && matches.length > 0;
-
-
 
   const selectedSessionSummaryItems = useMemo(() => {
     if (!selectedSessionMeta) return [];
@@ -898,6 +1242,45 @@ export default function SmartMatching() {
 
   const selectedSessionFreeText = selectedSessionMeta?.criteriaSnapshot?.freeText?.trim() || '';
   const selectedSessionDescription = selectedSessionMeta?.job?.description?.trim() || '';
+  const selectedBatchSummaryItems = useMemo(() => {
+    if (!selectedBatchMeta) return [];
+
+    const config = selectedBatchMeta.configSnapshot;
+    const items = [
+      t('product.matching.totalJobsLabel', '{{count}} jobs', {
+        count: config?.selectedJobCount ?? selectedBatchMeta.totalJobs,
+      }),
+      t('product.matching.sessionSummaryResumeCount', '{{count}} resumes selected', {
+        count: config?.selectedResumeCount ?? 0,
+      }),
+      t('product.matching.agentCountLabel', '{{count}} agents', {
+        count: config?.maxAgents ?? 6,
+      }),
+    ];
+
+    if (config?.locations?.length) {
+      items.push(
+        t('product.matching.sessionSummaryLocations', 'Locations: {{locations}}', {
+          locations: config.locations.join(', '),
+        })
+      );
+    }
+
+    if (config?.jobTypes?.length) {
+      items.push(
+        t('product.matching.sessionSummaryJobTypes', 'Job types: {{jobTypes}}', {
+          jobTypes: config.jobTypes.join(', '),
+        })
+      );
+    }
+
+    return items;
+  }, [selectedBatchMeta, t]);
+  const selectedBatchFreeText = selectedBatchMeta?.configSnapshot?.freeText?.trim() || '';
+  const activeBatchJobs = useMemo(
+    () => batchProgress?.jobs ?? [],
+    [batchProgress]
+  );
   const openJobs = useMemo(() => jobs.filter((job) => job.status === 'open'), [jobs]);
   const highlightedJobs = useMemo(() => {
     const source = openJobs.length > 0 ? openJobs : jobs;
@@ -909,7 +1292,7 @@ export default function SmartMatching() {
       })
       .slice(0, 4);
   }, [jobs, openJobs, i18n.language]);
-  const showOverview = !running && !selectedSessionId && selectedJobIds.length === 0;
+  const showOverview = !running && !selectedBatchId && !selectedSessionId && selectedJobIds.length === 0;
   const overviewReadyLoading = showOverview && (loadingJobs || loadingResumeCount);
 
   return (
@@ -952,10 +1335,10 @@ export default function SmartMatching() {
             {running ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-                {matchProgress?.total
+                {batchProgress?.totalTasks
                   ? t('product.matching.runningProgress', 'Matching {{processed}} / {{total}}', {
-                      processed: processedCount,
-                      total: matchProgress.total,
+                      processed: batchResolvedCount,
+                      total: batchProgress.totalTasks,
                     })
                   : t('product.matching.running', 'Matching...')}
               </>
@@ -1001,6 +1384,115 @@ export default function SmartMatching() {
         </div>
       )}
 
+      {selectedBatchId && selectedBatchMeta && (
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 px-5 py-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h10" />
+                    </svg>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      {t('product.matching.selectedBatch', 'Selected matching run')}
+                    </p>
+                    <h3 className="truncate text-lg font-bold text-slate-900">
+                      {selectedBatchMeta.title || t('product.matching.untitledBatch', 'Untitled matching run')}
+                    </h3>
+                  </div>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    selectedBatchMeta.status === 'completed'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : selectedBatchMeta.status === 'failed'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {t(
+                      `product.matching.session${selectedBatchMeta.status.charAt(0).toUpperCase() + selectedBatchMeta.status.slice(1)}`,
+                      selectedBatchMeta.status
+                    )}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                  {selectedBatchSummaryItems.map((item) => (
+                    <span key={item} className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
+                      {item}
+                    </span>
+                  ))}
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
+                    {t('product.matching.batchStartedAt', 'Started')}: {formatSessionTime(selectedBatchMeta.startedAt || selectedBatchMeta.createdAt)}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
+                    {t('product.matching.batchEndedAt', 'Ended')}: {formatSessionTime(selectedBatchMeta.completedAt)}
+                  </span>
+                </div>
+
+                {selectedBatchFreeText && (
+                  <p className="mt-3 text-sm text-slate-600">
+                    <span className="font-semibold text-slate-900">
+                      {t('product.matching.sessionRequirements', 'Requirement summary')}:
+                    </span>{' '}
+                    {selectedBatchFreeText}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid shrink-0 gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    {t('product.matching.sessionStatsMatched', 'Matched')}
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">
+                    {selectedBatchMeta.completedTasks}/{selectedBatchMeta.totalTasks}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    {t('product.matching.failedCountInline', 'Failed')}
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{selectedBatchMeta.failedTasks}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    {t('product.matching.totalFilteredLabel', 'Filtered')}
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{selectedBatchMeta.filteredTasks}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-5 py-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-semibold text-slate-900">
+                  {t('product.matching.childSessions', 'Child job sessions')}
+                </h4>
+                <p className="text-xs text-slate-500">
+                  {t('product.matching.childSessionsDesc', 'Select a job session to inspect candidate-level results.')}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60">
+              <MatchingSessionHistory
+                onSelectSession={handleSelectSession}
+                selectedSessionId={selectedSessionId}
+                refreshTrigger={sessionRefreshTrigger}
+                embedded
+                limit={50}
+                filterParams={{ ...pageFilterParams, batchRunId: selectedBatchId }}
+                allowDelete={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Viewing session banner */}
       {selectedSessionId && (
         <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 via-cyan-50 to-sky-50 px-5 py-4 shadow-sm">
@@ -1022,19 +1514,29 @@ export default function SmartMatching() {
                 </div>
               </div>
 
-              <div className="mt-3 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                  {selectedSessionMeta?.job?.title && (
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 font-semibold text-blue-700">
-                      {selectedSessionMeta.job.title}
+                <div className="mt-3 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                    {selectedSessionMeta?.job?.title && (
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 font-semibold text-blue-700">
+                        {selectedSessionMeta.job.title}
                     </span>
                   )}
-                  {selectedSessionSummaryItems.map((item) => (
-                    <span key={item} className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
-                      {item}
-                    </span>
-                  ))}
-                </div>
+                    {selectedSessionSummaryItems.map((item) => (
+                      <span key={item} className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
+                        {item}
+                      </span>
+                    ))}
+                    {selectedSessionMeta && (
+                      <>
+                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
+                          {t('product.matching.sessionStartedAt', 'Started')}: {formatSessionTime(selectedSessionMeta.createdAt)}
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-600">
+                          {t('product.matching.sessionEndedAt', 'Ended')}: {formatSessionTime(selectedSessionMeta.completedAt)}
+                        </span>
+                      </>
+                    )}
+                  </div>
 
                 {selectedSessionFreeText && (
                   <p className="mt-3 text-sm text-slate-700">
@@ -1110,11 +1612,11 @@ export default function SmartMatching() {
               )}
             </div>
             <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
-              <p className="text-xs font-medium text-slate-500">{t('product.matching.overviewSavedSessions', 'Saved sessions')}</p>
-              {loadingSessionCount ? (
+              <p className="text-xs font-medium text-slate-500">{t('product.matching.overviewSavedBatches', 'Saved runs')}</p>
+              {loadingBatchCount ? (
                 <div className="mt-2 h-8 w-12 animate-pulse rounded-lg bg-slate-100" />
               ) : (
-                <p className="mt-1 text-2xl font-bold text-slate-900">{savedSessionCount}</p>
+                <p className="mt-1 text-2xl font-bold text-slate-900">{savedBatchCount}</p>
               )}
             </div>
           </div>
@@ -1208,11 +1710,11 @@ export default function SmartMatching() {
             </div>
           )}
 
-          {/* Recent Sessions */}
+          {/* Recent Runs */}
           <div className="rounded-xl border border-slate-200 bg-white">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="text-sm font-semibold text-slate-900">
-                {t('product.matching.recentMatches', 'Recent Matches')}
+                {t('product.matching.recentBatchRuns', 'Recent Matching Runs')}
               </h3>
               <button
                 type="button"
@@ -1222,20 +1724,20 @@ export default function SmartMatching() {
                 {t('product.matching.viewAll', 'View all')}
               </button>
             </div>
-            <MatchingSessionHistory
-              onSelectSession={handleSelectSession}
-              selectedSessionId={selectedSessionId}
+            <MatchingBatchHistory
+              onSelectBatch={handleSelectBatch}
+              selectedBatchId={selectedBatchId}
               refreshTrigger={sessionRefreshTrigger}
               embedded
               limit={5}
               filterParams={pageFilterParams}
+              onDeletedBatch={handleDeletedBatch}
             />
           </div>
         </div>
       )}
 
-      {/* Status filter */}
-      {selectedJobIds.length > 0 && !selectedSessionId && (
+      {selectedSessionId && (
         <div className="flex gap-2 flex-wrap">
           {statuses.map((s) => (
             <button
@@ -1253,153 +1755,248 @@ export default function SmartMatching() {
         </div>
       )}
 
-      {/* Pre-filter progress */}
-      {running && preFilterProgress && (
-        <div className={`rounded-xl border p-5 ${
-          preFilterProgress.status === 'running'
-            ? 'border-purple-200 bg-gradient-to-r from-purple-50 via-violet-50 to-fuchsia-50'
-            : 'border-purple-200 bg-purple-50'
-        }`}>
-          {preFilterProgress.status === 'running' ? (
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
+      {running && batchProgress && (
+        <div className="rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 via-cyan-50 to-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-600">
+                    {t('product.matching.runningBatchLabel', 'Batch matching in progress')}
+                  </p>
+                  <p className="text-base font-semibold text-slate-900">
+                    {batchProgress.title || t('product.matching.untitledBatch', 'Untitled matching run')}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {t('product.matching.batchProgressStats', '{{processed}} / {{total}} comparisons resolved across {{jobs}} jobs', {
+                      processed: batchResolvedCount,
+                      total: batchProgress.totalTasks,
+                      jobs: batchProgress.totalJobs,
+                    })}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  {t('product.matching.preFilterRunning', 'Pre-filtering {{total}} resumes...', { total: preFilterProgress.total })}
-                </p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {t('product.matching.preFilterRunningDesc', 'AI is screening candidates to find the best matches for this job.')}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-purple-700">
-              <svg className="w-5 h-5 text-purple-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              {t('product.matching.preFilterComplete', 'Pre-filter complete: {{passed}} passed, {{excluded}} excluded', {
-                passed: preFilterProgress.passed ?? 0,
-                excluded: preFilterProgress.excluded ?? 0,
-              })}
-              {preFilterProgress.durationMs && (
-                <span className="text-purple-500 ml-1">({(preFilterProgress.durationMs / 1000).toFixed(1)}s)</span>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* Batch screening progress */}
-      {running && screeningProgress && (
-        <div className={`rounded-xl border p-5 ${
-          screeningProgress.status === 'running'
-            ? 'border-amber-200 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50'
-            : 'border-amber-200 bg-amber-50'
-        }`}>
-          {screeningProgress.status === 'running' ? (
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-600 text-white">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  {t('product.matching.screeningRunning', 'Screening {{total}} resumes...', { total: screeningProgress.total ?? 0 })}
-                </p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {t('product.matching.screeningRunningDesc', 'AI is quickly evaluating all candidates to prioritize the best matches.')}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-amber-700">
-              <svg className="w-5 h-5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              {t('product.matching.screeningComplete', 'Screening complete: {{a}} strong, {{b}} moderate, {{c}} low match', {
-                a: screeningProgress.A ?? 0,
-                b: screeningProgress.B ?? 0,
-                c: screeningProgress.C ?? 0,
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {running && matchProgress && (!preFilterProgress || preFilterProgress.status === 'completed') && (
-        <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 via-cyan-50 to-sky-50 p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  {matchProgress.jobCount && matchProgress.jobCount > 1
-                    ? t('product.matching.progressTitleMulti', 'Job {{jobIndex}}/{{jobCount}}: Matching resumes for {{jobTitle}}', {
-                        jobIndex: matchProgress.jobIndex,
-                        jobCount: matchProgress.jobCount,
-                        jobTitle: matchProgress.jobTitle,
-                      })
-                    : t('product.matching.progressTitle', 'Matching resumes for {{jobTitle}}', {
-                        jobTitle: matchProgress.jobTitle,
-                      })
-                  }
-                </p>
-                <p className="mt-1 text-sm text-slate-600">
-                  {t('product.matching.progressStats', '{{processed}} / {{total}} resumes processed', {
-                    processed: processedCount,
-                    total: matchProgress.total || '...',
-                  })}
-                  {matchProgress.failed > 0 && (
-                    <>
-                      {' · '}
-                      {t('product.matching.progressFailed', '{{failed}} failed', {
-                        failed: matchProgress.failed,
-                      })}
-                    </>
-                  )}
-                </p>
+              <div className="mt-4">
+                <div className="mb-2 flex items-center justify-between text-xs font-medium text-blue-700">
+                  <span>{t('product.matching.running', 'Matching...')}</span>
+                  <span>{batchResolvedCount}/{batchProgress.totalTasks}</span>
+                </div>
+                <div className="h-2 rounded-full bg-blue-100">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 transition-[width] duration-500 ease-out"
+                    style={{ width: `${batchProgressPercent}%` }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="rounded-xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-600">
-                {t('product.matching.progressCurrentLabel', 'Currently matching')}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">
-                {matchProgress.currentCandidateName
-                  ? t('product.matching.progressCurrent', '{{candidateName}} -> {{jobTitle}}', {
-                      candidateName: matchProgress.currentCandidateName,
-                      jobTitle: matchProgress.jobTitle,
-                    })
-                  : t('product.matching.progressPreparing', 'Preparing the next resume...')}
-              </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  {t('product.matching.sessionStatsMatched', 'Matched')}
+                </p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{batchProgress.completedTasks}</p>
+              </div>
+              <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  {t('product.matching.failedCountInline', 'Failed')}
+                </p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{batchProgress.failedTasks}</p>
+              </div>
+              <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  {t('product.matching.totalFilteredLabel', 'Filtered')}
+                </p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{batchProgress.filteredTasks}</p>
+              </div>
             </div>
           </div>
 
-          <div className="mt-4">
-            <div className="mb-2 flex items-center justify-between text-xs font-medium text-blue-700">
-              <span>{t('product.matching.running', 'Matching...')}</span>
-              <span>
-                {matchProgress.total > 0
-                  ? `${processedCount}/${matchProgress.total}`
-                  : t('product.matching.progressStarting', 'Starting...')}
-              </span>
+          <div className="mt-5 grid gap-3 lg:grid-cols-2">
+            {preFilterProgress && (
+              <div className={`rounded-2xl border px-4 py-3 ${
+                preFilterProgress.status === 'running'
+                  ? 'border-purple-200 bg-purple-50'
+                  : 'border-purple-200 bg-white'
+              }`}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-purple-600">
+                  {t('product.matching.prefilterEnabled', 'AI pre-filter enabled')}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">
+                  {preFilterProgress.jobTitle || t('product.matching.currentJob', 'Current job')}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  {preFilterProgress.status === 'running'
+                    ? t('product.matching.preFilterRunning', 'Pre-filtering {{total}} resumes...', { total: preFilterProgress.total })
+                    : t('product.matching.preFilterComplete', 'Pre-filter complete: {{passed}} passed, {{excluded}} excluded', {
+                        passed: preFilterProgress.passed ?? 0,
+                        excluded: preFilterProgress.excluded ?? 0,
+                      })}
+                  {preFilterProgress.durationMs ? ` (${(preFilterProgress.durationMs / 1000).toFixed(1)}s)` : ''}
+                </p>
+              </div>
+            )}
+
+            {screeningProgress && (
+              <div className={`rounded-2xl border px-4 py-3 ${
+                screeningProgress.status === 'running'
+                  ? 'border-amber-200 bg-amber-50'
+                  : 'border-amber-200 bg-white'
+              }`}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-600">
+                  {t('product.matching.screeningLabel', 'Screening')}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">
+                  {screeningProgress.jobTitle || t('product.matching.currentJob', 'Current job')}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  {screeningProgress.status === 'running'
+                    ? t('product.matching.screeningRunning', 'Screening {{total}} resumes...', { total: screeningProgress.total ?? 0 })
+                    : t('product.matching.screeningComplete', 'Screening complete: {{a}} strong, {{b}} moderate, {{c}} low match', {
+                        a: screeningProgress.A ?? 0,
+                        b: screeningProgress.B ?? 0,
+                        c: screeningProgress.C ?? 0,
+                      })}
+                  {screeningProgress.durationMs ? ` (${(screeningProgress.durationMs / 1000).toFixed(1)}s)` : ''}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-900">
+                {t('product.matching.batchJobBoard', 'Per-job progress')}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {t('product.matching.agentPoolSummary', '{{active}} / {{max}} agents active', {
+                  active: batchProgress.activeAgents,
+                  max: batchProgress.maxAgents,
+                })}
+              </p>
             </div>
-            <div className="h-2 rounded-full bg-blue-100">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 transition-[width] duration-500 ease-out"
-                style={{ width: `${progressPercent}%` }}
-              />
+            <div className="grid gap-3 lg:grid-cols-2">
+              {activeBatchJobs.map((job) => {
+                const resolvedCount = job.completedTasks + job.failedTasks + job.filteredTasks;
+                const resolvedPercent = job.totalTasks > 0 ? Math.max(8, (resolvedCount / job.totalTasks) * 100) : 8;
+                const tone =
+                  job.status === 'completed'
+                    ? 'border-emerald-200 bg-emerald-50/70'
+                    : job.status === 'failed'
+                      ? 'border-red-200 bg-red-50/70'
+                      : 'border-slate-200 bg-white';
+
+                return (
+                  <div key={job.jobId} className={`rounded-2xl border p-4 ${tone}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-900">{job.jobTitle}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {t(`product.matching.jobStatus.${job.status}`, job.status)}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm">
+                        {resolvedCount}/{job.totalTasks}
+                      </span>
+                    </div>
+                    <div className="mt-3 h-2 rounded-full bg-white">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 transition-[width] duration-500 ease-out"
+                        style={{ width: `${resolvedPercent}%` }}
+                      />
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-600">
+                      <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">
+                        {t('product.matching.sessionStatsMatched', 'Matched')}: {job.completedTasks}
+                      </span>
+                      <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">
+                        {t('product.matching.failedCountInline', 'Failed')}: {job.failedTasks}
+                      </span>
+                      <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">
+                        {t('product.matching.totalFilteredLabel', 'Filtered')}: {job.filteredTasks}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-900">
+                {t('product.matching.agentLanes', 'Agent lanes')}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {t('product.matching.peakAgents', 'Peak {{count}} agents', {
+                  count: batchProgress.peakActiveAgents,
+                })}
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {batchProgress.agents.map((agent) => {
+                const statusTone =
+                  agent.status === 'running'
+                    ? 'border-blue-200 bg-blue-50'
+                    : agent.status === 'error'
+                      ? 'border-red-200 bg-red-50'
+                      : agent.status === 'done'
+                        ? 'border-emerald-200 bg-emerald-50'
+                        : 'border-slate-200 bg-white';
+
+                return (
+                  <div key={agent.slot} className={`rounded-2xl border p-4 ${statusTone}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {t('product.matching.agentLaneLabel', 'Agent {{slot}}', { slot: agent.slot })}
+                      </p>
+                      <span className="rounded-full bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 shadow-sm">
+                        {t(`product.matching.workerStatus.${agent.status}`, agent.status)}
+                      </span>
+                    </div>
+
+                    {agent.jobTitle || agent.resumeName ? (
+                      <div className="mt-3 space-y-2 text-sm text-slate-700">
+                        {agent.jobTitle && (
+                          <p>
+                            <span className="font-semibold text-slate-900">{t('product.matching.filterByJob', 'Job')}:</span>{' '}
+                            {agent.jobTitle}
+                          </p>
+                        )}
+                        {agent.resumeName && (
+                          <p>
+                            <span className="font-semibold text-slate-900">{t('product.matching.resumeLabel', 'Resume')}:</span>{' '}
+                            {agent.resumeName}
+                          </p>
+                        )}
+                        {agent.startedAt && (
+                          <p className="text-xs text-slate-500">
+                            {t('product.matching.startedLabel', 'Started')}: {formatSessionTime(agent.startedAt)}
+                          </p>
+                        )}
+                        {agent.error && (
+                          <p className="text-xs text-red-600">{agent.error}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-500">
+                        {t('product.matching.agentIdle', 'Waiting for the next task.')}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       )}
 
       {/* Match Results */}
-      {(selectedJobIds.length > 0 || selectedSessionId) && (
+      {(selectedSessionId || running || matches.length > 0) && (
         <>
           {loadingMatches && matches.length === 0 ? (
             <div className="flex justify-center py-12">
@@ -1435,9 +2032,18 @@ export default function SmartMatching() {
                   {t('product.matching.refreshingResults', 'Refreshing results...')}
                 </div>
               )}
-              {matches.map((match) => (
+              {filteredMatches.map((match, idx) => (
+                <div key={match.id}>
+                  {/* Job group header when multiple jobs */}
+                  {!jobFilter && selectedJobIds.length > 1 && (idx === 0 || filteredMatches[idx - 1].jobId !== match.jobId) && (
+                    <div className="flex items-center gap-2 mb-2 mt-1">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        {jobs.find((j) => j.id === match.jobId)?.title || match.jobId}
+                      </span>
+                      <div className="flex-1 h-px bg-slate-200" />
+                    </div>
+                  )}
                 <div
-                  key={match.id}
                   className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 hover:border-blue-200 transition-colors"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -1626,6 +2232,7 @@ export default function SmartMatching() {
                       ))}
                     </div>
                   )}
+                </div>
                 </div>
               ))}
             </div>
@@ -2004,7 +2611,7 @@ export default function SmartMatching() {
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
               <h3 className="text-lg font-bold text-slate-900">
-                {t('product.matching.sessionHistory', 'Session History')}
+                {t('product.matching.batchHistory', 'Batch Matching History')}
               </h3>
               <button
                 onClick={() => setShowHistoryDrawer(false)}
@@ -2016,12 +2623,13 @@ export default function SmartMatching() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <MatchingSessionHistory
-                onSelectSession={handleSelectSession}
-                selectedSessionId={selectedSessionId}
+              <MatchingBatchHistory
+                onSelectBatch={handleSelectBatch}
+                selectedBatchId={selectedBatchId}
                 refreshTrigger={sessionRefreshTrigger}
                 embedded
                 filterParams={pageFilterParams}
+                onDeletedBatch={handleDeletedBatch}
               />
             </div>
           </div>
@@ -2048,8 +2656,6 @@ export default function SmartMatching() {
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
                   {selectedSessionMeta.job?.title || t('product.matching.noJobLinked', 'No linked job')}
-                  {' · '}
-                  {new Date(selectedSessionMeta.createdAt).toLocaleString()}
                 </p>
               </div>
               <button
@@ -2198,6 +2804,18 @@ export default function SmartMatching() {
                     {t('product.matching.sessionMetrics', 'Session metrics')}
                   </p>
                   <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.sessionStartedAt', 'Started')}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">{formatSessionTime(selectedSessionMeta.createdAt)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        {t('product.matching.sessionEndedAt', 'Ended')}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">{formatSessionTime(selectedSessionMeta.completedAt)}</p>
+                    </div>
                     <div className="rounded-2xl bg-slate-50 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                         {t('product.matching.totalMatchedLabel', 'Matched')}

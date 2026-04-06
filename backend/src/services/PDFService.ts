@@ -11,6 +11,15 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || '';
 const PDF_LLM_MAX_TOKENS = 8000;
 
 export class PDFService {
+  /**
+   * Set during pdftotext extraction when the raw output has a high density of
+   * short alphanumeric fragment lines — a strong signal that a watermark/tracking
+   * string has been scattered across the text by pdftotext's layout engine.
+   * When true, extractText() skips the early-return on quality-pass and forces
+   * the LLM vision path, which handles watermarked PDFs much better.
+   */
+  private _watermarkScatterDetected = false;
+
   private getPreferredVisionModel(): string | undefined {
     return VISION_MODEL || process.env.LLM_MODEL || undefined;
   }
@@ -318,6 +327,22 @@ export class PDFService {
         logger.info('PDF_PDFTOTEXT', `Raw stdout: ${stdout.length} chars (${useLayout ? 'layout' : 'raw'})`, {
           preview: stdout.substring(0, 400).replace(/\n/g, '\\n'),
         }, requestId);
+
+        // Detect watermark scatter: count lines that are short alnum fragments
+        // (1-3 chars, purely alphanumeric). A high ratio (>25%) means the PDF has
+        // a tracking/watermark string whose characters were scattered across the
+        // text by pdftotext's layout engine, making the output unreliable.
+        {
+          const nonEmptyLines = stdout.split('\n').filter(l => l.trim().length > 0);
+          const fragmentCount = nonEmptyLines.filter(l => {
+            const t = l.trim();
+            return t.length <= 3 && /^[A-Za-z0-9+/=_~-]+$/.test(t);
+          }).length;
+          if (nonEmptyLines.length > 20 && fragmentCount / nonEmptyLines.length > 0.25) {
+            this._watermarkScatterDetected = true;
+            logger.info('PDF_PDFTOTEXT', `Watermark scatter detected: ${fragmentCount}/${nonEmptyLines.length} fragment lines (${(fragmentCount / nonEmptyLines.length * 100).toFixed(0)}%)`, {}, requestId);
+          }
+        }
 
         // Strip repeated watermark tokens before line-level cleanup
         const watermarks = this.findWatermarkTokens(stdout, requestId);
@@ -804,6 +829,8 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
    *   6. Last resort → return whatever we have
    */
   async extractText(buffer: Buffer, requestId?: string): Promise<string> {
+    this._watermarkScatterDetected = false;
+
     logger.info('PDF_EXTRACT', `Starting PDF extraction (${Math.round(buffer.length / 1024)}KB)`, {
       bufferSizeKB: Math.round(buffer.length / 1024),
     }, requestId);
@@ -856,13 +883,20 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
       }
     }
 
-    // Step 3: Quality check — if local extraction is good, return immediately
-    if (localText.length > 0 && this.isExtractionQualityGood(localText, requestId)) {
+    // Step 3: Quality check — if local extraction is good AND no watermark scatter, return immediately.
+    // Watermark scatter means the text passed quality checks (watermark chars are ASCII, not garbled CJK)
+    // but the content is structurally damaged — words broken, fragments injected inline, sections disordered.
+    // The LLM vision path handles these PDFs much better.
+    if (localText.length > 0 && this.isExtractionQualityGood(localText, requestId) && !this._watermarkScatterDetected) {
       logger.info('PDF_EXTRACT', `Using ${localSource} result (quality OK)`, { chars: localText.length }, requestId);
       return localText;
     }
 
-    if (localText.length > 0) {
+    if (this._watermarkScatterDetected) {
+      logger.info('PDF_EXTRACT', 'Watermark scatter detected — forcing LLM extraction despite quality check pass', {
+        localChars: localText.length,
+      }, requestId);
+    } else if (localText.length > 0) {
       logger.info('PDF_EXTRACT', `${localSource} quality poor, trying LLM extraction with local text as reference`, {
         localChars: localText.length,
       }, requestId);
@@ -898,6 +932,14 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
 
     // Step 5: Pick the best result — compare local vs LLM
     if (llmText && localText.length > 0) {
+      // When watermark scatter was detected, prefer LLM — local text has inline
+      // fragment damage that character counts can't detect.
+      if (this._watermarkScatterDetected) {
+        logger.info('PDF_EXTRACT', 'Using LLM result (watermark scatter in local text)', {
+          localChars: localText.length, llmChars: llmText.length,
+        }, requestId);
+        return llmText;
+      }
       const winner = this.compareExtractionQuality(localText, llmText, requestId);
       if (winner === 'a') {
         logger.info('PDF_EXTRACT', `${localSource} richer than LLM — using ${localSource}`, {
@@ -970,13 +1012,15 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
       localSource = 'pdf-parse';
     }
 
-    // Step 3: Quality check — if local extraction is good, return immediately
-    if (localText.length > 0 && this.isExtractionQualityGood(localText, requestId)) {
+    // Step 3: Quality check — if local extraction is good AND no watermark scatter, return immediately
+    if (localText.length > 0 && this.isExtractionQualityGood(localText, requestId) && !this._watermarkScatterDetected) {
       return { text: localText, numPages: data.numpages, info: data.info || {} };
     }
 
     // Step 4: LLM extraction with local text as character-accuracy reference
-    if (localText.length > 0) {
+    if (this._watermarkScatterDetected) {
+      logger.info('PDF_EXTRACT', 'extractWithMetadata: watermark scatter detected — forcing LLM extraction', {}, requestId);
+    } else if (localText.length > 0) {
       logger.info('PDF_EXTRACT', `extractWithMetadata: ${localSource} quality poor, trying LLM`, {}, requestId);
     }
 
@@ -1000,8 +1044,12 @@ Include ALL details from this page only. Do NOT translate, summarize, or omit an
     // Step 5: Pick the best result
     let finalText = localText;
     if (llmText && llmText.trim().length > 20 && localText.length > 0) {
-      const winner = this.compareExtractionQuality(localText, llmText, requestId);
-      finalText = winner === 'a' ? localText : llmText;
+      if (this._watermarkScatterDetected) {
+        finalText = llmText;
+      } else {
+        const winner = this.compareExtractionQuality(localText, llmText, requestId);
+        finalText = winner === 'a' ? localText : llmText;
+      }
     } else if (llmText && llmText.trim().length > 20) {
       finalText = llmText;
     }

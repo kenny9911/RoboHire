@@ -116,11 +116,12 @@
       "product": "功能",
       "productMenu": {
         "requirements": "需求分析",
-        "agents": "智能代理",
-        "resumeScreening": "简历筛选",
-        "smartMatching": "智能匹配",
+        "agents": "AI Agent",
+        "resumeScreening": "人才库",
+        "smartMatching": "AI 筛选匹配",
         "aiInterview": "AI 面试",
-        "smartEvaluation": "智能评估",
+        "smartEvaluation": "AI 评估",
+        "quickInvite": "一键邀约",
         "api": "API"
       }
     },
@@ -132,6 +133,7 @@
       "subheadline": "不再为堆积如山的简历头疼——AI 招聘助手帮你搞定候选人初筛、在线面试和综合评估，全程自动化。",
       "ctaPrimary": "开始免费试用",
       "ctaSecondary": "立即开始招聘",
+      "quickInviteCta": "一键邀约",
       "stat1": "节省时间",
       "stat2": "筛选更快",
       "stat3": "合作企业",
@@ -251,11 +253,11 @@
         "desc": "AI驱动的招聘流程，自动筛选简历、管理候选人，全面优化您的招聘流程。"
       },
       "smartMatching": {
-        "title": "智能匹配",
+        "title": "AI 筛选匹配",
         "desc": "AI精准匹配候选人与职位，智能评分排名，让您不错过任何顶尖人才。"
       },
       "aiInterview": {
-        "title": "AI面试",
+        "title": "AI 面试",
         "desc": "AI主持的视频面试，自然语音对话。候选人与AI面试官交流——您只需查看结果。"
       },
       "evaluation": {
@@ -2117,23 +2119,37 @@
   },
   "product": {
     "nav": {
-      "dashboard": "控制面板",
+      "dashboard": "仪表盘",
       "hiringRequests": "招聘需求",
       "projects": "招聘项目",
+      "pipeline": "招聘管道",
+      "candidates": "候选人",
       "talentHub": "人才库",
       "jobs": "职位",
+      "contacts": "联系人",
+      "tasks": "任务",
       "aiInterview": "AI 面试",
       "profile": "个人资料",
       "settings": "设置",
       "devDashboard": "开发者控制台",
-      "smartMatching": "智能匹配",
-      "evaluations": "评估报告",
+      "smartMatching": "AI 筛选匹配",
+      "evaluations": "AI 评估",
+      "quickInvite": "一键邀约",
       "candidateDetail": "候选人详情",
       "jobDetail": "职位详情",
       "interviewRoom": "面试房间",
-      "agents": "Agents",
+      "agents": "AI 智能体",
       "agentDetail": "Agent 详情",
-      "interviewHub": "面试库"
+      "interviewHub": "面试库",
+      "activity": "动态",
+      "analytics": "数据分析",
+      "category": {
+        "main": "主菜单",
+        "client": "客户管理",
+        "ai": "AI",
+        "insights": "洞察",
+        "system": "系统"
+      }
     },
     "dashboard": {
       "welcome": "欢迎回来",
@@ -2655,6 +2671,7 @@
       "sortTitleDesc": "职位名称：Z 到 A",
       "resultsCount": "共 {{count}} 个职位",
       "resultsCountFiltered": "显示 {{shown}} / {{total}} 个职位",
+      "resultsCountPaginated": "第 {{page}} 页，共 {{totalPages}} 页（{{total}} 个职位）",
       "clearFilters": "清除筛选",
       "viewLabel": "视图",
       "viewList": "列表",
@@ -2669,6 +2686,10 @@
       "previewTitle": "职位描述预览"
     },
     "jobDetail": {
+      "tabDetails": "职位详情",
+      "tabInsights": "AI 洞察",
+      "noInsights": "暂无 AI 洞察",
+      "noInsightsDesc": "AI 洞察需要关联招聘需求。通过 Agent Alex 创建职位以启用智能分析报告。",
       "backToJobs": "返回职位列表",
       "alexChatHistory": "Agent Alex — 对话记录",
       "openAgentAlex": "打开 Agent Alex",
@@ -2691,6 +2712,24 @@
       "evaluationRules": "评估规则",
       "yearly": "年",
       "monthly": "月",
+      "currency": {
+        "USD": "美元",
+        "CNY": "人民币",
+        "EUR": "欧元",
+        "GBP": "英镑",
+        "JPY": "日元",
+        "KRW": "韩元",
+        "HKD": "港币",
+        "TWD": "新台币",
+        "SGD": "新加坡元",
+        "CAD": "加元",
+        "AUD": "澳元"
+      },
+      "salaryCurrency": "币种",
+      "salaryPeriod": "周期",
+      "salaryMin": "最低薪资",
+      "salaryMax": "最高薪资",
+      "salaryText": "薪资文本",
       "tabDetails": "详情",
       "tabApplicants": "应聘者",
       "tabOverview": "概览",
@@ -2859,6 +2898,16 @@
     "talent": {
       "title": "人才库",
       "subtitle": "您的候选人资料库，提供AI洞察。",
+      "colName": "姓名",
+      "colTitle": "当前职位",
+      "colStatus": "状态",
+      "colSource": "来源",
+      "colDate": "日期",
+      "colScore": "AI 评分",
+      "colActions": "操作",
+      "statusCompleted": "已完成",
+      "statusInvited": "已邀请",
+      "statusActive": "活跃",
       "upload": "上传简历",
       "searchPlaceholder": "按姓名、职位、技能搜索...",
       "filters": "筛选器",
@@ -3012,7 +3061,7 @@
       "clearFilters": "清除所有筛选"
     },
     "matching": {
-      "title": "智能匹配",
+      "title": "AI 筛选匹配",
       "subtitle": "AI驱动的候选人-职位匹配与详细分析。",
       "selectJob": "选择职位",
       "selectJobs": "选择职位",
@@ -3043,6 +3092,10 @@
         "filled": "已招满"
       },
       "allStatuses": "全部",
+      "filterByJob": "职位",
+      "allJobs": "全部职位",
+      "filterBySession": "匹配会话",
+      "allSessions": "全部会话",
       "runMatch": "运行AI匹配",
       "running": "匹配中...",
       "runningProgress": "匹配中 {{processed}} / {{total}}",
@@ -3107,6 +3160,9 @@
       "sessionCompleted": "已完成",
       "sessionRunning": "进行中",
       "sessionFailed": "失败",
+      "sessionStartedAt": "开始时间",
+      "sessionEndedAt": "结束时间",
+      "sessionEndPending": "进行中",
       "sessionStats": "{{matched}}/{{total}} 匹配",
       "avgScore": "平均：{{score}}",
       "topGrade": "最高：{{grade}}",
@@ -3207,7 +3263,7 @@
       "passedThreshold": "达标"
     },
     "evaluations": {
-      "title": "评估报告",
+      "title": "AI 评估",
       "subtitle": "AI驱动的多智能体候选人评估报告。",
       "empty": "暂无评估",
       "emptyDesc": "先完成面试，然后运行AI评估。",
@@ -3964,8 +4020,11 @@
     "confirmDeleteMessage": "确定要删除此项目吗？此操作无法撤销。",
     "cancel": "取消",
     "delete": "删除",
+    "search": "搜索",
     "save": "保存",
     "saving": "保存中...",
+    "previous": "上一页",
+    "next": "下一页",
     "filters": {
       "allRecruiters": "所有招聘官",
       "recruiterGroup": "招聘官",
@@ -4467,6 +4526,7 @@
     "title": "Agent Alex",
     "subtitle": "招聘需求分析师",
     "floatingLabel": "AI 招聘助手",
+    "quickInvite": "一键邀约",
     "panels": { "agentInteraction": "智能对话" },
     "modes": { "textChat": "文字聊天", "liveVoice": "实时语音" },
     "sessions": { "recent": "最近对话", "newChat": "新对话", "cannotDelete": "无法删除 — 已关联职位" },
@@ -4577,6 +4637,53 @@
         "reasonForOpening": "招聘原因",
         "dealBreakers": "一票否决项"
       }
+    }
+  },
+  "contacts": {
+    "title": "联系人与公司",
+    "subtitle": "管理您的招聘经理、客户、推荐人和合作公司。",
+    "contactsTab": "联系人",
+    "companiesTab": "公司",
+    "searchPlaceholder": "按姓名、邮箱或公司搜索联系人...",
+    "searchCompanyPlaceholder": "按名称、行业或地点搜索公司...",
+    "allTypes": "所有类型",
+    "addContact": "添加联系人",
+    "addCompany": "添加公司",
+    "editContact": "编辑联系人",
+    "editCompany": "编辑公司",
+    "noContacts": "暂无联系人",
+    "noContactsDesc": "添加您的第一个联系人以开始使用。",
+    "noCompanies": "暂无公司",
+    "noCompaniesDesc": "添加您的第一家公司以开始使用。",
+    "confirmDelete": "确定要删除此联系人吗？",
+    "confirmDeleteCompany": "确定要删除此公司吗？",
+    "cancel": "取消",
+    "saving": "保存中...",
+    "update": "更新",
+    "create": "创建",
+    "type": {
+      "hiringManager": "招聘经理",
+      "client": "客户",
+      "vendor": "供应商",
+      "reference": "推荐人"
+    },
+    "form": {
+      "firstName": "名",
+      "lastName": "姓",
+      "email": "邮箱",
+      "phone": "电话",
+      "jobTitle": "职位",
+      "type": "类型",
+      "company": "公司",
+      "noCompany": "无公司",
+      "companyName": "公司名称",
+      "industry": "行业",
+      "size": "公司规模",
+      "location": "地点",
+      "website": "网站",
+      "openJobs": "在招职位",
+      "totalPlaced": "已录用总数",
+      "notes": "备注"
     }
   }
 }

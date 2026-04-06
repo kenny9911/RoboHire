@@ -29,7 +29,7 @@
     "@livekit/agents-plugin-openai": "^1.0.50",
     "@livekit/agents-plugin-silero": "^1.0.50",
     "@livekit/rtc-node": "^0.13.24",
-    "@prisma/client": "6.9.0",
+    "@prisma/client": "^6.9.0",
     "bcryptjs": "^3.0.3",
     "canvas": "^3.2.1",
     "cookie-parser": "^1.4.7",
@@ -50,7 +50,7 @@
     "pdf-parse": "^1.1.1",
     "pdf-to-img": "^5.0.0",
     "pdfkit": "^0.18.0",
-    "prisma": "6.9.0",
+    "prisma": "^6.9.0",
     "stripe": "^20.3.1",
     "ws": "^8.20.0",
     "xlsx": "^0.18.5"

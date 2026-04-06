@@ -175,7 +175,7 @@ export default function AutoMatchPanel({ hiringRequest, onCandidatesUpdated }: A
   }, []);
 
   // Debounced server-side search
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const recruiterFilterRef = useRef(recruiterFilter);
   recruiterFilterRef.current = recruiterFilter;
 

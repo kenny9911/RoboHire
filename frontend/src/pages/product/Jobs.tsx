@@ -176,11 +176,18 @@ export default function Jobs() {
   const [jobs, setJobs] = usePageState<Job[]>('jobs.list', []);
   const [loading, setLoading] = useState(jobs.length > 0 ? false : true);
   const [statusFilter, setStatusFilter] = usePageState<string>('jobs.statusFilter', '');
-  const [viewMode, setViewMode] = usePageState<JobViewMode>('jobs.viewMode', 'list');
+  const [viewMode, setViewMode] = usePageState<JobViewMode>('jobs.viewMode', 'cards');
   const [searchQuery, setSearchQuery] = usePageState<string>('jobs.searchQuery', '');
   const [clientFilter, setClientFilter] = usePageState<string>('jobs.clientFilter', '');
   const [dateRangeFilter, setDateRangeFilter] = usePageState<JobDateRangeFilter>('jobs.dateRangeFilter', 'all');
   const [sortOrder, setSortOrder] = usePageState<JobSortOrder>('jobs.sortOrder', 'created_desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [aggregates, setAggregates] = useState<{
+    openCount: number; totalHeadcount: number; totalMatches: number; totalInterviews: number; totalCompleted: number; companyNames: string[];
+  } | null>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [recruiterFilter, setRecruiterFilter] = useState<RecruiterTeamFilterValue>({});
   const [showCreate, setShowCreate] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -218,31 +225,6 @@ export default function Jobs() {
     return null;
   }, [t]);
 
-  const matchesDateRange = useCallback((job: Job, range: JobDateRangeFilter) => {
-    if (range === 'all') return true;
-
-    const createdAt = new Date(job.createdAt);
-    if (Number.isNaN(createdAt.getTime())) return false;
-
-    const now = new Date();
-
-    if (range === 'today') {
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return createdAt >= startOfDay;
-    }
-
-    if (range === 'week') {
-      const today = now.getDay();
-      const diffToMonday = (today + 6) % 7;
-      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
-      startOfWeek.setHours(0, 0, 0, 0);
-      return createdAt >= startOfWeek;
-    }
-
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    return createdAt >= startOfMonth;
-  }, []);
-
   useEffect(() => {
     if (!importing) {
       setImportStageIndex(0);
@@ -257,53 +239,61 @@ export default function Jobs() {
     return () => window.clearInterval(timer);
   }, [importing, importStages.length]);
 
-  const fetchJobs = useCallback(async () => {
+  const fetchJobs = useCallback(async (pageNum = 1) => {
     try {
       setLoading(true);
-      const params: Record<string, string | number> = { page: 1, limit: 50 };
+      const params: Record<string, string | number> = { page: pageNum, limit: 20, includeAggregates: 'true' };
       if (statusFilter) params.status = statusFilter;
       if (recruiterFilter.filterUserId) params.filterUserId = recruiterFilter.filterUserId;
       if (recruiterFilter.filterTeamId) params.filterTeamId = recruiterFilter.filterTeamId;
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (clientFilter) params.companyName = clientFilter;
+      if (dateRangeFilter !== 'all') params.dateRange = dateRangeFilter;
 
-      const collected: Job[] = [];
-      const seen = new Set<string>();
-      let page = 1;
-      let totalPages = 1;
+      // Map sort order to backend params
+      if (sortOrder === 'created_asc') { params.sortBy = 'created'; params.sortDir = 'asc'; }
+      else if (sortOrder === 'title_asc') { params.sortBy = 'title'; params.sortDir = 'asc'; }
+      else if (sortOrder === 'title_desc') { params.sortBy = 'title'; params.sortDir = 'desc'; }
+      // default: created_desc (backend default)
 
-      do {
-        const res = await axios.get('/api/v1/jobs', { params: { ...params, page } });
-        const pageItems: Job[] = res.data.data || [];
-        pageItems.forEach((job) => {
-          if (seen.has(job.id)) return;
-          seen.add(job.id);
-          collected.push(job);
-        });
-        totalPages = Math.max(1, Number(res.data.pagination?.totalPages || 1));
-        page += 1;
-      } while (page <= totalPages);
-
-      setJobs(collected);
+      const res = await axios.get('/api/v1/jobs', { params });
+      const pageItems: Job[] = res.data.data || [];
+      setJobs(pageItems);
+      const pag = res.data.pagination;
+      setCurrentPage(pag?.page ?? 1);
+      setTotalPages(pag?.totalPages ?? 1);
+      setTotalJobs(pag?.total ?? 0);
+      if (res.data.aggregates) {
+        setAggregates(res.data.aggregates);
+      }
     } catch {
       // silently fail
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, recruiterFilter]);
+  }, [statusFilter, recruiterFilter, clientFilter, dateRangeFilter, sortOrder, searchQuery]);
 
+  // Fetch on filter changes (non-search)
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    fetchJobs(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, recruiterFilter, clientFilter, dateRangeFilter, sortOrder]);
 
-  const clientOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          jobs
-            .map((job) => job.companyName?.trim())
-            .filter((value): value is string => Boolean(value)),
-        ),
-      ).sort((a, b) => a.localeCompare(b, i18n.language)),
-    [i18n.language, jobs],
+  // Debounce search input (skip initial mount — the filter effect already fires)
+  const searchMountedRef = useRef(false);
+  useEffect(() => {
+    if (!searchMountedRef.current) { searchMountedRef.current = true; return; }
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      fetchJobs(1);
+    }, 350);
+    return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
+  const clientOptions = useMemo<string[]>(
+    () => aggregates?.companyNames ?? [],
+    [aggregates],
   );
 
   useEffect(() => {
@@ -311,54 +301,18 @@ export default function Jobs() {
     setClientFilter('');
   }, [clientFilter, clientOptions, setClientFilter]);
 
-  const displayedJobs = useMemo(() => {
-    const normalizedSearch = searchQuery.trim().toLowerCase();
-
-    const next = jobs.filter((job) => {
-      if (clientFilter && (job.companyName || '') !== clientFilter) return false;
-      if (!matchesDateRange(job, dateRangeFilter)) return false;
-      if (!normalizedSearch) return true;
-
-      const haystack = [
-        job.title,
-        job.companyName,
-        job.department,
-        getJobLocationsLabel(job),
-        job.hiringRequest?.title,
-        job.description,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-
-      return haystack.includes(normalizedSearch);
-    });
-
-    next.sort((a, b) => {
-      if (sortOrder === 'created_desc') {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-      if (sortOrder === 'created_asc') {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      }
-      if (sortOrder === 'title_asc') {
-        return a.title.localeCompare(b.title, i18n.language);
-      }
-      return b.title.localeCompare(a.title, i18n.language);
-    });
-
-    return next;
-  }, [clientFilter, dateRangeFilter, i18n.language, jobs, matchesDateRange, searchQuery, sortOrder]);
+  // Server-side filtering/sorting — jobs array is already the current page
+  const displayedJobs = jobs;
 
   const hasActiveFilters = Boolean(searchQuery.trim() || clientFilter || dateRangeFilter !== 'all');
   const numberFormatter = useMemo(() => new Intl.NumberFormat(i18n.language), [i18n.language]);
 
   const recruiterOverviewStats = useMemo(() => {
-    const openCount = displayedJobs.filter((job) => job.status === 'open').length;
-    const totalHeadcount = displayedJobs.reduce((sum, job) => sum + Math.max(0, Number(job.headcount) || 0), 0);
-    const totalMatches = displayedJobs.reduce((sum, job) => sum + (job.stats?.matches ?? 0), 0);
-    const totalInterviews = displayedJobs.reduce((sum, job) => sum + (job.stats?.interviews ?? 0), 0);
-    const totalCompleted = displayedJobs.reduce((sum, job) => sum + (job.stats?.completedInterviews ?? 0), 0);
+    const openCount = aggregates?.openCount ?? 0;
+    const totalHeadcount = aggregates?.totalHeadcount ?? 0;
+    const totalMatches = aggregates?.totalMatches ?? 0;
+    const totalInterviews = aggregates?.totalInterviews ?? 0;
+    const totalCompleted = aggregates?.totalCompleted ?? 0;
 
     return [
       {
@@ -402,7 +356,7 @@ export default function Jobs() {
         valueClass: 'text-slate-950',
       },
     ];
-  }, [displayedJobs, numberFormatter, t]);
+  }, [aggregates, numberFormatter, t]);
 
   const resetForm = () => {
     setForm(getInitialForm(i18n.language));
@@ -1083,12 +1037,13 @@ export default function Jobs() {
           <div className="mt-3 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:flex-1">
               <p className="text-sm text-slate-500">
-                {displayedJobs.length === jobs.length
-                  ? t('product.jobs.resultsCount', '{{count}} jobs', { count: displayedJobs.length })
-                  : t('product.jobs.resultsCountFiltered', 'Showing {{shown}} of {{total}} jobs', {
-                      shown: displayedJobs.length,
-                      total: jobs.length,
-                    })}
+                {totalJobs > 0
+                  ? t('product.jobs.resultsCountPaginated', 'Page {{page}} of {{totalPages}} ({{total}} jobs)', {
+                      page: currentPage,
+                      totalPages,
+                      total: totalJobs,
+                    })
+                  : t('product.jobs.resultsCount', '{{count}} jobs', { count: 0 })}
               </p>
 
               <div className="flex flex-wrap items-center gap-2">
@@ -1997,7 +1952,7 @@ export default function Jobs() {
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
         </div>
-      ) : jobs.length === 0 ? (
+      ) : jobs.length === 0 && !hasActiveFilters && !statusFilter ? (
         <div className="text-center py-16 rounded-2xl border border-slate-200 bg-white">
           <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -2014,7 +1969,7 @@ export default function Jobs() {
             {t('product.jobs.create', 'Create Job')}
           </button>
         </div>
-      ) : displayedJobs.length === 0 ? (
+      ) : jobs.length === 0 ? (
         <div className="text-center py-16 rounded-2xl border border-slate-200 bg-white">
           <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h18M3 12h18M3 19h18" />
@@ -2027,6 +1982,7 @@ export default function Jobs() {
               setSearchQuery('');
               setClientFilter('');
               setDateRangeFilter('all');
+              setStatusFilter('');
             }}
             className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
@@ -2086,14 +2042,16 @@ export default function Jobs() {
                       </p>
                     )}
 
-                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {stats.map((stat) => (
-                        <div key={stat.label} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{stat.label}</p>
-                          <p className="mt-1 text-lg font-semibold text-slate-900">{stat.value}</p>
-                        </div>
-                      ))}
-                    </div>
+                    {viewMode !== 'cards' && (
+                      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {stats.map((stat) => (
+                          <div key={stat.label} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{stat.label}</p>
+                            <p className="mt-1 text-lg font-semibold text-slate-900">{stat.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {job.notes && (
                       <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700">
@@ -2114,11 +2072,54 @@ export default function Jobs() {
                     </div>
                   </div>
 
+                  {/* Stats pinned to bottom in card view */}
+                  {viewMode === 'cards' && (
+                    <div className="mt-auto pt-4 grid grid-cols-4 gap-2">
+                      {stats.map((stat) => (
+                        <div key={stat.label} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{stat.label}</p>
+                          <p className="mt-1 text-lg font-semibold text-slate-900">{stat.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {viewMode === 'list' && renderJobActions(job)}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <button
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => fetchJobs(currentPage - 1)}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            {t('common.previous', 'Previous')}
+          </button>
+          <span className="text-sm text-slate-500 tabular-nums">
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={currentPage >= totalPages}
+            onClick={() => fetchJobs(currentPage + 1)}
+            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {t('common.next', 'Next')}
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       )}
 

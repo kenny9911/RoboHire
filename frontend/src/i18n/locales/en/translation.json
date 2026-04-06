@@ -116,11 +116,12 @@
       "product": "Features",
       "productMenu": {
         "requirements": "Requirements Analysis",
-        "agents": "Agents",
-        "resumeScreening": "Resume Screening",
-        "smartMatching": "Smart Matching",
+        "agents": "AI Agent",
+        "resumeScreening": "Talent Hub",
+        "smartMatching": "AI Screening",
         "aiInterview": "AI Interview",
-        "smartEvaluation": "Smart Evaluation",
+        "smartEvaluation": "AI Evaluations",
+        "quickInvite": "Instant Invite",
         "api": "API"
       }
     },
@@ -132,6 +133,7 @@
       "subheadline": "Say goodbye to spending long hours going through piles of resumes. Our AI hiring agent vets candidates, conducts interviews, and delivers comprehensive evaluation reports automatically.",
       "ctaPrimary": "Start Free Trial",
       "ctaSecondary": "Start Easy Hiring",
+      "quickInviteCta": "Instant Invite",
       "stat1": "Time Saved",
       "stat2": "Faster Screening",
       "stat3": "Companies",
@@ -251,7 +253,7 @@
         "desc": "AI-powered hiring workflow that screens resumes, manages candidates, and streamlines your entire recruitment process."
       },
       "smartMatching": {
-        "title": "Smart Matching",
+        "title": "AI Screening",
         "desc": "AI matches candidates to jobs with precision scoring, ranking the best fits so you never miss top talent."
       },
       "aiInterview": {
@@ -259,7 +261,7 @@
         "desc": "AI-led video interviews with natural voice conversation. Candidates talk to our AI interviewer — you review the results."
       },
       "evaluation": {
-        "title": "Evaluation",
+        "title": "AI Evaluation",
         "desc": "Multi-agent AI assessment that evaluates skills, experience, culture fit, and delivers comprehensive hiring reports."
       }
     },
@@ -1989,20 +1991,34 @@
       "dashboard": "Dashboard",
       "hiringRequests": "Hiring Requests",
       "projects": "Projects",
+      "pipeline": "Pipeline",
+      "candidates": "Candidates",
       "talentHub": "Talent Hub",
       "jobs": "Jobs",
+      "contacts": "Contacts",
+      "tasks": "Tasks",
       "aiInterview": "AI Interview",
       "profile": "Profile",
       "settings": "Settings",
       "devDashboard": "Dev Dashboard",
-      "smartMatching": "Smart Matching",
-      "evaluations": "Evaluations",
+      "smartMatching": "AI Screening",
+      "evaluations": "AI Evaluations",
+      "quickInvite": "Instant Invite",
       "candidateDetail": "Candidate Detail",
       "jobDetail": "Job Detail",
       "interviewRoom": "Interview Room",
-      "agents": "Agents",
+      "agents": "AI Agents",
       "agentDetail": "Agent Detail",
-      "interviewHub": "Interview Hub"
+      "interviewHub": "Interview Hub",
+      "activity": "Activity",
+      "analytics": "Analytics",
+      "category": {
+        "main": "Main Menu",
+        "client": "Client Management",
+        "ai": "AI",
+        "insights": "Insights",
+        "system": "System"
+      }
     },
     "dashboard": {
       "welcome": "Welcome back",
@@ -2524,6 +2540,7 @@
       "sortTitleDesc": "Title: Z to A",
       "resultsCount": "{{count}} jobs",
       "resultsCountFiltered": "Showing {{shown}} of {{total}} jobs",
+      "resultsCountPaginated": "Page {{page}} of {{totalPages}} ({{total}} jobs)",
       "clearFilters": "Clear filters",
       "viewLabel": "View",
       "viewList": "List",
@@ -2538,6 +2555,10 @@
       "previewTitle": "Job Description Preview"
     },
     "jobDetail": {
+      "tabDetails": "Job Details",
+      "tabInsights": "AI Insights",
+      "noInsights": "No AI Insights Available",
+      "noInsightsDesc": "AI insights require a linked hiring request. Create this job from Agent Alex to enable intelligence reports.",
       "backToJobs": "Back to Jobs",
       "alexChatHistory": "Agent Alex — Conversation History",
       "openAgentAlex": "Open Agent Alex",
@@ -2560,6 +2581,24 @@
       "evaluationRules": "Evaluation Rules",
       "yearly": "year",
       "monthly": "month",
+      "currency": {
+        "USD": "USD",
+        "CNY": "CNY",
+        "EUR": "EUR",
+        "GBP": "GBP",
+        "JPY": "JPY",
+        "KRW": "KRW",
+        "HKD": "HKD",
+        "TWD": "TWD",
+        "SGD": "SGD",
+        "CAD": "CAD",
+        "AUD": "AUD"
+      },
+      "salaryCurrency": "Currency",
+      "salaryPeriod": "Period",
+      "salaryMin": "Min Salary",
+      "salaryMax": "Max Salary",
+      "salaryText": "Salary Text",
       "tabDetails": "Details",
       "tabApplicants": "Applicants",
       "tabOverview": "Overview",
@@ -2728,6 +2767,16 @@
     "talent": {
       "title": "Talent Hub",
       "subtitle": "Your candidate repository with AI-powered insights.",
+      "colName": "Name",
+      "colTitle": "Current Title",
+      "colStatus": "Status",
+      "colSource": "Source",
+      "colDate": "Date",
+      "colScore": "AI Score",
+      "colActions": "Actions",
+      "statusCompleted": "Completed",
+      "statusInvited": "Invited",
+      "statusActive": "Active",
       "upload": "Upload Resumes",
       "searchPlaceholder": "Search by name, role, skills...",
       "filters": "Filters",
@@ -2881,7 +2930,7 @@
       "clearFilters": "Clear all filters"
     },
     "matching": {
-      "title": "Smart Matching",
+      "title": "AI Screening",
       "subtitle": "AI-powered candidate-job matching with detailed analysis.",
       "selectJob": "Select a Job",
       "selectJobs": "Select Jobs",
@@ -2913,6 +2962,10 @@
         "filled": "Filled"
       },
       "allStatuses": "All",
+      "filterByJob": "Job",
+      "allJobs": "All Jobs",
+      "filterBySession": "Session",
+      "allSessions": "All Sessions",
       "runMatch": "Run AI Matching",
       "running": "Matching...",
       "runningProgress": "Matching {{processed}} / {{total}}",
@@ -2978,6 +3031,9 @@
       "sessionCompleted": "completed",
       "sessionRunning": "running",
       "sessionFailed": "failed",
+      "sessionStartedAt": "Started",
+      "sessionEndedAt": "Ended",
+      "sessionEndPending": "In progress",
       "sessionStats": "{{matched}}/{{total}} matched",
       "avgScore": "Avg: {{score}}",
       "topGrade": "Top: {{grade}}",
@@ -3079,7 +3135,7 @@
       "passedThreshold": "Meets passing score"
     },
     "evaluations": {
-      "title": "Evaluations",
+      "title": "AI Evaluations",
       "subtitle": "AI-powered multi-agent candidate evaluation reports.",
       "empty": "No evaluations yet",
       "emptyDesc": "Complete interviews first, then run AI evaluations.",
@@ -3847,8 +3903,11 @@
     "confirmDeleteMessage": "Are you sure you want to delete this item? This action cannot be undone.",
     "cancel": "Cancel",
     "delete": "Delete",
+    "search": "Search",
     "save": "Save",
     "saving": "Saving...",
+    "previous": "Previous",
+    "next": "Next",
     "filters": {
       "allRecruiters": "All Recruiters",
       "recruiterGroup": "Recruiters",
@@ -4350,6 +4409,7 @@
     "title": "Agent Alex",
     "subtitle": "Recruitment Requirements Analyst",
     "floatingLabel": "AI Hiring Assistant",
+    "quickInvite": "Instant Invite",
     "panels": {
       "agentInteraction": "Agent Interaction"
     },
@@ -4474,6 +4534,53 @@
         "reasonForOpening": "Reason for Opening",
         "dealBreakers": "Deal Breakers"
       }
+    }
+  },
+  "contacts": {
+    "title": "Contacts & Companies",
+    "subtitle": "Manage your hiring managers, clients, references, and partner companies.",
+    "contactsTab": "Contacts",
+    "companiesTab": "Companies",
+    "searchPlaceholder": "Search contacts by name, email, or company...",
+    "searchCompanyPlaceholder": "Search companies by name, industry, or location...",
+    "allTypes": "All Types",
+    "addContact": "Add Contact",
+    "addCompany": "Add Company",
+    "editContact": "Edit Contact",
+    "editCompany": "Edit Company",
+    "noContacts": "No contacts yet",
+    "noContactsDesc": "Add your first contact to get started.",
+    "noCompanies": "No companies yet",
+    "noCompaniesDesc": "Add your first company to get started.",
+    "confirmDelete": "Are you sure you want to delete this contact?",
+    "confirmDeleteCompany": "Are you sure you want to delete this company?",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "update": "Update",
+    "create": "Create",
+    "type": {
+      "hiringManager": "Hiring Manager",
+      "client": "Client",
+      "vendor": "Vendor",
+      "reference": "Reference"
+    },
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "jobTitle": "Job Title",
+      "type": "Type",
+      "company": "Company",
+      "noCompany": "No company",
+      "companyName": "Company Name",
+      "industry": "Industry",
+      "size": "Company Size",
+      "location": "Location",
+      "website": "Website",
+      "openJobs": "Open Jobs",
+      "totalPlaced": "Total Placed",
+      "notes": "Notes"
     }
   }
 }
