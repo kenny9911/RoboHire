@@ -179,37 +179,9 @@ export default function ProductIntro({
   const heroStatLabelClass = isLight
     ? 'mt-2 text-xs font-medium uppercase tracking-[0.18em] leading-snug text-slate-500'
     : 'mt-2 text-xs font-medium uppercase tracking-[0.18em] leading-snug text-slate-400';
-  const heroPanelGlowClass = isLight
-    ? 'absolute -inset-6 rounded-full bg-sky-300/30 blur-3xl'
-    : 'absolute -inset-6 rounded-full bg-cyan-400/10 blur-3xl';
   const glassCardClass = isLight
     ? 'rounded-[30px] border border-white/90 bg-white/88 shadow-[0_30px_80px_-52px_rgba(37,99,235,0.28)] backdrop-blur-xl'
     : 'rounded-[30px] border border-white/10 bg-white/[0.05] shadow-[0_30px_80px_-52px_rgba(8,145,178,0.45)] backdrop-blur-xl';
-  const hairlineClass = isLight
-    ? 'absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/80 to-transparent'
-    : 'absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent';
-  const heroBlobClass = isLight
-    ? 'absolute -right-16 top-10 h-40 w-40 rounded-full bg-sky-300/35 blur-3xl'
-    : 'absolute -right-16 top-10 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl';
-  const panelEyebrowClass = isLight
-    ? 'text-xs font-semibold uppercase tracking-[0.24em] text-slate-500'
-    : 'text-xs font-semibold uppercase tracking-[0.24em] text-slate-400';
-  const panelTitleClass = isLight ? 'mt-3 text-2xl font-semibold text-slate-900' : 'mt-3 text-2xl font-semibold text-white';
-  const panelBodyClass = isLight ? 'mt-2 text-sm leading-relaxed text-slate-600' : 'mt-2 text-sm leading-relaxed text-slate-400';
-  const cycleBadgeClass = isLight
-    ? 'rounded-2xl border border-sky-200 bg-sky-50/90 px-4 py-3 text-right'
-    : 'rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-right';
-  const cycleEyebrowClass = isLight
-    ? 'text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700/80'
-    : 'text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200/80';
-  const cycleValueClass = isLight ? 'mt-1 text-xl font-bold text-slate-900' : 'mt-1 text-xl font-bold text-white';
-  const heroMiniCardClass = isLight
-    ? 'rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_18px_38px_-32px_rgba(37,99,235,0.18)] transition-colors duration-300 hover:border-sky-300/50 hover:bg-white'
-    : 'rounded-2xl border border-white/10 bg-slate-950/60 p-4 transition-colors duration-300 hover:border-cyan-300/20 hover:bg-slate-900/80';
-  const miniMetaClass = isLight
-    ? 'text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400'
-    : 'text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500';
-  const miniTitleClass = isLight ? 'mt-2 text-sm font-semibold text-slate-900' : 'mt-2 text-sm font-semibold text-white';
   const sectionHeadingClass = isLight
     ? 'landing-display text-3xl font-bold text-slate-900 sm:text-4xl'
     : 'landing-display text-3xl font-bold text-white sm:text-4xl';
@@ -527,7 +499,7 @@ export default function ProductIntro({
     { value: '90%', label: t('productIntro.stats.time', '时间节省') },
     { value: '7×24', label: t('productIntro.stats.avail', '全天候服务') },
     { value: '7', label: t('productIntro.stats.lang', '种语言支持') },
-    { value: '500+', label: t('productIntro.stats.companies', '企业客户') },
+    { value: '70%', label: t('productIntro.stats.timeSaved', '招聘时间缩短') },
   ];
 
   const pricingPlans = [
@@ -582,8 +554,8 @@ export default function ProductIntro({
                 </div>
               )}
 
-              <div className={`grid gap-12 lg:items-center ${isChineseHero ? 'lg:grid-cols-[1.14fr_0.86fr]' : 'lg:grid-cols-[1.05fr_0.95fr]'}`}>
-                <div className="max-w-3xl">
+              <div>
+                <div className="mx-auto max-w-3xl text-center">
                   <p className={heroBadgeClass}>{t('productIntro.hero.badge', 'AI 招聘代理')}</p>
 
                   <h1 className={heroTitleClass}>
@@ -599,7 +571,7 @@ export default function ProductIntro({
                     {t('productIntro.hero.subtitle', 'RoboHire 用 AI Agents 驱动招聘全流程 — 需求澄清、简历筛选、自动邀约、AI 面试、评估决策。过去需要 42 天的招聘周期，现在只要几天。')}
                   </p>
 
-                  <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+                  <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                     <Link to="/agent-alex" state={{ fresh: true }} className={primaryCtaClass}>
                       {t('productIntro.hero.cta1', '免费开始使用')}
                     </Link>
@@ -615,7 +587,7 @@ export default function ProductIntro({
                     </Link>
                   </div>
 
-                  <div className="mt-12 grid max-w-3xl grid-cols-2 gap-4 xl:grid-cols-4">
+                  <div className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-4 xl:grid-cols-4">
                     {heroStats.map((stat, index) => (
                       <div
                         key={stat.label}
@@ -628,89 +600,6 @@ export default function ProductIntro({
                   </div>
                 </div>
 
-                <div className="relative">
-                  <div className={heroPanelGlowClass} />
-                  <div className={`${glassCardClass} relative overflow-hidden p-6 sm:p-8`}>
-                    <div className={hairlineClass} />
-                    <div className={heroBlobClass} />
-
-                    <div className="relative flex items-start justify-between gap-4">
-                      <div>
-                        <p className={panelEyebrowClass}>
-                          {t('productIntro.hero.panelLabel', '招聘流程总览')}
-                        </p>
-                        <h2 className={panelTitleClass}>
-                          {t('productIntro.steps.title', '四个环节，一路自动推进')}
-                        </h2>
-                        <p className={panelBodyClass}>
-                          {t('productIntro.steps.subtitle', 'RoboHire 的 AI 招聘代理自动驱动每一个环节，你只需做最终决定。')}
-                        </p>
-                      </div>
-
-                      <div className={cycleBadgeClass}>
-                        <p className={cycleEyebrowClass}>
-                          {t('productIntro.hero.cycleLabel', '周期缩短')}
-                        </p>
-                        <p className={`${cycleValueClass} whitespace-nowrap`}>42 → 3</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                      {steps.slice(0, 4).map((step) => (
-                        <div key={step.num} className={heroMiniCardClass}>
-                          <div className="flex items-start gap-4">
-                            <div
-                              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
-                                isLight ? step.lightBg : step.darkBg
-                              } ${isLight ? step.lightIconColor : step.darkIconColor}`}
-                            >
-                              {step.icon}
-                            </div>
-                            <div className="min-w-0">
-                              <p className={miniMetaClass}>
-                                {step.num} • {step.subtitle}
-                              </p>
-                              <h3 className={miniTitleClass}>{step.title}</h3>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div
-                      className={
-                        isLight
-                          ? 'mt-8 rounded-[26px] border border-sky-200 bg-gradient-to-r from-sky-50 via-white to-indigo-50 p-5'
-                          : 'mt-8 rounded-[26px] border border-cyan-400/15 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-indigo-500/10 p-5'
-                      }
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className={cycleEyebrowClass}>
-                            {t('productIntro.hero.snapshotLabel', '效果摘要')}
-                          </p>
-                          <p className={isLight ? 'mt-2 text-xl font-semibold text-slate-900' : 'mt-2 text-xl font-semibold text-white'}>
-                            {t('productIntro.scenario.title', '从 150 人到 4 人，3 天完成')}
-                          </p>
-                        </div>
-                        <div
-                          className={
-                            isLight
-                              ? 'rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-right'
-                              : 'rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-right'
-                          }
-                        >
-                          <p className={isLight ? 'text-sm text-slate-500' : 'text-sm text-slate-400'}>
-                            {t('productIntro.scenario.after', '使用 RoboHire')}
-                          </p>
-                          <p className={isLight ? 'text-2xl font-bold text-sky-700' : 'text-2xl font-bold text-cyan-200'}>
-                            3 {t('productIntro.scenario.days', '天')}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </section>

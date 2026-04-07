@@ -197,7 +197,7 @@ export const productIntroTranslations = {
       time: "time saved",
       avail: "always-on coverage",
       lang: "supported languages",
-      companies: "customer teams",
+      timeSaved: "hiring time reduced",
     },
     pricing: {
       title: "Flexible pricing that scales with hiring",
@@ -425,7 +425,7 @@ export const productIntroTranslations = {
       time: "时间节省",
       avail: "全天候服务",
       lang: "种语言支持",
-      companies: "家企业在用",
+      timeSaved: "招聘时间缩短",
     },
     pricing: {
       title: "定价灵活，跟着招聘规模走",
@@ -653,7 +653,7 @@ export const productIntroTranslations = {
       time: "時間節省",
       avail: "全天候服務",
       lang: "種語言支援",
-      companies: "家企業在用",
+      timeSaved: "招聘時間縮短",
     },
     pricing: {
       title: "定價靈活，跟著招募規模走",
@@ -881,7 +881,7 @@ export const productIntroTranslations = {
       time: "工数削減",
       avail: "24時間対応",
       lang: "対応言語",
-      companies: "導入企業",
+      timeSaved: "採用時間短縮",
     },
     pricing: {
       title: "採用規模に合わせて選べる料金",
@@ -1109,7 +1109,7 @@ export const productIntroTranslations = {
       time: "de tiempo ahorrado",
       avail: "cobertura continua",
       lang: "idiomas disponibles",
-      companies: "equipos clientes",
+      timeSaved: "tiempo de contratación reducido",
     },
     pricing: {
       title: "Precios flexibles para cada ritmo de contratación",
@@ -1337,7 +1337,7 @@ export const productIntroTranslations = {
       time: "de temps gagné",
       avail: "couverture continue",
       lang: "langues prises en charge",
-      companies: "équipes clientes",
+      timeSaved: "temps de recrutement réduit",
     },
     pricing: {
       title: "Une tarification souple selon votre rythme de recrutement",
@@ -1565,7 +1565,7 @@ export const productIntroTranslations = {
       time: "de tempo economizado",
       avail: "cobertura contínua",
       lang: "idiomas suportados",
-      companies: "times clientes",
+      timeSaved: "tempo de contratação reduzido",
     },
     pricing: {
       title: "Preço flexível para cada ritmo de contratação",
@@ -1793,7 +1793,7 @@ export const productIntroTranslations = {
       time: "Zeitersparnis",
       avail: "Rund-um-die-Uhr-Verfügbarkeit",
       lang: "unterstützte Sprachen",
-      companies: "Kundenteams",
+      timeSaved: "Einstellungszeit verkürzt",
     },
     pricing: {
       title: "Flexible Preise passend zu Ihrem Hiring-Tempo",
