@@ -18,34 +18,33 @@ type IconProps = {
 };
 
 /* SVG icon helpers */
-const IconChat = () => (
-  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+/* ── Step icons (monochrome, modern geometric) ── */
+const IconBriefcase = () => (
+  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 12v.01" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2 12h8m4 0h8" />
   </svg>
 );
-const IconDoc = () => (
-  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+const IconLayers = () => (
+  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L2 7l10 5 10-5-10-5z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2 17l10 5 10-5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2 12l10 5 10-5" />
   </svg>
 );
-const IconFilter = () => (
-  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+const IconCameraAI = () => (
+  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 11.5l1.5 1.5 3-3" />
   </svg>
 );
-const IconSend = () => (
-  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-  </svg>
-);
-const IconVideo = () => (
-  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-  </svg>
-);
-const IconChart = () => (
-  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+const IconClipboardCheck = () => (
+  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 14l2 2 4-4" />
   </svg>
 );
 const IconCheck = ({ className = '' }: IconProps) => (
@@ -314,37 +313,56 @@ export default function ProductIntro({
 
   const painPoints = [
     {
-      icon: '📋',
+      icon: (
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+        </svg>
+      ),
       title: t('productIntro.pain.unclear.title', '需求不清，反复沟通'),
       text: t('productIntro.pain.unclear.text', '用人部门一句"招个厉害的人"，HR 要来回确认岗位职责、硬性要求、团队偏好，需求澄清本身就耗掉好几天'),
     },
     {
-      icon: '📄',
+      icon: (
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m0 0a2.246 2.246 0 00-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0121 12v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6c0-1.243 1.007-2.25 2.25-2.25h13.5" />
+        </svg>
+      ),
       title: t('productIntro.pain.resumes.title', '简历堆积如山'),
       text: t('productIntro.pain.resumes.text', '一个岗位收到 200+ 份简历，逐份看完要花一整周，但真正匹配的可能只有 10 个人'),
     },
     {
-      icon: '📅',
-      title: t('productIntro.pain.scheduling.title', '面试安排是噩梦'),
-      text: t('productIntro.pain.scheduling.text', '协调候选人、面试官、会议室，一轮下来两周过去了，优秀候选人早已被竞争对手抢走'),
+      icon: (
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      title: t('productIntro.pain.scheduling.title', '重复事务拖住团队'),
+      text: t('productIntro.pain.scheduling.text', '排面试、催进度、补记录，80% 的时间花在行政事务上。协调候选人和面试官的日程就要来回好几天，优秀候选人早被竞对抢走。'),
     },
     {
-      icon: '🎯',
+      icon: (
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+        </svg>
+      ),
       title: t('productIntro.pain.evaluation.title', '评估全靠"感觉"'),
       text: t('productIntro.pain.evaluation.text', '不同面试官标准不一，主观判断多，事后复盘缺乏数据支撑，难以做出客观的录用决策'),
     },
     {
-      icon: '🔁',
-      title: t('productIntro.pain.repetitive.title', '重复劳动消耗精力'),
-      text: t('productIntro.pain.repetitive.text', '80% 的时间花在筛选不合适的人，只有 20% 留给真正重要的沟通和决策'),
-    },
-    {
-      icon: '🌍',
+      icon: (
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+        </svg>
+      ),
       title: t('productIntro.pain.language.title', '跨语言招聘更难'),
       text: t('productIntro.pain.language.text', '全球化团队需要多语言面试能力，传统方式根本无法覆盖不同语言和时区的候选人'),
     },
     {
-      icon: '🏠',
+      icon: (
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+        </svg>
+      ),
       title: t('productIntro.pain.nohr.title', '小公司没有招聘能力'),
       text: t('productIntro.pain.nohr.text', '初创团队和成长型小微企业没有专职 HR、没有合格的面试官，无力配备专业招聘角色，却同样需要找到优秀人才'),
     },
@@ -353,75 +371,51 @@ export default function ProductIntro({
   const steps = [
     {
       num: '01',
-      icon: <IconChat />,
-      color: 'from-cyan-400 via-sky-500 to-blue-600',
-      lightBg: 'bg-cyan-50 ring-1 ring-inset ring-cyan-200',
-      lightIconColor: 'text-cyan-600',
-      darkBg: 'bg-cyan-500/15 ring-1 ring-inset ring-cyan-400/30',
-      darkIconColor: 'text-cyan-200',
-      title: t('productIntro.steps.clarify.title', '需求澄清与梳理'),
+      icon: <IconBriefcase />,
+      color: 'from-slate-400 via-slate-500 to-slate-600',
+      lightBg: 'bg-slate-100 ring-1 ring-inset ring-slate-200',
+      lightIconColor: 'text-slate-700',
+      darkBg: 'bg-white/10 ring-1 ring-inset ring-white/20',
+      darkIconColor: 'text-white',
+      title: t('productIntro.steps.clarify.title', '从需求到 JD，一步到位'),
       subtitle: t('productIntro.steps.clarify.subtitle', 'AI Recruiting Consultant'),
-      text: t('productIntro.steps.clarify.text', 'AI 招聘顾问通过对话式交互，帮你快速梳理岗位需求：职责范围、必备技能、经验要求、薪资预期。AI 会追问模糊的地方，确保需求清晰完整，10 分钟输出结构化岗位画像。'),
+      text: t('productIntro.steps.clarify.text', 'AI 招聘顾问通过对话式交互梳理岗位需求——职责范围、核心技能、薪资区间、不可妥协项，10 分钟输出结构化岗位画像，并自动生成完整 JD，确认即可发布。'),
     },
     {
       num: '02',
-      icon: <IconDoc />,
-      color: 'from-sky-400 via-blue-500 to-indigo-600',
-      lightBg: 'bg-sky-50 ring-1 ring-inset ring-sky-200',
-      lightIconColor: 'text-sky-600',
-      darkBg: 'bg-sky-500/15 ring-1 ring-inset ring-sky-400/30',
-      darkIconColor: 'text-sky-200',
-      title: t('productIntro.steps.create.title', '一键创建岗位'),
-      subtitle: t('productIntro.steps.create.subtitle', 'AI JD Generator'),
-      text: t('productIntro.steps.create.text', '基于梳理好的需求，AI 自动生成专业的职位描述（JD），包含岗位职责、任职要求、加分项等完整结构。你只需确认或微调，一键发布。告别从零写 JD 的痛苦。'),
+      icon: <IconLayers />,
+      color: 'from-slate-400 via-slate-500 to-slate-600',
+      lightBg: 'bg-slate-100 ring-1 ring-inset ring-slate-200',
+      lightIconColor: 'text-slate-700',
+      darkBg: 'bg-white/10 ring-1 ring-inset ring-white/20',
+      darkIconColor: 'text-white',
+      title: t('productIntro.steps.screen.title', 'AI 智能简历筛选'),
+      subtitle: t('productIntro.steps.screen.subtitle', 'AI Resume Screening Agent'),
+      text: t('productIntro.steps.screen.text', '批量上传简历，AI Agents 立即启动。不是关键词匹配——AI 真正看懂经历、技能相关性、经验深度和潜力信号，几分钟处理 200+ 份简历，给出带理由的排序结果。'),
     },
     {
       num: '03',
-      icon: <IconFilter />,
-      color: 'from-blue-400 via-indigo-500 to-violet-600',
-      lightBg: 'bg-blue-50 ring-1 ring-inset ring-blue-200',
-      lightIconColor: 'text-blue-600',
-      darkBg: 'bg-blue-500/15 ring-1 ring-inset ring-blue-400/30',
-      darkIconColor: 'text-blue-200',
-      title: t('productIntro.steps.screen.title', 'AI 智能简历筛选'),
-      subtitle: t('productIntro.steps.screen.subtitle', 'AI Resume Screening Agent'),
-      text: t('productIntro.steps.screen.text', '上传简历（支持批量），AI Agents 立即启动。不是关键词匹配 — AI 真正理解上下文，精准识别必备技能匹配度、经验缺口和潜力亮点，每份简历给出量化评分。几分钟处理 200+ 份简历。'),
+      icon: <IconCameraAI />,
+      color: 'from-slate-400 via-slate-500 to-slate-600',
+      lightBg: 'bg-slate-100 ring-1 ring-inset ring-slate-200',
+      lightIconColor: 'text-slate-700',
+      darkBg: 'bg-white/10 ring-1 ring-inset ring-white/20',
+      darkIconColor: 'text-white',
+      title: t('productIntro.steps.interview.title', 'AI 视频面试官'),
+      subtitle: t('productIntro.steps.interview.subtitle', 'AI Video Interviewer'),
+      text: t('productIntro.steps.interview.text', '筛选通过的候选人自动收到面试链接。AI 面试官 7×24 在线，结构化提问、实时追问，支持中英日西法葡德 7 种语言。候选人点开即面，无需额外安装。'),
     },
     {
       num: '04',
-      icon: <IconSend />,
-      color: 'from-indigo-400 via-blue-500 to-cyan-500',
-      lightBg: 'bg-indigo-50 ring-1 ring-inset ring-indigo-200',
-      lightIconColor: 'text-indigo-600',
-      darkBg: 'bg-indigo-500/15 ring-1 ring-inset ring-indigo-400/30',
-      darkIconColor: 'text-indigo-200',
-      title: t('productIntro.steps.invite.title', '自动邀约面试'),
-      subtitle: t('productIntro.steps.invite.subtitle', 'Auto Interview Invitation'),
-      text: t('productIntro.steps.invite.text', '筛选出的候选人，AI 自动发送面试邀请 — 包含专属面试链接和二维码。候选人无需下载任何软件，点击链接即可开始。你不需要协调任何人的日程。'),
-    },
-    {
-      num: '05',
-      icon: <IconVideo />,
-      color: 'from-fuchsia-500 via-violet-500 to-blue-500',
-      lightBg: 'bg-violet-50 ring-1 ring-inset ring-violet-200',
-      lightIconColor: 'text-violet-600',
-      darkBg: 'bg-violet-500/15 ring-1 ring-inset ring-violet-400/30',
-      darkIconColor: 'text-violet-200',
-      title: t('productIntro.steps.interview.title', 'AI 视频面试'),
-      subtitle: t('productIntro.steps.interview.subtitle', 'AI Video Interview'),
-      text: t('productIntro.steps.interview.text', 'AI 面试官 7×24 小时在线，对每位候选人进行结构化视频面试。支持语音实时对话、根据回答智能追问、多语言切换（中/英/日/西/法/葡/德）。'),
-    },
-    {
-      num: '06',
-      icon: <IconChart />,
-      color: 'from-cyan-400 via-blue-500 to-indigo-600',
-      lightBg: 'bg-cyan-50 ring-1 ring-inset ring-cyan-200',
-      lightIconColor: 'text-cyan-600',
-      darkBg: 'bg-cyan-500/15 ring-1 ring-inset ring-cyan-400/30',
-      darkIconColor: 'text-cyan-200',
-      title: t('productIntro.steps.evaluate.title', '面试评估与决策'),
+      icon: <IconClipboardCheck />,
+      color: 'from-slate-400 via-slate-500 to-slate-600',
+      lightBg: 'bg-slate-100 ring-1 ring-inset ring-slate-200',
+      lightIconColor: 'text-slate-700',
+      darkBg: 'bg-white/10 ring-1 ring-inset ring-white/20',
+      darkIconColor: 'text-white',
+      title: t('productIntro.steps.evaluate.title', '看报告，做决策'),
       subtitle: t('productIntro.steps.evaluate.subtitle', 'Multi-Agent Evaluation'),
-      text: t('productIntro.steps.evaluate.text', '面试结束后自动生成多维度评估报告：技能匹配度、经验深度分析、优势与短板、录用建议与风险提示，以及 AI 作弊检测。你只需查看报告，约见最优候选人。'),
+      text: t('productIntro.steps.evaluate.text', '每场面试自动生成结构化评估报告：技能匹配、经验深度、优势短板、录用建议、风险提示和 AI 作弊检测。团队只需要把时间留给最后几位候选人。'),
     },
   ];
 
@@ -646,7 +640,7 @@ export default function ProductIntro({
                           {t('productIntro.hero.panelLabel', '招聘流程总览')}
                         </p>
                         <h2 className={panelTitleClass}>
-                          {t('productIntro.steps.title', '六大环节，一键启动')}
+                          {t('productIntro.steps.title', '四个环节，一路自动推进')}
                         </h2>
                         <p className={panelBodyClass}>
                           {t('productIntro.steps.subtitle', 'RoboHire 的 AI 招聘代理自动驱动每一个环节，你只需做最终决定。')}
@@ -737,13 +731,13 @@ export default function ProductIntro({
                   const accent = accents[index % accents.length];
 
                   return (
-                    <div key={point.title} className={`${standardCardClass} ${accent.shadow}`}>
+                    <div key={point.title} className={`${standardCardClass} flex flex-col ${accent.shadow}`}>
                       <div className={`absolute inset-x-6 top-0 h-px bg-gradient-to-r ${accent.glow}`} />
-                      <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border text-2xl ${accent.iconWrap}`}>
+                      <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl ${isLight ? 'bg-slate-900 text-white' : 'bg-white/10 text-white'}`}>
                         {point.icon}
                       </div>
                       <h3 className={standardCardTitleClass}>{point.title}</h3>
-                      <p className={standardCardTextClass}>{point.text}</p>
+                      <p className={`${standardCardTextClass} flex-1`}>{point.text}</p>
                     </div>
                   );
                 })}
@@ -758,18 +752,16 @@ export default function ProductIntro({
                   {t('productIntro.steps.badge', '全流程自动化')}
                 </p>
                 <h2 className={sectionHeadingLargeClass}>
-                  {t('productIntro.steps.title', '六大环节，一键启动')}
+                  {t('productIntro.steps.title', '四个环节，一路自动推进')}
                 </h2>
                 <p className={sectionBodyClass}>
                   {t('productIntro.steps.subtitle', 'RoboHire 的 AI 招聘代理自动驱动每一个环节，你只需做最终决定。')}
                 </p>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {steps.map((step) => (
-                  <div key={step.num} className={stepCardClass}>
-                    <div className={`absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br ${step.color} opacity-15 blur-3xl transition-opacity duration-300 group-hover:opacity-30`} />
-                    <div className={`absolute left-6 right-6 top-0 h-px bg-gradient-to-r ${step.color}`} />
+                  <div key={step.num} className={`${stepCardClass} flex flex-col`}>
                     <div className={stepNumberClass}>{step.num}</div>
 
                     <div
@@ -782,7 +774,7 @@ export default function ProductIntro({
 
                     <h3 className={stepTitleClass}>{step.title}</h3>
                     <p className={stepSubtitleClass}>{step.subtitle}</p>
-                    <p className={stepTextClass}>{step.text}</p>
+                    <p className={`${stepTextClass} flex-1`}>{step.text}</p>
                   </div>
                 ))}
               </div>

@@ -1652,7 +1652,7 @@ router.get('/sessions/count', requireAuth, async (req, res) => {
 
 router.get('/batches', requireAuth, async (req, res) => {
   try {
-    const { limit = '20', offset = '0', filterUserId, filterTeamId, teamView, includeTotal } = req.query;
+    const { limit = '20', offset = '0', filterUserId, filterTeamId, teamView, includeTotal, status } = req.query;
     const scope = await getVisibilityScope(req.user!, (teamView as string) === 'true');
     const visFilter = await buildAdminOverrideFilter(scope, filterUserId as string | undefined, filterTeamId as string | undefined);
     const pageSize = Math.max(1, parseInt(limit as string, 10) || 20);
@@ -1661,6 +1661,9 @@ router.get('/batches', requireAuth, async (req, res) => {
     const queryTake = shouldIncludeTotal ? pageSize : pageSize + 1;
 
     const where: any = { ...visFilter };
+    if (status && typeof status === 'string') {
+      where.status = status;
+    }
 
     const batchesPromise = prisma.matchingBatchRun.findMany({
       where,

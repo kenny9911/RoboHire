@@ -21,7 +21,7 @@ const DEFAULT_PLAN_LIMITS: Record<string, { interviews: number; matches: number 
   free: { interviews: 2, matches: 10 },
   starter: { interviews: 15, matches: 30 },
   growth: { interviews: 120, matches: 240 },
-  business: { interviews: 280, matches: 500 },
+  business: { interviews: 300, matches: 1000 },
   custom: { interviews: Infinity, matches: Infinity },
 };
 

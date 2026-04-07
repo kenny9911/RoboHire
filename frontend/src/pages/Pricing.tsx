@@ -26,7 +26,7 @@ interface Plan {
 
 type PaidTier = 'starter' | 'growth' | 'business';
 type Tier = 'free' | PaidTier | 'custom';
-type DisplayCurrency = 'USD' | 'CNY' | 'JPY';
+type DisplayCurrency = 'USD' | 'CNY' | 'JPY' | 'TWD';
 type PricingMatrix = Record<DisplayCurrency, Record<PaidTier, number>>;
 
 const TIER_RANK: Record<Tier, number> = {
@@ -41,10 +41,12 @@ const DEFAULT_PRICES: PricingMatrix = {
   USD: { starter: 29, growth: 199, business: 399 },
   CNY: { starter: 199, growth: 1369, business: 2749 },
   JPY: { starter: 4559, growth: 31329, business: 62799 },
+  TWD: { starter: 899, growth: 6199, business: 12399 },
 };
 
 function resolveDisplayCurrency(language: string): DisplayCurrency {
   const normalized = language.toLowerCase();
+  if (normalized === 'zh-tw') return 'TWD';
   if (normalized.startsWith('zh')) return 'CNY';
   if (normalized.startsWith('ja')) return 'JPY';
   return 'USD';
@@ -112,6 +114,7 @@ export default function Pricing() {
             USD: { ...DEFAULT_PRICES.USD },
             CNY: { ...DEFAULT_PRICES.CNY },
             JPY: { ...DEFAULT_PRICES.JPY },
+            TWD: { ...DEFAULT_PRICES.TWD },
           };
 
           const incoming = data.data.prices as
@@ -119,7 +122,7 @@ export default function Pricing() {
             | undefined;
 
           if (incoming && typeof incoming === 'object') {
-            (['USD', 'CNY', 'JPY'] as DisplayCurrency[]).forEach((currency) => {
+            (['USD', 'CNY', 'JPY', 'TWD'] as DisplayCurrency[]).forEach((currency) => {
               const values = incoming[currency];
               if (!values || typeof values !== 'object') return;
               (['starter', 'growth', 'business'] as PaidTier[]).forEach((tier) => {
@@ -195,8 +198,8 @@ export default function Pricing() {
       features: [
         { text: t('pricing.business.f1', 'Unlimited seats') },
         { text: t('pricing.business.f2', 'Unlimited job roles') },
-        { text: t('pricing.business.f3', '280 interviews / month') },
-        { text: t('pricing.business.f4', '500 resume matches / month') },
+        { text: t('pricing.business.f3', '300 interviews / month') },
+        { text: t('pricing.business.f4', '1000 resume matches / month') },
         { text: t('pricing.business.f5', 'Everything in Growth') },
         { text: t('pricing.business.f6', 'Priority support'), subtext: t('pricing.business.f6s', 'Faster response times') },
         { text: t('pricing.business.f7', 'Advanced analytics'), subtext: t('pricing.business.f7s', 'Detailed hiring funnel insights') },
@@ -393,6 +396,9 @@ export default function Pricing() {
     }
     if (displayCurrency === 'CNY') {
       return `CNY ¥${value.toLocaleString('zh-CN')}`;
+    }
+    if (displayCurrency === 'TWD') {
+      return `NT$${value.toLocaleString('zh-TW')}`;
     }
     return `JPY ¥${value.toLocaleString('ja-JP')}`;
   };

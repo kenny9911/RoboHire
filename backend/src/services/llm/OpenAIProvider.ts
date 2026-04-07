@@ -57,7 +57,13 @@ export class OpenAIProvider implements LLMProvider {
   private defaultModel: string;
 
   constructor(apiKey: string, defaultModel: string) {
-    this.client = new OpenAI({ apiKey });
+    const baseURL = process.env.OPENAI_BASE_URL;
+    const proxyKey = process.env.LLM_PROXY_KEY;
+    this.client = new OpenAI({
+      apiKey,
+      ...(baseURL ? { baseURL } : {}),
+      ...(baseURL && proxyKey ? { defaultHeaders: { 'X-Proxy-Key': proxyKey } } : {}),
+    });
     this.defaultModel = defaultModel;
   }
 

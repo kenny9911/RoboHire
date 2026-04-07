@@ -27,6 +27,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import IntelligenceReportPanel from '../../components/IntelligenceReportPanel';
+import CandidatePanel from '../../components/CandidatePanel';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -256,6 +257,7 @@ export default function JobDetail() {
   const [saveError, setSaveError] = useState('');
   const [closing, setClosing] = useState(false);
   const [aiLoading, setAiLoading] = useState<ContentSection | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<MatchResult | null>(null);
 
   // Basic info form draft
   const [basicDraft, setBasicDraft] = useState({
@@ -413,6 +415,12 @@ export default function JobDetail() {
     if (!job) return 0;
     return Math.max(0, Math.floor((Date.now() - new Date(job.publishedAt || job.createdAt).getTime()) / 86400000));
   }, [job]);
+
+  // ---- Candidate panel status change handler ----
+  const handleMatchStatusChange = useCallback((matchId: string, newStatus: string) => {
+    setMatches((prev) => prev.map((m) => m.id === matchId ? { ...m, status: newStatus } : m));
+    setSelectedMatch((prev) => prev && prev.id === matchId ? { ...prev, status: newStatus } : prev);
+  }, []);
 
   // ---- Helper to render section action buttons ----
   const sectionActions = (section: ContentSection) => (
@@ -854,11 +862,11 @@ export default function JobDetail() {
                   </thead>
                   <tbody>
                     {matches.map((match) => (
-                      <tr key={match.id} className="border-b border-slate-50 last:border-0">
+                      <tr key={match.id} onClick={() => setSelectedMatch(match)} className="border-b border-slate-50 last:border-0 cursor-pointer hover:bg-slate-50 transition-colors">
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2">
                             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">{getInitials(match.resume.name)}</div>
-                            <span className="font-medium text-slate-900">{match.resume.name}</span>
+                            <span className="font-medium text-slate-900 hover:text-blue-600 transition-colors">{match.resume.name}</span>
                           </div>
                         </td>
                         <td className="py-3 pr-4">
@@ -932,6 +940,15 @@ export default function JobDetail() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* Candidate sliding panel */}
+      {selectedMatch && (
+        <CandidatePanel
+          match={selectedMatch}
+          onClose={() => setSelectedMatch(null)}
+          onStatusChange={handleMatchStatusChange}
+        />
       )}
     </div>
   );

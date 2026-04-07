@@ -35,16 +35,12 @@ export const productIntroTranslations = {
         text: "One opening can pull in 200+ applicants. Reading every profile takes days, yet only a small handful are genuinely worth moving forward.",
       },
       scheduling: {
-        title: "Scheduling becomes its own job",
-        text: "Between candidates, interviewers, calendars, and time zones, the process drags on and the best people disappear before round one is done.",
+        title: "Admin buries the team",
+        text: "Scheduling interviews, chasing updates, backfilling records — 80% of the effort is logistics. Coordinating calendars takes days, and top candidates get poached in the meantime.",
       },
       evaluation: {
         title: "Too much depends on gut feel",
         text: "Different interviewers ask different questions and score differently, so decisions end up inconsistent and hard to defend.",
-      },
-      repetitive: {
-        title: "The team gets buried in admin",
-        text: "Most of the workload is repetitive triage, not high-value conversations. Good recruiters spend their time chasing logistics instead of making decisions.",
       },
       language: {
         title: "Global hiring raises the bar",
@@ -57,12 +53,12 @@ export const productIntroTranslations = {
     },
     steps: {
       badge: "End-to-end automation",
-      title: "Six steps, one hiring flow",
-      subtitle: "RoboHire coordinates each stage automatically so your team can focus on the final call.",
+      title: "Four steps, fully automated",
+      subtitle: "RoboHire handles each stage so your team only makes the final call.",
       clarify: {
-        title: "Clarify the role",
+        title: "From role brief to job post",
         subtitle: "AI Recruiting Consultant",
-        text: "An AI recruiting copilot asks the questions a strong recruiter would ask: scope, must-have skills, seniority, compensation, team fit, and deal-breakers. In about 10 minutes, you have a structured hiring brief.",
+        text: "An AI recruiting copilot clarifies the role through dialogue — scope, must-haves, compensation, deal-breakers — and outputs a structured brief plus a polished job description in about 10 minutes. Review, tweak, publish.",
       },
       create: {
         title: "Generate the job post",
@@ -71,8 +67,8 @@ export const productIntroTranslations = {
       },
       screen: {
         title: "Screen resumes with context",
-        subtitle: "AI Resume Screening",
-        text: "Upload resumes in bulk and the agents get to work immediately. This is not keyword matching. RoboHire reads for context, skill relevance, experience depth, and upside, then ranks every candidate with clear reasoning.",
+        subtitle: "AI Resume Screening Agent",
+        text: "Upload resumes in bulk and the agents get to work immediately. Not keyword matching — AI reads for context, skill relevance, experience depth, and upside, then ranks every candidate with clear reasoning. 200+ resumes in minutes.",
       },
       invite: {
         title: "Invite candidates automatically",
@@ -80,14 +76,14 @@ export const productIntroTranslations = {
         text: "Qualified candidates receive interview invitations automatically, complete with a private link and QR code. No back-and-forth scheduling. No extra software for the candidate.",
       },
       interview: {
-        title: "Run AI video interviews",
+        title: "AI video interviewer",
         subtitle: "AI Video Interviewer",
-        text: "Your AI interviewer is available 24/7, asks structured questions, follows up in real time, and supports live conversations in Chinese, English, Japanese, Spanish, French, Portuguese, and German.",
+        text: "Qualified candidates automatically receive an interview link. The AI interviewer is available 24/7, asks structured questions, follows up in real time, and supports 7 languages. Candidates click and start — no scheduling, no software to install.",
       },
       evaluate: {
         title: "Review scorecards and decide",
         subtitle: "Multi-Agent Evaluation",
-        text: "After each interview, RoboHire produces a structured assessment covering skill fit, experience depth, strengths, concerns, hiring recommendation, risk signals, and AI cheating checks. Your team reviews the scorecards and spends time only on finalists.",
+        text: "After each interview, RoboHire produces a structured assessment: skill fit, experience depth, strengths, concerns, hiring recommendation, risk signals, and AI cheating checks. Your team spends time only on finalists.",
       },
     },
     scenario: {
@@ -267,16 +263,12 @@ export const productIntroTranslations = {
         text: "一个岗位收到 200 多份简历很正常，逐份看完要花几天，但真正值得推进的候选人可能就那么几位。",
       },
       scheduling: {
-        title: "排面试本身就是一份工作",
-        text: "候选人、面试官、会议时间、跨时区安排一起叠上来，流程很容易拖长，优秀的人还没见到就先被别人抢走。",
+        title: "重复事务拖住团队",
+        text: "排面试、催进度、补记录，80% 的时间花在行政事务上。协调候选人和面试官的日程就要来回好几天，优秀候选人早被竞对抢走。",
       },
       evaluation: {
         title: "评估标准全靠个人感觉",
         text: "不同面试官问法不同、标准不同，最后很难横向比较，也很难给出站得住脚的录用判断。",
-      },
-      repetitive: {
-        title: "团队被重复事务拖住",
-        text: "大部分时间都花在筛人、催进度、补记录上，真正该投入的判断、沟通和说服反而被压缩了。",
       },
       language: {
         title: "跨语言招聘更难放量",
@@ -289,12 +281,12 @@ export const productIntroTranslations = {
     },
     steps: {
       badge: "全流程自动化",
-      title: "六个环节，一路自动推进",
+      title: "四个环节，一路自动推进",
       subtitle: "RoboHire 把每个环节都接起来自动跑，团队只需要在关键节点做决定。",
       clarify: {
-        title: "先把岗位说清楚",
+        title: "从需求到 JD，一步到位",
         subtitle: "AI 招聘顾问",
-        text: "AI 会像资深招聘顾问一样追问职责范围、核心能力、资历要求、薪资区间、团队偏好和不能妥协的条件，10 分钟内整理出一份结构化岗位画像。",
+        text: "AI 招聘顾问通过对话式交互梳理岗位需求——职责范围、核心技能、薪资区间、不可妥协项，10 分钟输出结构化岗位画像，并自动生成完整 JD，确认即可发布。",
       },
       create: {
         title: "一键生成职位描述",
@@ -304,7 +296,7 @@ export const productIntroTranslations = {
       screen: {
         title: "按语义筛简历",
         subtitle: "AI 简历筛选代理",
-        text: "把简历批量上传后，AI 会立刻开始工作。它不是做关键词匹配，而是真正看懂经历、技能相关性、经验深度和潜力信号，再给出带理由的排序结果。",
+        text: "批量上传简历，AI Agents 立即启动。不是关键词匹配——AI 真正看懂经历、技能相关性、经验深度和潜力信号，几分钟处理 200+ 份简历，给出带理由的排序结果。",
       },
       invite: {
         title: "自动发起面试邀约",
@@ -312,14 +304,14 @@ export const productIntroTranslations = {
         text: "进入下一轮的候选人会自动收到专属面试链接和二维码。没有来回确认时间，没有额外软件安装，候选人点开就能开始。",
       },
       interview: {
-        title: "AI 视频初面",
+        title: "AI 视频面试官",
         subtitle: "AI 视频面试官",
-        text: "AI 面试官 7×24 小时在线，按统一框架提问，也会根据回答继续追问。支持中、英、日、西、法、葡、德 7 种语言。",
+        text: "筛选通过的候选人自动收到面试链接。AI 面试官 7×24 在线，结构化提问、实时追问，支持中英日西法葡德 7 种语言。候选人点开即面，无需额外安装。",
       },
       evaluate: {
         title: "看报告，做决策",
         subtitle: "多代理评估系统",
-        text: "每场面试结束后，系统自动生成结构化评估报告，覆盖技能匹配、经验深度、优势短板、录用建议、风险提示和 AI 作弊检测。团队只需要把时间留给最后几位候选人。",
+        text: "每场面试自动生成结构化评估报告：技能匹配、经验深度、优势短板、录用建议、风险提示和 AI 作弊检测。团队只需要把时间留给最后几位候选人。",
       },
     },
     scenario: {
@@ -499,16 +491,12 @@ export const productIntroTranslations = {
         text: "一個職缺收到 200 多份履歷並不誇張，逐份看完要花好幾天，真正值得往下推進的人卻只有少數。",
       },
       scheduling: {
-        title: "排面談本身就是一份工作",
-        text: "候選人、面試官、時段、跨時區一起卡進來，流程很容易被拖長，優秀人才還沒見到就先被別人搶走。",
+        title: "重複事務拖住團隊",
+        text: "排面試、催進度、補記錄，80% 的時間花在行政事務上。協調候選人和面試官的日程就要來回好幾天，優秀候選人早被競對搶走。",
       },
       evaluation: {
         title: "評估標準常常靠個人感覺",
         text: "不同面試官問法不同、標準不同，最後很難公平比較，也難留下能說服人的決策依據。",
-      },
-      repetitive: {
-        title: "團隊被重複雜務綁住",
-        text: "大量時間花在初篩、催進度和補紀錄，真正該做的人才判斷與溝通反而被壓縮。",
       },
       language: {
         title: "跨語言招募更難放大",
@@ -520,38 +508,38 @@ export const productIntroTranslations = {
       },
     },
     steps: {
-      badge: "端到端自動化",
-      title: "六個環節，一路自動推進",
-      subtitle: "RoboHire 會把每個招募節點接起來往前推，團隊只需要在關鍵時刻做決定。",
+      badge: "全流程自動化",
+      title: "四個環節，一路自動推進",
+      subtitle: "RoboHire 把每個環節都接起來自動跑，團隊只需要在關鍵節點做決定。",
       clarify: {
-        title: "先把職缺講清楚",
+        title: "從需求到 JD，一步到位",
         subtitle: "AI 招募顧問",
-        text: "AI 會像資深招募顧問一樣追問職責範圍、核心能力、年資要求、薪資區間、團隊偏好與不能退讓的條件，大約 10 分鐘就能整理出一份結構化的人才輪廓。",
+        text: "AI 招募顧問透過對話式互動梳理職位需求——職責範圍、核心技能、薪資區間、不可妥協項，10 分鐘輸出結構化職位畫像，並自動產生完整 JD，確認即可發布。",
       },
       create: {
-        title: "一鍵產出職缺內容",
+        title: "一鍵生成職位描述",
         subtitle: "AI JD 生成器",
-        text: "需求釐清後，RoboHire 會自動寫好完整 JD，把職責、條件、加分項和職缺亮點整理好。你只要微調幾處，就能直接發布。",
+        text: "需求理清後，RoboHire 會自動寫好完整 JD，職責、要求、加分項和職位亮點一次到位。你只要過一遍，改幾處就能直接發布。",
       },
       screen: {
-        title: "用語意看懂履歷",
-        subtitle: "AI 履歷篩選代理",
-        text: "履歷一批次上傳，AI 就會立刻開始處理。它不是只抓關鍵字，而是會看懂經歷脈絡、技能關聯、資歷深度與潛力訊號，再給出有理由的排序。",
+        title: "按語義篩簡歷",
+        subtitle: "AI 簡歷篩選代理",
+        text: "批量上傳簡歷，AI Agents 立即啟動。不是關鍵字比對——AI 真正看懂經歷、技能相關性、經驗深度和潛力信號，幾分鐘處理 200+ 份簡歷，給出帶理由的排序結果。",
       },
       invite: {
-        title: "自動發出面談邀請",
+        title: "自動發起面試邀約",
         subtitle: "自動邀約助手",
-        text: "進入下一輪的候選人會自動收到專屬面談連結與 QR Code。沒有來回喬時間，也不需要額外安裝軟體，點開就能開始。",
+        text: "進入下一輪的候選人會自動收到專屬面試連結和 QR Code。無需來回確認時間，無需安裝軟體，候選人點開就能開始。",
       },
       interview: {
-        title: "AI 視訊初談",
-        subtitle: "AI 視訊面談官",
-        text: "AI 面談官 24 小時在線，依照一致架構提問，也會根據回答即時追問。支援中、英、日、西、法、葡、德 7 種語言。",
+        title: "AI 視訊面試官",
+        subtitle: "AI 視訊面試官",
+        text: "篩選通過的候選人自動收到面試連結。AI 面試官全天候在線，結構化提問、即時追問，支持中英日西法葡德 7 種語言。候選人點開即面，無需額外安裝。",
       },
       evaluate: {
-        title: "看報告，再做決策",
+        title: "看報告，做決策",
         subtitle: "多代理評估系統",
-        text: "每場面談結束後，系統都會自動產出結構化評估報告，涵蓋技能匹配、經驗深度、優勢弱點、錄用建議、風險提醒與 AI 作弊偵測。團隊只要把時間留給最後幾位候選人。",
+        text: "每場面試自動產生結構化評估報告：技能匹配、經驗深度、優勢短板、錄用建議、風險提示和 AI 作弊檢測。團隊只需要把時間留給最後幾位候選人。",
       },
     },
     scenario: {
@@ -731,16 +719,12 @@ export const productIntroTranslations = {
         text: "1つのポジションに200件以上の応募が集まるのは珍しくありません。すべてを読むには数日かかるのに、本当に前に進める候補者はごく一部です。",
       },
       scheduling: {
-        title: "面接調整そのものが重い",
-        text: "候補者、面接官、空き時間、時差を合わせているうちに、優秀な人ほど先に他社へ決まってしまいます。",
+        title: "管理業務にチームが埋もれる",
+        text: "面接の調整、進捗確認、記録の補完——80%の工数が事務作業に消えます。候補者と面接官のスケジュール調整だけで何日もかかり、優秀な人材は先に他社へ。",
       },
       evaluation: {
         title: "評価が面接官ごとにぶれやすい",
         text: "質問内容も見方も人によって違うため、横並びで比べにくく、採用判断の説明責任も持ちにくくなります。",
-      },
-      repetitive: {
-        title: "採用チームが雑務に埋もれる",
-        text: "一次選考、日程調整、記録整理などの反復作業に時間を取られ、本来向き合うべき見極めや口説きに手が回りません。",
       },
       language: {
         title: "多言語採用はさらに難しい",
@@ -752,38 +736,38 @@ export const productIntroTranslations = {
       },
     },
     steps: {
-      badge: "採用フローを丸ごと自動化",
-      title: "6つの工程を、ひと続きで回す",
-      subtitle: "RoboHireが各工程をつなぎ、チームは意思決定が必要な場面だけに集中できます。",
+      badge: "エンドツーエンドの自動化",
+      title: "4つのステップで完全自動化",
+      subtitle: "RoboHireが各段階を自動で進めるので、チームは最終判断に集中できます。",
       clarify: {
-        title: "まず要件を言語化する",
+        title: "要件定義からJD作成まで一括",
         subtitle: "AI採用コンサルタント",
-        text: "AIが優秀なリクルーターのように、役割、必須スキル、経験年数、報酬帯、チームとの相性、譲れない条件を順番に確認します。約10分で構造化された採用要件がまとまります。",
+        text: "AI採用コンサルタントが対話形式で職務要件を整理——職責範囲、必須スキル、給与帯、譲れない条件を10分で構造化し、完成度の高いJDまで自動生成します。確認して公開するだけ。",
       },
       create: {
-        title: "求人票をすぐ作る",
+        title: "求人票を自動生成",
         subtitle: "AI JDジェネレーター",
-        text: "要件が固まれば、RoboHireが職務内容、応募要件、歓迎条件、訴求ポイントまで含めた求人票を作成します。確認して少し直せば、そのまま公開できます。",
+        text: "要件が固まったら、RoboHireが職務内容、応募条件、歓迎条件を含む完成度の高い求人票を自動作成。確認・微調整して公開するだけ。",
       },
       screen: {
-        title: "文脈で書類を見極める",
-        subtitle: "AI書類選考エージェント",
-        text: "履歴書や職務経歴書をまとめてアップロードすると、AIがすぐに読み始めます。単純なキーワード照合ではなく、経験の深さ、スキルの関連性、伸びしろまで踏まえて順位づけします。",
+        title: "AIによる書類選考",
+        subtitle: "AI履歴書スクリーニング",
+        text: "履歴書を一括アップロードするとAIエージェントが即座に稼働。キーワードマッチではなく、文脈・スキル関連性・経験の深さ・将来性を読み解き、根拠付きでランキング。200件以上を数分で処理。",
       },
       invite: {
-        title: "面接案内を自動で送る",
-        subtitle: "面接案内オートメーション",
-        text: "次に進める候補者には、専用リンクとQRコード付きの面接案内が自動送信されます。日程調整の往復も、追加アプリのインストールも不要です。",
+        title: "自動で面接招待",
+        subtitle: "自動面接招待",
+        text: "通過した候補者には面接リンクとQRコードが自動送信されます。日程調整の手間なし、ソフトのインストールも不要。候補者はリンクを開くだけ。",
       },
       interview: {
-        title: "AIが一次面接を担う",
+        title: "AIビデオ面接官",
         subtitle: "AIビデオ面接官",
-        text: "AI面接官は24時間対応。構造化された質問を行い、回答に応じてその場で深掘りします。中国語、英語、日本語、スペイン語、フランス語、ポルトガル語、ドイツ語に対応しています。",
+        text: "通過した候補者に面接リンクを自動送信。AI面接官は24時間対応、構造化された質問と即座のフォローアップ、7言語対応。候補者はクリックするだけで面接開始。",
       },
       evaluate: {
-        title: "レポートを見て判断する",
+        title: "レポートを見て判断",
         subtitle: "マルチエージェント評価",
-        text: "面接後には、スキル適合度、経験の厚み、強み、懸念点、採用推奨、リスクシグナル、AI不正検知まで含んだ評価レポートが自動生成されます。チームは最終候補者にだけ時間を使えます。",
+        text: "面接ごとに構造化された評価レポートを自動生成：スキル適合度、経験の深さ、長所短所、採用推奨、リスク指摘、AIカンニング検知。チームは最終候補者にだけ時間を使えます。",
       },
     },
     scenario: {
@@ -963,16 +947,12 @@ export const productIntroTranslations = {
         text: "Una sola vacante puede atraer más de 200 postulaciones. Leerlas una por una toma días, pero los perfiles que de verdad valen la pena suelen ser pocos.",
       },
       scheduling: {
-        title: "Coordinar entrevistas se vuelve otro trabajo",
-        text: "Entre candidatos, entrevistadores, agendas y husos horarios, el proceso se alarga y los mejores perfiles se van antes de terminar la primera ronda.",
+        title: "El equipo se ahoga en tareas administrativas",
+        text: "Programar entrevistas, hacer seguimiento, completar registros — el 80% del esfuerzo es logística. Coordinar agendas lleva días, y los mejores candidatos se pierden.",
       },
       evaluation: {
         title: "La evaluación depende demasiado del ojo de cada uno",
         text: "Cada entrevistador pregunta distinto y califica distinto, así que comparar candidatos con justicia se vuelve mucho más difícil.",
-      },
-      repetitive: {
-        title: "El equipo se ahoga en tareas repetitivas",
-        text: "Gran parte del tiempo se va en filtrar, perseguir respuestas y ordenar notas. Lo estratégico queda para el final, cuando ya no queda energía.",
       },
       language: {
         title: "Contratar en varios idiomas complica todo más",
@@ -984,38 +964,38 @@ export const productIntroTranslations = {
       },
     },
     steps: {
-      badge: "Automatización de punta a punta",
-      title: "Seis pasos, un solo flujo",
-      subtitle: "RoboHire conecta cada etapa y la empuja sola, para que el equipo intervenga solo cuando toca decidir.",
+      badge: "Automatización completa",
+      title: "Cuatro pasos, totalmente automatizado",
+      subtitle: "RoboHire gestiona cada etapa para que tu equipo solo tome la decisión final.",
       clarify: {
-        title: "Aterriza el perfil",
-        subtitle: "Consultor de reclutamiento con IA",
-        text: "La IA pregunta como lo haría un reclutador senior: alcance del rol, habilidades imprescindibles, nivel de experiencia, compensación, contexto del equipo y no negociables. En unos 10 minutos queda armado un brief claro.",
+        title: "Del briefing a la oferta de empleo",
+        subtitle: "Consultor de Reclutamiento IA",
+        text: "Un copiloto de reclutamiento IA aclara el rol mediante diálogo — alcance, requisitos imprescindibles, compensación, líneas rojas — y genera un perfil estructurado más una descripción de puesto pulida en 10 minutos. Revisa, ajusta, publica.",
       },
       create: {
-        title: "Crea la vacante en un clic",
-        subtitle: "Generador de job description con IA",
-        text: "Cuando el rol ya está claro, RoboHire redacta una descripción completa con responsabilidades, requisitos, pluses y narrativa del puesto. Tú solo revisas, ajustas y publicas.",
+        title: "Generar la oferta de empleo",
+        subtitle: "Generador de JD con IA",
+        text: "Una vez claro el rol, RoboHire redacta una descripción de puesto profesional con responsabilidades, requisitos y diferenciadores. Revísala, ajústala, publícala.",
       },
       screen: {
-        title: "Filtra CV con contexto",
-        subtitle: "Agente de screening de CV",
-        text: "Sube los CV en lote y los agentes empiezan al instante. No es matching por palabras clave. RoboHire entiende contexto, relevancia de habilidades, profundidad de experiencia y potencial, y luego ordena a cada candidato con razones claras.",
+        title: "Filtrar currículos con contexto",
+        subtitle: "Agente de Filtrado de CVs IA",
+        text: "Sube currículos en lote y los agentes se ponen a trabajar. No es coincidencia de palabras clave — la IA lee contexto, relevancia de habilidades, profundidad de experiencia y potencial. 200+ CVs en minutos con razonamiento claro.",
       },
       invite: {
-        title: "Invita candidatos automáticamente",
-        subtitle: "Outreach automático para entrevistas",
-        text: "Los perfiles aprobados reciben su invitación con enlace privado y código QR. Sin ida y vuelta para cuadrar agendas. Sin instalar nada extra del lado del candidato.",
+        title: "Invitar candidatos automáticamente",
+        subtitle: "Invitación Automática",
+        text: "Los candidatos seleccionados reciben automáticamente una invitación con enlace privado y código QR. Sin coordinación de agendas. Sin software adicional.",
       },
       interview: {
-        title: "Haz primeras entrevistas con IA",
-        subtitle: "Entrevistador de video con IA",
-        text: "Tu entrevistador con IA está disponible 24/7, sigue una estructura consistente, repregunta en tiempo real y sostiene conversaciones en chino, inglés, japonés, español, francés, portugués y alemán.",
+        title: "Entrevistador de video IA",
+        subtitle: "Entrevistador de Video IA",
+        text: "Los candidatos seleccionados reciben automáticamente un enlace de entrevista. El entrevistador IA está disponible 24/7, hace preguntas estructuradas, repreguntas en tiempo real y soporta 7 idiomas. Sin agendas, sin instalaciones.",
       },
       evaluate: {
-        title: "Revisa reportes y decide",
-        subtitle: "Evaluación multiagente",
-        text: "Después de cada entrevista, RoboHire genera un reporte estructurado con ajuste al rol, lectura de experiencia, fortalezas, alertas, recomendación de contratación, señales de riesgo y chequeos anti-trampa. El equipo solo dedica tiempo a los finalistas.",
+        title: "Ver informes y decidir",
+        subtitle: "Evaluación Multi-Agente",
+        text: "Tras cada entrevista se genera automáticamente un informe estructurado: ajuste de habilidades, profundidad de experiencia, fortalezas, riesgos, recomendación de contratación y detección de trampas IA. Tu equipo solo dedica tiempo a los finalistas.",
       },
     },
     scenario: {
@@ -1195,16 +1175,12 @@ export const productIntroTranslations = {
         text: "Un poste peut attirer plus de 200 candidatures. Tout lire prend des jours, alors qu'au final seuls quelques profils méritent vraiment d'aller plus loin.",
       },
       scheduling: {
-        title: "La planification devient un métier à part",
-        text: "Entre candidats, intervieweurs, agendas et fuseaux horaires, le process s'étire et les meilleurs profils acceptent ailleurs avant même la fin du premier tour.",
+        title: "L'équipe est noyée dans l'administratif",
+        text: "Planifier les entretiens, relancer, mettre à jour les dossiers — 80 % de l'effort est logistique. Coordonner les agendas prend des jours, et les meilleurs candidats partent ailleurs.",
       },
       evaluation: {
         title: "L'évaluation dépend trop du ressenti",
         text: "Chaque intervieweur pose ses propres questions et applique ses propres critères. Comparer proprement les candidats devient vite compliqué.",
-      },
-      repetitive: {
-        title: "L'équipe s'épuise dans l'opérationnel",
-        text: "Une grande partie du temps part dans le tri, les relances et la remise en forme des notes. Le vrai jugement humain passe au second plan.",
       },
       language: {
         title: "Le recrutement multilingue complique encore tout",
@@ -1217,37 +1193,37 @@ export const productIntroTranslations = {
     },
     steps: {
       badge: "Automatisation de bout en bout",
-      title: "Six étapes, un seul flux",
-      subtitle: "RoboHire enchaîne les étapes automatiquement pour que votre équipe se concentre sur le bon moment : la décision.",
+      title: "Quatre étapes, entièrement automatisé",
+      subtitle: "RoboHire gère chaque étape pour que votre équipe ne prenne que la décision finale.",
       clarify: {
-        title: "Cadrer le poste",
-        subtitle: "Consultant recrutement IA",
-        text: "L'IA pose les bonnes questions comme le ferait un excellent recruteur : périmètre du rôle, compétences indispensables, niveau d'expérience, rémunération, contexte d'équipe et points non négociables. En une dizaine de minutes, le brief est clair.",
+        title: "Du brief au poste publié",
+        subtitle: "Consultant IA en recrutement",
+        text: "Un copilote IA clarifie le poste par le dialogue — périmètre, compétences clés, rémunération, critères non négociables — et produit un brief structuré plus une fiche de poste soignée en 10 minutes. Relisez, ajustez, publiez.",
       },
       create: {
-        title: "Rédiger l'offre en un clic",
-        subtitle: "Générateur de fiche de poste IA",
-        text: "Une fois le besoin clarifié, RoboHire rédige une fiche de poste complète avec missions, attendus, bonus et angle de présentation. Il reste à relire, ajuster et publier.",
+        title: "Générer l'offre d'emploi",
+        subtitle: "Générateur de JD IA",
+        text: "Une fois le poste défini, RoboHire rédige une fiche de poste professionnelle avec responsabilités, exigences et atouts. Relisez, ajustez, publiez.",
       },
       screen: {
-        title: "Trier les CV avec du contexte",
-        subtitle: "Agent IA de présélection",
-        text: "Déposez les CV en lot et les agents se mettent au travail immédiatement. Ici, on ne parle pas de simples mots-clés. RoboHire comprend le contexte, la proximité des compétences, la profondeur d'expérience et le potentiel avant de classer chaque profil.",
+        title: "Présélection contextuelle des CV",
+        subtitle: "Agent de Présélection IA",
+        text: "Téléchargez les CV en masse, les agents se mettent au travail immédiatement. Pas de correspondance de mots-clés — l'IA lit le contexte, la pertinence des compétences et le potentiel. 200+ CV en quelques minutes avec raisonnement clair.",
       },
       invite: {
         title: "Inviter les candidats automatiquement",
-        subtitle: "Relance d'entretien automatisée",
-        text: "Les candidats retenus reçoivent automatiquement leur invitation avec lien privé et QR code. Pas d'aller-retour pour trouver un créneau, pas d'installation supplémentaire côté candidat.",
+        subtitle: "Invitation automatisée",
+        text: "Les candidats retenus reçoivent automatiquement un lien d'entretien privé et un QR code. Pas de coordination d'agendas. Pas de logiciel à installer.",
       },
       interview: {
-        title: "Mener les premiers entretiens avec l'IA",
-        subtitle: "Interviewer vidéo IA",
-        text: "L'interviewer IA est disponible 24h sur 24, suit une trame cohérente, relance en temps réel et peut échanger en chinois, anglais, japonais, espagnol, français, portugais et allemand.",
+        title: "Intervieweur vidéo IA",
+        subtitle: "Intervieweur Vidéo IA",
+        text: "Les candidats retenus reçoivent automatiquement un lien d'entretien. L'intervieweur IA est disponible 24h/24, pose des questions structurées, relance en temps réel et supporte 7 langues. Sans planning, sans installation.",
       },
       evaluate: {
-        title: "Lire les rapports et trancher",
-        subtitle: "Évaluation multi-agents",
-        text: "Après chaque entretien, RoboHire produit une synthèse structurée : adéquation au poste, lecture de l'expérience, points forts, réserves, recommandation d'embauche, signaux de risque et détection de fraude à l'IA. L'équipe ne passe du temps que sur les finalistes.",
+        title: "Consulter les rapports et décider",
+        subtitle: "Évaluation Multi-Agent",
+        text: "Après chaque entretien, un rapport structuré est généré automatiquement : adéquation des compétences, profondeur d'expérience, forces, risques, recommandation d'embauche et détection de triche IA. Votre équipe ne consacre du temps qu'aux finalistes.",
       },
     },
     scenario: {
@@ -1427,16 +1403,12 @@ export const productIntroTranslations = {
         text: "Uma única vaga pode receber mais de 200 candidaturas. Ler tudo leva dias, mas os perfis que realmente valem avançar costumam ser poucos.",
       },
       scheduling: {
-        title: "Agendar entrevista vira outro trabalho",
-        text: "Entre candidatos, entrevistadores, agendas e fusos, o processo se arrasta e os melhores nomes somem antes mesmo de fechar a primeira rodada.",
+        title: "A equipe se afoga em tarefas administrativas",
+        text: "Agendar entrevistas, cobrar atualizações, preencher registros — 80% do esforço é logística. Coordenar agendas leva dias, e os melhores candidatos vão para a concorrência.",
       },
       evaluation: {
         title: "A avaliação muda demais de pessoa para pessoa",
         text: "Cada entrevistador pergunta de um jeito e avalia com um critério diferente. Comparar candidatos com justiça fica muito mais difícil.",
-      },
-      repetitive: {
-        title: "O time afunda em tarefa repetitiva",
-        text: "Boa parte do tempo vai para triagem, cobrança de retorno e organização de notas. Falta energia para a parte estratégica da contratação.",
       },
       language: {
         title: "Contratar em vários idiomas complica ainda mais",
@@ -1448,38 +1420,38 @@ export const productIntroTranslations = {
       },
     },
     steps: {
-      badge: "Automação de ponta a ponta",
-      title: "Seis etapas, um fluxo só",
-      subtitle: "O RoboHire conecta cada fase e faz o processo andar sozinho, para o time entrar só quando chega a hora de decidir.",
+      badge: "Automação ponta a ponta",
+      title: "Quatro etapas, totalmente automatizado",
+      subtitle: "O RoboHire gerencia cada etapa para que sua equipe só tome a decisão final.",
       clarify: {
-        title: "Esclareça o perfil da vaga",
-        subtitle: "Consultor de recrutamento com IA",
-        text: "A IA pergunta como um bom recrutador perguntaria: escopo do cargo, competências indispensáveis, senioridade, remuneração, contexto do time e pontos inegociáveis. Em cerca de 10 minutos, o briefing fica estruturado.",
+        title: "Do briefing à vaga publicada",
+        subtitle: "Consultor de Recrutamento IA",
+        text: "Um copiloto de recrutamento IA esclarece a vaga por diálogo — escopo, habilidades essenciais, remuneração, inegociáveis — e gera um perfil estruturado mais uma descrição de vaga polida em 10 minutos. Revise, ajuste, publique.",
       },
       create: {
-        title: "Gere a descrição da vaga",
+        title: "Gerar a descrição da vaga",
         subtitle: "Gerador de JD com IA",
-        text: "Com o perfil definido, o RoboHire monta uma descrição completa com responsabilidades, requisitos, diferenciais e posicionamento da vaga. Você revisa, ajusta e publica.",
+        text: "Com a vaga definida, o RoboHire redige uma descrição profissional com responsabilidades, requisitos e diferenciais. Revise, ajuste, publique.",
       },
       screen: {
-        title: "Faça triagem com contexto",
-        subtitle: "Agente de triagem de currículos",
-        text: "Suba os currículos em lote e os agentes começam na hora. Não é busca por palavra-chave. O RoboHire entende contexto, relação entre habilidades, profundidade de experiência e potencial antes de ranquear cada candidato.",
+        title: "Triagem contextual de currículos",
+        subtitle: "Agente de Triagem de CVs IA",
+        text: "Faça upload em lote e os agentes começam imediatamente. Não é correspondência de palavras-chave — a IA lê contexto, relevância de habilidades e potencial. 200+ currículos em minutos com raciocínio claro.",
       },
       invite: {
-        title: "Convide candidatos automaticamente",
-        subtitle: "Convite automático para entrevista",
-        text: "Os perfis aprovados recebem o convite com link privado e QR code. Nada de troca interminável para achar horário. Nada de software extra para o candidato instalar.",
+        title: "Convidar candidatos automaticamente",
+        subtitle: "Convite Automático",
+        text: "Os candidatos aprovados recebem automaticamente um link de entrevista e QR code. Sem coordenação de agendas. Sem software adicional.",
       },
       interview: {
-        title: "Rode entrevistas por vídeo com IA",
-        subtitle: "Entrevistador de vídeo com IA",
-        text: "Seu entrevistador com IA atende 24 horas por dia, segue uma estrutura consistente, aprofunda respostas em tempo real e conversa em chinês, inglês, japonês, espanhol, francês, português e alemão.",
+        title: "Entrevistador de vídeo IA",
+        subtitle: "Entrevistador de Vídeo IA",
+        text: "Candidatos aprovados recebem automaticamente um link de entrevista. O entrevistador IA está disponível 24/7, faz perguntas estruturadas, acompanha em tempo real e suporta 7 idiomas. Sem agendamento, sem instalação.",
       },
       evaluate: {
-        title: "Leia os relatórios e decida",
-        subtitle: "Avaliação multiagente",
-        text: "Depois de cada entrevista, o RoboHire gera um relatório estruturado com aderência à vaga, leitura da experiência, pontos fortes, alertas, recomendação de contratação, sinais de risco e checagens contra fraude com IA. O time só gasta energia com os finalistas.",
+        title: "Ver relatórios e decidir",
+        subtitle: "Avaliação Multi-Agente",
+        text: "Após cada entrevista, um relatório estruturado é gerado automaticamente: adequação de habilidades, profundidade de experiência, pontos fortes, riscos, recomendação de contratação e detecção de fraude IA. Sua equipe dedica tempo apenas aos finalistas.",
       },
     },
     scenario: {
@@ -1659,16 +1631,12 @@ export const productIntroTranslations = {
         text: "Auf eine Rolle gehen schnell 200 oder mehr Bewerbungen ein. Alles manuell zu lesen dauert Tage, obwohl am Ende nur wenige Profile wirklich relevant sind.",
       },
       scheduling: {
-        title: "Interviewplanung wird zum Vollzeitjob",
-        text: "Zwischen Kandidaten, Interviewern, Kalendern und Zeitzonen zieht sich der Prozess und die besten Leute sind weg, bevor Runde eins abgeschlossen ist.",
+        title: "Das Team versinkt in Verwaltungsarbeit",
+        text: "Interviews planen, Fortschritt nachverfolgen, Unterlagen pflegen — 80 % des Aufwands ist Logistik. Terminabstimmungen dauern Tage, und die besten Kandidaten sind längst woanders.",
       },
       evaluation: {
         title: "Zu viel hängt am Bauchgefühl",
         text: "Jeder Interviewer fragt anders und bewertet anders. Dadurch werden Entscheidungen inkonsistent und nur schwer sauber begründbar.",
-      },
-      repetitive: {
-        title: "Das Team versinkt in Routinearbeit",
-        text: "Viel zu viel Zeit geht für Vorsortierung, Nachfassen und Dokumentation drauf. Für die eigentliche Beurteilung bleibt zu wenig Raum.",
       },
       language: {
         title: "Internationales Hiring erhöht die Komplexität",
@@ -1681,37 +1649,37 @@ export const productIntroTranslations = {
     },
     steps: {
       badge: "End-to-End-Automatisierung",
-      title: "Sechs Schritte, ein sauberer Flow",
-      subtitle: "RoboHire verbindet jede Phase automatisch, damit Ihr Team sich auf die finalen Entscheidungen konzentrieren kann.",
+      title: "Vier Schritte, voll automatisiert",
+      subtitle: "RoboHire steuert jede Phase, damit Ihr Team nur die finale Entscheidung trifft.",
       clarify: {
-        title: "Rolle sauber schärfen",
+        title: "Vom Briefing zur Stellenanzeige",
         subtitle: "KI-Recruiting-Berater",
-        text: "Die KI fragt nach Umfang der Rolle, Muss-Skills, Erfahrungsniveau, Vergütung, Teamkontext und Ausschlusskriterien, so wie es ein starker Recruiter tun würde. Nach rund 10 Minuten steht ein strukturiertes Anforderungsprofil.",
+        text: "Ein KI-Recruiting-Copilot klärt die Stelle im Dialog — Umfang, Pflichtqualifikationen, Vergütung, K.o.-Kriterien — und erstellt in 10 Minuten ein strukturiertes Profil plus ausformulierte Stellenanzeige. Prüfen, anpassen, veröffentlichen.",
       },
       create: {
-        title: "Stellenanzeige direkt erzeugen",
+        title: "Stellenanzeige generieren",
         subtitle: "KI-JD-Generator",
-        text: "Sobald die Rolle klar ist, erstellt RoboHire eine vollständige Stellenbeschreibung mit Aufgaben, Anforderungen, Pluspunkten und passender Positionierung. Prüfen, feinjustieren, veröffentlichen.",
+        text: "Sobald die Stelle definiert ist, erstellt RoboHire eine professionelle Stellenanzeige mit Aufgaben, Anforderungen und Vorteilen. Prüfen, anpassen, veröffentlichen.",
       },
       screen: {
-        title: "Lebensläufe mit Kontext prüfen",
-        subtitle: "KI-CV-Screening",
-        text: "Laden Sie Bewerbungen gesammelt hoch und die Agenten legen sofort los. Das ist kein Keyword-Matching. RoboHire versteht Kontext, Skill-Nähe, Erfahrungsdichte und Potenzial und priorisiert Kandidaten mit nachvollziehbarer Begründung.",
+        title: "Kontextbasiertes CV-Screening",
+        subtitle: "KI-Lebenslauf-Screening",
+        text: "Laden Sie Lebensläufe im Batch hoch, die Agenten starten sofort. Kein Keyword-Matching — die KI versteht Kontext, Skill-Relevanz und Potenzial. 200+ CVs in Minuten mit klarer Begründung.",
       },
       invite: {
         title: "Kandidaten automatisch einladen",
-        subtitle: "Automatisierte Interview-Einladung",
-        text: "Geeignete Kandidaten erhalten automatisch ihre Einladung mit persönlichem Link und QR-Code. Kein endloses Hin und Her für Termine. Keine zusätzliche Software auf Kandidatenseite.",
+        subtitle: "Automatisierte Einladung",
+        text: "Qualifizierte Kandidaten erhalten automatisch einen Interviewlink und QR-Code. Keine Terminabstimmung. Keine zusätzliche Software.",
       },
       interview: {
-        title: "KI-Videointerviews durchführen",
+        title: "KI-Video-Interviewer",
         subtitle: "KI-Video-Interviewer",
-        text: "Ihr KI-Interviewer ist rund um die Uhr verfügbar, stellt strukturierte Fragen, hakt in Echtzeit nach und führt Gespräche auf Chinesisch, Englisch, Japanisch, Spanisch, Französisch, Portugiesisch und Deutsch.",
+        text: "Qualifizierte Kandidaten erhalten automatisch einen Interviewlink. Der KI-Interviewer ist 24/7 verfügbar, stellt strukturierte Fragen, hakt in Echtzeit nach und unterstützt 7 Sprachen. Ohne Terminplanung, ohne Installation.",
       },
       evaluate: {
-        title: "Scorecards lesen und entscheiden",
+        title: "Berichte prüfen und entscheiden",
         subtitle: "Multi-Agenten-Bewertung",
-        text: "Nach jedem Interview erstellt RoboHire eine strukturierte Auswertung zu Rollenfit, Erfahrungsniveau, Stärken, Risiken, Einstellungs-Empfehlung und KI-Cheating-Checks. Ihr Team investiert Zeit nur noch in Finalisten.",
+        text: "Nach jedem Interview wird automatisch ein strukturierter Bericht erstellt: Skill-Fit, Erfahrungstiefe, Stärken, Risiken, Einstellungsempfehlung und KI-Betrugs\u00ADerkennung. Ihr Team investiert Zeit nur in die Finalisten.",
       },
     },
     scenario: {

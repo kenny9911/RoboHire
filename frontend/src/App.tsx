@@ -10,6 +10,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import APILanding from './pages/APILanding';
 import Pricing from './pages/Pricing';
+import SalesKit from './pages/SalesKit';
 import NotFound from './pages/NotFound';
 
 // Lazy-loaded public pages
@@ -111,6 +112,7 @@ function App() {
             <Route path="/start-hiring" element={<Navigate to="/agent-alex" replace />} />
             <Route path="/developers" element={<APILanding />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/sales-kit" element={<SalesKit />} />
             <Route path="/request-demo" element={<RequestDemo />} />
             <Route path="/quick-invite" element={<QuickInvite />} />
             <Route path="/about" element={<About />} />

@@ -236,7 +236,7 @@ export default function MatchingBatchHistory({
                     </div>
                     <div className="rounded-2xl bg-slate-50 px-3 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                        {t('product.matching.failedCountInline', 'Failed')}
+                        {t('product.matching.failedLabel', 'Failed')}
                       </p>
                       <p className="mt-1 text-sm font-semibold text-slate-900">{batch.failedTasks}</p>
                     </div>

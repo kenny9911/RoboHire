@@ -6,9 +6,19 @@ export class GoogleProvider implements LLMProvider {
   private defaultModel: string;
   private readonly retryDelayMs = 800;
   private readonly requestTimeoutMs: number;
+  private readonly requestOptions?: { baseUrl?: string; customHeaders?: Record<string, string> };
 
   constructor(apiKey: string, defaultModel: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
+    // Optional proxy support for geo-restricted regions
+    const baseUrl = process.env.GEMINI_BASE_URL;
+    const proxyKey = process.env.LLM_PROXY_KEY;
+    if (baseUrl) {
+      this.requestOptions = {
+        baseUrl,
+        ...(proxyKey ? { customHeaders: { 'X-Proxy-Key': proxyKey } } : {}),
+      };
+    }
     // Extract model name from provider/model format (e.g., "google/gemini-3-flash-preview" -> "gemini-3-flash-preview")
     this.defaultModel = defaultModel.includes('/') 
       ? defaultModel.split('/')[1] 
@@ -33,7 +43,7 @@ export class GoogleProvider implements LLMProvider {
         temperature: options?.temperature ?? 0.7,
         maxOutputTokens: options?.maxTokens,
       },
-    });
+    }, this.requestOptions);
 
     // Convert messages to Gemini format
     const systemMessage = messages.find((m) => m.role === 'system');

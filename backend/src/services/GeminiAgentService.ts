@@ -315,7 +315,15 @@ export function assertGeminiConfigured(): void {
 
 export function createGeminiClient(): GoogleGenAI {
   assertGeminiConfigured();
-  return new GoogleGenAI({ apiKey: getGeminiApiKey() });
+  const baseUrl = process.env.GEMINI_BASE_URL;
+  const proxyKey = process.env.LLM_PROXY_KEY;
+  return new GoogleGenAI({
+    apiKey: getGeminiApiKey(),
+    ...(baseUrl ? { httpOptions: {
+      baseUrl,
+      ...(proxyKey ? { headers: { 'X-Proxy-Key': proxyKey } } : {}),
+    } } : {}),
+  });
 }
 
 export function normalizeHistory(history: HistoryMessage[]): Content[] {

@@ -1196,6 +1196,7 @@ router.post('/config/pricing', async (req, res) => {
         USD: {},
         CNY: {},
         JPY: {},
+        TWD: {},
       },
     };
 

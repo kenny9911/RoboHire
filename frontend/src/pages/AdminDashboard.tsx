@@ -1819,10 +1819,11 @@ function UsersTab() {
 }
 
 function PricingTab() {
-  const [prices, setPrices] = useState<Record<'USD' | 'CNY' | 'JPY', Record<'starter' | 'growth' | 'business', string>>>({
+  const [prices, setPrices] = useState<Record<'USD' | 'CNY' | 'JPY' | 'TWD', Record<'starter' | 'growth' | 'business', string>>>({
     USD: { starter: '29', growth: '199', business: '399' },
     CNY: { starter: '199', growth: '1369', business: '2749' },
     JPY: { starter: '4559', growth: '31329', business: '62799' },
+    TWD: { starter: '899', growth: '6199', business: '12399' },
   });
   const [discountEnabled, setDiscountEnabled] = useState(false);
   const [discountPercent, setDiscountPercent] = useState('0');
@@ -1835,10 +1836,11 @@ function PricingTab() {
     adminFetch('/config')
       .then((data) => {
         const configs: { key: string; value: string }[] = data.data?.configs || [];
-        const p: Record<'USD' | 'CNY' | 'JPY', Record<'starter' | 'growth' | 'business', string>> = {
+        const p: Record<'USD' | 'CNY' | 'JPY' | 'TWD', Record<'starter' | 'growth' | 'business', string>> = {
           USD: { starter: '29', growth: '199', business: '399' },
           CNY: { starter: '199', growth: '1369', business: '2749' },
           JPY: { starter: '4559', growth: '31329', business: '62799' },
+          TWD: { starter: '899', growth: '6199', business: '12399' },
         };
         let nextDiscountEnabled = false;
         let nextDiscountPercent = '0';
@@ -1848,9 +1850,9 @@ function PricingTab() {
           if (c.key === 'price_growth_monthly') p.USD.growth = c.value;
           if (c.key === 'price_business_monthly') p.USD.business = c.value;
 
-          const match = c.key.match(/^price_(usd|cny|jpy)_(starter|growth|business)_monthly$/i);
+          const match = c.key.match(/^price_(usd|cny|jpy|twd)_(starter|growth|business)_monthly$/i);
           if (match) {
-            const currency = match[1].toUpperCase() as 'USD' | 'CNY' | 'JPY';
+            const currency = match[1].toUpperCase() as 'USD' | 'CNY' | 'JPY' | 'TWD';
             const tier = match[2].toLowerCase() as 'starter' | 'growth' | 'business';
             p[currency][tier] = c.value;
           }
@@ -1887,6 +1889,11 @@ function PricingTab() {
         starter: parsePrice(prices.JPY.starter),
         growth: parsePrice(prices.JPY.growth),
         business: parsePrice(prices.JPY.business),
+      },
+      TWD: {
+        starter: parsePrice(prices.TWD.starter),
+        growth: parsePrice(prices.TWD.growth),
+        business: parsePrice(prices.TWD.business),
       },
     };
 
@@ -1943,6 +1950,7 @@ function PricingTab() {
             { code: 'USD' as const, symbol: '$', localeLabel: 'US Dollar' },
             { code: 'CNY' as const, symbol: '¥', localeLabel: 'Chinese Yuan' },
             { code: 'JPY' as const, symbol: '¥', localeLabel: 'Japanese Yen' },
+            { code: 'TWD' as const, symbol: 'NT$', localeLabel: 'Taiwan Dollar' },
           ]).map((currency) => (
             <div key={currency.code} className="rounded-xl border border-gray-200 p-4">
               <div className="mb-4">

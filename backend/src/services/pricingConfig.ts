@@ -3,7 +3,7 @@ import prisma from '../lib/prisma.js';
 export const PRICING_TIERS = ['starter', 'growth', 'business'] as const;
 export type PricingTier = (typeof PRICING_TIERS)[number];
 
-export const PRICING_CURRENCIES = ['USD', 'CNY', 'JPY'] as const;
+export const PRICING_CURRENCIES = ['USD', 'CNY', 'JPY', 'TWD'] as const;
 export type PricingCurrency = (typeof PRICING_CURRENCIES)[number];
 
 export type PricingMatrix = Record<PricingCurrency, Record<PricingTier, number>>;
@@ -27,12 +27,14 @@ const DEFAULT_PRICES: PricingMatrix = {
   USD: { starter: 29, growth: 199, business: 399 },
   CNY: { starter: 199, growth: 1369, business: 2749 },
   JPY: { starter: 4559, growth: 31329, business: 62799 },
+  TWD: { starter: 899, growth: 6199, business: 12399 },
 };
 
 const CURRENCY_CODE_MAP: Record<string, PricingCurrency> = {
   usd: 'USD',
   cny: 'CNY',
   jpy: 'JPY',
+  twd: 'TWD',
 };
 
 function cloneDefaultPrices(): PricingMatrix {
@@ -40,6 +42,7 @@ function cloneDefaultPrices(): PricingMatrix {
     USD: { ...DEFAULT_PRICES.USD },
     CNY: { ...DEFAULT_PRICES.CNY },
     JPY: { ...DEFAULT_PRICES.JPY },
+    TWD: { ...DEFAULT_PRICES.TWD },
   };
 }
 

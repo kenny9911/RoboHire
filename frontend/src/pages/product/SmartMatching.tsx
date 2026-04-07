@@ -487,6 +487,60 @@ export default function SmartMatching() {
     };
   }, [pageFilterParams, sessionRefreshTrigger]);
 
+  // Auto-detect a running batch when returning to the page
+  useEffect(() => {
+    if (running) return; // already tracking a live run via SSE
+
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    (async () => {
+      try {
+        const res = await axios.get('/api/v1/matching/batches', {
+          params: { status: 'running', limit: 1, ...pageFilterParams },
+        });
+        const batches = res.data.data || [];
+        if (cancelled || batches.length === 0) return;
+
+        const batch = batches[0];
+        setSelectedBatchId(batch.id);
+        setSelectedBatchMeta({ ...batch, matchingSessions: batch.matchingSessions || [] });
+
+        // Poll until the batch finishes
+        const poll = async () => {
+          if (cancelled) return;
+          try {
+            const detail = await axios.get(`/api/v1/matching/batches/${batch.id}`, { params: pageFilterParams });
+            const data = detail.data.data;
+            if (cancelled) return;
+            const batchData = data?.batch;
+            const sessions = data?.sessions || [];
+            if (batchData) {
+              setSelectedBatchMeta({ ...batchData, matchingSessions: sessions });
+            }
+            if (batchData?.status === 'running') {
+              pollTimer = setTimeout(poll, 3000);
+            } else {
+              // Batch finished — refresh counts
+              setSessionRefreshTrigger((prev) => prev + 1);
+            }
+          } catch {
+            // stop polling on error
+          }
+        };
+        pollTimer = setTimeout(poll, 3000);
+      } catch {
+        // no running batch — nothing to do
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const fetchModalResumes = useCallback(async (filter: RecruiterTeamFilterValue, search?: string, keepSelection?: boolean) => {
     setLoadingModalResumes(true);
     try {
@@ -1452,7 +1506,7 @@ export default function SmartMatching() {
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                    {t('product.matching.failedCountInline', 'Failed')}
+                    {t('product.matching.failedLabel', 'Failed')}
                   </p>
                   <p className="mt-1 text-lg font-bold text-slate-900">{selectedBatchMeta.failedTasks}</p>
                 </div>
@@ -1803,7 +1857,7 @@ export default function SmartMatching() {
               </div>
               <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  {t('product.matching.failedCountInline', 'Failed')}
+                  {t('product.matching.failedLabel', 'Failed')}
                 </p>
                 <p className="mt-1 text-lg font-bold text-slate-900">{batchProgress.failedTasks}</p>
               </div>
@@ -1914,7 +1968,7 @@ export default function SmartMatching() {
                         {t('product.matching.sessionStatsMatched', 'Matched')}: {job.completedTasks}
                       </span>
                       <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">
-                        {t('product.matching.failedCountInline', 'Failed')}: {job.failedTasks}
+                        {t('product.matching.failedLabel', 'Failed')}: {job.failedTasks}
                       </span>
                       <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">
                         {t('product.matching.totalFilteredLabel', 'Filtered')}: {job.filteredTasks}

@@ -37,6 +37,7 @@ import teamsRouter from './routes/teams.js';
 import contactsRouter from './routes/contacts.js';
 import agentAlexRouter from './routes/agentAlex.js';
 import agentAlexSessionsRouter from './routes/agentAlexSessions.js';
+import llmProxyRouter from './routes/llmProxy.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createServer as createHttpServer } from 'node:http';
 import { Modality } from '@google/genai';
@@ -115,6 +116,7 @@ app.use('/api/v1/gohire-interviews', gohireInterviewsRouter);
 app.use('/api/v1/teams', teamsRouter);
 app.use('/api/v1/contacts', contactsRouter);
 app.use('/api/v1/agent-alex', agentAlexRouter);
+app.use('/api/v1/llm-proxy', llmProxyRouter);
 app.use('/api/v1/agent-alex/sessions', agentAlexSessionsRouter);
 
 // Root endpoint
