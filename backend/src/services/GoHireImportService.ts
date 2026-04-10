@@ -290,6 +290,26 @@ class GoHireImportService {
         return;
       }
 
+      // Periodic flush of the in-progress report so the frontend sees live progress
+      const flushReportToDb = async () => {
+        try {
+          const processed = report.created.length + report.skippedExisting.length
+            + report.skippedNoEmail.length + report.failed.length;
+          await prisma.goHireImportBatch.update({
+            where: { id: batchId },
+            data: {
+              resumesCreated: report.created.length,
+              resumesFailed: report.failed.length,
+              resumesPending: Math.max(0, interviews.length - processed),
+              errors: { ...report } as any, // in-progress (no summary yet)
+            },
+          });
+        } catch {
+          // silent
+        }
+      };
+      const flushInterval = setInterval(() => { void flushReportToDb(); }, 2000);
+
       const tasks = interviews.map((interview) => async () => {
         const processingMap = this._currentlyProcessing.get(batchId)!;
         processingMap.set(interview.id, { candidateName: interview.candidateName, startedAt: Date.now() });
@@ -362,7 +382,11 @@ class GoHireImportService {
         }
       });
 
-      await runConcurrent(tasks, RESUME_PROCESS_CONCURRENCY);
+      try {
+        await runConcurrent(tasks, RESUME_PROCESS_CONCURRENCY);
+      } finally {
+        clearInterval(flushInterval);
+      }
 
       // Build summary
       const summary = {
@@ -687,6 +711,28 @@ class GoHireImportService {
       notProcessed: [] as Array<{ interviewId: string; candidateName: string; resumeUrl: string | null }>, // populated if stopped
     };
 
+    // Periodic flush of the in-progress report so the frontend sees live progress
+    // (without this the counters stay at 0 until the batch finalizes).
+    const flushReportToDb = async () => {
+      try {
+        const processed = report.created.length + report.skippedExisting.length
+          + report.skippedNoEmail.length + report.failed.length + report.notProcessed.length;
+        await prisma.goHireImportBatch.update({
+          where: { id: batchId },
+          data: {
+            // Don't set phase2Completed here — only at final flush
+            resumesCreated: report.created.length,
+            resumesFailed: report.failed.length,
+            resumesPending: Math.max(0, interviews.length - processed),
+            errors: { ...report } as any, // in-progress (no summary yet)
+          },
+        });
+      } catch {
+        // silent — not critical if a single flush fails
+      }
+    };
+    const flushInterval = setInterval(() => { void flushReportToDb(); }, 2000);
+
     const tasks = interviews.map((interview) => async () => {
       // Stop check — if user requested stop, skip remaining tasks
       if (this._stoppingBatches.has(batchId)) {
@@ -828,7 +874,11 @@ class GoHireImportService {
       }
     });
 
-    await runConcurrent(tasks, RESUME_PROCESS_CONCURRENCY);
+    try {
+      await runConcurrent(tasks, RESUME_PROCESS_CONCURRENCY);
+    } finally {
+      clearInterval(flushInterval);
+    }
 
     // Determine if stopped — if so, populate notProcessed with anything still pending
     const wasStopped = this._stoppingBatches.has(batchId);
@@ -1232,38 +1282,58 @@ class GoHireImportService {
         });
       }
 
-      // Create Resume record — link to recruiter so the candidate is associated with their recruiter
-      const resume = await prisma.resume.create({
-        data: {
-          userId: interview.candidateUserId,
-          recruiterUserId: interview.userId || null,
-          name: parsedData?.name || interview.candidateName || 'Unknown',
-          email: parsedData?.email || null,
-          phone: parsedData?.phone || null,
-          currentRole: parsedData?.currentRole || null,
-          experienceYears: parsedData?.experienceYears || null,
-          resumeText: normalizedText,
-          parsedData: parsedData || undefined,
-          contentHash,
-          summary,
-          highlight,
-          source: 'gohire_import',
-          preferences: preferences as any,
-          fileName: filename,
-          fileSize: buffer.length,
-          fileType: mimetype,
-          // Original file storage references — required for "View Original Document"
-          originalFileProvider: storedOriginalFile?.provider || null,
-          originalFileKey: storedOriginalFile?.key || null,
-          originalFileName: storedOriginalFile?.fileName || null,
-          originalFileMimeType: storedOriginalFile?.mimeType || null,
-          originalFileSize: storedOriginalFile?.size || null,
-          originalFileChecksum: storedOriginalFile?.checksum || null,
-          originalFileStoredAt: storedOriginalFile?.storedAt || null,
-        },
-      });
-
-      resumeId = resume.id;
+      // Create Resume record — link to recruiter so the candidate is associated with their recruiter.
+      // Race-safe: if another concurrent task just created the same (userId, contentHash),
+      // Prisma throws P2002 — we recover by fetching the row that won the race.
+      try {
+        const resume = await prisma.resume.create({
+          data: {
+            userId: interview.candidateUserId,
+            recruiterUserId: interview.userId || null,
+            name: parsedData?.name || interview.candidateName || 'Unknown',
+            email: parsedData?.email || null,
+            phone: parsedData?.phone || null,
+            currentRole: parsedData?.currentRole || null,
+            experienceYears: parsedData?.experienceYears || null,
+            resumeText: normalizedText,
+            parsedData: parsedData || undefined,
+            contentHash,
+            summary,
+            highlight,
+            source: 'gohire_import',
+            preferences: preferences as any,
+            fileName: filename,
+            fileSize: buffer.length,
+            fileType: mimetype,
+            // Original file storage references — required for "View Original Document"
+            originalFileProvider: storedOriginalFile?.provider || null,
+            originalFileKey: storedOriginalFile?.key || null,
+            originalFileName: storedOriginalFile?.fileName || null,
+            originalFileMimeType: storedOriginalFile?.mimeType || null,
+            originalFileSize: storedOriginalFile?.size || null,
+            originalFileChecksum: storedOriginalFile?.checksum || null,
+            originalFileStoredAt: storedOriginalFile?.storedAt || null,
+          },
+        });
+        resumeId = resume.id;
+      } catch (err: any) {
+        // P2002 = unique constraint violation. A concurrent task just created the same resume.
+        if (err?.code === 'P2002') {
+          logger.info('GOHIRE_IMPORT', 'Race condition on Resume create — recovering by linking to existing row', {
+            requestId, interviewId: interview.id, candidateName: interview.candidateName,
+          });
+          const concurrent = await prisma.resume.findUnique({
+            where: { userId_contentHash: { userId: interview.candidateUserId, contentHash } },
+            select: { id: true },
+          });
+          if (!concurrent) {
+            throw err; // shouldn't happen — if P2002 fired, the row must exist
+          }
+          resumeId = concurrent.id;
+        } else {
+          throw err;
+        }
+      }
     }
 
     // Update GoHireInterview with resume link

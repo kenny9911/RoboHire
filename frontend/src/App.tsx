@@ -28,7 +28,6 @@ const Blog = lazy(() => import('./pages/Blog'));
 // Lazy-loaded product app
 const ProductLayout = lazy(() => import('./layouts/ProductLayout'));
 const ProductDashboard = lazy(() => import('./pages/product/ProductDashboard'));
-const ProductHiringRequests = lazy(() => import('./pages/product/HiringRequests'));
 const ProductAgents = lazy(() => import('./pages/product/Agents'));
 const ProductAgentDetail = lazy(() => import('./pages/product/AgentDetail'));
 const ProductTalentHub = lazy(() => import('./pages/product/TalentHub'));
@@ -47,7 +46,6 @@ const ProfileLayout = lazy(() => import('./layouts/ProfileLayout'));
 const ProfileSecurity = lazy(() => import('./pages/product/ProfileSecurity'));
 
 // Lazy-loaded dashboard
-const Dashboard = lazy(() => import('./pages/Dashboard'));
 const APIKeys = lazy(() => import('./pages/APIKeys'));
 const UsageDashboard = lazy(() => import('./pages/UsageDashboard'));
 const CallDetail = lazy(() => import('./pages/CallDetail'));
@@ -135,8 +133,6 @@ function App() {
               }
             >
               <Route index element={<ProductDashboard />} />
-              <Route path="hiring" element={<ProductHiringRequests />} />
-              <Route path="hiring/:id" element={<Dashboard />} />
               <Route path="agents" element={<ProductAgents />} />
               <Route path="agents/:id" element={<ProductAgentDetail />} />
               <Route path="talent" element={<ProductTalentHub />} />

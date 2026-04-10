@@ -1719,15 +1719,15 @@ router.post('/users/:userId/enable', async (req, res) => {
 
 /**
  * POST /api/v1/admin/users/:userId/set-role
- * Change a user's role (admin/internal/user)
- * Body: { role: 'admin' | 'internal' | 'user', reason: string }
+ * Change a user's role (admin/internal/agency/user)
+ * Body: { role: 'admin' | 'internal' | 'agency' | 'user', reason: string }
  */
 router.post('/users/:userId/set-role', async (req, res) => {
   try {
     const { role, reason } = req.body;
 
-    if (role !== 'admin' && role !== 'internal' && role !== 'user') {
-      res.status(400).json({ success: false, error: 'role must be "admin", "internal", or "user"' });
+    if (role !== 'admin' && role !== 'internal' && role !== 'agency' && role !== 'user') {
+      res.status(400).json({ success: false, error: 'role must be "admin", "internal", "agency", or "user"' });
       return;
     }
     if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {

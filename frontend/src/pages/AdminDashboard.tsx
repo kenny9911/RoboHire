@@ -1748,6 +1748,7 @@ function UsersTab() {
                         >
                           <option value="user">User</option>
                           <option value="internal">Internal</option>
+                          <option value="agency">Agency</option>
                           <option value="admin">Admin</option>
                         </select>
                       </div>

@@ -658,6 +658,7 @@ function ProfileTab({ user, editing, profileDraft, saving, onEdit, onCancel, onD
               <select value={actionRole} onChange={e => onActionRole(normalizeUserRole(e.target.value))} className="text-sm border border-gray-200 rounded-lg px-3 py-2">
                 <option value="user">User</option>
                 <option value="internal">Internal</option>
+                <option value="agency">Agency</option>
                 <option value="admin">Admin</option>
               </select>
             )}

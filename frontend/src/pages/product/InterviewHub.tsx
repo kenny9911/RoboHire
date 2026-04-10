@@ -621,7 +621,6 @@ export default function InterviewHub() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">
           {t('interviewHub.title', 'Interview Hub')}
-          <span className="ml-2 text-lg font-normal text-slate-400">{t('interviewHub.subtitle', '面试库')}</span>
         </h2>
         <p className="mt-1 text-sm text-slate-500">
           {t('interviewHub.description', 'Search and manage GoHire interview recordings and evaluations.')}

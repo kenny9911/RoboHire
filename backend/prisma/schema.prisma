@@ -64,7 +64,7 @@ model User {
   jobTitle      String?
   company       String?
   avatar        String?
-  role          String    @default("user") // 'user', 'internal', or 'admin'
+  role          String    @default("user") // 'user', 'internal', 'agency', or 'admin'
   provider      String?   // 'email', 'google', 'github', 'linkedin'
   providerId    String?
   teamId        String?

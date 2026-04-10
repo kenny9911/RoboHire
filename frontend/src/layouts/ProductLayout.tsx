@@ -19,6 +19,7 @@ interface NavItem {
 interface NavGroup {
   categoryKey: string;
   categoryFallback: string;
+  roles?: string[]; // if set, entire category is only shown for these roles
   items: NavItem[];
 }
 
@@ -30,10 +31,6 @@ const navGroups: NavGroup[] = [
       {
         path: '/product', labelKey: 'product.nav.dashboard', fallback: 'Dashboard', exact: true,
         icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>,
-      },
-      {
-        path: '/product/hiring', labelKey: 'product.nav.pipeline', fallback: 'Pipeline',
-        icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>,
       },
       {
         path: '/product/talent', labelKey: 'product.nav.candidates', fallback: 'Candidates',
@@ -79,14 +76,12 @@ const navGroups: NavGroup[] = [
   {
     categoryKey: 'product.nav.category.client',
     categoryFallback: 'Client Management',
+    roles: ['agency', 'admin'],
     items: [
       {
         path: '/product/contacts', labelKey: 'product.nav.contacts', fallback: 'Contacts',
+        roles: ['agency', 'admin'],
         icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" /></svg>,
-      },
-      {
-        path: '/product/tasks', labelKey: 'product.nav.tasks', fallback: 'Tasks',
-        icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
       },
     ],
   },
@@ -185,7 +180,9 @@ export default function ProductLayout() {
 
       {/* Primary Nav */}
       <nav className="flex-1 px-3 mt-2 overflow-y-auto">
-        {navGroups.map((group, gi) => (
+        {navGroups
+          .filter((group) => !group.roles || group.roles.includes(user?.role || 'user'))
+          .map((group, gi) => (
           <div key={group.categoryKey}>
             {gi > 0 && <div className="my-3 border-t border-slate-200" />}
             {!collapsed && (
@@ -338,6 +335,21 @@ export default function ProductLayout() {
 
         {/* Desktop notification bell (top-right) */}
         <div className="hidden lg:flex items-center justify-end px-6 py-2 gap-2">
+          {/* Tasks icon — to the left of the notifications bell */}
+          <Link
+            to="/product/tasks"
+            className="relative p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            title={t('product.nav.tasks', 'Tasks')}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            {taskCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] flex items-center justify-center rounded-full text-[9px] font-bold bg-red-500 text-white px-1">
+                {taskCount > 99 ? '99+' : taskCount}
+              </span>
+            )}
+          </Link>
           <div className="relative">
             <button
               onClick={openNotifications}

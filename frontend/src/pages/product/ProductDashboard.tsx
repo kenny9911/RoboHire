@@ -386,8 +386,8 @@ export default function ProductDashboard() {
             </div>
             <div className="divide-y divide-slate-100">
               {[
-                { label: t('product.dashboard.pendingCandidates', 'Pending Candidates'), count: pi?.pendingCandidates || 0, href: '/product/hiring', color: 'bg-amber-100 text-amber-700' },
-                { label: t('product.dashboard.pendingProjects', 'Active Projects'), count: pi?.pendingProjects || 0, href: '/product/hiring', color: 'bg-blue-100 text-blue-700' },
+                { label: t('product.dashboard.pendingCandidates', 'Pending Candidates'), count: pi?.pendingCandidates || 0, href: '/product/talent', color: 'bg-amber-100 text-amber-700' },
+                { label: t('product.dashboard.pendingProjects', 'Active Jobs'), count: pi?.pendingProjects || 0, href: '/product/jobs', color: 'bg-blue-100 text-blue-700' },
                 { label: t('product.dashboard.pendingEvaluations', 'Pending Evaluations'), count: pi?.pendingEvaluations || 0, href: '/product/evaluations', color: 'bg-violet-100 text-violet-700' },
               ].map((item) => (
                 <Link
@@ -531,10 +531,10 @@ export default function ProductDashboard() {
                   {enhanced.todoItems.filter((td) => td.count > 0).map((td) => {
                     const configs: Record<string, { title: string; desc: string; color: string; href: string; icon: string }> = {
                       stale_request: {
-                        title: t('product.dashboard.todoStaleRequests', 'Stale Hiring Requests'),
-                        desc: t('product.dashboard.todoStaleRequestsDesc', '{{count}} request(s) with no activity for 7+ days', { count: td.count }),
+                        title: t('product.dashboard.todoStaleJobs', 'Stale Jobs'),
+                        desc: t('product.dashboard.todoStaleJobsDesc', '{{count}} job(s) with no activity for 7+ days', { count: td.count }),
                         color: 'bg-amber-100 text-amber-700',
-                        href: '/product/hiring',
+                        href: '/product/jobs',
                         icon: '⏱',
                       },
                       unreviewed_match: {
