@@ -2,8 +2,9 @@ import { pdfService } from './PDFService.js';
 import { logger } from './LoggerService.js';
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
+import WordExtractor from 'word-extractor';
 
-export type SupportedFormat = 'pdf' | 'docx' | 'xlsx' | 'csv' | 'txt' | 'md' | 'json' | 'unknown';
+export type SupportedFormat = 'pdf' | 'docx' | 'doc' | 'xlsx' | 'csv' | 'txt' | 'md' | 'json' | 'unknown';
 
 /**
  * Unified document parsing service that extracts text from PDF, DOCX, XLSX, and TXT files.
@@ -17,10 +18,14 @@ export class DocumentParsingService {
   detectFormat(mimetype: string, filename?: string): SupportedFormat {
     const mime = (mimetype || '').toLowerCase();
     if (mime === 'application/pdf') return 'pdf';
-    if (
-      mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      mime === 'application/msword'
-    ) return 'docx';
+    // Modern .docx (OOXML)
+    if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
+    // Legacy .doc (Word 97-2003 binary format) — uses `application/msword` mime
+    if (mime === 'application/msword') {
+      // If filename ends in .docx, prefer that (some servers send the legacy mime for both)
+      if (filename && filename.toLowerCase().endsWith('.docx')) return 'docx';
+      return 'doc';
+    }
     if (
       mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
       mime === 'application/vnd.ms-excel'
@@ -34,7 +39,8 @@ export class DocumentParsingService {
     if (filename) {
       const ext = filename.toLowerCase().split('.').pop();
       if (ext === 'pdf') return 'pdf';
-      if (ext === 'docx' || ext === 'doc') return 'docx';
+      if (ext === 'docx') return 'docx';
+      if (ext === 'doc') return 'doc';
       if (ext === 'xlsx' || ext === 'xls') return 'xlsx';
       if (ext === 'csv') return 'csv';
       if (ext === 'txt') return 'txt';
@@ -73,6 +79,9 @@ export class DocumentParsingService {
           break;
         case 'docx':
           text = await this.extractDocx(buffer, requestId);
+          break;
+        case 'doc':
+          text = await this.extractLegacyDoc(buffer, requestId);
           break;
         case 'xlsx':
           text = this.extractXlsx(buffer, requestId);
@@ -114,12 +123,25 @@ export class DocumentParsingService {
   /**
    * Extract text from DOCX using mammoth.
    * mammoth handles UTF-8/CJK/i18n content natively.
+   * If the buffer is actually a legacy .doc file (OLE compound, magic D0CF11E0),
+   * fall back to the legacy extractor automatically.
    */
   private async extractDocx(buffer: Buffer, requestId?: string): Promise<string> {
     logger.info('DOC_PARSE', 'Extracting DOCX with mammoth', {}, requestId);
 
-    if (buffer.length < 2 || buffer[0] !== 0x50 || buffer[1] !== 0x4b) {
-      throw new Error('Legacy .doc files are not supported yet. Please save the Word document as .docx and upload again.');
+    // DOCX files are ZIP archives, starting with "PK" (0x50 0x4B)
+    const isZip = buffer.length >= 2 && buffer[0] === 0x50 && buffer[1] === 0x4b;
+    // Legacy .doc files start with the OLE compound document signature 0xD0CF11E0
+    const isOleCompound = buffer.length >= 4
+      && buffer[0] === 0xd0 && buffer[1] === 0xcf
+      && buffer[2] === 0x11 && buffer[3] === 0xe0;
+
+    if (!isZip && isOleCompound) {
+      logger.info('DOC_PARSE', 'Detected legacy .doc file (OLE compound) — using word-extractor', {}, requestId);
+      return this.extractLegacyDoc(buffer, requestId);
+    }
+    if (!isZip) {
+      throw new Error('Unrecognized Word document format (expected .docx ZIP or legacy .doc OLE compound)');
     }
 
     const result = await mammoth.extractRawText({ buffer });
@@ -137,6 +159,31 @@ export class DocumentParsingService {
     }
 
     logger.info('DOC_PARSE', `DOCX extracted: ${text.length} chars`, {}, requestId);
+    return text;
+  }
+
+  /**
+   * Extract text from a legacy .doc (Word 97-2003 binary / OLE compound) file.
+   * Uses word-extractor which parses the OLE structure in pure JS.
+   */
+  private async extractLegacyDoc(buffer: Buffer, requestId?: string): Promise<string> {
+    logger.info('DOC_PARSE', 'Extracting legacy .doc with word-extractor', {}, requestId);
+
+    const extractor = new WordExtractor();
+    const extracted = await extractor.extract(buffer);
+    // word-extractor returns an object with getBody(), getHeaders(), getFooters(), etc.
+    // We concatenate body + headers + footers to capture all text.
+    const body = (extracted?.getBody?.() || '').toString();
+    const headers = (extracted?.getHeaders?.() || '').toString();
+    const footers = (extracted?.getFooters?.() || '').toString();
+    const text = [body, headers, footers].filter((s) => s.trim()).join('\n\n').trim();
+
+    if (!text) {
+      logger.warn('DOC_PARSE', 'word-extractor returned empty text', {}, requestId);
+      throw new Error('No text content found in legacy .doc file');
+    }
+
+    logger.info('DOC_PARSE', `Legacy .doc extracted: ${text.length} chars`, {}, requestId);
     return text;
   }
 

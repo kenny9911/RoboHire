@@ -38,7 +38,7 @@ npm run db:seed --workspace=backend       # Seed database with demo data
 
 ### No test or lint commands are configured.
 
-Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API playground endpoint, and dashboard page load after auth/data changes.
+Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API playground endpoint, and `/product` page load after auth/data changes.
 
 ## Architecture
 
@@ -67,7 +67,7 @@ Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API p
 
 **CRM Module** — `routes/contacts.ts` provides CRUD for Contacts and Companies. Contacts have types (client, hiring_manager, vendor, reference) and link to companies. Uses `getVisibilityScope()` for team-scoped access.
 
-**Task System** — `routes/tasks.ts` provides task CRUD, notifications, and admin automation rule management. `services/TaskGeneratorService.ts` creates tasks from recruitment events (interview completed, matching done, job published, etc.) with 15 task types across 5 categories. Agent tasks auto-execute via `services/TaskExecutorService.ts`; human tasks surface in the inbox. `services/NotificationService.ts` handles in-app notifications and email alerts. Tasks are integrated into `interviews.ts`, `jobs.ts`, `matching.ts`, and `InstantSearchMatchService.ts` via event hooks.
+**Task System** — `routes/tasks.ts` provides task CRUD, notifications, and admin automation rule management. `services/TaskGeneratorService.ts` creates tasks from recruitment events (interview completed, matching done, job published, etc.) with 15 task types across 5 categories. Agent tasks auto-execute via `services/TaskExecutorService.ts` which calls `EvaluationAgent`, `MatchOrchestratorService`, `ResumeParseAgent`, and `EmailService` directly (real execution, not stubs). `services/NotificationService.ts` handles in-app notifications and email alerts. Event hooks fire from `interviews.ts` (completed → evaluate, evaluation → review/decision), `jobs.ts` (created → publish, published → match), `matching.ts` (completed → review, A/A+ match → shortlist, status=shortlisted → invite), `resumes.ts` (incomplete parse → reparse), and `InstantSearchMatchService.ts` (agent sourced → review). Scheduled checks (run via `POST /api/v1/tasks/admin/run-stale-checks` or cron) generate `follow_up_invitation`, `stale_pipeline`, `close_stale_job`, `interview_reminder` tasks and escalate overdue ones. Full spec: `docs/tasks-system.md` and `docs/tasks-system-design.md`.
 
 **Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`, `routes/interviews.ts` (LiveKit AI interviews), `routes/gohireInterviews.ts` (GoHire integration), `routes/dashboard.ts` (consolidated stats), `routes/agentAlex.ts` (Gemini chat/transcribe/TTS), `routes/agentAlexSessions.ts` (session CRUD), `routes/agents.ts` (recruitment agents CRUD), `routes/contacts.ts` (CRM contacts + companies), `routes/tasks.ts` (task management + notifications + admin automation rules).
 
@@ -79,13 +79,13 @@ Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API p
 
 **State management** — React Context only (no Redux). `AuthContext` stores JWT in localStorage under key `auth_token`; restores session via `/api/auth/me`. `FormDataContext` syncs form data across API playground pages.
 
-**Layouts** — `DashboardLayout` (sidebar + nested routes), `APIPlayground` (tabbed API testing), `DocsLayout` (docs sidebar). Routes defined in `App.tsx`. Dashboard routes gated by `ProtectedRoute.tsx`.
+**Layouts** — `ProductLayout` (sidebar + nested routes for `/product/*` — the main authenticated app shell with notification bell and task badge), `APIPlayground` (tabbed API testing), `DocsLayout` (docs sidebar), `ProfileLayout` (nested settings under `/product/profile/*`). Routes defined in `App.tsx`. Authenticated routes gated by `ProtectedRoute.tsx`. The legacy `/dashboard` route was removed and now redirects to `/product`; `Login.tsx` defaults post-login navigation to `/product`.
 
 **i18n** — 8 languages (en, zh, zh-TW, ja, es, fr, pt, de) via i18next. Translations in `i18n/locales/{lang}/translation.json`. Auto-detects from browser with English fallback.
 
 **HTTP client** — `lib/axios.ts` creates an Axios instance that auto-injects JWT from localStorage into `Authorization` header. In dev, Vite proxies `/api` to backend (`http://localhost:4607`). In prod, `VITE_API_URL` sets the base URL.
 
-**Homepage** — `Landing.tsx` renders `<ProductIntro>` (from `pages/ProductIntro.tsx`) with `showDarkToggle={false}`, `showFAQ={true}`, and homepage-specific JSON-LD schema. The old landing sub-components (Hero.tsx, ServiceCards.tsx, etc.) are deprecated. `/product-intro` and `/product-info` redirect to `/`.
+**Homepage** — `Landing.tsx` renders `<ProductIntro>` (from `pages/ProductIntro.tsx`) with `showDarkToggle={false}`, `showFAQ={true}`, and homepage-specific JSON-LD schema. The old landing sub-components (Hero.tsx, ServiceCards.tsx, etc.) are deprecated. `/product-intro` and `/product-info` redirect to `/`. The light-mode background follows the LightArk-inspired spec in `docs/background-DESIGN.md` — pure white canvas with two large soft watercolor blobs (lavender left, sky-blue right), slate-navy `#33465B` headings, and a `#3B84E2 → #2F63E1 → #9154FD` blue-violet gradient for CTAs and accents. All light-mode color tokens are defined in `ProductIntro.tsx` near the top of the component.
 
 **Agent Alex** (`/agent-alex`) — Replaces the old `/start-hiring`. AI recruitment requirements agent with text chat + live voice (Gemini). Split-panel layout: chat on left, live specification document on right. Sessions persisted in DB (`AgentAlexSession`). Route wrapped in `<ProtectedRoute>`.
 
@@ -156,7 +156,8 @@ Copy `.env.example` to `.env` at repo root. Key variable groups: `LLM_PROVIDER`/
 | Notification service | `backend/src/services/NotificationService.ts` |
 | Tasks page (frontend) | `frontend/src/pages/product/Tasks.tsx` |
 | Admin task automation | `frontend/src/pages/AdminTaskAutomationTab.tsx` |
-| Task system design doc | `docs/tasks-system-design.md` |
+| Task system spec | `docs/tasks-system.md`, `docs/tasks-system-design.md` |
+| Background design spec | `docs/background-DESIGN.md` |
 | Team visibility | `backend/src/lib/teamVisibility.ts` |
 | Design system reference | `DESIGN.md` |
 | Bug fix workflow | `BUG_FIX_WORKFLOW.md` |

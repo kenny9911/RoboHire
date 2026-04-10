@@ -1368,10 +1368,13 @@ class GoHireImportService {
 
     // Magic bytes
     if (buffer.length >= 4 && buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46) {
-      return 'application/pdf';
+      return 'application/pdf'; // %PDF
     }
     if (buffer.length >= 2 && buffer[0] === 0x50 && buffer[1] === 0x4B) {
-      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; // PK (ZIP/DOCX)
+    }
+    if (buffer.length >= 4 && buffer[0] === 0xd0 && buffer[1] === 0xcf && buffer[2] === 0x11 && buffer[3] === 0xe0) {
+      return 'application/msword'; // OLE compound (legacy .doc)
     }
     return 'text/plain';
   }

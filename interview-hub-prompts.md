@@ -120,3 +120,61 @@ A chronological log of every user prompt during the build-out of the GoHire CSV 
 ## 17. Mobile-friendly detail page with Evaluation as 4th tab
 
 > make /product/interview-hub detail page mobile-friendly, when in mobile mode, add the Evaluation panel to the forth tab of the resume, make sure that user can view the entire tab content. add this prompt to the prompt file
+
+---
+
+## 18. Bump CSV import concurrency to 10
+
+> for improting csv to interview-hub, maximize the number of agents to 10 agents to run in parallel, instead of 3.
+
+---
+
+## 19. Mobile view — tab content not visible
+
+> [screenshot of mobile view showing empty gray area below tab buttons]
+>
+> cannot see the resume, job description, and transcript in mobile view. please optimize the ui when in mobile mode. keep the desktop mode as is.
+
+---
+
+## 20. Mobile view — Evaluation panel pushed below
+
+> [screenshot of mobile view showing evaluation panel below empty tab area]
+>
+> in mobile view, the Evaluation panel is pushed down blow, please re-adujust the ui and code
+
+---
+
+## 21. Remove /product/hiring page (Pipeline/Project)
+
+> /product/hiring, this page is redundant in the new prcess, where we generate JD directly from Agent Alex, or from scratch, really no need to the "Pipeline" or "Project" phase. pleas remove this from the web app.
+
+---
+
+## 22. Move Tasks to top-right, gate Client Management by agency role
+
+> Move "任务" to the right upper icon, left to "notifications" icon, make the "Client Management" section, only available to the user of "agency" user role. add a user role type "agency" to the user management.
+
+---
+
+## 23. Resume sync errors — race condition + 404
+
+> [screenshot of failed entries: 陈姓威 with HTTP 404 and Prisma unique constraint errors]
+>
+> errors in syncing resumes from interview-hub to talent-hub.
+
+---
+
+## 24. Live progress updates during resume sync
+
+> [screenshot of progress UI showing 0/35 while tasks are actively processing]
+>
+> it needs to update the completed numbers when the batch is in progress, rather than wait till the end and show the numbers.
+
+---
+
+## 25. Support legacy .doc files
+
+> [screenshot of failed entry: 朱凤至 — "Legacy .doc files are not supported yet. Please save the Word document as .docx and upload again."]
+>
+> can we support the legacy word doc?
