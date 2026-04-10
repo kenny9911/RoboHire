@@ -495,7 +495,7 @@ export default function GoHireEvaluation() {
   const [interview, setInterview] = useState<InterviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'resume' | 'jd' | 'transcript'>('resume');
+  const [activeTab, setActiveTab] = useState<'resume' | 'jd' | 'transcript' | 'evaluation'>('resume');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isParsingResume, setIsParsingResume] = useState(false);
   const [parsedResumeMarkdown, setParsedResumeMarkdown] = useState<string | null>(null);
@@ -892,25 +892,25 @@ export default function GoHireEvaluation() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-slate-50">
       {/* Header */}
-      <header className="h-16 px-5 bg-gradient-to-r from-white via-white to-slate-50 border-b border-slate-200/80 flex items-center justify-between flex-none">
-        <div className="flex items-center gap-4 min-w-0 flex-1">
+      <header className="h-14 lg:h-16 px-3 lg:px-5 bg-gradient-to-r from-white via-white to-slate-50 border-b border-slate-200/80 flex items-center justify-between flex-none">
+        <div className="flex items-center gap-2 lg:gap-4 min-w-0 flex-1">
           <button
             onClick={() => navigate('/product/interview-hub')}
-            className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition-colors flex-none rounded-lg hover:bg-slate-100 px-2 py-1.5 -ml-2"
+            className="inline-flex items-center gap-1 lg:gap-1.5 text-xs lg:text-sm text-slate-400 hover:text-slate-700 transition-colors flex-none rounded-lg hover:bg-slate-100 px-1.5 lg:px-2 py-1 lg:py-1.5 -ml-1 lg:-ml-2"
           >
             <ArrowLeftIcon />
-            {t('goHireEval.back', 'Back')}
+            <span className="hidden sm:inline">{t('goHireEval.back', 'Back')}</span>
           </button>
-          <div className="w-px h-6 bg-slate-200 flex-none" />
+          <div className="w-px h-5 lg:h-6 bg-slate-200 flex-none" />
           <div className="min-w-0">
-            <h1 className="text-base font-bold text-slate-900 truncate">
+            <h1 className="text-sm lg:text-base font-bold text-slate-900 truncate">
               {interview.candidateName}
             </h1>
             {interview.jobTitle && (
-              <p className="text-xs text-slate-500 truncate mt-0.5">{interview.jobTitle}</p>
+              <p className="text-[10px] lg:text-xs text-slate-500 truncate mt-0.5">{interview.jobTitle}</p>
             )}
             {interview.recruiterName && (
-              <p className="text-xs text-slate-400 truncate mt-0.5">
+              <p className="hidden lg:block text-xs text-slate-400 truncate mt-0.5">
                 {t('goHireEval.recruiter', 'Recruiter')}: {interview.recruiterName}
               </p>
             )}
@@ -971,9 +971,16 @@ export default function GoHireEvaluation() {
         {/* LEFT PANEL - Video + Context Tabs                                */}
         {/* ================================================================ */}
         {panelLayout !== 'right' && (
-        <div ref={leftPanelRef} className="w-full flex flex-col gap-4 overflow-hidden" style={panelLayout === 'both' ? { flex: `0 0 ${leftPanelPercent}%` } : undefined}>
-          {/* Video player */}
-          <div className="bg-gradient-to-b from-slate-900 to-slate-800 rounded-xl overflow-hidden border border-slate-200/80 shadow-sm" style={{ flex: `0 0 ${videoPanelPercent}%` }}>
+        <div
+          ref={leftPanelRef}
+          className={`w-full min-h-0 flex flex-col gap-3 lg:gap-4 overflow-hidden ${activeTab === 'evaluation' ? 'flex-none lg:flex-1' : 'flex-1'} ${panelLayout === 'both' ? 'lg:[flex:0_0_var(--left-panel-pct)]' : ''}`}
+          style={panelLayout === 'both' ? ({ ['--left-panel-pct' as any]: `${leftPanelPercent}%` }) : undefined}
+        >
+          {/* Video player — constrained on mobile, flex-based on desktop */}
+          <div
+            className={`bg-gradient-to-b from-slate-900 to-slate-800 rounded-xl overflow-hidden border border-slate-200/80 shadow-sm flex-none aspect-video lg:aspect-auto max-h-[30vh] lg:max-h-none lg:[flex:0_0_var(--video-pct)] ${activeTab === 'evaluation' ? 'hidden lg:block' : 'block'}`}
+            style={{ ['--video-pct' as any]: `${videoPanelPercent}%` }}
+          >
               {interview.videoUrl ? (
                 <video
                   ref={videoRef}
@@ -991,14 +998,14 @@ export default function GoHireEvaluation() {
           </div>
 
           {/* Context tabs */}
-          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div className={`flex flex-col min-h-0 bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden ${activeTab === 'evaluation' ? 'flex-none lg:flex-1' : 'flex-1'}`}>
             {/* Tab buttons */}
-            <div className="flex gap-1 px-3 py-2 border-b border-slate-200 bg-slate-50/50 flex-none">
+            <div className="flex gap-1 px-2 lg:px-3 py-2 border-b border-slate-200 bg-slate-50/50 flex-none overflow-x-auto">
               {(['resume', 'jd', 'transcript'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  className={`flex-1 px-2 lg:px-4 py-2 text-xs lg:text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
                     activeTab === tab
                       ? 'text-slate-900 bg-white shadow-sm'
                       : 'text-slate-500 hover:text-slate-700 hover:bg-white/60'
@@ -1011,10 +1018,21 @@ export default function GoHireEvaluation() {
                     : t('goHireEval.tabTranscript', '面试记录')}
                 </button>
               ))}
+              {/* Mobile-only Evaluation tab — pulls the right panel content into the tab area */}
+              <button
+                onClick={() => setActiveTab('evaluation')}
+                className={`lg:hidden flex-1 px-2 py-2 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${
+                  activeTab === 'evaluation'
+                    ? 'text-purple-900 bg-white shadow-sm'
+                    : 'text-purple-600 hover:text-purple-700 hover:bg-white/60'
+                }`}
+              >
+                {t('goHireEval.tabEvaluation', '评估')}
+              </button>
             </div>
 
-            {/* Tab content */}
-            <div className="flex-1 overflow-y-auto p-4">
+            {/* Tab content — hidden on mobile when Evaluation tab is active (right panel takes over) */}
+            <div className={`flex-1 overflow-y-auto p-4 ${activeTab === 'evaluation' ? 'hidden lg:block' : 'block'}`}>
               {/* ---- Resume Tab ---- */}
               {activeTab === 'resume' && (
                 <div>
@@ -1336,9 +1354,11 @@ export default function GoHireEvaluation() {
 
         {/* ================================================================ */}
         {/* RIGHT PANEL - Evaluation Report                                  */}
+        {/* On mobile: shown ONLY when activeTab === 'evaluation' (4th tab)   */}
+        {/* On desktop (lg+): shown based on panelLayout                      */}
         {/* ================================================================ */}
         {panelLayout !== 'left' && (
-        <div className="w-full flex-1 flex flex-col overflow-hidden rounded-xl border border-slate-200/80 shadow-sm bg-gradient-to-b from-white to-slate-50">
+        <div className={`w-full flex-1 flex-col overflow-hidden rounded-xl border border-slate-200/80 shadow-sm bg-gradient-to-b from-white to-slate-50 ${activeTab === 'evaluation' ? 'flex' : 'hidden lg:flex'}`}>
           {/* Report header */}
           <div className="px-5 py-4 flex items-center justify-between border-b border-slate-200/80 bg-white flex-none rounded-t-xl">
             <div className="flex items-center gap-2.5">

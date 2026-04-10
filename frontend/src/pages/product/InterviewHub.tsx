@@ -1197,7 +1197,7 @@ export default function InterviewHub() {
                             </div>
                             {interview.resumeId ? (
                               <button
-                                onClick={(e) => { e.stopPropagation(); navigate(`/product/talent-hub?highlight=${interview.resumeId}`); }}
+                                onClick={(e) => { e.stopPropagation(); navigate(`/product/talent?highlight=${interview.resumeId}`); }}
                                 className="font-medium text-blue-600 hover:text-blue-800 truncate max-w-[180px] text-left"
                                 title={t('interviewHub.viewInTalentHub', 'View in Talent Hub')}
                               >
@@ -1494,7 +1494,7 @@ export default function InterviewHub() {
                                 <div key={i} className="flex items-center gap-2 text-emerald-700">
                                   <span className="text-emerald-500">✓</span>
                                   <button
-                                    onClick={() => navigate(`/product/talent-hub?highlight=${r.resumeId}`)}
+                                    onClick={() => navigate(`/product/talent?highlight=${r.resumeId}`)}
                                     className="font-medium hover:underline text-left"
                                     title={t('interviewHub.viewInTalentHub', 'View in Talent Hub')}
                                   >
@@ -1522,7 +1522,7 @@ export default function InterviewHub() {
                                 <div key={i} className="flex items-center gap-2 text-slate-600">
                                   <span className="text-slate-400">↻</span>
                                   <button
-                                    onClick={() => navigate(`/product/talent-hub?highlight=${r.existingResumeId}`)}
+                                    onClick={() => navigate(`/product/talent?highlight=${r.existingResumeId}`)}
                                     className="hover:underline text-left"
                                   >
                                     {r.candidateName}

@@ -62,7 +62,7 @@ const EXT_MIME_MAP: Record<string, string> = {
 };
 
 const RESUME_DOWNLOAD_TIMEOUT_MS = 30_000;
-const RESUME_PROCESS_CONCURRENCY = 3;
+const RESUME_PROCESS_CONCURRENCY = 10;
 
 // ---------------------------------------------------------------------------
 // GoHireImportService
