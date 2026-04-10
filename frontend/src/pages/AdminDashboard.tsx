@@ -19,7 +19,10 @@ import SEO from '../components/SEO';
 import LLMUsageTab from './AdminLLMUsageTab';
 import LogsTab from './AdminLogsTab';
 import ActivityTab from './AdminActivityTab';
+import RobustMonitorTab from './AdminRobustMonitorTab';
+import TaskAutomationTab from './AdminTaskAutomationTab';
 import { formatUsageLimit, getPlanInterviewLimit, getPlanMatchLimit } from '../utils/usageLimits';
+import { getUserRoleBadgeClassName, getUserRoleLabel, normalizeUserRole, type UserRole } from '../utils/userRole';
 
 // --- Types ---
 interface UserSummary {
@@ -240,7 +243,7 @@ async function authFetch(endpoint: string, options: RequestInit = {}) {
   return data;
 }
 
-const TABS = ['Overview', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Activity', 'Pricing', 'Interview', 'Teams', 'Settings'] as const;
+const TABS = ['Overview', 'Monitor', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Activity', 'Pricing', 'Interview', 'Teams', 'Tasks', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 const INTERVIEW_CONFIG_FIELDS = [
   'interview.instructions',
@@ -1146,7 +1149,7 @@ function UsersTab() {
   const [actionUsageType, setActionUsageType] = useState<'interview' | 'match'>('interview');
   const [actionTier, setActionTier] = useState('starter');
   const [actionStatus, setActionStatus] = useState('active');
-  const [actionRole, setActionRole] = useState('user');
+  const [actionRole, setActionRole] = useState<UserRole>('user');
   const [actionImmediate, setActionImmediate] = useState(false);
   const [actionReason, setActionReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1227,6 +1230,7 @@ function UsersTab() {
       const data = await adminFetch(`/users/${userId}`);
       setSelectedUser(data.data.user);
       setAdjustments(data.data.adjustments);
+      setActionRole(normalizeUserRole(data.data.user.role));
       setActionType('');
       setActionMessage('');
       setActionError('');
@@ -1321,7 +1325,7 @@ function UsersTab() {
           method: 'POST',
           body: JSON.stringify({ role: actionRole, reason: actionReason.trim() }),
         });
-        setActionMessage(`Role changed to ${actionRole}`);
+        setActionMessage(`Role changed to ${getUserRoleLabel(actionRole)}`);
       }
 
       await loadUserDetail(selectedUser.id);
@@ -1414,11 +1418,9 @@ function UsersTab() {
                         {u.company || '-'}
                       </td>
                       <td className="py-2.5 pr-4">
-                        {u.role === 'admin' ? (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700">admin</span>
-                        ) : (
-                          <span className="text-gray-400 text-xs">user</span>
-                        )}
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getUserRoleBadgeClassName(u.role)}`}>
+                          {getUserRoleLabel(u.role)}
+                        </span>
                       </td>
                       <td className="py-2.5 pr-4">{tierBadge(u.subscriptionTier)}</td>
                       <td className="py-2.5 pr-4">{statusBadge(u.subscriptionStatus)}</td>
@@ -1485,9 +1487,9 @@ function UsersTab() {
                 <div className="flex items-center gap-2">
                   {tierBadge(selectedUser.subscriptionTier)}
                   {statusBadge(selectedUser.subscriptionStatus)}
-                  {selectedUser.role === 'admin' && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700">admin</span>
-                  )}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getUserRoleBadgeClassName(selectedUser.role)}`}>
+                    {getUserRoleLabel(selectedUser.role)}
+                  </span>
                 </div>
               </div>
 
@@ -1741,7 +1743,7 @@ function UsersTab() {
                         <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
                         <select
                           value={actionRole}
-                          onChange={(e) => setActionRole(e.target.value)}
+                          onChange={(e) => setActionRole(normalizeUserRole(e.target.value))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                         >
                           <option value="user">User</option>
@@ -3109,7 +3111,11 @@ function TeamsTab() {
                         <p className="text-sm font-medium text-gray-900">{m.name || m.email}</p>
                         <p className="text-xs text-gray-400">{m.email}</p>
                       </div>
-                      {m.role === 'admin' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">Admin</span>}
+                      {normalizeUserRole(m.role) !== 'user' && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${getUserRoleBadgeClassName(m.role)}`}>
+                          {getUserRoleLabel(m.role)}
+                        </span>
+                      )}
                     </div>
                     <button onClick={() => handleRemoveMember(team.id, m.id)} className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50">
                       {t('admin.teams.removeMember', 'Remove')}
@@ -3214,8 +3220,105 @@ function SettingsTab() {
     }
   };
 
+  /* ── Agent Alex config ──────────────────────────────────────────────── */
+  const [alexProvider, setAlexProvider] = useState<'claude' | 'gemini'>('gemini');
+  const [alexWebSearch, setAlexWebSearch] = useState(false);
+  const [alexLoading, setAlexLoading] = useState(true);
+  const [alexSaving, setAlexSaving] = useState(false);
+
+  useEffect(() => {
+    authFetch('/admin/config/agent-alex')
+      .then((data: any) => {
+        if (data.data) {
+          setAlexProvider(data.data.provider || 'gemini');
+          setAlexWebSearch(data.data.webSearchEnabled || false);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setAlexLoading(false));
+  }, []);
+
+  const updateAlexConfig = async (updates: { provider?: string; webSearchEnabled?: boolean }) => {
+    setAlexSaving(true);
+    try {
+      await authFetch('/admin/config/agent-alex', {
+        method: 'POST',
+        body: JSON.stringify(updates),
+      });
+      if (updates.provider) setAlexProvider(updates.provider as 'claude' | 'gemini');
+      if (typeof updates.webSearchEnabled === 'boolean') setAlexWebSearch(updates.webSearchEnabled);
+    } catch { /* silent */ }
+    finally { setAlexSaving(false); }
+  };
+
   return (
-    <div className="max-w-md">
+    <div className="max-w-xl space-y-6">
+      {/* Agent Alex Configuration */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Agent Alex Configuration</h3>
+        <p className="text-sm text-gray-500 mb-6">Configure the AI provider and features for Agent Alex recruitment assistant.</p>
+
+        {alexLoading ? (
+          <div className="text-sm text-gray-400">Loading...</div>
+        ) : (
+          <div className="space-y-5">
+            {/* Provider toggle */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-2">AI Provider</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => updateAlexConfig({ provider: 'gemini' })}
+                  disabled={alexSaving}
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                    alexProvider === 'gemini'
+                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Google Gemini
+                </button>
+                <button
+                  onClick={() => updateAlexConfig({ provider: 'claude' })}
+                  disabled={alexSaving}
+                  className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                    alexProvider === 'claude'
+                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Anthropic Claude
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-1.5">
+                {alexProvider === 'claude'
+                  ? 'Claude uses Opus 4.6 for analysis + Sonnet 4.6 for quick replies. Gemini used for voice only.'
+                  : 'Gemini powers both text chat and live voice.'}
+              </p>
+            </div>
+
+            {/* Web search toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-xs font-medium text-gray-600">Web Search (Tavily)</label>
+                <p className="text-xs text-gray-400 mt-0.5">Enable real-time web search for salary benchmarks and market insights</p>
+              </div>
+              <button
+                onClick={() => updateAlexConfig({ webSearchEnabled: !alexWebSearch })}
+                disabled={alexSaving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  alexWebSearch ? 'bg-indigo-600' : 'bg-gray-200'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  alexWebSearch ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Password Change */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Change Password</h3>
         <p className="text-sm text-gray-500 mb-6">Update your admin account password.</p>
@@ -3285,7 +3388,9 @@ function SettingsTab() {
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const initialTab = TABS.includes(searchParams.get('tab') as Tab) ? (searchParams.get('tab') as Tab) : 'Overview';
+  const requestedTab = searchParams.get('tab');
+  const normalizedInitialTab = requestedTab === 'Robust Monitor' ? 'Monitor' : requestedTab;
+  const initialTab = TABS.includes(normalizedInitialTab as Tab) ? (normalizedInitialTab as Tab) : 'Overview';
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
   if (user?.role !== 'admin') {
@@ -3320,6 +3425,7 @@ export default function AdminDashboard() {
 
       {/* Tab content */}
       {activeTab === 'Overview' && <OverviewTab />}
+      {activeTab === 'Monitor' && <RobustMonitorTab />}
       {activeTab === 'Analytics' && <UsageAnalyticsTab />}
       {activeTab === 'LLM Usage' && <LLMUsageTab />}
       {activeTab === 'Logs' && <LogsTab />}
@@ -3328,6 +3434,7 @@ export default function AdminDashboard() {
       {activeTab === 'Pricing' && <PricingTab />}
       {activeTab === 'Interview' && <InterviewConfigTab />}
       {activeTab === 'Teams' && <TeamsTab />}
+      {activeTab === 'Tasks' && <TaskAutomationTab />}
       {activeTab === 'Settings' && <SettingsTab />}
     </div>
   );

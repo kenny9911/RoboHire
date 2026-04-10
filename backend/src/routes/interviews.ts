@@ -8,6 +8,7 @@ import { EvaluationAgent } from '../agents/EvaluationAgent.js';
 import { liveKitService } from '../services/LiveKitService.js';
 import { interviewPromptAgent } from '../agents/InterviewPromptAgent.js';
 import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
+import { taskGenerator } from '../services/TaskGeneratorService.js';
 import { getPreferredResumeEmail } from '../utils/resumeContact.js';
 import { escapeHtml, emailService } from '../services/EmailService.js';
 import '../types/auth.js';
@@ -1538,6 +1539,19 @@ router.patch('/:id', requireAuth, async (req, res) => {
       });
     });
 
+    // Task generation: if interview just completed, trigger evaluate task
+    if (status === 'completed' && existing.status !== 'completed') {
+      void taskGenerator.onInterviewCompleted({
+        id: updated.id,
+        userId,
+        candidateName: updated.candidateName,
+        jobTitle: updated.jobTitle,
+        jobId: (updated as any).jobId || null,
+        resumeId: (updated as any).resumeId || null,
+        hiringRequestId: (updated as any).hiringRequestId || null,
+      });
+    }
+
     res.json({ success: true, data: updated });
   } catch (err: any) {
     logger.error('INTERVIEWS', 'Failed to update interview', { error: err.message });
@@ -1610,6 +1624,19 @@ router.post('/:id/evaluate', requireAuth, async (req, res) => {
     });
 
     logger.info('INTERVIEWS', `Evaluation completed for interview ${id}`, { requestId });
+
+    // Task generation: review evaluation + hiring decision if hire-worthy
+    void taskGenerator.onEvaluationCreated(
+      { interviewId: id, overallScore, verdict, summary },
+      {
+        id: interview.id,
+        userId,
+        candidateName: interview.candidateName,
+        jobTitle: interview.jobTitle,
+        jobId: (interview as any).jobId || null,
+        resumeId: (interview as any).resumeId || null,
+      },
+    );
 
     res.json({ success: true, data: evaluation });
   } catch (err: any) {

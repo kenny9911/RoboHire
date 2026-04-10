@@ -75,24 +75,24 @@ const IconMoon = ({ className = '' }: IconProps) => (
 
 const lightAccents = [
   {
-    glow: 'from-transparent via-cyan-500/60 to-transparent',
-    iconWrap: 'border-cyan-200 bg-cyan-50',
-    shadow: 'hover:shadow-[0_34px_80px_-46px_rgba(34,211,238,0.28)]',
+    glow: 'from-transparent via-[rgba(60,177,247,0.5)] to-transparent',
+    iconWrap: 'border-[#D7E4FA] bg-[#E7F0FF]',
+    shadow: 'hover:shadow-[0_34px_80px_-46px_rgba(59,132,226,0.24)]',
   },
   {
-    glow: 'from-transparent via-sky-500/60 to-transparent',
-    iconWrap: 'border-sky-200 bg-sky-50',
-    shadow: 'hover:shadow-[0_34px_80px_-46px_rgba(56,189,248,0.26)]',
+    glow: 'from-transparent via-[rgba(59,132,226,0.5)] to-transparent',
+    iconWrap: 'border-[#D7E4FA] bg-[#E7F0FF]',
+    shadow: 'hover:shadow-[0_34px_80px_-46px_rgba(47,99,225,0.24)]',
   },
   {
-    glow: 'from-transparent via-blue-500/55 to-transparent',
-    iconWrap: 'border-blue-200 bg-blue-50',
-    shadow: 'hover:shadow-[0_34px_80px_-46px_rgba(59,130,246,0.24)]',
+    glow: 'from-transparent via-[rgba(47,99,225,0.45)] to-transparent',
+    iconWrap: 'border-[#D7E4FA] bg-[#E7F0FF]',
+    shadow: 'hover:shadow-[0_34px_80px_-46px_rgba(47,99,225,0.22)]',
   },
   {
-    glow: 'from-transparent via-indigo-500/55 to-transparent',
-    iconWrap: 'border-indigo-200 bg-indigo-50',
-    shadow: 'hover:shadow-[0_34px_80px_-46px_rgba(99,102,241,0.24)]',
+    glow: 'from-transparent via-[rgba(145,84,253,0.4)] to-transparent',
+    iconWrap: 'border-[rgba(145,84,253,0.2)] bg-[rgba(145,84,253,0.06)]',
+    shadow: 'hover:shadow-[0_34px_80px_-46px_rgba(145,84,253,0.22)]',
   },
 ] as const;
 
@@ -134,151 +134,158 @@ export default function ProductIntro({
   const accents = isLight ? lightAccents : darkAccents;
 
   const pageShellClass = isLight
-    ? 'relative min-h-screen overflow-hidden bg-[#f6fbff] text-slate-900'
+    ? 'relative min-h-screen overflow-hidden bg-white text-[#33465B]'
     : 'relative min-h-screen overflow-hidden bg-[#020617] text-slate-100';
   const pageBackdropClass = isLight
-    ? 'absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_28%),radial-gradient(circle_at_82%_10%,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_50%_100%,rgba(99,102,241,0.12),transparent_36%)]'
+    ? 'absolute inset-0'
     : 'absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_30%),radial-gradient(circle_at_80%_12%,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_50%_100%,rgba(79,70,229,0.12),transparent_36%)]';
+  // Light mode: two vivid watercolor blobs (lavender left, blue right) — matches LightArk.ai hero style
+  const pageBlobLeftClass = isLight
+    ? 'absolute -left-[5%] top-[2%] h-[800px] w-[900px] rounded-full bg-[rgba(190,170,240,0.40)] blur-[100px]'
+    : 'hidden';
+  const pageBlobRightClass = isLight
+    ? 'absolute -right-[5%] top-[0%] h-[750px] w-[850px] rounded-full bg-[rgba(150,205,250,0.40)] blur-[100px]'
+    : 'hidden';
   const pageGlowClass = isLight
-    ? 'absolute left-1/2 top-0 h-[680px] w-[680px] -translate-x-1/2 rounded-full bg-cyan-200/60 blur-[140px]'
+    ? 'hidden'
     : 'absolute left-1/2 top-0 h-[680px] w-[680px] -translate-x-1/2 rounded-full bg-cyan-500/8 blur-[140px]';
-  const pageGridClass = isLight ? 'absolute inset-0 opacity-[0.12]' : 'absolute inset-0 opacity-20';
+  const pageGridClass = isLight ? 'hidden' : 'absolute inset-0 opacity-20';
   const heroSectionClass = isLight
-    ? 'relative overflow-hidden border-b border-slate-200/80 pb-20 pt-10 sm:pb-28 sm:pt-16 lg:pb-32 lg:pt-20'
+    ? 'relative overflow-hidden pb-20 pt-10 sm:pb-28 sm:pt-16 lg:pb-32 lg:pt-20'
     : 'relative overflow-hidden border-b border-white/5 pb-20 pt-10 sm:pb-28 sm:pt-16 lg:pb-32 lg:pt-20';
   const heroOverlayClass = isLight
-    ? 'absolute inset-0 bg-gradient-to-b from-white/70 via-white/20 to-sky-50/80'
+    ? 'absolute inset-0'
     : 'absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/20 to-slate-950/60';
   const themeToggleClass = isLight
-    ? 'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-[0_16px_36px_-28px_rgba(37,99,235,0.35)] backdrop-blur-md transition-colors hover:border-sky-300 hover:text-sky-700'
+    ? 'inline-flex items-center gap-2 rounded-full border border-[#D7E4FA] bg-white/90 px-4 py-2 text-sm font-semibold text-[#33465B] shadow-[0_16px_36px_-28px_rgba(59,132,226,0.25)] backdrop-blur-md transition-colors hover:border-[#3B84E2]/40 hover:text-[#3B84E2]'
     : 'inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-slate-200 backdrop-blur-md transition-colors hover:border-cyan-300/40 hover:text-white';
   const heroBadgeClass = isLight
-    ? 'mb-6 inline-flex rounded-full border border-sky-200 bg-white/90 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-[0_14px_28px_-24px_rgba(37,99,235,0.35)]'
+    ? 'mb-6 inline-flex rounded-full border border-[#D7E4FA] bg-white/90 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#3B84E2] shadow-[0_14px_28px_-24px_rgba(59,132,226,0.3)]'
     : 'mb-6 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200';
   const heroTitleClass = isLight
-    ? `landing-display text-4xl font-bold text-slate-900 sm:text-5xl ${isChineseHero ? 'tracking-[-0.035em] lg:text-[2.9rem] lg:leading-[1.12] xl:text-[3.7rem] xl:leading-[1.08]' : 'tracking-tight lg:text-[3.2rem] lg:leading-[1.08] xl:text-[4.1rem] xl:leading-[1.02]'}`
+    ? `landing-display text-4xl font-bold text-[#33465B] sm:text-5xl ${isChineseHero ? 'tracking-[-0.035em] lg:text-[2.9rem] lg:leading-[1.12] xl:text-[3.7rem] xl:leading-[1.08]' : 'tracking-tight lg:text-[3.2rem] lg:leading-[1.08] xl:text-[4.1rem] xl:leading-[1.02]'}`
     : `landing-display text-4xl font-bold text-white sm:text-5xl ${isChineseHero ? 'tracking-[-0.035em] lg:text-[2.9rem] lg:leading-[1.12] xl:text-[3.7rem] xl:leading-[1.08]' : 'tracking-tight lg:text-[3.2rem] lg:leading-[1.08] xl:text-[4.1rem] xl:leading-[1.02]'}`;
   const heroTitleLineClass = isChineseHero ? 'block lg:whitespace-nowrap' : 'block';
   const heroTitleSecondLineClass = isChineseHero ? 'mt-4 lg:mt-5' : 'mt-3';
   const heroGradientClass = isLight
-    ? 'bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 bg-clip-text text-transparent'
+    ? 'bg-gradient-to-r from-[#3B84E2] via-[#2F63E1] to-[#9154FD] bg-clip-text text-transparent'
     : 'bg-gradient-to-r from-cyan-200 via-sky-300 to-indigo-300 bg-clip-text text-transparent';
   const heroSubtitleClass = isLight
-    ? 'mt-6 max-w-2xl text-lg leading-relaxed text-slate-600 sm:text-xl'
+    ? 'mt-6 max-w-2xl text-lg leading-relaxed text-[#46556A] sm:text-xl'
     : 'mt-6 max-w-2xl text-lg leading-relaxed text-slate-300 sm:text-xl';
   const primaryCtaClass = isLight
-    ? 'w-full rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-[0_24px_60px_-24px_rgba(59,130,246,0.55)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_32px_84px_-30px_rgba(37,99,235,0.65)] sm:w-auto'
+    ? 'w-full rounded-full bg-gradient-to-r from-[#3B84E2] via-[#2F63E1] to-[#9154FD] px-8 py-4 text-base font-semibold text-white shadow-[0_24px_60px_-24px_rgba(59,132,226,0.55)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_32px_84px_-30px_rgba(47,99,225,0.65)] sm:w-auto'
     : 'w-full rounded-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-[0_24px_60px_-24px_rgba(59,130,246,0.9)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_32px_84px_-30px_rgba(14,165,233,0.95)] sm:w-auto';
   const secondaryCtaClass = isLight
-    ? 'w-full rounded-full border border-slate-200 bg-white/92 px-8 py-4 text-base font-semibold text-slate-700 shadow-[0_20px_42px_-34px_rgba(37,99,235,0.25)] transition-all duration-300 hover:border-sky-300 hover:text-sky-700 sm:w-auto'
+    ? 'w-full rounded-full border border-[#D7E4FA] bg-white/92 px-8 py-4 text-base font-semibold text-[#33465B] shadow-[0_20px_42px_-34px_rgba(59,132,226,0.2)] transition-all duration-300 hover:border-[#3B84E2]/40 hover:text-[#3B84E2] sm:w-auto'
     : 'w-full rounded-full border border-white/15 bg-white/[0.05] px-8 py-4 text-base font-semibold text-white/90 backdrop-blur-md transition-all duration-300 hover:border-cyan-300/40 hover:bg-white/[0.08] hover:text-white sm:w-auto';
   const heroStatCardClass = isLight
-    ? 'rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-4 shadow-[0_20px_48px_-36px_rgba(37,99,235,0.22)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5'
+    ? 'rounded-2xl border border-[rgba(59,132,226,0.18)] bg-white/90 px-4 py-4 shadow-[0_20px_48px_-36px_rgba(59,132,226,0.18)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5'
     : 'rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5';
-  const heroStatValueClass = isLight ? 'text-2xl font-bold text-slate-900 sm:text-3xl' : 'text-2xl font-bold text-white sm:text-3xl';
+  const heroStatValueClass = isLight ? 'text-2xl font-bold text-[#33465B] sm:text-3xl' : 'text-2xl font-bold text-white sm:text-3xl';
   const heroStatLabelClass = isLight
-    ? 'mt-2 text-xs font-medium uppercase tracking-[0.18em] leading-snug text-slate-500'
+    ? 'mt-2 text-xs font-medium uppercase tracking-[0.18em] leading-snug text-[#46556A]'
     : 'mt-2 text-xs font-medium uppercase tracking-[0.18em] leading-snug text-slate-400';
   const glassCardClass = isLight
-    ? 'rounded-[30px] border border-white/90 bg-white/88 shadow-[0_30px_80px_-52px_rgba(37,99,235,0.28)] backdrop-blur-xl'
+    ? 'rounded-[30px] border border-[rgba(59,132,226,0.18)] bg-white/88 shadow-[0_30px_80px_-52px_rgba(59,132,226,0.22)] backdrop-blur-xl'
     : 'rounded-[30px] border border-white/10 bg-white/[0.05] shadow-[0_30px_80px_-52px_rgba(8,145,178,0.45)] backdrop-blur-xl';
   const sectionHeadingClass = isLight
-    ? 'landing-display text-3xl font-bold text-slate-900 sm:text-4xl'
+    ? 'landing-display text-3xl font-bold text-[#33465B] sm:text-4xl'
     : 'landing-display text-3xl font-bold text-white sm:text-4xl';
   const sectionHeadingLargeClass = isLight
-    ? 'landing-display text-3xl font-bold text-slate-900 sm:text-4xl lg:text-5xl'
+    ? 'landing-display text-3xl font-bold text-[#33465B] sm:text-4xl lg:text-5xl'
     : 'landing-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl';
-  const sectionBodyClass = isLight ? 'mt-4 text-lg text-slate-600' : 'mt-4 text-lg text-slate-400';
+  const sectionBodyClass = isLight ? 'mt-4 text-lg text-[#46556A]' : 'mt-4 text-lg text-slate-400';
   const sectionAltClass = isLight
-    ? 'relative border-y border-slate-200/80 bg-slate-50/80'
+    ? 'relative border-y border-[#D7E4FA]/60 bg-[#F5F6FC]/80'
     : 'relative border-y border-white/5 bg-slate-950/35';
   const standardCardClass = isLight
-    ? 'group relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_-42px_rgba(37,99,235,0.18)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40'
+    ? 'group relative overflow-hidden rounded-[28px] border border-[rgba(59,132,226,0.15)] bg-white p-6 shadow-[0_24px_60px_-42px_rgba(59,132,226,0.14)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(59,132,226,0.3)]'
     : 'group relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.05] p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/20 hover:bg-white/[0.07]';
-  const standardCardTextClass = isLight ? 'text-sm leading-relaxed text-slate-600' : 'text-sm leading-relaxed text-slate-400';
-  const standardCardTitleClass = isLight ? 'mb-2 text-base font-semibold text-slate-900' : 'mb-2 text-base font-semibold text-white';
+  const standardCardTextClass = isLight ? 'text-sm leading-relaxed text-[#46556A]' : 'text-sm leading-relaxed text-slate-400';
+  const standardCardTitleClass = isLight ? 'mb-2 text-base font-semibold text-[#33465B]' : 'mb-2 text-base font-semibold text-white';
   const stepCardClass = isLight
-    ? 'group relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-white p-7 shadow-[0_26px_72px_-48px_rgba(37,99,235,0.2)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40'
+    ? 'group relative overflow-hidden rounded-[30px] border border-[rgba(59,132,226,0.15)] bg-white p-7 shadow-[0_26px_72px_-48px_rgba(59,132,226,0.16)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(59,132,226,0.3)]'
     : 'group relative overflow-hidden rounded-[30px] border border-white/10 bg-slate-950/70 p-7 shadow-[0_26px_72px_-52px_rgba(15,23,42,0.9)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/20 hover:bg-slate-900/80 hover:shadow-[0_34px_94px_-56px_rgba(59,130,246,0.55)]';
   const stepNumberClass = isLight
     ? 'absolute right-6 top-6 select-none text-[3.5rem] font-bold leading-none text-slate-100'
     : 'absolute right-6 top-6 select-none text-[3.5rem] font-bold leading-none text-white/[0.06]';
-  const stepTitleClass = isLight ? 'relative mb-2 text-lg font-bold text-slate-900' : 'relative mb-2 text-lg font-bold text-white';
+  const stepTitleClass = isLight ? 'relative mb-2 text-lg font-bold text-[#33465B]' : 'relative mb-2 text-lg font-bold text-white';
   const stepSubtitleClass = isLight
-    ? 'relative mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400'
+    ? 'relative mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[#46556A]/70'
     : 'relative mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500';
-  const stepTextClass = isLight ? 'relative text-sm leading-relaxed text-slate-600' : 'relative text-sm leading-relaxed text-slate-300';
+  const stepTextClass = isLight ? 'relative text-sm leading-relaxed text-[#46556A]' : 'relative text-sm leading-relaxed text-slate-300';
   const scenarioBadgeClass = isLight
-    ? 'mb-6 inline-flex rounded-full border border-sky-200 bg-white/90 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-700'
+    ? 'mb-6 inline-flex rounded-full border border-[#D7E4FA] bg-white/90 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#3B84E2]'
     : 'mb-6 inline-flex rounded-full border border-blue-400/20 bg-blue-400/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-blue-200';
   const scenarioCardClass = `${glassCardClass} relative overflow-hidden p-8 sm:p-10`;
-  const scenarioBodyTextClass = isLight ? 'space-y-6 text-base leading-relaxed text-slate-700' : 'space-y-6 text-base leading-relaxed text-slate-300';
+  const scenarioBodyTextClass = isLight ? 'space-y-6 text-base leading-relaxed text-[#46556A]' : 'space-y-6 text-base leading-relaxed text-slate-300';
   const scenarioStripClass = isLight
-    ? 'mt-8 flex items-center justify-between gap-4 rounded-[26px] border border-sky-200 bg-gradient-to-r from-sky-50 to-indigo-50 px-6 py-5'
+    ? 'mt-8 flex items-center justify-between gap-4 rounded-[26px] border border-[#D7E4FA] bg-gradient-to-r from-[#E7F0FF] to-[#F4F5FB] px-6 py-5'
     : 'mt-8 flex items-center justify-between gap-4 rounded-[26px] border border-cyan-400/15 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 px-6 py-5';
-  const scenarioBeforeValueClass = isLight ? 'text-2xl font-bold text-slate-400 line-through' : 'text-2xl font-bold text-slate-500 line-through';
-  const scenarioAfterLabelClass = isLight ? 'text-sm text-sky-700' : 'text-sm text-cyan-200';
-  const scenarioAfterValueClass = isLight ? 'text-2xl font-bold text-slate-900' : 'text-2xl font-bold text-white';
+  const scenarioBeforeValueClass = isLight ? 'text-2xl font-bold text-[#46556A]/50 line-through' : 'text-2xl font-bold text-slate-500 line-through';
+  const scenarioAfterLabelClass = isLight ? 'text-sm text-[#3B84E2]' : 'text-sm text-cyan-200';
+  const scenarioAfterValueClass = isLight ? 'text-2xl font-bold text-[#33465B]' : 'text-2xl font-bold text-white';
   const comparisonWrapClass = isLight
-    ? 'overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_28px_80px_-50px_rgba(37,99,235,0.16)]'
+    ? 'overflow-hidden rounded-[30px] border border-[rgba(59,132,226,0.15)] bg-white shadow-[0_28px_80px_-50px_rgba(59,132,226,0.14)]'
     : 'overflow-hidden rounded-[30px] border border-white/10 bg-slate-950/70 shadow-[0_28px_80px_-50px_rgba(15,23,42,0.95)] backdrop-blur-xl';
-  const comparisonHeadRowClass = isLight ? 'bg-slate-50/90' : 'bg-white/[0.04]';
-  const comparisonHeadCellClass = isLight ? 'px-5 py-4 text-left text-sm font-semibold text-slate-500' : 'px-5 py-4 text-left text-sm font-semibold text-slate-400';
-  const comparisonFeatureClass = isLight ? 'px-5 py-4 text-sm font-medium text-slate-900' : 'px-5 py-4 text-sm font-medium text-white';
-  const comparisonOldClass = isLight ? 'px-5 py-4 text-sm text-slate-600' : 'px-5 py-4 text-sm text-slate-400';
-  const comparisonRoboClass = isLight ? 'bg-sky-50 px-5 py-4 text-sm font-medium text-sky-700' : 'bg-cyan-400/[0.06] px-5 py-4 text-sm font-medium text-cyan-50';
-  const comparisonRowClass = isLight ? 'transition-colors hover:bg-slate-50' : 'transition-colors hover:bg-white/[0.03]';
-  const testimonialBodyClass = isLight ? 'text-base leading-relaxed text-slate-700 sm:text-lg' : 'text-base leading-relaxed text-slate-300 sm:text-lg';
+  const comparisonHeadRowClass = isLight ? 'bg-[#F5F6FC]/90' : 'bg-white/[0.04]';
+  const comparisonHeadCellClass = isLight ? 'px-5 py-4 text-left text-sm font-semibold text-[#46556A]' : 'px-5 py-4 text-left text-sm font-semibold text-slate-400';
+  const comparisonFeatureClass = isLight ? 'px-5 py-4 text-sm font-medium text-[#33465B]' : 'px-5 py-4 text-sm font-medium text-white';
+  const comparisonOldClass = isLight ? 'px-5 py-4 text-sm text-[#46556A]' : 'px-5 py-4 text-sm text-slate-400';
+  const comparisonRoboClass = isLight ? 'bg-[#E7F0FF] px-5 py-4 text-sm font-medium text-[#3B84E2]' : 'bg-cyan-400/[0.06] px-5 py-4 text-sm font-medium text-cyan-50';
+  const comparisonRowClass = isLight ? 'transition-colors hover:bg-[#F5F6FC]' : 'transition-colors hover:bg-white/[0.03]';
+  const testimonialBodyClass = isLight ? 'text-base leading-relaxed text-[#46556A] sm:text-lg' : 'text-base leading-relaxed text-slate-300 sm:text-lg';
   const testimonialMarkClass = isLight
-    ? 'absolute -top-4 left-8 select-none text-6xl font-serif leading-none text-sky-200'
+    ? 'absolute -top-4 left-8 select-none text-6xl font-serif leading-none text-[#D7E4FA]'
     : 'absolute -top-4 left-8 select-none text-6xl font-serif leading-none text-cyan-300/30';
   const testimonialBadgeClass = isLight
-    ? 'flex h-11 w-11 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sm font-bold text-sky-700'
+    ? 'flex h-11 w-11 items-center justify-center rounded-full border border-[#D7E4FA] bg-[#E7F0FF] text-sm font-bold text-[#3B84E2]'
     : 'flex h-11 w-11 items-center justify-center rounded-full border border-cyan-400/20 bg-cyan-500/15 text-sm font-bold text-cyan-200';
-  const authorNameClass = isLight ? 'text-sm font-semibold text-slate-900' : 'text-sm font-semibold text-white';
-  const authorMetaClass = isLight ? 'text-xs text-slate-500' : 'text-xs text-slate-500';
-  const audienceTitleClass = isLight ? 'mb-2 text-base font-bold text-slate-900' : 'mb-2 text-base font-bold text-white';
+  const authorNameClass = isLight ? 'text-sm font-semibold text-[#33465B]' : 'text-sm font-semibold text-white';
+  const authorMetaClass = isLight ? 'text-xs text-[#46556A]' : 'text-xs text-slate-500';
+  const audienceTitleClass = isLight ? 'mb-2 text-base font-bold text-[#33465B]' : 'mb-2 text-base font-bold text-white';
   const pricingNormalClass = isLight
-    ? 'rounded-[28px] border border-slate-200/80 bg-white p-6 text-center text-slate-900 shadow-[0_24px_60px_-42px_rgba(37,99,235,0.18)] transition-all duration-300 hover:-translate-y-1 hover:border-sky-300/40'
+    ? 'rounded-[28px] border border-[rgba(59,132,226,0.15)] bg-white p-6 text-center text-[#33465B] shadow-[0_24px_60px_-42px_rgba(59,132,226,0.14)] transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(59,132,226,0.3)]'
     : 'rounded-[28px] border border-white/10 bg-white/[0.05] p-6 text-center text-white backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/20 hover:bg-white/[0.07]';
   const pricingHighlightClass = isLight
-    ? 'rounded-[28px] border border-sky-300/70 bg-gradient-to-b from-sky-50 via-white to-indigo-50 p-6 text-center text-slate-900 shadow-[0_34px_94px_-48px_rgba(56,189,248,0.3)] transition-all duration-300 hover:-translate-y-1'
+    ? 'rounded-[28px] border border-[#3B84E2]/40 bg-gradient-to-b from-[#E7F0FF] via-white to-[#F4F5FB] p-6 text-center text-[#33465B] shadow-[0_34px_94px_-48px_rgba(59,132,226,0.25)] transition-all duration-300 hover:-translate-y-1'
     : 'rounded-[28px] border border-cyan-300/30 bg-gradient-to-b from-sky-500/20 via-blue-500/20 to-indigo-600/25 p-6 text-center text-white shadow-[0_34px_94px_-48px_rgba(56,189,248,0.6)] transition-all duration-300 hover:-translate-y-1';
   const pricingPopularClass = isLight
-    ? 'mb-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-sky-700'
+    ? 'mb-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#3B84E2]'
     : 'mb-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-cyan-200';
-  const pricingNameMutedClass = isLight ? 'text-sm font-semibold text-slate-500' : 'text-sm font-semibold text-slate-400';
-  const pricingNameHighlightClass = isLight ? 'text-sm font-semibold text-sky-700' : 'text-sm font-semibold text-sky-100';
-  const pricingValueClass = isLight ? 'mt-2 text-3xl font-bold text-slate-900' : 'mt-2 text-3xl font-bold text-white';
-  const pricingPeriodMutedClass = isLight ? 'text-base font-medium text-slate-400' : 'text-base font-medium text-slate-500';
-  const pricingPeriodHighlightClass = isLight ? 'text-base font-medium text-sky-700/70' : 'text-base font-medium text-sky-100/80';
-  const pricingDescMutedClass = isLight ? 'mt-2 text-sm text-slate-600' : 'mt-2 text-sm text-slate-400';
-  const pricingDescHighlightClass = isLight ? 'mt-2 text-sm text-slate-700' : 'mt-2 text-sm text-sky-100/90';
+  const pricingNameMutedClass = isLight ? 'text-sm font-semibold text-[#46556A]' : 'text-sm font-semibold text-slate-400';
+  const pricingNameHighlightClass = isLight ? 'text-sm font-semibold text-[#3B84E2]' : 'text-sm font-semibold text-sky-100';
+  const pricingValueClass = isLight ? 'mt-2 text-3xl font-bold text-[#33465B]' : 'mt-2 text-3xl font-bold text-white';
+  const pricingPeriodMutedClass = isLight ? 'text-base font-medium text-[#46556A]/60' : 'text-base font-medium text-slate-500';
+  const pricingPeriodHighlightClass = isLight ? 'text-base font-medium text-[#3B84E2]/70' : 'text-base font-medium text-sky-100/80';
+  const pricingDescMutedClass = isLight ? 'mt-2 text-sm text-[#46556A]' : 'mt-2 text-sm text-slate-400';
+  const pricingDescHighlightClass = isLight ? 'mt-2 text-sm text-[#46556A]' : 'mt-2 text-sm text-sky-100/90';
   const pricingLinkClass = isLight
-    ? 'inline-flex items-center gap-2 text-base font-semibold text-sky-700 transition-colors hover:text-sky-900'
+    ? 'inline-flex items-center gap-2 text-base font-semibold text-[#3B84E2] transition-colors hover:text-[#2F63E1]'
     : 'inline-flex items-center gap-2 text-base font-semibold text-cyan-200 transition-colors hover:text-white';
   const ctaSectionClass = isLight
-    ? 'relative overflow-hidden border-t border-slate-200/80 py-24 sm:py-28'
+    ? 'relative overflow-hidden py-24 sm:py-28'
     : 'relative overflow-hidden border-t border-white/5 py-24 sm:py-28';
   const ctaBackdropClass = isLight
-    ? 'absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.2),transparent_26%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(239,246,255,0.95)_100%)]'
+    ? 'absolute inset-0'
     : 'absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.18),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0)_0%,rgba(2,6,23,0.7)_100%)]';
   const ctaLeftBlobClass = isLight
-    ? 'absolute left-1/4 top-0 h-[500px] w-[500px] rounded-full bg-cyan-200/70 blur-[120px]'
+    ? 'absolute -left-[5%] top-[5%] h-[600px] w-[700px] rounded-full bg-[rgba(190,170,240,0.35)] blur-[100px]'
     : 'absolute left-1/4 top-0 h-[500px] w-[500px] rounded-full bg-cyan-400/10 blur-[120px]';
   const ctaRightBlobClass = isLight
-    ? 'absolute bottom-0 right-1/4 h-[420px] w-[420px] rounded-full bg-indigo-200/60 blur-[120px]'
+    ? 'absolute -right-[5%] bottom-[5%] h-[550px] w-[650px] rounded-full bg-[rgba(150,205,250,0.35)] blur-[100px]'
     : 'absolute bottom-0 right-1/4 h-[420px] w-[420px] rounded-full bg-indigo-500/10 blur-[120px]';
   const ctaTitleClass = isLight
-    ? 'landing-display text-3xl font-bold text-slate-900 sm:text-4xl lg:text-5xl'
+    ? 'landing-display text-3xl font-bold text-[#33465B] sm:text-4xl lg:text-5xl'
     : 'landing-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl';
-  const ctaBodyClass = isLight ? 'mx-auto mt-5 max-w-2xl text-lg text-slate-600' : 'mx-auto mt-5 max-w-2xl text-lg text-slate-400';
+  const ctaBodyClass = isLight ? 'mx-auto mt-5 max-w-2xl text-lg text-[#46556A]' : 'mx-auto mt-5 max-w-2xl text-lg text-slate-400';
   const ctaPillClass = isLight
-    ? 'rounded-full border border-slate-200/80 bg-white/90 px-4 py-1.5 text-xs font-medium text-slate-600 backdrop-blur-sm'
+    ? 'rounded-full border border-[#D7E4FA] bg-white/90 px-4 py-1.5 text-xs font-medium text-[#46556A] backdrop-blur-sm'
     : 'rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-medium text-slate-300 backdrop-blur-sm';
-  const checkIconClass = isLight ? 'text-sky-600' : 'text-cyan-300';
-  const xIconClass = isLight ? 'text-slate-300' : 'text-slate-500';
-  const arrowAccentClass = isLight ? 'text-sky-700' : 'text-cyan-200';
+  const checkIconClass = isLight ? 'text-[#3B84E2]' : 'text-cyan-300';
+  const xIconClass = isLight ? 'text-[#46556A]/30' : 'text-slate-500';
+  const arrowAccentClass = isLight ? 'text-[#3B84E2]' : 'text-cyan-200';
   const themeToggleLabel = isLight
     ? t('productIntro.theme.dark', 'Dark mode')
     : t('productIntro.theme.light', 'Light mode');
@@ -522,6 +529,8 @@ export default function ProductIntro({
       <div className={pageShellClass}>
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className={pageBackdropClass} />
+          <div className={pageBlobLeftClass} />
+          <div className={pageBlobRightClass} />
           <div className={pageGlowClass} />
           <div
             className={pageGridClass}
@@ -685,21 +694,21 @@ export default function ProductIntro({
                 <div
                   className={
                     isLight
-                      ? 'absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/70 to-transparent'
+                      ? 'absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(59,132,226,0.5)] to-transparent'
                       : 'absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/70 to-transparent'
                   }
                 />
-                <div className={isLight ? 'absolute bottom-0 right-0 h-44 w-44 rounded-full bg-sky-300/35 blur-3xl' : 'absolute bottom-0 right-0 h-44 w-44 rounded-full bg-blue-500/10 blur-3xl'} />
+                <div className={isLight ? 'absolute bottom-0 right-0 h-44 w-44 rounded-full bg-[rgba(59,132,226,0.15)] blur-3xl' : 'absolute bottom-0 right-0 h-44 w-44 rounded-full bg-blue-500/10 blur-3xl'} />
 
                 <div className={scenarioBodyTextClass}>
                   <p>
-                    <span className={isLight ? 'font-semibold text-sky-700' : 'font-semibold text-cyan-300'}>
+                    <span className={isLight ? 'font-semibold text-[#3B84E2]' : 'font-semibold text-cyan-300'}>
                       {t('productIntro.scenario.day1label', '周一上午')}
                     </span>
                     {t('productIntro.scenario.day1', '，你告诉 AI 招聘顾问"我们需要招一个高级产品经理"。AI 通过几轮对话帮你梳理清楚岗位要求，自动生成 JD 并发布。你上传了 150 份候选人简历，午饭前 AI 已完成全部筛选，给出 Top 15 的匹配排名和详细分析。')}
                   </p>
                   <p>
-                    <span className={isLight ? 'font-semibold text-blue-700' : 'font-semibold text-sky-300'}>
+                    <span className={isLight ? 'font-semibold text-[#2F63E1]' : 'font-semibold text-sky-300'}>
                       {t('productIntro.scenario.day1pmlabel', '周一下午')}
                     </span>
                     {t('productIntro.scenario.day1pm', '，AI 自动向 15 位候选人发送面试邀请，每人收到专属面试链接和二维码。')}
@@ -753,7 +762,7 @@ export default function ProductIntro({
                         <th className={comparisonHeadCellClass}>
                           {t('productIntro.compare.header.old', '传统招聘')}
                         </th>
-                        <th className="bg-gradient-to-r from-sky-500/95 to-indigo-600/95 px-5 py-4 text-left text-sm font-semibold text-white">
+                        <th className="bg-gradient-to-r from-[#3B84E2]/95 via-[#2F63E1]/95 to-[#9154FD]/95 px-5 py-4 text-left text-sm font-semibold text-white">
                           RoboHire
                         </th>
                       </tr>
@@ -821,7 +830,7 @@ export default function ProductIntro({
               </div>
 
               <div className={`${glassCardClass} relative overflow-hidden p-8 sm:p-10`}>
-                <div className={isLight ? 'absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/70 to-transparent' : 'absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent'} />
+                <div className={isLight ? 'absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(59,132,226,0.5)] to-transparent' : 'absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent'} />
                 <div className={testimonialMarkClass}>&ldquo;</div>
 
                 <blockquote className="relative">
@@ -914,7 +923,7 @@ export default function ProductIntro({
               <div className="mt-8 text-center">
                 <Link to="/pricing" className={pricingLinkClass}>
                   {t('productIntro.pricing.viewAll', '查看完整定价方案')}
-                  <IconArrow className={isLight ? 'text-sky-700' : ''} />
+                  <IconArrow className={isLight ? 'text-[#3B84E2]' : ''} />
                 </Link>
               </div>
             </div>

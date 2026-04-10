@@ -109,7 +109,8 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'x-ai/grok-code-fast-1': { input: 0.20, output: 1.50 },
   'openai/gpt-oss-120b': { input: 0.039, output: 0.19 },
   'openai/gpt-5.2': { input: 1.75, output: 14.00 },
-  'anthropic/claude-opus-4.5': { input: 5.00, output: 25.00 },
+  'anthropic/claude-opus-4.6': { input: 5.00, output: 25.00 },
+  'anthropic/claude-sonnet-4.6': { input: 3.00, output: 15.00 },
   'xiaomi/mimo-v2-flash': { input: 0.09, output: 0.29 },
   'z-ai/glm-4.7': { input: 0.40, output: 1.50 },
   // OpenAI direct
@@ -122,6 +123,9 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'kimi-k2-turbo-preview': { input: 0.30, output: 1.50 },
   'kimi-k2-thinking': { input: 0.60, output: 3.00 },
   'kimi-k2-thinking-turbo': { input: 0.30, output: 1.50 },
+  // Anthropic direct
+  'claude-opus-4-6-20250408': { input: 5.00, output: 25.00 },
+  'claude-sonnet-4-6-20250408': { input: 3.00, output: 15.00 },
   // OpenRouter Kimi
   'moonshotai/kimi-k2.5': { input: 0.60, output: 3.00 },
   // Google direct
@@ -275,6 +279,19 @@ class LoggerService extends EventEmitter {
       case 'ERROR': return LogLevel.ERROR;
       default: return LogLevel.INFO;
     }
+  }
+
+  setLogLevel(level: string | LogLevel): void {
+    const nextLevel = typeof level === 'string' ? this.parseLogLevel(level) : level;
+    this.logLevel = nextLevel;
+  }
+
+  getLogLevel(): LogLevel {
+    return this.logLevel;
+  }
+
+  getLogLevelName(): string {
+    return this.getLevelName(this.logLevel);
   }
 
   private formatTimestamp(): string {
@@ -815,6 +832,14 @@ class LoggerService extends EventEmitter {
       status: ctx.status,
       statusCode: ctx.statusCode,
     };
+  }
+
+  getActiveRequestSnapshots(): RequestUsageSnapshot[] {
+    this.pruneCompletedRequestContexts();
+
+    return Array.from(this.requestContexts.keys())
+      .map((requestId) => this.getRequestSnapshot(requestId))
+      .filter((snapshot): snapshot is RequestUsageSnapshot => Boolean(snapshot));
   }
 
   // Get global statistics

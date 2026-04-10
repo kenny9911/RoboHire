@@ -103,7 +103,7 @@ console.log(result.data.matchScore); // 85`;
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
                 <button
-                  onClick={() => navigate(isAuthenticated ? '/dashboard/api-keys' : '/login')}
+                  onClick={() => navigate(isAuthenticated ? '/product/profile/api-keys' : '/login')}
                   className="w-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3.5 text-center font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 sm:w-auto sm:px-8 sm:py-4"
                 >
                   {t('apiLanding.hero.getKey', 'Get your API key')}
@@ -277,7 +277,7 @@ console.log(result.data.matchScore); // 85`;
           </p>
           <div className="flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
             <button
-              onClick={() => navigate(isAuthenticated ? '/dashboard/api-keys' : '/login')}
+              onClick={() => navigate(isAuthenticated ? '/product/profile/api-keys' : '/login')}
               className="w-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-4 font-semibold text-white shadow-[0_20px_35px_-20px_rgba(37,99,235,0.95)] transition-all hover:-translate-y-0.5 sm:w-auto"
             >
               {t('apiLanding.cta.getStarted', 'Get started')}

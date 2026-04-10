@@ -103,6 +103,8 @@ interface InterviewData {
   interviewDatetime: string | null;
   interviewEndDatetime: string | null;
   duration: number | null;
+  recruiterName: string | null;
+  recruiterEmail: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -907,6 +909,11 @@ export default function GoHireEvaluation() {
             {interview.jobTitle && (
               <p className="text-xs text-slate-500 truncate mt-0.5">{interview.jobTitle}</p>
             )}
+            {interview.recruiterName && (
+              <p className="text-xs text-slate-400 truncate mt-0.5">
+                {t('goHireEval.recruiter', 'Recruiter')}: {interview.recruiterName}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 flex-none print:hidden">
@@ -952,7 +959,7 @@ export default function GoHireEvaluation() {
           )}
           {interview.evaluationVerdict && (
             <span className={getDecisionBadge(interview.evaluationVerdict)}>
-              {interview.evaluationVerdict.replace(/_/g, ' ')}
+              {t(`goHireEval.verdict.${interview.evaluationVerdict}`, interview.evaluationVerdict.replace(/_/g, ' '))}
             </span>
           )}
         </div>

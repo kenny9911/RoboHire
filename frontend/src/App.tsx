@@ -41,19 +41,18 @@ const EvaluationSharedReport = lazy(() => import('./pages/EvaluationSharedReport
 const ProductInterviewHub = lazy(() => import('./pages/product/InterviewHub'));
 const ProductGoHireEvaluation = lazy(() => import('./pages/product/GoHireEvaluation'));
 const ProductContacts = lazy(() => import('./pages/product/Contacts'));
+const ProductTasks = lazy(() => import('./pages/product/Tasks'));
 const ProductProfile = lazy(() => import('./pages/product/Profile'));
 const ProfileLayout = lazy(() => import('./layouts/ProfileLayout'));
 const ProfileSecurity = lazy(() => import('./pages/product/ProfileSecurity'));
 
 // Lazy-loaded dashboard
-const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const APIKeys = lazy(() => import('./pages/APIKeys'));
-const DashboardStats = lazy(() => import('./pages/DashboardStats'));
 const UsageDashboard = lazy(() => import('./pages/UsageDashboard'));
 const CallDetail = lazy(() => import('./pages/CallDetail'));
-const Account = lazy(() => import('./pages/Account'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminLiveTerminal = lazy(() => import('./pages/AdminLiveTerminal'));
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
 const ResumeDetail = lazy(() => import('./pages/ResumeDetail'));
 const ATSIntegrations = lazy(() => import('./pages/ATSIntegrations'));
@@ -109,6 +108,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/agent-alex" element={<ProtectedRoute><AgentAlex /></ProtectedRoute>} />
+            <Route path="/admin/live-terminal" element={<ProtectedRoute><AdminLiveTerminal /></ProtectedRoute>} />
             <Route path="/start-hiring" element={<Navigate to="/agent-alex" replace />} />
             <Route path="/developers" element={<APILanding />} />
             <Route path="/pricing" element={<Pricing />} />
@@ -150,6 +150,7 @@ function App() {
               <Route path="evaluations" element={<ProductEvaluationCenter />} />
               <Route path="quick-invite" element={<QuickInvite />} />
               <Route path="contacts" element={<ProductContacts />} />
+              <Route path="tasks" element={<ProductTasks />} />
               <Route path="profile" element={<ProfileLayout />}>
                 <Route index element={<ProductProfile />} />
                 <Route path="security" element={<ProfileSecurity />} />
@@ -162,29 +163,9 @@ function App() {
               <Route path="admin/users/:userId" element={<AdminUserDetail />} />
             </Route>
 
-            {/* Dashboard (protected, shared sidebar layout) */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              {/* Redirect old request detail routes to /product/hiring */}
-              <Route path="requests/:id" element={<Navigate to="/product/hiring" replace />} />
-              {/* Redirect old resume routes to /product/talent */}
-              <Route path="resumes" element={<Navigate to="/product/talent" replace />} />
-              <Route path="resumes/:id" element={<Navigate to="/product/talent" replace />} />
-              <Route path="api-keys" element={<APIKeys />} />
-              <Route path="stats" element={<DashboardStats />} />
-              <Route path="usage" element={<UsageDashboard />} />
-              <Route path="usage/calls/:id" element={<CallDetail />} />
-              <Route path="account" element={<Account />} />
-              <Route path="admin" element={<AdminDashboard />} />
-              <Route path="integrations" element={<ATSIntegrations />} />
-            </Route>
+            {/* Legacy dashboard redirects to /product */}
+            <Route path="/dashboard" element={<Navigate to="/product" replace />} />
+            <Route path="/dashboard/*" element={<Navigate to="/product" replace />} />
 
             {/* API Playground Routes (Public) */}
             <Route path="/api-playground" element={<APIPlayground />}>

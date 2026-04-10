@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from "react-resizable-panels";
 import { ChatInterface } from '../components/agent-alex/ChatInterface';
 import { LiveVoiceInterface } from '../components/agent-alex/LiveVoiceInterface';
@@ -119,16 +119,28 @@ function parseSalaryRange(text?: string): { salaryMin?: number; salaryMax?: numb
   else if (/month|月薪|每月|monthly/i.test(text)) period = 'monthly';
 
   // Extract numbers, handle 万 (10k) and k multipliers
+  // First try range pattern like "20-40K", "30-50万" where suffix applies to both numbers
   const numbers: number[] = [];
-  const regex = /([\d,.]+)\s*(?:万|w|k)?/gi;
-  let m;
-  while ((m = regex.exec(text)) !== null) {
-    let num = parseFloat(m[1].replace(/,/g, ''));
-    if (!isNaN(num)) {
-      const suffix = text.substring(m.index + m[1].length, m.index + m[1].length + 2).toLowerCase();
-      if (/万|w/i.test(suffix)) num *= 10000;
-      else if (/k/i.test(suffix)) num *= 1000;
-      numbers.push(Math.round(num));
+  const rangeMatch = text.match(/([\d,.]+)\s*[-–—~～至到]\s*([\d,.]+)\s*(万|w|k)?/i);
+  if (rangeMatch) {
+    const n1 = parseFloat(rangeMatch[1].replace(/,/g, ''));
+    const n2 = parseFloat(rangeMatch[2].replace(/,/g, ''));
+    const suffix = (rangeMatch[3] || '').toLowerCase();
+    const multiplier = /万|w/.test(suffix) ? 10000 : /k/.test(suffix) ? 1000 : 1;
+    if (!isNaN(n1)) numbers.push(Math.round(n1 * multiplier));
+    if (!isNaN(n2)) numbers.push(Math.round(n2 * multiplier));
+  } else {
+    // Fallback: extract individual numbers with their own suffixes
+    const regex = /([\d,.]+)\s*(万|w|k)?/gi;
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      let num = parseFloat(m[1].replace(/,/g, ''));
+      if (!isNaN(num)) {
+        const suffix = (m[2] || '').toLowerCase();
+        if (/万|w/.test(suffix)) num *= 10000;
+        else if (/k/.test(suffix)) num *= 1000;
+        numbers.push(Math.round(num));
+      }
     }
   }
 
@@ -214,6 +226,7 @@ function isAuthenticated(): boolean {
 export default function AgentAlex() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isCreatingJob, setIsCreatingJob] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string>('');
@@ -233,23 +246,35 @@ export default function AgentAlex() {
   // --- initial load ---
 
   useEffect(() => {
+    const wantFresh = (location.state as any)?.fresh === true;
+    // Clear the fresh flag from history state so refreshes don't re-trigger
+    if (wantFresh) {
+      window.history.replaceState({}, '');
+    }
     const loadSessions = async () => {
       if (isAuthenticated()) {
         try {
           const dbSessions = await fetchSessions();
           if (dbSessions.length > 0) {
             const mapped = dbSessions.map(dbToSession);
-            setSessions(mapped);
-            setActiveSessionId(mapped[0].id);
+            if (wantFresh) {
+              // User clicked "新建项目" — create a fresh session on top
+              const freshSession = await createNewSession(welcomeText);
+              setSessions([freshSession, ...mapped]);
+              setActiveSessionId(freshSession.id);
+            } else {
+              setSessions(mapped);
+              setActiveSessionId(mapped[0].id);
+            }
             setIsLoading(false);
             return;
           }
         } catch { /* fall through */ }
       }
       // No DB sessions or not authenticated — create a fresh one
-      const fresh = await createNewSession(welcomeText);
-      setSessions([fresh]);
-      setActiveSessionId(fresh.id);
+      const freshSession = await createNewSession(welcomeText);
+      setSessions([freshSession]);
+      setActiveSessionId(freshSession.id);
       setIsLoading(false);
     };
     loadSessions();

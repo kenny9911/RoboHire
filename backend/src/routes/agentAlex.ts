@@ -1,19 +1,50 @@
 import { Router, type Request, type Response } from 'express';
 import {
   getGeminiConfigStatus,
-  getUserFacingError,
-  streamChatResponse,
+  getUserFacingError as getGeminiError,
+  streamChatResponse as streamGeminiChat,
   transcribeAudio,
   generateSpeech,
   type GeminiUsageMetrics,
 } from '../services/GeminiAgentService.js';
-import type { ChatStreamEvent, HiringRequirements, HistoryMessage } from '../types/agentAlex.js';
+import {
+  getClaudeConfigStatus,
+  getUserFacingClaudeError,
+  streamClaudeChatResponse,
+  type ClaudeUsageMetrics,
+} from '../services/ClaudeAgentService.js';
+import { isWebSearchEnabled } from '../services/WebSearchService.js';
+import type { AgentAlexProvider, ChatStreamEvent, HiringRequirements, HistoryMessage } from '../types/agentAlex.js';
 import { logger } from '../services/LoggerService.js';
 import { executeInstantSearch } from '../services/InstantSearchMatchService.js';
+import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 
-/** Log Gemini usage through the standard LoggerService so it appears in ApiRequestLog + LLMCallLog */
+/* ── Provider resolution with DB cache ────────────────────────────────── */
+
+let cachedProvider: { value: AgentAlexProvider; expiresAt: number } | null = null;
+
+async function getActiveProvider(): Promise<AgentAlexProvider> {
+  const now = Date.now();
+  if (cachedProvider && cachedProvider.expiresAt > now) return cachedProvider.value;
+
+  const envFallback = (process.env.AGENT_ALEX_PROVIDER as AgentAlexProvider) || 'gemini';
+  try {
+    const row = await prisma.appConfig.findUnique({ where: { key: 'agent_alex_provider' } });
+    const value = (row?.value === 'claude' ? 'claude' : row?.value === 'gemini' ? 'gemini' : null)
+      || envFallback;
+    cachedProvider = { value, expiresAt: now + 30_000 };
+    return value;
+  } catch {
+    // DB unavailable — cache env fallback to avoid retrying DB on every request
+    cachedProvider = { value: envFallback, expiresAt: now + 10_000 };
+    return envFallback;
+  }
+}
+
+/* ── Usage logging ────────────────────────────────────────────────────── */
+
 function logGeminiUsage(requestId: string, endpoint: string, usage: GeminiUsageMetrics, status: 'success' | 'error' = 'success', errorMessage?: string) {
   logger.logLLMCall({
     requestId,
@@ -21,6 +52,22 @@ function logGeminiUsage(requestId: string, endpoint: string, usage: GeminiUsageM
     provider: 'google-gemini',
     promptTokens: usage.promptTokens,
     completionTokens: usage.completionTokens,
+    duration: usage.durationMs,
+    status,
+    messages: undefined,
+    options: { endpoint },
+    responseText: undefined,
+    errorMessage: errorMessage || undefined,
+  });
+}
+
+function logClaudeUsage(requestId: string, endpoint: string, usage: ClaudeUsageMetrics, status: 'success' | 'error' = 'success', errorMessage?: string) {
+  logger.logLLMCall({
+    requestId,
+    model: usage.model,
+    provider: 'anthropic-claude',
+    promptTokens: usage.inputTokens,
+    completionTokens: usage.outputTokens,
     duration: usage.durationMs,
     status,
     messages: undefined,
@@ -44,8 +91,14 @@ function isHistoryMessageArray(value: unknown): value is HistoryMessage[] {
 }
 
 // GET /api/v1/agent-alex/config
-router.get('/config', (_req: Request, res: Response) => {
-  res.json(getGeminiConfigStatus());
+router.get('/config', async (_req: Request, res: Response) => {
+  const provider = await getActiveProvider();
+  const status = provider === 'claude' ? getClaudeConfigStatus() : getGeminiConfigStatus();
+  res.json({
+    ...status,
+    provider,
+    webSearchEnabled: isWebSearchEnabled(),
+  });
 });
 
 // POST /api/v1/agent-alex/chat/stream
@@ -76,34 +129,82 @@ router.post('/chat/stream', async (req: Request, res: Response) => {
     }
 
     const userId = req.user?.id;
+    const provider = await getActiveProvider();
+    const resolvedLocale = typeof locale === 'string' ? locale : undefined;
 
-    const usage = await streamChatResponse({
-      history,
-      message,
-      locale: typeof locale === 'string' ? locale : undefined,
-      onEvent: writeEvent,
-      onSearchRequested: userId
-        ? async (criteria: Partial<HiringRequirements>, source: string) => {
-            if (source === 'upload') {
-              return 'User wants to upload resumes. Please ask them to upload files.';
-            }
-            const result = await executeInstantSearch(
-              {
-                userId,
-                requirements: criteria as HiringRequirements,
-                requestId: req.requestId || undefined,
-              },
-              writeEvent,
-            );
-            if (result.error) return `Search failed: ${result.error}`;
-            return `Search completed. Screened ${result.filteredCount} resumes from talent pool (${result.totalResumes} total). Found ${result.matchedCount} qualified candidates above threshold. Top candidate: ${result.candidates[0]?.name || 'none'} (${result.candidates[0]?.score || 0} points, ${result.candidates[0]?.grade || '-'}). Agent ID: ${result.agentId}`;
+    const searchHandler = userId
+      ? async (criteria: Partial<HiringRequirements>, source: string) => {
+          if (source === 'upload') {
+            return 'User wants to upload resumes. Please ask them to upload files.';
           }
-        : undefined,
+          const result = await executeInstantSearch(
+            {
+              userId,
+              requirements: criteria as HiringRequirements,
+              requestId: req.requestId || undefined,
+            },
+            writeEvent,
+          );
+          if (result.error) return `Search failed: ${result.error}`;
+          return `Search completed. Screened ${result.filteredCount} resumes from talent pool (${result.totalResumes} total). Found ${result.matchedCount} qualified candidates above threshold. Top candidate: ${result.candidates[0]?.name || 'none'} (${result.candidates[0]?.score || 0} points, ${result.candidates[0]?.grade || '-'}). Agent ID: ${result.agentId}`;
+        }
+      : undefined;
+
+    logger.info('AGENT_ALEX', `Chat stream started — provider: ${provider}`, {
+      requestId: req.requestId,
+      provider,
+      locale: resolvedLocale,
+      historyLength: history.length,
+      messageLength: message.length,
+      userId,
     });
-    logGeminiUsage(req.requestId || 'unknown', '/agent-alex/chat/stream', usage);
+
+    if (provider === 'claude') {
+      const usage = await streamClaudeChatResponse({
+        history,
+        message,
+        locale: resolvedLocale,
+        onEvent: writeEvent,
+        onSearchRequested: searchHandler,
+      });
+      logClaudeUsage(req.requestId || 'unknown', '/agent-alex/chat/stream', usage);
+      logger.info('AGENT_ALEX', 'Chat stream completed (Claude)', {
+        requestId: req.requestId,
+        model: usage.model,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        durationMs: usage.durationMs,
+      });
+    } else {
+      const usage = await streamGeminiChat({
+        history,
+        message,
+        locale: resolvedLocale,
+        onEvent: writeEvent,
+        onSearchRequested: searchHandler,
+      });
+      logGeminiUsage(req.requestId || 'unknown', '/agent-alex/chat/stream', usage);
+      logger.info('AGENT_ALEX', 'Chat stream completed (Gemini)', {
+        requestId: req.requestId,
+        model: usage.model,
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        durationMs: usage.durationMs,
+      });
+    }
+
     writeEvent({ type: 'done' });
   } catch (error) {
-    const { code, message } = getUserFacingError(error);
+    const provider = (process.env.AGENT_ALEX_PROVIDER as AgentAlexProvider) || 'gemini';
+    const errorHandler = provider === 'claude' ? getUserFacingClaudeError : getGeminiError;
+    const { code, message } = errorHandler(error);
+    logger.error('AGENT_ALEX', 'Chat stream failed', {
+      requestId: req.requestId,
+      provider,
+      errorCode: code,
+      errorMessage: message,
+      error: error instanceof Error ? error.message : String(error),
+    });
     writeEvent({ type: 'error', code, message });
   } finally {
     res.end();
@@ -132,7 +233,7 @@ router.post('/transcribe', async (req: Request, res: Response) => {
     logGeminiUsage(req.requestId || 'unknown', '/agent-alex/transcribe', result.usage);
     res.json({ text: result.text });
   } catch (error) {
-    const { status, code, message } = getUserFacingError(error);
+    const { status, code, message } = getGeminiError(error);
     res.status(status).json({ error: { code, message } });
   }
 });
@@ -156,7 +257,7 @@ router.post('/tts', async (req: Request, res: Response) => {
     logGeminiUsage(req.requestId || 'unknown', '/agent-alex/tts', result.usage);
     res.json({ audioBase64: result.audioBase64 });
   } catch (error) {
-    const { status, code, message } = getUserFacingError(error);
+    const { status, code, message } = getGeminiError(error);
     res.status(status).json({ error: { code, message } });
   }
 });

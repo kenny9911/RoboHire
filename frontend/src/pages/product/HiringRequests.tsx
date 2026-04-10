@@ -633,7 +633,7 @@ export default function HiringRequests() {
               sub: '',
             },
             {
-              label: t('product.hiring.stats.avgClose', 'Avg Close'),
+              label: t('product.hiring.stats.avgScore', 'Avg Match Score'),
               value: stats?.avgMatchScore ? `${stats.avgMatchScore}` : '—',
               sub: stats?.avgMatchScore ? '' : t('product.hiring.stats.accumulating', 'accumulating data'),
             },

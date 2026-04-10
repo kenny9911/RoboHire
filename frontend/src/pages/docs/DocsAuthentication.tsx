@@ -51,7 +51,7 @@ export default function DocsAuthentication() {
           <li>{t('docs.auth.apiKeys.step4', 'Copy and securely store your key (shown only once)')}</li>
         </ol>
         <Link
-          to="/dashboard/api-keys"
+          to="/product/profile/api-keys"
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
         >
           {t('docs.auth.apiKeys.manage', 'Manage your API keys')}

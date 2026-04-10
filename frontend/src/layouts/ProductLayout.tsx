@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import LanguageSelector from '../components/LanguageSelector';
 import { FloatingAgentAlex } from '../components/agent-alex/FloatingAgentAlex';
+import axios from '../lib/axios';
 
 interface NavItem {
   path: string;
@@ -110,10 +111,58 @@ export default function ProductLayout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [taskCount, setTaskCount] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
+
+  // Fetch task stats and notification count
+  const fetchCounts = useCallback(async () => {
+    try {
+      const [statsRes, notifRes] = await Promise.all([
+        axios.get('/api/v1/tasks/stats').catch(() => null),
+        axios.get('/api/v1/tasks/notifications/unread-count').catch(() => null),
+      ]);
+      if (statsRes?.data?.stats) setTaskCount(statsRes.data.stats.actionRequired || 0);
+      if (notifRes?.data) setUnreadNotifications(notifRes.data.count || 0);
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => {
+    void fetchCounts();
+    const interval = setInterval(fetchCounts, 60000); // refresh every minute
+    return () => clearInterval(interval);
+  }, [fetchCounts]);
+
+  const openNotifications = async () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications) {
+      try {
+        const res = await axios.get('/api/v1/tasks/notifications/list', { params: { limit: '10' } });
+        setNotifications(res.data.notifications || []);
+      } catch { /* silent */ }
+    }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await axios.post('/api/v1/tasks/notifications/mark-all-read');
+      setUnreadNotifications(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch { /* silent */ }
+  };
+
+  const markNotificationRead = async (id: string) => {
+    try {
+      await axios.patch(`/api/v1/tasks/notifications/${id}/read`);
+      setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+      setUnreadNotifications((prev) => Math.max(0, prev - 1));
+    } catch { /* silent */ }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -153,7 +202,7 @@ export default function ProductLayout() {
                     key={item.path}
                     to={item.path}
                     title={collapsed ? t(item.labelKey, item.fallback) : undefined}
-                    className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`relative flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       active
                         ? 'bg-blue-50 text-blue-700'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
@@ -161,6 +210,15 @@ export default function ProductLayout() {
                   >
                     <span className={`shrink-0 ${active ? 'text-blue-600' : 'text-slate-500'}`}>{item.icon}</span>
                     {!collapsed && <span className="flex-1">{t(item.labelKey, item.fallback)}</span>}
+                    {/* Task count badge */}
+                    {item.path === '/product/tasks' && taskCount > 0 && !collapsed && (
+                      <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white min-w-[18px] text-center">
+                        {taskCount > 99 ? '99+' : taskCount}
+                      </span>
+                    )}
+                    {item.path === '/product/tasks' && taskCount > 0 && collapsed && (
+                      <span className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-red-500" />
+                    )}
                       </Link>
                 );
               })}
@@ -277,6 +335,80 @@ export default function ProductLayout() {
             <LanguageSelector variant="compact" />
           </div>
         </header>
+
+        {/* Desktop notification bell (top-right) */}
+        <div className="hidden lg:flex items-center justify-end px-6 py-2 gap-2">
+          <div className="relative">
+            <button
+              onClick={openNotifications}
+              className="relative p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              title={t('notifications.title', 'Notifications')}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] flex items-center justify-center rounded-full text-[9px] font-bold bg-red-500 text-white px-1">
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </span>
+              )}
+            </button>
+
+            {/* Notification dropdown */}
+            {showNotifications && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
+                <div className="absolute right-0 mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                    <h3 className="text-sm font-semibold text-slate-900">{t('notifications.title', 'Notifications')}</h3>
+                    {unreadNotifications > 0 && (
+                      <button onClick={markAllRead} className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        {t('notifications.markAllRead', 'Mark all read')}
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-slate-400">
+                        {t('notifications.empty', 'No notifications')}
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          onClick={() => {
+                            if (!n.read) void markNotificationRead(n.id);
+                            if (n.actionUrl) { navigate(n.actionUrl); setShowNotifications(false); }
+                          }}
+                          className={`px-4 py-3 border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors ${!n.read ? 'bg-blue-50/50' : ''}`}
+                        >
+                          <div className="flex items-start gap-2">
+                            {!n.read && <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-sm ${!n.read ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>{n.title}</p>
+                              {n.message && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{n.message}</p>}
+                              <p className="text-[10px] text-slate-400 mt-1">
+                                {new Date(n.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <Link
+                    to="/product/tasks"
+                    onClick={() => setShowNotifications(false)}
+                    className="block text-center py-2.5 text-xs font-medium text-blue-600 hover:bg-blue-50 border-t border-slate-100"
+                  >
+                    {t('notifications.viewAll', 'View all tasks')}
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+          <LanguageSelector variant="compact" />
+        </div>
 
         {/* Page content */}
         <main className="flex-1 overflow-auto p-4 sm:p-5 lg:p-6">

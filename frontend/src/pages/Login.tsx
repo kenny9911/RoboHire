@@ -27,7 +27,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Get redirect URL from location state
-  const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard';
+  const from = (location.state as { from?: Location })?.from?.pathname || '/product';
 
   // Check for OAuth error in URL
   useEffect(() => {

@@ -12,6 +12,7 @@ import { getOrParseResume } from '../services/ResumeParsingCache.js';
 import { resumeParseAgent } from '../agents/ResumeParseAgent.js';
 import { normalizeExtractedText } from '../services/ResumeParserService.js';
 import { isParsedResumeLikelyIncomplete } from '../services/ResumeParseValidation.js';
+import { taskGenerator } from '../services/TaskGeneratorService.js';
 import { resumeInsightAgent } from '../agents/ResumeInsightAgent.js';
 import { jobFitAgent } from '../agents/JobFitAgent.js';
 import {
@@ -85,6 +86,8 @@ function getLanguageFilterTerms(value: string): string[] {
 
 function decodeFilename(raw: string): string {
   try {
+    // If the string already contains CJK characters, it was decoded correctly — skip re-encoding
+    if (/[\u4e00-\u9fff\u3400-\u4dbf]/.test(raw)) return raw;
     // Multer decodes Content-Disposition filenames as Latin-1 by default.
     // Re-encode to Latin-1 bytes then decode as UTF-8 to recover CJK characters.
     const bytes = Buffer.from(raw, 'latin1');
@@ -105,9 +108,41 @@ function cleanCandidateNameFromFilename(filename: string): string {
   let name = filename.replace(/\.[^.]+$/, ''); // strip extension
   // Strip 【...】 or [...] prefix (Chinese recruitment convention: 【jobCode_title_location salary】)
   name = name.replace(/^[\[【][^\]】]*[\]】]\s*/, '');
-  // Strip trailing experience years like " 10年", " 3年以上", " 10年以上"
-  name = name.replace(/\s+\d+年[以上]*\s*$/, '');
+  // Strip trailing experience/graduation suffixes like " 10年", " 26年应届生", " 3年以上经验"
+  name = name.replace(/\s+\d+年.*$/, '');
   return name.trim() || filename.replace(/\.[^.]+$/, '');
+}
+
+/** Common resume section headers that the AI parser may mistake for a name */
+const SECTION_HEADER_NAMES = new Set([
+  '基本信息', '个人信息', '个人简介', '个人资料', '联系方式', '教育经历',
+  '工作经历', '项目经历', '技能特长', '自我评价', '求职意向', '个人简历',
+  'personal resume', 'personal information', 'basic information',
+  'contact information', 'work experience', 'education',
+]);
+
+/**
+ * Clean up a name returned by the AI resume parser.
+ * Returns empty string if the name is clearly invalid (e.g. a section header).
+ */
+function sanitizeParsedName(raw?: string): string {
+  if (!raw) return '';
+  let name = raw.trim();
+
+  // Reject section headers used as names
+  if (SECTION_HEADER_NAMES.has(name.toLowerCase()) || SECTION_HEADER_NAMES.has(name)) return '';
+
+  // Strip parenthetical English transliteration: "赵子谦（Ziqian Zhao）" → "赵子谦"
+  name = name.replace(/[（(]\s*[A-Za-z][\w\s.-]*[)）]/, '').trim();
+
+  // Strip trailing isolated uppercase initials/abbreviations: "樊女士 Z M" → "樊女士"
+  // Matches: trailing whitespace + 1-4 uppercase Latin tokens that look like initials
+  name = name.replace(/\s+(?:[A-Z][A-Za-z]?\s*){1,4}$/, '').trim();
+
+  // If result is empty or too short (single char) or too long (likely garbage), reject
+  if (name.length < 2 || name.length > 30) return '';
+
+  return name;
 }
 
 function buildInlineContentDisposition(filename: string): string {
@@ -303,7 +338,7 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
     const { parsedData: parsed } = await getOrParseResume(resumeText, userId, req.requestId);
 
     // Extract metadata from parsed data
-    const name = parsed.name || cleanCandidateNameFromFilename(decodedName);
+    const name = sanitizeParsedName(parsed.name) || cleanCandidateNameFromFilename(decodedName);
     const email = parsed.email || null;
     const phone = parsed.phone || null;
     const currentRole = parsed.experience?.[0]?.role as string || null;
@@ -311,17 +346,25 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       ? computeExperienceYears(parsed.experience)
       : null;
 
-    // Person-duplicate check: same file or same (name+email)
+    // Person-duplicate check: same file, same (name+email), or same name alone
     if (req.query.skipPersonCheck !== 'true') {
       let personMatch: any = null;
-      
+
       if (name && email) {
         personMatch = await prisma.resume.findFirst({
           where: { name: { equals: name, mode: 'insensitive' }, email: { equals: email, mode: 'insensitive' }, userId, status: 'active' },
           orderBy: { updatedAt: 'desc' },
         });
       }
-      
+
+      // Fallback: match by name alone when email is unavailable (prevents duplicates from incomplete parses)
+      if (!personMatch && name && !email) {
+        personMatch = await prisma.resume.findFirst({
+          where: { name: { equals: name, mode: 'insensitive' }, userId, status: 'active' },
+          orderBy: { updatedAt: 'desc' },
+        });
+      }
+
       if (!personMatch && existing) {
         personMatch = existing;
       }
@@ -408,6 +451,11 @@ router.post('/upload', requireAuth, uploadDoc.single('file'), async (req: Reques
       });
     }
 
+    // Task generation: trigger reparse if the parse looks incomplete
+    if (isParsedResumeLikelyIncomplete(parsed, resumeText)) {
+      void taskGenerator.onResumeParseIncomplete({ id: resume.id, userId, name: resume.name });
+    }
+
     return res.json({
       success: true,
       data: resume,
@@ -456,19 +504,27 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
         });
 
         const { parsedData: parsed } = await getOrParseResume(resumeText, userId, requestId);
-        const name = parsed.name || cleanCandidateNameFromFilename(decodedName);
+        const name = sanitizeParsedName(parsed.name) || cleanCandidateNameFromFilename(decodedName);
         const email = parsed.email || null;
         const phone = parsed.phone || null;
         const currentRole = parsed.experience?.[0]?.role as string || null;
         const experienceYears = parsed.experience?.length ? computeExperienceYears(parsed.experience) : null;
 
-        // Person-duplicate check: same file or same (name+email)
+        // Person-duplicate check: same file, same (name+email), or same name alone
         if (req.query.skipPersonCheck !== 'true') {
           let personMatch: any = null;
-          
+
           if (name && email) {
             personMatch = await prisma.resume.findFirst({
               where: { name: { equals: name, mode: 'insensitive' }, email: { equals: email, mode: 'insensitive' }, userId, status: 'active' },
+              orderBy: { updatedAt: 'desc' },
+            });
+          }
+
+          // Fallback: match by name alone when email is unavailable
+          if (!personMatch && name && !email) {
+            personMatch = await prisma.resume.findFirst({
+              where: { name: { equals: name, mode: 'insensitive' }, userId, status: 'active' },
               orderBy: { updatedAt: 'desc' },
             });
           }
@@ -551,6 +607,11 @@ router.post('/upload-batch', requireAuth, uploadDoc.array('files', 20), async (r
             create: { jobId: batchJobId, resumeId: resume.id, status: 'applied', appliedAt: new Date(), appliedBy: userId },
             update: { status: 'applied', appliedAt: new Date(), appliedBy: userId },
           });
+        }
+
+        // Task generation: trigger reparse if the parse looks incomplete
+        if (isParsedResumeLikelyIncomplete(parsed, resumeText)) {
+          void taskGenerator.onResumeParseIncomplete({ id: resume.id, userId, name: resume.name });
         }
 
         return { fileName: decodedName, success: true as const, data: resume, duplicate: Boolean(existing) };
@@ -643,7 +704,7 @@ router.post('/:id/reupload', requireAuth, uploadDoc.single('file'), async (req: 
 
     // For reupload, always re-parse (user explicitly wants new parsing)
     const { parsedData: parsed } = await getOrParseResume(resumeText, ownerUserId, req.requestId);
-    const name = parsed.name || cleanCandidateNameFromFilename(decodedName);
+    const name = sanitizeParsedName(parsed.name) || cleanCandidateNameFromFilename(decodedName);
     const email = parsed.email || null;
     const phone = parsed.phone || null;
     const currentRole = parsed.experience?.[0]?.role as string || null;

@@ -123,7 +123,7 @@ export default function DocsLayout() {
               <LanguageSelector variant="compact" />
             </div>
             <Link
-              to="/dashboard/api-keys"
+              to="/product/profile/api-keys"
               className="hidden rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white transition-all hover:-translate-y-0.5 sm:inline-flex"
             >
               {t('docs.getApiKey', 'Get API Key')}

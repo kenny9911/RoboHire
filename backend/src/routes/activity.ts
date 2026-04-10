@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import prisma from '../lib/prisma.js';
+import { opsMonitor } from '../services/OpsMonitorService.js';
 
 const router = Router();
 
@@ -33,6 +34,16 @@ router.post('/track', requireAuth, async (req, res) => {
         elementTag: e.elementTag ? String(e.elementTag).slice(0, 20) : null,
         metadata: e.metadata || null,
         timestamp: new Date(e.timestamp || Date.now()),
+      })),
+    });
+
+    opsMonitor.recordActivityBatch({
+      userId,
+      count: capped.length,
+      events: capped.map((e: any) => ({
+        eventType: String(e.eventType || 'click'),
+        path: String(e.path || '/'),
+        element: e.element ? String(e.element).slice(0, 200) : null,
       })),
     });
 

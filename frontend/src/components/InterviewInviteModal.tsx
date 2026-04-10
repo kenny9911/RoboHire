@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconX, IconCircleCheck } from '@tabler/icons-react';
+import { QRCodeSVG } from 'qrcode.react';
 import axios from '../lib/axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -196,10 +197,15 @@ export default function InterviewInviteModal({ resumeId, candidateName, candidat
                 </div>
               )}
 
-              {(result as any).qrcode_url && (
+              {(result as any).qrcode_url ? (
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-2">{t('resumeLibrary.detail.invite.qrCode', 'WeChat QR Code')}</p>
+                  <p className="text-xs text-gray-500 mb-2">{t('resumeLibrary.detail.invite.qrCode', 'QR Code')}</p>
                   <img src={(result as any).qrcode_url} alt="QR Code" className="w-32 h-32 mx-auto rounded-lg border border-gray-200" />
+                </div>
+              ) : (result as any).login_url && (
+                <div className="text-center">
+                  <p className="text-xs text-gray-500 mb-2">{t('resumeLibrary.detail.invite.qrCode', 'QR Code')}</p>
+                  <QRCodeSVG value={(result as any).login_url} size={128} level="M" />
                 </div>
               )}
 

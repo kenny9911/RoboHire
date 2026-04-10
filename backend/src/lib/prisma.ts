@@ -51,7 +51,7 @@ function ensureConnectionParams(url: string): string {
     const u = new URL(url);
     if (!u.searchParams.has('connect_timeout')) u.searchParams.set('connect_timeout', '15');
     if (!u.searchParams.has('pool_timeout')) u.searchParams.set('pool_timeout', '15');
-    if (!u.searchParams.has('connection_limit')) u.searchParams.set('connection_limit', '5');
+    if (!u.searchParams.has('connection_limit')) u.searchParams.set('connection_limit', '15');
     if (!u.searchParams.has('socket_timeout')) u.searchParams.set('socket_timeout', '30');
     return u.toString();
   } catch {

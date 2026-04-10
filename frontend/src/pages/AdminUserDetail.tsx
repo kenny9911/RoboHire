@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import axios from '../lib/axios';
 import { formatUsageLimit } from '../utils/usageLimits';
+import { getUserRoleBadgeClassName, getUserRoleLabel, normalizeUserRole, type UserRole } from '../utils/userRole';
 
 // --- Types ---
 interface UserDetail {
@@ -134,7 +135,7 @@ export default function AdminUserDetail() {
   const [actionUsageType, setActionUsageType] = useState<'interview' | 'match'>('interview');
   const [actionTier, setActionTier] = useState('starter');
   const [actionStatus, setActionStatus] = useState('active');
-  const [actionRole, setActionRole] = useState('user');
+  const [actionRole, setActionRole] = useState<UserRole>('user');
   const [actionMaxInterviews, setActionMaxInterviews] = useState('');
   const [actionMaxMatches, setActionMaxMatches] = useState('');
   const [actionReason, setActionReason] = useState('');
@@ -182,7 +183,7 @@ export default function AdminUserDetail() {
       setSelectedLeadTeams(
         (data.teamMemberships || []).filter((m: TeamMembership) => m.role === 'lead').map((m: TeamMembership) => m.teamId)
       );
-      setActionRole(data.user.role);
+      setActionRole(normalizeUserRole(data.user.role));
     } catch (err) {
       console.error('Failed to load user:', err);
     } finally {
@@ -355,9 +356,9 @@ export default function AdminUserDetail() {
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${STATUS_COLORS[user.subscriptionStatus] || STATUS_COLORS.active}`}>
                 {user.subscriptionStatus}
               </span>
-              {user.role === 'admin' && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-700">Admin</span>
-              )}
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${getUserRoleBadgeClassName(user.role)}`}>
+                {getUserRoleLabel(user.role)}
+              </span>
               {isTeamLead && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-purple-100 text-purple-700">
                   {t('admin.userDetail.teamLead', 'Team Lead')}
@@ -654,8 +655,9 @@ function ProfileTab({ user, editing, profileDraft, saving, onEdit, onCancel, onD
               </div>
             )}
             {actionType === 'set_role' && (
-              <select value={actionRole} onChange={e => onActionRole(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-3 py-2">
+              <select value={actionRole} onChange={e => onActionRole(normalizeUserRole(e.target.value))} className="text-sm border border-gray-200 rounded-lg px-3 py-2">
                 <option value="user">User</option>
+                <option value="internal">Internal</option>
                 <option value="admin">Admin</option>
               </select>
             )}

@@ -118,7 +118,7 @@ export default function APIPlayground() {
           {user ? (
             <>
               <Link
-                to="/dashboard/account"
+                to="/product/profile"
                 className="flex items-center gap-3 px-3 mb-3 rounded-lg py-2 -my-1 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 {user.avatar ? (
@@ -184,7 +184,7 @@ export default function APIPlayground() {
                   {t('apiPlayground.signIn', 'Sign In')}
                 </Link>
                 <Link
-                  to="/dashboard/api-keys"
+                  to="/product/profile/api-keys"
                   className="inline-flex items-center rounded-md bg-white px-3 py-1.5 text-xs font-medium text-amber-700 ring-1 ring-amber-300 hover:bg-amber-50 transition-colors"
                 >
                   {t('apiPlayground.getApiKey', 'Get an API Key')}

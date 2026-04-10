@@ -9,6 +9,7 @@
 
 import prisma from '../lib/prisma.js';
 import { logger } from './LoggerService.js';
+import { taskGenerator } from './TaskGeneratorService.js';
 import type { HiringRequirements, ChatStreamEvent, SearchCandidate } from '../types/agentAlex.js';
 
 // ── Types ──
@@ -290,6 +291,14 @@ export async function executeInstantSearch(
         })),
         skipDuplicates: true,
       });
+
+      // Task generation: review agent-sourced candidates
+      for (const r of qualifiedResults.slice(0, 5)) { // limit to top 5 tasks per run
+        void taskGenerator.onAgentCandidateFound(
+          { id: '', agentId: agent.id, name: r.resumeName, matchScore: r.score },
+          agent.userId, agent.name,
+        );
+      }
     }
 
     // Update agent stats

@@ -33,6 +33,7 @@ Thumbs.db
 
 # Test coverage
 coverage/
+TestReport/
 
 # Temporary files
 *.tmp

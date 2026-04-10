@@ -23,6 +23,12 @@ interface GoHireInterview {
   invitedAt: string | null;
   evaluationScore: number | null;
   evaluationVerdict: string | null;
+  candidateUserId: string | null;
+  userId: string | null;
+  resumeId: string | null;
+  jobId: string | null;
+  resumeProcessingStatus: string | null;
+  importBatchId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -99,9 +105,89 @@ export default function InterviewHub() {
     total: number;
     errors: Array<{ row: number; error: string }>;
     duplicates: Array<{ row: number; candidateName: string; interviewDatetime: string }>;
+    batchId?: string;
+    usersCreated?: number;
+    usersLinked?: number;
+    jobsCreated?: number;
+    jobsLinked?: number;
+    resumeProcessingStarted?: boolean;
+    resumesPending?: number;
   } | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [resumeProgress, setResumeProgress] = useState<{
+    completed: number;
+    failed: number;
+    skippedExisting: number;
+    pending: number;
+    total: number;
+    done: boolean;
+    currentlyProcessing: Array<{ interviewId: string; candidateName: string; startedAt: number }>;
+    report?: {
+      summary: { total: number; created: number; skippedExisting: number; skippedNoEmail: number; failed: number };
+      created: Array<{ interviewId: string; candidateName: string; resumeId: string; resumeUrl: string | null; recruiter: string | null }>;
+      skippedExisting: Array<{ interviewId: string; candidateName: string; existingResumeId: string; resumeUrl: string | null; reason: string }>;
+      skippedNoEmail: Array<{ interviewId: string; candidateName: string; resumeUrl: string | null; reason: string }>;
+      failed: Array<{ interviewId: string; candidateName: string; resumeUrl: string | null; error: string }>;
+    };
+  } | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Backfill state
+  const [backfilling, setBackfilling] = useState(false);
+  const [backfillBatchId, setBackfillBatchId] = useState<string | null>(null);
+  const [backfillStartedAt, setBackfillStartedAt] = useState<number | null>(null);
+  const [stopRequested, setStopRequested] = useState(false);
+  const [backfillProgress, setBackfillProgress] = useState<{
+    completed: number;
+    failed: number;
+    skippedExisting: number;
+    skippedNoEmail: number;
+    pending: number;
+    total: number;
+    done: boolean;
+    stopped?: boolean;
+    currentlyProcessing: Array<{ interviewId: string; candidateName: string; startedAt: number }>;
+    report?: {
+      summary: { total: number; created: number; skippedExisting: number; skippedNoEmail: number; failed: number; notProcessed?: number; stopped?: boolean };
+      created: Array<{ interviewId: string; candidateName: string; resumeId: string; recruiter: string | null }>;
+      skippedExisting: Array<{ interviewId: string; candidateName: string; existingResumeId: string; reason: string }>;
+      skippedNoEmail: Array<{ interviewId: string; candidateName: string; reason: string }>;
+      failed: Array<{ interviewId: string; candidateName: string; error: string }>;
+      notProcessed?: Array<{ interviewId: string; candidateName: string }>;
+    };
+  } | null>(null);
+  const backfillPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Scan-and-select state (preview before sync)
+  interface ScanItem {
+    interviewId: string;
+    gohireUserId: string;
+    candidateName: string;
+    candidateEmail: string | null;
+    recruiterName: string | null;
+    recruiterEmail: string | null;
+    jobTitle: string | null;
+    resumeUrl: string | null;
+    interviewDatetime: string;
+    interviewEndDatetime: string | null;
+    durationMinutes: number | null;
+    isShortInterview: boolean;
+    candidateUserExists: boolean;
+    candidateUserId: string | null;
+    hasResumeInTalentHub: boolean;
+    existingResumeId: string | null;
+    recruiterUserExists: boolean;
+    recruiterUserId: string | null;
+    recommendedAction: 'create_new' | 'link_existing' | 'create_user_and_resume' | 'no_email' | 'no_url';
+  }
+  const [scanning, setScanning] = useState(false);
+  const [scanResults, setScanResults] = useState<ScanItem[] | null>(null);
+  const [scanModalOpen, setScanModalOpen] = useState(false);
+  const [selectedScanIds, setSelectedScanIds] = useState<Set<string>>(new Set());
+  const [scanFilter, setScanFilter] = useState<'all' | 'create_new' | 'create_user_and_resume' | 'link_existing' | 'no_email'>('all');
+  const [scanSearch, setScanSearch] = useState('');
+  const [hideShortInterviews, setHideShortInterviews] = useState(true);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -204,9 +290,63 @@ export default function InterviewHub() {
 
   const hasActiveFilters = jobTitleFilter || recruiterFilter || dateFrom || dateTo || hasVideo !== undefined;
 
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
+
+  const startResumePolling = useCallback((batchId: string, totalPending: number) => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    setResumeProgress({
+      completed: 0, failed: 0, skippedExisting: 0,
+      pending: totalPending, total: totalPending,
+      done: false, currentlyProcessing: [],
+    });
+
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await axios.get(`/api/v1/gohire-interviews/import-status/${batchId}`);
+        if (res.data.success) {
+          const { batch, statusBreakdown, runtime } = res.data.data;
+          const completedTotal = statusBreakdown.find((s: any) => s.status === 'completed')?.count || 0;
+          const failed = statusBreakdown.find((s: any) => s.status === 'failed')?.count || 0;
+          const pending = statusBreakdown.find((s: any) => s.status === 'pending')?.count || 0;
+          const processing = statusBreakdown.find((s: any) => s.status === 'processing')?.count || 0;
+
+          // Pull live counts from the in-progress report if present
+          const liveReport = batch.errors as any;
+          const liveCreated = liveReport?.created?.length ?? 0;
+          const liveSkippedExisting = liveReport?.skippedExisting?.length ?? 0;
+
+          setResumeProgress({
+            completed: liveCreated || (completedTotal - liveSkippedExisting),
+            skippedExisting: liveSkippedExisting,
+            failed,
+            pending: pending + processing,
+            total: totalPending,
+            done: batch.phase2Completed,
+            currentlyProcessing: runtime?.processing || [],
+            report: batch.phase2Completed && batch.errors ? batch.errors as any : undefined,
+          });
+
+          if (batch.phase2Completed) {
+            if (pollRef.current) clearInterval(pollRef.current);
+            pollRef.current = null;
+            fetchInterviews();
+          }
+        }
+      } catch {
+        // Silent — keep polling
+      }
+    }, 2000);
+  }, []);
+
   const handleImportCsv = async (file: File, overwrite = false) => {
     setImporting(true);
     setImportResult(null);
+    setResumeProgress(null);
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -231,6 +371,11 @@ export default function InterviewHub() {
         if (result.created > 0 || result.updated > 0) {
           fetchInterviews();
         }
+
+        // Start polling for Phase 2 resume processing
+        if (result.resumeProcessingStarted && result.batchId) {
+          startResumePolling(result.batchId, result.resumesPending || 0);
+        }
       }
     } catch {
       setImportResult({ created: 0, updated: 0, skipped: 0, total: 0, errors: [{ row: 0, error: t('interviewHub.import.failed', 'Import failed') }], duplicates: [] });
@@ -248,6 +393,206 @@ export default function InterviewHub() {
   const handleOverwriteConfirm = () => {
     if (pendingFile) {
       handleImportCsv(pendingFile, true);
+    }
+  };
+
+  // Cleanup backfill polling on unmount
+  useEffect(() => {
+    return () => {
+      if (backfillPollRef.current) clearInterval(backfillPollRef.current);
+    };
+  }, []);
+
+  const handleBackfillResumes = async () => {
+    setBackfilling(true);
+    setBackfillProgress(null);
+    setStopRequested(false);
+    setBackfillStartedAt(Date.now());
+    try {
+      const res = await axios.post('/api/v1/gohire-interviews/backfill-resumes');
+      if (res.data.success) {
+        const { batchId, totalToProcess } = res.data.data;
+        if (!totalToProcess) {
+          setBackfillProgress({
+            completed: 0, failed: 0, skippedExisting: 0, skippedNoEmail: 0,
+            pending: 0, total: 0, done: true, currentlyProcessing: [],
+          });
+          setBackfilling(false);
+          return;
+        }
+        setBackfillBatchId(batchId);
+        setBackfillProgress({
+          completed: 0, failed: 0, skippedExisting: 0, skippedNoEmail: 0,
+          pending: totalToProcess, total: totalToProcess, done: false,
+          currentlyProcessing: [],
+        });
+
+        // Poll progress every 2s for more responsive UI
+        backfillPollRef.current = setInterval(async () => {
+          try {
+            const status = await axios.get(`/api/v1/gohire-interviews/import-status/${batchId}`);
+            if (status.data.success) {
+              const { batch, statusBreakdown, runtime } = status.data.data;
+              // Note: 'completed' status from DB includes both newly-created AND already-existing (linked)
+              const completedTotal = statusBreakdown.find((s: any) => s.status === 'completed')?.count || 0;
+              const failed = statusBreakdown.find((s: any) => s.status === 'failed')?.count || 0;
+              const skipped = statusBreakdown.find((s: any) => s.status === 'skipped')?.count || 0;
+              const pending = statusBreakdown.find((s: any) => s.status === 'pending')?.count || 0;
+              const processing = statusBreakdown.find((s: any) => s.status === 'processing')?.count || 0;
+
+              // Pull live counts from the in-progress report if present, else fall back to DB counts
+              const liveReport = batch.errors as any;
+              const liveCreated = liveReport?.created?.length ?? 0;
+              const liveSkippedExisting = liveReport?.skippedExisting?.length ?? 0;
+              const liveSkippedNoEmail = liveReport?.skippedNoEmail?.length ?? skipped;
+
+              setStopRequested(runtime?.stopRequested || false);
+
+              setBackfillProgress({
+                completed: liveCreated || (completedTotal - liveSkippedExisting),
+                skippedExisting: liveSkippedExisting,
+                skippedNoEmail: liveSkippedNoEmail,
+                failed,
+                pending: pending + processing,
+                total: totalToProcess,
+                done: batch.phase2Completed,
+                stopped: liveReport?.summary?.stopped || false,
+                currentlyProcessing: runtime?.processing || [],
+                report: batch.phase2Completed && batch.errors ? batch.errors as any : undefined,
+              });
+
+              if (batch.phase2Completed) {
+                if (backfillPollRef.current) clearInterval(backfillPollRef.current);
+                backfillPollRef.current = null;
+                setBackfilling(false);
+                setBackfillBatchId(null);
+                fetchInterviews();
+              }
+            }
+          } catch {
+            // silent
+          }
+        }, 2000);
+      }
+    } catch {
+      setBackfillProgress({
+        completed: 0, failed: 1, skippedExisting: 0, skippedNoEmail: 0,
+        pending: 0, total: 0, done: true, currentlyProcessing: [],
+      });
+      setBackfilling(false);
+    }
+  };
+
+  const handleStopBackfill = async () => {
+    if (!backfillBatchId) return;
+    setStopRequested(true);
+    try {
+      await axios.post(`/api/v1/gohire-interviews/backfill-stop/${backfillBatchId}`);
+    } catch {
+      // silent — polling will reflect actual state
+    }
+  };
+
+  // Read-only scan: list interviews missing resumes (no DB writes)
+  const handleScanMissingResumes = async () => {
+    setScanning(true);
+    setScanResults(null);
+    setScanModalOpen(true);
+    try {
+      const res = await axios.get('/api/v1/gohire-interviews/missing-resumes');
+      if (res.data.success) {
+        const items: ScanItem[] = res.data.data.items;
+        setScanResults(items);
+        // Default selection: only safe-to-create rows AND skip short interviews (<9min)
+        const defaultSelected = new Set(
+          items
+            .filter((i) =>
+              (i.recommendedAction === 'create_new' || i.recommendedAction === 'create_user_and_resume') &&
+              !i.isShortInterview,
+            )
+            .map((i) => i.interviewId),
+        );
+        setSelectedScanIds(defaultSelected);
+      }
+    } catch {
+      setScanResults([]);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Process only the selected interview IDs from the scan modal
+  const handleCreateSelected = async () => {
+    if (selectedScanIds.size === 0) return;
+    const interviewIds = Array.from(selectedScanIds);
+    setScanModalOpen(false);
+    setBackfilling(true);
+    setBackfillProgress(null);
+    setStopRequested(false);
+    setBackfillStartedAt(Date.now());
+    try {
+      const res = await axios.post('/api/v1/gohire-interviews/create-selected-resumes', { interviewIds });
+      if (res.data.success) {
+        const { batchId, totalToProcess } = res.data.data;
+        if (!totalToProcess) {
+          setBackfillProgress({
+            completed: 0, failed: 0, skippedExisting: 0, skippedNoEmail: 0,
+            pending: 0, total: 0, done: true, currentlyProcessing: [],
+          });
+          setBackfilling(false);
+          return;
+        }
+        setBackfillBatchId(batchId);
+        setBackfillProgress({
+          completed: 0, failed: 0, skippedExisting: 0, skippedNoEmail: 0,
+          pending: totalToProcess, total: totalToProcess, done: false,
+          currentlyProcessing: [],
+        });
+        // Reuse the same polling logic as full backfill
+        backfillPollRef.current = setInterval(async () => {
+          try {
+            const status = await axios.get(`/api/v1/gohire-interviews/import-status/${batchId}`);
+            if (status.data.success) {
+              const { batch, statusBreakdown, runtime } = status.data.data;
+              const completedTotal = statusBreakdown.find((s: any) => s.status === 'completed')?.count || 0;
+              const failed = statusBreakdown.find((s: any) => s.status === 'failed')?.count || 0;
+              const skipped = statusBreakdown.find((s: any) => s.status === 'skipped')?.count || 0;
+              const pending = statusBreakdown.find((s: any) => s.status === 'pending')?.count || 0;
+              const processing = statusBreakdown.find((s: any) => s.status === 'processing')?.count || 0;
+              const liveReport = batch.errors as any;
+              const liveCreated = liveReport?.created?.length ?? 0;
+              const liveSkippedExisting = liveReport?.skippedExisting?.length ?? 0;
+              const liveSkippedNoEmail = liveReport?.skippedNoEmail?.length ?? skipped;
+              setStopRequested(runtime?.stopRequested || false);
+              setBackfillProgress({
+                completed: liveCreated || (completedTotal - liveSkippedExisting),
+                skippedExisting: liveSkippedExisting,
+                skippedNoEmail: liveSkippedNoEmail,
+                failed,
+                pending: pending + processing,
+                total: totalToProcess,
+                done: batch.phase2Completed,
+                stopped: liveReport?.summary?.stopped || false,
+                currentlyProcessing: runtime?.processing || [],
+                report: batch.phase2Completed && batch.errors ? batch.errors as any : undefined,
+              });
+              if (batch.phase2Completed) {
+                if (backfillPollRef.current) clearInterval(backfillPollRef.current);
+                backfillPollRef.current = null;
+                setBackfilling(false);
+                setBackfillBatchId(null);
+                fetchInterviews();
+              }
+            }
+          } catch { /* silent */ }
+        }, 2000);
+      }
+    } catch {
+      setBackfillProgress({
+        completed: 0, failed: 1, skippedExisting: 0, skippedNoEmail: 0,
+        pending: 0, total: 0, done: true, currentlyProcessing: [],
+      });
+      setBackfilling(false);
     }
   };
 
@@ -366,8 +711,8 @@ export default function InterviewHub() {
           {/* Recruiter/team filter — admin sees full user picker, non-admin with team sees My/Team toggle */}
           <RecruiterTeamFilter value={adminFilter} onChange={(f) => { setAdminFilter(f); setPage(1); }} />
 
-          {/* Import CSV button (admin only) */}
-          {(user?.role === 'admin' || user?.role === 'internal') && (
+          {/* Import CSV / Sync Resumes / Scan & Select — admin only */}
+          {user?.role === 'admin' && (
             <>
               <input
                 ref={fileInputRef}
@@ -392,6 +737,42 @@ export default function InterviewHub() {
                   </svg>
                 )}
                 {t('interviewHub.import.button', 'Import CSV')}
+              </button>
+              <button
+                onClick={handleBackfillResumes}
+                disabled={backfilling}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                title={t('interviewHub.backfill.tooltip', 'Scan interviews without resumes and create them in Talent Hub')}
+              >
+                {backfilling ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                )}
+                {t('interviewHub.backfill.button', 'Sync Resumes')}
+              </button>
+              <button
+                onClick={handleScanMissingResumes}
+                disabled={scanning || backfilling}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                title={t('interviewHub.scan.tooltip', 'Preview interviews missing resumes — review and select which to create (no DB writes)')}
+              >
+                {scanning ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                )}
+                {t('interviewHub.scan.button', 'Scan & Select')}
               </button>
             </>
           )}
@@ -530,6 +911,204 @@ export default function InterviewHub() {
           </div>
         ) : (
           <>
+            {/* Backfill progress banner */}
+            {backfillProgress && (() => {
+              const processed = backfillProgress.completed + backfillProgress.failed + backfillProgress.skippedExisting + backfillProgress.skippedNoEmail;
+              const pct = backfillProgress.total > 0 ? Math.round((processed / backfillProgress.total) * 100) : 0;
+              const elapsedMs = backfillStartedAt ? Date.now() - backfillStartedAt : 0;
+              const itemsPerSec = elapsedMs > 0 && processed > 0 ? processed / (elapsedMs / 1000) : 0;
+              const remaining = Math.max(0, backfillProgress.total - processed);
+              const etaSec = itemsPerSec > 0 ? Math.round(remaining / itemsPerSec) : 0;
+              const formatEta = (s: number) => {
+                if (s < 60) return `${s}s`;
+                if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
+                return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+              };
+              const isStopped = backfillProgress.report?.summary?.stopped;
+              const bannerColor = backfillProgress.done
+                ? (isStopped ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50')
+                : 'border-blue-200 bg-blue-50';
+
+              return (
+              <div className={`mx-0 mb-4 rounded-lg border p-4 ${bannerColor}`}>
+                {/* Header line: status icon + title + close (when done) */}
+                <div className="flex items-center gap-2 mb-3">
+                  {!backfillProgress.done ? (
+                    <svg className="w-5 h-5 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : isStopped ? (
+                    <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                  <span className={`text-sm font-semibold ${backfillProgress.done ? (isStopped ? 'text-amber-800' : 'text-emerald-800') : 'text-blue-800'}`}>
+                    {backfillProgress.done
+                      ? (backfillProgress.total === 0
+                        ? t('interviewHub.backfill.allSynced', 'All interviews already have resumes in Talent Hub')
+                        : isStopped
+                          ? t('interviewHub.backfill.stopped', 'Resume sync stopped')
+                          : t('interviewHub.backfill.done', 'Resume sync complete: {{completed}} created, {{failed}} failed', { completed: backfillProgress.completed, failed: backfillProgress.failed }))
+                      : stopRequested
+                        ? t('interviewHub.backfill.stopping', 'Stopping... finishing in-flight resumes')
+                        : t('interviewHub.backfill.processing', 'Syncing resumes to Talent Hub...')
+                    }
+                  </span>
+                  {/* Stop button while running */}
+                  {!backfillProgress.done && !stopRequested && (
+                    <button
+                      onClick={handleStopBackfill}
+                      className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-md transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1" /></svg>
+                      {t('interviewHub.backfill.stop', 'Stop')}
+                    </button>
+                  )}
+                  {backfillProgress.done && (
+                    <button onClick={() => setBackfillProgress(null)} className="ml-auto text-slate-400 hover:text-slate-600">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Progress bar + counters (always show, even when done) */}
+                {backfillProgress.total > 0 && (
+                  <>
+                    <div className="w-full bg-white/60 rounded-full h-2.5 mb-2 overflow-hidden">
+                      <div
+                        className={`h-2.5 rounded-full transition-all duration-500 ${backfillProgress.done ? (isStopped ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-blue-500'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs mb-2">
+                      <span className="font-semibold text-slate-700">{processed} / {backfillProgress.total} ({pct}%)</span>
+                      {!backfillProgress.done && (
+                        <>
+                          <span className="text-slate-500">·</span>
+                          <span className="text-slate-600">{itemsPerSec.toFixed(2)} {t('interviewHub.backfill.perSec', '/s')}</span>
+                          {etaSec > 0 && (
+                            <>
+                              <span className="text-slate-500">·</span>
+                              <span className="text-slate-600">ETA {formatEta(etaSec)}</span>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {/* Live status counters */}
+                    <div className="grid grid-cols-4 gap-2 text-xs mb-2">
+                      <div className="rounded bg-emerald-100 px-2 py-1">
+                        <span className="font-bold text-emerald-700">{backfillProgress.completed}</span>
+                        <span className="text-emerald-600 ml-1">{t('interviewHub.backfill.reportCreated', 'Created')}</span>
+                      </div>
+                      <div className="rounded bg-slate-100 px-2 py-1">
+                        <span className="font-bold text-slate-700">{backfillProgress.skippedExisting}</span>
+                        <span className="text-slate-500 ml-1">{t('interviewHub.backfill.reportExisting', 'Already Exist')}</span>
+                      </div>
+                      <div className="rounded bg-amber-100 px-2 py-1">
+                        <span className="font-bold text-amber-700">{backfillProgress.skippedNoEmail}</span>
+                        <span className="text-amber-600 ml-1">{t('interviewHub.backfill.reportNoEmail', 'No Email')}</span>
+                      </div>
+                      <div className="rounded bg-red-100 px-2 py-1">
+                        <span className="font-bold text-red-700">{backfillProgress.failed}</span>
+                        <span className="text-red-600 ml-1">{t('interviewHub.backfill.reportFailed', 'Failed')}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Currently processing list */}
+                {!backfillProgress.done && backfillProgress.currentlyProcessing.length > 0 && (
+                  <div className="mt-2 rounded-md bg-white/50 p-2">
+                    <div className="text-[11px] font-semibold text-slate-600 mb-1">
+                      {t('interviewHub.backfill.processingNow', 'Processing now ({{count}}):', { count: backfillProgress.currentlyProcessing.length })}
+                    </div>
+                    <div className="space-y-0.5">
+                      {backfillProgress.currentlyProcessing.map((p) => {
+                        const elapsed = Math.round((Date.now() - p.startedAt) / 1000);
+                        return (
+                          <div key={p.interviewId} className="flex items-center gap-2 text-xs text-slate-700">
+                            <svg className="w-3 h-3 animate-spin text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            <span className="truncate">{p.candidateName}</span>
+                            <span className="text-slate-400 ml-auto">{elapsed}s</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {/* Status report — detailed expandable lists when done */}
+                {backfillProgress.done && backfillProgress.report && (
+                  <div className="mt-3 space-y-2 border-t border-slate-200/60 pt-3">
+                    {/* Created list */}
+                    {backfillProgress.report.created.length > 0 && (
+                      <details className="text-xs">
+                        <summary className="cursor-pointer text-emerald-700 font-medium">{t('interviewHub.backfill.createdList', 'Created resumes ({{count}})', { count: backfillProgress.report.created.length })}</summary>
+                        <div className="mt-1 max-h-40 overflow-y-auto space-y-0.5 pl-3 bg-white/50 rounded p-2">
+                          {backfillProgress.report.created.map((r, i) => (
+                            <div key={i} className="text-emerald-700">✓ {r.candidateName} {r.recruiter ? <span className="text-slate-500">({r.recruiter})</span> : ''}</div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                    {/* Skipped — already exist */}
+                    {backfillProgress.report.skippedExisting.length > 0 && (
+                      <details className="text-xs">
+                        <summary className="cursor-pointer text-slate-600 font-medium">{t('interviewHub.backfill.existingList', 'Already in Talent Hub ({{count}})', { count: backfillProgress.report.skippedExisting.length })}</summary>
+                        <div className="mt-1 max-h-40 overflow-y-auto space-y-0.5 pl-3 bg-white/50 rounded p-2">
+                          {backfillProgress.report.skippedExisting.map((r, i) => (
+                            <div key={i} className="text-slate-600">↻ {r.candidateName} <span className="text-slate-400">— linked to existing</span></div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                    {/* Skipped — no email */}
+                    {backfillProgress.report.skippedNoEmail.length > 0 && (
+                      <details className="text-xs">
+                        <summary className="cursor-pointer text-amber-700 font-medium">{t('interviewHub.backfill.noEmailList', 'No email — skipped ({{count}})', { count: backfillProgress.report.skippedNoEmail.length })}</summary>
+                        <div className="mt-1 max-h-40 overflow-y-auto space-y-0.5 pl-3 bg-white/50 rounded p-2">
+                          {backfillProgress.report.skippedNoEmail.map((r, i) => (
+                            <div key={i} className="text-amber-700">⚠ {r.candidateName}</div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                    {/* Failed */}
+                    {backfillProgress.report.failed.length > 0 && (
+                      <details className="text-xs" open>
+                        <summary className="cursor-pointer text-red-700 font-medium">{t('interviewHub.backfill.failedList', 'Failed ({{count}})', { count: backfillProgress.report.failed.length })}</summary>
+                        <div className="mt-1 max-h-40 overflow-y-auto space-y-0.5 pl-3 bg-white/50 rounded p-2">
+                          {backfillProgress.report.failed.map((r, i) => (
+                            <div key={i} className="text-red-700">✗ <span className="font-medium">{r.candidateName}</span> — {r.error}</div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                    {/* Not processed (only if stopped) */}
+                    {backfillProgress.report.notProcessed && backfillProgress.report.notProcessed.length > 0 && (
+                      <details className="text-xs" open={isStopped}>
+                        <summary className="cursor-pointer text-amber-700 font-medium">{t('interviewHub.backfill.notProcessedList', 'Not processed — stopped before reaching ({{count}})', { count: backfillProgress.report.notProcessed.length })}</summary>
+                        <div className="mt-1 max-h-40 overflow-y-auto space-y-0.5 pl-3 bg-white/50 rounded p-2">
+                          {backfillProgress.report.notProcessed.map((r, i) => (
+                            <div key={i} className="text-amber-600">○ {r.candidateName}</div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                )}
+              </div>
+              );
+            })()}
+
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -599,14 +1178,36 @@ export default function InterviewHub() {
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 shrink-0">
+                            <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 shrink-0">
                               <span className="text-xs font-bold text-slate-600">
                                 {interview.candidateName[0]?.toUpperCase() || '?'}
                               </span>
+                              {/* Resume processing status dot */}
+                              {interview.resumeProcessingStatus && interview.resumeProcessingStatus !== 'skipped' && (
+                                <span
+                                  className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                                    interview.resumeProcessingStatus === 'completed' ? 'bg-emerald-400' :
+                                    interview.resumeProcessingStatus === 'failed' ? 'bg-red-400' :
+                                    interview.resumeProcessingStatus === 'processing' ? 'bg-blue-400 animate-pulse' :
+                                    'bg-amber-400'
+                                  }`}
+                                  title={`Resume: ${interview.resumeProcessingStatus}`}
+                                />
+                              )}
                             </div>
-                            <span className="font-medium text-slate-900 truncate max-w-[180px]">
-                              {interview.candidateName}
-                            </span>
+                            {interview.resumeId ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); navigate(`/product/talent-hub?highlight=${interview.resumeId}`); }}
+                                className="font-medium text-blue-600 hover:text-blue-800 truncate max-w-[180px] text-left"
+                                title={t('interviewHub.viewInTalentHub', 'View in Talent Hub')}
+                              >
+                                {interview.candidateName}
+                              </button>
+                            ) : (
+                              <span className="font-medium text-slate-900 truncate max-w-[180px]">
+                                {interview.candidateName}
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-slate-500 truncate max-w-[180px]">
@@ -614,9 +1215,18 @@ export default function InterviewHub() {
                         </td>
                         <td className="px-4 py-3">
                           {interview.jobTitle ? (
-                            <span className="inline-block px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded-full truncate max-w-[160px]">
-                              {interview.jobTitle}
-                            </span>
+                            interview.jobId ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); navigate(`/product/jobs/${interview.jobId}`); }}
+                                className="inline-block px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-full truncate max-w-[160px] transition-colors"
+                              >
+                                {interview.jobTitle}
+                              </button>
+                            ) : (
+                              <span className="inline-block px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded-full truncate max-w-[160px]">
+                                {interview.jobTitle}
+                              </span>
+                            )
                           ) : (
                             <span className="text-slate-300">-</span>
                           )}
@@ -730,20 +1340,20 @@ export default function InterviewHub() {
 
       {/* Import Result Modal */}
       {importResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { setImportResult(null); setPendingFile(null); }}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setImportResult(null); setPendingFile(null); setResumeProgress(null); if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } }}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-900">
                 {t('interviewHub.import.resultTitle', 'Import Results')}
               </h3>
-              <button onClick={() => { setImportResult(null); setPendingFile(null); }} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => { setImportResult(null); setPendingFile(null); setResumeProgress(null); if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } }} className="text-slate-400 hover:text-slate-600">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="px-6 py-4 space-y-4">
+            <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
               {/* Summary stats */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="text-center p-3 rounded-lg bg-slate-50">
@@ -763,6 +1373,221 @@ export default function InterviewHub() {
                   <div className="text-[11px] text-amber-600">{t('interviewHub.import.skipped', 'Skipped')}</div>
                 </div>
               </div>
+
+              {/* Users & Jobs created during import */}
+              {(importResult.usersCreated || importResult.usersLinked || importResult.jobsCreated || importResult.jobsLinked) ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-slate-200 p-3">
+                    <div className="text-xs font-medium text-slate-500 mb-1">{t('interviewHub.import.candidates', 'Candidates')}</div>
+                    <div className="flex items-baseline gap-2">
+                      {importResult.usersCreated ? (
+                        <span className="text-sm text-emerald-600 font-medium">{importResult.usersCreated} {t('interviewHub.import.newAccounts', 'new')}</span>
+                      ) : null}
+                      {importResult.usersLinked ? (
+                        <span className="text-sm text-blue-600 font-medium">{importResult.usersLinked} {t('interviewHub.import.linked', 'linked')}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 p-3">
+                    <div className="text-xs font-medium text-slate-500 mb-1">{t('interviewHub.import.jobs', 'Jobs')}</div>
+                    <div className="flex items-baseline gap-2">
+                      {importResult.jobsCreated ? (
+                        <span className="text-sm text-emerald-600 font-medium">{importResult.jobsCreated} {t('interviewHub.import.newAccounts', 'new')}</span>
+                      ) : null}
+                      {importResult.jobsLinked ? (
+                        <span className="text-sm text-blue-600 font-medium">{importResult.jobsLinked} {t('interviewHub.import.linked', 'linked')}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Resume processing progress + detailed report */}
+              {resumeProgress && (() => {
+                const processed = resumeProgress.completed + resumeProgress.failed + resumeProgress.skippedExisting;
+                const pct = resumeProgress.total > 0 ? Math.round((processed / resumeProgress.total) * 100) : 0;
+                return (
+                  <div className={`rounded-lg border p-4 ${resumeProgress.done ? 'border-emerald-200 bg-emerald-50' : 'border-blue-200 bg-blue-50'}`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      {!resumeProgress.done ? (
+                        <svg className="w-5 h-5 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      <span className={`text-sm font-semibold ${resumeProgress.done ? 'text-emerald-800' : 'text-blue-800'}`}>
+                        {resumeProgress.done
+                          ? t('interviewHub.import.resumesDone', 'Resume processing complete')
+                          : t('interviewHub.import.resumesProcessing', 'Processing resumes...')
+                        }
+                      </span>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="w-full bg-white/60 rounded-full h-2.5 mb-2 overflow-hidden">
+                      <div
+                        className={`h-2.5 rounded-full transition-all duration-500 ${resumeProgress.done ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-700 mb-2">
+                      <span className="font-semibold">{processed} / {resumeProgress.total} ({pct}%)</span>
+                    </div>
+                    {/* Live status counters */}
+                    <div className="grid grid-cols-4 gap-2 text-xs mb-2">
+                      <div className="rounded bg-emerald-100 px-2 py-1">
+                        <span className="font-bold text-emerald-700">{resumeProgress.completed}</span>
+                        <span className="text-emerald-600 ml-1">{t('interviewHub.backfill.reportCreated', 'Created')}</span>
+                      </div>
+                      <div className="rounded bg-slate-100 px-2 py-1">
+                        <span className="font-bold text-slate-700">{resumeProgress.skippedExisting}</span>
+                        <span className="text-slate-500 ml-1">{t('interviewHub.backfill.reportExisting', 'Already Exist')}</span>
+                      </div>
+                      <div className="rounded bg-amber-100 px-2 py-1">
+                        <span className="font-bold text-amber-700">{resumeProgress.pending}</span>
+                        <span className="text-amber-600 ml-1">{t('interviewHub.import.remaining', 'remaining')}</span>
+                      </div>
+                      <div className="rounded bg-red-100 px-2 py-1">
+                        <span className="font-bold text-red-700">{resumeProgress.failed}</span>
+                        <span className="text-red-600 ml-1">{t('interviewHub.backfill.reportFailed', 'Failed')}</span>
+                      </div>
+                    </div>
+
+                    {/* Currently processing list */}
+                    {!resumeProgress.done && resumeProgress.currentlyProcessing.length > 0 && (
+                      <div className="mt-2 rounded-md bg-white/50 p-2">
+                        <div className="text-[11px] font-semibold text-slate-600 mb-1">
+                          {t('interviewHub.backfill.processingNow', 'Processing now ({{count}}):', { count: resumeProgress.currentlyProcessing.length })}
+                        </div>
+                        <div className="space-y-0.5">
+                          {resumeProgress.currentlyProcessing.map((p) => {
+                            const elapsed = Math.round((Date.now() - p.startedAt) / 1000);
+                            return (
+                              <div key={p.interviewId} className="flex items-center gap-2 text-xs text-slate-700">
+                                <svg className="w-3 h-3 animate-spin text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                <span className="truncate">{p.candidateName}</span>
+                                <span className="text-slate-400 ml-auto">{elapsed}s</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Detailed report when done */}
+                    {resumeProgress.done && resumeProgress.report && (
+                      <div className="mt-3 space-y-2 border-t border-slate-200/60 pt-3">
+                        {/* Created list — clickable to TalentHub + view original PDF */}
+                        {resumeProgress.report.created.length > 0 && (
+                          <details className="text-xs" open>
+                            <summary className="cursor-pointer text-emerald-700 font-medium">
+                              {t('interviewHub.backfill.createdList', 'Created resumes ({{count}})', { count: resumeProgress.report.created.length })}
+                            </summary>
+                            <div className="mt-1 max-h-48 overflow-y-auto space-y-1 pl-3 bg-white/50 rounded p-2">
+                              {resumeProgress.report.created.map((r, i) => (
+                                <div key={i} className="flex items-center gap-2 text-emerald-700">
+                                  <span className="text-emerald-500">✓</span>
+                                  <button
+                                    onClick={() => navigate(`/product/talent-hub?highlight=${r.resumeId}`)}
+                                    className="font-medium hover:underline text-left"
+                                    title={t('interviewHub.viewInTalentHub', 'View in Talent Hub')}
+                                  >
+                                    {r.candidateName}
+                                  </button>
+                                  {r.recruiter && <span className="text-slate-500 text-[10px]">({r.recruiter})</span>}
+                                  {r.resumeUrl && (
+                                    <a href={r.resumeUrl} target="_blank" rel="noreferrer" className="ml-auto text-blue-600 hover:text-blue-800 text-[10px]" title={t('interviewHub.import.viewOriginal', 'View original PDF')}>
+                                      {t('interviewHub.import.viewOriginal', 'Original PDF')} ↗
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                        {/* Already exist list */}
+                        {resumeProgress.report.skippedExisting.length > 0 && (
+                          <details className="text-xs">
+                            <summary className="cursor-pointer text-slate-600 font-medium">
+                              {t('interviewHub.backfill.existingList', 'Already in Talent Hub ({{count}})', { count: resumeProgress.report.skippedExisting.length })}
+                            </summary>
+                            <div className="mt-1 max-h-48 overflow-y-auto space-y-1 pl-3 bg-white/50 rounded p-2">
+                              {resumeProgress.report.skippedExisting.map((r, i) => (
+                                <div key={i} className="flex items-center gap-2 text-slate-600">
+                                  <span className="text-slate-400">↻</span>
+                                  <button
+                                    onClick={() => navigate(`/product/talent-hub?highlight=${r.existingResumeId}`)}
+                                    className="hover:underline text-left"
+                                  >
+                                    {r.candidateName}
+                                  </button>
+                                  <span className="text-slate-400 text-[10px]">— linked to existing</span>
+                                  {r.resumeUrl && (
+                                    <a href={r.resumeUrl} target="_blank" rel="noreferrer" className="ml-auto text-blue-600 hover:text-blue-800 text-[10px]">
+                                      {t('interviewHub.import.viewOriginal', 'Original PDF')} ↗
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                        {/* No email skipped */}
+                        {resumeProgress.report.skippedNoEmail.length > 0 && (
+                          <details className="text-xs">
+                            <summary className="cursor-pointer text-amber-700 font-medium">
+                              {t('interviewHub.backfill.noEmailList', 'No email — skipped ({{count}})', { count: resumeProgress.report.skippedNoEmail.length })}
+                            </summary>
+                            <div className="mt-1 max-h-48 overflow-y-auto space-y-1 pl-3 bg-white/50 rounded p-2">
+                              {resumeProgress.report.skippedNoEmail.map((r, i) => (
+                                <div key={i} className="flex items-center gap-2 text-amber-700">
+                                  <span>⚠</span>
+                                  <span>{r.candidateName}</span>
+                                  {r.resumeUrl && (
+                                    <a href={r.resumeUrl} target="_blank" rel="noreferrer" className="ml-auto text-blue-600 hover:text-blue-800 text-[10px]">
+                                      {t('interviewHub.import.viewOriginal', 'Original PDF')} ↗
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                        {/* Failed — open by default with error message + link to original PDF */}
+                        {resumeProgress.report.failed.length > 0 && (
+                          <details className="text-xs" open>
+                            <summary className="cursor-pointer text-red-700 font-medium">
+                              {t('interviewHub.backfill.failedList', 'Failed ({{count}})', { count: resumeProgress.report.failed.length })}
+                            </summary>
+                            <div className="mt-1 max-h-48 overflow-y-auto space-y-1 pl-3 bg-white/50 rounded p-2">
+                              {resumeProgress.report.failed.map((r, i) => (
+                                <div key={i} className="text-red-700">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-red-500">✗</span>
+                                    <span className="font-medium">{r.candidateName}</span>
+                                    {r.resumeUrl && (
+                                      <a href={r.resumeUrl} target="_blank" rel="noreferrer" className="ml-auto text-blue-600 hover:text-blue-800 text-[10px]">
+                                        {t('interviewHub.import.viewOriginal', 'Original PDF')} ↗
+                                      </a>
+                                    )}
+                                  </div>
+                                  <div className="text-red-600 text-[11px] pl-5 mt-0.5">{r.error}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Duplicates warning */}
               {importResult.duplicates.length > 0 && (
@@ -825,7 +1650,7 @@ export default function InterviewHub() {
 
             <div className="px-6 py-3 border-t border-slate-100 flex justify-end">
               <button
-                onClick={() => { setImportResult(null); setPendingFile(null); }}
+                onClick={() => { setImportResult(null); setPendingFile(null); setResumeProgress(null); if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } }}
                 className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 {t('common.close', 'Close')}
@@ -834,6 +1659,266 @@ export default function InterviewHub() {
           </div>
         </div>
       )}
+
+      {/* Scan & Select modal — preview interviews missing resumes */}
+      {scanModalOpen && (() => {
+        const items = scanResults || [];
+        const filtered = items.filter((it) => {
+          if (hideShortInterviews && it.isShortInterview) return false;
+          if (scanFilter !== 'all' && it.recommendedAction !== scanFilter) return false;
+          if (scanSearch) {
+            const q = scanSearch.toLowerCase();
+            return (
+              it.candidateName.toLowerCase().includes(q) ||
+              (it.candidateEmail || '').toLowerCase().includes(q) ||
+              (it.recruiterName || '').toLowerCase().includes(q) ||
+              (it.jobTitle || '').toLowerCase().includes(q)
+            );
+          }
+          return true;
+        });
+        const counts = items.reduce((acc, it) => { acc[it.recommendedAction] = (acc[it.recommendedAction] || 0) + 1; return acc; }, {} as Record<string, number>);
+        const shortCount = items.filter((it) => it.isShortInterview).length;
+        const allFilteredSelected = filtered.length > 0 && filtered.every((it) => selectedScanIds.has(it.interviewId));
+        const toggleRow = (id: string) => {
+          const next = new Set(selectedScanIds);
+          if (next.has(id)) next.delete(id); else next.add(id);
+          setSelectedScanIds(next);
+        };
+        const toggleAllFiltered = () => {
+          const next = new Set(selectedScanIds);
+          if (allFilteredSelected) {
+            filtered.forEach((it) => next.delete(it.interviewId));
+          } else {
+            filtered.forEach((it) => {
+              // Don't auto-select disabled rows
+              if (it.recommendedAction !== 'no_email' && it.recommendedAction !== 'no_url') {
+                next.add(it.interviewId);
+              }
+            });
+          }
+          setSelectedScanIds(next);
+        };
+        const selectOnlyNew = () => {
+          const next = new Set<string>();
+          items.forEach((it) => {
+            if (it.recommendedAction === 'create_new' || it.recommendedAction === 'create_user_and_resume') {
+              next.add(it.interviewId);
+            }
+          });
+          setSelectedScanIds(next);
+        };
+        const ACTION_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+          create_new: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: t('interviewHub.scan.actionCreateNew', 'Create new') },
+          create_user_and_resume: { bg: 'bg-blue-100', text: 'text-blue-700', label: t('interviewHub.scan.actionCreateUserAndResume', 'Create user + resume') },
+          link_existing: { bg: 'bg-slate-100', text: 'text-slate-600', label: t('interviewHub.scan.actionLinkExisting', 'Link to existing') },
+          no_email: { bg: 'bg-amber-100', text: 'text-amber-700', label: t('interviewHub.scan.actionNoEmail', 'No email') },
+          no_url: { bg: 'bg-red-100', text: 'text-red-700', label: t('interviewHub.scan.actionNoUrl', 'No resume URL') },
+        };
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setScanModalOpen(false)}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {t('interviewHub.scan.title', 'Scan: Interviews Missing Resumes')}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {t('interviewHub.scan.subtitle', 'Read-only preview. Select which to create — existing resumes will never be overwritten.')}
+                  </p>
+                </div>
+                <button onClick={() => setScanModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Filters & summary */}
+              {scanning ? (
+                <div className="flex-1 flex items-center justify-center py-16">
+                  <svg className="w-8 h-8 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                </div>
+              ) : items.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center py-16 text-slate-500 text-sm">
+                  {t('interviewHub.scan.empty', 'All interviews already have resumes in Talent Hub')}
+                </div>
+              ) : (
+                <>
+                  <div className="px-6 py-3 border-b border-slate-100 space-y-3">
+                    {/* Action breakdown */}
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <button
+                        onClick={() => setScanFilter('all')}
+                        className={`px-2.5 py-1 rounded-md font-medium ${scanFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                      >
+                        {t('interviewHub.scan.filterAll', 'All')} ({items.length})
+                      </button>
+                      {(['create_new', 'create_user_and_resume', 'link_existing', 'no_email'] as const).map((k) => {
+                        const style = ACTION_STYLES[k];
+                        return (
+                          <button
+                            key={k}
+                            onClick={() => setScanFilter(k)}
+                            className={`px-2.5 py-1 rounded-md font-medium ${scanFilter === k ? `${style.bg} ${style.text} ring-2 ring-offset-1 ring-slate-300` : `${style.bg} ${style.text} opacity-80 hover:opacity-100`}`}
+                          >
+                            {style.label} ({counts[k] || 0})
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Search & bulk actions */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={scanSearch}
+                        onChange={(e) => setScanSearch(e.target.value)}
+                        placeholder={t('interviewHub.scan.searchPlaceholder', 'Search by name, email, recruiter, job...')}
+                        className="flex-1 px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      />
+                      <button
+                        onClick={toggleAllFiltered}
+                        className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md"
+                      >
+                        {allFilteredSelected ? t('interviewHub.scan.deselectFiltered', 'Deselect filtered') : t('interviewHub.scan.selectFiltered', 'Select filtered')}
+                      </button>
+                      <button
+                        onClick={selectOnlyNew}
+                        className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-md"
+                      >
+                        {t('interviewHub.scan.selectOnlyNew', 'Only new')}
+                      </button>
+                      <button
+                        onClick={() => setSelectedScanIds(new Set())}
+                        disabled={selectedScanIds.size === 0}
+                        className="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-md disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {t('interviewHub.scan.unselectAll', 'Unselect all')}
+                      </button>
+                    </div>
+                    {/* Short interview toggle */}
+                    {shortCount > 0 && (
+                      <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={hideShortInterviews}
+                          onChange={(e) => setHideShortInterviews(e.target.checked)}
+                          className="w-3.5 h-3.5 accent-blue-600"
+                        />
+                        {t('interviewHub.scan.hideShort', 'Hide short interviews (<9 min)')}
+                        <span className="text-amber-600 font-medium">({shortCount})</span>
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Table */}
+                  <div className="flex-1 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="sticky top-0 bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="px-3 py-2 text-left w-10"></th>
+                          <th className="px-3 py-2 text-left font-semibold text-slate-600">{t('interviewHub.scan.colCandidate', 'Candidate')}</th>
+                          <th className="px-3 py-2 text-left font-semibold text-slate-600">{t('interviewHub.scan.colJob', 'Job')}</th>
+                          <th className="px-3 py-2 text-left font-semibold text-slate-600">{t('interviewHub.scan.colRecruiter', 'Recruiter')}</th>
+                          <th className="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">{t('interviewHub.scan.colDateTime', 'Date & Time')}</th>
+                          <th className="px-3 py-2 text-left font-semibold text-slate-600 whitespace-nowrap">{t('interviewHub.scan.colDuration', 'Duration')}</th>
+                          <th className="px-3 py-2 text-left font-semibold text-slate-600">{t('interviewHub.scan.colAction', 'Action')}</th>
+                          <th className="px-3 py-2 text-center font-semibold text-slate-600">{t('interviewHub.scan.colResume', 'Resume')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((it) => {
+                          const style = ACTION_STYLES[it.recommendedAction];
+                          const disabled = it.recommendedAction === 'no_email' || it.recommendedAction === 'no_url';
+                          const isChecked = selectedScanIds.has(it.interviewId);
+                          const dt = new Date(it.interviewDatetime);
+                          return (
+                            <tr key={it.interviewId} className={`border-b border-slate-100 hover:bg-slate-50/50 ${disabled ? 'opacity-60' : ''} ${it.isShortInterview ? 'bg-amber-50/40' : ''}`}>
+                              <td className="px-3 py-2">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  disabled={disabled}
+                                  onChange={() => !disabled && toggleRow(it.interviewId)}
+                                  className="w-4 h-4 accent-blue-600"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="font-medium text-slate-900">{it.candidateName}</div>
+                                {it.candidateEmail && <div className="text-slate-500 text-[11px]">{it.candidateEmail}</div>}
+                              </td>
+                              <td className="px-3 py-2 text-slate-600 max-w-[180px] truncate">{it.jobTitle || '-'}</td>
+                              <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{it.recruiterName || it.recruiterEmail || '-'}</td>
+                              <td className="px-3 py-2 text-slate-500 whitespace-nowrap">
+                                <div>{dt.toLocaleDateString()}</div>
+                                <div className="text-[10px] text-slate-400">{dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                {it.durationMinutes != null ? (
+                                  <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium ${it.isShortInterview ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>
+                                    {it.durationMinutes}m{it.isShortInterview ? ' ⚠' : ''}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-300">-</span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2">
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${style.bg} ${style.text}`}>
+                                  {style.label}
+                                </span>
+                                {it.hasResumeInTalentHub && (
+                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                    {t('interviewHub.scan.existingId', 'Resume #{{id}}', { id: it.existingResumeId?.substring(0, 8) })}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                {it.resumeUrl ? (
+                                  <a href={it.resumeUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800" onClick={(e) => e.stopPropagation()}>
+                                    <svg className="w-4 h-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                  </a>
+                                ) : (
+                                  <span className="text-slate-300">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <div className="text-xs text-slate-600">
+                      {t('interviewHub.scan.selectedCount', '{{selected}} of {{total}} selected', { selected: selectedScanIds.size, total: items.length })}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setScanModalOpen(false)}
+                        className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg"
+                      >
+                        {t('common.cancel', 'Cancel')}
+                      </button>
+                      <button
+                        onClick={handleCreateSelected}
+                        disabled={selectedScanIds.size === 0}
+                        className="px-4 py-1.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {t('interviewHub.scan.createSelected', 'Create {{count}} resumes', { count: selectedScanIds.size })}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

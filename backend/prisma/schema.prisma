@@ -113,6 +113,11 @@ model User {
   alexSessions       AgentAlexSession[]
   contacts           Contact[]
   companies          Company[]
+  tasksAssigned      Task[]         @relation("TaskAssignee")
+  tasksCreated       Task[]         @relation("TaskCreator")
+  notifications      Notification[]
+  goHireInterviewsAsCandidate GoHireInterview[] @relation("GoHireCandidateUser")
+  goHireInterviewsAsRecruiter GoHireInterview[] @relation("GoHireRecruiterUser")
 
   @@index([email])
   @@index([provider, providerId])
@@ -453,6 +458,8 @@ model Resume {
   jobMatches      JobMatch[]
   resumeVersions  ResumeVersion[]
   agentCandidates AgentCandidate[]
+  tasks           Task[]
+  goHireInterviews GoHireInterview[]
 
   @@unique([userId, contentHash])
   @@index([userId])
@@ -557,6 +564,8 @@ model Job {
   matchingSessions  MatchingSession[]
   agents            Agent[]
   alexSession       AgentAlexSession?
+  tasks             Task[]
+  goHireInterviews  GoHireInterview[]
 
   @@index([userId])
   @@index([hiringRequestId, updatedAt])
@@ -623,6 +632,7 @@ model Interview {
   candidate       Candidate?          @relation(fields: [candidateId], references: [id], onDelete: SetNull)
   evaluation      InterviewEvaluation?
   dialogTurns     InterviewDialogTurn[]
+  tasks           Task[]
 
   @@index([userId])
   @@index([status])
@@ -901,8 +911,23 @@ model GoHireInterview {
   evaluationScore       Int?                            // Quick-access score (0-100)
   evaluationVerdict     String?                         // strong_hire, hire, weak_hire, no_hire
   evaluationShareToken  String?   @unique               // Share token for public evaluation report
+
+  // Foreign key links to core entities (populated during CSV import pipeline)
+  candidateUserId        String?                         // FK → User (candidate account)
+  userId                 String?                         // FK → User (recruiter/owner)
+  resumeId               String?                         // FK → Resume (parsed resume in TalentHub)
+  jobId                  String?                         // FK → Job (linked job posting)
+  resumeProcessingStatus String?   @default("pending")   // pending, processing, completed, failed, skipped
+  resumeProcessingError  String?   @db.Text              // Error message if resume processing failed
+  importBatchId          String?                         // Groups records from same CSV upload
+
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+
+  candidateUser  User?    @relation("GoHireCandidateUser", fields: [candidateUserId], references: [id], onDelete: SetNull)
+  recruiterUser  User?    @relation("GoHireRecruiterUser", fields: [userId], references: [id], onDelete: SetNull)
+  resume         Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  job            Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
 
   @@index([candidateName])
   @@index([candidateEmail])
@@ -911,6 +936,37 @@ model GoHireInterview {
   @@index([interviewDatetime])
   @@index([gohireUserId])
   @@index([evaluationScore])
+  @@index([candidateUserId])
+  @@index([userId])
+  @@index([resumeId])
+  @@index([jobId])
+  @@index([importBatchId])
+  @@index([resumeProcessingStatus])
+}
+
+model GoHireImportBatch {
+  id                String   @id @default(cuid())
+  adminUserId       String                          // Who triggered the import
+  fileName          String?                         // Original CSV filename
+  totalRows         Int                             // Total data rows in CSV
+  phase1Completed   Boolean  @default(false)        // Sync phase done
+  phase2Completed   Boolean  @default(false)        // Async resume processing done
+  usersCreated      Int      @default(0)
+  usersLinked       Int      @default(0)
+  jobsCreated       Int      @default(0)
+  jobsLinked        Int      @default(0)
+  resumesCreated    Int      @default(0)
+  resumesFailed     Int      @default(0)
+  resumesPending    Int      @default(0)
+  interviewsCreated Int      @default(0)
+  interviewsUpdated Int      @default(0)
+  interviewsSkipped Int      @default(0)
+  errors            Json?                           // Array of {row, error}
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([adminUserId])
+  @@index([createdAt])
 }
 
 model AgentAlexSession {
@@ -927,6 +983,114 @@ model AgentAlexSession {
   linkedJob    Job?     @relation(fields: [linkedJobId], references: [id], onDelete: SetNull)
 
   @@index([userId, updatedAt])
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  userId        String    // assignee
+  createdById   String?   // who/what created it (null = system)
+
+  // Classification
+  type          String    // evaluate_interview, review_evaluation, hiring_decision, review_matches, shortlist_candidates, send_interview_invite, follow_up_invitation, interview_reminder, run_matching, review_agent_candidates, publish_job, close_stale_job, stale_pipeline, sync_gohire_interviews, reparse_resume
+  category      String    // pipeline, evaluation, sourcing, communication, admin
+  assigneeType  String    @default("human") // human | agent
+
+  // Content
+  title         String
+  description   String?   @db.Text
+  actionUrl     String?   // deep link to relevant page
+  actionLabel   String?   // button text for the primary action
+
+  // Context links
+  jobId              String?
+  resumeId           String?
+  interviewId        String?
+  candidateId        String?
+  matchingSessionId  String?
+  agentId            String?
+  hiringRequestId    String?
+
+  // Priority & SLA
+  priority      String    @default("medium") // critical, high, medium, low
+  dueAt         DateTime?
+  slaDeadline   DateTime?
+  escalatedAt   DateTime?
+
+  // Status
+  status        String    @default("pending") // pending, in_progress, completed, dismissed, expired, auto_completed
+  completedAt   DateTime?
+  completedBy   String?   // userId or 'system'
+  dismissReason String?
+  result        Json?     // outcome data
+
+  // Trigger
+  triggerEvent  String    // what event spawned this
+  triggerData   Json?     // event context snapshot
+  isAutoGenerated Boolean @default(true)
+
+  // Archive
+  archivedAt    DateTime? // set 7 days after completed/dismissed
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation("TaskAssignee", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy     User?     @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  job           Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  resume        Resume?   @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  interview     Interview? @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+  notifications Notification[]
+
+  @@index([userId, status])
+  @@index([userId, priority])
+  @@index([type, status])
+  @@index([status, dueAt])
+  @@index([jobId])
+  @@index([interviewId])
+  @@index([resumeId])
+  @@index([archivedAt])
+  @@index([createdAt])
+}
+
+model TaskAutomationRule {
+  id                  String    @id @default(cuid())
+  userId              String?   // null = global default
+  taskType            String    @unique // maps to task type enum
+  enabled             Boolean   @default(true)
+  assigneeType        String    @default("human") // human | agent
+  autoExecute         Boolean   @default(false) // for agent tasks: execute immediately?
+  slaHours            Int?      // SLA deadline in hours
+  priority            String    @default("medium") // default priority
+  escalateAfterHours  Int?      // hours after creation to escalate
+  emailNotify         Boolean   @default(false) // send email on creation?
+  config              Json?     // extra type-specific config
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([taskType])
+  @@index([userId])
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String    // recipient
+  taskId      String?   // linked task
+  type        String    // task_created, task_overdue, task_escalated, task_completed
+  title       String
+  message     String?
+  actionUrl   String?
+  read        Boolean   @default(false)
+  readAt      DateTime?
+  emailSent   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task        Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@index([taskId])
 }
 
 model Contact {

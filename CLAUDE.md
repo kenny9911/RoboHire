@@ -67,7 +67,9 @@ Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API p
 
 **CRM Module** — `routes/contacts.ts` provides CRUD for Contacts and Companies. Contacts have types (client, hiring_manager, vendor, reference) and link to companies. Uses `getVisibilityScope()` for team-scoped access.
 
-**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`, `routes/interviews.ts` (LiveKit AI interviews), `routes/gohireInterviews.ts` (GoHire integration), `routes/dashboard.ts` (consolidated stats), `routes/agentAlex.ts` (Gemini chat/transcribe/TTS), `routes/agentAlexSessions.ts` (session CRUD), `routes/agents.ts` (recruitment agents CRUD), `routes/contacts.ts` (CRM contacts + companies).
+**Task System** — `routes/tasks.ts` provides task CRUD, notifications, and admin automation rule management. `services/TaskGeneratorService.ts` creates tasks from recruitment events (interview completed, matching done, job published, etc.) with 15 task types across 5 categories. Agent tasks auto-execute via `services/TaskExecutorService.ts`; human tasks surface in the inbox. `services/NotificationService.ts` handles in-app notifications and email alerts. Tasks are integrated into `interviews.ts`, `jobs.ts`, `matching.ts`, and `InstantSearchMatchService.ts` via event hooks.
+
+**Routes:** `routes/api.ts` (core AI endpoints under `/api/v1`), `routes/auth.ts`, `routes/hiring.ts`, `routes/hiringSessions.ts`, `routes/hiringChat.ts`, `routes/apiKeys.ts`, `routes/usage.ts`, `routes/checkout.ts` (Stripe), `routes/demo.ts`, `routes/jobs.ts`, `routes/ats.ts`, `routes/matching.ts`, `routes/interviews.ts` (LiveKit AI interviews), `routes/gohireInterviews.ts` (GoHire integration), `routes/dashboard.ts` (consolidated stats), `routes/agentAlex.ts` (Gemini chat/transcribe/TTS), `routes/agentAlexSessions.ts` (session CRUD), `routes/agents.ts` (recruitment agents CRUD), `routes/contacts.ts` (CRM contacts + companies), `routes/tasks.ts` (task management + notifications + admin automation rules).
 
 **Request audit & analytics** — `middleware/requestAudit.ts` automatically logs every `/api/` request to `ApiRequestLog` after response completion, capturing tokens, cost, duration, and LLM call details. `lib/requestClassification.ts` maps URL paths to module names (e.g. `resume_parse`, `smart_matching`) for analytics grouping. For batch operations (e.g. auto-match processing multiple resumes), set `req.skipAudit = true` and create per-unit `ApiRequestLog` entries manually to get accurate per-item usage counts.
 
@@ -98,7 +100,7 @@ Verify changes manually: smoke test login/auth restore, `/agent-alex`, one API p
 
 ### Database
 
-PostgreSQL with Prisma ORM. Schema at `backend/prisma/schema.prisma`. Key models: User, Session, HiringRequest, Candidate, HiringSession, ApiKey, ApiUsageRecord, ApiRequestLog, LLMCallLog, ResumeJobFit, Interview, GoHireInterview, MatchingBatchRun, MatchingSession, Contact, Company. `ApiRequestLog` is the source of truth for usage analytics (tokens, cost, duration per API call). `LLMCallLog` stores individual LLM invocations linked to their parent request. User model tracks subscription tier, Stripe IDs, and usage counters. Resume model stores `contentHash` for dedup, `parsedData` (JSON) for structured parse, and `summary`/`highlight` for AI-generated pitch text. `MatchingBatchRun` tracks batch orchestration jobs with per-task progress counters; each `MatchingSession` can link to a batch run via `batchRunId`.
+PostgreSQL with Prisma ORM. Schema at `backend/prisma/schema.prisma`. Key models: User, Session, HiringRequest, Candidate, HiringSession, ApiKey, ApiUsageRecord, ApiRequestLog, LLMCallLog, ResumeJobFit, Interview, GoHireInterview, GoHireImportBatch, MatchingBatchRun, MatchingSession, Contact, Company, Task, TaskAutomationRule, Notification. `GoHireInterview` now has FK links to User (candidate + recruiter), Resume, and Job, populated during CSV import pipeline. `GoHireImportBatch` tracks import batch progress across the two-phase pipeline (sync Phase 1 + async Phase 2 resume processing). `ApiRequestLog` is the source of truth for usage analytics (tokens, cost, duration per API call). `LLMCallLog` stores individual LLM invocations linked to their parent request. User model tracks subscription tier, Stripe IDs, and usage counters. Resume model stores `contentHash` for dedup, `parsedData` (JSON) for structured parse, and `summary`/`highlight` for AI-generated pitch text. `MatchingBatchRun` tracks batch orchestration jobs with per-task progress counters; each `MatchingSession` can link to a batch run via `batchRunId`. `Task` tracks auto-generated and manual tasks with 15 types (evaluate_interview, review_matches, publish_job, etc.), priority/SLA/escalation, linked to Job/Resume/Interview. `TaskAutomationRule` stores per-type config (enabled, SLA hours, auto-execute, email notify). `Notification` stores in-app notification records linked to tasks.
 
 ### Deployment
 
@@ -127,6 +129,8 @@ Copy `.env.example` to `.env` at repo root. Key variable groups: `LLM_PROVIDER`/
 | Resume parse cache | `backend/src/services/ResumeParsingCache.ts` |
 | AI interviews (LiveKit) | `backend/src/routes/interviews.ts` |
 | GoHire integration | `backend/src/routes/gohireInterviews.ts` |
+| GoHire import pipeline | `backend/src/services/GoHireImportService.ts` |
+| Import utilities | `backend/src/utils/salaryParser.ts`, `jobTitleNormalizer.ts`, `preferencesExtractor.ts`, `concurrency.ts` |
 | Dashboard stats | `backend/src/routes/dashboard.ts` |
 | Smart matching | `frontend/src/pages/product/SmartMatching.tsx` |
 | Talent pool | `frontend/src/pages/product/TalentHub.tsx` |
@@ -146,6 +150,13 @@ Copy `.env.example` to `.env` at repo root. Key variable groups: `LLM_PROVIDER`/
 | Start Hiring (legacy) | `frontend/src/pages/StartHiring.tsx` (redirects to `/agent-alex`) |
 | Batch matching orchestrator | `backend/src/services/MatchOrchestratorService.ts` |
 | CRM contacts + companies | `backend/src/routes/contacts.ts` |
+| Task system routes | `backend/src/routes/tasks.ts` |
+| Task generator service | `backend/src/services/TaskGeneratorService.ts` |
+| Task executor service | `backend/src/services/TaskExecutorService.ts` |
+| Notification service | `backend/src/services/NotificationService.ts` |
+| Tasks page (frontend) | `frontend/src/pages/product/Tasks.tsx` |
+| Admin task automation | `frontend/src/pages/AdminTaskAutomationTab.tsx` |
+| Task system design doc | `docs/tasks-system-design.md` |
 | Team visibility | `backend/src/lib/teamVisibility.ts` |
 | Design system reference | `DESIGN.md` |
 | Bug fix workflow | `BUG_FIX_WORKFLOW.md` |

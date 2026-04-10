@@ -13,6 +13,7 @@ import { languageService } from '../services/LanguageService.js';
 import type { ParsedJD, RequirementsDetailed, QualificationsDetailed } from '../types/index.js';
 import { getVisibilityScope, buildUserIdFilter, buildAdminOverrideFilter } from '../lib/teamVisibility.js';
 import { buildHiringRequestAccessWhere } from '../lib/hiringRequestVisibility.js';
+import { taskGenerator } from '../services/TaskGeneratorService.js';
 import '../types/auth.js';
 
 /**
@@ -875,6 +876,26 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
+    // Auto-create a HiringRequest if none provided (e.g. Agent Alex flow)
+    let resolvedHiringRequestId = fields.hiringRequestId || null;
+    if (!resolvedHiringRequestId && req.body.autoCreateHiringRequest !== false) {
+      const hr = await prisma.hiringRequest.create({
+        data: {
+          userId,
+          title: fields.title.trim(),
+          requirements: [
+            fields.description,
+            fields.qualifications,
+            fields.hardRequirements,
+          ].filter(Boolean).join('\n\n') || fields.title.trim(),
+          jobDescription: fields.description?.trim() || null,
+          status: 'active',
+        },
+      });
+      resolvedHiringRequestId = hr.id;
+      logger.info('JOBS', 'Auto-created HiringRequest for job', { hiringRequestId: hr.id }, requestId);
+    }
+
     const job = await prisma.job.create({
       data: {
         userId,
@@ -913,12 +934,20 @@ router.post('/', requireAuth, async (req, res) => {
         interviewDuration: fields.interviewDuration ? parseInt(fields.interviewDuration, 10) : 30,
         interviewRequirements: fields.interviewRequirements?.trim() || null,
         evaluationRules: fields.evaluationRules?.trim() || null,
-        hiringRequestId: fields.hiringRequestId || null,
+        hiringRequestId: resolvedHiringRequestId,
         status: fields.status === 'open' ? 'open' : 'draft',
       },
     });
 
     logger.info('JOBS', 'Job created', { jobId: job.id, title: job.title }, requestId);
+
+    // Task generation: publish_job if draft, run_matching if already open
+    if (job.status === 'draft') {
+      void taskGenerator.onJobCreated({ id: job.id, userId: job.userId, title: job.title, status: job.status });
+    } else if (job.status === 'open') {
+      void taskGenerator.onJobPublished({ id: job.id, userId: job.userId, title: job.title });
+    }
+
     res.status(201).json({ success: true, data: job });
   } catch (error) {
     logger.error('JOBS', 'Failed to create job', { error: error instanceof Error ? error.message : String(error) }, requestId);
@@ -984,6 +1013,11 @@ router.patch('/:id', requireAuth, async (req, res) => {
       where: { id: req.params.id },
       data,
     });
+
+    // Task generation: if just published (status changed to open)
+    if (fields.status === 'open' && existing.status !== 'open') {
+      void taskGenerator.onJobPublished({ id: job.id, userId: job.userId, title: job.title });
+    }
 
     res.json({ success: true, data: job });
   } catch (error) {

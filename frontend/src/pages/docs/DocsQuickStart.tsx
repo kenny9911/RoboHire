@@ -110,7 +110,7 @@ print(result['data']['matchScore'])  # e.g., 85`,
         </p>
         <div className="ml-11">
           <Link
-            to="/dashboard/api-keys"
+            to="/product/profile/api-keys"
             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium rounded-full shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5"
           >
             {t('docs.quickStart.step1.cta', 'Get API Key')}

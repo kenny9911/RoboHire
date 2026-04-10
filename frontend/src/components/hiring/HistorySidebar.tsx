@@ -276,7 +276,7 @@ export default function HistorySidebar({
                     hiringRequests.slice(0, 10).map((request) => (
                       <Link
                         key={request.id}
-                        to={`/dashboard/hiring/${request.id}`}
+                        to={`/product/hiring/${request.id}`}
                         className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         <span

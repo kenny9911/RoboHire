@@ -6,6 +6,7 @@ import { requireAdmin } from '../middleware/admin.js';
 import prisma from '../lib/prisma.js';
 import { clearLimitsCache, getPlanLimits, resolveUserUsageLimitsFromPlan } from '../middleware/usageMeter.js';
 import { updatePriceId } from './checkout.js';
+import adminMonitorRouter from './adminMonitor.js';
 import {
   PRICING_CURRENCIES,
   PRICING_DISCOUNT_COUPON_KEY,
@@ -29,6 +30,7 @@ const router = Router();
 
 // All admin routes require auth + admin role
 router.use(requireAuth, requireAdmin);
+router.use('/monitor', adminMonitorRouter);
 
 type UsageBucket = 'hour' | 'day' | 'week';
 
@@ -1138,6 +1140,63 @@ router.get('/config', async (_req, res) => {
 });
 
 /**
+ * GET /api/v1/admin/config/agent-alex
+ * Get Agent Alex configuration (provider, web search)
+ */
+router.get('/config/agent-alex', async (_req, res) => {
+  try {
+    const configs = await prisma.appConfig.findMany({
+      where: { key: { in: ['agent_alex_provider', 'agent_alex_web_search_enabled'] } },
+    });
+    const configMap = Object.fromEntries(configs.map((c) => [c.key, c.value]));
+    res.json({
+      success: true,
+      data: {
+        provider: configMap['agent_alex_provider'] || process.env.AGENT_ALEX_PROVIDER || 'gemini',
+        webSearchEnabled: (configMap['agent_alex_web_search_enabled'] ?? process.env.AGENT_ALEX_WEB_SEARCH_ENABLED) === 'true',
+      },
+    });
+  } catch (error) {
+    console.error('Admin agent-alex config error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load Agent Alex config' });
+  }
+});
+
+/**
+ * POST /api/v1/admin/config/agent-alex
+ * Update Agent Alex configuration
+ * Body: { provider?: 'claude' | 'gemini', webSearchEnabled?: boolean }
+ */
+router.post('/config/agent-alex', async (req, res) => {
+  try {
+    const { provider, webSearchEnabled } = req.body as { provider?: string; webSearchEnabled?: boolean };
+
+    if (provider && !['claude', 'gemini'].includes(provider)) {
+      return res.status(400).json({ success: false, error: 'Invalid provider. Must be "claude" or "gemini".' });
+    }
+
+    const updates: Array<{ key: string; value: string }> = [];
+    if (provider) updates.push({ key: 'agent_alex_provider', value: provider });
+    if (typeof webSearchEnabled === 'boolean') {
+      updates.push({ key: 'agent_alex_web_search_enabled', value: String(webSearchEnabled) });
+    }
+
+    for (const { key, value } of updates) {
+      await prisma.appConfig.upsert({
+        where: { key },
+        update: { value, updatedBy: req.user?.id || null },
+        create: { key, value, updatedBy: req.user?.id || null },
+      });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Admin agent-alex config update error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update Agent Alex config' });
+  }
+});
+
+/**
  * POST /api/v1/admin/config/pricing
  * Update subscription prices and discount settings.
  * Body:
@@ -1660,8 +1719,8 @@ router.post('/users/:userId/enable', async (req, res) => {
 
 /**
  * POST /api/v1/admin/users/:userId/set-role
- * Change a user's role (admin/user)
- * Body: { role: 'admin' | 'user', reason: string }
+ * Change a user's role (admin/internal/user)
+ * Body: { role: 'admin' | 'internal' | 'user', reason: string }
  */
 router.post('/users/:userId/set-role', async (req, res) => {
   try {

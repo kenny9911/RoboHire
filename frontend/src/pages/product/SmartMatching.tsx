@@ -1123,8 +1123,9 @@ export default function SmartMatching() {
         }
         setSessionRefreshTrigger((prev) => prev + 1);
       }
-    } catch {
-      setError(t('product.matching.errorGeneric', 'Matching failed. Please try again.'));
+    } catch (err: any) {
+      const msg = err?.message || t('product.matching.errorGeneric', 'Matching failed. Please try again.');
+      setError(msg);
     } finally {
       setRunning(false);
     }

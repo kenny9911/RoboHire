@@ -52,9 +52,13 @@ export interface HistoryMessage {
 
 export type ConfigReason = "missing_api_key" | "placeholder_api_key";
 
+export type AgentAlexProvider = 'claude' | 'gemini';
+
 export interface AppConfigStatus {
   configured: boolean;
   reason?: ConfigReason;
+  provider?: AgentAlexProvider;
+  webSearchEnabled?: boolean;
 }
 
 export interface SearchCandidate {
@@ -75,6 +79,8 @@ export type ChatStreamEvent =
   | { type: "search-progress"; data: { searchId: string; completed: number; total: number } }
   | { type: "search-result"; data: { searchId: string; candidate: SearchCandidate } }
   | { type: "search-completed"; data: { searchId: string; agentId: string; totalMatched: number; totalScreened: number; topCandidates: SearchCandidate[] } }
+  | { type: "web-search-started"; data: { query: string } }
+  | { type: "web-search-completed"; data: { query: string; resultCount: number } }
   | { type: "done" }
   | { type: "error"; code: string; message: string };
 

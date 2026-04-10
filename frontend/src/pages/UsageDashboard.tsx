@@ -461,7 +461,7 @@ export default function UsageDashboard() {
                               )}
                               <td className="py-2 text-right">
                                 <button
-                                  onClick={() => navigate(`/dashboard/usage/calls/${call.id}`)}
+                                  onClick={() => navigate(`/product/profile/usage/calls/${call.id}`)}
                                   className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                                 >
                                   {t('usage.callHistory.view', 'View')}

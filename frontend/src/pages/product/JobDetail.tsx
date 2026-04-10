@@ -25,6 +25,7 @@ import {
   Sparkles,
   Pencil,
   Lightbulb,
+  RotateCcw,
 } from 'lucide-react';
 import IntelligenceReportPanel from '../../components/IntelligenceReportPanel';
 import CandidatePanel from '../../components/CandidatePanel';
@@ -376,6 +377,15 @@ export default function JobDetail() {
     } catch { /* silent */ } finally { setClosing(false); }
   }, [job, closing]);
 
+  const handleReopenJob = useCallback(async () => {
+    if (!job || closing) return;
+    setClosing(true);
+    try {
+      const res = await axios.patch(`/api/v1/jobs/${job.id}`, { status: 'open' });
+      if (res.data.success) setJob(res.data.data);
+    } catch { /* silent */ } finally { setClosing(false); }
+  }, [job, closing]);
+
   // ---- Derived data ----
   const locationText = useMemo(() => {
     if (!job) return '—';
@@ -491,14 +501,25 @@ export default function JobDetail() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleCloseJob}
-              disabled={closing || job.status === 'closed'}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 transition-colors disabled:opacity-50"
-            >
-              {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-              {t('product.jobDetail.closeJob', 'Close Job')}
-            </button>
+            {job.status === 'closed' ? (
+              <button
+                onClick={handleReopenJob}
+                disabled={closing}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-600 shadow-sm hover:bg-emerald-50 transition-colors disabled:opacity-50"
+              >
+                {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                {t('product.jobDetail.reopenJob', 'Reopen Job')}
+              </button>
+            ) : (
+              <button
+                onClick={handleCloseJob}
+                disabled={closing}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 transition-colors disabled:opacity-50"
+              >
+                {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                {t('product.jobDetail.closeJob', 'Close Job')}
+              </button>
+            )}
           </div>
         </div>
       </div>

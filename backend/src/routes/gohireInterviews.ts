@@ -10,6 +10,7 @@ import { goHireEvaluationService } from '../services/GoHireEvaluationService.js'
 import { resumeParserService, normalizeExtractedText, convertStructuredToMarkdown } from '../services/ResumeParserService.js';
 import { documentParsingService } from '../services/DocumentParsingService.js';
 import { getVisibilityScope, VisibilityScope } from '../lib/teamVisibility.js';
+import { goHireImportService } from '../services/GoHireImportService.js';
 import OpenAI from 'openai';
 import '../types/auth.js';
 
@@ -18,8 +19,9 @@ const csvUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 
 const router = Router();
 
 /**
- * Build a recruiterEmail filter for GoHireInterview based on visibility scope.
- * GoHireInterview has no userId — we match recruiterEmail against User.email.
+ * Build a visibility filter for GoHireInterview based on user scope.
+ * Prefers the userId FK (set during import pipeline) for new records.
+ * Falls back to recruiterEmail matching for legacy records without userId.
  */
 async function buildRecruiterEmailFilter(
   scope: VisibilityScope,
@@ -45,13 +47,22 @@ async function buildRecruiterEmailFilter(
 
   if (targetUserIds.length === 0) return { recruiterEmail: '__none__' };
 
+  // Look up emails for fallback matching on legacy records without userId FK
   const users = await prisma.user.findMany({
     where: { id: { in: targetUserIds } },
     select: { email: true },
   });
   const emails = users.map((u) => u.email).filter(Boolean);
-  if (emails.length === 0) return { recruiterEmail: '__none__' };
-  return { recruiterEmail: { in: emails, mode: 'insensitive' } };
+
+  // Use OR: match either the new userId FK or the legacy recruiterEmail
+  return {
+    OR: [
+      { userId: { in: targetUserIds } },
+      ...(emails.length > 0
+        ? [{ recruiterEmail: { in: emails, mode: 'insensitive' as const }, userId: null }]
+        : []),
+    ],
+  };
 }
 
 /**
@@ -320,7 +331,8 @@ router.post('/sync-from-invite', async (req, res) => {
 
 /**
  * POST /import-csv — Import GoHire interviews from CSV file (admin only).
- * Returns { created, updated, skipped, errors } counts plus list of duplicates for confirmation.
+ * Phase 1 (sync): Creates Users, Jobs, and GoHireInterview records. Returns immediately.
+ * Phase 2 (async): Downloads and parses resumes in background. Poll via GET /import-status/:batchId.
  */
 router.post('/import-csv', requireAdmin, csvUpload.single('file'), async (req, res) => {
   const requestId = generateRequestId();
@@ -340,69 +352,51 @@ router.post('/import-csv', requireAdmin, csvUpload.single('file'), async (req, r
 
     const headers = rows[0];
     const dataRows = rows.slice(1).filter(r => r.some(cell => cell.trim()));
+    const adminUserId = req.user!.id;
 
     logger.info('GOHIRE_IMPORT', 'Starting CSV import', {
       requestId, totalRows: dataRows.length, overwrite,
     });
 
-    let created = 0;
-    let updated = 0;
-    let skipped = 0;
-    const errors: Array<{ row: number; error: string }> = [];
-    const duplicates: Array<{ row: number; gohireUserId: string; candidateName: string; interviewDatetime: string; existingId: string }> = [];
+    // Create batch record
+    const batch = await prisma.goHireImportBatch.create({
+      data: {
+        adminUserId,
+        fileName: req.file.originalname || null,
+        totalRows: dataRows.length,
+      },
+    });
 
-    for (let i = 0; i < dataRows.length; i++) {
-      const row = dataRows[i];
-      const rowNum = i + 2; // 1-indexed, header is row 1
-      try {
-        const record = mapCsvRow(headers, row);
-        if (!record.gohireUserId) {
-          errors.push({ row: rowNum, error: 'Missing gohire_user_id' });
-          continue;
-        }
+    // Phase 1 (sync): Create/link Users, Jobs, GoHireInterview records
+    const phase1Result = await goHireImportService.processPhase1Sync(
+      dataRows, headers, adminUserId, batch.id, overwrite, mapCsvRow,
+    );
 
-        // Check for existing record by gohireUserId + interviewDatetime
-        const existing = await prisma.goHireInterview.findFirst({
-          where: {
-            gohireUserId: record.gohireUserId,
-            interviewDatetime: record.interviewDatetime,
-          },
-          select: { id: true },
+    // Phase 2 (async, fire-and-forget): Download and parse resumes in background
+    const hasPendingResumes = phase1Result.resumesPending > 0;
+    if (hasPendingResumes) {
+      goHireImportService.processPhase2Async(batch.id).catch((err) => {
+        logger.error('GOHIRE_IMPORT', 'Phase 2 background processing failed', {
+          requestId, batchId: batch.id,
+          error: err instanceof Error ? err.message : String(err),
         });
-
-        if (existing) {
-          if (overwrite) {
-            await prisma.goHireInterview.update({
-              where: { id: existing.id },
-              data: record,
-            });
-            updated++;
-          } else {
-            duplicates.push({
-              row: rowNum,
-              gohireUserId: record.gohireUserId,
-              candidateName: record.candidateName,
-              interviewDatetime: record.interviewDatetime.toISOString(),
-              existingId: existing.id,
-            });
-            skipped++;
-          }
-        } else {
-          await prisma.goHireInterview.create({ data: record });
-          created++;
-        }
-      } catch (err) {
-        errors.push({ row: rowNum, error: err instanceof Error ? err.message : String(err) });
-      }
+      });
     }
 
-    logger.info('GOHIRE_IMPORT', 'CSV import completed', {
-      requestId, created, updated, skipped, errors: errors.length, duplicates: duplicates.length,
+    logger.info('GOHIRE_IMPORT', 'Phase 1 completed, returning response', {
+      requestId, batchId: batch.id,
+      created: phase1Result.created,
+      updated: phase1Result.updated,
+      resumeProcessingStarted: hasPendingResumes,
     });
 
     res.json({
       success: true,
-      data: { created, updated, skipped, errors, duplicates, total: dataRows.length },
+      data: {
+        ...phase1Result,
+        batchId: batch.id,
+        resumeProcessingStarted: hasPendingResumes,
+      },
     });
   } catch (error) {
     logger.error('GOHIRE_IMPORT', 'CSV import failed', {
@@ -410,6 +404,162 @@ router.post('/import-csv', requireAdmin, csvUpload.single('file'), async (req, r
       error: error instanceof Error ? error.message : String(error),
     });
     res.status(500).json({ success: false, error: 'Failed to import CSV' });
+  }
+});
+
+/**
+ * GET /import-status/:batchId — Poll import batch progress (admin only).
+ * Returns batch stats + per-interview resume processing status breakdown.
+ */
+router.get('/import-status/:batchId', requireAdmin, async (req, res) => {
+  try {
+    const batch = await prisma.goHireImportBatch.findUnique({
+      where: { id: req.params.batchId },
+    });
+    if (!batch) {
+      return res.status(404).json({ success: false, error: 'Import batch not found' });
+    }
+
+    const statusBreakdown = await prisma.goHireInterview.groupBy({
+      by: ['resumeProcessingStatus'],
+      where: { importBatchId: req.params.batchId },
+      _count: true,
+    });
+
+    // Pull in-memory runtime state (currently processing items, stop flag)
+    const runtime = goHireImportService.getBackfillRuntimeState(req.params.batchId);
+
+    res.json({
+      success: true,
+      data: {
+        batch,
+        statusBreakdown: statusBreakdown.map((s) => ({
+          status: s.resumeProcessingStatus,
+          count: s._count,
+        })),
+        runtime,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get import status' });
+  }
+});
+
+/**
+ * POST /backfill-stop/:batchId — Request graceful stop of a running backfill (admin only).
+ * Currently in-flight resumes finish, but no new ones start.
+ */
+router.post('/backfill-stop/:batchId', requireAdmin, async (req, res) => {
+  try {
+    const requested = goHireImportService.requestBackfillStop(req.params.batchId);
+    if (!requested) {
+      return res.status(404).json({ success: false, error: 'Batch is not currently running' });
+    }
+    res.json({ success: true, data: { stopRequested: true } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to stop backfill' });
+  }
+});
+
+/**
+ * GET /missing-resumes — READ-ONLY scan: list all interviews missing a Resume in TalentHub,
+ * enriched with discovery info (does candidate user exist? does resume exist?) so admin can
+ * preview what would happen before any DB writes.
+ */
+router.get('/missing-resumes', requireAdmin, async (_req, res) => {
+  const requestId = generateRequestId();
+  try {
+    const results = await goHireImportService.scanMissingResumes();
+    res.json({
+      success: true,
+      data: {
+        total: results.length,
+        items: results,
+      },
+    });
+  } catch (error) {
+    logger.error('GOHIRE_BACKFILL', 'Failed to scan missing resumes', {
+      requestId, error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to scan missing resumes' });
+  }
+});
+
+/**
+ * POST /create-selected-resumes — Process only the selected interview IDs.
+ * SAFETY: re-validates each ID still has resumeId === null before processing,
+ * so existing resumes are NEVER overwritten.
+ */
+router.post('/create-selected-resumes', requireAdmin, async (req, res) => {
+  const requestId = generateRequestId();
+  try {
+    const adminUserId = req.user!.id;
+    const { interviewIds } = req.body as { interviewIds?: string[] };
+
+    if (!Array.isArray(interviewIds) || interviewIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'interviewIds array is required' });
+    }
+    if (interviewIds.length > 1000) {
+      return res.status(400).json({ success: false, error: 'Maximum 1000 interviews per batch' });
+    }
+
+    const { batchId, totalToProcess } = await goHireImportService.backfillMissingResumes(adminUserId, interviewIds);
+
+    if (totalToProcess === 0) {
+      return res.json({
+        success: true,
+        data: {
+          message: 'None of the selected interviews need processing (all already have resumes)',
+          totalToProcess: 0,
+        },
+      });
+    }
+
+    logger.info('GOHIRE_BACKFILL', 'Selected resume creation started', {
+      requestId, batchId, totalToProcess, requested: interviewIds.length,
+    });
+
+    res.json({ success: true, data: { batchId, totalToProcess, requested: interviewIds.length } });
+  } catch (error) {
+    logger.error('GOHIRE_BACKFILL', 'Failed to start selective creation', {
+      requestId, error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to start selective resume creation' });
+  }
+});
+
+/**
+ * POST /backfill-resumes — Scan all GoHireInterview records without a linked Resume,
+ * download+parse their resumes, and create Resume records in TalentHub (admin only).
+ * Returns a batchId for progress polling via GET /import-status/:batchId.
+ */
+router.post('/backfill-resumes', requireAdmin, async (req, res) => {
+  const requestId = generateRequestId();
+  try {
+    const adminUserId = req.user!.id;
+
+    const { batchId, totalToProcess } = await goHireImportService.backfillMissingResumes(adminUserId);
+
+    if (totalToProcess === 0) {
+      return res.json({
+        success: true,
+        data: { message: 'All interviews already have linked resumes', totalToProcess: 0 },
+      });
+    }
+
+    logger.info('GOHIRE_BACKFILL', 'Resume backfill started', {
+      requestId, batchId, totalToProcess,
+    });
+
+    res.json({
+      success: true,
+      data: { batchId, totalToProcess },
+    });
+  } catch (error) {
+    logger.error('GOHIRE_BACKFILL', 'Failed to start backfill', {
+      requestId, error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ success: false, error: 'Failed to start resume backfill' });
   }
 });
 
@@ -687,6 +837,12 @@ router.get('/', async (req, res) => {
           invitedAt: true,
           evaluationScore: true,
           evaluationVerdict: true,
+          candidateUserId: true,
+          userId: true,
+          resumeId: true,
+          jobId: true,
+          resumeProcessingStatus: true,
+          importBatchId: true,
           createdAt: true,
           updatedAt: true,
         },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -353,10 +353,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { id: requestId } = useParams();
-  const location = useLocation();
-  const isProductContext = location.pathname.startsWith('/product');
-  const listPath = isProductContext ? '/product/hiring' : '/dashboard';
-  const detailPath = (id: string) => isProductContext ? `/product/hiring/${id}` : `/dashboard/requests/${id}`;
+  const listPath = '/product/hiring';
+  const detailPath = (id: string) => `/product/hiring/${id}`;
 
   const [hiringRequests, setHiringRequests] = useState<HiringRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -1025,7 +1023,7 @@ export default function Dashboard() {
               </Link>
 
               <Link
-                to="/dashboard/api-keys"
+                to="/product/profile/api-keys"
                 className="landing-gradient-stroke bg-white rounded-[28px] p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300"
               >
                 <div className="flex items-center gap-4">
@@ -1042,7 +1040,7 @@ export default function Dashboard() {
               </Link>
 
               <Link
-                to="/dashboard/usage"
+                to="/product/profile/usage"
                 className="landing-gradient-stroke bg-white rounded-[28px] p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300"
               >
                 <div className="flex items-center gap-4">
@@ -1063,7 +1061,7 @@ export default function Dashboard() {
               </Link>
 
               <Link
-                to="/dashboard/stats"
+                to="/product"
                 className="landing-gradient-stroke bg-white rounded-[28px] p-5 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.75)] hover:-translate-y-1 hover:shadow-[0_28px_52px_-36px_rgba(15,23,42,0.6)] transition-all duration-300"
               >
                 <div className="flex items-center gap-4">

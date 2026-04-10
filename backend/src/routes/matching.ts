@@ -17,6 +17,7 @@ import {
 import { getPreferredResumeEmail } from '../utils/resumeContact.js';
 import { universityTierService } from '../services/UniversityTierService.js';
 import type { TieredResume } from '../agents/skills/types.js';
+import { taskGenerator } from '../services/TaskGeneratorService.js';
 import '../types/auth.js';
 
 const router = Router();
@@ -421,6 +422,22 @@ async function finalizeBatchSession(
       topGrade: runtime.bestGrade,
     },
   });
+
+  // Task generation: review matches after session completes
+  if (status === 'completed' && resolvedMatches > 0) {
+    try {
+      const session = await prisma.matchingSession.findUnique({
+        where: { id: sessionId },
+        include: { job: { select: { title: true } } },
+      });
+      if (session) {
+        void taskGenerator.onMatchingCompleted(
+          { id: sessionId, userId: session.userId, jobId: session.jobId, totalMatched: resolvedMatches, avgScore, topGrade: runtime.bestGrade },
+          session.job?.title,
+        );
+      }
+    } catch { /* non-critical */ }
+  }
 }
 
 /**
@@ -762,6 +779,15 @@ router.post('/run', requireAuth, async (req, res) => {
         if (grade && (bestGrade === null || (gradeRank[grade] ?? 0) > (gradeRank[bestGrade] ?? 0))) {
           bestGrade = grade;
         }
+
+        // Task generation: shortlist high-grade matches (A+ or A)
+        if (grade && ['A+', 'A'].includes(grade)) {
+          void taskGenerator.onHighMatchFound(
+            { jobId, resumeId: taskResult.resumeId, score, grade },
+            userId, taskResult.resumeName, job.title,
+          );
+        }
+
         results.push(result);
       } catch (upsertErr: any) {
         logger.error('MATCHING', `Failed to upsert match for ${taskResult.resumeId}`, { requestId, error: upsertErr.message });
@@ -858,14 +884,19 @@ router.post('/run', requireAuth, async (req, res) => {
         });
       }
     }
+    const errMsg = err?.message || 'Failed to run matching';
+    const userError = /quota|rate.?limit|unauthorized|forbidden|api.?key/i.test(errMsg)
+      ? errMsg
+      : 'Failed to run matching';
+
     if (wantsStream && !res.headersSent) {
-      return res.status(500).json({ success: false, error: 'Failed to run matching' });
+      return res.status(500).json({ success: false, error: userError });
     }
     if (wantsStream) {
-      sendSSE('error', { error: 'Failed to run matching' });
+      sendSSE('error', { error: userError });
       return res.end();
     }
-    res.status(500).json({ success: false, error: 'Failed to run matching' });
+    res.status(500).json({ success: false, error: userError });
   }
 });
 
@@ -1560,14 +1591,19 @@ router.post('/run-batch', requireAuth, async (req, res) => {
       }).catch(() => undefined);
     }
 
+    const errMsg = err?.message || 'Failed to run batch matching';
+    const userError = /quota|rate.?limit|unauthorized|forbidden|api.?key/i.test(errMsg)
+      ? errMsg
+      : 'Failed to run batch matching';
+
     if (wantsStream && !res.headersSent) {
-      return res.status(500).json({ success: false, error: 'Failed to run batch matching' });
+      return res.status(500).json({ success: false, error: userError });
     }
     if (wantsStream) {
-      sendSSE('error', { error: 'Failed to run batch matching' });
+      sendSSE('error', { error: userError });
       return res.end();
     }
-    return res.status(500).json({ success: false, error: 'Failed to run batch matching' });
+    return res.status(500).json({ success: false, error: userError });
   }
 });
 
@@ -2028,8 +2064,21 @@ router.patch('/results/:matchId', requireAuth, async (req, res) => {
         resume: {
           select: { id: true, name: true, email: true, currentRole: true },
         },
+        job: {
+          select: { id: true, title: true, hiringRequestId: true },
+        },
       },
     });
+
+    // Task generation: send interview invite when candidate is shortlisted
+    if (status === 'shortlisted' && updated.resume && updated.job) {
+      void taskGenerator.onCandidateShortlisted(
+        { resumeId: updated.resume.id, hiringRequestId: updated.job.hiringRequestId || '' },
+        userId,
+        updated.resume.name,
+        updated.job.title,
+      );
+    }
 
     res.json({ success: true, data: updated });
   } catch (err: any) {

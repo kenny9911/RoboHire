@@ -155,7 +155,7 @@ export default function Navbar() {
               <Link
                 to="/login"
                 state={{ from: { pathname: '/agent-alex' } }}
-                className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-16px_rgba(37,99,235,0.9)]"
+                className="rounded-full bg-gradient-to-r from-[#3B84E2] via-[#2F63E1] to-[#9154FD] px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_-16px_rgba(37,99,235,0.9)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-16px_rgba(37,99,235,0.9)]"
               >
                 {t('landing.nav.getStarted', 'Get Started')}
               </Link>
@@ -246,7 +246,7 @@ export default function Navbar() {
               <Link
                 to="/product"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
+                className="rounded-xl bg-gradient-to-r from-[#3B84E2] via-[#2F63E1] to-[#9154FD] px-4 py-2.5 text-center text-sm font-semibold text-white"
               >
                 {t('landing.nav.dashboard', 'Dashboard')}
               </Link>
@@ -263,7 +263,7 @@ export default function Navbar() {
                   to="/login"
                   state={{ from: { pathname: '/agent-alex' } }}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
+                  className="rounded-xl bg-gradient-to-r from-[#3B84E2] via-[#2F63E1] to-[#9154FD] px-4 py-2.5 text-center text-sm font-semibold text-white"
                 >
                   {t('landing.nav.getStarted', 'Get Started')}
                 </Link>

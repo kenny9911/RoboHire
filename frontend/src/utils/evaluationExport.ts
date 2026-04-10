@@ -2,12 +2,22 @@
  * Evaluation export utilities — Markdown, Word (HTML), and download helpers.
  */
 
+import i18next from 'i18next';
+
 interface ExportMeta {
   candidateName: string;
   jobTitle?: string | null;
   interviewDate?: string | null;
   score?: number | null;
   verdict?: string | null;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Export label translations                                                  */
+/* -------------------------------------------------------------------------- */
+
+function L(key: string, fallback: string): string {
+  return i18next.t(`evaluationExport.${key}`, fallback);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -52,48 +62,48 @@ export function generateEvaluationMarkdown(data: any, meta: ExportMeta): string 
   const lines: string[] = [];
   const push = (...l: string[]) => lines.push(...l, '');
 
-  push(`# Interview Evaluation Report`);
-  push(`**Candidate:** ${meta.candidateName}`);
-  if (meta.jobTitle) push(`**Position:** ${meta.jobTitle}`);
-  if (meta.interviewDate) push(`**Date:** ${new Date(meta.interviewDate).toLocaleDateString()}`);
-  if (meta.score != null) push(`**Score:** ${meta.score}/100`);
-  if (meta.verdict) push(`**Verdict:** ${formatVerdict(meta.verdict)}`);
+  push(`# ${L('title', 'Interview Evaluation Report')}`);
+  push(`**${L('candidate', 'Candidate')}:** ${meta.candidateName}`);
+  if (meta.jobTitle) push(`**${L('position', 'Position')}:** ${meta.jobTitle}`);
+  if (meta.interviewDate) push(`**${L('date', 'Date')}:** ${new Date(meta.interviewDate).toLocaleDateString()}`);
+  if (meta.score != null) push(`**${L('score', 'Score')}:** ${meta.score}/100`);
+  if (meta.verdict) push(`**${L('verdict', 'Verdict')}:** ${formatVerdict(meta.verdict)}`);
   push('---');
 
   if (data.summary) {
-    push(`## Summary`, data.summary);
+    push(`## ${L('summary', 'Summary')}`, data.summary);
   }
 
   if (data.strengths?.length) {
-    push(`## Strengths`, ...renderArraySection(data.strengths));
+    push(`## ${L('strengths', 'Strengths')}`, ...renderArraySection(data.strengths));
   }
 
   if (data.weaknesses?.length) {
-    push(`## Weaknesses`, ...renderArraySection(data.weaknesses));
+    push(`## ${L('weaknesses', 'Weaknesses')}`, ...renderArraySection(data.weaknesses));
   }
 
   if (data.recommendation) {
-    push(`## Recommendation`, data.recommendation);
+    push(`## ${L('recommendation', 'Recommendation')}`, data.recommendation);
   }
 
   // Must-Have Analysis
   if (data.mustHaveAnalysis) {
     const mha = data.mustHaveAnalysis;
-    push(`## Must-Have Requirements Analysis`);
-    push(`**Pass Rate:** ${mha.passRate || '-'}  |  **Must-Have Score:** ${mha.mustHaveScore ?? '-'}/100`);
-    if (mha.disqualified) push(`**DISQUALIFIED** — ${(mha.disqualificationReasons || []).join('; ')}`);
+    push(`## ${L('mustHaveAnalysis', 'Must-Have Requirements Analysis')}`);
+    push(`**${L('passRate', 'Pass Rate')}:** ${mha.passRate || '-'}  |  **${L('mustHaveScore', 'Must-Have Score')}:** ${mha.mustHaveScore ?? '-'}/100`);
+    if (mha.disqualified) push(`**${L('disqualified', 'DISQUALIFIED')}** — ${(mha.disqualificationReasons || []).join('; ')}`);
     if (mha.assessment) push(mha.assessment);
 
     if (mha.interviewVerification?.verified?.length) {
-      push(`### Verified Requirements`);
+      push(`### ${L('verifiedRequirements', 'Verified Requirements')}`);
       for (const v of mha.interviewVerification.verified) {
-        push(`- **${v.requirement}** — ${v.evidence} (confidence: ${v.confidenceLevel})`);
+        push(`- **${v.requirement}** — ${v.evidence} (${L('confidence', 'confidence')}: ${v.confidenceLevel})`);
       }
     }
     if (mha.interviewVerification?.failed?.length) {
-      push(`### Failed Requirements`);
+      push(`### ${L('failedRequirements', 'Failed Requirements')}`);
       for (const f of mha.interviewVerification.failed) {
-        push(`- **${f.requirement}** — ${f.reason} (severity: ${f.severity})`);
+        push(`- **${f.requirement}** — ${f.reason} (${L('severity', 'severity')}: ${f.severity})`);
       }
     }
   }
@@ -101,83 +111,83 @@ export function generateEvaluationMarkdown(data: any, meta: ExportMeta): string 
   // Technical Analysis
   if (data.technicalAnalysis) {
     const ta = data.technicalAnalysis;
-    push(`## Technical Analysis`);
-    push(`**Depth Rating:** ${ta.depthRating || '-'}`);
+    push(`## ${L('technicalAnalysis', 'Technical Analysis')}`);
+    push(`**${L('depthRating', 'Depth Rating')}:** ${ta.depthRating || '-'}`);
     if (ta.summary) push(ta.summary);
     if (ta.details?.length) push(...renderArraySection(ta.details));
-    if (ta.provenSkills?.length) push(`**Proven Skills:** ${ta.provenSkills.join(', ')}`);
-    if (ta.claimedButUnverified?.length) push(`**Claimed but Unverified:** ${ta.claimedButUnverified.join(', ')}`);
+    if (ta.provenSkills?.length) push(`**${L('provenSkills', 'Proven Skills')}:** ${ta.provenSkills.join(', ')}`);
+    if (ta.claimedButUnverified?.length) push(`**${L('claimedUnverified', 'Claimed but Unverified')}:** ${ta.claimedButUnverified.join(', ')}`);
   }
 
   // JD Match
   if (data.jdMatch) {
     const jd = data.jdMatch;
-    push(`## Job Description Match`);
+    push(`## ${L('jdMatch', 'Job Description Match')}`);
     if (jd.summary) push(jd.summary);
     if (jd.requirements?.length) {
-      push(`### Requirements`);
+      push(`### ${L('requirements', 'Requirements')}`);
       for (const r of jd.requirements) {
         push(`- **${r.requirement}** — ${r.matchLevel} (${r.score}/100): ${r.explanation}`);
       }
     }
-    if (jd.extraSkillsFound?.length) push(`**Extra Skills Found:** ${jd.extraSkillsFound.join(', ')}`);
+    if (jd.extraSkillsFound?.length) push(`**${L('extraSkills', 'Extra Skills Found')}:** ${jd.extraSkillsFound.join(', ')}`);
   }
 
   // Behavioral Analysis
   if (data.behavioralAnalysis) {
     const ba = data.behavioralAnalysis;
-    push(`## Behavioral Analysis`);
-    push(`**Compatibility:** ${ba.compatibility || '-'}`);
+    push(`## ${L('behavioralAnalysis', 'Behavioral Analysis')}`);
+    push(`**${L('compatibility', 'Compatibility')}:** ${ba.compatibility || '-'}`);
     if (ba.summary) push(ba.summary);
     if (ba.details?.length) push(...renderArraySection(ba.details));
   }
 
   // Q&A Assessment
   if (data.questionAnswerAssessment?.length) {
-    push(`## Question & Answer Assessment`);
+    push(`## ${L('qaAssessment', 'Question & Answer Assessment')}`);
     for (const qa of data.questionAnswerAssessment) {
       push(`### Q: ${qa.question}`);
-      push(`**Answer:** ${qa.answer}`);
-      push(`**Score:** ${qa.score}/100  |  **Correctness:** ${qa.correctness}`);
-      if (qa.thoughtProcess) push(`**Thought Process:** ${qa.thoughtProcess}`);
-      if (qa.clarity) push(`**Clarity:** ${qa.clarity}`);
+      push(`**${L('answer', 'Answer')}:** ${qa.answer}`);
+      push(`**${L('score', 'Score')}:** ${qa.score}/100  |  **${L('correctness', 'Correctness')}:** ${qa.correctness}`);
+      if (qa.thoughtProcess) push(`**${L('thoughtProcess', 'Thought Process')}:** ${qa.thoughtProcess}`);
+      if (qa.clarity) push(`**${L('clarity', 'Clarity')}:** ${qa.clarity}`);
     }
   }
 
   // Level Assessment
   if (data.levelAssessment) {
-    push(`## Level Assessment`, data.levelAssessment);
+    push(`## ${L('levelAssessment', 'Level Assessment')}`, data.levelAssessment);
   }
 
   // Interviewer's Kit
   if (data.interviewersKit) {
     const kit = data.interviewersKit;
-    push(`## Interviewer's Kit`);
+    push(`## ${L('interviewersKit', "Interviewer's Kit")}`);
     if (kit.suggestedQuestions?.length) {
-      push(`### Suggested Follow-up Questions`, ...renderArraySection(kit.suggestedQuestions));
+      push(`### ${L('suggestedQuestions', 'Suggested Follow-up Questions')}`, ...renderArraySection(kit.suggestedQuestions));
     }
     if (kit.focusAreas?.length) {
-      push(`### Focus Areas`, ...renderArraySection(kit.focusAreas));
+      push(`### ${L('focusAreas', 'Focus Areas')}`, ...renderArraySection(kit.focusAreas));
     }
   }
 
   // Cheating Analysis
   if (data.cheatingAnalysis) {
     const ca = data.cheatingAnalysis;
-    push(`## Integrity / Cheating Analysis`);
-    push(`**Risk Level:** ${ca.riskLevel}  |  **Suspicion Score:** ${ca.suspicionScore}/100`);
+    push(`## ${L('cheatingAnalysis', 'Integrity / Cheating Analysis')}`);
+    push(`**${L('riskLevel', 'Risk Level')}:** ${ca.riskLevel}  |  **${L('suspicionScore', 'Suspicion Score')}:** ${ca.suspicionScore}/100`);
     if (ca.summary) push(ca.summary);
     if (ca.indicators?.length) {
       for (const ind of ca.indicators) {
         push(`- **${ind.type}** (${ind.severity}): ${ind.description}`);
       }
     }
-    if (ca.authenticitySignals?.length) push(`**Authenticity Signals:** ${ca.authenticitySignals.join(', ')}`);
+    if (ca.authenticitySignals?.length) push(`**${L('authenticitySignals', 'Authenticity Signals')}:** ${ca.authenticitySignals.join(', ')}`);
   }
 
   // Skills Assessment
   if (data.skillsAssessment?.length) {
-    push(`## Skills Assessment`);
+    push(`## ${L('skillsAssessment', 'Skills Assessment')}`);
     for (const s of data.skillsAssessment) {
       push(`- **${s.skill}** — ${s.rating}: ${s.evidence}`);
     }
@@ -186,29 +196,29 @@ export function generateEvaluationMarkdown(data: any, meta: ExportMeta): string 
   // Personality Assessment
   if (data.personalityAssessment) {
     const pa = data.personalityAssessment;
-    push(`## Personality Assessment (性格测试)`);
-    push(`**MBTI Estimate:** ${pa.mbtiEstimate} (${pa.mbtiConfidence} confidence)`);
+    push(`## ${L('personalityAssessment', 'Personality Assessment')}`);
+    push(`**${L('mbtiEstimate', 'MBTI Estimate')}:** ${pa.mbtiEstimate} (${pa.mbtiConfidence} ${L('confidence', 'confidence')})`);
     if (pa.mbtiExplanation) push(pa.mbtiExplanation);
     if (pa.bigFiveTraits?.length) {
-      push(`### Big Five Traits (OCEAN)`);
-      for (const t of pa.bigFiveTraits) {
-        push(`- **${t.trait}** — ${t.level}: ${t.evidence}`);
+      push(`### ${L('bigFiveTraits', 'Big Five Traits (OCEAN)')}`);
+      for (const tr of pa.bigFiveTraits) {
+        push(`- **${tr.trait}** — ${tr.level}: ${tr.evidence}`);
       }
     }
-    if (pa.communicationStyle) push(`**Communication Style:** ${pa.communicationStyle}`);
-    if (pa.workStylePreferences?.length) push(`**Work Style:** ${pa.workStylePreferences.join(', ')}`);
-    if (pa.motivators?.length) push(`**Motivators:** ${pa.motivators.join(', ')}`);
-    if (pa.potentialChallenges?.length) push(`**Potential Challenges:** ${pa.potentialChallenges.join(', ')}`);
-    if (pa.teamDynamicsAdvice) push(`**Team Dynamics:** ${pa.teamDynamicsAdvice}`);
+    if (pa.communicationStyle) push(`**${L('communicationStyle', 'Communication Style')}:** ${pa.communicationStyle}`);
+    if (pa.workStylePreferences?.length) push(`**${L('workStyle', 'Work Style')}:** ${pa.workStylePreferences.join(', ')}`);
+    if (pa.motivators?.length) push(`**${L('motivators', 'Motivators')}:** ${pa.motivators.join(', ')}`);
+    if (pa.potentialChallenges?.length) push(`**${L('potentialChallenges', 'Potential Challenges')}:** ${pa.potentialChallenges.join(', ')}`);
+    if (pa.teamDynamicsAdvice) push(`**${L('teamDynamics', 'Team Dynamics')}:** ${pa.teamDynamicsAdvice}`);
     if (pa.summary) push(pa.summary);
   }
 
   // Expert Advice
   if (data.expertAdvice) {
-    push(`## Expert Advice`, data.expertAdvice);
+    push(`## ${L('expertAdvice', 'Expert Advice')}`, data.expertAdvice);
   }
 
-  push('---', `*Report generated by RoboHire AI — ${new Date().toLocaleDateString()}*`);
+  push('---', `*${L('reportFooter', 'Report generated by RoboHire AI')} — ${new Date().toLocaleDateString()}*`);
 
   return lines.join('\n');
 }

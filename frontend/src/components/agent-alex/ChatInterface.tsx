@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Send, Mic, Square, Play, Loader2, BrainCircuit, Lightbulb, RefreshCw, Plus } from "lucide-react";
+import { Send, Mic, Square, Play, Loader2, Lightbulb, RefreshCw, Plus, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -230,6 +230,7 @@ export function ChatInterface({
   const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -244,13 +245,23 @@ export function ChatInterface({
     const userMsgId = Date.now().toString();
     const modelMsgId = (Date.now() + 1).toString();
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setMessages((prev) => [
       ...prev,
       { id: userMsgId, role: "user", text: trimmedText },
-      { id: modelMsgId, role: "model", text: "", isThinking: true },
+      { id: modelMsgId, role: "model", text: "", isThinking: true, thinkingStatus: t('agentAlex.chat.thinking', 'Thinking...') },
     ]);
     setInput("");
     setIsProcessing(true);
+
+    // Helper to update the thinking status line
+    const setThinkingStatus = (status: string) => {
+      setMessages((prev) => prev.map((msg) =>
+        msg.id === modelMsgId && msg.isThinking ? { ...msg, thinkingStatus: status } : msg,
+      ));
+    };
 
     try {
       let fullText = "";
@@ -261,11 +272,13 @@ export function ChatInterface({
         },
         (event) => {
           if (event.type === "requirements-update") {
+            setThinkingStatus(t('agentAlex.chat.updatingSpec', 'Updating specification...'));
             onUpdateRequirements(event.data);
             return;
           }
 
           if (event.type === "suggestions") {
+            setThinkingStatus(t('agentAlex.chat.preparingSuggestions', 'Preparing suggestions...'));
             setMessages((prev) =>
               prev.map((message) =>
                 message.id === modelMsgId
@@ -278,6 +291,7 @@ export function ChatInterface({
 
           // ── Search events ──
           if (event.type === "search-started") {
+            setThinkingStatus(t('agentAlex.chat.matchingCandidates', 'Matching candidates...'));
             setMessages((prev) => [...prev, {
               id: `search-${event.data.searchId}`,
               role: "model" as const,
@@ -336,6 +350,25 @@ export function ChatInterface({
             return;
           }
 
+          if (event.type === "web-search-started") {
+            setThinkingStatus(`${t('agentAlex.chat.webSearching', 'Searching the web')}: ${event.data.query}`);
+            setMessages((prev) => prev.map((msg) =>
+              msg.id === modelMsgId
+                ? { ...msg, webSearchState: { isSearching: true, query: event.data.query } }
+                : msg,
+            ));
+            return;
+          }
+
+          if (event.type === "web-search-completed") {
+            setMessages((prev) => prev.map((msg) =>
+              msg.id === modelMsgId
+                ? { ...msg, webSearchState: { isSearching: false, query: event.data.query, resultCount: event.data.resultCount } }
+                : msg,
+            ));
+            return;
+          }
+
           if (event.type === "text-delta") {
             fullText += event.text;
             setMessages((prev) =>
@@ -347,23 +380,34 @@ export function ChatInterface({
             );
           }
         },
+        abortController.signal,
       );
 
       setMessages((prev) =>
         prev.map((message) =>
-          message.id === modelMsgId ? { ...message, isThinking: false } : message,
+          message.id === modelMsgId ? { ...message, isThinking: false, thinkingStatus: undefined } : message,
         ),
       );
     } catch (error) {
-      const message = errorMessageFromUnknown(error);
-      setMessages((prev) =>
-        prev.map((item) =>
-          item.id === modelMsgId
-            ? { ...item, text: message, isThinking: false, isError: true }
-            : item,
-        ),
-      );
+      if (abortController.signal.aborted) {
+        // User stopped the request — keep whatever text was accumulated
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === modelMsgId ? { ...msg, isThinking: false, thinkingStatus: undefined } : msg,
+          ),
+        );
+      } else {
+        const message = errorMessageFromUnknown(error);
+        setMessages((prev) =>
+          prev.map((item) =>
+            item.id === modelMsgId
+              ? { ...item, text: message, isThinking: false, isError: true, thinkingStatus: undefined }
+              : item,
+          ),
+        );
+      }
     } finally {
+      abortControllerRef.current = null;
       setIsProcessing(false);
     }
   };
@@ -503,12 +547,20 @@ export function ChatInterface({
                     : "px-4 py-3.5 sm:px-6 sm:py-5 bg-white border border-slate-200 text-slate-800 rounded-bl-sm",
                 )}
               >
+                {/* Web search indicator */}
+                {message.webSearchState?.isSearching && (
+                  <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs">
+                    <Globe className="w-3.5 h-3.5 animate-pulse" />
+                    <span>{t('agentAlex.chat.webSearching', 'Searching the web...')}{message.webSearchState.query ? `: ${message.webSearchState.query}` : ''}</span>
+                  </div>
+                )}
+
                 {(message as any).searchState ? (
                   <SearchProgressCard searchState={(message as any).searchState} />
                 ) : message.isThinking ? (
                   <div className="flex items-center gap-2 text-slate-500">
-                    <BrainCircuit className="w-4 h-4 animate-pulse" />
-                    <span className="text-sm font-medium">{t('agentAlex.chat.thinking', 'Thinking...')}</span>
+                    <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                    <span className="text-sm text-slate-500 truncate max-w-[280px] sm:max-w-[400px]">{message.thinkingStatus || t('agentAlex.chat.thinking', 'Thinking...')}</span>
                   </div>
                 ) : (
                   <div className={cn(
@@ -572,7 +624,15 @@ export function ChatInterface({
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => {
+              setInput(event.target.value);
+              // Auto-resize textarea to fit content
+              const el = textareaRef.current;
+              if (el) {
+                el.style.height = 'auto';
+                el.style.height = `${Math.min(el.scrollHeight, 256)}px`;
+              }
+            }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
@@ -580,7 +640,7 @@ export function ChatInterface({
               }
             }}
             placeholder={isAiEnabled ? t('agentAlex.chat.placeholder', 'Type your response...') : t('agentAlex.chat.disabled', 'AI disabled until Gemini is configured.')}
-            className="flex-1 max-h-32 min-h-[40px] sm:min-h-[44px] bg-transparent border-none focus:ring-0 resize-none py-2 px-2.5 sm:py-2.5 sm:px-3 text-sm text-slate-800 placeholder:text-slate-400 custom-scrollbar disabled:cursor-not-allowed"
+            className="flex-1 max-h-64 min-h-[40px] sm:min-h-[44px] bg-transparent border-none focus:ring-0 resize-none py-2 px-2.5 sm:py-2.5 sm:px-3 text-sm text-slate-800 placeholder:text-slate-400 custom-scrollbar disabled:cursor-not-allowed"
             rows={1}
             disabled={isProcessing || !isAiEnabled}
           />
@@ -600,14 +660,24 @@ export function ChatInterface({
               {isRecording ? <Square className="w-4 h-4 fill-current" /> : <Mic className="w-4 h-4" />}
             </button>
 
-            <button
-              onClick={() => void handleSend(input)}
-              disabled={!input.trim() || isProcessing || !isAiEnabled}
-              className="p-2 sm:p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-all flex-shrink-0 shadow-sm"
-              title={t('agentAlex.chat.send', 'Send message')}
-            >
-              {isProcessing && !isRecording ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </button>
+            {isProcessing && !isRecording ? (
+              <button
+                onClick={() => abortControllerRef.current?.abort()}
+                className="p-2 sm:p-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all flex-shrink-0 shadow-sm"
+                title={t('agentAlex.chat.stop', 'Stop generating')}
+              >
+                <Square className="w-4 h-4 fill-current" />
+              </button>
+            ) : (
+              <button
+                onClick={() => void handleSend(input)}
+                disabled={!input.trim() || !isAiEnabled}
+                className="p-2 sm:p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-all flex-shrink-0 shadow-sm"
+                title={t('agentAlex.chat.send', 'Send message')}
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
         {isRecording && (

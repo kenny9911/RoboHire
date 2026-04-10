@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import EvaluationResultDisplay from '../components/EvaluationResultDisplay';
@@ -20,12 +20,29 @@ interface SharedReport {
   evaluationVerdict: string | null;
 }
 
-const VERDICT_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  strong_hire: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Strong Hire' },
-  hire: { bg: 'bg-emerald-50', text: 'text-emerald-600', label: 'Hire' },
-  lean_hire: { bg: 'bg-blue-50', text: 'text-blue-600', label: 'Lean Hire' },
-  lean_no_hire: { bg: 'bg-amber-50', text: 'text-amber-600', label: 'Lean No Hire' },
-  no_hire: { bg: 'bg-red-50', text: 'text-red-600', label: 'No Hire' },
+/* -------------------------------------------------------------------------- */
+/*  Error boundary — prevents blank page if EvaluationResultDisplay crashes   */
+/* -------------------------------------------------------------------------- */
+
+class EvalErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
+const VERDICT_STYLES: Record<string, { bg: string; text: string }> = {
+  strong_hire: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  hire: { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  lean_hire: { bg: 'bg-blue-50', text: 'text-blue-600' },
+  lean_no_hire: { bg: 'bg-amber-50', text: 'text-amber-600' },
+  no_hire: { bg: 'bg-red-50', text: 'text-red-600' },
 };
 
 export default function EvaluationSharedReport() {
@@ -134,19 +151,19 @@ export default function EvaluationSharedReport() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
-              PDF
+              {t('export.pdf', 'PDF')}
             </button>
             <button
               onClick={handleExportWord}
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              Word
+              {t('export.word', 'Word')}
             </button>
             <button
               onClick={handleExportMarkdown}
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              Markdown
+              {t('export.markdown', 'Markdown')}
             </button>
           </div>
         </div>
@@ -186,7 +203,7 @@ export default function EvaluationSharedReport() {
               )}
               {vs && (
                 <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${vs.bg} ${vs.text}`}>
-                  {vs.label}
+                  {t(`goHireEval.verdict.${report.evaluationVerdict}`, report.evaluationVerdict?.replace(/_/g, ' ') || '')}
                 </span>
               )}
             </div>
@@ -195,7 +212,15 @@ export default function EvaluationSharedReport() {
 
         {/* Full evaluation display */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <EvaluationResultDisplay data={report.evaluationData} />
+          <EvalErrorBoundary
+            fallback={
+              <p className="text-sm text-slate-500">
+                {t('evaluationReport.renderError', 'Unable to render evaluation details. Please try exporting as Word or Markdown instead.')}
+              </p>
+            }
+          >
+            <EvaluationResultDisplay data={report.evaluationData} />
+          </EvalErrorBoundary>
         </div>
       </main>
 

@@ -50,6 +50,7 @@ export async function fetchAppConfig(): Promise<AppConfigStatus> {
 export async function streamChat(
   payload: { history: HistoryMessage[]; message: string },
   onEvent: (event: ChatStreamEvent) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   // Detect current i18n locale to pass to backend
   const htmlLang = document.documentElement.lang;
@@ -62,6 +63,7 @@ export async function streamChat(
     },
     credentials: 'include',
     body: JSON.stringify({ ...payload, locale }),
+    signal,
   });
 
   if (!response.body) {
