@@ -65,6 +65,175 @@ export interface IdealProfileHookResult {
   refetch: () => Promise<void>;
 }
 
+export const EMPTY_IDEAL_CANDIDATE_PROFILE: IdealCandidateProfile = {
+  coreSkills: [],
+  bonusSkills: [],
+  antiSkills: [],
+  yearsOfExperience: { min: 0, ideal: 0 },
+  signals: [],
+  anchorCandidateIds: [],
+  antiAnchorCandidateIds: [],
+  generatedAt: '',
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object';
+}
+
+function normalizeIdealCandidateProfile(value: unknown): IdealCandidateProfile {
+  const candidate = isRecord(value) ? value : {};
+  const years = isRecord(candidate.yearsOfExperience) ? candidate.yearsOfExperience : {};
+  const seniorityRange = isRecord(candidate.seniorityRange) ? candidate.seniorityRange : null;
+
+  return {
+    ...EMPTY_IDEAL_CANDIDATE_PROFILE,
+    ...(Array.isArray(candidate.preferredLocations)
+      ? {
+          preferredLocations: candidate.preferredLocations.filter(
+            (item): item is string => typeof item === 'string',
+          ),
+        }
+      : {}),
+    ...(Array.isArray(candidate.preferredIndustries)
+      ? {
+          preferredIndustries: candidate.preferredIndustries.filter(
+            (item): item is string => typeof item === 'string',
+          ),
+        }
+      : {}),
+    ...(Array.isArray(candidate.preferredCompanySizes)
+      ? {
+          preferredCompanySizes: candidate.preferredCompanySizes.filter(
+            (
+              item,
+            ): item is 'startup' | 'midsize' | 'enterprise' =>
+              item === 'startup' || item === 'midsize' || item === 'enterprise',
+          ),
+        }
+      : {}),
+    ...(typeof candidate.preferredRoleProgression === 'string'
+      ? { preferredRoleProgression: candidate.preferredRoleProgression }
+      : {}),
+    ...(seniorityRange
+      ? {
+          seniorityRange: {
+            min: typeof seniorityRange.min === 'number' ? seniorityRange.min : 0,
+            ideal:
+              typeof seniorityRange.ideal === 'number'
+                ? seniorityRange.ideal
+                : typeof seniorityRange.min === 'number'
+                ? seniorityRange.min
+                : 0,
+            ...(typeof seniorityRange.max === 'number' ? { max: seniorityRange.max } : {}),
+            unit: 'years' as const,
+          },
+        }
+      : {}),
+    coreSkills: Array.isArray(candidate.coreSkills)
+      ? candidate.coreSkills
+          .filter(
+            (
+              item,
+            ): item is { skill: string; importance?: unknown; rationale?: unknown } =>
+              isRecord(item) && typeof item.skill === 'string',
+          )
+          .map((item) => ({
+            skill: item.skill,
+            importance:
+              item.importance === 'critical' || item.importance === 'high'
+                ? item.importance
+                : 'medium',
+            rationale: typeof item.rationale === 'string' ? item.rationale : '',
+          }))
+      : [],
+    bonusSkills: Array.isArray(candidate.bonusSkills)
+      ? candidate.bonusSkills.filter((item): item is string => typeof item === 'string')
+      : [],
+    antiSkills: Array.isArray(candidate.antiSkills)
+      ? candidate.antiSkills.filter((item): item is string => typeof item === 'string')
+      : [],
+    yearsOfExperience: {
+      min: typeof years.min === 'number' ? years.min : 0,
+      ideal:
+        typeof years.ideal === 'number'
+          ? years.ideal
+          : typeof years.min === 'number'
+          ? years.min
+          : 0,
+      ...(typeof years.max === 'number' ? { max: years.max } : {}),
+    },
+    signals: Array.isArray(candidate.signals)
+      ? candidate.signals
+          .filter(
+            (
+              item,
+            ): item is {
+              trait: string;
+              weight?: unknown;
+              source?: unknown;
+              evidence?: unknown;
+            } => isRecord(item) && typeof item.trait === 'string',
+          )
+          .map((item) => ({
+            trait: item.trait,
+            weight: typeof item.weight === 'number' ? item.weight : 0,
+            source:
+              item.source === 'liked' || item.source === 'disliked' ? item.source : 'jd',
+            ...(typeof item.evidence === 'string' ? { evidence: item.evidence } : {}),
+          }))
+      : [],
+    anchorCandidateIds: Array.isArray(candidate.anchorCandidateIds)
+      ? candidate.anchorCandidateIds.filter((item): item is string => typeof item === 'string')
+      : [],
+    antiAnchorCandidateIds: Array.isArray(candidate.antiAnchorCandidateIds)
+      ? candidate.antiAnchorCandidateIds.filter((item): item is string => typeof item === 'string')
+      : [],
+    generatedAt:
+      typeof candidate.generatedAt === 'string'
+        ? candidate.generatedAt
+        : EMPTY_IDEAL_CANDIDATE_PROFILE.generatedAt,
+  };
+}
+
+function normalizeIdealProfileVersion(value: unknown): IdealProfileVersion | null {
+  if (!isRecord(value)) return null;
+
+  const unwrapped =
+    typeof value.version === 'number'
+      ? value
+      : isRecord(value.profile) && typeof value.profile.version === 'number'
+      ? value.profile
+      : null;
+
+  if (!isRecord(unwrapped) || typeof unwrapped.version !== 'number') return null;
+
+  return {
+    id: typeof unwrapped.id === 'string' ? unwrapped.id : '',
+    agentId: typeof unwrapped.agentId === 'string' ? unwrapped.agentId : '',
+    version: unwrapped.version,
+    profile: normalizeIdealCandidateProfile(unwrapped.profile),
+    suggestedHardRequirements: Array.isArray(unwrapped.suggestedHardRequirements)
+      ? (unwrapped.suggestedHardRequirements as HardRequirement[])
+      : [],
+    narrativeSummary:
+      typeof unwrapped.narrativeSummary === 'string' ? unwrapped.narrativeSummary : '',
+    confidence: typeof unwrapped.confidence === 'number' ? unwrapped.confidence : 0,
+    generatedFromLikes:
+      typeof unwrapped.generatedFromLikes === 'number' ? unwrapped.generatedFromLikes : 0,
+    generatedFromDislikes:
+      typeof unwrapped.generatedFromDislikes === 'number'
+        ? unwrapped.generatedFromDislikes
+        : 0,
+    generatedAt: typeof unwrapped.generatedAt === 'string' ? unwrapped.generatedAt : '',
+    tokensIn: typeof unwrapped.tokensIn === 'number' ? unwrapped.tokensIn : undefined,
+    tokensOut: typeof unwrapped.tokensOut === 'number' ? unwrapped.tokensOut : undefined,
+    costUsd: typeof unwrapped.costUsd === 'number' ? unwrapped.costUsd : undefined,
+    llmModel: typeof unwrapped.llmModel === 'string' ? unwrapped.llmModel : undefined,
+    llmProvider:
+      typeof unwrapped.llmProvider === 'string' ? unwrapped.llmProvider : undefined,
+  };
+}
+
 /**
  * Encapsulates all 4 ICP endpoints for a given agent. Components that need the
  * profile data can pull from this hook instead of hand-rolling fetch logic.
@@ -88,7 +257,7 @@ export function useIdealProfile(agentId: string | null): IdealProfileHookResult 
     setError(null);
     try {
       const res = await axios.get(`/api/v1/agents/${agentId}/ideal-profile`);
-      const next = (res.data?.data ?? res.data ?? null) as IdealProfileVersion | null;
+      const next = normalizeIdealProfileVersion(res.data?.data ?? res.data ?? null);
       setProfile(next);
       setMissing(next === null);
     } catch (err: unknown) {
@@ -124,7 +293,8 @@ export function useIdealProfile(agentId: string | null): IdealProfileHookResult 
         const res = await axios.post(`/api/v1/agents/${agentId}/ideal-profile/regenerate`, {
           force: opts?.force ?? false,
         });
-        const next = (res.data?.data ?? res.data) as IdealProfileVersion;
+        const next = normalizeIdealProfileVersion(res.data?.data ?? res.data);
+        if (!next) throw new Error('Invalid ideal profile response');
         setProfile(next);
         setMissing(false);
         return next;
@@ -145,7 +315,8 @@ export function useIdealProfile(agentId: string | null): IdealProfileHookResult 
       if (!agentId) return;
       try {
         const res = await axios.post(`/api/v1/agents/${agentId}/ideal-profile/revert`, { version });
-        const next = (res.data?.data ?? res.data) as IdealProfileVersion;
+        const next = normalizeIdealProfileVersion(res.data?.data ?? res.data);
+        if (!next) throw new Error('Invalid ideal profile response');
         setProfile(next);
         setMissing(false);
       } catch (err: unknown) {

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useIdealProfile, type IdealProfileVersion } from '../hooks/useIdealProfile';
+import {
+  EMPTY_IDEAL_CANDIDATE_PROFILE,
+  useIdealProfile,
+  type IdealProfileVersion,
+} from '../hooks/useIdealProfile';
 import RegenerateProfileModal from './RegenerateProfileModal';
 
 interface Props {
@@ -39,6 +43,7 @@ export default function IdealProfileCard({ agentId, compact = false }: Props) {
       : confidencePct < 85
       ? 'high'
       : 'veryHigh';
+  const idealProfile = profile?.profile ?? EMPTY_IDEAL_CANDIDATE_PROFILE;
 
   if (loading) {
     return (
@@ -159,13 +164,13 @@ export default function IdealProfileCard({ agentId, compact = false }: Props) {
           )}
 
           {/* Core skills */}
-          {profile.profile.coreSkills && profile.profile.coreSkills.length > 0 && (
+          {idealProfile.coreSkills.length > 0 && (
             <div>
               <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 {t('agents.workbench.icp.coreSkills', 'Core skills')}
               </h4>
               <div className="flex flex-wrap gap-1.5">
-                {profile.profile.coreSkills.map((s) => {
+                {idealProfile.coreSkills.map((s) => {
                   const color =
                     s.importance === 'critical'
                       ? 'border-violet-400 bg-violet-100 text-violet-800'
@@ -187,13 +192,13 @@ export default function IdealProfileCard({ agentId, compact = false }: Props) {
           )}
 
           {/* Bonus skills */}
-          {!compact && profile.profile.bonusSkills && profile.profile.bonusSkills.length > 0 && (
+          {!compact && idealProfile.bonusSkills.length > 0 && (
             <div>
               <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 {t('agents.workbench.icp.bonusSkills', 'Bonus skills')}
               </h4>
               <div className="flex flex-wrap gap-1.5">
-                {profile.profile.bonusSkills.map((s) => (
+                {idealProfile.bonusSkills.map((s) => (
                   <span
                     key={s}
                     className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-600"
@@ -206,7 +211,7 @@ export default function IdealProfileCard({ agentId, compact = false }: Props) {
           )}
 
           {/* Anti-traits / red flags */}
-          {profile.profile.antiSkills && profile.profile.antiSkills.length > 0 && (
+          {idealProfile.antiSkills.length > 0 && (
             <div>
               <h4 className="mb-2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-700">
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -215,7 +220,7 @@ export default function IdealProfileCard({ agentId, compact = false }: Props) {
                 {t('agents.workbench.icp.antiTraits', 'Anti-traits / red flags')}
               </h4>
               <div className="flex flex-wrap gap-1.5">
-                {profile.profile.antiSkills.map((s) => (
+                {idealProfile.antiSkills.map((s) => (
                   <span
                     key={s}
                     className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700"
@@ -228,14 +233,14 @@ export default function IdealProfileCard({ agentId, compact = false }: Props) {
           )}
 
           {/* Anchor candidates */}
-          {!compact && profile.profile.anchorCandidateIds && profile.profile.anchorCandidateIds.length > 0 && (
+          {!compact && idealProfile.anchorCandidateIds.length > 0 && (
             <div>
               <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 {t('agents.workbench.icp.anchors', 'Anchor candidates')}
               </h4>
               <p className="text-[11px] text-slate-500">
                 {t('agents.workbench.icp.anchorsCount', '{{count}} liked candidates used as ground-truth exemplars', {
-                  count: profile.profile.anchorCandidateIds.length,
+                  count: idealProfile.anchorCandidateIds.length,
                 })}
               </p>
             </div>
@@ -322,7 +327,8 @@ export default function IdealProfileCard({ agentId, compact = false }: Props) {
           previousProfile={prevVersion}
           regenerating={regenerating}
           onConfirm={async () => {
-            await regenerate();
+            const next = await regenerate();
+            if (!next) throw new Error('Failed to regenerate ideal profile');
           }}
           onRevert={async () => {
             if (prevVersion) await revert(prevVersion.version);

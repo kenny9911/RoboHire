@@ -1191,7 +1191,8 @@ function IcpRegenerateLauncher({ agentId, onClose }: { agentId: string; onClose:
       currentProfile={ideal.profile}
       regenerating={ideal.regenerating}
       onConfirm={async () => {
-        await ideal.regenerate();
+        const next = await ideal.regenerate();
+        if (!next) throw new Error('Failed to regenerate ideal profile');
       }}
       onRevert={async () => {
         if (prev) await ideal.revert(prev.version);

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { IdealProfileVersion } from '../hooks/useIdealProfile';
+import {
+  EMPTY_IDEAL_CANDIDATE_PROFILE,
+  type IdealProfileVersion,
+} from '../hooks/useIdealProfile';
 
 interface Props {
   /** The version before the regen was triggered. */
@@ -60,14 +63,16 @@ export default function RegenerateProfileModal({
   const oldConfPct = Math.round((previousProfile?.confidence ?? 0) * 100);
   const newConfPct = Math.round((currentProfile?.confidence ?? 0) * 100);
   const delta = newConfPct - oldConfPct;
+  const previousIdealProfile = previousProfile?.profile ?? EMPTY_IDEAL_CANDIDATE_PROFILE;
+  const currentIdealProfile = currentProfile?.profile ?? EMPTY_IDEAL_CANDIDATE_PROFILE;
 
-  const oldSkills = new Set((previousProfile?.profile.coreSkills || []).map((s) => s.skill));
-  const newSkills = new Set((currentProfile?.profile.coreSkills || []).map((s) => s.skill));
+  const oldSkills = new Set(previousIdealProfile.coreSkills.map((s) => s.skill));
+  const newSkills = new Set(currentIdealProfile.coreSkills.map((s) => s.skill));
   const added = Array.from(newSkills).filter((s) => !oldSkills.has(s));
   const removed = Array.from(oldSkills).filter((s) => !newSkills.has(s));
 
-  const oldAntiSkills = new Set(previousProfile?.profile.antiSkills || []);
-  const newAntiSkills = new Set(currentProfile?.profile.antiSkills || []);
+  const oldAntiSkills = new Set(previousIdealProfile.antiSkills);
+  const newAntiSkills = new Set(currentIdealProfile.antiSkills);
   const addedAnti = Array.from(newAntiSkills).filter((s) => !oldAntiSkills.has(s));
   const removedAnti = Array.from(oldAntiSkills).filter((s) => !newAntiSkills.has(s));
 
