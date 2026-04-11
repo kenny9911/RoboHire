@@ -4,6 +4,31 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../lib/axios';
 import RecruiterTeamFilter, { type RecruiterTeamFilterValue } from '../../components/RecruiterTeamFilter';
+import AutoGrowTextarea from '../../components/AutoGrowTextarea';
+import AgentRunDrawer from '../../components/AgentRunDrawer';
+import HardRequirementsEditor, { type HardRequirement } from '../../components/HardRequirementsEditor';
+
+type SourceMode = 'instant_search' | 'internal_minio' | 'external_api';
+type AutonomyMode = 'manual' | 'scheduled';
+type SchedulePreset = 'off' | 'hourly' | 'daily' | 'weekly' | 'custom';
+
+interface JobOption {
+  id: string;
+  title: string;
+  userId: string;
+  user?: { id: string; name: string | null; email: string } | null;
+}
+
+interface JobsAvailableResponse {
+  data: JobOption[];
+  meta: { isAdmin: boolean; scope: 'all' | 'own' };
+}
+
+const SCHEDULE_PRESETS: Record<Exclude<SchedulePreset, 'custom' | 'off'>, string> = {
+  hourly: '0 * * * *',
+  daily: '0 9 * * *',
+  weekly: '0 9 * * 1',
+};
 
 interface Agent {
   id: string;
@@ -35,11 +60,19 @@ export default function Agents() {
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState('');
   const [createDesc, setCreateDesc] = useState('');
-  const [createTaskType, setCreateTaskType] = useState<'search' | 'match'>('search');
+  const [createTaskType, setCreateTaskType] = useState<'search_candidates' | 'match_resumes'>('search_candidates');
   const [createInstructions, setCreateInstructions] = useState('');
   const [creating, setCreating] = useState(false);
-  const [jobs, setJobs] = useState<Array<{ id: string; title: string }>>([]);
+  const [availableJobs, setAvailableJobs] = useState<JobOption[]>([]);
+  const [jobsMeta, setJobsMeta] = useState<{ isAdmin: boolean; scope: 'all' | 'own' }>({ isAdmin: false, scope: 'own' });
+  const [jobQuery, setJobQuery] = useState('');
   const [createJobId, setCreateJobId] = useState('');
+  const [createSourceModes, setCreateSourceModes] = useState<SourceMode[]>(['instant_search']);
+  const [createAutonomy, setCreateAutonomy] = useState<AutonomyMode>('manual');
+  const [createSchedulePreset, setCreateSchedulePreset] = useState<SchedulePreset>('off');
+  const [createScheduleCron, setCreateScheduleCron] = useState('');
+  const [createHardRequirements, setCreateHardRequirements] = useState<HardRequirement[]>([]);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -51,6 +84,12 @@ export default function Agents() {
   const [editName, setEditName] = useState('');
   const [editAccessLevel, setEditAccessLevel] = useState<'shared' | 'private'>('shared');
   const [editCollaborators, setEditCollaborators] = useState<string[]>([]);
+  const [drawerAgent, setDrawerAgent] = useState<{ id: string; name: string } | null>(null);
+
+  const openDrawer = (agent: Agent) => {
+    setDrawerAgent({ id: agent.id, name: agent.name });
+    setMenuOpen(null);
+  };
 
   const fetchAgents = useCallback(async () => {
     try {
@@ -69,13 +108,59 @@ export default function Agents() {
 
   useEffect(() => {
     fetchAgents();
-    axios.get('/api/v1/jobs', { params: { limit: 200, fields: 'minimal', includeTotal: 'false' } })
-      .then((res) => setJobs(res.data.data || []))
-      .catch(() => {});
   }, [fetchAgents]);
 
+  // Load jobs the caller can scope an agent to. Re-runs when the query changes or the modal opens.
+  useEffect(() => {
+    if (!showCreate) return;
+    let cancelled = false;
+    const params: Record<string, string | number> = { limit: 100 };
+    if (jobQuery.trim()) params.q = jobQuery.trim();
+    axios
+      .get<JobsAvailableResponse>('/api/v1/agents/jobs-available', { params })
+      .then((res) => {
+        if (cancelled) return;
+        setAvailableJobs(res.data.data || []);
+        setJobsMeta(res.data.meta || { isAdmin: false, scope: 'own' });
+      })
+      .catch(() => {
+        if (!cancelled) setAvailableJobs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showCreate, jobQuery]);
+
+  const resetCreateForm = () => {
+    setCreateName('');
+    setCreateDesc('');
+    setCreateTaskType('search_candidates');
+    setCreateInstructions('');
+    setCreateJobId('');
+    setJobQuery('');
+    setCreateSourceModes(['instant_search']);
+    setCreateAutonomy('manual');
+    setCreateSchedulePreset('off');
+    setCreateScheduleCron('');
+    setCreateHardRequirements([]);
+    setCreateError(null);
+  };
+
   const handleCreate = async () => {
+    setCreateError(null);
     if (!createName.trim() || !createDesc.trim() || !createJobId) return;
+    if (createTaskType === 'search_candidates' && createSourceModes.length === 0) {
+      setCreateError(t('agents.workbench.errors.sourceRequired', 'Pick at least one candidate source'));
+      return;
+    }
+    let cron: string | undefined;
+    if (createAutonomy === 'scheduled') {
+      cron = createSchedulePreset === 'custom' ? createScheduleCron.trim() : SCHEDULE_PRESETS[createSchedulePreset as 'hourly' | 'daily' | 'weekly'];
+      if (!cron || cron.split(/\s+/).filter(Boolean).length < 5) {
+        setCreateError(t('agents.workbench.errors.invalidCron', 'Enter a valid cron expression (5 fields)'));
+        return;
+      }
+    }
     setCreating(true);
     try {
       await axios.post('/api/v1/agents', {
@@ -84,19 +169,27 @@ export default function Agents() {
         taskType: createTaskType,
         instructions: createInstructions.trim() || undefined,
         jobId: createJobId,
+        source: createTaskType === 'search_candidates' ? { modes: createSourceModes } : undefined,
+        autonomy: createAutonomy,
+        schedule: cron ?? null,
+        scheduleEnabled: createAutonomy === 'scheduled',
+        config: createHardRequirements.length > 0 ? { hardRequirements: createHardRequirements } : undefined,
       });
       setShowCreate(false);
-      setCreateName('');
-      setCreateDesc('');
-      setCreateTaskType('search');
-      setCreateInstructions('');
-      setCreateJobId('');
+      resetCreateForm();
       fetchAgents();
-    } catch {
-      // handle error
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setCreateError(msg || t('agents.workbench.errors.createFailed', 'Failed to create agent'));
     } finally {
       setCreating(false);
     }
+  };
+
+  const toggleSourceMode = (mode: SourceMode) => {
+    setCreateSourceModes((prev) =>
+      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
+    );
   };
 
   const handleDelete = async (id: string) => {
@@ -330,7 +423,13 @@ export default function Agents() {
                       </svg>
                     </button>
                     {menuOpen === agent.id && (
-                      <div className="absolute right-0 top-8 z-20 w-40 rounded-lg border border-slate-200 bg-white shadow-lg py-1">
+                      <div className="absolute right-0 top-8 z-20 w-48 rounded-lg border border-slate-200 bg-white shadow-lg py-1">
+                        <button
+                          onClick={() => openDrawer(agent)}
+                          className="w-full text-left px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-50"
+                        >
+                          {t('agents.workbench.openWorkbench', 'Open workbench')}
+                        </button>
                         <Link
                           to={`/product/agents/${agent.id}`}
                           className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
@@ -359,7 +458,7 @@ export default function Agents() {
                     )}
                   </div>
 
-                  <Link to={`/product/agents/${agent.id}`} className="block">
+                  <div onClick={() => openDrawer(agent)} className="block cursor-pointer">
                     <h3 className="text-base font-semibold text-slate-900 pr-8 mb-1">{agent.name}</h3>
                     <div className="flex items-center gap-2 mb-3">
                       <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
@@ -409,7 +508,7 @@ export default function Agents() {
                         <span className="text-xs text-slate-400">{t(`agents.status.${agent.status}`, agent.status)}</span>
                       </span>
                     </div>
-                  </Link>
+                  </div>
                 </div>
               );
             })}
@@ -463,7 +562,13 @@ export default function Agents() {
                       </svg>
                     </button>
                     {menuOpen === agent.id && (
-                      <div className="absolute right-0 top-7 z-20 w-40 rounded-lg border border-slate-200 bg-white shadow-lg py-1">
+                      <div className="absolute right-0 top-7 z-20 w-48 rounded-lg border border-slate-200 bg-white shadow-lg py-1">
+                        <button
+                          onClick={() => openDrawer(agent)}
+                          className="w-full text-left px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-50"
+                        >
+                          {t('agents.workbench.openWorkbench', 'Open workbench')}
+                        </button>
                         <Link
                           to={`/product/agents/${agent.id}`}
                           className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
@@ -648,29 +753,45 @@ export default function Agents() {
 
       {/* ── Create Modal ── */}
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCreate(false)}>
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-lg w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 py-10"
+          onClick={() => { setShowCreate(false); resetCreateForm(); }}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl p-6 max-w-2xl w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-lg font-semibold text-slate-900">{t('agents.createTitle', 'Create New Agent')}</h3>
-            <p className="mt-1 mb-5 text-sm text-slate-500 leading-relaxed">{t('agents.createDesc', 'Automate your search with a smart agent. Set criteria once and let your agent keep working in the background—no need to repeat yourself.')}</p>
-            <div className="space-y-4">
+            <p className="mt-1 mb-5 text-sm text-slate-500 leading-relaxed">
+              {t('agents.createDesc', 'Automate your search with a smart agent. Set criteria once and let your agent keep working in the background—no need to repeat yourself.')}
+            </p>
+
+            <div className="space-y-5">
+              {/* Agent Name */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.agentName', 'Agent Name')}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('agents.agentName', 'Agent Name')} <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
                   placeholder={t('agents.namePlaceholder', 'e.g. Senior Full-stack Sourcer')}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 />
               </div>
+
+              {/* Task Type */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.taskType', 'Task Type')} <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('agents.taskType', 'Task Type')} <span className="text-red-500">*</span>
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setCreateTaskType('search')}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
-                      createTaskType === 'search'
+                    onClick={() => setCreateTaskType('search_candidates')}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                      createTaskType === 'search_candidates'
                         ? 'border-violet-500 bg-violet-50 text-violet-700 ring-1 ring-violet-500'
                         : 'border-slate-300 text-slate-700 hover:bg-slate-50'
                     }`}
@@ -682,9 +803,9 @@ export default function Agents() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCreateTaskType('match')}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
-                      createTaskType === 'match'
+                    onClick={() => setCreateTaskType('match_resumes')}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                      createTaskType === 'match_resumes'
                         ? 'border-violet-500 bg-violet-50 text-violet-700 ring-1 ring-violet-500'
                         : 'border-slate-300 text-slate-700 hover:bg-slate-50'
                     }`}
@@ -692,55 +813,203 @@ export default function Agents() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    {t('agents.taskTypeMatch', 'Match Candidate')}
+                    {t('agents.workbench.taskTypeMatchResumes', 'Match Resumes')}
                   </button>
                 </div>
               </div>
+
+              {/* Linked Job — admin-aware */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.linkedJob', 'Linked Job')} <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('agents.linkedJob', 'Linked Job')} <span className="text-red-500">*</span>
+                  {jobsMeta.isAdmin && (
+                    <span className="ml-2 inline-flex items-center rounded-md bg-violet-50 px-1.5 py-0.5 text-[11px] font-medium text-violet-700">
+                      {t('agents.workbench.adminScope', 'admin · all users')}
+                    </span>
+                  )}
+                </label>
+                {jobsMeta.isAdmin && (
+                  <input
+                    type="text"
+                    value={jobQuery}
+                    onChange={(e) => setJobQuery(e.target.value)}
+                    placeholder={t('agents.workbench.jobSearchPlaceholder', 'Search jobs by title...')}
+                    className="mb-2 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  />
+                )}
                 <select
                   value={createJobId}
                   onChange={(e) => setCreateJobId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 >
                   <option value="">{t('agents.selectJob', 'Select a job...')}</option>
-                  {jobs.map((j) => (
-                    <option key={j.id} value={j.id}>{j.title}</option>
+                  {availableJobs.map((j) => (
+                    <option key={j.id} value={j.id}>
+                      {j.title}
+                      {jobsMeta.isAdmin && j.user ? ` — ${j.user.name || j.user.email}` : ''}
+                    </option>
                   ))}
                 </select>
+                {availableJobs.length === 0 && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {t('agents.workbench.noJobsAvailable', 'No jobs available. Create a job first.')}
+                  </p>
+                )}
               </div>
+
+              {/* Candidate Source (search_candidates only) */}
+              {createTaskType === 'search_candidates' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    {t('agents.workbench.candidateSource', 'Candidate Source')} <span className="text-red-500">*</span>
+                  </label>
+                  <p className="mb-2 text-xs text-slate-500">
+                    {t('agents.workbench.candidateSourceDesc', 'Pick one or more places the agent should search.')}
+                  </p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {(['instant_search', 'internal_minio', 'external_api'] as SourceMode[]).map((mode) => {
+                      const selected = createSourceModes.includes(mode);
+                      return (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => toggleSourceMode(mode)}
+                          className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                            selected
+                              ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500'
+                              : 'border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span
+                            className={`mt-0.5 flex h-4 w-4 items-center justify-center rounded border ${
+                              selected ? 'border-violet-600 bg-violet-600' : 'border-slate-400 bg-white'
+                            }`}
+                          >
+                            {selected && (
+                              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </span>
+                          <span>
+                            <span className="block text-sm font-medium text-slate-900">
+                              {t(`agents.workbench.source.${mode}.name`, mode)}
+                            </span>
+                            <span className="block text-xs text-slate-500">
+                              {t(`agents.workbench.source.${mode}.desc`, '')}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Hard Requirements — optional strict filter */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.searchCriteria', 'Search Criteria')}</label>
-                <textarea
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('agents.workbench.create.hardRequirementsStep.label', 'Hard Requirements')}{' '}
+                  <span className="text-xs font-normal text-slate-500">
+                    ({t('agents.workbench.create.hardRequirementsStep.optional', 'optional')})
+                  </span>
+                </label>
+                <HardRequirementsEditor
+                  value={createHardRequirements}
+                  onChange={setCreateHardRequirements}
+                  compact
+                />
+              </div>
+
+              {/* Search Criteria — auto-grow */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('agents.searchCriteria', 'Search Criteria')} <span className="text-red-500">*</span>
+                </label>
+                <AutoGrowTextarea
                   value={createDesc}
                   onChange={(e) => setCreateDesc(e.target.value)}
                   placeholder={t('agents.criteriaPlaceholder', 'Describe your ideal candidate in detail...')}
-                  rows={3}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
+                  minRows={3}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 />
               </div>
+
+              {/* Instructions — auto-grow */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t('agents.instructions', 'Instructions')}</label>
-                <textarea
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('agents.instructions', 'Instructions')}
+                </label>
+                <AutoGrowTextarea
                   value={createInstructions}
                   onChange={(e) => setCreateInstructions(e.target.value)}
                   placeholder={t('agents.instructionsPlaceholder', 'Tell the agent what you want it to do...')}
-                  rows={3}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
+                  minRows={3}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 />
               </div>
+
+              {/* Schedule */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('agents.workbench.schedule', 'Schedule')}
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {(['off', 'hourly', 'daily', 'weekly', 'custom'] as SchedulePreset[]).map((preset) => {
+                    const selected = createSchedulePreset === preset;
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => {
+                          setCreateSchedulePreset(preset);
+                          setCreateAutonomy(preset === 'off' ? 'manual' : 'scheduled');
+                        }}
+                        className={`rounded-xl border px-2 py-2 text-xs font-medium transition-colors ${
+                          selected
+                            ? 'border-violet-500 bg-violet-50 text-violet-700 ring-1 ring-violet-500'
+                            : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {t(`agents.workbench.schedulePreset.${preset}`, preset)}
+                      </button>
+                    );
+                  })}
+                </div>
+                {createSchedulePreset === 'custom' && (
+                  <input
+                    type="text"
+                    value={createScheduleCron}
+                    onChange={(e) => setCreateScheduleCron(e.target.value)}
+                    placeholder="0 9 * * 1-5"
+                    className="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm text-slate-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  />
+                )}
+                {createSchedulePreset !== 'off' && createSchedulePreset !== 'custom' && (
+                  <p className="mt-1 font-mono text-[11px] text-slate-500">
+                    cron: {SCHEDULE_PRESETS[createSchedulePreset as 'hourly' | 'daily' | 'weekly']}
+                  </p>
+                )}
+              </div>
+
+              {createError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {createError}
+                </div>
+              )}
             </div>
+
             <div className="mt-6 flex justify-end gap-2">
               <button
-                onClick={() => setShowCreate(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                onClick={() => { setShowCreate(false); resetCreateForm(); }}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
               >
                 {t('common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleCreate}
                 disabled={creating || !createName.trim() || !createDesc.trim() || !createJobId}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-xl transition-colors disabled:opacity-50"
               >
                 {creating ? t('agents.creating', 'Creating...') : t('agents.createBtn', 'Create Agent')}
               </button>
@@ -854,6 +1123,18 @@ export default function Agents() {
       {/* Close menu on outside click */}
       {menuOpen && (
         <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
+      )}
+
+      {/* ── Run/Results Drawer ── */}
+      {drawerAgent && (
+        <AgentRunDrawer
+          agentId={drawerAgent.id}
+          agentName={drawerAgent.name}
+          onClose={() => {
+            setDrawerAgent(null);
+            fetchAgents();
+          }}
+        />
       )}
     </div>
   );

@@ -1167,17 +1167,9 @@
   },
   "notifications": {
     "title": "通知",
-    "empty": "暂无新动态。",
-    "viewAll": "查看全部动态",
-    "match": "新增匹配",
-    "invitation": "已发送面试邀请",
-    "interview": "面试已完成",
-    "subtitle": "{{name}} · {{request}}",
-    "candidate": "候选人",
-    "justNow": "刚刚",
-    "minutesAgo": "{{count}} 分钟前",
-    "hoursAgo": "{{count}} 小时前",
-    "daysAgo": "{{count}} 天前"
+    "markAllRead": "全部标为已读",
+    "empty": "暂无通知",
+    "viewAll": "查看所有任务"
   },
   "apiPlayground": {
     "title": "API 测试",
@@ -4276,26 +4268,473 @@
       "autoExecute": "自动执行",
       "emailNotify": "邮件通知",
       "types": {
-        "evaluate_interview": { "label": "评估面试", "desc": "面试完成后自动运行评估" },
-        "review_evaluation": { "label": "审查评估", "desc": "审查评估结果并做出录用决定" },
-        "hiring_decision": { "label": "录用决定", "desc": "对获得录用/强烈推荐评价的候选人做出决定" },
-        "review_matches": { "label": "审查匹配", "desc": "审查匹配会话结果" },
-        "shortlist_candidates": { "label": "候选人入围", "desc": "将高评级(A+/A)匹配候选人列入入围名单" },
-        "send_interview_invite": { "label": "发送面试邀请", "desc": "向入围候选人发送面试邀请" },
-        "follow_up_invitation": { "label": "跟进邀请", "desc": "候选人未开始面试时跟进" },
-        "interview_reminder": { "label": "面试提醒", "desc": "在预定面试前24小时发送提醒" },
-        "run_matching": { "label": "运行匹配", "desc": "职位发布时自动匹配候选人" },
-        "review_agent_candidates": { "label": "审查代理候选人", "desc": "审查AI代理搜寻到的候选人" },
-        "publish_job": { "label": "发布职位", "desc": "审查并发布新创建的草稿职位" },
-        "close_stale_job": { "label": "关闭过期职位", "desc": "审查开放超过30天且无活动的职位" },
-        "stale_pipeline": { "label": "停滞流程", "desc": "审查在匹配状态停留超过7天的候选人" },
-        "sync_gohire_interviews": { "label": "同步GoHire", "desc": "从GoHire平台同步面试数据" },
-        "reparse_resume": { "label": "重新解析简历", "desc": "对数据不完整的简历重新运行解析" }
+        "evaluate_interview": {
+          "label": "评估面试",
+          "desc": "面试完成后自动运行评估"
+        },
+        "review_evaluation": {
+          "label": "审查评估",
+          "desc": "审查评估结果并做出录用决定"
+        },
+        "hiring_decision": {
+          "label": "录用决定",
+          "desc": "对获得录用/强烈推荐评价的候选人做出决定"
+        },
+        "review_matches": {
+          "label": "审查匹配",
+          "desc": "审查匹配会话结果"
+        },
+        "shortlist_candidates": {
+          "label": "候选人入围",
+          "desc": "将高评级(A+/A)匹配候选人列入入围名单"
+        },
+        "send_interview_invite": {
+          "label": "发送面试邀请",
+          "desc": "向入围候选人发送面试邀请"
+        },
+        "follow_up_invitation": {
+          "label": "跟进邀请",
+          "desc": "候选人未开始面试时跟进"
+        },
+        "interview_reminder": {
+          "label": "面试提醒",
+          "desc": "在预定面试前24小时发送提醒"
+        },
+        "run_matching": {
+          "label": "运行匹配",
+          "desc": "职位发布时自动匹配候选人"
+        },
+        "review_agent_candidates": {
+          "label": "审查代理候选人",
+          "desc": "审查AI代理搜寻到的候选人"
+        },
+        "publish_job": {
+          "label": "发布职位",
+          "desc": "审查并发布新创建的草稿职位"
+        },
+        "close_stale_job": {
+          "label": "关闭过期职位",
+          "desc": "审查开放超过30天且无活动的职位"
+        },
+        "stale_pipeline": {
+          "label": "停滞流程",
+          "desc": "审查在匹配状态停留超过7天的候选人"
+        },
+        "sync_gohire_interviews": {
+          "label": "同步GoHire",
+          "desc": "从GoHire平台同步面试数据"
+        },
+        "reparse_resume": {
+          "label": "重新解析简历",
+          "desc": "对数据不完整的简历重新运行解析"
+        }
       }
-    }
+    },
+    "agentSources": {
+      "title": "代理数据源",
+      "subtitle": "配置 AI 代理在哪里查找候选人。切换全局数据源或管理第三方数据供应商。",
+      "globalToggles": "全局数据源开关",
+      "globalTogglesDesc": "关闭后的数据源将不会出现在任何用户创建代理时的选项中。",
+      "externalApiDesc": "下方配置的第三方数据供应商。",
+      "externalSources": "第三方数据源",
+      "externalSourcesDesc": "代理运行时可调用的第三方数据供应商。凭据以加密方式存储。",
+      "addSource": "添加数据源",
+      "editSource": "编辑外部数据源",
+      "noSources": "尚未配置任何外部数据源。",
+      "confirmDelete": "确定要删除此外部数据源吗？",
+      "test": "测试",
+      "testOk": "测试成功 — 返回 {{count}} 位候选人",
+      "formDesc": "凭据以加密方式保存，不会通过 API 返回。",
+      "name": "名称",
+      "provider": "供应商",
+      "baseUrl": "基础 URL",
+      "authType": "认证方式",
+      "credentials": "凭据（JSON）",
+      "credentialsHint": "api_key 格式：{\"apiKey\": \"…\", \"apiKeyHeader\": \"X-API-Key\"}；basic：{\"username\": \"…\", \"password\": \"…\"}；oauth：{\"accessToken\": \"…\"}。",
+      "enabled": "启用",
+      "invalidJson": "凭据必须是有效的 JSON 对象",
+      "saveFailed": "保存外部数据源失败"
+    },
+    "agentsTerminal": {
+      "title": "代理运维终端",
+      "subtitle": "所有代理的实时事件流",
+      "filterPlaceholder": "过滤事件 / 代理 / 消息…",
+      "waiting": "等待事件…",
+      "recentRuns": "最近运行",
+      "cost": "费用",
+      "duration": "耗时"
+    },
+    "memory": {
+        "users": "有记忆数据的用户",
+        "searchPlaceholder": "按邮箱或姓名搜索…",
+        "showingN": "显示 {{shown}} / {{total}} 位用户",
+        "noUsers": "无匹配用户",
+        "pickUser": "请选择一位用户查看其记忆数据",
+        "interactions": "次交互",
+        "breakGlass": "破窗访问 · 已审计",
+        "tabs": {
+          "profile": "配置",
+          "memories": "记忆",
+          "interactions": "交互",
+          "audit": "审计"
+        },
+        "signalsLearned": "学习信号",
+        "agents": "代理",
+        "lastRebuilt": "最近重建",
+        "topSkills": "主要技能",
+        "topAntiSkills": "负面技能",
+        "topLocations": "主要地点",
+        "topIndustries": "主要行业",
+        "rebuild": "重建配置",
+        "rebuilding": "重建中…",
+        "reset": "重置配置",
+        "confirmReset": "确定要重置该用户的记忆配置吗？此操作无法撤销。",
+        "buildProfile": "立即生成配置",
+        "noProfile": "该用户尚无招聘配置。",
+        "noMemories": "该用户尚无记忆条目。",
+        "noInteractions": "尚未捕获任何交互事件。",
+        "noAudit": "暂无审计记录。",
+        "auditHint": "每一次管理员对该用户数据的操作都会记录在此。审计条目不可修改。",
+        "lastSeen": "最近使用",
+        "expires": "过期",
+        "confirmDelete": "确定要删除此记忆条目吗？审计日志会保留记录。",
+        "saveFailed": "保存失败",
+        "editModal": {
+          "title": "编辑记忆",
+          "warning": "这是一次破窗编辑。操作、前后内容、以及可选的原因都会记入不可变的审计日志。",
+          "content": "内容",
+          "weight": "权重（0-10）",
+          "reason": "原因（可选，会记入审计日志）",
+          "reasonPlaceholder": "例如：support ticket #1234，修正陈旧记忆"
+        }
+      }
+  
   },
   "agents": {
     "title": "Agents",
+    "workbench": {
+      "taskTypeMatchResumes": "简历匹配",
+      "adminScope": "管理员 · 全部用户",
+      "jobSearchPlaceholder": "按职位名称搜索...",
+      "noJobsAvailable": "暂无可用职位，请先创建职位。",
+      "candidateSource": "候选人来源",
+      "candidateSourceDesc": "选择一个或多个代理搜索来源。",
+      "source": {
+        "instant_search": {
+          "name": "即时搜索",
+          "desc": "通过即时匹配管道搜索 RoboHire 内部简历库。"
+        },
+        "internal_minio": {
+          "name": "内部资源库",
+          "desc": "扫描 MinIO 简历存档以查找匹配的候选人。"
+        },
+        "external_api": {
+          "name": "外部来源",
+          "desc": "通过管理员配置的接口查询第三方数据源（LinkedIn、GitHub 等）。"
+        }
+      },
+      "schedule": "调度",
+      "schedulePreset": {
+        "off": "关闭",
+        "hourly": "每小时",
+        "daily": "每日",
+        "weekly": "每周",
+        "custom": "自定义"
+      },
+      "errors": {
+        "sourceRequired": "请至少选择一个候选人来源",
+        "invalidCron": "请输入有效的 cron 表达式（5 段）",
+        "createFailed": "创建代理失败"
+      },
+      "openWorkbench": "打开工作台",
+      "drawer": {
+        "runStatus": "{{status}} · {{triggered}}",
+        "noRuns": "尚无运行记录",
+        "cancel": "取消",
+        "starting": "启动中…",
+        "runNow": "立即运行",
+        "tabs": {
+          "results": "结果",
+          "runs": "运行记录",
+          "activity": "活动日志",
+          "settings": "设置"
+        },
+        "empty": {
+          "title": "尚无运行记录",
+          "desc": "点击顶部的“立即运行”开始第一次执行。"
+        },
+        "filter": {
+          "all": "全部",
+          "pending": "待处理",
+          "liked": "已喜欢",
+          "disliked": "已忽略"
+        },
+        "connecting": "连接中…",
+        "streaming": "结果流式传输中…",
+        "runComplete": "运行完成",
+        "streamError": "连接已断开",
+        "noMatches": "此视图下暂无候选人。",
+        "loadingResults": "正在加载结果…",
+        "dislike": "忽略",
+        "like": "喜欢",
+        "noRunsYet": "尚无运行记录，点击顶部的“立即运行”。",
+        "runStatusLabel": {
+          "queued": "排队中",
+          "running": "运行中",
+          "completed": "已完成",
+          "failed": "失败",
+          "cancelled": "已取消"
+        },
+        "matchedCount": "{{count}} 个匹配",
+        "activityCount": "{{count}} 个事件",
+        "noActivity": "暂无活动记录。",
+        "eventCount": "{{count}} 个事件",
+        "live": {
+          "matched": "已匹配",
+          "scored": "已评分",
+          "calls": "LLM 调用",
+          "cost": "费用",
+          "errors": "错误",
+          "warmingUp": "正在准备…"
+        }
+      },
+      "review": {
+        "title": "审阅候选人",
+        "introTitle": "我找到了一些初步的匹配结果，请审阅这些候选人并反馈你的意见。",
+        "introDesc": "请审阅全部 {{count}} 位候选人以继续。",
+        "reviewProfiles": "审阅候选人",
+        "viewList": "列表视图",
+        "viewReview": "审阅视图",
+        "fullProfile": "查看完整简历",
+        "prev": "上一位",
+        "next": "下一位",
+        "counter": "候选人 {{current}}/{{total}}",
+        "approve": "通过",
+        "reject": "拒绝",
+        "helpText": "此操作仅用于校准代理，不会发送邮件。",
+        "criteriaHint": "使用 ← → 切换候选人，按 Esc 返回。",
+        "doneTitle": "全部候选人已审阅",
+        "doneDesc": "你的反馈已记录。返回列表即可对已通过的候选人执行操作。",
+        "backToList": "返回结果列表",
+        "tabs": {
+          "experience": "工作经历",
+          "education": "教育背景",
+          "skills": "技能"
+        },
+        "noExperience": "未从该简历中解析到工作经历。",
+        "noEducation": "未从该简历中解析到教育背景。",
+        "noSkills": "未从该简历中解析到技能信息。",
+        "unknownCompany": "未知公司",
+        "skillGroups": {
+          "all": "技能",
+          "technical": "技术技能",
+          "languages": "编程语言",
+          "frameworks": "框架",
+          "tools": "工具",
+          "soft": "软技能",
+          "other": "其他",
+          "tags": "标签"
+        },
+        "addCriteria": "添加标准",
+        "editCriteria": "编辑标准",
+        "editCriteriaHint": "使用"
+      },
+      "criteria": {
+        "title": "评估标准",
+        "mostImportant": "最重要",
+        "leastImportant": "次重要",
+        "addCriterion": "添加条件",
+        "addToBucket": "添加到{{bucket}}",
+        "dragHere": "将条件拖到此处，或点击下方添加。",
+        "update": "更新",
+        "selectPreset": "选择预设",
+        "savePreset": "保存预设",
+        "presetsComingSoon": "预设功能即将推出",
+        "pin": "设为必要条件",
+        "unpin": "取消必要",
+        "pinHint": "点击将此项标记为必要条件",
+        "pinnedHint": "必要条件 — 代理将视为一票否决项",
+        "placeholder": "例如：需具备领导和管理经验",
+        "saveFailed": "保存评估标准失败",
+        "noPresets": "尚未保存任何预设",
+        "presetNamePlaceholder": "预设名称",
+        "hrRelationship": "硬性条件先过滤候选池，软性条件再对剩余候选人评分。"
+      },
+      "settings": {
+        "sections": {
+          "identity": "基本信息",
+          "task": "任务类型",
+          "target": "目标岗位",
+          "sources": "候选人来源",
+          "criteria": "搜索条件",
+          "instructions": "指令",
+          "schedule": "调度",
+          "danger": "危险操作",
+          "hardRequirements": "硬性条件",
+          "idealProfile": "理想画像"
+        },
+        "fineTuneCriteria": "精细调整标准",
+        "unsavedChanges": "有未保存的更改",
+        "discard": "放弃更改",
+        "saveChanges": "保存更改",
+        "requiredMissing": "名称、搜索条件和关联岗位为必填项",
+        "deleteAgent": "删除代理",
+        "deleteDesc": "将永久删除该代理及其所有运行记录、候选人和活动日志。此操作不可恢复。",
+        "confirmDelete": "确定要删除此代理吗？此操作无法撤销。"
+      },
+      "summary": {
+        "title": "运行摘要",
+        "subtitle": "耗时 {{duration}} · 匹配出 {{matched}} 位候选人",
+        "matched": "已匹配",
+        "liked": "已喜欢",
+        "pending": "待处理",
+        "errors": "错误",
+        "cost": "费用",
+        "topCandidates": "推荐候选人",
+        "commonStrengths": "共同优势",
+        "commonGaps": "共同短板",
+        "findMore": "寻找更多候选人",
+        "getSuggestions": "获取条件建议",
+        "findMoreHint": "已评估的候选人将被自动跳过。"
+      },
+      "suggestions": {
+        "title": "条件建议",
+        "subtitle": "根据你拒绝的候选人，以下是一些可能有帮助的优化建议。",
+        "analyzing": "正在分析被拒绝的候选人…",
+        "pattern": "识别到的模式",
+        "empty": "暂无具体建议 — 代理认为你的条件已经调校得很好了。",
+        "typeAdd": "新增",
+        "typeModify": "修改",
+        "typeRemove": "移除",
+        "apply": "应用",
+        "applied": "已应用"
+      },
+      "icp": {
+        "title": "理想候选人画像",
+        "version": "v{{n}}",
+        "subtitle": "基于 {{likes}} 次赞和 {{dislikes}} 次踩",
+        "confidence": "置信度",
+        "confidenceLow": "信号不足 — 继续筛选",
+        "confidenceMedium": "渐入佳境 — 多点赞/踩以提升精度",
+        "confidenceHigh": "稳定 — 可用于下一次运行",
+        "confidenceVeryHigh": "非常稳定",
+        "narrative": "总结",
+        "coreSkills": "核心技能",
+        "bonusSkills": "加分技能",
+        "antiTraits": "反向特征 / 红旗",
+        "anchors": "锚定候选人",
+        "anchorsCount": "使用 {{count}} 位点赞候选人作为范例",
+        "history": "历史版本",
+        "revert": "回滚",
+        "suggested": "建议的硬性条件",
+        "promote": "采用",
+        "regenerate": "重新生成",
+        "generateFromJD": "从职位描述生成",
+        "emptyTitle": "教会你的 agent 什么叫\"好\"",
+        "emptyState": "点赞或拒绝几位候选人，我会学到你想要什么。你也可以先从职位描述生成一版。",
+        "generating": "正在理解你的品味…",
+        "generatingHint": "通常 5–15 秒。正在从点赞和拒绝中重新学习。",
+        "noHistory": "还没有历史版本。",
+        "errorTitle": "无法加载理想画像",
+        "badgeUsing": "使用理想画像 v{{n}}",
+        "badgeUsingTooltip": "先按硬性条件过滤，再用该画像评分。",
+        "badgeNone": "尚无理想画像 — 仅使用 JD",
+        "badgeNoneTooltip": "点赞或拒绝候选人以训练 agent。",
+        "deltaStripUpdated": "理想画像已更新 · v{{n}}",
+        "deltaStripNoICP": "准备就绪 — 生成你的第一个理想画像",
+        "applied": "已应用",
+        "discard": "放弃"
+      },
+      "hardRequirements": {
+        "title": "硬性条件",
+        "titleCn": "硬性条件",
+        "titleEn": "Hard requirements",
+        "badge": "严格过滤",
+        "warning": "不满足全部条件的候选人将被直接排除（不是降分）。请谨慎使用。",
+        "addRule": "添加硬性条件",
+        "removeRule": "删除规则：{{desc}}",
+        "emptyTitle": "暂无严格过滤条件。",
+        "emptyDesc": "所有已获取的候选人都将进入评分阶段。",
+        "quickAdd": "快速添加",
+        "fieldLabel": "字段",
+        "operatorLabel": "操作符",
+        "tagPlaceholder": "输入后按回车",
+        "dryRun": "当前约会排除 {{pct}}% 的候选人",
+        "dryRunWarning": "警告：将排除几乎所有候选人（{{pct}}%）",
+        "warningTitle": "硬性条件可能排除几乎所有候选人",
+        "warningTitleBlocking": "硬性条件将排除所有候选人",
+        "warningSubtitle": "运行前请检查。",
+        "ofPool": "在 {{total}} 位候选人中：",
+        "excludedCount": "{{count}} 人被过滤",
+        "remainingCount": "{{count}} 人将进入评分",
+        "topOffenders": "排除最多的规则",
+        "excludesN": "排除 {{n}}",
+        "runAnyway": "仍然运行",
+        "editRules": "编辑硬性条件",
+        "fields": {
+          "experienceYears": "工作年限",
+          "salaryExpectation": "期望薪资",
+          "location": "地点",
+          "currentRole": "当前职位",
+          "education.degree": "学历",
+          "education.field": "专业",
+          "languages": "语言",
+          "skills.technical": "技术技能",
+          "tags": "标签",
+          "custom": "自定义正则"
+        },
+        "operators": {
+          "eq": "等于",
+          "neq": "不等于",
+          "gte": "≥（至少）",
+          "lte": "≤（至多）",
+          "gt": ">",
+          "lt": "<",
+          "contains": "包含",
+          "contains_any": "包含任一",
+          "contains_all": "包含全部",
+          "not_contains": "不包含",
+          "matches": "匹配",
+          "not_matches": "不匹配",
+          "in": "属于",
+          "not_in": "不属于"
+        },
+        "degrees": {
+          "HighSchool": "高中",
+          "Associate": "大专",
+          "Bachelor": "本科",
+          "Master": "硕士",
+          "PhD": "博士"
+        },
+        "presets": {
+          "yearsExp": "5 年以上经验",
+          "location": "位于…",
+          "english": "会英语",
+          "bachelor": "本科及以上"
+        },
+        "validation": {
+          "mustBeNumber": "必须为数字",
+          "addAtLeastOne": "至少添加一个值",
+          "emptyRegex": "正则不能为空",
+          "invalidRegex": "无效的正则表达式"
+        }
+      },
+      "regenModal": {
+        "title": "重新生成理想画像",
+        "comparing": "分析信号中…",
+        "applyNew": "采用新版本",
+        "discard": "放弃",
+        "confidenceDelta": "置信度",
+        "addedTraits": "新增",
+        "removedTraits": "移除"
+      },
+      "create": {
+        "hardRequirementsStep": {
+          "label": "硬性条件",
+          "optional": "可选"
+        }
+      }
+    },
     "subtitle": "RoboHire Agent 可以自动搜索、审核并联系候选人。",
     "create": "新建 Agent",
     "myAgents": "我的 Agents",
@@ -5161,11 +5600,5 @@
       "hoursLeft": "剩余{{count}}小时",
       "daysLeft": "剩余{{count}}天"
     }
-  },
-  "notifications": {
-    "title": "通知",
-    "markAllRead": "全部标为已读",
-    "empty": "暂无通知",
-    "viewAll": "查看所有任务"
   }
 }

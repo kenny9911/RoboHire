@@ -1166,17 +1166,9 @@
   },
   "notifications": {
     "title": "Notifications",
-    "empty": "You are all caught up.",
-    "viewAll": "View all activity",
-    "match": "New match",
-    "invitation": "Invitation sent",
-    "interview": "Interview completed",
-    "subtitle": "{{name}} · {{request}}",
-    "candidate": "Candidate",
-    "justNow": "just now",
-    "minutesAgo": "{{count}}m ago",
-    "hoursAgo": "{{count}}h ago",
-    "daysAgo": "{{count}}d ago"
+    "markAllRead": "Mark all read",
+    "empty": "No notifications",
+    "viewAll": "View all tasks"
   },
   "apiPlayground": {
     "title": "API Playground",
@@ -4158,26 +4150,473 @@
       "autoExecute": "Auto-execute",
       "emailNotify": "Email notify",
       "types": {
-        "evaluate_interview": { "label": "Evaluate Interview", "desc": "Auto-run evaluation after interview completes" },
-        "review_evaluation": { "label": "Review Evaluation", "desc": "Review evaluation results and make hiring decision" },
-        "hiring_decision": { "label": "Hiring Decision", "desc": "Decide on candidates with hire/strong_hire verdict" },
-        "review_matches": { "label": "Review Matches", "desc": "Review matching session results" },
-        "shortlist_candidates": { "label": "Shortlist Candidates", "desc": "Shortlist high-grade (A+/A) match candidates" },
-        "send_interview_invite": { "label": "Send Interview Invite", "desc": "Send interview invitation to shortlisted candidates" },
-        "follow_up_invitation": { "label": "Follow Up Invitation", "desc": "Follow up when candidate hasn't started interview" },
-        "interview_reminder": { "label": "Interview Reminder", "desc": "Send reminder 24h before scheduled interview" },
-        "run_matching": { "label": "Run Matching", "desc": "Auto-match candidates when a job is published" },
-        "review_agent_candidates": { "label": "Review Agent Candidates", "desc": "Review candidates sourced by AI agents" },
-        "publish_job": { "label": "Publish Job", "desc": "Review and publish newly created draft jobs" },
-        "close_stale_job": { "label": "Close Stale Job", "desc": "Review jobs open 30+ days with no activity" },
-        "stale_pipeline": { "label": "Stale Pipeline", "desc": "Review candidates stuck in matched status 7+ days" },
-        "sync_gohire_interviews": { "label": "Sync GoHire", "desc": "Sync interview data from GoHire platform" },
-        "reparse_resume": { "label": "Reparse Resume", "desc": "Re-run parse on resumes with incomplete data" }
+        "evaluate_interview": {
+          "label": "Evaluate Interview",
+          "desc": "Auto-run evaluation after interview completes"
+        },
+        "review_evaluation": {
+          "label": "Review Evaluation",
+          "desc": "Review evaluation results and make hiring decision"
+        },
+        "hiring_decision": {
+          "label": "Hiring Decision",
+          "desc": "Decide on candidates with hire/strong_hire verdict"
+        },
+        "review_matches": {
+          "label": "Review Matches",
+          "desc": "Review matching session results"
+        },
+        "shortlist_candidates": {
+          "label": "Shortlist Candidates",
+          "desc": "Shortlist high-grade (A+/A) match candidates"
+        },
+        "send_interview_invite": {
+          "label": "Send Interview Invite",
+          "desc": "Send interview invitation to shortlisted candidates"
+        },
+        "follow_up_invitation": {
+          "label": "Follow Up Invitation",
+          "desc": "Follow up when candidate hasn't started interview"
+        },
+        "interview_reminder": {
+          "label": "Interview Reminder",
+          "desc": "Send reminder 24h before scheduled interview"
+        },
+        "run_matching": {
+          "label": "Run Matching",
+          "desc": "Auto-match candidates when a job is published"
+        },
+        "review_agent_candidates": {
+          "label": "Review Agent Candidates",
+          "desc": "Review candidates sourced by AI agents"
+        },
+        "publish_job": {
+          "label": "Publish Job",
+          "desc": "Review and publish newly created draft jobs"
+        },
+        "close_stale_job": {
+          "label": "Close Stale Job",
+          "desc": "Review jobs open 30+ days with no activity"
+        },
+        "stale_pipeline": {
+          "label": "Stale Pipeline",
+          "desc": "Review candidates stuck in matched status 7+ days"
+        },
+        "sync_gohire_interviews": {
+          "label": "Sync GoHire",
+          "desc": "Sync interview data from GoHire platform"
+        },
+        "reparse_resume": {
+          "label": "Reparse Resume",
+          "desc": "Re-run parse on resumes with incomplete data"
+        }
       }
-    }
+    },
+    "agentSources": {
+      "title": "Agent Sources",
+      "subtitle": "Configure where the hireable agents look for candidates. Toggle global sources and manage third-party sourcing vendors.",
+      "globalToggles": "Global source toggles",
+      "globalTogglesDesc": "Disabled sources are hidden from the agent creation modal across every user in this workspace.",
+      "externalApiDesc": "Third-party sourcing vendors configured below.",
+      "externalSources": "External sources",
+      "externalSourcesDesc": "Third-party sourcing vendors agents can query at runtime. Credentials are encrypted at rest.",
+      "addSource": "Add source",
+      "editSource": "Edit external source",
+      "noSources": "No external sources configured yet.",
+      "confirmDelete": "Delete this external source?",
+      "test": "Test",
+      "testOk": "Test OK — returned {{count}} candidate(s)",
+      "formDesc": "Credentials are encrypted at rest and never returned over the API.",
+      "name": "Name",
+      "provider": "Provider",
+      "baseUrl": "Base URL",
+      "authType": "Auth type",
+      "credentials": "Credentials (JSON)",
+      "credentialsHint": "For api_key: {\"apiKey\": \"…\", \"apiKeyHeader\": \"X-API-Key\"}. For basic: {\"username\": \"…\", \"password\": \"…\"}. For oauth: {\"accessToken\": \"…\"}.",
+      "enabled": "Enabled",
+      "invalidJson": "Credentials must be a valid JSON object",
+      "saveFailed": "Failed to save external source"
+    },
+    "agentsTerminal": {
+      "title": "Agent Operations Terminal",
+      "subtitle": "Realtime event stream across all agents",
+      "filterPlaceholder": "Filter events / agents / messages...",
+      "waiting": "Waiting for events...",
+      "recentRuns": "Recent Runs",
+      "cost": "cost",
+      "duration": "duration"
+    },
+    "memory": {
+        "users": "Users with memory data",
+        "searchPlaceholder": "Search by email or name…",
+        "showingN": "{{shown}} of {{total}} users",
+        "noUsers": "No users match",
+        "pickUser": "Select a user to view their memory data",
+        "interactions": "interactions",
+        "breakGlass": "BREAK-GLASS · AUDITED",
+        "tabs": {
+          "profile": "Profile",
+          "memories": "Memories",
+          "interactions": "Interactions",
+          "audit": "Audit"
+        },
+        "signalsLearned": "Signals learned",
+        "agents": "Agents",
+        "lastRebuilt": "Last rebuilt",
+        "topSkills": "Top skills",
+        "topAntiSkills": "Top anti-skills",
+        "topLocations": "Top locations",
+        "topIndustries": "Top industries",
+        "rebuild": "Rebuild profile",
+        "rebuilding": "Rebuilding…",
+        "reset": "Reset profile",
+        "confirmReset": "Reset this user's memory profile? This cannot be undone.",
+        "buildProfile": "Build profile now",
+        "noProfile": "No recruiter profile yet.",
+        "noMemories": "No memories yet for this user.",
+        "noInteractions": "No interaction events captured yet.",
+        "noAudit": "No audit entries yet.",
+        "auditHint": "Every admin action on this user's data is captured here. Audit entries are immutable.",
+        "lastSeen": "Last seen",
+        "expires": "expires",
+        "confirmDelete": "Delete this memory? Audit will retain the record.",
+        "saveFailed": "Failed to save",
+        "editModal": {
+          "title": "Edit memory",
+          "warning": "This is a break-glass edit. The action, before/after, and optional reason are stored in an immutable audit log.",
+          "content": "Content",
+          "weight": "Weight (0-10)",
+          "reason": "Reason (optional, captured in audit log)",
+          "reasonPlaceholder": "e.g. support ticket #1234, correcting stale fact"
+        }
+      }
+  
   },
   "agents": {
     "title": "Agents",
+    "workbench": {
+      "taskTypeMatchResumes": "Match Resumes",
+      "adminScope": "admin · all users",
+      "jobSearchPlaceholder": "Search jobs by title...",
+      "noJobsAvailable": "No jobs available. Create a job first.",
+      "candidateSource": "Candidate Source",
+      "candidateSourceDesc": "Pick one or more places the agent should search.",
+      "source": {
+        "instant_search": {
+          "name": "Instant Search",
+          "desc": "Search RoboHire internal resumes via the instant matching pipeline."
+        },
+        "internal_minio": {
+          "name": "Internal Repository",
+          "desc": "Scan the MinIO resume archive for matching candidates."
+        },
+        "external_api": {
+          "name": "External Sources",
+          "desc": "Query third-party providers (LinkedIn, GitHub, etc.) via admin-configured APIs."
+        }
+      },
+      "schedule": "Schedule",
+      "schedulePreset": {
+        "off": "Off",
+        "hourly": "Hourly",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "custom": "Custom"
+      },
+      "errors": {
+        "sourceRequired": "Pick at least one candidate source",
+        "invalidCron": "Enter a valid cron expression (5 fields)",
+        "createFailed": "Failed to create agent"
+      },
+      "openWorkbench": "Open workbench",
+      "drawer": {
+        "runStatus": "{{status}} · {{triggered}}",
+        "noRuns": "No runs yet",
+        "cancel": "Cancel",
+        "starting": "Starting…",
+        "runNow": "Run now",
+        "tabs": {
+          "results": "Results",
+          "runs": "Runs",
+          "activity": "Activity",
+          "settings": "Settings"
+        },
+        "empty": {
+          "title": "No runs yet",
+          "desc": "Click \"Run now\" in the header to start the first execution."
+        },
+        "filter": {
+          "all": "All",
+          "pending": "Pending",
+          "liked": "Liked",
+          "disliked": "Disliked"
+        },
+        "connecting": "Connecting…",
+        "streaming": "Streaming results…",
+        "runComplete": "Run complete",
+        "streamError": "Stream disconnected",
+        "noMatches": "No candidates in this view yet.",
+        "loadingResults": "Loading results…",
+        "dislike": "Dislike",
+        "like": "Like",
+        "noRunsYet": "No runs yet. Click \"Run now\" in the header.",
+        "runStatusLabel": {
+          "queued": "Queued",
+          "running": "Running",
+          "completed": "Completed",
+          "failed": "Failed",
+          "cancelled": "Cancelled"
+        },
+        "matchedCount": "{{count}} matched",
+        "activityCount": "{{count}} events",
+        "noActivity": "No activity yet.",
+        "eventCount": "{{count}} events",
+        "live": {
+          "matched": "matched",
+          "scored": "scored",
+          "calls": "LLM calls",
+          "cost": "cost",
+          "errors": "errors",
+          "warmingUp": "Warming up…"
+        }
+      },
+      "review": {
+        "title": "Review Profiles",
+        "introTitle": "I've found initial matches. Please review these profiles and share your feedback.",
+        "introDesc": "Approve all {{count}} profiles to continue.",
+        "reviewProfiles": "Review Profiles",
+        "viewList": "List view",
+        "viewReview": "Review view",
+        "fullProfile": "Full profile",
+        "prev": "Previous",
+        "next": "Next",
+        "counter": "Profile {{current}}/{{total}}",
+        "approve": "Approve",
+        "reject": "Reject",
+        "helpText": "This only calibrates the agent and does not send emails.",
+        "criteriaHint": "Use ← → to navigate and Esc to return.",
+        "doneTitle": "All profiles reviewed",
+        "doneDesc": "Your feedback has been recorded. Return to the list to take action on approved profiles.",
+        "backToList": "Back to results",
+        "tabs": {
+          "experience": "Experience",
+          "education": "Education",
+          "skills": "Skills"
+        },
+        "noExperience": "No experience data parsed from this resume.",
+        "noEducation": "No education data parsed from this resume.",
+        "noSkills": "No skills data parsed from this resume.",
+        "unknownCompany": "Unknown",
+        "skillGroups": {
+          "all": "Skills",
+          "technical": "Technical",
+          "languages": "Languages",
+          "frameworks": "Frameworks",
+          "tools": "Tools",
+          "soft": "Soft Skills",
+          "other": "Other",
+          "tags": "Tags"
+        },
+        "addCriteria": "Add Criteria",
+        "editCriteria": "Edit Criteria",
+        "editCriteriaHint": "Pin criteria as mandatory or re-order by importance using "
+      },
+      "criteria": {
+        "title": "Criteria",
+        "mostImportant": "Most Important",
+        "leastImportant": "Least Important",
+        "addCriterion": "Add Criterion",
+        "addToBucket": "Add to {{bucket}}",
+        "dragHere": "Drop a criterion here, or click Add below.",
+        "update": "Update",
+        "selectPreset": "Select Preset",
+        "savePreset": "Save Preset",
+        "presetsComingSoon": "Presets coming soon",
+        "pin": "Pin as mandatory",
+        "unpin": "Unpin",
+        "pinHint": "Click to mark as mandatory requirement",
+        "pinnedHint": "Mandatory — agent must treat this as a dealbreaker",
+        "placeholder": "Should have experience in leadership and management",
+        "saveFailed": "Failed to save criteria",
+        "noPresets": "No presets saved yet",
+        "presetNamePlaceholder": "Preset name",
+        "hrRelationship": "Hard requirements run first to filter the pool. Then soft criteria score what's left."
+      },
+      "settings": {
+        "sections": {
+          "identity": "Identity",
+          "task": "Task",
+          "target": "Target",
+          "sources": "Candidate Sources",
+          "criteria": "Search Criteria",
+          "instructions": "Instructions",
+          "schedule": "Schedule",
+          "danger": "Danger Zone",
+          "hardRequirements": "Hard Requirements",
+          "idealProfile": "Ideal Profile"
+        },
+        "fineTuneCriteria": "Fine-tune criteria",
+        "unsavedChanges": "You have unsaved changes",
+        "discard": "Discard",
+        "saveChanges": "Save changes",
+        "requiredMissing": "Name, search criteria, and linked job are required",
+        "deleteAgent": "Delete agent",
+        "deleteDesc": "Removes the agent, its runs, candidates, and activity log. This cannot be undone.",
+        "confirmDelete": "Delete this agent? This cannot be undone."
+      },
+      "summary": {
+        "title": "Run summary",
+        "subtitle": "Completed in {{duration}} · {{matched}} candidates surfaced",
+        "matched": "Matched",
+        "liked": "Liked",
+        "pending": "Pending",
+        "errors": "Errors",
+        "cost": "Cost",
+        "topCandidates": "Top candidates",
+        "commonStrengths": "Common strengths",
+        "commonGaps": "Common gaps",
+        "findMore": "Find more candidates",
+        "getSuggestions": "Get criteria suggestions",
+        "findMoreHint": "Already-evaluated candidates are skipped automatically."
+      },
+      "suggestions": {
+        "title": "Criteria suggestions",
+        "subtitle": "Based on the candidates you rejected, here are some refinements that could help.",
+        "analyzing": "Analyzing rejected candidates…",
+        "pattern": "Pattern detected",
+        "empty": "No specific suggestions — the agent thinks your criteria are well-tuned.",
+        "typeAdd": "Add",
+        "typeModify": "Modify",
+        "typeRemove": "Remove",
+        "apply": "Apply",
+        "applied": "Applied"
+      },
+      "icp": {
+        "title": "Ideal Candidate Profile",
+        "version": "v{{n}}",
+        "subtitle": "Learned from {{likes}} likes · {{dislikes}} dislikes",
+        "confidence": "Confidence",
+        "confidenceLow": "Too few signals — keep triaging",
+        "confidenceMedium": "Getting warmer — like/dislike more to sharpen",
+        "confidenceHigh": "Solid — ready to guide the next run",
+        "confidenceVeryHigh": "Very stable",
+        "narrative": "Narrative",
+        "coreSkills": "Core skills",
+        "bonusSkills": "Bonus skills",
+        "antiTraits": "Anti-traits / red flags",
+        "anchors": "Anchor candidates",
+        "anchorsCount": "{{count}} liked candidates used as ground-truth exemplars",
+        "history": "History",
+        "revert": "Revert",
+        "suggested": "Suggested hard requirements",
+        "promote": "Promote",
+        "regenerate": "Regenerate",
+        "generateFromJD": "Generate from job description",
+        "emptyTitle": "Teach your agent what \"great\" looks like",
+        "emptyState": "Like or dislike a few candidates and I'll learn what you're looking for. You can also generate a profile from the job description alone.",
+        "generating": "Synthesizing your taste…",
+        "generatingHint": "Typically 5–15 seconds. Re-learning from likes and dislikes.",
+        "noHistory": "No history yet.",
+        "errorTitle": "Couldn't load ideal profile",
+        "badgeUsing": "Using ideal profile v{{n}}",
+        "badgeUsingTooltip": "Filters by hard requirements, then scores using this ICP.",
+        "badgeNone": "No ideal profile yet — using JD only",
+        "badgeNoneTooltip": "Like or dislike candidates to teach the agent.",
+        "deltaStripUpdated": "Ideal profile updated · v{{n}}",
+        "deltaStripNoICP": "Ready to learn — generate your first ideal profile",
+        "applied": "Applied",
+        "discard": "Discard"
+      },
+      "hardRequirements": {
+        "title": "Hard requirements",
+        "titleCn": "",
+        "titleEn": "Hard requirements",
+        "badge": "Strict Filter",
+        "warning": "Candidates not meeting ALL of these are excluded entirely — not down-scored. Use sparingly.",
+        "addRule": "Add hard requirement",
+        "removeRule": "Remove rule: {{desc}}",
+        "emptyTitle": "No strict filters yet.",
+        "emptyDesc": "Every sourced candidate will reach the scoring stage.",
+        "quickAdd": "Quick add",
+        "fieldLabel": "Field",
+        "operatorLabel": "Operator",
+        "tagPlaceholder": "Type and press Enter",
+        "dryRun": "Currently excludes ~{{pct}}% of candidates",
+        "dryRunWarning": "Warning: would exclude almost everyone ({{pct}}%)",
+        "warningTitle": "Hard requirements may exclude almost everyone",
+        "warningTitleBlocking": "Hard requirements exclude everyone",
+        "warningSubtitle": "Review before running.",
+        "ofPool": "Of {{total}} sourced candidates:",
+        "excludedCount": "{{count}} excluded by filters",
+        "remainingCount": "{{count}} would be evaluated",
+        "topOffenders": "Top rules removing the pool",
+        "excludesN": "excludes {{n}}",
+        "runAnyway": "Run anyway",
+        "editRules": "Edit hard requirements",
+        "fields": {
+          "experienceYears": "Experience (years)",
+          "salaryExpectation": "Salary expectation",
+          "location": "Location",
+          "currentRole": "Current role",
+          "education.degree": "Degree",
+          "education.field": "Field of study",
+          "languages": "Languages",
+          "skills.technical": "Technical skill",
+          "tags": "Tags",
+          "custom": "Custom regex"
+        },
+        "operators": {
+          "eq": "equals",
+          "neq": "not equals",
+          "gte": "≥ (at least)",
+          "lte": "≤ (at most)",
+          "gt": ">",
+          "lt": "<",
+          "contains": "contains",
+          "contains_any": "contains any of",
+          "contains_all": "contains all of",
+          "not_contains": "does not contain",
+          "matches": "matches",
+          "not_matches": "does not match",
+          "in": "is any of",
+          "not_in": "is none of"
+        },
+        "degrees": {
+          "HighSchool": "High School",
+          "Associate": "Associate",
+          "Bachelor": "Bachelor",
+          "Master": "Master",
+          "PhD": "PhD"
+        },
+        "presets": {
+          "yearsExp": "5+ years exp",
+          "location": "Located in…",
+          "english": "Speaks English",
+          "bachelor": "Bachelor+"
+        },
+        "validation": {
+          "mustBeNumber": "Value must be a number",
+          "addAtLeastOne": "Add at least one value",
+          "emptyRegex": "Regex cannot be empty",
+          "invalidRegex": "Invalid regular expression"
+        }
+      },
+      "regenModal": {
+        "title": "Regenerate ideal profile",
+        "comparing": "Analyzing signals…",
+        "applyNew": "Apply new version",
+        "discard": "Discard",
+        "confidenceDelta": "Confidence",
+        "addedTraits": "Added",
+        "removedTraits": "Removed"
+      },
+      "create": {
+        "hardRequirementsStep": {
+          "label": "Hard Requirements",
+          "optional": "optional"
+        }
+      }
+    },
     "subtitle": "RoboHire agents can source, review, and reach out to profiles autonomously.",
     "create": "Create new agent",
     "myAgents": "My Agents",
@@ -5043,11 +5482,5 @@
       "hoursLeft": "{{count}}h left",
       "daysLeft": "{{count}}d left"
     }
-  },
-  "notifications": {
-    "title": "Notifications",
-    "markAllRead": "Mark all read",
-    "empty": "No notifications",
-    "viewAll": "View all tasks"
   }
 }

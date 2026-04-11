@@ -7,6 +7,9 @@ import prisma from '../lib/prisma.js';
 import { clearLimitsCache, getPlanLimits, resolveUserUsageLimitsFromPlan } from '../middleware/usageMeter.js';
 import { updatePriceId } from './checkout.js';
 import adminMonitorRouter from './adminMonitor.js';
+import adminAgentSourcesRouter from './adminAgentSources.js';
+import adminAgentsTerminalRouter from './adminAgentsTerminal.js';
+import adminMemoryRouter from './adminMemory.js';
 import {
   PRICING_CURRENCIES,
   PRICING_DISCOUNT_COUPON_KEY,
@@ -31,6 +34,9 @@ const router = Router();
 // All admin routes require auth + admin role
 router.use(requireAuth, requireAdmin);
 router.use('/monitor', adminMonitorRouter);
+router.use('/agent-sources', adminAgentSourcesRouter);
+router.use('/agents-terminal', adminAgentsTerminalRouter);
+router.use('/memory', adminMemoryRouter);
 
 type UsageBucket = 'hour' | 'day' | 'week';
 

@@ -1167,17 +1167,9 @@
   },
   "notifications": {
     "title": "通知",
-    "empty": "暫無新動態。",
-    "viewAll": "檢視全部動態",
-    "match": "新增匹配",
-    "invitation": "已傳送面試邀請",
-    "interview": "面試已完成",
-    "subtitle": "{{name}} · {{request}}",
-    "candidate": "候選人",
-    "justNow": "剛剛",
-    "minutesAgo": "{{count}} 分鐘前",
-    "hoursAgo": "{{count}} 小時前",
-    "daysAgo": "{{count}} 天前"
+    "markAllRead": "全部標為已讀",
+    "empty": "暫無通知",
+    "viewAll": "檢視所有任務"
   },
   "apiPlayground": {
     "title": "API 測試",
@@ -4173,26 +4165,473 @@
       "autoExecute": "自動執行",
       "emailNotify": "郵件通知",
       "types": {
-        "evaluate_interview": { "label": "評估面試", "desc": "面試完成後自動執行評估" },
-        "review_evaluation": { "label": "審查評估", "desc": "審查評估結果並做出錄用決定" },
-        "hiring_decision": { "label": "錄用決定", "desc": "對獲得錄用/強烈推薦的候選人做出決定" },
-        "review_matches": { "label": "審查匹配", "desc": "審查匹配工作階段結果" },
-        "shortlist_candidates": { "label": "候選人入圍", "desc": "將高評級(A+/A)匹配候選人列入入圍名單" },
-        "send_interview_invite": { "label": "發送面試邀請", "desc": "向入圍候選人發送面試邀請" },
-        "follow_up_invitation": { "label": "跟進邀請", "desc": "候選人未開始面試時跟進" },
-        "interview_reminder": { "label": "面試提醒", "desc": "在預定面試前24小時發送提醒" },
-        "run_matching": { "label": "執行匹配", "desc": "職位發布時自動匹配候選人" },
-        "review_agent_candidates": { "label": "審查代理候選人", "desc": "審查AI代理搜尋到的候選人" },
-        "publish_job": { "label": "發布職位", "desc": "審查並發布新建立的草稿職位" },
-        "close_stale_job": { "label": "關閉過期職位", "desc": "審查開放超過30天且無活動的職位" },
-        "stale_pipeline": { "label": "停滯流程", "desc": "審查在匹配狀態停留超過7天的候選人" },
-        "sync_gohire_interviews": { "label": "同步GoHire", "desc": "從GoHire平台同步面試資料" },
-        "reparse_resume": { "label": "重新解析履歷", "desc": "對資料不完整的履歷重新執行解析" }
+        "evaluate_interview": {
+          "label": "評估面試",
+          "desc": "面試完成後自動執行評估"
+        },
+        "review_evaluation": {
+          "label": "審查評估",
+          "desc": "審查評估結果並做出錄用決定"
+        },
+        "hiring_decision": {
+          "label": "錄用決定",
+          "desc": "對獲得錄用/強烈推薦的候選人做出決定"
+        },
+        "review_matches": {
+          "label": "審查匹配",
+          "desc": "審查匹配工作階段結果"
+        },
+        "shortlist_candidates": {
+          "label": "候選人入圍",
+          "desc": "將高評級(A+/A)匹配候選人列入入圍名單"
+        },
+        "send_interview_invite": {
+          "label": "發送面試邀請",
+          "desc": "向入圍候選人發送面試邀請"
+        },
+        "follow_up_invitation": {
+          "label": "跟進邀請",
+          "desc": "候選人未開始面試時跟進"
+        },
+        "interview_reminder": {
+          "label": "面試提醒",
+          "desc": "在預定面試前24小時發送提醒"
+        },
+        "run_matching": {
+          "label": "執行匹配",
+          "desc": "職位發布時自動匹配候選人"
+        },
+        "review_agent_candidates": {
+          "label": "審查代理候選人",
+          "desc": "審查AI代理搜尋到的候選人"
+        },
+        "publish_job": {
+          "label": "發布職位",
+          "desc": "審查並發布新建立的草稿職位"
+        },
+        "close_stale_job": {
+          "label": "關閉過期職位",
+          "desc": "審查開放超過30天且無活動的職位"
+        },
+        "stale_pipeline": {
+          "label": "停滯流程",
+          "desc": "審查在匹配狀態停留超過7天的候選人"
+        },
+        "sync_gohire_interviews": {
+          "label": "同步GoHire",
+          "desc": "從GoHire平台同步面試資料"
+        },
+        "reparse_resume": {
+          "label": "重新解析履歷",
+          "desc": "對資料不完整的履歷重新執行解析"
+        }
       }
-    }
+    },
+    "agentSources": {
+      "title": "代理資料源",
+      "subtitle": "設定 AI 代理在哪裡尋找候選人。切換全域資料源或管理第三方資料供應商。",
+      "globalToggles": "全域資料源開關",
+      "globalTogglesDesc": "關閉後的資料源將不會出現在任何使用者建立代理時的選項中。",
+      "externalApiDesc": "下方設定的第三方資料供應商。",
+      "externalSources": "第三方資料源",
+      "externalSourcesDesc": "代理執行時可呼叫的第三方資料供應商。憑證以加密方式儲存。",
+      "addSource": "新增資料源",
+      "editSource": "編輯外部資料源",
+      "noSources": "尚未設定任何外部資料源。",
+      "confirmDelete": "確定要刪除此外部資料源嗎？",
+      "test": "測試",
+      "testOk": "測試成功 — 返回 {{count}} 位候選人",
+      "formDesc": "憑證以加密方式儲存，不會透過 API 回傳。",
+      "name": "名稱",
+      "provider": "供應商",
+      "baseUrl": "基礎 URL",
+      "authType": "驗證方式",
+      "credentials": "憑證（JSON）",
+      "credentialsHint": "api_key 格式：{\"apiKey\": \"…\", \"apiKeyHeader\": \"X-API-Key\"}；basic：{\"username\": \"…\", \"password\": \"…\"}；oauth：{\"accessToken\": \"…\"}。",
+      "enabled": "啟用",
+      "invalidJson": "憑證必須是有效的 JSON 物件",
+      "saveFailed": "儲存外部資料源失敗"
+    },
+    "agentsTerminal": {
+      "title": "代理運維終端",
+      "subtitle": "所有代理的即時事件流",
+      "filterPlaceholder": "過濾事件 / 代理 / 訊息…",
+      "waiting": "等待事件…",
+      "recentRuns": "最近執行",
+      "cost": "費用",
+      "duration": "耗時"
+    },
+    "memory": {
+        "users": "有記憶資料的使用者",
+        "searchPlaceholder": "依電郵或姓名搜尋…",
+        "showingN": "顯示 {{shown}} / {{total}} 位使用者",
+        "noUsers": "無符合使用者",
+        "pickUser": "請選擇使用者以檢視其記憶資料",
+        "interactions": "次互動",
+        "breakGlass": "破窗存取 · 已稽核",
+        "tabs": {
+          "profile": "設定檔",
+          "memories": "記憶",
+          "interactions": "互動",
+          "audit": "稽核"
+        },
+        "signalsLearned": "學習訊號",
+        "agents": "代理",
+        "lastRebuilt": "最近重建",
+        "topSkills": "主要技能",
+        "topAntiSkills": "負面技能",
+        "topLocations": "主要地點",
+        "topIndustries": "主要產業",
+        "rebuild": "重建設定檔",
+        "rebuilding": "重建中…",
+        "reset": "重置設定檔",
+        "confirmReset": "確定要重置此使用者的記憶設定檔嗎？此操作無法復原。",
+        "buildProfile": "立即建立設定檔",
+        "noProfile": "此使用者尚無招募設定檔。",
+        "noMemories": "此使用者尚無記憶條目。",
+        "noInteractions": "尚未擷取任何互動事件。",
+        "noAudit": "暫無稽核記錄。",
+        "auditHint": "每一次管理員對此使用者資料的操作都會記錄於此。稽核條目不可變更。",
+        "lastSeen": "最近使用",
+        "expires": "過期",
+        "confirmDelete": "確定要刪除此記憶條目嗎？稽核記錄會保留。",
+        "saveFailed": "儲存失敗",
+        "editModal": {
+          "title": "編輯記憶",
+          "warning": "這是一次破窗編輯。操作、前後內容、以及可選原因都會記入不可變的稽核記錄。",
+          "content": "內容",
+          "weight": "權重（0-10）",
+          "reason": "原因（可選，會記入稽核記錄）",
+          "reasonPlaceholder": "例：support ticket #1234，更正過時記憶"
+        }
+      }
+  
   },
   "agents": {
     "title": "Agents",
+    "workbench": {
+      "taskTypeMatchResumes": "履歷匹配",
+      "adminScope": "管理員 · 全部使用者",
+      "jobSearchPlaceholder": "依職位名稱搜尋...",
+      "noJobsAvailable": "目前沒有可用的職位，請先建立職位。",
+      "candidateSource": "候選人來源",
+      "candidateSourceDesc": "選擇一個或多個代理搜尋來源。",
+      "source": {
+        "instant_search": {
+          "name": "即時搜尋",
+          "desc": "透過即時匹配流程搜尋 RoboHire 內部履歷庫。"
+        },
+        "internal_minio": {
+          "name": "內部資源庫",
+          "desc": "掃描 MinIO 履歷封存尋找匹配的候選人。"
+        },
+        "external_api": {
+          "name": "外部來源",
+          "desc": "透過管理員設定的 API 查詢第三方來源（LinkedIn、GitHub 等）。"
+        }
+      },
+      "schedule": "排程",
+      "schedulePreset": {
+        "off": "關閉",
+        "hourly": "每小時",
+        "daily": "每日",
+        "weekly": "每週",
+        "custom": "自訂"
+      },
+      "errors": {
+        "sourceRequired": "請至少選擇一個候選人來源",
+        "invalidCron": "請輸入有效的 cron 運算式（5 段）",
+        "createFailed": "建立代理失敗"
+      },
+      "openWorkbench": "開啟工作台",
+      "drawer": {
+        "runStatus": "{{status}} · {{triggered}}",
+        "noRuns": "尚無執行記錄",
+        "cancel": "取消",
+        "starting": "啟動中…",
+        "runNow": "立即執行",
+        "tabs": {
+          "results": "結果",
+          "runs": "執行記錄",
+          "activity": "活動記錄",
+          "settings": "設定"
+        },
+        "empty": {
+          "title": "尚無執行記錄",
+          "desc": "點擊頂部的「立即執行」開始第一次執行。"
+        },
+        "filter": {
+          "all": "全部",
+          "pending": "待處理",
+          "liked": "已喜歡",
+          "disliked": "已忽略"
+        },
+        "connecting": "連線中…",
+        "streaming": "結果串流中…",
+        "runComplete": "執行完成",
+        "streamError": "連線已中斷",
+        "noMatches": "此檢視下暫無候選人。",
+        "loadingResults": "正在載入結果…",
+        "dislike": "忽略",
+        "like": "喜歡",
+        "noRunsYet": "尚無執行記錄，點擊頂部的「立即執行」。",
+        "runStatusLabel": {
+          "queued": "排隊中",
+          "running": "執行中",
+          "completed": "已完成",
+          "failed": "失敗",
+          "cancelled": "已取消"
+        },
+        "matchedCount": "{{count}} 個匹配",
+        "activityCount": "{{count}} 個事件",
+        "noActivity": "暫無活動記錄。",
+        "eventCount": "{{count}} 個事件",
+        "live": {
+          "matched": "已匹配",
+          "scored": "已評分",
+          "calls": "LLM 呼叫",
+          "cost": "費用",
+          "errors": "錯誤",
+          "warmingUp": "正在準備…"
+        }
+      },
+      "review": {
+        "title": "審閱候選人",
+        "introTitle": "我找到了一些初步的匹配結果，請審閱這些候選人並分享你的意見。",
+        "introDesc": "請審閱全部 {{count}} 位候選人以繼續。",
+        "reviewProfiles": "審閱候選人",
+        "viewList": "列表檢視",
+        "viewReview": "審閱檢視",
+        "fullProfile": "查看完整履歷",
+        "prev": "上一位",
+        "next": "下一位",
+        "counter": "候選人 {{current}}/{{total}}",
+        "approve": "通過",
+        "reject": "拒絕",
+        "helpText": "此操作僅用於校準代理，不會發送電子郵件。",
+        "criteriaHint": "使用 ← → 切換候選人，按 Esc 返回。",
+        "doneTitle": "全部候選人已審閱",
+        "doneDesc": "你的回饋已記錄。返回列表即可對已通過的候選人執行操作。",
+        "backToList": "返回結果列表",
+        "tabs": {
+          "experience": "工作經歷",
+          "education": "教育背景",
+          "skills": "技能"
+        },
+        "noExperience": "未從該履歷中解析到工作經歷。",
+        "noEducation": "未從該履歷中解析到教育背景。",
+        "noSkills": "未從該履歷中解析到技能資訊。",
+        "unknownCompany": "未知公司",
+        "skillGroups": {
+          "all": "技能",
+          "technical": "技術技能",
+          "languages": "程式語言",
+          "frameworks": "框架",
+          "tools": "工具",
+          "soft": "軟技能",
+          "other": "其他",
+          "tags": "標籤"
+        },
+        "addCriteria": "新增標準",
+        "editCriteria": "編輯標準",
+        "editCriteriaHint": "使用"
+      },
+      "criteria": {
+        "title": "評估標準",
+        "mostImportant": "最重要",
+        "leastImportant": "次重要",
+        "addCriterion": "新增條件",
+        "addToBucket": "新增到 {{bucket}}",
+        "dragHere": "將條件拖到此處，或點擊下方新增。",
+        "update": "更新",
+        "selectPreset": "選擇預設",
+        "savePreset": "儲存預設",
+        "presetsComingSoon": "預設功能即將推出",
+        "pin": "設為必要條件",
+        "unpin": "取消必要",
+        "pinHint": "點擊將此項標記為必要條件",
+        "pinnedHint": "必要條件 — 代理將視為一票否決項",
+        "placeholder": "例如：需具備領導和管理經驗",
+        "saveFailed": "儲存評估標準失敗",
+        "noPresets": "尚未儲存任何預設",
+        "presetNamePlaceholder": "預設名稱",
+        "hrRelationship": "硬性條件先過濾候選池，軟性條件再對剩餘候選人評分。"
+      },
+      "settings": {
+        "sections": {
+          "identity": "基本資訊",
+          "task": "任務類型",
+          "target": "目標職位",
+          "sources": "候選人來源",
+          "criteria": "搜尋條件",
+          "instructions": "指令",
+          "schedule": "排程",
+          "danger": "危險操作",
+          "hardRequirements": "硬性條件",
+          "idealProfile": "理想畫像"
+        },
+        "fineTuneCriteria": "精細調整標準",
+        "unsavedChanges": "有未儲存的變更",
+        "discard": "放棄變更",
+        "saveChanges": "儲存變更",
+        "requiredMissing": "名稱、搜尋條件和關聯職位為必填項",
+        "deleteAgent": "刪除代理",
+        "deleteDesc": "將永久刪除該代理及其所有執行記錄、候選人和活動記錄。此操作不可恢復。",
+        "confirmDelete": "確定要刪除此代理嗎？此操作無法復原。"
+      },
+      "summary": {
+        "title": "執行摘要",
+        "subtitle": "耗時 {{duration}} · 匹配出 {{matched}} 位候選人",
+        "matched": "已匹配",
+        "liked": "已喜歡",
+        "pending": "待處理",
+        "errors": "錯誤",
+        "cost": "費用",
+        "topCandidates": "推薦候選人",
+        "commonStrengths": "共同優勢",
+        "commonGaps": "共同弱點",
+        "findMore": "尋找更多候選人",
+        "getSuggestions": "取得條件建議",
+        "findMoreHint": "已評估的候選人將被自動跳過。"
+      },
+      "suggestions": {
+        "title": "條件建議",
+        "subtitle": "根據你拒絕的候選人，以下是一些可能有幫助的優化建議。",
+        "analyzing": "正在分析被拒絕的候選人…",
+        "pattern": "辨識到的模式",
+        "empty": "暫無具體建議 — 代理認為你的條件已經調校得很好了。",
+        "typeAdd": "新增",
+        "typeModify": "修改",
+        "typeRemove": "移除",
+        "apply": "套用",
+        "applied": "已套用"
+      },
+      "icp": {
+        "title": "理想候選人畫像",
+        "version": "v{{n}}",
+        "subtitle": "基於 {{likes}} 次讚和 {{dislikes}} 次踩",
+        "confidence": "信心度",
+        "confidenceLow": "信號不足 — 繼續篩選",
+        "confidenceMedium": "漸入佳境 — 多讚/踩以提升精度",
+        "confidenceHigh": "穩定 — 可用於下一次執行",
+        "confidenceVeryHigh": "非常穩定",
+        "narrative": "摘要",
+        "coreSkills": "核心技能",
+        "bonusSkills": "加分技能",
+        "antiTraits": "反向特徵 / 警示",
+        "anchors": "錨定候選人",
+        "anchorsCount": "使用 {{count}} 位按讚候選人作為範例",
+        "history": "歷史版本",
+        "revert": "回滾",
+        "suggested": "建議的硬性條件",
+        "promote": "採用",
+        "regenerate": "重新生成",
+        "generateFromJD": "從職缺描述生成",
+        "emptyTitle": "教會你的 agent 什麼是「好」",
+        "emptyState": "按讚或拒絕幾位候選人，我會學到你要什麼。你也可以先從職缺描述生成一版。",
+        "generating": "正在理解你的品味…",
+        "generatingHint": "通常 5–15 秒。正在從讚和踩中重新學習。",
+        "noHistory": "尚無歷史版本。",
+        "errorTitle": "無法載入理想畫像",
+        "badgeUsing": "使用理想畫像 v{{n}}",
+        "badgeUsingTooltip": "先按硬性條件過濾，再用該畫像評分。",
+        "badgeNone": "尚無理想畫像 — 僅使用 JD",
+        "badgeNoneTooltip": "按讚或拒絕候選人以訓練 agent。",
+        "deltaStripUpdated": "理想畫像已更新 · v{{n}}",
+        "deltaStripNoICP": "準備就緒 — 生成你的第一個理想畫像",
+        "applied": "已套用",
+        "discard": "放棄"
+      },
+      "hardRequirements": {
+        "title": "硬性條件",
+        "titleCn": "硬性條件",
+        "titleEn": "Hard requirements",
+        "badge": "嚴格過濾",
+        "warning": "不滿足所有條件的候選人會被直接排除（不是降分）。請謹慎使用。",
+        "addRule": "新增硬性條件",
+        "removeRule": "刪除規則：{{desc}}",
+        "emptyTitle": "尚無嚴格過濾條件。",
+        "emptyDesc": "所有已獲取的候選人都會進入評分階段。",
+        "quickAdd": "快速新增",
+        "fieldLabel": "欄位",
+        "operatorLabel": "運算子",
+        "tagPlaceholder": "輸入後按 Enter",
+        "dryRun": "目前約排除 {{pct}}% 的候選人",
+        "dryRunWarning": "警告：將排除幾乎所有候選人（{{pct}}%）",
+        "warningTitle": "硬性條件可能排除幾乎所有候選人",
+        "warningTitleBlocking": "硬性條件將排除所有候選人",
+        "warningSubtitle": "執行前請檢查。",
+        "ofPool": "在 {{total}} 位候選人中：",
+        "excludedCount": "{{count}} 人被過濾",
+        "remainingCount": "{{count}} 人將進入評分",
+        "topOffenders": "排除最多的規則",
+        "excludesN": "排除 {{n}}",
+        "runAnyway": "仍然執行",
+        "editRules": "編輯硬性條件",
+        "fields": {
+          "experienceYears": "工作年資",
+          "salaryExpectation": "期望薪資",
+          "location": "地點",
+          "currentRole": "目前職位",
+          "education.degree": "學歷",
+          "education.field": "主修",
+          "languages": "語言",
+          "skills.technical": "技術技能",
+          "tags": "標籤",
+          "custom": "自訂正則"
+        },
+        "operators": {
+          "eq": "等於",
+          "neq": "不等於",
+          "gte": "≥（至少）",
+          "lte": "≤（至多）",
+          "gt": ">",
+          "lt": "<",
+          "contains": "包含",
+          "contains_any": "包含任一",
+          "contains_all": "包含全部",
+          "not_contains": "不包含",
+          "matches": "符合",
+          "not_matches": "不符合",
+          "in": "屬於",
+          "not_in": "不屬於"
+        },
+        "degrees": {
+          "HighSchool": "高中",
+          "Associate": "專科",
+          "Bachelor": "學士",
+          "Master": "碩士",
+          "PhD": "博士"
+        },
+        "presets": {
+          "yearsExp": "5 年以上經驗",
+          "location": "位於…",
+          "english": "會英文",
+          "bachelor": "學士以上"
+        },
+        "validation": {
+          "mustBeNumber": "必須為數字",
+          "addAtLeastOne": "至少新增一個值",
+          "emptyRegex": "正則不能為空",
+          "invalidRegex": "無效的正則表達式"
+        }
+      },
+      "regenModal": {
+        "title": "重新生成理想畫像",
+        "comparing": "分析訊號中…",
+        "applyNew": "採用新版本",
+        "discard": "放棄",
+        "confidenceDelta": "信心度",
+        "addedTraits": "新增",
+        "removedTraits": "移除"
+      },
+      "create": {
+        "hardRequirementsStep": {
+          "label": "硬性條件",
+          "optional": "選填"
+        }
+      }
+    },
     "subtitle": "RoboHire Agent 可以自動搜尋、審核並聯繫候選人。",
     "create": "新建 Agent",
     "myAgents": "我的 Agents",
@@ -5058,11 +5497,5 @@
       "hoursLeft": "剩餘{{count}}小時",
       "daysLeft": "剩餘{{count}}天"
     }
-  },
-  "notifications": {
-    "title": "通知",
-    "markAllRead": "全部標為已讀",
-    "empty": "暫無通知",
-    "viewAll": "檢視所有任務"
   }
 }

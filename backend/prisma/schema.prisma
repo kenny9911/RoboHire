@@ -56,20 +56,20 @@ model TeamInvitation {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String?
-  name          String?
-  phone         String?
-  jobTitle      String?
-  company       String?
-  avatar        String?
-  role          String    @default("user") // 'user', 'internal', 'agency', or 'admin'
-  provider      String?   // 'email', 'google', 'github', 'linkedin'
-  providerId    String?
-  teamId        String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  name         String?
+  phone        String?
+  jobTitle     String?
+  company      String?
+  avatar       String?
+  role         String   @default("user") // 'user', 'internal', 'agency', or 'admin'
+  provider     String? // 'email', 'google', 'github', 'linkedin'
+  providerId   String?
+  teamId       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Subscription / Stripe
   stripeCustomerId    String?   @unique
@@ -81,43 +81,48 @@ model User {
   interviewsUsed      Int       @default(0)
   resumeMatchesUsed   Int       @default(0)
   topUpBalance        Float     @default(0)
-  customMaxInterviews Int?      // Admin override for max interviews (null = use plan default)
-  customMaxMatches    Int?      // Admin override for max matches (null = use plan default)
+  customMaxInterviews Int? // Admin override for max interviews (null = use plan default)
+  customMaxMatches    Int? // Admin override for max matches (null = use plan default)
 
-  team            Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  hiringRequests  HiringRequest[]
-  sessions        Session[]
-  hiringSessions  HiringSession[]
-  apiKeys         ApiKey[]
-  usageRecords    ApiUsageRecord[]
-  apiRequestLogs  ApiRequestLog[]
-  llmCallLogs     LLMCallLog[]
-  topUpRecords    TopUpRecord[]
-  alipayOrders    AlipayOrder[]
-  resumes         Resume[]
-  recruiterResumes Resume[]  @relation("ResumeRecruiter")
-  adminAdjustmentsReceived  AdminAdjustment[] @relation("AdminAdjustmentsReceived")
-  adminAdjustmentsMade      AdminAdjustment[] @relation("AdminAdjustmentsMade")
-  atsIntegrations ATSIntegration[]
-  jobs            Job[]
-  interviews         Interview[]
-  interviewDialogTurns InterviewDialogTurn[]
-  matchingBatchRuns  MatchingBatchRun[]
-  matchingSessions   MatchingSession[]
-  activities         UserActivity[]
-  resumeVersions     ResumeVersion[]
+  team                               Team?                        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  hiringRequests                     HiringRequest[]
+  sessions                           Session[]
+  hiringSessions                     HiringSession[]
+  apiKeys                            ApiKey[]
+  usageRecords                       ApiUsageRecord[]
+  apiRequestLogs                     ApiRequestLog[]
+  llmCallLogs                        LLMCallLog[]
+  topUpRecords                       TopUpRecord[]
+  alipayOrders                       AlipayOrder[]
+  resumes                            Resume[]
+  recruiterResumes                   Resume[]                     @relation("ResumeRecruiter")
+  adminAdjustmentsReceived           AdminAdjustment[]            @relation("AdminAdjustmentsReceived")
+  adminAdjustmentsMade               AdminAdjustment[]            @relation("AdminAdjustmentsMade")
+  atsIntegrations                    ATSIntegration[]
+  jobs                               Job[]
+  interviews                         Interview[]
+  interviewDialogTurns               InterviewDialogTurn[]
+  matchingBatchRuns                  MatchingBatchRun[]
+  matchingSessions                   MatchingSession[]
+  activities                         UserActivity[]
+  resumeVersions                     ResumeVersion[]
   interviewRoomConfigVersionsCreated InterviewRoomConfigVersion[] @relation("InterviewRoomConfigVersionsCreated")
-  agents             Agent[]
-  teamMemberships    TeamMember[]
-  teamInvitations    TeamInvitation[] @relation("TeamInviter")
-  alexSessions       AgentAlexSession[]
-  contacts           Contact[]
-  companies          Company[]
-  tasksAssigned      Task[]         @relation("TaskAssignee")
-  tasksCreated       Task[]         @relation("TaskCreator")
-  notifications      Notification[]
-  goHireInterviewsAsCandidate GoHireInterview[] @relation("GoHireCandidateUser")
-  goHireInterviewsAsRecruiter GoHireInterview[] @relation("GoHireRecruiterUser")
+  agents                             Agent[]
+  agentCriteriaPresets               AgentCriteriaPreset[]
+  agentIdealProfiles                 AgentIdealProfile[]
+  userRecruiterProfile               UserRecruiterProfile?
+  candidateInteractions              CandidateInteraction[]
+  memoryAdminAuditLogs               MemoryAdminAuditLog[]
+  teamMemberships                    TeamMember[]
+  teamInvitations                    TeamInvitation[]             @relation("TeamInviter")
+  alexSessions                       AgentAlexSession[]
+  contacts                           Contact[]
+  companies                          Company[]
+  tasksAssigned                      Task[]                       @relation("TaskAssignee")
+  tasksCreated                       Task[]                       @relation("TaskCreator")
+  notifications                      Notification[]
+  goHireInterviewsAsCandidate        GoHireInterview[]            @relation("GoHireCandidateUser")
+  goHireInterviewsAsRecruiter        GoHireInterview[]            @relation("GoHireRecruiterUser")
 
   @@index([email])
   @@index([provider, providerId])
@@ -131,7 +136,7 @@ model Session {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
@@ -140,24 +145,24 @@ model Session {
 }
 
 model HiringRequest {
-  id              String   @id @default(cuid())
-  userId          String
-  title           String
-  clientName      String?
-  requirements    String   @db.Text
-  jobDescription  String?  @db.Text
-  status                String   @default("active") // active, paused, closed
+  id                    String    @id @default(cuid())
+  userId                String
+  title                 String
+  clientName            String?
+  requirements          String    @db.Text
+  jobDescription        String?   @db.Text
+  status                String    @default("active") // active, paused, closed
   webhookUrl            String?
   intelligenceData      Json?
   intelligenceUpdatedAt DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  candidates     Candidate[]
-  resumeJobFits  ResumeJobFit[]
-  jobs           Job[]
-  interviews     Interview[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  candidates    Candidate[]
+  resumeJobFits ResumeJobFit[]
+  jobs          Job[]
+  interviews    Interview[]
 
   @@index([userId])
   @@index([status])
@@ -176,11 +181,11 @@ model Candidate {
   evaluationReport Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  
+
   externalAtsId       String?
   externalAtsProvider String?
 
-  hiringRequest HiringRequest @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
+  hiringRequest HiringRequest         @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
   interviews    Interview[]
   dialogTurns   InterviewDialogTurn[]
 
@@ -200,7 +205,7 @@ model HiringSession {
   status    String   @default("active") // active, completed, archived
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -209,18 +214,18 @@ model HiringSession {
 }
 
 model ApiKey {
-  id          String    @id @default(cuid())
-  userId      String
-  name        String
-  key         String    @unique
-  prefix      String    // First 8 chars for display (rh_xxxx...)
-  lastUsedAt  DateTime?
-  expiresAt   DateTime?
-  scopes      String[]  @default(["read", "write"])
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  key        String    @unique
+  prefix     String // First 8 chars for display (rh_xxxx...)
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  scopes     String[]  @default(["read", "write"])
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
   user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   usageRecords ApiUsageRecord[]
   requestLogs  ApiRequestLog[]
@@ -335,15 +340,15 @@ model LLMCallLog {
 }
 
 model TopUpRecord {
-  id                  String   @id @default(cuid())
+  id                  String    @id @default(cuid())
   userId              String
-  stripeSessionId     String   @unique  // Stripe Checkout Session ID for idempotency
-  stripePaymentIntent String?  @unique  // Stripe PaymentIntent ID
+  stripeSessionId     String    @unique // Stripe Checkout Session ID for idempotency
+  stripePaymentIntent String?   @unique // Stripe PaymentIntent ID
   amountCents         Int
   amountDollars       Float
-  status              String   @default("pending") // pending, completed, failed
+  status              String    @default("pending") // pending, completed, failed
   creditedAt          DateTime?
-  createdAt           DateTime @default(now())
+  createdAt           DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -354,16 +359,16 @@ model TopUpRecord {
 }
 
 model AlipayOrder {
-  id           String    @id @default(cuid())
-  userId       String
-  outTradeNo   String    @unique
-  tier         String    // starter, growth, business
-  amount       Float     // payment amount in CNY
-  status       String    @default("pending") // pending, completed, failed, closed
-  completedAt  DateTime?
-  createdAt    DateTime  @default(now())
+  id          String    @id @default(cuid())
+  userId      String
+  outTradeNo  String    @unique
+  tier        String // starter, growth, business
+  amount      Float // payment amount in CNY
+  status      String    @default("pending") // pending, completed, failed, closed
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
 
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([outTradeNo])
@@ -371,15 +376,15 @@ model AlipayOrder {
 }
 
 model AdminAdjustment {
-  id          String   @id @default(cuid())
-  userId      String
-  adminId     String
-  type        String   // "balance", "usage_interview", "usage_match", "subscription"
-  amount      Float?
-  oldValue    String?
-  newValue    String?
-  reason      String
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  adminId   String
+  type      String // "balance", "usage_interview", "usage_match", "subscription"
+  amount    Float?
+  oldValue  String?
+  newValue  String?
+  reason    String
+  createdAt DateTime @default(now())
 
   user  User @relation("AdminAdjustmentsReceived", fields: [userId], references: [id], onDelete: Cascade)
   admin User @relation("AdminAdjustmentsMade", fields: [adminId], references: [id], onDelete: Cascade)
@@ -400,17 +405,17 @@ model AppConfig {
 }
 
 model InterviewRoomConfigVersion {
-  id            String   @id @default(cuid())
-  versionNumber Int      @unique
+  id            String    @id @default(cuid())
+  versionNumber Int       @unique
   versionLabel  String?
-  changeNote    String?  @db.Text
+  changeNote    String?   @db.Text
   config        Json
-  isActive      Boolean  @default(false)
+  isActive      Boolean   @default(false)
   activatedAt   DateTime?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
   createdById   String?
 
-  createdByUser User?    @relation("InterviewRoomConfigVersionsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  createdByUser User? @relation("InterviewRoomConfigVersionsCreated", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([versionNumber])
   @@index([isActive, createdAt])
@@ -419,23 +424,23 @@ model InterviewRoomConfigVersion {
 }
 
 model Resume {
-  id              String    @id @default(cuid())
-  userId          String
-  recruiterUserId String?
-  name            String
-  email           String?
-  phone           String?
-  currentRole     String?
-  experienceYears String?
-  summary         String?   @db.Text  // AI-generated professional summary
-  highlight       String?             // One-line highlight for card display
-  resumeText      String    @db.Text
-  parsedData      Json?
-  insightData     Json?
-  jobFitData      Json?
-  fileName        String?
-  fileSize        Int?
-  fileType        String?
+  id                   String    @id @default(cuid())
+  userId               String
+  recruiterUserId      String?
+  name                 String
+  email                String?
+  phone                String?
+  currentRole          String?
+  experienceYears      String?
+  summary              String?   @db.Text // AI-generated professional summary
+  highlight            String? // One-line highlight for card display
+  resumeText           String    @db.Text
+  parsedData           Json?
+  insightData          Json?
+  jobFitData           Json?
+  fileName             String?
+  fileSize             Int?
+  fileType             String?
   originalFileProvider String?
   originalFileKey      String?
   originalFileName     String?
@@ -443,22 +448,22 @@ model Resume {
   originalFileSize     Int?
   originalFileChecksum String?
   originalFileStoredAt DateTime?
-  contentHash     String?
-  status          String    @default("active")
-  source          String    @default("upload")
-  tags            String[]  @default([])
-  notes           String?   @db.Text
-  preferences     Json?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  contentHash          String?
+  status               String    @default("active")
+  source               String    @default("upload")
+  tags                 String[]  @default([])
+  notes                String?   @db.Text
+  preferences          Json?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recruiterUser   User?     @relation("ResumeRecruiter", fields: [recruiterUserId], references: [id], onDelete: SetNull)
-  resumeJobFits   ResumeJobFit[]
-  jobMatches      JobMatch[]
-  resumeVersions  ResumeVersion[]
-  agentCandidates AgentCandidate[]
-  tasks           Task[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recruiterUser    User?             @relation("ResumeRecruiter", fields: [recruiterUserId], references: [id], onDelete: SetNull)
+  resumeJobFits    ResumeJobFit[]
+  jobMatches       JobMatch[]
+  resumeVersions   ResumeVersion[]
+  agentCandidates  AgentCandidate[]
+  tasks            Task[]
   goHireInterviews GoHireInterview[]
 
   @@unique([userId, contentHash])
@@ -487,28 +492,28 @@ model ResumeVersion {
   changeNote      String?
   createdAt       DateTime @default(now())
 
-  resume          Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([resumeId, createdAt])
   @@index([userId])
 }
 
 model ResumeJobFit {
-  id               String   @id @default(cuid())
-  resumeId         String
-  hiringRequestId  String
-  fitScore         Int?
-  fitGrade         String?
-  fitData          Json?
-  pipelineStatus   String   @default("matched") // matched, shortlisted, rejected, invited
-  invitedAt        DateTime?
-  inviteData       Json?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String    @id @default(cuid())
+  resumeId        String
+  hiringRequestId String
+  fitScore        Int?
+  fitGrade        String?
+  fitData         Json?
+  pipelineStatus  String    @default("matched") // matched, shortlisted, rejected, invited
+  invitedAt       DateTime?
+  inviteData      Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  resume           Resume         @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  hiringRequest    HiringRequest  @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
+  resume        Resume        @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  hiringRequest HiringRequest @relation(fields: [hiringRequestId], references: [id], onDelete: Cascade)
 
   @@unique([resumeId, hiringRequestId])
   @@index([resumeId])
@@ -520,52 +525,52 @@ model ResumeJobFit {
 }
 
 model Job {
-  id              String    @id @default(cuid())
-  userId          String
-  hiringRequestId String?
-  title           String
-  department      String?
-  location        String?
-  workType        String?   // remote, hybrid, onsite
-  employmentType  String?   // full-time, part-time, contract, internship
-  experienceLevel String?   // entry, mid, senior, lead, executive
-  education       String?   // 学历要求: high_school, associate, bachelor, master, phd, none
-  headcount       Int       @default(1) // 招聘人数
-  salaryMin       Int?
-  salaryMax       Int?
-  salaryCurrency  String?   @default("USD")
-  salaryText      String?   @db.Text  // Free-text salary description, e.g. "base3000+补贴600+绩效1000"
-  companyName          String?
-  description          String?   @db.Text
-  qualifications       String?   @db.Text   // 任职要求
-  hardRequirements     String?   @db.Text   // 硬性要求
-  niceToHave           String?   @db.Text   // 优先条件 / 加分项
-  benefits             String?   @db.Text   // 福利待遇
-  requirements         Json?     // { mustHave: [], niceToHave: [] }
-  parsedData           Json?     // AI-parsed JD cache
-  salaryPeriod         String?   @default("monthly") // monthly, yearly
-  locations            Json?     // Array of { country, city }
-  interviewMode        String?   @default("standard") // standard, question_bank
-  passingScore         Int?      @default(60)  // 20-80
-  interviewLanguage    String?   @default("en")
-  interviewDuration    Int?      @default(30)  // minutes: 15,30,45,60
-  interviewRequirements String?  @db.Text  // 面试要求
-  evaluationRules      String?   @db.Text  // 评估规则
-  notes                String?   @db.Text  // 内部备注，不展示给候选人
-  status               String    @default("draft") // draft, open, paused, closed, filled
-  publishedAt     DateTime?
-  closedAt        DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                    String    @id @default(cuid())
+  userId                String
+  hiringRequestId       String?
+  title                 String
+  department            String?
+  location              String?
+  workType              String? // remote, hybrid, onsite
+  employmentType        String? // full-time, part-time, contract, internship
+  experienceLevel       String? // entry, mid, senior, lead, executive
+  education             String? // 学历要求: high_school, associate, bachelor, master, phd, none
+  headcount             Int       @default(1) // 招聘人数
+  salaryMin             Int?
+  salaryMax             Int?
+  salaryCurrency        String?   @default("USD")
+  salaryText            String?   @db.Text // Free-text salary description, e.g. "base3000+补贴600+绩效1000"
+  companyName           String?
+  description           String?   @db.Text
+  qualifications        String?   @db.Text // 任职要求
+  hardRequirements      String?   @db.Text // 硬性要求
+  niceToHave            String?   @db.Text // 优先条件 / 加分项
+  benefits              String?   @db.Text // 福利待遇
+  requirements          Json? // { mustHave: [], niceToHave: [] }
+  parsedData            Json? // AI-parsed JD cache
+  salaryPeriod          String?   @default("monthly") // monthly, yearly
+  locations             Json? // Array of { country, city }
+  interviewMode         String?   @default("standard") // standard, question_bank
+  passingScore          Int?      @default(60) // 20-80
+  interviewLanguage     String?   @default("en")
+  interviewDuration     Int?      @default(30) // minutes: 15,30,45,60
+  interviewRequirements String?   @db.Text // 面试要求
+  evaluationRules       String?   @db.Text // 评估规则
+  notes                 String?   @db.Text // 内部备注，不展示给候选人
+  status                String    @default("draft") // draft, open, paused, closed, filled
+  publishedAt           DateTime?
+  closedAt              DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hiringRequest     HiringRequest?    @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
-  jobMatches        JobMatch[]
-  matchingSessions  MatchingSession[]
-  agents            Agent[]
-  alexSession       AgentAlexSession?
-  tasks             Task[]
-  goHireInterviews  GoHireInterview[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hiringRequest    HiringRequest?    @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
+  jobMatches       JobMatch[]
+  matchingSessions MatchingSession[]
+  agents           Agent[]
+  alexSession      AgentAlexSession?
+  tasks            Task[]
+  goHireInterviews GoHireInterview[]
 
   @@index([userId])
   @@index([hiringRequestId, updatedAt])
@@ -575,22 +580,22 @@ model Job {
 }
 
 model JobMatch {
-  id          String    @id @default(cuid())
-  jobId       String
-  resumeId    String
-  score       Int?
-  grade       String?   // A+, A, B+, B, C, D, F
-  matchData   Json?     // Full ResumeMatchAgent output
-  status      String    @default("new") // new, reviewed, shortlisted, applied, rejected, invited
-  reviewedAt  DateTime?
-  reviewedBy  String?
-  appliedAt   DateTime?
-  appliedBy   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  jobId      String
+  resumeId   String
+  score      Int?
+  grade      String? // A+, A, B+, B, C, D, F
+  matchData  Json? // Full ResumeMatchAgent output
+  status     String    @default("new") // new, reviewed, shortlisted, applied, rejected, invited
+  reviewedAt DateTime?
+  reviewedBy String?
+  appliedAt  DateTime?
+  appliedBy  String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  resume      Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, resumeId])
   @@index([jobId])
@@ -613,26 +618,27 @@ model Interview {
   jobDescription  String?   @db.Text
   resumeText      String?   @db.Text
   status          String    @default("scheduled") // scheduled, in_progress, completed, cancelled, expired
-  type            String    @default("ai_video")  // ai_video, ai_audio, ai_text
+  type            String    @default("ai_video") // ai_video, ai_audio, ai_text
   scheduledAt     DateTime?
   startedAt       DateTime?
   completedAt     DateTime?
-  duration        Int?      // seconds
+  duration        Int? // seconds
   accessToken     String?   @unique // unique token for candidate to join
-  roomId          String?   // LiveKit room ID
-  transcript      Json?     // Array of { role, content, timestamp }
+  roomId          String? // LiveKit room ID
+  transcript      Json? // Array of { role, content, timestamp }
   recordingUrl    String?
-  gohireUserId    String?   // GoHire user_id returned from invitation API
+  gohireUserId    String? // GoHire user_id returned from invitation API
   metadata        Json?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hiringRequest   HiringRequest?      @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
-  candidate       Candidate?          @relation(fields: [candidateId], references: [id], onDelete: SetNull)
-  evaluation      InterviewEvaluation?
-  dialogTurns     InterviewDialogTurn[]
-  tasks           Task[]
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hiringRequest HiringRequest?        @relation(fields: [hiringRequestId], references: [id], onDelete: SetNull)
+  candidate     Candidate?            @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  evaluation    InterviewEvaluation?
+  dialogTurns   InterviewDialogTurn[]
+  tasks         Task[]
+  invitation    Invitation?
 
   @@index([userId])
   @@index([status])
@@ -668,19 +674,19 @@ model InterviewDialogTurn {
 }
 
 model InterviewEvaluation {
-  id              String    @id @default(cuid())
-  interviewId     String    @unique
-  overallScore    Int?
-  grade           String?
-  verdict         String?   // strong_hire, hire, lean_hire, lean_no_hire, no_hire
-  evaluationData  Json?     // Full evaluation agent output
-  summary         String?   @db.Text
-  strengths       Json?     // string[]
-  weaknesses      Json?     // string[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  interviewId    String   @unique
+  overallScore   Int?
+  grade          String?
+  verdict        String? // strong_hire, hire, lean_hire, lean_no_hire, no_hire
+  evaluationData Json? // Full evaluation agent output
+  summary        String?  @db.Text
+  strengths      Json? // string[]
+  weaknesses     Json? // string[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  interview       Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   @@index([interviewId])
   @@index([overallScore])
@@ -688,17 +694,17 @@ model InterviewEvaluation {
 }
 
 model ATSIntegration {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider      String   // "greenhouse" | "lever" | "ashby" | "bamboohr" | "workable"
-  credentials   String   // encrypted JSON: { apiKey, subdomain, etc. }
-  isActive      Boolean  @default(true)
-  syncEnabled   Boolean  @default(true)
-  lastSyncAt    DateTime?
-  config        Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    String // "greenhouse" | "lever" | "ashby" | "bamboohr" | "workable"
+  credentials String // encrypted JSON: { apiKey, subdomain, etc. }
+  isActive    Boolean   @default(true)
+  syncEnabled Boolean   @default(true)
+  lastSyncAt  DateTime?
+  config      Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   webhookDeliveries WebhookDelivery[]
   syncLogs          ATSSyncLog[]
@@ -708,38 +714,38 @@ model ATSIntegration {
 }
 
 model ATSSyncLog {
-  id              String   @id @default(cuid())
-  integrationId   String
-  integration     ATSIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
-  direction       String   // "inbound" | "outbound"
-  entityType      String   // "job" | "candidate" | "application"
-  entityId        String?
-  externalId      String?
-  status          String   // "success" | "failed" | "skipped"
-  error           String?
-  payload         Json?
-  createdAt       DateTime @default(now())
+  id            String         @id @default(cuid())
+  integrationId String
+  integration   ATSIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  direction     String // "inbound" | "outbound"
+  entityType    String // "job" | "candidate" | "application"
+  entityId      String?
+  externalId    String?
+  status        String // "success" | "failed" | "skipped"
+  error         String?
+  payload       Json?
+  createdAt     DateTime       @default(now())
 
   @@index([integrationId])
   @@index([createdAt])
 }
 
 model WebhookDelivery {
-  id              String   @id @default(cuid())
+  id              String          @id @default(cuid())
   integrationId   String?
   integration     ATSIntegration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
   hiringRequestId String?
   event           String
   url             String
   payload         Json
-  status          String   // "pending" | "delivered" | "failed"
+  status          String // "pending" | "delivered" | "failed"
   statusCode      Int?
-  attempts        Int      @default(0)
-  maxAttempts     Int      @default(5)
+  attempts        Int             @default(0)
+  maxAttempts     Int             @default(5)
   lastAttemptAt   DateTime?
   nextRetryAt     DateTime?
-  response        String?  @db.Text
-  createdAt       DateTime @default(now())
+  response        String?         @db.Text
+  createdAt       DateTime        @default(now())
 
   @@index([status, nextRetryAt])
   @@index([hiringRequestId])
@@ -749,7 +755,7 @@ model UserActivity {
   id         String   @id @default(cuid())
   userId     String
   sessionId  String
-  eventType  String   // "page_view" | "click"
+  eventType  String // "page_view" | "click"
   path       String
   element    String?
   elementTag String?
@@ -766,23 +772,23 @@ model UserActivity {
 }
 
 model MatchingBatchRun {
-  id              String    @id @default(cuid())
-  userId          String
-  title           String?
-  status          String    @default("running") // running, completed, failed
-  config          Json      // { jobIds[], resumeIds[], preFilter?, maxAgents }
-  summary         Json?     // { jobs[], peakActiveAgents, sessionIds[] }
-  totalJobs       Int       @default(0)
-  totalTasks      Int       @default(0)
-  completedTasks  Int       @default(0)
-  failedTasks     Int       @default(0)
-  filteredTasks   Int       @default(0)
-  startedAt       DateTime  @default(now())
-  completedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  userId         String
+  title          String?
+  status         String    @default("running") // running, completed, failed
+  config         Json // { jobIds[], resumeIds[], preFilter?, maxAgents }
+  summary        Json? // { jobs[], peakActiveAgents, sessionIds[] }
+  totalJobs      Int       @default(0)
+  totalTasks     Int       @default(0)
+  completedTasks Int       @default(0)
+  failedTasks    Int       @default(0)
+  filteredTasks  Int       @default(0)
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   matchingSessions MatchingSession[]
 
   @@index([userId, createdAt])
@@ -790,40 +796,40 @@ model MatchingBatchRun {
 }
 
 model MatchingSession {
-  id              String    @id @default(cuid())
-  userId          String
-  jobId           String
-  batchRunId      String?
-  title           String?
-  status          String    @default("running") // running, completed, failed
+  id         String  @id @default(cuid())
+  userId     String
+  jobId      String
+  batchRunId String?
+  title      String?
+  status     String  @default("running") // running, completed, failed
 
   // Configuration snapshot
-  config          Json      // { resumeIds[], preFilter: { locations?, jobTypes?, freeText? } }
+  config Json // { resumeIds[], preFilter: { locations?, jobTypes?, freeText? } }
 
   // Pre-filter results
   preFilterModel  String?
-  preFilterResult Json?     // { passedIds[], excluded: [{ resumeId, reason }], durationMs }
+  preFilterResult Json? // { passedIds[], excluded: [{ resumeId, reason }], durationMs }
 
   // Results summary
-  totalResumes    Int       @default(0)
-  totalFiltered   Int       @default(0)
-  totalMatched    Int       @default(0)
-  totalFailed     Int       @default(0)
-  avgScore        Float?
-  topGrade        String?
+  totalResumes  Int     @default(0)
+  totalFiltered Int     @default(0)
+  totalMatched  Int     @default(0)
+  totalFailed   Int     @default(0)
+  avgScore      Float?
+  topGrade      String?
 
   // Cost tracking
-  totalCost       Float     @default(0)
-  totalTokens     Int       @default(0)
-  totalLLMCalls   Int       @default(0)
+  totalCost     Float @default(0)
+  totalTokens   Int   @default(0)
+  totalLLMCalls Int   @default(0)
 
-  createdAt       DateTime  @default(now())
-  completedAt     DateTime?
-  updatedAt       DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job             Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  batchRun        MatchingBatchRun? @relation(fields: [batchRunId], references: [id], onDelete: Cascade)
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job      Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  batchRun MatchingBatchRun? @relation(fields: [batchRunId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([jobId])
@@ -831,103 +837,441 @@ model MatchingSession {
 }
 
 model Agent {
-  id              String    @id @default(cuid())
-  userId          String
-  name            String
-  description     String    // natural-language search criteria
-  taskType        String    @default("search") // search, match
-  instructions    String?   // user instructions for what the agent should do
-  status          String    @default("active") // active, paused, completed
-  jobId           String?   // linked job (required for task execution)
+  id           String  @id @default(cuid())
+  userId       String
+  name         String
+  description  String // natural-language search criteria
+  taskType     String  @default("search_candidates") // search_candidates, match_resumes, + future
+  instructions String? // user instructions for what the agent should do
+  status       String  @default("active") // active, paused, completed
+  jobId        String? // linked job (required for task execution)
 
   // Search config snapshot
-  config          Json?     // { location?, skills[], experienceMin?, experienceMax?, keywords? }
+  config Json? // { location?, skills[], experienceMin?, experienceMax?, keywords? }
+
+  // Candidate source selection — { modes: ['instant_search'|'internal_minio'|'external_api'], externalApiConfigId? }
+  source Json?
+
+  // Scheduling
+  autonomy        String    @default("manual") // manual, scheduled, event
+  schedule        String? // cron expression, e.g. "0 9 * * *"
+  scheduleEnabled Boolean   @default(false)
+  nextRunAt       DateTime?
+
+  // Phase 7 — when true, creating this agent seeded its initial ICP from the
+  // owner's UserRecruiterProfile. When false, the user explicitly opted out
+  // of cross-agent learning for this particular agent.
+  agentInheritsFromProfile Boolean @default(true)
 
   // Stats
-  totalSourced    Int       @default(0)
-  totalApproved   Int       @default(0)
-  totalRejected   Int       @default(0)
-  totalContacted  Int       @default(0)
+  totalSourced   Int @default(0)
+  totalApproved  Int @default(0)
+  totalRejected  Int @default(0)
+  totalContacted Int @default(0)
 
-  lastRunAt       DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  lastRunAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job             Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
-  candidates      AgentCandidate[]
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job           Job?                @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  candidates    AgentCandidate[]
+  runs          AgentRun[]
+  activities    AgentActivityLog[]
+  idealProfiles AgentIdealProfile[]
 
   @@index([userId, createdAt])
   @@index([status])
+  @@index([scheduleEnabled, nextRunAt])
 }
 
 model AgentCandidate {
-  id              String    @id @default(cuid())
-  agentId         String
-  resumeId        String?   // linked resume if exists in system
-  name            String
-  email           String?
-  profileUrl      String?   // external profile link
-  headline        String?   // current role / summary
-  matchScore      Float?    // 0-100
-  status          String    @default("pending") // pending, approved, rejected, contacted
-  outreachSentAt  DateTime?
-  notes           String?
+  id             String    @id @default(cuid())
+  agentId        String
+  runId          String? // which run produced this candidate
+  resumeId       String? // linked resume if exists in system
+  name           String
+  email          String?
+  profileUrl     String? // external profile link
+  headline       String? // current role / summary
+  matchScore     Float? // 0-100
+  source         String? // instant_search, internal_minio, external_api
+  reason         String?   @db.Text // LLM "why this candidate" one-liner
+  metadata       Json? // per-task type extras (matched skills, etc.)
+  status         String    @default("pending") // pending, liked, disliked, invited, contacted, messaged, interviewed, hired, rejected, archived
+  outreachSentAt DateTime?
+  notes          String?
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  agent           Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  resume          Resume?   @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  agent       Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  run         AgentRun?    @relation(fields: [runId], references: [id], onDelete: SetNull)
+  resume      Resume?      @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  invitations Invitation[]
+  outreach    Outreach[]
 
   @@index([agentId, status])
   @@index([agentId, createdAt])
+  @@index([runId])
+}
+
+model AgentRun {
+  id            String    @id @default(cuid())
+  agentId       String
+  triggeredBy   String // user, schedule, event, agent, openclaw
+  triggeredById String? // userId, parent runId, or openclaw delivery id
+  status        String    @default("queued") // queued, running, completed, failed, cancelled
+  startedAt     DateTime?
+  completedAt   DateTime?
+  error         String?   @db.Text
+  stats         Json? // { sourced, matched, liked, disliked, invited, emailed, messaged }
+
+  // Phase 5 — comprehensive logging columns. Aggregated from llm.call.completed
+  // events written to AgentActivityLog at run completion.
+  tokensIn     Int   @default(0)
+  tokensOut    Int   @default(0)
+  costUsd      Float @default(0)
+  llmCallCount Int   @default(0)
+  avgLatencyMs Int   @default(0) // mean per-call latency
+  durationMs   Int   @default(0) // total wall-clock (completedAt - startedAt)
+
+  createdAt DateTime @default(now())
+
+  agent      Agent              @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  candidates AgentCandidate[]
+  activities AgentActivityLog[]
+
+  @@index([agentId, createdAt])
+  @@index([status])
+  @@index([costUsd])
+}
+
+model AgentCriteriaPreset {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  criteria  Json // Array of { id, text, pinned, bucket: 'most'|'least' }
+  scope     String   @default("private") // private | shared
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([scope])
+}
+
+// AgentIdealProfile — LLM-generated structured representation of the
+// recruiter's taste. Synthesized from liked + disliked candidates after each
+// triage batch. Used by the matcher (via llmMatcher) to score future runs
+// against an evolving baseline rather than only the static JD.
+//
+// Versioning: every regeneration creates a new row. The latest version is
+// always the one with the highest `version` for a given agentId. Older
+// versions are kept for audit and rollback. The active row is the one whose
+// (agentId, version) maxes out — query with orderBy: { version: 'desc' }.
+model AgentIdealProfile {
+  id      String @id @default(cuid())
+  agentId String // not @unique — versioned history retained for audit
+  userId  String
+  version Int    @default(1)
+
+  // Structured ICP — see docs/icp-architecture.md §2 for the full shape.
+  // Includes: coreSkills[], bonusSkills[], antiSkills[], yearsOfExperience,
+  // signals[], anchorCandidateIds[], antiAnchorCandidateIds[], etc.
+  profile Json
+
+  // LLM-suggested hard requirements (NOT yet active until user accepts).
+  // The actual active hard requirements live on Agent.config.hardRequirements
+  // because the user owns them; this column is just a suggestion buffer.
+  suggestedHardRequirements Json?
+
+  narrativeSummary      String? @db.Text // 1-2 sentence human-readable digest
+  confidence            Float   @default(0) // 0..1, model self-reported
+  generatedFromLikes    Int     @default(0)
+  generatedFromDislikes Int     @default(0)
+
+  // Audit
+  generatedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, version])
+  @@index([agentId, generatedAt])
+  @@index([userId])
+}
+
+// Phase 7a — Cross-agent aggregated recruiter taste model. One row per user.
+// Rebuilt (not incrementally updated) whenever any AgentIdealProfile for the
+// user changes. See docs/context-engineering-v7.md §2.1 for the full shape.
+model UserRecruiterProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Aggregated taste — frequency-weighted arrays. All shapes documented in the
+  // design doc so we can evolve them fast without migrations.
+  topSkills       Json // [{skill, weight, lastSeenAt, sourceCount}]
+  topAntiSkills   Json // same shape
+  topLocations    Json
+  topIndustries   Json
+  topCompanySizes Json // ['startup' | 'midsize' | 'enterprise']
+
+  // Recurring hard-requirement patterns the user tends to set across agents.
+  recurringHardReqs Json // [{description, seenInAgents: string[], suggestApply: boolean}]
+
+  // Stats
+  signalsLearned Int      @default(0) // total likes + dislikes across all agents
+  agentCount     Int      @default(0)
+  lastRebuiltAt  DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Phase 7b — raw implicit signal events captured from candidate cards and
+// profile detail views. Append-only. 90-day retention; aggregated into
+// MemoryEntry rows via the synthesis worker.
+model CandidateInteraction {
+  id          String  @id @default(cuid())
+  userId      String
+  agentId     String?
+  runId       String?
+  candidateId String // AgentCandidate.id
+  resumeId    String?
+
+  eventType  String // viewed, expanded, dwell, contact_copied, link_clicked, scroll_deep
+  durationMs Int? // for dwell / time-on-page events
+  metadata   Json?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([candidateId])
+  @@index([eventType, createdAt])
+}
+
+// Phase 7c — the semantic memory primitive. Written by the synthesis worker
+// (Phase 7c) or by user actions. Retrieved by ContextRetrievalService with
+// cosine similarity (v1 — JS; v7.5 — pgvector).
+model MemoryEntry {
+  id   String @id @default(cuid())
+  kind String // preference | rejection_pattern | hard_req_suggest | anchor | company_wide | synthesized_fact
+
+  // Scope hierarchy — exactly one scope level per memory
+  scope   String // user | team | workspace | job
+  scopeId String // userId | teamId | workspaceId | jobId
+
+  // Semantic content — the human-readable fact the LLM sees
+  content String @db.Text
+
+  // Embedding vector — Json for v1 (JS cosine similarity).
+  // Phase 7.5 will add a pgvector column via raw SQL.
+  embedding Json // number[] serialized
+
+  // Weight + decay
+  weight         Float     @default(1.0) // current effective weight
+  baselineWeight Float     @default(1.0) // weight at creation
+  reinforceCount Int       @default(1)
+  lastSeenAt     DateTime  @default(now())
+  expiresAt      DateTime? // null = permanent (rare, user-pinned)
+
+  // Hiring-requirement awareness — nullable, used for semantic job matching
+  jobContext Json? // { jobTitle?, industry?, companySize?, role? }
+
+  // Provenance
+  sourceEventId String? // AgentCandidate.id, CandidateInteraction.id, or null
+  sourceAgentId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([scope, scopeId])
+  @@index([kind])
+  @@index([expiresAt])
+  @@index([scopeId, kind, lastSeenAt])
+}
+
+// MemoryAdminAuditLog — every admin action on memory data goes here.
+// Durable, immutable, indexed by target so users can see who looked at
+// their data and when. This table is the "break-glass" audit trail for
+// the Phase 7 Memory Manager feature.
+//
+// action values:
+//   view_profile | view_memories | view_interactions
+//   edit_memory | delete_memory | pin_memory | unpin_memory
+//   rebuild_profile | reset_profile | export
+model MemoryAdminAuditLog {
+  id         String  @id @default(cuid())
+  adminId    String
+  targetType String // memory_entry | user_profile | interaction | user
+  targetId   String // memoryId | userId | interactionId
+  action     String // see comment above
+  reason     String? @db.Text // optional user-provided justification
+  changes    Json? // { before: {...}, after: {...} } for edit actions
+  ipAddress  String?
+
+  createdAt DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([action, createdAt])
+}
+
+model AgentActivityLog {
+  id          String   @id @default(cuid())
+  agentId     String
+  runId       String?
+  candidateId String? // AgentCandidate.id (scalar, no FK — survives candidate delete)
+  actor       String // system, user:<id>, agent:<id>, openclaw:<instanceId>
+  eventType   String // taxonomy in docs/agents-redesign-spec.md §5.3
+  severity    String   @default("info") // debug, info, warn, error
+  message     String?  @db.Text
+  payload     Json?
+  // Monotonic per-run sequence so the terminal replays events in dispatch
+  // order, even when they land on the DB slightly out of order.
+  sequence    Int      @default(0)
+  errorCode   String?
+  errorStack  String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  agent Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  run   AgentRun? @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([agentId, createdAt])
+  @@index([runId, createdAt])
+  @@index([candidateId])
+  @@index([eventType, createdAt])
+  @@index([severity, createdAt])
+}
+
+model Invitation {
+  id               String    @id @default(cuid())
+  agentCandidateId String?
+  resumeId         String?
+  jobId            String
+  invitedByUserId  String?
+  invitedByAgentId String?
+  channel          String // email, sms, openclaw
+  loginUrl         String?   @db.Text
+  qrcodeUrl        String?   @db.Text
+  sentAt           DateTime  @default(now())
+  acceptedAt       DateTime?
+  interviewId      String?   @unique
+  status           String    @default("sent") // sent, opened, accepted, expired, cancelled
+
+  agentCandidate AgentCandidate? @relation(fields: [agentCandidateId], references: [id], onDelete: SetNull)
+  interview      Interview?      @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+
+  @@index([jobId, sentAt])
+  @@index([agentCandidateId])
+  @@index([status])
+}
+
+model Outreach {
+  id                 String    @id @default(cuid())
+  agentCandidateId   String?
+  resumeId           String?
+  jobId              String?
+  initiatedByUserId  String?
+  initiatedByAgentId String?
+  channel            String // email, openclaw, sms, linkedin
+  templateKey        String?
+  subject            String?
+  body               String    @db.Text
+  thread             Json? // [{ role, body, at, externalId? }]
+  status             String    @default("draft") // draft, queued, sent, delivered, replied, bounced, failed
+  externalId         String? // Resend message id, OpenClaw delivery id
+  sentAt             DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  agentCandidate AgentCandidate? @relation(fields: [agentCandidateId], references: [id], onDelete: SetNull)
+
+  @@index([agentCandidateId, createdAt])
+  @@index([channel, status])
+  @@index([externalId])
+}
+
+model ExternalSourceConfig {
+  id          String   @id @default(cuid())
+  name        String // "LinkedIn Recruiter", "GitHub People", ...
+  provider    String // linkedin, github, seekout, fetcher, custom
+  enabled     Boolean  @default(true)
+  baseUrl     String
+  authType    String // api_key, oauth, basic
+  credentials Json // encrypted at rest — see CryptoService
+  config      Json? // provider-specific knobs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([enabled, provider])
+}
+
+model SourceConfig {
+  id                   String   @id @default(cuid())
+  workspaceId          String?  @unique // null = global default
+  instantSearchEnabled Boolean  @default(true)
+  internalMinioEnabled Boolean  @default(false)
+  externalApiEnabled   Boolean  @default(false)
+  minioBucket          String?
+  updatedAt            DateTime @updatedAt
 }
 
 /// GoHire interview records imported from CSV export
 model GoHireInterview {
   id                    String    @id @default(cuid())
-  gohireUserId          String                          // candidate UUID in GoHire
-  candidateName         String                          // 候选人姓名
-  candidateEmail        String?                         // 用户邮箱（登录名称）
-  interviewDatetime     DateTime                        // 面试开始时间
-  interviewEndDatetime  DateTime?                       // 面试结束时间
-  duration              Int?                            // 面试时长 (minutes)
-  videoUrl              String?   @db.Text              // gohire_interview_video_filepath
-  recruiterName         String?                         // 招聘人员姓名
-  recruiterEmail        String?                         // 招聘人员邮箱
-  recruiterId           String?                         // gohire_recruiter_id
-  jobTitle              String?                         // 职位名称
-  jobDescription        String?   @db.Text              // 职位描述
-  jobRequirements       String?   @db.Text              // 任职要求
-  interviewRequirements String?   @db.Text              // 面试要求
-  resumeUrl             String?   @db.Text              // 简历下载地址
-  transcriptUrl         String?   @db.Text              // 面试记录下载地址
-  parsedResumeText      String?   @db.Text              // Cached parsed resume markdown
-  lastLoginAt           DateTime?                       // 最近登录时间
-  invitedAt             DateTime?                       // 邀约时间
-  transcript            String?   @db.Text              // Fetched/generated transcript
-  evaluationData        Json?                           // Evaluation result JSON
-  evaluationScore       Int?                            // Quick-access score (0-100)
-  evaluationVerdict     String?                         // strong_hire, hire, weak_hire, no_hire
-  evaluationShareToken  String?   @unique               // Share token for public evaluation report
+  gohireUserId          String // candidate UUID in GoHire
+  candidateName         String // 候选人姓名
+  candidateEmail        String? // 用户邮箱（登录名称）
+  interviewDatetime     DateTime // 面试开始时间
+  interviewEndDatetime  DateTime? // 面试结束时间
+  duration              Int? // 面试时长 (minutes)
+  videoUrl              String?   @db.Text // gohire_interview_video_filepath
+  recruiterName         String? // 招聘人员姓名
+  recruiterEmail        String? // 招聘人员邮箱
+  recruiterId           String? // gohire_recruiter_id
+  jobTitle              String? // 职位名称
+  jobDescription        String?   @db.Text // 职位描述
+  jobRequirements       String?   @db.Text // 任职要求
+  interviewRequirements String?   @db.Text // 面试要求
+  resumeUrl             String?   @db.Text // 简历下载地址
+  transcriptUrl         String?   @db.Text // 面试记录下载地址
+  parsedResumeText      String?   @db.Text // Cached parsed resume markdown
+  lastLoginAt           DateTime? // 最近登录时间
+  invitedAt             DateTime? // 邀约时间
+  transcript            String?   @db.Text // Fetched/generated transcript
+  evaluationData        Json? // Evaluation result JSON
+  evaluationScore       Int? // Quick-access score (0-100)
+  evaluationVerdict     String? // strong_hire, hire, weak_hire, no_hire
+  evaluationShareToken  String?   @unique // Share token for public evaluation report
 
   // Foreign key links to core entities (populated during CSV import pipeline)
-  candidateUserId        String?                         // FK → User (candidate account)
-  userId                 String?                         // FK → User (recruiter/owner)
-  resumeId               String?                         // FK → Resume (parsed resume in TalentHub)
-  jobId                  String?                         // FK → Job (linked job posting)
-  resumeProcessingStatus String?   @default("pending")   // pending, processing, completed, failed, skipped
-  resumeProcessingError  String?   @db.Text              // Error message if resume processing failed
-  importBatchId          String?                         // Groups records from same CSV upload
+  candidateUserId        String? // FK → User (candidate account)
+  userId                 String? // FK → User (recruiter/owner)
+  resumeId               String? // FK → Resume (parsed resume in TalentHub)
+  jobId                  String? // FK → Job (linked job posting)
+  resumeProcessingStatus String? @default("pending") // pending, processing, completed, failed, skipped
+  resumeProcessingError  String? @db.Text // Error message if resume processing failed
+  importBatchId          String? // Groups records from same CSV upload
 
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  candidateUser  User?    @relation("GoHireCandidateUser", fields: [candidateUserId], references: [id], onDelete: SetNull)
-  recruiterUser  User?    @relation("GoHireRecruiterUser", fields: [userId], references: [id], onDelete: SetNull)
-  resume         Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
-  job            Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  candidateUser User?   @relation("GoHireCandidateUser", fields: [candidateUserId], references: [id], onDelete: SetNull)
+  recruiterUser User?   @relation("GoHireRecruiterUser", fields: [userId], references: [id], onDelete: SetNull)
+  resume        Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  job           Job?    @relation(fields: [jobId], references: [id], onDelete: SetNull)
 
   @@index([candidateName])
   @@index([candidateEmail])
@@ -946,11 +1290,11 @@ model GoHireInterview {
 
 model GoHireImportBatch {
   id                String   @id @default(cuid())
-  adminUserId       String                          // Who triggered the import
-  fileName          String?                         // Original CSV filename
-  totalRows         Int                             // Total data rows in CSV
-  phase1Completed   Boolean  @default(false)        // Sync phase done
-  phase2Completed   Boolean  @default(false)        // Async resume processing done
+  adminUserId       String // Who triggered the import
+  fileName          String? // Original CSV filename
+  totalRows         Int // Total data rows in CSV
+  phase1Completed   Boolean  @default(false) // Sync phase done
+  phase2Completed   Boolean  @default(false) // Async resume processing done
   usersCreated      Int      @default(0)
   usersLinked       Int      @default(0)
   jobsCreated       Int      @default(0)
@@ -961,7 +1305,7 @@ model GoHireImportBatch {
   interviewsCreated Int      @default(0)
   interviewsUpdated Int      @default(0)
   interviewsSkipped Int      @default(0)
-  errors            Json?                           // Array of {row, error}
+  errors            Json? // Array of {row, error}
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -973,73 +1317,73 @@ model AgentAlexSession {
   id           String   @id @default(cuid())
   userId       String
   title        String   @default("New Chat")
-  messages     Json     @default("[]")    // ChatMessage[]
-  requirements Json     @default("{}")    // HiringRequirements
+  messages     Json     @default("[]") // ChatMessage[]
+  requirements Json     @default("{}") // HiringRequirements
   linkedJobId  String?  @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  linkedJob    Job?     @relation(fields: [linkedJobId], references: [id], onDelete: SetNull)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedJob Job? @relation(fields: [linkedJobId], references: [id], onDelete: SetNull)
 
   @@index([userId, updatedAt])
 }
 
 model Task {
-  id            String    @id @default(cuid())
-  userId        String    // assignee
-  createdById   String?   // who/what created it (null = system)
+  id          String  @id @default(cuid())
+  userId      String // assignee
+  createdById String? // who/what created it (null = system)
 
   // Classification
-  type          String    // evaluate_interview, review_evaluation, hiring_decision, review_matches, shortlist_candidates, send_interview_invite, follow_up_invitation, interview_reminder, run_matching, review_agent_candidates, publish_job, close_stale_job, stale_pipeline, sync_gohire_interviews, reparse_resume
-  category      String    // pipeline, evaluation, sourcing, communication, admin
-  assigneeType  String    @default("human") // human | agent
+  type         String // evaluate_interview, review_evaluation, hiring_decision, review_matches, shortlist_candidates, send_interview_invite, follow_up_invitation, interview_reminder, run_matching, review_agent_candidates, publish_job, close_stale_job, stale_pipeline, sync_gohire_interviews, reparse_resume
+  category     String // pipeline, evaluation, sourcing, communication, admin
+  assigneeType String @default("human") // human | agent
 
   // Content
-  title         String
-  description   String?   @db.Text
-  actionUrl     String?   // deep link to relevant page
-  actionLabel   String?   // button text for the primary action
+  title       String
+  description String? @db.Text
+  actionUrl   String? // deep link to relevant page
+  actionLabel String? // button text for the primary action
 
   // Context links
-  jobId              String?
-  resumeId           String?
-  interviewId        String?
-  candidateId        String?
-  matchingSessionId  String?
-  agentId            String?
-  hiringRequestId    String?
+  jobId             String?
+  resumeId          String?
+  interviewId       String?
+  candidateId       String?
+  matchingSessionId String?
+  agentId           String?
+  hiringRequestId   String?
 
   // Priority & SLA
-  priority      String    @default("medium") // critical, high, medium, low
-  dueAt         DateTime?
-  slaDeadline   DateTime?
-  escalatedAt   DateTime?
+  priority    String    @default("medium") // critical, high, medium, low
+  dueAt       DateTime?
+  slaDeadline DateTime?
+  escalatedAt DateTime?
 
   // Status
   status        String    @default("pending") // pending, in_progress, completed, dismissed, expired, auto_completed
   completedAt   DateTime?
-  completedBy   String?   // userId or 'system'
+  completedBy   String? // userId or 'system'
   dismissReason String?
-  result        Json?     // outcome data
+  result        Json? // outcome data
 
   // Trigger
-  triggerEvent  String    // what event spawned this
-  triggerData   Json?     // event context snapshot
+  triggerEvent    String // what event spawned this
+  triggerData     Json? // event context snapshot
   isAutoGenerated Boolean @default(true)
 
   // Archive
-  archivedAt    DateTime? // set 7 days after completed/dismissed
+  archivedAt DateTime? // set 7 days after completed/dismissed
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user          User      @relation("TaskAssignee", fields: [userId], references: [id], onDelete: Cascade)
-  createdBy     User?     @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  job           Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
-  resume        Resume?   @relation(fields: [resumeId], references: [id], onDelete: SetNull)
-  interview     Interview? @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+  user          User           @relation("TaskAssignee", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy     User?          @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  job           Job?           @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  resume        Resume?        @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  interview     Interview?     @relation(fields: [interviewId], references: [id], onDelete: SetNull)
   notifications Notification[]
 
   @@index([userId, status])
@@ -1054,39 +1398,39 @@ model Task {
 }
 
 model TaskAutomationRule {
-  id                  String    @id @default(cuid())
-  userId              String?   // null = global default
-  taskType            String    @unique // maps to task type enum
-  enabled             Boolean   @default(true)
-  assigneeType        String    @default("human") // human | agent
-  autoExecute         Boolean   @default(false) // for agent tasks: execute immediately?
-  slaHours            Int?      // SLA deadline in hours
-  priority            String    @default("medium") // default priority
-  escalateAfterHours  Int?      // hours after creation to escalate
-  emailNotify         Boolean   @default(false) // send email on creation?
-  config              Json?     // extra type-specific config
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                 String   @id @default(cuid())
+  userId             String? // null = global default
+  taskType           String   @unique // maps to task type enum
+  enabled            Boolean  @default(true)
+  assigneeType       String   @default("human") // human | agent
+  autoExecute        Boolean  @default(false) // for agent tasks: execute immediately?
+  slaHours           Int? // SLA deadline in hours
+  priority           String   @default("medium") // default priority
+  escalateAfterHours Int? // hours after creation to escalate
+  emailNotify        Boolean  @default(false) // send email on creation?
+  config             Json? // extra type-specific config
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([taskType])
   @@index([userId])
 }
 
 model Notification {
-  id          String    @id @default(cuid())
-  userId      String    // recipient
-  taskId      String?   // linked task
-  type        String    // task_created, task_overdue, task_escalated, task_completed
-  title       String
-  message     String?
-  actionUrl   String?
-  read        Boolean   @default(false)
-  readAt      DateTime?
-  emailSent   Boolean   @default(false)
-  createdAt   DateTime  @default(now())
+  id        String    @id @default(cuid())
+  userId    String // recipient
+  taskId    String? // linked task
+  type      String // task_created, task_overdue, task_escalated, task_completed
+  title     String
+  message   String?
+  actionUrl String?
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  emailSent Boolean   @default(false)
+  createdAt DateTime  @default(now())
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task        Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
   @@index([userId, read])
   @@index([userId, createdAt])
@@ -1101,15 +1445,15 @@ model Contact {
   email           String?
   phone           String?
   jobTitle        String?
-  contactType     String    @default("client")    // hiring_manager, client, vendor, reference
+  contactType     String    @default("client") // hiring_manager, client, vendor, reference
   companyId       String?
   notes           String?   @db.Text
   lastContactedAt DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company         Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([contactType])
@@ -1118,21 +1462,21 @@ model Contact {
 }
 
 model Company {
-  id              String    @id @default(cuid())
-  userId          String
-  name            String
-  industry        String?
-  size            String?               // e.g. "50-200", "1000+"
-  location        String?
-  website         String?
-  notes           String?   @db.Text
-  openJobs        Int       @default(0)
-  totalPlaced     Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  industry    String?
+  size        String? // e.g. "50-200", "1000+"
+  location    String?
+  website     String?
+  notes       String?  @db.Text
+  openJobs    Int      @default(0)
+  totalPlaced Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contacts        Contact[]
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts Contact[]
 
   @@index([userId])
   @@index([name])

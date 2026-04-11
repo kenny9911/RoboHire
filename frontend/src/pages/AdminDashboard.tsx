@@ -21,6 +21,8 @@ import LogsTab from './AdminLogsTab';
 import ActivityTab from './AdminActivityTab';
 import RobustMonitorTab from './AdminRobustMonitorTab';
 import TaskAutomationTab from './AdminTaskAutomationTab';
+import AdminAgentSourcesTab from './AdminAgentSourcesTab';
+import AdminMemoryTab from './AdminMemoryTab';
 import { formatUsageLimit, getPlanInterviewLimit, getPlanMatchLimit } from '../utils/usageLimits';
 import { getUserRoleBadgeClassName, getUserRoleLabel, normalizeUserRole, type UserRole } from '../utils/userRole';
 
@@ -243,7 +245,7 @@ async function authFetch(endpoint: string, options: RequestInit = {}) {
   return data;
 }
 
-const TABS = ['Overview', 'Monitor', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Activity', 'Pricing', 'Interview', 'Teams', 'Tasks', 'Settings'] as const;
+const TABS = ['Overview', 'Monitor', 'Analytics', 'LLM Usage', 'Logs', 'Users', 'Activity', 'Pricing', 'Interview', 'Teams', 'Tasks', 'Agent Sources', 'Memory', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 const INTERVIEW_CONFIG_FIELDS = [
   'interview.instructions',
@@ -3406,7 +3408,7 @@ export default function AdminDashboard() {
     <div className="max-w-7xl mx-auto space-y-6">
       <SEO title="Admin" noIndex />
       {/* Tab bar */}
-      <div className="landing-gradient-stroke rounded-3xl bg-white/90 p-2 shadow-[0_22px_44px_-36px_rgba(15,23,42,0.62)]">
+      <div className="landing-gradient-stroke flex items-center justify-between gap-3 rounded-3xl bg-white/90 p-2 shadow-[0_22px_44px_-36px_rgba(15,23,42,0.62)]">
         <nav className="flex flex-wrap gap-2">
           {TABS.map((tab) => (
             <button
@@ -3422,6 +3424,14 @@ export default function AdminDashboard() {
             </button>
           ))}
         </nav>
+        <a
+          href="/product/admin/agents-terminal"
+          className="mr-2 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 font-mono text-xs text-emerald-400 hover:bg-zinc-900"
+          title="Realtime agents operations terminal"
+        >
+          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+          Agents Terminal
+        </a>
       </div>
 
       {/* Tab content */}
@@ -3436,6 +3446,8 @@ export default function AdminDashboard() {
       {activeTab === 'Interview' && <InterviewConfigTab />}
       {activeTab === 'Teams' && <TeamsTab />}
       {activeTab === 'Tasks' && <TaskAutomationTab />}
+      {activeTab === 'Agent Sources' && <AdminAgentSourcesTab />}
+      {activeTab === 'Memory' && <AdminMemoryTab />}
       {activeTab === 'Settings' && <SettingsTab />}
     </div>
   );

@@ -1596,17 +1596,9 @@
   },
   "notifications": {
     "title": "通知",
-    "empty": "新しい通知はありません。",
-    "viewAll": "すべての通知を見る",
-    "match": "新しいマッチ",
-    "invitation": "招待を送信しました",
-    "interview": "面接が完了しました",
-    "subtitle": "{{name}} ・ {{request}}",
-    "candidate": "候補者",
-    "justNow": "たった今",
-    "minutesAgo": "{{count}}分前",
-    "hoursAgo": "{{count}}時間前",
-    "daysAgo": "{{count}}日前"
+    "markAllRead": "すべて既読にする",
+    "empty": "通知はありません",
+    "viewAll": "すべてのタスクを表示"
   },
   "pages": {
     "matchResume": {
@@ -4112,26 +4104,473 @@
       "autoExecute": "自動実行",
       "emailNotify": "メール通知",
       "types": {
-        "evaluate_interview": { "label": "面接評価", "desc": "面接完了後に自動で評価を実行" },
-        "review_evaluation": { "label": "評価レビュー", "desc": "評価結果を確認し採用判断を行う" },
-        "hiring_decision": { "label": "採用決定", "desc": "採用/強力推薦の候補者について判断する" },
-        "review_matches": { "label": "マッチングレビュー", "desc": "マッチングセッションの結果を確認" },
-        "shortlist_candidates": { "label": "候補者絞り込み", "desc": "高評価(A+/A)の候補者をショートリストに追加" },
-        "send_interview_invite": { "label": "面接招待送信", "desc": "ショートリストの候補者に面接招待を送信" },
-        "follow_up_invitation": { "label": "招待フォローアップ", "desc": "候補者が面接を開始していない場合にフォローアップ" },
-        "interview_reminder": { "label": "面接リマインダー", "desc": "予定面接の24時間前にリマインダーを送信" },
-        "run_matching": { "label": "マッチング実行", "desc": "求人公開時に候補者を自動マッチング" },
-        "review_agent_candidates": { "label": "エージェント候補者レビュー", "desc": "AIエージェントが発掘した候補者を確認" },
-        "publish_job": { "label": "求人公開", "desc": "新規作成された下書き求人を確認して公開" },
-        "close_stale_job": { "label": "古い求人をクローズ", "desc": "30日以上活動のない求人を確認" },
-        "stale_pipeline": { "label": "停滞パイプライン", "desc": "7日以上マッチング状態の候補者を確認" },
-        "sync_gohire_interviews": { "label": "GoHire同期", "desc": "GoHireプラットフォームから面接データを同期" },
-        "reparse_resume": { "label": "履歴書再解析", "desc": "不完全なデータの履歴書を再解析" }
+        "evaluate_interview": {
+          "label": "面接評価",
+          "desc": "面接完了後に自動で評価を実行"
+        },
+        "review_evaluation": {
+          "label": "評価レビュー",
+          "desc": "評価結果を確認し採用判断を行う"
+        },
+        "hiring_decision": {
+          "label": "採用決定",
+          "desc": "採用/強力推薦の候補者について判断する"
+        },
+        "review_matches": {
+          "label": "マッチングレビュー",
+          "desc": "マッチングセッションの結果を確認"
+        },
+        "shortlist_candidates": {
+          "label": "候補者絞り込み",
+          "desc": "高評価(A+/A)の候補者をショートリストに追加"
+        },
+        "send_interview_invite": {
+          "label": "面接招待送信",
+          "desc": "ショートリストの候補者に面接招待を送信"
+        },
+        "follow_up_invitation": {
+          "label": "招待フォローアップ",
+          "desc": "候補者が面接を開始していない場合にフォローアップ"
+        },
+        "interview_reminder": {
+          "label": "面接リマインダー",
+          "desc": "予定面接の24時間前にリマインダーを送信"
+        },
+        "run_matching": {
+          "label": "マッチング実行",
+          "desc": "求人公開時に候補者を自動マッチング"
+        },
+        "review_agent_candidates": {
+          "label": "エージェント候補者レビュー",
+          "desc": "AIエージェントが発掘した候補者を確認"
+        },
+        "publish_job": {
+          "label": "求人公開",
+          "desc": "新規作成された下書き求人を確認して公開"
+        },
+        "close_stale_job": {
+          "label": "古い求人をクローズ",
+          "desc": "30日以上活動のない求人を確認"
+        },
+        "stale_pipeline": {
+          "label": "停滞パイプライン",
+          "desc": "7日以上マッチング状態の候補者を確認"
+        },
+        "sync_gohire_interviews": {
+          "label": "GoHire同期",
+          "desc": "GoHireプラットフォームから面接データを同期"
+        },
+        "reparse_resume": {
+          "label": "履歴書再解析",
+          "desc": "不完全なデータの履歴書を再解析"
+        }
       }
-    }
+    },
+    "agentSources": {
+      "title": "エージェントソース",
+      "subtitle": "エージェントが候補者を探す場所を設定します。グローバルソースの切替と、サードパーティ供給元の管理を行えます。",
+      "globalToggles": "グローバル切替",
+      "globalTogglesDesc": "無効化されたソースは、このワークスペース内のすべてのユーザーの作成モーダルから非表示になります。",
+      "externalApiDesc": "下記で設定する第三者サードパーティベンダー。",
+      "externalSources": "外部ソース",
+      "externalSourcesDesc": "エージェントが実行時に問い合わせる第三者サードパーティベンダー。資格情報は暗号化されて保存されます。",
+      "addSource": "ソースを追加",
+      "editSource": "外部ソースを編集",
+      "noSources": "外部ソースはまだ設定されていません。",
+      "confirmDelete": "この外部ソースを削除しますか？",
+      "test": "テスト",
+      "testOk": "テスト成功 — {{count}} 件の候補者が返されました",
+      "formDesc": "資格情報は暗号化されて保存され、API経由で返されることはありません。",
+      "name": "名前",
+      "provider": "プロバイダ",
+      "baseUrl": "ベース URL",
+      "authType": "認証方式",
+      "credentials": "資格情報（JSON）",
+      "credentialsHint": "api_key: {\"apiKey\": \"…\", \"apiKeyHeader\": \"X-API-Key\"}. basic: {\"username\": \"…\", \"password\": \"…\"}. oauth: {\"accessToken\": \"…\"}.",
+      "enabled": "有効",
+      "invalidJson": "資格情報は有効な JSON オブジェクトである必要があります",
+      "saveFailed": "外部ソースの保存に失敗しました"
+    },
+    "agentsTerminal": {
+      "title": "エージェント運用ターミナル",
+      "subtitle": "全エージェントのリアルタイムイベントストリーム",
+      "filterPlaceholder": "イベント / エージェント / メッセージでフィルタ…",
+      "waiting": "イベント待機中…",
+      "recentRuns": "最近の実行",
+      "cost": "コスト",
+      "duration": "実行時間"
+    },
+    "memory": {
+        "users": "メモリデータのあるユーザー",
+        "searchPlaceholder": "メールまたは名前で検索…",
+        "showingN": "{{total}} 件中 {{shown}} 件",
+        "noUsers": "一致するユーザーなし",
+        "pickUser": "ユーザーを選択してメモリデータを表示",
+        "interactions": "件のインタラクション",
+        "breakGlass": "ブレイクグラス · 監査済",
+        "tabs": {
+          "profile": "プロファイル",
+          "memories": "メモリ",
+          "interactions": "インタラクション",
+          "audit": "監査"
+        },
+        "signalsLearned": "学習シグナル",
+        "agents": "エージェント",
+        "lastRebuilt": "最終再構築",
+        "topSkills": "主要スキル",
+        "topAntiSkills": "アンチスキル",
+        "topLocations": "主要地域",
+        "topIndustries": "主要業界",
+        "rebuild": "プロファイル再構築",
+        "rebuilding": "再構築中…",
+        "reset": "プロファイルをリセット",
+        "confirmReset": "このユーザーのメモリプロファイルをリセットしますか？取り消せません。",
+        "buildProfile": "プロファイルを作成",
+        "noProfile": "このユーザーのリクルーター プロファイルはまだありません。",
+        "noMemories": "このユーザーのメモリはまだありません。",
+        "noInteractions": "インタラクション イベントは未捕捉です。",
+        "noAudit": "監査エントリはありません。",
+        "auditHint": "このユーザーデータに対する管理者の全操作がここに記録されます。監査エントリは変更不可です。",
+        "lastSeen": "最終確認",
+        "expires": "有効期限",
+        "confirmDelete": "このメモリを削除しますか？監査ログは保持されます。",
+        "saveFailed": "保存に失敗しました",
+        "editModal": {
+          "title": "メモリを編集",
+          "warning": "これはブレイクグラス編集です。操作内容、変更前/変更後、任意の理由は不変の監査ログに保存されます。",
+          "content": "内容",
+          "weight": "重み（0-10）",
+          "reason": "理由（任意、監査ログに記録）",
+          "reasonPlaceholder": "例: サポートチケット #1234、古いファクトを修正"
+        }
+      }
+  
   },
   "agents": {
     "title": "エージェント",
+    "workbench": {
+      "taskTypeMatchResumes": "履歴書マッチング",
+      "adminScope": "管理者 · 全ユーザー",
+      "jobSearchPlaceholder": "職位名で検索...",
+      "noJobsAvailable": "利用可能な求人がありません。まず求人を作成してください。",
+      "candidateSource": "候補者ソース",
+      "candidateSourceDesc": "エージェントが検索する場所を1つ以上選択してください。",
+      "source": {
+        "instant_search": {
+          "name": "インスタント検索",
+          "desc": "インスタントマッチングパイプラインで RoboHire の内部履歴書を検索します。"
+        },
+        "internal_minio": {
+          "name": "内部リポジトリ",
+          "desc": "MinIO の履歴書アーカイブをスキャンしてマッチする候補者を探します。"
+        },
+        "external_api": {
+          "name": "外部ソース",
+          "desc": "管理者が設定したAPI経由でサードパーティ（LinkedIn、GitHubなど）を照会します。"
+        }
+      },
+      "schedule": "スケジュール",
+      "schedulePreset": {
+        "off": "オフ",
+        "hourly": "毎時",
+        "daily": "毎日",
+        "weekly": "毎週",
+        "custom": "カスタム"
+      },
+      "errors": {
+        "sourceRequired": "候補者ソースを1つ以上選択してください",
+        "invalidCron": "有効な cron 式（5 フィールド）を入力してください",
+        "createFailed": "エージェントの作成に失敗しました"
+      },
+      "openWorkbench": "ワークベンチを開く",
+      "drawer": {
+        "runStatus": "{{status}} · {{triggered}}",
+        "noRuns": "実行履歴がありません",
+        "cancel": "キャンセル",
+        "starting": "起動中…",
+        "runNow": "今すぐ実行",
+        "tabs": {
+          "results": "結果",
+          "runs": "実行履歴",
+          "activity": "アクティビティ",
+          "settings": "設定"
+        },
+        "empty": {
+          "title": "実行履歴がありません",
+          "desc": "ヘッダーの「今すぐ実行」をクリックして初回実行を開始します。"
+        },
+        "filter": {
+          "all": "すべて",
+          "pending": "保留中",
+          "liked": "いいね",
+          "disliked": "スキップ"
+        },
+        "connecting": "接続中…",
+        "streaming": "結果をストリーミング中…",
+        "runComplete": "実行完了",
+        "streamError": "接続が切断されました",
+        "noMatches": "このビューには候補者がまだいません。",
+        "loadingResults": "結果を読み込み中…",
+        "dislike": "スキップ",
+        "like": "いいね",
+        "noRunsYet": "実行履歴がありません。ヘッダーの「今すぐ実行」をクリック。",
+        "runStatusLabel": {
+          "queued": "キュー",
+          "running": "実行中",
+          "completed": "完了",
+          "failed": "失敗",
+          "cancelled": "キャンセル済"
+        },
+        "matchedCount": "{{count}} 件マッチ",
+        "activityCount": "{{count}} 件のイベント",
+        "noActivity": "アクティビティがありません。",
+        "eventCount": "{{count}} 件のイベント",
+        "live": {
+          "matched": "マッチ",
+          "scored": "スコア済み",
+          "calls": "LLM 呼出",
+          "cost": "コスト",
+          "errors": "エラー",
+          "warmingUp": "ウォームアップ中…"
+        }
+      },
+      "review": {
+        "title": "プロフィール審査",
+        "introTitle": "初期マッチを見つけました。これらのプロフィールを確認してフィードバックをお寄せください。",
+        "introDesc": "続行するには {{count}} 件すべてのプロフィールを承認してください。",
+        "reviewProfiles": "プロフィールを審査",
+        "viewList": "リスト表示",
+        "viewReview": "審査モード",
+        "fullProfile": "フルプロフィール",
+        "prev": "前へ",
+        "next": "次へ",
+        "counter": "プロフィール {{current}}/{{total}}",
+        "approve": "承認",
+        "reject": "却下",
+        "helpText": "これはエージェントの校正のみを行い、メールは送信されません。",
+        "criteriaHint": "← → で移動、Esc で戻ります。",
+        "doneTitle": "すべてのプロフィールを審査しました",
+        "doneDesc": "フィードバックが記録されました。リストに戻って承認済みのプロフィールにアクションしてください。",
+        "backToList": "結果リストに戻る",
+        "tabs": {
+          "experience": "職歴",
+          "education": "学歴",
+          "skills": "スキル"
+        },
+        "noExperience": "この履歴書から職歴データは解析されませんでした。",
+        "noEducation": "この履歴書から学歴データは解析されませんでした。",
+        "noSkills": "この履歴書からスキルデータは解析されませんでした。",
+        "unknownCompany": "不明",
+        "skillGroups": {
+          "all": "スキル",
+          "technical": "技術",
+          "languages": "言語",
+          "frameworks": "フレームワーク",
+          "tools": "ツール",
+          "soft": "ソフトスキル",
+          "other": "その他",
+          "tags": "タグ"
+        },
+        "addCriteria": "基準を追加",
+        "editCriteria": "基準を編集",
+        "editCriteriaHint": "重要度による並べ替えや必須化は "
+      },
+      "criteria": {
+        "title": "評価基準",
+        "mostImportant": "最重要",
+        "leastImportant": "副次的",
+        "addCriterion": "基準を追加",
+        "addToBucket": "{{bucket}} に追加",
+        "dragHere": "ここに基準をドロップするか、下の追加をクリックしてください。",
+        "update": "更新",
+        "selectPreset": "プリセット選択",
+        "savePreset": "プリセット保存",
+        "presetsComingSoon": "プリセット機能は近日公開",
+        "pin": "必須としてピン留め",
+        "unpin": "ピン留め解除",
+        "pinHint": "クリックして必須要件として設定",
+        "pinnedHint": "必須 — エージェントは絶対条件として扱います",
+        "placeholder": "例: リーダーシップおよびマネジメントの経験が必要",
+        "saveFailed": "評価基準の保存に失敗しました",
+        "noPresets": "プリセットがまだ保存されていません",
+        "presetNamePlaceholder": "プリセット名",
+        "hrRelationship": "ハード条件でまず母集団をフィルタし、残りをソフト条件でスコアリングします。"
+      },
+      "settings": {
+        "sections": {
+          "identity": "基本情報",
+          "task": "タスク",
+          "target": "対象職務",
+          "sources": "候補者ソース",
+          "criteria": "検索条件",
+          "instructions": "指示",
+          "schedule": "スケジュール",
+          "danger": "危険操作",
+          "hardRequirements": "ハード条件",
+          "idealProfile": "理想プロファイル"
+        },
+        "fineTuneCriteria": "基準を細かく調整",
+        "unsavedChanges": "未保存の変更があります",
+        "discard": "破棄",
+        "saveChanges": "変更を保存",
+        "requiredMissing": "名前、検索条件、関連求人は必須です",
+        "deleteAgent": "エージェントを削除",
+        "deleteDesc": "エージェントとその実行履歴、候補者、アクティビティログをすべて削除します。この操作は取り消せません。",
+        "confirmDelete": "このエージェントを削除しますか？この操作は取り消せません。"
+      },
+      "summary": {
+        "title": "実行サマリー",
+        "subtitle": "所要時間 {{duration}} · 候補者 {{matched}} 名",
+        "matched": "マッチ",
+        "liked": "いいね",
+        "pending": "保留",
+        "errors": "エラー",
+        "cost": "コスト",
+        "topCandidates": "トップ候補者",
+        "commonStrengths": "共通の強み",
+        "commonGaps": "共通のギャップ",
+        "findMore": "もっと候補者を探す",
+        "getSuggestions": "条件の提案を取得",
+        "findMoreHint": "評価済みの候補者は自動的にスキップされます。"
+      },
+      "suggestions": {
+        "title": "条件の提案",
+        "subtitle": "却下した候補者に基づいて、改善のための提案を行います。",
+        "analyzing": "却下された候補者を分析中…",
+        "pattern": "検出されたパターン",
+        "empty": "具体的な提案はありません — エージェントは現在の条件で十分だと判断しています。",
+        "typeAdd": "追加",
+        "typeModify": "変更",
+        "typeRemove": "削除",
+        "apply": "適用",
+        "applied": "適用済み"
+      },
+      "icp": {
+        "title": "理想の候補者プロファイル",
+        "version": "v{{n}}",
+        "subtitle": "{{likes}} 件の高評価・{{dislikes}} 件の低評価から学習",
+        "confidence": "信頼度",
+        "confidenceLow": "シグナル不足 — 選別を続けてください",
+        "confidenceMedium": "良くなってきました — さらに評価して精度を上げましょう",
+        "confidenceHigh": "安定 — 次の実行をガイドできます",
+        "confidenceVeryHigh": "非常に安定",
+        "narrative": "要約",
+        "coreSkills": "コアスキル",
+        "bonusSkills": "ボーナススキル",
+        "antiTraits": "反対特徴 / 警告サイン",
+        "anchors": "アンカー候補者",
+        "anchorsCount": "{{count}} 人の高評価候補者を基準として使用",
+        "history": "履歴",
+        "revert": "元に戻す",
+        "suggested": "提案されるハード条件",
+        "promote": "採用",
+        "regenerate": "再生成",
+        "generateFromJD": "求人票から生成",
+        "emptyTitle": "エージェントに「優秀」とは何かを教えましょう",
+        "emptyState": "数人の候補者を高/低評価すれば、あなたの好みを学習します。求人票からも生成できます。",
+        "generating": "あなたの好みを分析中…",
+        "generatingHint": "通常 5〜15 秒。評価から再学習しています。",
+        "noHistory": "履歴はまだありません。",
+        "errorTitle": "理想プロファイルを読み込めませんでした",
+        "badgeUsing": "理想プロファイル v{{n}} を使用中",
+        "badgeUsingTooltip": "ハード条件でフィルタし、このプロファイルでスコアリングします。",
+        "badgeNone": "理想プロファイルなし — JD のみ使用",
+        "badgeNoneTooltip": "候補者を評価してエージェントを訓練してください。",
+        "deltaStripUpdated": "理想プロファイル更新済み · v{{n}}",
+        "deltaStripNoICP": "準備完了 — 最初の理想プロファイルを生成",
+        "applied": "適用済み",
+        "discard": "破棄"
+      },
+      "hardRequirements": {
+        "title": "ハード条件",
+        "titleCn": "硬性条件",
+        "titleEn": "Hard requirements",
+        "badge": "厳格フィルタ",
+        "warning": "すべての条件を満たさない候補者は完全に除外されます（スコア減ではありません）。慎重に使用してください。",
+        "addRule": "ハード条件を追加",
+        "removeRule": "ルールを削除：{{desc}}",
+        "emptyTitle": "厳格フィルタはまだありません。",
+        "emptyDesc": "すべての候補者がスコアリング段階に進みます。",
+        "quickAdd": "クイック追加",
+        "fieldLabel": "フィールド",
+        "operatorLabel": "演算子",
+        "tagPlaceholder": "入力後に Enter",
+        "dryRun": "現在 {{pct}}% の候補者を除外",
+        "dryRunWarning": "警告：ほぼ全員を除外します（{{pct}}%）",
+        "warningTitle": "ハード条件でほぼ全員が除外される可能性",
+        "warningTitleBlocking": "ハード条件で全員が除外されます",
+        "warningSubtitle": "実行前に確認してください。",
+        "ofPool": "{{total}} 人の候補者のうち：",
+        "excludedCount": "{{count}} 人がフィルタで除外",
+        "remainingCount": "{{count}} 人が評価対象",
+        "topOffenders": "除外の多いルール",
+        "excludesN": "{{n}} 人を除外",
+        "runAnyway": "それでも実行",
+        "editRules": "ハード条件を編集",
+        "fields": {
+          "experienceYears": "経験年数",
+          "salaryExpectation": "希望年収",
+          "location": "勤務地",
+          "currentRole": "現在の職種",
+          "education.degree": "学位",
+          "education.field": "専攻",
+          "languages": "言語",
+          "skills.technical": "技術スキル",
+          "tags": "タグ",
+          "custom": "カスタム正規表現"
+        },
+        "operators": {
+          "eq": "＝",
+          "neq": "≠",
+          "gte": "≥（以上）",
+          "lte": "≤（以下）",
+          "gt": ">",
+          "lt": "<",
+          "contains": "含む",
+          "contains_any": "いずれかを含む",
+          "contains_all": "すべてを含む",
+          "not_contains": "含まない",
+          "matches": "一致",
+          "not_matches": "不一致",
+          "in": "いずれか",
+          "not_in": "いずれでもない"
+        },
+        "degrees": {
+          "HighSchool": "高校",
+          "Associate": "短大",
+          "Bachelor": "学士",
+          "Master": "修士",
+          "PhD": "博士"
+        },
+        "presets": {
+          "yearsExp": "5 年以上の経験",
+          "location": "勤務地…",
+          "english": "英語話者",
+          "bachelor": "学士以上"
+        },
+        "validation": {
+          "mustBeNumber": "数値で入力してください",
+          "addAtLeastOne": "少なくとも 1 つの値を追加",
+          "emptyRegex": "正規表現は空にできません",
+          "invalidRegex": "無効な正規表現"
+        }
+      },
+      "regenModal": {
+        "title": "理想プロファイルを再生成",
+        "comparing": "シグナルを分析中…",
+        "applyNew": "新バージョンを適用",
+        "discard": "破棄",
+        "confidenceDelta": "信頼度",
+        "addedTraits": "追加",
+        "removedTraits": "削除"
+      },
+      "create": {
+        "hardRequirementsStep": {
+          "label": "ハード条件",
+          "optional": "任意"
+        }
+      }
+    },
     "subtitle": "RoboHireエージェントが自動でプロフィールの検索・審査・連絡を行います。",
     "create": "新規エージェント作成",
     "myAgents": "マイエージェント",
@@ -4994,11 +5433,5 @@
       "hoursLeft": "残り{{count}}時間",
       "daysLeft": "残り{{count}}日"
     }
-  },
-  "notifications": {
-    "title": "通知",
-    "markAllRead": "すべて既読にする",
-    "empty": "通知はありません",
-    "viewAll": "すべてのタスクを表示"
   }
 }

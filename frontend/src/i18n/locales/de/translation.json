@@ -1226,17 +1226,9 @@
   },
   "notifications": {
     "title": "Benachrichtigungen",
-    "empty": "Keine neuen Updates.",
-    "viewAll": "Alle Aktivitäten anzeigen",
-    "match": "Neuer Match",
-    "invitation": "Einladung gesendet",
-    "interview": "Interview abgeschlossen",
-    "subtitle": "{{name}} · {{request}}",
-    "candidate": "Kandidat",
-    "justNow": "gerade eben",
-    "minutesAgo": "vor {{count}} Min.",
-    "hoursAgo": "vor {{count}} Std.",
-    "daysAgo": "vor {{count}} Tg."
+    "markAllRead": "Alle als gelesen markieren",
+    "empty": "Keine Benachrichtigungen",
+    "viewAll": "Alle Aufgaben anzeigen"
   },
   "pages": {
     "matchResume": {
@@ -3653,26 +3645,473 @@
       "autoExecute": "Auto-ausführen",
       "emailNotify": "E-Mail-Benachrichtigung",
       "types": {
-        "evaluate_interview": { "label": "Interview Bewerten", "desc": "Automatische Bewertung nach Abschluss des Interviews" },
-        "review_evaluation": { "label": "Bewertung Prüfen", "desc": "Bewertungsergebnisse prüfen und Entscheidung treffen" },
-        "hiring_decision": { "label": "Einstellungsentscheidung", "desc": "Über empfohlene Kandidaten entscheiden" },
-        "review_matches": { "label": "Übereinstimmungen Prüfen", "desc": "Matching-Sitzungsergebnisse überprüfen" },
-        "shortlist_candidates": { "label": "Kandidaten Vorauswählen", "desc": "A+/A-Kandidaten auf die Vorauswahlliste setzen" },
-        "send_interview_invite": { "label": "Einladung Senden", "desc": "Interview-Einladung an Vorausgewählte senden" },
-        "follow_up_invitation": { "label": "Einladung Nachfassen", "desc": "Nachfassen wenn Kandidat nicht gestartet hat" },
-        "interview_reminder": { "label": "Interview-Erinnerung", "desc": "Erinnerung 24h vor dem Interview senden" },
-        "run_matching": { "label": "Matching Ausführen", "desc": "Automatisches Matching bei Stellenveröffentlichung" },
-        "review_agent_candidates": { "label": "Agenten-Kandidaten Prüfen", "desc": "Von KI-Agenten gefundene Kandidaten prüfen" },
-        "publish_job": { "label": "Stelle Veröffentlichen", "desc": "Neue Stellenentwürfe prüfen und veröffentlichen" },
-        "close_stale_job": { "label": "Inaktive Stelle Schließen", "desc": "Stellen prüfen die 30+ Tage offen ohne Aktivität sind" },
-        "stale_pipeline": { "label": "Stagnierende Pipeline", "desc": "Kandidaten prüfen die 7+ Tage im Matching-Status sind" },
-        "sync_gohire_interviews": { "label": "GoHire Synchronisieren", "desc": "Interviewdaten von GoHire synchronisieren" },
-        "reparse_resume": { "label": "Lebenslauf Neu Analysieren", "desc": "Lebensläufe mit unvollständigen Daten neu analysieren" }
+        "evaluate_interview": {
+          "label": "Interview Bewerten",
+          "desc": "Automatische Bewertung nach Abschluss des Interviews"
+        },
+        "review_evaluation": {
+          "label": "Bewertung Prüfen",
+          "desc": "Bewertungsergebnisse prüfen und Entscheidung treffen"
+        },
+        "hiring_decision": {
+          "label": "Einstellungsentscheidung",
+          "desc": "Über empfohlene Kandidaten entscheiden"
+        },
+        "review_matches": {
+          "label": "Übereinstimmungen Prüfen",
+          "desc": "Matching-Sitzungsergebnisse überprüfen"
+        },
+        "shortlist_candidates": {
+          "label": "Kandidaten Vorauswählen",
+          "desc": "A+/A-Kandidaten auf die Vorauswahlliste setzen"
+        },
+        "send_interview_invite": {
+          "label": "Einladung Senden",
+          "desc": "Interview-Einladung an Vorausgewählte senden"
+        },
+        "follow_up_invitation": {
+          "label": "Einladung Nachfassen",
+          "desc": "Nachfassen wenn Kandidat nicht gestartet hat"
+        },
+        "interview_reminder": {
+          "label": "Interview-Erinnerung",
+          "desc": "Erinnerung 24h vor dem Interview senden"
+        },
+        "run_matching": {
+          "label": "Matching Ausführen",
+          "desc": "Automatisches Matching bei Stellenveröffentlichung"
+        },
+        "review_agent_candidates": {
+          "label": "Agenten-Kandidaten Prüfen",
+          "desc": "Von KI-Agenten gefundene Kandidaten prüfen"
+        },
+        "publish_job": {
+          "label": "Stelle Veröffentlichen",
+          "desc": "Neue Stellenentwürfe prüfen und veröffentlichen"
+        },
+        "close_stale_job": {
+          "label": "Inaktive Stelle Schließen",
+          "desc": "Stellen prüfen die 30+ Tage offen ohne Aktivität sind"
+        },
+        "stale_pipeline": {
+          "label": "Stagnierende Pipeline",
+          "desc": "Kandidaten prüfen die 7+ Tage im Matching-Status sind"
+        },
+        "sync_gohire_interviews": {
+          "label": "GoHire Synchronisieren",
+          "desc": "Interviewdaten von GoHire synchronisieren"
+        },
+        "reparse_resume": {
+          "label": "Lebenslauf Neu Analysieren",
+          "desc": "Lebensläufe mit unvollständigen Daten neu analysieren"
+        }
       }
-    }
+    },
+    "agentSources": {
+      "title": "Agent-Quellen",
+      "subtitle": "Konfigurieren Sie, wo die Agenten Kandidaten suchen. Globale Quellen umschalten und Drittanbieter verwalten.",
+      "globalToggles": "Globale Schalter",
+      "globalTogglesDesc": "Deaktivierte Quellen werden im Agent-Erstellungsdialog für alle Benutzer dieses Workspaces ausgeblendet.",
+      "externalApiDesc": "Drittanbieter unten konfiguriert.",
+      "externalSources": "Externe Quellen",
+      "externalSourcesDesc": "Drittanbieter-Sourcing-Dienste, die Agenten zur Laufzeit abfragen können. Zugangsdaten werden verschlüsselt gespeichert.",
+      "addSource": "Quelle hinzufügen",
+      "editSource": "Externe Quelle bearbeiten",
+      "noSources": "Noch keine externen Quellen konfiguriert.",
+      "confirmDelete": "Diese externe Quelle löschen?",
+      "test": "Testen",
+      "testOk": "Test OK — {{count}} Kandidat(en) zurückgegeben",
+      "formDesc": "Zugangsdaten werden verschlüsselt gespeichert und nie über die API zurückgegeben.",
+      "name": "Name",
+      "provider": "Anbieter",
+      "baseUrl": "Basis-URL",
+      "authType": "Auth-Typ",
+      "credentials": "Zugangsdaten (JSON)",
+      "credentialsHint": "api_key: {\"apiKey\": \"…\", \"apiKeyHeader\": \"X-API-Key\"}. basic: {\"username\": \"…\", \"password\": \"…\"}. oauth: {\"accessToken\": \"…\"}.",
+      "enabled": "Aktiviert",
+      "invalidJson": "Die Zugangsdaten müssen ein gültiges JSON-Objekt sein",
+      "saveFailed": "Externe Quelle konnte nicht gespeichert werden"
+    },
+    "agentsTerminal": {
+      "title": "Agent-Operations-Terminal",
+      "subtitle": "Echtzeit-Ereignisstrom aller Agenten",
+      "filterPlaceholder": "Ereignisse / Agenten / Nachrichten filtern…",
+      "waiting": "Warte auf Ereignisse…",
+      "recentRuns": "Letzte Läufe",
+      "cost": "Kosten",
+      "duration": "Dauer"
+    },
+    "memory": {
+        "users": "Benutzer mit Speicherdaten",
+        "searchPlaceholder": "Nach E-Mail oder Name suchen…",
+        "showingN": "{{shown}} von {{total}} Benutzern",
+        "noUsers": "Keine passenden Benutzer",
+        "pickUser": "Wählen Sie einen Benutzer, um Speicherdaten anzuzeigen",
+        "interactions": "Interaktionen",
+        "breakGlass": "BREAK-GLASS · PROTOKOLLIERT",
+        "tabs": {
+          "profile": "Profil",
+          "memories": "Speicher",
+          "interactions": "Interaktionen",
+          "audit": "Audit"
+        },
+        "signalsLearned": "Gelernte Signale",
+        "agents": "Agenten",
+        "lastRebuilt": "Zuletzt neu aufgebaut",
+        "topSkills": "Top-Fähigkeiten",
+        "topAntiSkills": "Anti-Fähigkeiten",
+        "topLocations": "Top-Standorte",
+        "topIndustries": "Top-Branchen",
+        "rebuild": "Profil neu aufbauen",
+        "rebuilding": "Wird neu aufgebaut…",
+        "reset": "Profil zurücksetzen",
+        "confirmReset": "Speicherprofil dieses Benutzers zurücksetzen? Nicht umkehrbar.",
+        "buildProfile": "Profil jetzt erstellen",
+        "noProfile": "Noch kein Recruiter-Profil.",
+        "noMemories": "Noch keine Speichereinträge für diesen Benutzer.",
+        "noInteractions": "Noch keine Interaktionsereignisse erfasst.",
+        "noAudit": "Noch keine Audit-Einträge.",
+        "auditHint": "Jede Admin-Aktion wird hier erfasst. Audit-Einträge sind unveränderlich.",
+        "lastSeen": "Zuletzt gesehen",
+        "expires": "läuft ab",
+        "confirmDelete": "Diesen Speichereintrag löschen? Audit behält den Eintrag.",
+        "saveFailed": "Speichern fehlgeschlagen",
+        "editModal": {
+          "title": "Speichereintrag bearbeiten",
+          "warning": "Break-Glass-Bearbeitung. Aktion, vor/nach und optionale Begründung werden im unveränderlichen Audit-Log gespeichert.",
+          "content": "Inhalt",
+          "weight": "Gewicht (0-10)",
+          "reason": "Begründung (optional, wird im Audit erfasst)",
+          "reasonPlaceholder": "z.B. Support-Ticket #1234, veraltete Fakten korrigieren"
+        }
+      }
+  
   },
   "agents": {
     "title": "Agenten",
+    "workbench": {
+      "taskTypeMatchResumes": "Lebenslauf-Matching",
+      "adminScope": "Admin · alle Benutzer",
+      "jobSearchPlaceholder": "Stellen nach Titel suchen...",
+      "noJobsAvailable": "Keine Stellen verfügbar. Erstellen Sie zuerst eine Stelle.",
+      "candidateSource": "Kandidatenquelle",
+      "candidateSourceDesc": "Wählen Sie einen oder mehrere Orte, an denen der Agent suchen soll.",
+      "source": {
+        "instant_search": {
+          "name": "Sofortsuche",
+          "desc": "Durchsuchen Sie RoboHire-interne Lebensläufe über die Instant-Matching-Pipeline."
+        },
+        "internal_minio": {
+          "name": "Internes Repository",
+          "desc": "Scannen Sie das MinIO-Lebenslaufarchiv nach passenden Kandidaten."
+        },
+        "external_api": {
+          "name": "Externe Quellen",
+          "desc": "Fragen Sie Drittanbieter (LinkedIn, GitHub usw.) über admin-konfigurierte APIs ab."
+        }
+      },
+      "schedule": "Zeitplan",
+      "schedulePreset": {
+        "off": "Aus",
+        "hourly": "Stündlich",
+        "daily": "Täglich",
+        "weekly": "Wöchentlich",
+        "custom": "Benutzerdefiniert"
+      },
+      "errors": {
+        "sourceRequired": "Wählen Sie mindestens eine Kandidatenquelle",
+        "invalidCron": "Geben Sie einen gültigen Cron-Ausdruck (5 Felder) ein",
+        "createFailed": "Agent konnte nicht erstellt werden"
+      },
+      "openWorkbench": "Workbench öffnen",
+      "drawer": {
+        "runStatus": "{{status}} · {{triggered}}",
+        "noRuns": "Keine Läufe",
+        "cancel": "Abbrechen",
+        "starting": "Startet…",
+        "runNow": "Jetzt ausführen",
+        "tabs": {
+          "results": "Ergebnisse",
+          "runs": "Läufe",
+          "activity": "Aktivität",
+          "settings": "Einstellungen"
+        },
+        "empty": {
+          "title": "Keine Läufe",
+          "desc": "Klicken Sie oben auf \"Jetzt ausführen\", um den ersten Lauf zu starten."
+        },
+        "filter": {
+          "all": "Alle",
+          "pending": "Ausstehend",
+          "liked": "Favorisiert",
+          "disliked": "Abgelehnt"
+        },
+        "connecting": "Verbinde…",
+        "streaming": "Streame Ergebnisse…",
+        "runComplete": "Lauf abgeschlossen",
+        "streamError": "Stream getrennt",
+        "noMatches": "Noch keine Kandidaten in dieser Ansicht.",
+        "loadingResults": "Ergebnisse werden geladen…",
+        "dislike": "Ablehnen",
+        "like": "Favorisieren",
+        "noRunsYet": "Keine Läufe. Klicken Sie oben auf \"Jetzt ausführen\".",
+        "runStatusLabel": {
+          "queued": "In Warteschlange",
+          "running": "Läuft",
+          "completed": "Abgeschlossen",
+          "failed": "Fehlgeschlagen",
+          "cancelled": "Abgebrochen"
+        },
+        "matchedCount": "{{count}} Treffer",
+        "activityCount": "{{count}} Ereignisse",
+        "noActivity": "Noch keine Aktivität.",
+        "eventCount": "{{count}} Ereignisse",
+        "live": {
+          "matched": "Treffer",
+          "scored": "bewertet",
+          "calls": "LLM-Aufrufe",
+          "cost": "Kosten",
+          "errors": "Fehler",
+          "warmingUp": "Wird gestartet…"
+        }
+      },
+      "review": {
+        "title": "Profile prüfen",
+        "introTitle": "Ich habe erste Treffer gefunden. Bitte prüfen Sie diese Profile und teilen Sie Ihr Feedback mit.",
+        "introDesc": "Genehmigen Sie alle {{count}} Profile, um fortzufahren.",
+        "reviewProfiles": "Profile prüfen",
+        "viewList": "Listenansicht",
+        "viewReview": "Prüfansicht",
+        "fullProfile": "Vollständiges Profil",
+        "prev": "Zurück",
+        "next": "Weiter",
+        "counter": "Profil {{current}}/{{total}}",
+        "approve": "Annehmen",
+        "reject": "Ablehnen",
+        "helpText": "Dies kalibriert nur den Agenten und sendet keine E-Mails.",
+        "criteriaHint": "Mit ← → navigieren, mit Esc zurück.",
+        "doneTitle": "Alle Profile geprüft",
+        "doneDesc": "Ihr Feedback wurde gespeichert. Kehren Sie zur Liste zurück, um mit genehmigten Profilen fortzufahren.",
+        "backToList": "Zurück zu Ergebnissen",
+        "tabs": {
+          "experience": "Erfahrung",
+          "education": "Bildung",
+          "skills": "Fähigkeiten"
+        },
+        "noExperience": "Keine Erfahrungsdaten aus diesem Lebenslauf extrahiert.",
+        "noEducation": "Keine Bildungsdaten aus diesem Lebenslauf extrahiert.",
+        "noSkills": "Keine Fähigkeiten aus diesem Lebenslauf extrahiert.",
+        "unknownCompany": "Unbekannt",
+        "skillGroups": {
+          "all": "Fähigkeiten",
+          "technical": "Technisch",
+          "languages": "Sprachen",
+          "frameworks": "Frameworks",
+          "tools": "Werkzeuge",
+          "soft": "Soft Skills",
+          "other": "Andere",
+          "tags": "Tags"
+        },
+        "addCriteria": "Kriterien hinzufügen",
+        "editCriteria": "Kriterien bearbeiten",
+        "editCriteriaHint": "Kriterien als Pflicht markieren oder nach Wichtigkeit sortieren mit "
+      },
+      "criteria": {
+        "title": "Kriterien",
+        "mostImportant": "Am wichtigsten",
+        "leastImportant": "Weniger wichtig",
+        "addCriterion": "Kriterium hinzufügen",
+        "addToBucket": "Zu {{bucket}} hinzufügen",
+        "dragHere": "Kriterium hier ablegen oder unten auf Hinzufügen klicken.",
+        "update": "Aktualisieren",
+        "selectPreset": "Preset auswählen",
+        "savePreset": "Preset speichern",
+        "presetsComingSoon": "Presets demnächst verfügbar",
+        "pin": "Als obligatorisch markieren",
+        "unpin": "Lösen",
+        "pinHint": "Klicken, um als zwingende Anforderung zu markieren",
+        "pinnedHint": "Zwingend — der Agent behandelt dies als Ausschlusskriterium",
+        "placeholder": "Muss Erfahrung in Führung und Management haben",
+        "saveFailed": "Kriterien konnten nicht gespeichert werden",
+        "noPresets": "Noch keine Presets gespeichert",
+        "presetNamePlaceholder": "Preset-Name",
+        "hrRelationship": "Harte Anforderungen filtern zuerst. Dann bewerten weiche Kriterien den Rest."
+      },
+      "settings": {
+        "sections": {
+          "identity": "Identität",
+          "task": "Aufgabe",
+          "target": "Ziel",
+          "sources": "Kandidatenquellen",
+          "criteria": "Suchkriterien",
+          "instructions": "Anweisungen",
+          "schedule": "Zeitplan",
+          "danger": "Gefahrenzone",
+          "hardRequirements": "Harte Anforderungen",
+          "idealProfile": "Ideales Profil"
+        },
+        "fineTuneCriteria": "Kriterien feinjustieren",
+        "unsavedChanges": "Sie haben ungespeicherte Änderungen",
+        "discard": "Verwerfen",
+        "saveChanges": "Änderungen speichern",
+        "requiredMissing": "Name, Suchkriterien und verknüpfte Stelle sind erforderlich",
+        "deleteAgent": "Agent löschen",
+        "deleteDesc": "Entfernt den Agenten, seine Läufe, Kandidaten und das Aktivitätsprotokoll. Nicht umkehrbar.",
+        "confirmDelete": "Diesen Agenten löschen? Nicht umkehrbar."
+      },
+      "summary": {
+        "title": "Lauf-Zusammenfassung",
+        "subtitle": "Abgeschlossen in {{duration}} · {{matched}} Kandidaten gefunden",
+        "matched": "Treffer",
+        "liked": "Favorisiert",
+        "pending": "Ausstehend",
+        "errors": "Fehler",
+        "cost": "Kosten",
+        "topCandidates": "Top-Kandidaten",
+        "commonStrengths": "Gemeinsame Stärken",
+        "commonGaps": "Gemeinsame Lücken",
+        "findMore": "Mehr Kandidaten finden",
+        "getSuggestions": "Kriterien-Vorschläge erhalten",
+        "findMoreHint": "Bereits bewertete Kandidaten werden automatisch übersprungen."
+      },
+      "suggestions": {
+        "title": "Kriterien-Vorschläge",
+        "subtitle": "Basierend auf den abgelehnten Kandidaten könnten diese Verfeinerungen helfen.",
+        "analyzing": "Abgelehnte Kandidaten werden analysiert…",
+        "pattern": "Muster erkannt",
+        "empty": "Keine spezifischen Vorschläge — der Agent hält Ihre Kriterien für gut abgestimmt.",
+        "typeAdd": "Hinzufügen",
+        "typeModify": "Ändern",
+        "typeRemove": "Entfernen",
+        "apply": "Anwenden",
+        "applied": "Angewendet"
+      },
+      "icp": {
+        "title": "Ideales Kandidatenprofil",
+        "version": "v{{n}}",
+        "subtitle": "Gelernt aus {{likes}} Likes · {{dislikes}} Dislikes",
+        "confidence": "Vertrauen",
+        "confidenceLow": "Zu wenig Signale — weiter sichten",
+        "confidenceMedium": "Wird besser — mehr bewerten für höhere Genauigkeit",
+        "confidenceHigh": "Solide — bereit für den nächsten Lauf",
+        "confidenceVeryHigh": "Sehr stabil",
+        "narrative": "Zusammenfassung",
+        "coreSkills": "Kernfähigkeiten",
+        "bonusSkills": "Bonusfähigkeiten",
+        "antiTraits": "Anti-Merkmale / Warnsignale",
+        "anchors": "Ankerkandidaten",
+        "anchorsCount": "{{count}} gemochte Kandidaten als Beispiele verwendet",
+        "history": "Verlauf",
+        "revert": "Zurücksetzen",
+        "suggested": "Vorgeschlagene harte Anforderungen",
+        "promote": "Übernehmen",
+        "regenerate": "Neu generieren",
+        "generateFromJD": "Aus Stellenbeschreibung generieren",
+        "emptyTitle": "Bringen Sie Ihrem Agent bei, was \"großartig\" bedeutet",
+        "emptyState": "Liken oder ablehnen Sie einige Kandidaten, und ich lerne, was Sie suchen. Sie können auch aus der Stellenbeschreibung generieren.",
+        "generating": "Ihren Geschmack wird synthetisiert…",
+        "generatingHint": "Normalerweise 5–15 Sekunden. Neu lernen aus Bewertungen.",
+        "noHistory": "Noch kein Verlauf.",
+        "errorTitle": "Ideales Profil konnte nicht geladen werden",
+        "badgeUsing": "Verwendet ideales Profil v{{n}}",
+        "badgeUsingTooltip": "Filtert nach harten Anforderungen und bewertet mit diesem Profil.",
+        "badgeNone": "Noch kein ideales Profil — nur JD",
+        "badgeNoneTooltip": "Bewerten Sie Kandidaten, um den Agent zu trainieren.",
+        "deltaStripUpdated": "Ideales Profil aktualisiert · v{{n}}",
+        "deltaStripNoICP": "Bereit zum Lernen — erstellen Sie Ihr erstes Profil",
+        "applied": "Angewendet",
+        "discard": "Verwerfen"
+      },
+      "hardRequirements": {
+        "title": "Harte Anforderungen",
+        "titleCn": "硬性条件",
+        "titleEn": "Hard requirements",
+        "badge": "Strenger Filter",
+        "warning": "Kandidaten, die NICHT ALLE erfüllen, werden vollständig ausgeschlossen — nicht nur abgewertet. Sparsam verwenden.",
+        "addRule": "Harte Anforderung hinzufügen",
+        "removeRule": "Regel entfernen: {{desc}}",
+        "emptyTitle": "Noch keine strengen Filter.",
+        "emptyDesc": "Alle Kandidaten gelangen in die Bewertungsphase.",
+        "quickAdd": "Schnell hinzufügen",
+        "fieldLabel": "Feld",
+        "operatorLabel": "Operator",
+        "tagPlaceholder": "Eingeben und Enter",
+        "dryRun": "Schließt derzeit ~{{pct}}% der Kandidaten aus",
+        "dryRunWarning": "Warnung: würde fast alle ausschließen ({{pct}}%)",
+        "warningTitle": "Harte Anforderungen könnten fast alle ausschließen",
+        "warningTitleBlocking": "Harte Anforderungen schließen alle aus",
+        "warningSubtitle": "Vor Ausführung prüfen.",
+        "ofPool": "Von {{total}} Kandidaten:",
+        "excludedCount": "{{count}} durch Filter ausgeschlossen",
+        "remainingCount": "{{count}} werden bewertet",
+        "topOffenders": "Regeln mit den meisten Ausschlüssen",
+        "excludesN": "schließt {{n}} aus",
+        "runAnyway": "Trotzdem ausführen",
+        "editRules": "Harte Anforderungen bearbeiten",
+        "fields": {
+          "experienceYears": "Berufserfahrung (Jahre)",
+          "salaryExpectation": "Gehaltsvorstellung",
+          "location": "Standort",
+          "currentRole": "Aktuelle Position",
+          "education.degree": "Abschluss",
+          "education.field": "Studienrichtung",
+          "languages": "Sprachen",
+          "skills.technical": "Technische Fähigkeit",
+          "tags": "Tags",
+          "custom": "Benutzerdefinierter Regex"
+        },
+        "operators": {
+          "eq": "gleich",
+          "neq": "ungleich",
+          "gte": "≥ (mindestens)",
+          "lte": "≤ (höchstens)",
+          "gt": ">",
+          "lt": "<",
+          "contains": "enthält",
+          "contains_any": "enthält eines von",
+          "contains_all": "enthält alle",
+          "not_contains": "enthält nicht",
+          "matches": "entspricht",
+          "not_matches": "entspricht nicht",
+          "in": "ist eines von",
+          "not_in": "ist keines von"
+        },
+        "degrees": {
+          "HighSchool": "Abitur",
+          "Associate": "Berufsakademie",
+          "Bachelor": "Bachelor",
+          "Master": "Master",
+          "PhD": "Doktor"
+        },
+        "presets": {
+          "yearsExp": "5+ Jahre Erfahrung",
+          "location": "Standort…",
+          "english": "Spricht Englisch",
+          "bachelor": "Bachelor+"
+        },
+        "validation": {
+          "mustBeNumber": "Wert muss eine Zahl sein",
+          "addAtLeastOne": "Mindestens einen Wert hinzufügen",
+          "emptyRegex": "Regex darf nicht leer sein",
+          "invalidRegex": "Ungültiger regulärer Ausdruck"
+        }
+      },
+      "regenModal": {
+        "title": "Ideales Profil neu generieren",
+        "comparing": "Analysiere Signale…",
+        "applyNew": "Neue Version anwenden",
+        "discard": "Verwerfen",
+        "confidenceDelta": "Vertrauen",
+        "addedTraits": "Hinzugefügt",
+        "removedTraits": "Entfernt"
+      },
+      "create": {
+        "hardRequirementsStep": {
+          "label": "Harte Anforderungen",
+          "optional": "optional"
+        }
+      }
+    },
     "subtitle": "RoboHire-Agenten können Profile autonom finden, prüfen und kontaktieren.",
     "create": "Neuen Agent erstellen",
     "myAgents": "Meine Agenten",
@@ -4535,11 +4974,5 @@
       "hoursLeft": "{{count}}h übrig",
       "daysLeft": "{{count}}T übrig"
     }
-  },
-  "notifications": {
-    "title": "Benachrichtigungen",
-    "markAllRead": "Alle als gelesen markieren",
-    "empty": "Keine Benachrichtigungen",
-    "viewAll": "Alle Aufgaben anzeigen"
   }
 }

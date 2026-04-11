@@ -31,6 +31,9 @@ import matchingRouter from './routes/matching.js';
 import interviewsRouter from './routes/interviews.js';
 import activityRouter from './routes/activity.js';
 import agentsRouter from './routes/agents.js';
+import agentCriteriaPresetsRouter from './routes/agentCriteriaPresets.js';
+import userRecruiterProfileRouter from './routes/userRecruiterProfile.js';
+import candidateInteractionsRouter from './routes/candidateInteractions.js';
 import dashboardRouter from './routes/dashboard.js';
 import gohireInterviewsRouter from './routes/gohireInterviews.js';
 import teamsRouter from './routes/teams.js';
@@ -111,7 +114,12 @@ app.use('/api/v1/jobs', jobsRouter);
 app.use('/api/v1/matching', matchingRouter);
 app.use('/api/v1/interviews', interviewsRouter);
 app.use('/api/v1/activity', activityRouter);
+// Mount preset router first so /agents/criteria-presets/* paths don't collide
+// with the main agents router's /:id routes.
+app.use('/api/v1/agents/criteria-presets', agentCriteriaPresetsRouter);
 app.use('/api/v1/agents', agentsRouter);
+app.use('/api/v1/user-recruiter-profile', userRecruiterProfileRouter);
+app.use('/api/v1/candidate-interactions', candidateInteractionsRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/gohire-interviews', gohireInterviewsRouter);
 app.use('/api/v1/teams', teamsRouter);
@@ -297,7 +305,7 @@ httpServer.on('upgrade', (request, socket, head) => {
 });
 
 // Start server
-const server = httpServer.listen(PORT, () => {
+const server = httpServer.listen(PORT, async () => {
   const logDir = logger.getLogDirectory();
   const docDir = documentStorage.getStorageDirectory();
   const docStats = documentStorage.getStats();
@@ -346,6 +354,18 @@ const server = httpServer.listen(PORT, () => {
     cachedResumes: docStats.resumeCount,
     cachedJDs: docStats.jdCount,
   });
+
+  // Phase 4 — start the in-process AgentScheduler after the HTTP server is up.
+  // Runs a missed-run catch-up pass on boot and registers cron tasks for all
+  // active scheduled agents.
+  try {
+    const { agentScheduler } = await import('./services/AgentSchedulerService.js');
+    await agentScheduler.init();
+  } catch (err) {
+    logger.warn('SERVER', 'AgentScheduler init failed', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 });
 
 server.on('error', (error: NodeJS.ErrnoException) => {
@@ -374,6 +394,15 @@ async function shutdown(signal: 'SIGINT' | 'SIGTERM'): Promise<void> {
     process.exit(1);
   }, 10_000);
   forceExitTimer.unref();
+
+  // Stop the agent scheduler before closing the HTTP server so no new runs
+  // are triggered mid-shutdown.
+  try {
+    const { agentScheduler } = await import('./services/AgentSchedulerService.js');
+    agentScheduler.shutdown();
+  } catch {
+    /* ignore — module may not have loaded if server failed early */
+  }
 
   server.close(async () => {
     clearTimeout(forceExitTimer);
