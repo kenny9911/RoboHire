@@ -1246,18 +1246,20 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       },
     };
 
-    // Optionally include aggregate stats inline to avoid a separate /stats round-trip
+    // Optionally include aggregate stats inline to avoid a separate /stats round-trip.
+    // Must use the same admin-override filter as the main list query so stats
+    // reflect the selected recruiter, not the logged-in user's full scope.
     const { includeStats } = req.query as Record<string, string>;
     if (includeStats === 'true') {
-      const userFilter = buildUserIdFilter(scope);
+      const statsFilter = await buildAdminOverrideFilter(scope, filterUserId, filterTeamId);
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       const [statTotal, thisWeek, analyzed, matchedCount, interviewedCount] = await Promise.all([
-        prisma.resume.count({ where: { ...userFilter, status: 'active' } }),
-        prisma.resume.count({ where: { ...userFilter, status: 'active', createdAt: { gte: oneWeekAgo } } }),
-        prisma.resume.count({ where: { ...userFilter, status: 'active', NOT: { insightData: { equals: Prisma.DbNull } } } }),
-        prisma.resume.count({ where: { ...userFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'matched' } } } }),
-        prisma.resume.count({ where: { ...userFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'invited' } } } }),
+        prisma.resume.count({ where: { ...statsFilter, status: 'active' } }),
+        prisma.resume.count({ where: { ...statsFilter, status: 'active', createdAt: { gte: oneWeekAgo } } }),
+        prisma.resume.count({ where: { ...statsFilter, status: 'active', NOT: { insightData: { equals: Prisma.DbNull } } } }),
+        prisma.resume.count({ where: { ...statsFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'matched' } } } }),
+        prisma.resume.count({ where: { ...statsFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'invited' } } } }),
       ]);
       response.stats = { total: statTotal, thisWeek, analyzed, matchedCount, interviewedCount };
     }
@@ -1304,18 +1306,19 @@ router.get('/stats', requireAuth, async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
-    const scope = await getVisibilityScope(req.user!);
-    const userFilter = buildUserIdFilter(scope);
+    const { filterUserId, filterTeamId, teamView } = req.query as Record<string, string>;
+    const scope = await getVisibilityScope(req.user!, teamView === 'true');
+    const statsFilter = await buildAdminOverrideFilter(scope, filterUserId, filterTeamId);
 
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
     const [total, thisWeek, analyzed, matchedCount, interviewedCount] = await Promise.all([
-      prisma.resume.count({ where: { ...userFilter, status: 'active' } }),
-      prisma.resume.count({ where: { ...userFilter, status: 'active', createdAt: { gte: oneWeekAgo } } }),
-      prisma.resume.count({ where: { ...userFilter, status: 'active', NOT: { insightData: { equals: Prisma.DbNull } } } }),
-      prisma.resume.count({ where: { ...userFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'matched' } } } }),
-      prisma.resume.count({ where: { ...userFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'invited' } } } }),
+      prisma.resume.count({ where: { ...statsFilter, status: 'active' } }),
+      prisma.resume.count({ where: { ...statsFilter, status: 'active', createdAt: { gte: oneWeekAgo } } }),
+      prisma.resume.count({ where: { ...statsFilter, status: 'active', NOT: { insightData: { equals: Prisma.DbNull } } } }),
+      prisma.resume.count({ where: { ...statsFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'matched' } } } }),
+      prisma.resume.count({ where: { ...statsFilter, status: 'active', resumeJobFits: { some: { pipelineStatus: 'invited' } } } }),
     ]);
 
     return res.json({ success: true, data: { total, thisWeek, analyzed, matchedCount, interviewedCount } });
