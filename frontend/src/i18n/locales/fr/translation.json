@@ -1690,7 +1690,9 @@
       "interviewRoom": "Salle d'entretien",
       "agents": "Agents",
       "agentDetail": "Détail de l'Agent",
-      "interviewHub": "Centre d'entretiens"
+      "interviewHub": "Centre d'entretiens",
+      "agentManager": "Gestionnaire d'agents",
+      "readOnly": "lire"
     },
     "dashboard": {
       "welcome": "Bienvenue",
@@ -3743,50 +3745,156 @@
       "duration": "durée"
     },
     "memory": {
-        "users": "Utilisateurs avec données mémoire",
-        "searchPlaceholder": "Rechercher par email ou nom…",
-        "showingN": "{{shown}} sur {{total}} utilisateurs",
-        "noUsers": "Aucun utilisateur trouvé",
-        "pickUser": "Sélectionnez un utilisateur pour voir ses données mémoire",
-        "interactions": "interactions",
-        "breakGlass": "BREAK-GLASS · AUDITÉ",
-        "tabs": {
-          "profile": "Profil",
-          "memories": "Mémoires",
-          "interactions": "Interactions",
-          "audit": "Audit"
-        },
-        "signalsLearned": "Signaux appris",
-        "agents": "Agents",
-        "lastRebuilt": "Dernière reconstruction",
-        "topSkills": "Compétences principales",
-        "topAntiSkills": "Anti-compétences",
-        "topLocations": "Emplacements principaux",
-        "topIndustries": "Industries principales",
-        "rebuild": "Reconstruire le profil",
-        "rebuilding": "Reconstruction…",
-        "reset": "Réinitialiser le profil",
-        "confirmReset": "Réinitialiser le profil mémoire de cet utilisateur ? Irréversible.",
-        "buildProfile": "Créer le profil maintenant",
-        "noProfile": "Pas encore de profil recruteur.",
-        "noMemories": "Pas encore de mémoires pour cet utilisateur.",
-        "noInteractions": "Aucun événement d’interaction capturé.",
-        "noAudit": "Aucune entrée d'audit.",
-        "auditHint": "Toute action admin sur les données de cet utilisateur est capturée ici. Les entrées d'audit sont immuables.",
-        "lastSeen": "Vu",
-        "expires": "expire",
-        "confirmDelete": "Supprimer cette mémoire ? L'audit conservera l'entrée.",
-        "saveFailed": "Échec de l'enregistrement",
-        "editModal": {
-          "title": "Modifier la mémoire",
-          "warning": "Modification break-glass. L'action, avant/après, et raison optionnelle sont stockés dans un journal d'audit immuable.",
-          "content": "Contenu",
-          "weight": "Poids (0-10)",
-          "reason": "Raison (optionnelle, capturée dans l'audit)",
-          "reasonPlaceholder": "ex: ticket support #1234, correction fait obsolète"
-        }
+      "users": "Utilisateurs avec données mémoire",
+      "searchPlaceholder": "Rechercher par email ou nom…",
+      "showingN": "{{shown}} sur {{total}} utilisateurs",
+      "noUsers": "Aucun utilisateur trouvé",
+      "pickUser": "Sélectionnez un utilisateur pour voir ses données mémoire",
+      "interactions": "interactions",
+      "breakGlass": "BREAK-GLASS · AUDITÉ",
+      "tabs": {
+        "profile": "Profil",
+        "memories": "Mémoires",
+        "interactions": "Interactions",
+        "audit": "Audit"
+      },
+      "signalsLearned": "Signaux appris",
+      "agents": "Agents",
+      "lastRebuilt": "Dernière reconstruction",
+      "topSkills": "Compétences principales",
+      "topAntiSkills": "Anti-compétences",
+      "topLocations": "Emplacements principaux",
+      "topIndustries": "Industries principales",
+      "rebuild": "Reconstruire le profil",
+      "rebuilding": "Reconstruction…",
+      "reset": "Réinitialiser le profil",
+      "confirmReset": "Réinitialiser le profil mémoire de cet utilisateur ? Irréversible.",
+      "buildProfile": "Créer le profil maintenant",
+      "noProfile": "Pas encore de profil recruteur.",
+      "noMemories": "Pas encore de mémoires pour cet utilisateur.",
+      "noInteractions": "Aucun événement d’interaction capturé.",
+      "noAudit": "Aucune entrée d'audit.",
+      "auditHint": "Toute action admin sur les données de cet utilisateur est capturée ici. Les entrées d'audit sont immuables.",
+      "lastSeen": "Vu",
+      "expires": "expire",
+      "confirmDelete": "Supprimer cette mémoire ? L'audit conservera l'entrée.",
+      "saveFailed": "Échec de l'enregistrement",
+      "editModal": {
+        "title": "Modifier la mémoire",
+        "warning": "Modification break-glass. L'action, avant/après, et raison optionnelle sont stockés dans un journal d'audit immuable.",
+        "content": "Contenu",
+        "weight": "Poids (0-10)",
+        "reason": "Raison (optionnelle, capturée dans l'audit)",
+        "reasonPlaceholder": "ex: ticket support #1234, correction fait obsolète"
       }
-  
+    },
+    "agentManager": {
+      "title": "Gestionnaire d'agents",
+      "heading": "Gestionnaire d'agents",
+      "subheading": "Plan de contrôle pour l'ensemble de la flotte d'agents IA.",
+      "forbidden": {
+        "title": "Administrateurs uniquement",
+        "body": "Vous avez besoin d'un compte administrateur ou interne pour accéder au gestionnaire d'agents."
+      },
+      "tabs": {
+        "agents": "Agents",
+        "runs": "Exécutions",
+        "cost": "Coût"
+      },
+      "summary": {
+        "totalAgents": "Agents",
+        "activeAgents": "Agents actifs",
+        "liveRuns": "En cours",
+        "staleRuns": "Bloqués",
+        "todayRuns": "Aujourd'hui · exécutions",
+        "todayCost": "Aujourd'hui · dépenses",
+        "todayTokens": "Aujourd'hui · tokens",
+        "totalRuns": "Total exécutions",
+        "runSweep": "Lancer le balayage",
+        "sweeping": "Balayage…",
+        "sweptN": "{{n}} exécution(s) bloquée(s) récupérée(s)",
+        "sweepFailed": "Échec du balayage",
+        "sweepHint": "Récupère toute exécution sans pulsation depuis {{n}} min."
+      },
+      "filters": {
+        "search": "Rechercher",
+        "searchPh": "nom ou description…",
+        "status": "Statut",
+        "calibration": "Calibrage",
+        "stuckOnly": "Bloqués uniquement",
+        "staleOnly": "Bloqués uniquement",
+        "durationGt": "Durée > (s)",
+        "costGt": "Coût > ($)",
+        "any": "Tous",
+        "totalRows": "{{n}} agent(s)",
+        "totalRunRows": "{{n}} exécution(s)"
+      },
+      "bulk": {
+        "selected": "{{n}} sélectionné(s)",
+        "clear": "Effacer",
+        "partial": "{{ok}} réussis, {{failed}} échoués",
+        "failed": "Action groupée échouée",
+        "confirmDelete": "Supprimer définitivement {{n}} agent(s) ? Impossible à annuler."
+      },
+      "actions": {
+        "cancel": "Annuler",
+        "markFailed": "Marquer échoué…",
+        "pause": "Pause",
+        "unpause": "Reprendre",
+        "delete": "Supprimer",
+        "forceRun": "Relancer"
+      },
+      "cols": {
+        "name": "Nom",
+        "owner": "Propriétaire",
+        "status": "Statut",
+        "calibration": "Calibrage",
+        "live": "En cours",
+        "stats": "Pool",
+        "lastRun": "Dernière exécution",
+        "agent": "Agent",
+        "runStatus": "Statut",
+        "duration": "Durée",
+        "cost": "Coût",
+        "tokens": "Tokens",
+        "candidates": "Cands",
+        "heartbeat": "Dernière pulsation",
+        "created": "Créé"
+      },
+      "table": {
+        "empty": "Aucun agent ne correspond aux filtres.",
+        "emptyRuns": "Aucune exécution ne correspond aux filtres."
+      },
+      "reason": {
+        "markFailedTitle": "Pourquoi marquer comme échoué ?",
+        "placeholder": "ex. le processus a redémarré ; l'exécuteur est mort."
+      },
+      "cost": {
+        "window": {
+          "today": "Aujourd'hui",
+          "7d": "7 derniers jours",
+          "30d": "30 derniers jours"
+        },
+        "totalRuns": "Exécutions",
+        "totalCost": "Dépenses",
+        "totalTokens": "Tokens",
+        "llmCalls": "Appels LLM",
+        "byDay": "Dépenses par jour",
+        "byUser": "Par propriétaire",
+        "byAgentTitle": "Par agent",
+        "noData": "Aucune donnée dans la période.",
+        "col": {
+          "name": "Nom",
+          "runs": "Exécutions",
+          "cost": "Coût",
+          "tokens": "Tokens"
+        }
+      },
+      "readOnly": {
+        "title": "Vue en lecture seule",
+        "body": "Les utilisateurs internes peuvent voir toute la flotte mais ne peuvent pas exécuter d'actions groupées, annuler des exécutions ni lancer de balayage. Demandez à un administrateur si vous avez besoin d'intervenir."
+      }
+    }
   },
   "agents": {
     "title": "Agents",
@@ -3876,6 +3984,16 @@
           "warmingUp": "Préparation…"
         }
       },
+      "runDetail": {
+        "duration": "Durée",
+        "candidates": "Candidats",
+        "events": "Événements",
+        "cost": "Coût",
+        "failReason": "Raison de l'échec :",
+        "viewResults": "Voir les résultats →",
+        "delete": "Supprimer",
+        "confirmDelete": "Supprimer cette exécution et toutes ses données ? Cette action est irréversible."
+      },
       "review": {
         "title": "Examiner les profils",
         "introTitle": "J'ai trouvé des correspondances initiales. Merci d'examiner ces profils et de partager vos retours.",
@@ -3899,9 +4017,9 @@
           "education": "Éducation",
           "skills": "Compétences"
         },
-        "noExperience": "Aucune donnée d'expérience extraite de ce CV.",
-        "noEducation": "Aucune donnée d'éducation extraite de ce CV.",
-        "noSkills": "Aucune donnée de compétences extraite de ce CV.",
+        "noExperience": "L'Agent s'en occupe — l'expérience apparaîtra ici.",
+        "noEducation": "L'Agent s'en occupe — la formation apparaîtra ici.",
+        "noSkills": "L'Agent s'en occupe — la carte des compétences apparaîtra ici.",
         "unknownCompany": "Inconnu",
         "skillGroups": {
           "all": "Compétences",
@@ -3915,7 +4033,20 @@
         },
         "addCriteria": "Ajouter des critères",
         "editCriteria": "Modifier les critères",
-        "editCriteriaHint": "Épinglez des critères comme obligatoires ou réordonnez par importance avec "
+        "editCriteriaHint": "Épinglez des critères comme obligatoires ou réordonnez par importance avec ",
+        "status": {
+          "liked": "Aimé",
+          "disliked": "Ignoré",
+          "contacted": "Contacté",
+          "pending": "En attente",
+          "invited": "Invité"
+        },
+        "loadingExperience": "L'Agent rassemble l'expérience professionnelle…",
+        "workingExperience": "L'Agent s'en occupe — l'expérience apparaîtra ici.",
+        "loadingEducation": "L'Agent rassemble les informations de formation…",
+        "workingEducation": "L'Agent s'en occupe — la formation apparaîtra ici.",
+        "loadingSkills": "L'Agent cartographie les compétences…",
+        "workingSkills": "L'Agent s'en occupe — la carte des compétences apparaîtra ici."
       },
       "criteria": {
         "title": "Critères",
@@ -4173,17 +4304,22 @@
       "approved": "Approuvés",
       "rejected": "Refusés",
       "contacted": "Contactés",
-      "all": "Tous"
+      "all": "Tous",
+      "liked": "Aimés",
+      "skipped": "Ignorés"
     },
     "stat": {
       "sourced": "Trouvés",
       "approved": "Approuvés",
       "rejected": "Refusés",
-      "contacted": "Contactés"
+      "contacted": "Contactés",
+      "liked": "Aimés",
+      "skipped": "Ignorés"
     },
     "candidateStatus": {
       "contacted": "Contacté",
-      "rejected": "Refusé"
+      "rejected": "Refusé",
+      "disliked": "Ignoré"
     },
     "pending": "En attente",
     "disapproved": "Désapprouvé",
@@ -4201,7 +4337,54 @@
     "collaborators": "Collaborateurs",
     "collaboratorsDesc": "Ces membres de l'équipe seront affectés à ce projet avec vous",
     "noCollaborators": "Aucun collaborateur sélectionné",
-    "saveChanges": "Enregistrer les modifications"
+    "saveChanges": "Enregistrer les modifications",
+    "calibration": {
+      "headline": "Calibrage · approuvez {{n}} / {{total}} profils pertinents",
+      "subtext": "Un refus réinitialise la série et apporte 3 nouveaux profils.",
+      "pending": "En attente du premier lancement",
+      "calibrating": "Calibrage en cours",
+      "calibrated": "Actif · recherche en cours"
+    },
+    "missionControl": {
+      "reviewPending": "Examiner {{n}} profil(s) en attente",
+      "openWorkbench": "Ouvrir l'atelier",
+      "runAgain": "Relancer",
+      "running": "En cours…",
+      "runAgainHint": "(ignore les déjà vus)",
+      "latestRun": "Dernier lancement",
+      "runSummary": "{{sourced}} examinés · {{matched}} retenus · déclenché par {{by}}",
+      "openRun": "Ouvrir le lancement →"
+    },
+    "whyMatched": {
+      "title": "Pourquoi nous avons retenu ce profil",
+      "good": "Bon match",
+      "potential": "Match potentiel",
+      "concern": "À approfondir",
+      "strengths": "Atouts",
+      "areasToExplore": "Points à explorer"
+    },
+    "rejection": {
+      "title": "Aidez Alex à apprendre — pourquoi ce profil ne convient pas ?",
+      "subtitle": "Plus vous donnez de détails, plus la prochaine sélection sera précise.",
+      "about": "{{name}} ignoré",
+      "tagsLabel": "Sélectionnez tout ce qui correspond",
+      "tags": {
+        "wrong_industry": "Mauvais secteur",
+        "wrong_location": "Mauvaise localisation",
+        "too_junior": "Trop junior",
+        "too_senior": "Trop senior",
+        "missing_key_skill": "Compétence-clé manquante",
+        "wrong_background": "Mauvais parcours",
+        "culture_mismatch": "Inadéquation culturelle",
+        "other": "Autre"
+      },
+      "reasonLabel": "Dites-nous-en plus",
+      "reasonPlaceholder": "Qu'est-ce qui manque ou ne va pas ? Ex. : ils ont de l'expérience HVAC mais uniquement résidentielle — nous voulons du commercial.",
+      "hint": "Choisissez au moins une étiquette, ou écrivez 10 caractères ou plus.",
+      "submit": "Ignorer le profil"
+    },
+    "like": "J'aime",
+    "review": "Examiner"
   },
   "interviewHub": {
     "title": "Centre d'Entretiens",

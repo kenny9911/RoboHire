@@ -2141,7 +2141,9 @@
         "ai": "AI",
         "insights": "洞察",
         "system": "系统"
-      }
+      },
+      "agentManager": "Agent 管理",
+      "readOnly": "只读"
     },
     "dashboard": {
       "welcome": "欢迎回来",
@@ -4365,50 +4367,156 @@
       "duration": "耗时"
     },
     "memory": {
-        "users": "有记忆数据的用户",
-        "searchPlaceholder": "按邮箱或姓名搜索…",
-        "showingN": "显示 {{shown}} / {{total}} 位用户",
-        "noUsers": "无匹配用户",
-        "pickUser": "请选择一位用户查看其记忆数据",
-        "interactions": "次交互",
-        "breakGlass": "破窗访问 · 已审计",
-        "tabs": {
-          "profile": "配置",
-          "memories": "记忆",
-          "interactions": "交互",
-          "audit": "审计"
-        },
-        "signalsLearned": "学习信号",
-        "agents": "代理",
-        "lastRebuilt": "最近重建",
-        "topSkills": "主要技能",
-        "topAntiSkills": "负面技能",
-        "topLocations": "主要地点",
-        "topIndustries": "主要行业",
-        "rebuild": "重建配置",
-        "rebuilding": "重建中…",
-        "reset": "重置配置",
-        "confirmReset": "确定要重置该用户的记忆配置吗？此操作无法撤销。",
-        "buildProfile": "立即生成配置",
-        "noProfile": "该用户尚无招聘配置。",
-        "noMemories": "该用户尚无记忆条目。",
-        "noInteractions": "尚未捕获任何交互事件。",
-        "noAudit": "暂无审计记录。",
-        "auditHint": "每一次管理员对该用户数据的操作都会记录在此。审计条目不可修改。",
-        "lastSeen": "最近使用",
-        "expires": "过期",
-        "confirmDelete": "确定要删除此记忆条目吗？审计日志会保留记录。",
-        "saveFailed": "保存失败",
-        "editModal": {
-          "title": "编辑记忆",
-          "warning": "这是一次破窗编辑。操作、前后内容、以及可选的原因都会记入不可变的审计日志。",
-          "content": "内容",
-          "weight": "权重（0-10）",
-          "reason": "原因（可选，会记入审计日志）",
-          "reasonPlaceholder": "例如：support ticket #1234，修正陈旧记忆"
-        }
+      "users": "有记忆数据的用户",
+      "searchPlaceholder": "按邮箱或姓名搜索…",
+      "showingN": "显示 {{shown}} / {{total}} 位用户",
+      "noUsers": "无匹配用户",
+      "pickUser": "请选择一位用户查看其记忆数据",
+      "interactions": "次交互",
+      "breakGlass": "破窗访问 · 已审计",
+      "tabs": {
+        "profile": "配置",
+        "memories": "记忆",
+        "interactions": "交互",
+        "audit": "审计"
+      },
+      "signalsLearned": "学习信号",
+      "agents": "代理",
+      "lastRebuilt": "最近重建",
+      "topSkills": "主要技能",
+      "topAntiSkills": "负面技能",
+      "topLocations": "主要地点",
+      "topIndustries": "主要行业",
+      "rebuild": "重建配置",
+      "rebuilding": "重建中…",
+      "reset": "重置配置",
+      "confirmReset": "确定要重置该用户的记忆配置吗？此操作无法撤销。",
+      "buildProfile": "立即生成配置",
+      "noProfile": "该用户尚无招聘配置。",
+      "noMemories": "该用户尚无记忆条目。",
+      "noInteractions": "尚未捕获任何交互事件。",
+      "noAudit": "暂无审计记录。",
+      "auditHint": "每一次管理员对该用户数据的操作都会记录在此。审计条目不可修改。",
+      "lastSeen": "最近使用",
+      "expires": "过期",
+      "confirmDelete": "确定要删除此记忆条目吗？审计日志会保留记录。",
+      "saveFailed": "保存失败",
+      "editModal": {
+        "title": "编辑记忆",
+        "warning": "这是一次破窗编辑。操作、前后内容、以及可选的原因都会记入不可变的审计日志。",
+        "content": "内容",
+        "weight": "权重（0-10）",
+        "reason": "原因（可选，会记入审计日志）",
+        "reasonPlaceholder": "例如：support ticket #1234，修正陈旧记忆"
       }
-  
+    },
+    "agentManager": {
+      "title": "Agent 管理",
+      "heading": "Agent 管理",
+      "subheading": "AI Agent 全局控制中心。",
+      "forbidden": {
+        "title": "仅限管理员",
+        "body": "您需要管理员或内部账号才能访问 Agent 管理。"
+      },
+      "tabs": {
+        "agents": "Agent 列表",
+        "runs": "运行记录",
+        "cost": "成本"
+      },
+      "summary": {
+        "totalAgents": "Agent 数",
+        "activeAgents": "活跃 Agent",
+        "liveRuns": "运行中",
+        "staleRuns": "僵尸运行",
+        "todayRuns": "今日 · 运行",
+        "todayCost": "今日 · 花费",
+        "todayTokens": "今日 · Token",
+        "totalRuns": "运行总数",
+        "runSweep": "执行清扫",
+        "sweeping": "清扫中…",
+        "sweptN": "已清扫 {{n}} 个僵尸运行",
+        "sweepFailed": "清扫失败",
+        "sweepHint": "清扫所有 {{n}} 分钟内无心跳的运行。"
+      },
+      "filters": {
+        "search": "搜索",
+        "searchPh": "名称或描述…",
+        "status": "状态",
+        "calibration": "校准状态",
+        "stuckOnly": "仅显示僵尸",
+        "staleOnly": "仅显示僵尸",
+        "durationGt": "运行时长 > (秒)",
+        "costGt": "花费 > ($)",
+        "any": "全部",
+        "totalRows": "共 {{n}} 个 Agent",
+        "totalRunRows": "共 {{n}} 个运行"
+      },
+      "bulk": {
+        "selected": "已选 {{n}} 项",
+        "clear": "清除",
+        "partial": "{{ok}} 成功, {{failed}} 失败",
+        "failed": "批量操作失败",
+        "confirmDelete": "永久删除 {{n}} 个 Agent?此操作无法撤销。"
+      },
+      "actions": {
+        "cancel": "取消运行",
+        "markFailed": "标记失败…",
+        "pause": "暂停",
+        "unpause": "恢复",
+        "delete": "删除",
+        "forceRun": "强制重跑"
+      },
+      "cols": {
+        "name": "名称",
+        "owner": "所有者",
+        "status": "状态",
+        "calibration": "校准",
+        "live": "当前运行",
+        "stats": "候选池",
+        "lastRun": "上次运行",
+        "agent": "Agent",
+        "runStatus": "状态",
+        "duration": "时长",
+        "cost": "花费",
+        "tokens": "Token",
+        "candidates": "候选",
+        "heartbeat": "最后心跳",
+        "created": "创建"
+      },
+      "table": {
+        "empty": "当前筛选下没有 Agent。",
+        "emptyRuns": "当前筛选下没有运行记录。"
+      },
+      "reason": {
+        "markFailedTitle": "请说明标记失败的原因",
+        "placeholder": "例如:进程已重启,执行器已经死亡。"
+      },
+      "cost": {
+        "window": {
+          "today": "今日",
+          "7d": "最近 7 天",
+          "30d": "最近 30 天"
+        },
+        "totalRuns": "运行",
+        "totalCost": "花费",
+        "totalTokens": "Token",
+        "llmCalls": "LLM 调用",
+        "byDay": "每日花费",
+        "byUser": "按所有者",
+        "byAgentTitle": "按 Agent",
+        "noData": "该时间段内无数据。",
+        "col": {
+          "name": "名称",
+          "runs": "运行",
+          "cost": "花费",
+          "tokens": "Token"
+        }
+      },
+      "readOnly": {
+        "title": "只读视图",
+        "body": "内部用户可以查看整个 Agent 群体,但不能执行批量操作、取消运行或清扫。如需干预,请联系管理员。"
+      }
+    }
   },
   "agents": {
     "title": "Agents",
@@ -4498,6 +4606,16 @@
           "warmingUp": "正在准备…"
         }
       },
+      "runDetail": {
+        "duration": "耗时",
+        "candidates": "候选人",
+        "events": "事件",
+        "cost": "费用",
+        "failReason": "失败原因：",
+        "viewResults": "查看结果 →",
+        "delete": "删除",
+        "confirmDelete": "删除此运行记录及所有相关数据？此操作不可撤销。"
+      },
       "review": {
         "title": "审阅候选人",
         "introTitle": "我找到了一些初步的匹配结果，请审阅这些候选人并反馈你的意见。",
@@ -4521,9 +4639,9 @@
           "education": "教育背景",
           "skills": "技能"
         },
-        "noExperience": "未从该简历中解析到工作经历。",
-        "noEducation": "未从该简历中解析到教育背景。",
-        "noSkills": "未从该简历中解析到技能信息。",
+        "noExperience": "Agent 在工作中,工作经历即将呈现。",
+        "noEducation": "Agent 在工作中,教育背景即将呈现。",
+        "noSkills": "Agent 在工作中,技能图谱即将呈现。",
         "unknownCompany": "未知公司",
         "skillGroups": {
           "all": "技能",
@@ -4537,7 +4655,20 @@
         },
         "addCriteria": "添加标准",
         "editCriteria": "编辑标准",
-        "editCriteriaHint": "使用"
+        "editCriteriaHint": "使用",
+        "status": {
+          "liked": "已喜欢",
+          "disliked": "已忽略",
+          "contacted": "已联系",
+          "pending": "待处理",
+          "invited": "已邀请"
+        },
+        "loadingExperience": "Agent 正在整理工作经历…",
+        "workingExperience": "Agent 在工作中,工作经历即将呈现。",
+        "loadingEducation": "Agent 正在整理教育背景…",
+        "workingEducation": "Agent 在工作中,教育背景即将呈现。",
+        "loadingSkills": "Agent 正在梳理技能图谱…",
+        "workingSkills": "Agent 在工作中,技能图谱即将呈现。"
       },
       "criteria": {
         "title": "评估标准",
@@ -4795,17 +4926,22 @@
       "approved": "已通过",
       "rejected": "已拒绝",
       "contacted": "已联系",
-      "all": "全部"
+      "all": "全部",
+      "liked": "已喜欢",
+      "skipped": "已忽略"
     },
     "stat": {
       "sourced": "已发现",
       "approved": "已通过",
       "rejected": "已拒绝",
-      "contacted": "已联系"
+      "contacted": "已联系",
+      "liked": "已喜欢",
+      "skipped": "已忽略"
     },
     "candidateStatus": {
       "contacted": "已联系",
-      "rejected": "已拒绝"
+      "rejected": "已拒绝",
+      "disliked": "已忽略"
     },
     "pending": "待审核",
     "disapproved": "未通过",
@@ -4823,7 +4959,54 @@
     "collaborators": "协作者",
     "collaboratorsDesc": "这些团队成员将与您一起参与此项目",
     "noCollaborators": "未选择协作者",
-    "saveChanges": "保存更改"
+    "saveChanges": "保存更改",
+    "calibration": {
+      "headline": "校准中 · 已通过 {{n}} / {{total}} 位优质候选人",
+      "subtext": "拒绝一位会重置连击,系统将为你带来 3 位新候选人。",
+      "pending": "等待首次运行",
+      "calibrating": "校准中",
+      "calibrated": "已激活 · 正在寻源"
+    },
+    "missionControl": {
+      "reviewPending": "审阅 {{n}} 位待处理候选人",
+      "openWorkbench": "打开工作台",
+      "runAgain": "再次运行",
+      "running": "运行中…",
+      "runAgainHint": "(跳过已见过的)",
+      "latestRun": "最近运行",
+      "runSummary": "已筛选 {{sourced}} 份 · 命中 {{matched}} 份 · 由 {{by}} 触发",
+      "openRun": "打开运行 →"
+    },
+    "whyMatched": {
+      "title": "为什么我们匹配了这位候选人",
+      "good": "良好匹配",
+      "potential": "潜在匹配",
+      "concern": "需要探讨",
+      "strengths": "优势",
+      "areasToExplore": "待了解的方面"
+    },
+    "rejection": {
+      "title": "帮助 Alex 学习 — 为什么这位不合适?",
+      "subtitle": "你提供的细节越多,下一批就越精准。",
+      "about": "跳过 {{name}}",
+      "tagsLabel": "选择所有适用项",
+      "tags": {
+        "wrong_industry": "行业不符",
+        "wrong_location": "地点不符",
+        "too_junior": "资历不足",
+        "too_senior": "资历过高",
+        "missing_key_skill": "缺乏关键技能",
+        "wrong_background": "背景不符",
+        "culture_mismatch": "文化不符",
+        "other": "其他"
+      },
+      "reasonLabel": "告诉我们更多",
+      "reasonPlaceholder": "哪里不对或缺什么?例如:他们有 HVAC 经验,但只做住宅 — 我们需要商业。",
+      "hint": "至少选择一个标签,或填写 10 个以上字符的反馈。",
+      "submit": "跳过此候选人"
+    },
+    "like": "喜欢",
+    "review": "审阅"
   },
   "interviewHub": {
     "title": "面试库",

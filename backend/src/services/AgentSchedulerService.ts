@@ -129,6 +129,39 @@ class AgentSchedulerService {
         return;
       }
 
+      // Concurrency guard (admin-agent-manager-prd §5 Track A5).
+      // The double-fire guard above only protects against the *same cron
+      // tick* firing twice — it doesn't help if a previous run is still
+      // in flight or zombied. Check for an existing live run before we
+      // queue a fresh one. If the existing run has a fresh heartbeat we
+      // skip; if it's stale we leave it for the watchdog to reap on its
+      // next pass and skip this tick anyway (don't double-up on a
+      // half-dead row, which would just confuse the workbench UI).
+      const existing = await prisma.agentRun.findFirst({
+        where: { agentId, status: { in: ['queued', 'running'] } },
+        select: { id: true, lastHeartbeatAt: true, startedAt: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (existing) {
+        await agentActivityLogger
+          .log({
+            agentId,
+            runId: existing.id,
+            actor: 'schedule',
+            eventType: 'agent.run.skipped_overlap',
+            severity: 'warn',
+            message: `Scheduled tick skipped — agent already has a live run (${existing.id})`,
+            payload: {
+              reason,
+              existingRunId: existing.id,
+              existingHeartbeatAt: existing.lastHeartbeatAt?.toISOString() ?? null,
+              existingStartedAt: existing.startedAt?.toISOString() ?? null,
+            },
+          })
+          .catch(() => {});
+        return;
+      }
+
       await agentActivityLogger.log({
         agentId,
         actor: 'schedule',

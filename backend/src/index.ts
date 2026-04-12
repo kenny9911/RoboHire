@@ -24,6 +24,9 @@ import usageRouter from './routes/usage.js';
 import demoRouter from './routes/demo.js';
 import checkoutRouter from './routes/checkout.js';
 import adminRouter from './routes/admin.js';
+import adminAgentManagerRouter from './routes/adminAgentManager.js';
+import { requireAdminOrInternal } from './middleware/admin.js';
+import { requireAuth as requireAuthMiddleware } from './middleware/auth.js';
 import resumesRouter from './routes/resumes.js';
 import atsRouter from './routes/ats.js';
 import jobsRouter from './routes/jobs.js';
@@ -108,6 +111,11 @@ app.use('/api/v1/usage', usageRouter);
 app.use('/api/v1/request-demo', demoRouter);
 app.use('/api/v1', checkoutRouter);
 app.use('/api/v1/admin', adminRouter);
+// Agent Manager — admin has full access, internal role has read-only access.
+// Mounted at its own path (not under /admin) so the router can apply its
+// own middleware stack. Individual mutating handlers stack `requireAdmin`
+// inline. See docs/admin-agent-manager-prd.md §4 Phase 4.
+app.use('/api/v1/agent-manager', requireAuthMiddleware, requireAdminOrInternal, adminAgentManagerRouter);
 app.use('/api/v1/resumes', resumesRouter);
 app.use('/api/v1/ats', atsRouter);
 app.use('/api/v1/jobs', jobsRouter);
@@ -366,6 +374,22 @@ const server = httpServer.listen(PORT, async () => {
       error: err instanceof Error ? err.message : String(err),
     });
   }
+
+  // admin-agent-manager-prd §5 Track A — sweep zombie AgentRun rows left
+  // over from a prior process lifecycle, then start the runtime watchdog
+  // cron so any future hangs are caught within ~22 minutes worst case.
+  try {
+    const { agentRunWatchdog } = await import('./services/AgentRunWatchdogService.js');
+    const result = await agentRunWatchdog.bootSweep();
+    if (result.swept > 0) {
+      logger.info('SERVER', 'Boot sweep reaped zombie agent runs', { swept: result.swept });
+    }
+    agentRunWatchdog.start();
+  } catch (err) {
+    logger.warn('SERVER', 'Agent run watchdog init failed', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 });
 
 server.on('error', (error: NodeJS.ErrnoException) => {
@@ -395,13 +419,19 @@ async function shutdown(signal: 'SIGINT' | 'SIGTERM'): Promise<void> {
   }, 10_000);
   forceExitTimer.unref();
 
-  // Stop the agent scheduler before closing the HTTP server so no new runs
-  // are triggered mid-shutdown.
+  // Stop the agent scheduler + run watchdog before closing the HTTP server
+  // so no new runs are triggered mid-shutdown and the cron timer is cleared.
   try {
     const { agentScheduler } = await import('./services/AgentSchedulerService.js');
     agentScheduler.shutdown();
   } catch {
     /* ignore — module may not have loaded if server failed early */
+  }
+  try {
+    const { agentRunWatchdog } = await import('./services/AgentRunWatchdogService.js');
+    agentRunWatchdog.stop();
+  } catch {
+    /* ignore */
   }
 
   server.close(async () => {

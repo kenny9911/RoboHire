@@ -37,6 +37,9 @@ router.use('/monitor', adminMonitorRouter);
 router.use('/agent-sources', adminAgentSourcesRouter);
 router.use('/agents-terminal', adminAgentsTerminalRouter);
 router.use('/memory', adminMemoryRouter);
+// NOTE: agent-manager used to mount here. It moved out in Phase 4 so that
+// internal-role users can read it. See backend/src/index.ts for the new
+// mount point under /api/v1/agent-manager with its own middleware stack.
 
 type UsageBucket = 'hour' | 'day' | 'week';
 

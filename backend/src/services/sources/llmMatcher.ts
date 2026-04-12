@@ -223,7 +223,11 @@ export async function matchResumesWithLLM(
               : ((g as { gap?: string; requirement?: string }).gap ?? (g as { requirement?: string }).requirement ?? String(g)),
           );
 
-        return { resume, score, grade, verdict, matchedSkills, uniqueValue, gaps };
+        // Build the structured "Why we matched this profile" payload from
+        // the same ResumeMatchAgent output. No additional LLM call.
+        const whyMatched = buildWhyMatched(matchResult, { score, grade, verdict, matchedSkills });
+
+        return { resume, score, grade, verdict, matchedSkills, uniqueValue, gaps, whyMatched };
       }),
     );
 
@@ -243,7 +247,7 @@ export async function matchResumesWithLLM(
       }
 
       stats.scored++;
-      const { resume, score, grade, verdict, matchedSkills, uniqueValue, gaps } = r.value;
+      const { resume, score, grade, verdict, matchedSkills, uniqueValue, gaps, whyMatched } = r.value;
 
       if (score < threshold) {
         await agentActivityLogger.log({
@@ -282,6 +286,7 @@ export async function matchResumesWithLLM(
             matchedSkills,
             gaps,
             uniqueValue,
+            whyMatched,
           } as unknown as object,
         },
       });
@@ -301,6 +306,132 @@ export async function matchResumesWithLLM(
   }
 
   return stats;
+}
+
+// ── Why-Matched extractor ───────────────────────────────────────────────────
+//
+// Maps the rich `ResumeMatchAgent` output into the structured shape consumed
+// by the "Why we matched this profile" panel in ReviewProfilesView. We do
+// this server-side so the frontend never has to know the raw match-agent
+// schema, and so a future change to that schema only touches one file.
+//
+// See docs/agent-sourcing-redesign.md §5 for the contract.
+
+export interface WhyMatchedReason {
+  type: 'good' | 'potential' | 'concern';
+  title: string;
+  detail: string;
+}
+
+export interface WhyMatched {
+  reasons: WhyMatchedReason[];
+  strengths: string[];
+  areasToExplore: string[];
+  skillMap: { matched: string[]; missing: string[]; extra: string[] };
+  overallVerdict: string;
+  grade: string;
+}
+
+function asString(v: unknown, fallback = ''): string {
+  if (typeof v === 'string') return v;
+  if (v == null) return fallback;
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    return (o.skill ?? o.name ?? o.gap ?? o.requirement ?? o.text ?? o.title ?? fallback) as string;
+  }
+  return String(v);
+}
+
+function buildWhyMatched(
+  matchResult: any,
+  ctx: { score: number; grade: string; verdict: string; matchedSkills: string[] },
+): WhyMatched {
+  const reasons: WhyMatchedReason[] = [];
+
+  // Must-have evaluation → mostly "good" reasons; disqualifications → "concern"
+  const mustHave = matchResult?.mustHaveAnalysis;
+  if (mustHave?.candidateEvaluation && Array.isArray(mustHave.candidateEvaluation)) {
+    for (const item of mustHave.candidateEvaluation.slice(0, 4)) {
+      const requirement = asString((item as any)?.requirement);
+      const evidence = asString((item as any)?.evidence);
+      const meets = (item as any)?.meets === true || (item as any)?.status === 'met';
+      if (requirement) {
+        reasons.push({
+          type: meets ? 'good' : 'potential',
+          title: requirement,
+          detail: evidence || (meets ? 'Candidate meets this requirement.' : 'Not clearly demonstrated in resume.'),
+        });
+      }
+    }
+  }
+
+  // Hard-requirement gaps → concerns
+  const gaps = matchResult?.hardRequirementGaps ?? [];
+  for (const g of gaps.slice(0, 3)) {
+    const title = asString(g);
+    if (title) {
+      reasons.push({
+        type: 'concern',
+        title,
+        detail: typeof g === 'object' && (g as any)?.reason ? String((g as any).reason) : 'Verify in interview.',
+      });
+    }
+  }
+
+  // Transferable skills → potential matches
+  const transferable = matchResult?.transferableSkills;
+  if (Array.isArray(transferable)) {
+    for (const t of transferable.slice(0, 2)) {
+      const title = asString((t as any)?.skill ?? (t as any)?.name ?? t);
+      const detail = asString((t as any)?.rationale ?? (t as any)?.evidence, 'Transferable from prior experience.');
+      if (title) reasons.push({ type: 'potential', title, detail });
+    }
+  }
+
+  // Strengths — pull unique value props + key achievements
+  const strengths: string[] = [];
+  const uniqueValue = matchResult?.candidatePotential?.uniqueValueProps ?? [];
+  for (const v of uniqueValue.slice(0, 3)) strengths.push(asString(v));
+  const keyAch = matchResult?.resumeAnalysis?.keyAchievements ?? [];
+  for (const a of keyAch.slice(0, 2)) {
+    const s = asString(a);
+    if (s && !strengths.includes(s)) strengths.push(s);
+  }
+
+  // Areas to explore — preference misalignment + soft gaps
+  const areasToExplore: string[] = [];
+  const prefAlign = matchResult?.preferenceAlignment;
+  if (prefAlign?.concerns && Array.isArray(prefAlign.concerns)) {
+    for (const c of prefAlign.concerns.slice(0, 3)) areasToExplore.push(asString(c));
+  }
+  if (matchResult?.candidatePotential?.developmentAreas) {
+    for (const d of matchResult.candidatePotential.developmentAreas.slice(0, 2)) {
+      areasToExplore.push(asString(d));
+    }
+  }
+
+  // Skill map
+  const skillMatch = matchResult?.skillMatch ?? {};
+  const skillMap = {
+    matched: (skillMatch.matchedMustHave ?? skillMatch.matched ?? []).slice(0, 12).map((s: unknown) => asString(s)),
+    missing: (skillMatch.missing ?? skillMatch.missingMustHave ?? []).slice(0, 12).map((s: unknown) => asString(s)),
+    extra: (skillMatch.extra ?? skillMatch.bonusSkills ?? []).slice(0, 8).map((s: unknown) => asString(s)),
+  };
+
+  // Ensure skillMap.matched at least includes ctx.matchedSkills (the same
+  // ones used to build the one-line reason).
+  for (const s of ctx.matchedSkills) {
+    if (s && !skillMap.matched.includes(s)) skillMap.matched.push(s);
+  }
+
+  return {
+    reasons,
+    strengths: strengths.filter(Boolean),
+    areasToExplore: areasToExplore.filter(Boolean),
+    skillMap,
+    overallVerdict: ctx.verdict,
+    grade: ctx.grade,
+  };
 }
 
 // ── JD builder ──────────────────────────────────────────────────────────────

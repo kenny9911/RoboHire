@@ -84,6 +84,21 @@ class AgentActivityLogger {
         },
       });
 
+      // Heartbeat: any event with a runId means the executor is still alive
+      // and progressing, so refresh AgentRun.lastHeartbeatAt. The watchdog
+      // service uses this column to detect zombies. Best-effort — we don't
+      // want a heartbeat write failure to block the activity log itself.
+      if (event.runId) {
+        prisma.agentRun
+          .updateMany({
+            where: { id: event.runId, status: { in: ['queued', 'running'] } },
+            data: { lastHeartbeatAt: new Date() },
+          })
+          .catch((err: unknown) => {
+            console.error('AgentActivityLogger heartbeat write failed:', err);
+          });
+      }
+
       const persisted: PersistedActivityEvent = {
         id: row.id,
         agentId: row.agentId,

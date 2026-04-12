@@ -8,31 +8,70 @@ import type {
   ParsedResumeData,
   ParsedSkills,
   RunCandidate,
+  WhyMatched,
 } from '../hooks/useAgentRunStream';
+import { extractWhyMatched } from '../hooks/useAgentRunStream';
 import AgentCriteriaModal, { type AgentCriterion } from './AgentCriteriaModal';
+import RejectionReasonModal, { type RejectionTag } from './RejectionReasonModal';
+
+interface RejectExtras {
+  rejectionReason?: string;
+  rejectionTags?: string[];
+}
 
 interface Props {
   agentId: string;
   candidates: RunCandidate[];
   onApprove: (id: string) => void;
-  onReject: (id: string) => void;
+  onReject: (id: string, extras?: RejectExtras) => void;
   onBack: () => void;
   onDone: () => void;
+  /**
+   * If set, the view starts on this candidate and lets the user page through
+   * the entire candidate list (not just pending). Used when a recruiter clicks
+   * a row from the workbench list or mission control to view a specific
+   * profile. When omitted (the default), the view filters to pending only —
+   * the calibration triage flow.
+   */
+  initialCandidateId?: string | null;
 }
 
 type ProfileTab = 'experience' | 'education' | 'skills';
 
-export default function ReviewProfilesView({ agentId, candidates, onApprove, onReject, onBack, onDone }: Props) {
+export default function ReviewProfilesView({
+  agentId,
+  candidates,
+  onApprove,
+  onReject,
+  onBack,
+  onDone,
+  initialCandidateId,
+}: Props) {
   const { t } = useTranslation();
 
   // Phase 7b — track implicit signals (profile expansions, dwell time on
   // the detail view) for the memory synthesis worker to consume later.
   const tracker = useCandidateInteractionTracker({ agentId });
 
-  // Only candidates that are still pending are reviewable. Once all pending are
-  // acted upon, show the completion screen and let the user return to the list.
-  const pending = useMemo(() => candidates.filter((c) => c.status === 'pending'), [candidates]);
-  const [index, setIndex] = useState(0);
+  // Two browse modes:
+  //   - Triage (default): only pending candidates, used during calibration
+  //   - Inspect: a specific candidate was requested → page through all
+  //     candidates so the recruiter can flip between them.
+  const inspectMode = !!initialCandidateId;
+  const visible = useMemo(
+    () => (inspectMode ? candidates : candidates.filter((c) => c.status === 'pending')),
+    [inspectMode, candidates],
+  );
+  // `pending` retained as the variable name to minimise downstream churn —
+  // it's "the list of profiles being browsed", not strictly pending.
+  const pending = visible;
+  const [index, setIndex] = useState(() => {
+    if (initialCandidateId) {
+      const idx = visible.findIndex((c) => c.id === initialCandidateId);
+      return idx >= 0 ? idx : 0;
+    }
+    return 0;
+  });
   const [tab, setTab] = useState<ProfileTab>('experience');
   const [criteriaOpen, setCriteriaOpen] = useState(false);
   const [criteria, setCriteria] = useState<AgentCriterion[]>([]);
@@ -40,6 +79,12 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
   // keep the drawer open time small. Values: undefined = not fetched,
   // null = fetched but empty, object = loaded.
   const [parsedById, setParsedById] = useState<Record<string, ParsedResumeData | null>>({});
+  // Why-matched is lazy-loaded alongside parsedData via the details endpoint.
+  // The SSE stream payload may already include it inside metadata; we prefer
+  // the freshest copy from the details fetch.
+  const [whyById, setWhyById] = useState<Record<string, WhyMatched | null>>({});
+  const [rejectionOpen, setRejectionOpen] = useState(false);
+  const [rejectionSubmitting, setRejectionSubmitting] = useState(false);
 
   // Dwell tracking — record time spent viewing each candidate's profile.
   // When the user navigates to a new profile, emit a `dwell` event for the
@@ -82,7 +127,9 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
           const res = await axios.get(`/api/v1/agents/${agentId}/candidates/${c.id}/details`);
           if (cancelled) return;
           const parsedData = (res.data?.data?.resume?.parsedData ?? null) as ParsedResumeData | null;
+          const why = (res.data?.data?.whyMatched ?? null) as WhyMatched | null;
           setParsedById((prev) => ({ ...prev, [c.id]: parsedData }));
+          setWhyById((prev) => ({ ...prev, [c.id]: why }));
         } catch {
           if (cancelled) return;
           setParsedById((prev) => ({ ...prev, [c.id]: null }));
@@ -127,15 +174,18 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
   }, []);
 
   const advance = useCallback(() => {
+    // Inspect mode: the candidate stays in the list (just changes status),
+    // so don't auto-advance — let the user use prev/next.
+    if (inspectMode) return;
     if (pending.length <= 1) {
       // That was the last pending profile.
       return;
     }
-    // After an action, the current candidate drops out of `pending`, so the
-    // next candidate shifts into position `index`. Only advance if we're at
-    // the end.
+    // Triage mode: after an action, the current candidate drops out of
+    // `pending`, so the next candidate shifts into position `index`. Only
+    // advance if we're at the end.
     if (index >= pending.length - 1) setIndex(Math.max(0, pending.length - 2));
-  }, [index, pending.length]);
+  }, [index, pending.length, inspectMode]);
 
   const handleApprove = useCallback(() => {
     if (!current) return;
@@ -145,9 +195,26 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
 
   const handleReject = useCallback(() => {
     if (!current) return;
-    onReject(current.id);
-    advance();
-  }, [current, onReject, advance]);
+    setRejectionOpen(true);
+  }, [current]);
+
+  const handleRejectSubmit = useCallback(
+    async (payload: { tags: RejectionTag[]; reason: string }) => {
+      if (!current) return;
+      setRejectionSubmitting(true);
+      try {
+        onReject(current.id, {
+          rejectionTags: payload.tags,
+          rejectionReason: payload.reason,
+        });
+        setRejectionOpen(false);
+        advance();
+      } finally {
+        setRejectionSubmitting(false);
+      }
+    },
+    [current, onReject, advance],
+  );
 
   const handlePrev = useCallback(() => {
     setIndex((i) => Math.max(0, i - 1));
@@ -217,6 +284,9 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
   const resume = current.resume ?? null;
   const parsed = parsedById[current.id] ?? resume?.parsedData ?? null;
   const location = parsed?.address ?? '';
+  // Prefer the freshest details fetch; fall back to whatever was streamed
+  // inside metadata so the panel renders immediately on first paint.
+  const whyMatched: WhyMatched | null = whyById[current.id] ?? extractWhyMatched(current);
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -253,6 +323,9 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
             <SocialLinks parsed={parsed} />
           </div>
 
+          {/* Why we matched this profile */}
+          {whyMatched && <WhyWeMatchedPanel data={whyMatched} />}
+
           {/* Profile tabs */}
           <div className="mb-4 border-b border-slate-200">
             <div className="flex gap-4">
@@ -273,9 +346,19 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
             </div>
           </div>
 
-          {tab === 'experience' && <ExperienceList items={parsed?.experience ?? []} />}
-          {tab === 'education' && <EducationList items={parsed?.education ?? []} />}
-          {tab === 'skills' && <SkillsMap skills={parsed?.skills} tags={resume?.tags ?? []} />}
+          {(() => {
+            // `parsedById[currentId]` is undefined while the lazy-load is in
+            // flight. We surface that as a "Agent is on it" placeholder so the
+            // recruiter never sees a "no data" message during the fetch.
+            const loading = parsedById[current.id] === undefined;
+            return (
+              <>
+                {tab === 'experience' && <ExperienceList items={parsed?.experience ?? []} loading={loading} />}
+                {tab === 'education' && <EducationList items={parsed?.education ?? []} loading={loading} />}
+                {tab === 'skills' && <SkillsMap skills={parsed?.skills} tags={resume?.tags ?? []} loading={loading} />}
+              </>
+            );
+          })()}
         </div>
 
         {/* Right: calibration sidebar */}
@@ -318,23 +401,39 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
             </button>
           </div>
 
-          <button
-            onClick={handleApprove}
-            className="mb-3 flex items-center justify-center gap-2 rounded-xl border-2 border-green-200 bg-green-50 px-5 py-3 text-sm font-semibold text-green-700 transition-colors hover:border-green-300 hover:bg-green-100"
-          >
-            {t('agents.workbench.review.approve', 'Approve')}
-            <kbd className="rounded border border-green-300 bg-white px-1.5 py-0.5 text-[10px] text-green-700">A</kbd>
-          </button>
-          <button
-            onClick={handleReject}
-            className="mb-4 flex items-center justify-center gap-2 rounded-xl border-2 border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100"
-          >
-            {t('agents.workbench.review.reject', 'Reject')}
-            <kbd className="rounded border border-red-300 bg-white px-1.5 py-0.5 text-[10px] text-red-700">R</kbd>
-          </button>
-          <p className="text-xs leading-relaxed text-slate-500">
-            {t('agents.workbench.review.helpText', 'This only calibrates the agent and does not send emails.')}
-          </p>
+          {current.status === 'pending' ? (
+            <>
+              <button
+                onClick={handleApprove}
+                className="mb-3 flex items-center justify-center gap-2 rounded-xl border-2 border-green-200 bg-green-50 px-5 py-3 text-sm font-semibold text-green-700 transition-colors hover:border-green-300 hover:bg-green-100"
+              >
+                {t('agents.workbench.review.approve', 'Approve')}
+                <kbd className="rounded border border-green-300 bg-white px-1.5 py-0.5 text-[10px] text-green-700">A</kbd>
+              </button>
+              <button
+                onClick={handleReject}
+                className="mb-4 flex items-center justify-center gap-2 rounded-xl border-2 border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100"
+              >
+                {t('agents.workbench.review.reject', 'Reject')}
+                <kbd className="rounded border border-red-300 bg-white px-1.5 py-0.5 text-[10px] text-red-700">R</kbd>
+              </button>
+              <p className="text-xs leading-relaxed text-slate-500">
+                {t('agents.workbench.review.helpText', 'This only calibrates the agent and does not send emails.')}
+              </p>
+            </>
+          ) : (
+            <div className={`mb-4 rounded-xl border-2 px-4 py-3 text-center text-sm font-semibold ${
+              current.status === 'liked'
+                ? 'border-green-200 bg-green-50 text-green-700'
+                : current.status === 'disliked'
+                ? 'border-red-200 bg-red-50 text-red-600'
+                : current.status === 'contacted'
+                ? 'border-blue-200 bg-blue-50 text-blue-700'
+                : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}>
+              {t(`agents.workbench.review.status.${current.status}`, current.status)}
+            </div>
+          )}
 
           <div className="mt-auto rounded-xl border border-slate-200 bg-white p-3 text-xs leading-relaxed text-slate-500">
             <p>
@@ -362,6 +461,95 @@ export default function ReviewProfilesView({ agentId, candidates, onApprove, onR
           onClose={() => setCriteriaOpen(false)}
           onSaved={(saved) => setCriteria(saved)}
         />
+      )}
+
+      {/* Rejection reason modal */}
+      <RejectionReasonModal
+        open={rejectionOpen}
+        candidateName={current?.name ?? ''}
+        submitting={rejectionSubmitting}
+        onCancel={() => setRejectionOpen(false)}
+        onSubmit={handleRejectSubmit}
+      />
+    </div>
+  );
+}
+
+// ── Why-We-Matched panel (per Image #2 reference) ──────────────────────────
+
+function WhyWeMatchedPanel({ data }: { data: WhyMatched }) {
+  const { t } = useTranslation();
+  const hasReasons = data.reasons && data.reasons.length > 0;
+  const hasStrengths = data.strengths && data.strengths.length > 0;
+  const hasAreas = data.areasToExplore && data.areasToExplore.length > 0;
+  if (!hasReasons && !hasStrengths && !hasAreas) return null;
+
+  return (
+    <div className="mb-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-violet-50/30 via-white to-white p-5">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="text-base">✨</span>
+        <h2 className="text-sm font-semibold text-slate-900">
+          {t('agents.whyMatched.title', 'Why we matched this profile')}
+        </h2>
+        {data.overallVerdict && (
+          <span className="ml-auto rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600">
+            {data.overallVerdict}
+          </span>
+        )}
+      </div>
+
+      {hasReasons && (
+        <div className="space-y-3">
+          {data.reasons.map((r, i) => {
+            const palette =
+              r.type === 'good'
+                ? { chip: 'bg-green-100 text-green-700', label: t('agents.whyMatched.good', 'Good Match'), icon: '✓' }
+                : r.type === 'potential'
+                ? { chip: 'bg-amber-100 text-amber-700', label: t('agents.whyMatched.potential', 'Potential Fit'), icon: '⚡' }
+                : { chip: 'bg-orange-100 text-orange-700', label: t('agents.whyMatched.concern', 'Worth Exploring'), icon: '⚠' };
+            return (
+              <div key={i} className="rounded-xl border border-slate-100 bg-white p-3">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${palette.chip}`}>
+                    <span>{palette.icon}</span>
+                    {palette.label}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-slate-800">{r.title}</p>
+                {r.detail && <p className="mt-1 text-xs leading-relaxed text-slate-600">{r.detail}</p>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {(hasStrengths || hasAreas) && (
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {hasStrengths && (
+            <div className="rounded-xl border border-green-100 bg-green-50/40 p-3">
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-green-700">
+                {t('agents.whyMatched.strengths', 'Strengths')}
+              </p>
+              <ul className="space-y-1 text-xs text-slate-700">
+                {data.strengths.slice(0, 4).map((s, i) => (
+                  <li key={i} className="leading-snug">• {s}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {hasAreas && (
+            <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-3">
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
+                {t('agents.whyMatched.areasToExplore', 'Areas to explore')}
+              </p>
+              <ul className="space-y-1 text-xs text-slate-700">
+                {data.areasToExplore.slice(0, 4).map((s, i) => (
+                  <li key={i} className="leading-snug">• {s}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -412,10 +600,18 @@ function SocialLinks({ parsed }: { parsed: ParsedResumeData | null }) {
   );
 }
 
-function ExperienceList({ items }: { items: ParsedExperience[] }) {
+function ExperienceList({ items, loading }: { items: ParsedExperience[]; loading?: boolean }) {
   const { t } = useTranslation();
   if (items.length === 0) {
-    return <EmptyState message={t('agents.workbench.review.noExperience', 'No experience data parsed from this resume.')} />;
+    return (
+      <AgentWorkingState
+        message={
+          loading
+            ? t('agents.workbench.review.loadingExperience', 'Agent is gathering work history…')
+            : t('agents.workbench.review.workingExperience', 'Agent is on it — work history will appear here.')
+        }
+      />
+    );
   }
 
   // Group by company
@@ -479,10 +675,18 @@ function ExperienceList({ items }: { items: ParsedExperience[] }) {
   );
 }
 
-function EducationList({ items }: { items: ParsedEducation[] }) {
+function EducationList({ items, loading }: { items: ParsedEducation[]; loading?: boolean }) {
   const { t } = useTranslation();
   if (items.length === 0) {
-    return <EmptyState message={t('agents.workbench.review.noEducation', 'No education data parsed from this resume.')} />;
+    return (
+      <AgentWorkingState
+        message={
+          loading
+            ? t('agents.workbench.review.loadingEducation', 'Agent is gathering education details…')
+            : t('agents.workbench.review.workingEducation', 'Agent is on it — education details will appear here.')
+        }
+      />
+    );
   }
   return (
     <div className="space-y-4">
@@ -514,7 +718,7 @@ function EducationList({ items }: { items: ParsedEducation[] }) {
   );
 }
 
-function SkillsMap({ skills, tags }: { skills: ParsedSkills | string[] | undefined; tags: string[] }) {
+function SkillsMap({ skills, tags, loading }: { skills: ParsedSkills | string[] | undefined; tags: string[]; loading?: boolean }) {
   const { t } = useTranslation();
 
   const groups: Array<{ label: string; items: string[] }> = [];
@@ -532,7 +736,15 @@ function SkillsMap({ skills, tags }: { skills: ParsedSkills | string[] | undefin
     groups.push({ label: t('agents.workbench.review.skillGroups.tags', 'Tags'), items: tags });
   }
   if (groups.length === 0) {
-    return <EmptyState message={t('agents.workbench.review.noSkills', 'No skills data parsed from this resume.')} />;
+    return (
+      <AgentWorkingState
+        message={
+          loading
+            ? t('agents.workbench.review.loadingSkills', 'Agent is mapping skills…')
+            : t('agents.workbench.review.workingSkills', 'Agent is on it — skill map will appear here.')
+        }
+      />
+    );
   }
 
   return (
@@ -556,10 +768,20 @@ function SkillsMap({ skills, tags }: { skills: ParsedSkills | string[] | undefin
   );
 }
 
-function EmptyState({ message }: { message: string }) {
+// Friendly placeholder shown in place of "no data parsed" — frames the
+// missing section as something the agent is still gathering, rather than as
+// a bare absence. Used for the experience / education / skills tabs where
+// the recruiter expects content even if the LLM hasn't finished extracting.
+function AgentWorkingState({ message }: { message: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
-      {message}
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-violet-200 bg-violet-50/30 px-4 py-10 text-center">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-violet-100">
+        <svg className="h-5 w-5 animate-spin text-violet-500" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" />
+        </svg>
+      </div>
+      <p className="max-w-xs text-sm text-slate-600">{message}</p>
     </div>
   );
 }

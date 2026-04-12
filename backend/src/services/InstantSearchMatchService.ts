@@ -282,12 +282,23 @@ export async function executeInstantSearch(
           name: r.resumeName,
           matchScore: r.score,
           status: 'pending',
-          notes: JSON.stringify({
+          metadata: {
             grade: r.grade,
             verdict: r.verdict,
             highlights: r.highlights,
             gaps: r.gaps,
-          }),
+            whyMatched: {
+              reasons: [
+                ...r.highlights.map((h) => ({ type: 'good' as const, title: h, detail: '' })),
+                ...r.gaps.map((g) => ({ type: 'concern' as const, title: g, detail: 'Verify in interview.' })),
+              ],
+              strengths: r.highlights,
+              areasToExplore: r.gaps,
+              skillMap: { matched: r.highlights, missing: r.gaps, extra: [] },
+              overallVerdict: r.verdict,
+              grade: r.grade,
+            },
+          } as unknown as object,
         })),
         skipDuplicates: true,
       });

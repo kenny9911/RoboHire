@@ -2062,7 +2062,9 @@
       "interviewRoom": "面接ルーム",
       "agents": "エージェント",
       "agentDetail": "エージェント詳細",
-      "interviewHub": "面接ハブ"
+      "interviewHub": "面接ハブ",
+      "agentManager": "エージェント管理",
+      "readOnly": "閲覧"
     },
     "dashboard": {
       "welcome": "おかえりなさい",
@@ -4201,50 +4203,156 @@
       "duration": "実行時間"
     },
     "memory": {
-        "users": "メモリデータのあるユーザー",
-        "searchPlaceholder": "メールまたは名前で検索…",
-        "showingN": "{{total}} 件中 {{shown}} 件",
-        "noUsers": "一致するユーザーなし",
-        "pickUser": "ユーザーを選択してメモリデータを表示",
-        "interactions": "件のインタラクション",
-        "breakGlass": "ブレイクグラス · 監査済",
-        "tabs": {
-          "profile": "プロファイル",
-          "memories": "メモリ",
-          "interactions": "インタラクション",
-          "audit": "監査"
-        },
-        "signalsLearned": "学習シグナル",
-        "agents": "エージェント",
-        "lastRebuilt": "最終再構築",
-        "topSkills": "主要スキル",
-        "topAntiSkills": "アンチスキル",
-        "topLocations": "主要地域",
-        "topIndustries": "主要業界",
-        "rebuild": "プロファイル再構築",
-        "rebuilding": "再構築中…",
-        "reset": "プロファイルをリセット",
-        "confirmReset": "このユーザーのメモリプロファイルをリセットしますか？取り消せません。",
-        "buildProfile": "プロファイルを作成",
-        "noProfile": "このユーザーのリクルーター プロファイルはまだありません。",
-        "noMemories": "このユーザーのメモリはまだありません。",
-        "noInteractions": "インタラクション イベントは未捕捉です。",
-        "noAudit": "監査エントリはありません。",
-        "auditHint": "このユーザーデータに対する管理者の全操作がここに記録されます。監査エントリは変更不可です。",
-        "lastSeen": "最終確認",
-        "expires": "有効期限",
-        "confirmDelete": "このメモリを削除しますか？監査ログは保持されます。",
-        "saveFailed": "保存に失敗しました",
-        "editModal": {
-          "title": "メモリを編集",
-          "warning": "これはブレイクグラス編集です。操作内容、変更前/変更後、任意の理由は不変の監査ログに保存されます。",
-          "content": "内容",
-          "weight": "重み（0-10）",
-          "reason": "理由（任意、監査ログに記録）",
-          "reasonPlaceholder": "例: サポートチケット #1234、古いファクトを修正"
-        }
+      "users": "メモリデータのあるユーザー",
+      "searchPlaceholder": "メールまたは名前で検索…",
+      "showingN": "{{total}} 件中 {{shown}} 件",
+      "noUsers": "一致するユーザーなし",
+      "pickUser": "ユーザーを選択してメモリデータを表示",
+      "interactions": "件のインタラクション",
+      "breakGlass": "ブレイクグラス · 監査済",
+      "tabs": {
+        "profile": "プロファイル",
+        "memories": "メモリ",
+        "interactions": "インタラクション",
+        "audit": "監査"
+      },
+      "signalsLearned": "学習シグナル",
+      "agents": "エージェント",
+      "lastRebuilt": "最終再構築",
+      "topSkills": "主要スキル",
+      "topAntiSkills": "アンチスキル",
+      "topLocations": "主要地域",
+      "topIndustries": "主要業界",
+      "rebuild": "プロファイル再構築",
+      "rebuilding": "再構築中…",
+      "reset": "プロファイルをリセット",
+      "confirmReset": "このユーザーのメモリプロファイルをリセットしますか？取り消せません。",
+      "buildProfile": "プロファイルを作成",
+      "noProfile": "このユーザーのリクルーター プロファイルはまだありません。",
+      "noMemories": "このユーザーのメモリはまだありません。",
+      "noInteractions": "インタラクション イベントは未捕捉です。",
+      "noAudit": "監査エントリはありません。",
+      "auditHint": "このユーザーデータに対する管理者の全操作がここに記録されます。監査エントリは変更不可です。",
+      "lastSeen": "最終確認",
+      "expires": "有効期限",
+      "confirmDelete": "このメモリを削除しますか？監査ログは保持されます。",
+      "saveFailed": "保存に失敗しました",
+      "editModal": {
+        "title": "メモリを編集",
+        "warning": "これはブレイクグラス編集です。操作内容、変更前/変更後、任意の理由は不変の監査ログに保存されます。",
+        "content": "内容",
+        "weight": "重み（0-10）",
+        "reason": "理由（任意、監査ログに記録）",
+        "reasonPlaceholder": "例: サポートチケット #1234、古いファクトを修正"
       }
-  
+    },
+    "agentManager": {
+      "title": "エージェントマネージャ",
+      "heading": "エージェントマネージャ",
+      "subheading": "AI エージェント全体のコントロールプレーン。",
+      "forbidden": {
+        "title": "管理者のみ",
+        "body": "エージェントマネージャを使用するには管理者または内部アカウントが必要です。"
+      },
+      "tabs": {
+        "agents": "エージェント",
+        "runs": "実行履歴",
+        "cost": "コスト"
+      },
+      "summary": {
+        "totalAgents": "エージェント",
+        "activeAgents": "アクティブ",
+        "liveRuns": "実行中",
+        "staleRuns": "ゾンビ",
+        "todayRuns": "本日 · 実行",
+        "todayCost": "本日 · 費用",
+        "todayTokens": "本日 · トークン",
+        "totalRuns": "総実行数",
+        "runSweep": "スイープ実行",
+        "sweeping": "スイープ中…",
+        "sweptN": "{{n}} 件のゾンビをクリーンアップしました",
+        "sweepFailed": "スイープに失敗しました",
+        "sweepHint": "{{n}} 分間ハートビートのない実行をクリーンアップします。"
+      },
+      "filters": {
+        "search": "検索",
+        "searchPh": "名前または説明…",
+        "status": "ステータス",
+        "calibration": "キャリブレーション",
+        "stuckOnly": "ゾンビのみ",
+        "staleOnly": "ゾンビのみ",
+        "durationGt": "実行時間 > (秒)",
+        "costGt": "費用 > ($)",
+        "any": "すべて",
+        "totalRows": "{{n}} 件のエージェント",
+        "totalRunRows": "{{n}} 件の実行"
+      },
+      "bulk": {
+        "selected": "{{n}} 件選択中",
+        "clear": "クリア",
+        "partial": "{{ok}} 件成功, {{failed}} 件失敗",
+        "failed": "一括操作に失敗しました",
+        "confirmDelete": "{{n}} 件のエージェントを完全に削除しますか?この操作は元に戻せません。"
+      },
+      "actions": {
+        "cancel": "キャンセル",
+        "markFailed": "失敗にする…",
+        "pause": "一時停止",
+        "unpause": "再開",
+        "delete": "削除",
+        "forceRun": "強制再実行"
+      },
+      "cols": {
+        "name": "名前",
+        "owner": "オーナー",
+        "status": "ステータス",
+        "calibration": "キャリブレーション",
+        "live": "実行中",
+        "stats": "プール",
+        "lastRun": "最終実行",
+        "agent": "エージェント",
+        "runStatus": "ステータス",
+        "duration": "時間",
+        "cost": "費用",
+        "tokens": "トークン",
+        "candidates": "候補",
+        "heartbeat": "最終心拍",
+        "created": "作成"
+      },
+      "table": {
+        "empty": "現在のフィルタに一致するエージェントがありません。",
+        "emptyRuns": "現在のフィルタに一致する実行がありません。"
+      },
+      "reason": {
+        "markFailedTitle": "失敗としてマークする理由",
+        "placeholder": "例: プロセスが再起動された。エグゼキュータは終了している。"
+      },
+      "cost": {
+        "window": {
+          "today": "今日",
+          "7d": "過去 7 日",
+          "30d": "過去 30 日"
+        },
+        "totalRuns": "実行",
+        "totalCost": "費用",
+        "totalTokens": "トークン",
+        "llmCalls": "LLM 呼び出し",
+        "byDay": "日別費用",
+        "byUser": "オーナー別",
+        "byAgentTitle": "エージェント別",
+        "noData": "この期間にはデータがありません。",
+        "col": {
+          "name": "名前",
+          "runs": "実行",
+          "cost": "費用",
+          "tokens": "トークン"
+        }
+      },
+      "readOnly": {
+        "title": "閲覧のみ",
+        "body": "内部ユーザはフリート全体を表示できますが、一括操作、実行のキャンセル、スイープはできません。介入が必要な場合は管理者にお問い合わせください。"
+      }
+    }
   },
   "agents": {
     "title": "エージェント",
@@ -4334,6 +4442,16 @@
           "warmingUp": "ウォームアップ中…"
         }
       },
+      "runDetail": {
+        "duration": "所要時間",
+        "candidates": "候補者",
+        "events": "イベント",
+        "cost": "コスト",
+        "failReason": "失敗理由：",
+        "viewResults": "結果を表示 →",
+        "delete": "削除",
+        "confirmDelete": "この実行記録とすべてのデータを削除しますか？この操作は元に戻せません。"
+      },
       "review": {
         "title": "プロフィール審査",
         "introTitle": "初期マッチを見つけました。これらのプロフィールを確認してフィードバックをお寄せください。",
@@ -4357,9 +4475,9 @@
           "education": "学歴",
           "skills": "スキル"
         },
-        "noExperience": "この履歴書から職歴データは解析されませんでした。",
-        "noEducation": "この履歴書から学歴データは解析されませんでした。",
-        "noSkills": "この履歴書からスキルデータは解析されませんでした。",
+        "noExperience": "エージェント作業中 — まもなく職歴が表示されます。",
+        "noEducation": "エージェント作業中 — まもなく学歴が表示されます。",
+        "noSkills": "エージェント作業中 — まもなくスキルマップが表示されます。",
         "unknownCompany": "不明",
         "skillGroups": {
           "all": "スキル",
@@ -4373,7 +4491,20 @@
         },
         "addCriteria": "基準を追加",
         "editCriteria": "基準を編集",
-        "editCriteriaHint": "重要度による並べ替えや必須化は "
+        "editCriteriaHint": "重要度による並べ替えや必須化は ",
+        "status": {
+          "liked": "気に入った",
+          "disliked": "スキップ",
+          "contacted": "連絡済み",
+          "pending": "保留中",
+          "invited": "招待済み"
+        },
+        "loadingExperience": "エージェントが職歴を収集中…",
+        "workingExperience": "エージェント作業中 — まもなく職歴が表示されます。",
+        "loadingEducation": "エージェントが学歴情報を収集中…",
+        "workingEducation": "エージェント作業中 — まもなく学歴が表示されます。",
+        "loadingSkills": "エージェントがスキルをマッピング中…",
+        "workingSkills": "エージェント作業中 — まもなくスキルマップが表示されます。"
       },
       "criteria": {
         "title": "評価基準",
@@ -4631,17 +4762,22 @@
       "approved": "承認済",
       "rejected": "却下済",
       "contacted": "連絡済",
-      "all": "すべて"
+      "all": "すべて",
+      "liked": "気に入った",
+      "skipped": "スキップ"
     },
     "stat": {
       "sourced": "発見",
       "approved": "承認",
       "rejected": "却下",
-      "contacted": "連絡済"
+      "contacted": "連絡済",
+      "liked": "気に入った",
+      "skipped": "スキップ"
     },
     "candidateStatus": {
       "contacted": "連絡済",
-      "rejected": "却下済"
+      "rejected": "却下済",
+      "disliked": "スキップ"
     },
     "pending": "保留中",
     "disapproved": "不承認",
@@ -4659,7 +4795,54 @@
     "collaborators": "コラボレーター",
     "collaboratorsDesc": "これらのチームメンバーがこのプロジェクトに参加します",
     "noCollaborators": "コラボレーターが選択されていません",
-    "saveChanges": "変更を保存"
+    "saveChanges": "変更を保存",
+    "calibration": {
+      "headline": "キャリブレーション中 · {{n}} / {{total}} 件の優良プロフィールを承認済み",
+      "subtext": "スキップで連続承認がリセットされ、3 件の新しいプロフィールが届きます。",
+      "pending": "初回実行待ち",
+      "calibrating": "キャリブレーション中",
+      "calibrated": "有効 · ソーシング中"
+    },
+    "missionControl": {
+      "reviewPending": "保留中の {{n}} 件のプロフィールを確認",
+      "openWorkbench": "ワークベンチを開く",
+      "runAgain": "再実行",
+      "running": "実行中…",
+      "runAgainHint": "(既出はスキップ)",
+      "latestRun": "最新の実行",
+      "runSummary": "{{sourced}} 件をスクリーニング · {{matched}} 件を抽出 · {{by}} がトリガー",
+      "openRun": "実行を開く →"
+    },
+    "whyMatched": {
+      "title": "マッチング理由",
+      "good": "良好なマッチ",
+      "potential": "潜在的マッチ",
+      "concern": "要確認",
+      "strengths": "強み",
+      "areasToExplore": "掘り下げる領域"
+    },
+    "rejection": {
+      "title": "Alex に学ばせてください — どこが合いませんか?",
+      "subtitle": "詳細が多いほど、次のバッチがより精度の高いものになります。",
+      "about": "{{name}} をスキップ",
+      "tagsLabel": "該当するものをすべて選択",
+      "tags": {
+        "wrong_industry": "業界が合わない",
+        "wrong_location": "勤務地が合わない",
+        "too_junior": "経験不足",
+        "too_senior": "経験過多",
+        "missing_key_skill": "重要スキル不足",
+        "wrong_background": "経歴が合わない",
+        "culture_mismatch": "カルチャー不一致",
+        "other": "その他"
+      },
+      "reasonLabel": "詳細を教えてください",
+      "reasonPlaceholder": "何が足りない、または合いませんか?例:HVAC 経験はあるが住宅のみ — 当社は商業用が必要。",
+      "hint": "タグを 1 つ以上選ぶか、10 文字以上のフィードバックを入力してください。",
+      "submit": "プロフィールをスキップ"
+    },
+    "like": "気に入る",
+    "review": "確認"
   },
   "interviewHub": {
     "title": "インタビューハブ",

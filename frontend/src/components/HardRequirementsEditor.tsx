@@ -567,14 +567,19 @@ function TagInput({
   disabled: boolean;
 }) {
   const { t } = useTranslation();
-  const add = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== 'Enter' && e.key !== ',') return;
-    e.preventDefault();
-    const input = e.currentTarget;
+  const commit = (input: HTMLInputElement) => {
     const next = input.value.trim();
     if (!next) return;
     if (!value.includes(next)) onChange([...value, next]);
     input.value = '';
+  };
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' && e.key !== ',') return;
+    e.preventDefault();
+    commit(e.currentTarget);
+  };
+  const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    commit(e.currentTarget);
   };
   const remove = (tag: string) => {
     onChange(value.filter((v) => v !== tag));
@@ -600,7 +605,8 @@ function TagInput({
       ))}
       <input
         type="text"
-        onKeyDown={add}
+        onKeyDown={onKeyDown}
+        onBlur={onBlur}
         disabled={disabled}
         placeholder={value.length === 0 ? t('agents.workbench.hardRequirements.tagPlaceholder', 'Type and press Enter') : ''}
         className="min-w-[80px] flex-1 border-0 bg-transparent p-0 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-0"

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from '../lib/axios';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +31,12 @@ interface Props {
   agentId: string;
   agentName: string;
   onClose: () => void;
+  /**
+   * If set, the drawer opens directly in the per-profile review view focused
+   * on this candidate. The recruiter can page through the rest of the
+   * agent's candidates from there.
+   */
+  initialCandidateId?: string | null;
 }
 
 interface RunSummary {
@@ -41,6 +47,10 @@ interface RunSummary {
   completedAt: string | null;
   stats: { sourced?: number; matched?: number } | null;
   createdAt: string;
+  durationMs?: number;
+  costUsd?: number;
+  tokensIn?: number;
+  tokensOut?: number;
   _count?: { candidates: number; activities: number };
 }
 
@@ -64,15 +74,24 @@ interface AgentDetail {
   config: Record<string, unknown> | null;
 }
 
-export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
+export default function AgentRunDrawer({ agentId, agentName, onClose, initialCandidateId }: Props) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('results');
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [runs, setRuns] = useState<RunSummary[]>([]);
   const [starting, setStarting] = useState(false);
   const [filter, setFilter] = useState<ResultsFilter>('pending');
-  const [view, setView] = useState<ResultsView>('list');
+  const [view, setView] = useState<ResultsView>(initialCandidateId ? 'review' : 'list');
+  // The candidate the user requested to inspect (set either via the prop on
+  // mount or by clicking a row in the list view). Cleared when the user
+  // navigates back to the list.
+  const [inspectCandidateId, setInspectCandidateId] = useState<string | null>(initialCandidateId ?? null);
   const [triageOverrides, setTriageOverrides] = useState<Record<string, string>>({});
+  // Master list of all candidates ever surfaced for this agent (across all
+  // runs). Loaded via REST so the Results tab is stable even when the SSE
+  // stream is connected to a fresh empty run, and so candidates with a
+  // null `runId` (legacy code path) still appear.
+  const [allCandidates, setAllCandidates] = useState<RunCandidate[]>([]);
   // Activity tab now uses SSE for instant + live updates instead of one-shot REST.
   // The hook only opens its EventSource when the Activity tab is active.
   const [activityActive, setActivityActive] = useState(false);
@@ -92,30 +111,60 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
       const res = await axios.get(`/api/v1/agents/${agentId}/runs`, { params: { limit: 20 } });
       const list = (res.data.data as RunSummary[]) || [];
       setRuns(list);
-      // Auto-select the most recent run if none is active
+      // Auto-select the most recent run if none is active. We do not require
+      // it to have candidates — the Results tab now renders from the merged
+      // master list (loadAllCandidates), so an empty run won't blank the UI.
       if (!activeRunId && list.length > 0) setActiveRunId(list[0].id);
     } catch {
       // ignore
     }
   }, [agentId, activeRunId]);
 
+  // Load all candidates that have ever been surfaced for this agent. The SSE
+  // stream is per-run; this endpoint is per-agent, so it's the source of
+  // truth for the Results tab. We refetch when a run ends, when triage
+  // happens, and on a 6s interval while a run is in flight.
+  const loadAllCandidates = useCallback(async () => {
+    try {
+      const res = await axios.get(`/api/v1/agents/${agentId}/candidates`, {
+        params: { limit: 200 },
+      });
+      const list = (res.data?.data as RunCandidate[]) || [];
+      setAllCandidates(list);
+    } catch {
+      // ignore — we'll still show whatever is in the SSE stream
+    }
+  }, [agentId]);
+
   useEffect(() => {
     loadRuns();
-  }, [loadRuns]);
+    loadAllCandidates();
+  }, [loadRuns, loadAllCandidates]);
 
-  // Reload runs when the stream ends so stats/status on the Runs tab are fresh
+  // Reload runs + master candidate list when the stream ends so stats/status
+  // on the Runs tab are fresh and any candidates that landed without firing
+  // a `candidate` event still appear.
   useEffect(() => {
-    if (stream.status === 'ended') loadRuns();
-  }, [stream.status, loadRuns]);
+    if (stream.status === 'ended') {
+      loadRuns();
+      loadAllCandidates();
+    }
+  }, [stream.status, loadRuns, loadAllCandidates]);
 
   // While any run is in-flight, poll the runs list every 4 seconds so the
-  // running card flips to "completed" promptly. Stops when nothing is live.
+  // running card flips to "completed" promptly, and refresh the master
+  // candidate list every 6s so the Results tab catches up if any candidate
+  // event is missed (SSE drops, network blips).
   useEffect(() => {
     const hasLive = runs.some((r) => r.status === 'running' || r.status === 'queued');
     if (!hasLive) return;
-    const iv = setInterval(loadRuns, 4000);
-    return () => clearInterval(iv);
-  }, [runs, loadRuns]);
+    const ivRuns = setInterval(loadRuns, 4000);
+    const ivCands = setInterval(loadAllCandidates, 6000);
+    return () => {
+      clearInterval(ivRuns);
+      clearInterval(ivCands);
+    };
+  }, [runs, loadRuns, loadAllCandidates]);
 
   const startRunActual = useCallback(async () => {
     setStarting(true);
@@ -128,8 +177,19 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
         setTriageOverrides({});
         loadRuns();
       }
-    } catch {
-      // TODO surface error
+    } catch (err: unknown) {
+      // 409 = duplicate run — reconnect to the existing run instead of
+      // doing nothing. This handles the "user clicked Run twice" scenario
+      // and also surfaces the run in the UI so they can cancel if needed.
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        const existingRunId = err.response.data?.data?.runId as string | undefined;
+        if (existingRunId) {
+          setActiveRunId(existingRunId);
+          setTab('results');
+          setTriageOverrides({});
+          loadRuns();
+        }
+      }
     } finally {
       setStarting(false);
     }
@@ -187,10 +247,23 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
     }
   };
 
-  const triageMutation = async (candidateId: string, status: 'liked' | 'disliked') => {
+  const triageMutation = async (
+    candidateId: string,
+    status: 'liked' | 'disliked',
+    extras?: { rejectionReason?: string; rejectionTags?: string[] },
+  ) => {
     setTriageOverrides((prev) => ({ ...prev, [candidateId]: status }));
     try {
-      await axios.patch(`/api/v1/agents/${agentId}/candidates/${candidateId}`, { status });
+      await axios.patch(`/api/v1/agents/${agentId}/candidates/${candidateId}`, {
+        status,
+        ...(extras?.rejectionReason !== undefined ? { rejectionReason: extras.rejectionReason } : {}),
+        ...(extras?.rejectionTags !== undefined ? { rejectionTags: extras.rejectionTags } : {}),
+      });
+      // A dislike during calibration triggers a fresh background run + ICP
+      // regen on the server. Refetch runs/candidates so the UI catches the
+      // new run and any newly surfaced candidates as they land.
+      void loadRuns();
+      void loadAllCandidates();
     } catch {
       setTriageOverrides((prev) => {
         const next = { ...prev };
@@ -206,13 +279,32 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
     setActivityActive(tab === 'activity');
   }, [tab]);
 
-  // Derive the candidate list to render: stream + triage overrides
+  // Derive the candidate list to render. Source of truth is the union of
+  //   1. allCandidates (REST master list — every candidate this agent has
+  //      ever surfaced, across all runs)
+  //   2. stream.candidates (live SSE updates from the currently active run
+  //      — these may not yet be in the REST list because the next refetch
+  //      hasn't fired)
+  // Deduped by id, with stream entries winning ties (they have the freshest
+  // status from the running run). Then apply optimistic triage overrides on
+  // top so a click on Like/Skip flips the badge instantly even before the
+  // PATCH response lands.
   const candidates: RunCandidate[] = useMemo(() => {
-    return stream.candidates.map((c) => {
+    const byId = new Map<string, RunCandidate>();
+    for (const c of allCandidates) byId.set(c.id, c);
+    for (const c of stream.candidates) byId.set(c.id, c);
+    const merged = Array.from(byId.values());
+    // Newest first by createdAt — matches the prior list-view ordering
+    merged.sort((a, b) => {
+      const ta = new Date(a.createdAt || 0).getTime();
+      const tb = new Date(b.createdAt || 0).getTime();
+      return tb - ta;
+    });
+    return merged.map((c) => {
       const override = triageOverrides[c.id];
       return override ? { ...c, status: override } : c;
     });
-  }, [stream.candidates, triageOverrides]);
+  }, [allCandidates, stream.candidates, triageOverrides]);
 
   const filteredCandidates = useMemo(() => {
     if (filter === 'all') return candidates;
@@ -230,6 +322,45 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
 
   const activeRun = runs.find((r) => r.id === activeRunId);
   const isRunning = stream.status === 'streaming' || stream.status === 'connecting' || activeRun?.status === 'running' || activeRun?.status === 'queued';
+
+  // Derive real-time progress from SSE activity events so we can show a
+  // live progress bar during a run (total pool → processed → matched).
+  const runProgress = useMemo(() => {
+    if (!isRunning && stream.status !== 'ended') return null;
+    let total = 0;
+    let processed = 0;
+    let matched = 0;
+    let errors = 0;
+    let currentResume = '';
+    for (const a of stream.activities) {
+      const p = a.payload as Record<string, unknown> | null;
+      if (a.eventType === 'source.instant_search.hit' || a.eventType === 'source.internal_minio.hit') {
+        total += (p?.poolSize as number) || 0;
+      }
+      if (a.eventType === 'hard_requirements.applied') {
+        const passed = (p?.passed as number) || 0;
+        total = passed; // refined total after filtering
+      }
+      if (a.eventType === 'match.scored') {
+        processed++;
+        matched++;
+      }
+      if (a.eventType === 'match.rejected_below_threshold') {
+        processed++;
+      }
+      if (a.eventType === 'error.llm') {
+        processed++;
+        errors++;
+      }
+      if (a.eventType === 'llm.call.started' && p?.resumeId) {
+        currentResume = (a.message || '').replace(/^Dispatching match for /, '').replace(/^Matched .*/, '');
+      }
+      if (a.eventType === 'llm.call.completed' && a.message) {
+        currentResume = a.message.replace(/^Matched /, '').replace(/ in \d+ms$/, '');
+      }
+    }
+    return { total, processed, matched, errors, currentResume };
+  }, [stream.activities, isRunning, stream.status]);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onClose}>
@@ -274,9 +405,12 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
             {isRunning ? (
               <button
                 onClick={handleCancel}
-                className="rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-xl border-2 border-red-200 bg-red-50 px-3.5 py-1.5 text-sm font-semibold text-red-700 hover:border-red-300 hover:bg-red-100"
               >
-                {t('agents.workbench.drawer.cancel', 'Cancel')}
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" />
+                </svg>
+                {t('agents.workbench.drawer.stop', 'Stop Agent')}
               </button>
             ) : (
               <button
@@ -299,6 +433,49 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
             </button>
           </div>
         </div>
+
+        {/* Live progress bar — shows during an active run */}
+        {isRunning && runProgress && runProgress.total > 0 && (
+          <div className="border-b border-violet-100 bg-violet-50/40 px-6 py-3">
+            <div className="mb-1.5 flex items-center justify-between text-xs">
+              <span className="font-medium text-slate-700">
+                {t('agents.workbench.progress.processing', 'Processing {{done}}/{{total}} resumes', {
+                  done: runProgress.processed,
+                  total: runProgress.total,
+                })}
+              </span>
+              <span className="text-slate-500">
+                {t('agents.workbench.progress.matched', '{{n}} matched', { n: runProgress.matched })}
+                {runProgress.errors > 0 &&
+                  ` · ${t('agents.workbench.progress.errors', '{{n}} errors', { n: runProgress.errors })}`}
+              </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-violet-100">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-700 transition-all duration-500"
+                style={{
+                  width: `${runProgress.total > 0 ? Math.min(100, (runProgress.processed / runProgress.total) * 100) : 0}%`,
+                }}
+              />
+            </div>
+            {runProgress.currentResume && (
+              <p className="mt-1 truncate text-[11px] text-slate-500">
+                {t('agents.workbench.progress.current', 'Now evaluating: {{name}}', { name: runProgress.currentResume })}
+              </p>
+            )}
+          </div>
+        )}
+        {isRunning && (!runProgress || runProgress.total === 0) && (
+          <div className="flex items-center gap-2 border-b border-violet-100 bg-violet-50/40 px-6 py-3">
+            <svg className="h-4 w-4 animate-spin text-violet-500" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            <span className="text-xs font-medium text-slate-700">
+              {t('agents.workbench.progress.starting', 'Agent is starting up…')}
+            </span>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="border-b border-slate-200 px-6">
@@ -327,9 +504,16 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
               agentId={agentId}
               candidates={candidates}
               onApprove={(id) => triageMutation(id, 'liked')}
-              onReject={(id) => triageMutation(id, 'disliked')}
-              onBack={() => setView('list')}
-              onDone={() => setView('list')}
+              onReject={(id, extras) => triageMutation(id, 'disliked', extras)}
+              onBack={() => {
+                setView('list');
+                setInspectCandidateId(null);
+              }}
+              onDone={() => {
+                setView('list');
+                setInspectCandidateId(null);
+              }}
+              initialCandidateId={inspectCandidateId}
             />
           ) : (
             <div className="h-full overflow-y-auto">
@@ -345,6 +529,10 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
                   candidates={filteredCandidates}
                   onLike={(id) => triageMutation(id, 'liked')}
                   onDislike={(id) => triageMutation(id, 'disliked')}
+                  onInspect={(id) => {
+                    setInspectCandidateId(id);
+                    setView('review');
+                  }}
                   streamStatus={stream.status}
                   hasRun={!!activeRunId}
                   onFindMore={handleRunNow}
@@ -361,6 +549,12 @@ export default function AgentRunDrawer({ agentId, agentName, onClose }: Props) {
                     setTriageOverrides({});
                   }}
                   onRefresh={loadRuns}
+                  onDeleteRun={async (runId) => {
+                    await axios.delete(`/api/v1/agents/${agentId}/runs/${runId}`);
+                    if (activeRunId === runId) setActiveRunId(null);
+                    loadRuns();
+                    loadAllCandidates();
+                  }}
                 />
               )}
               {tab === 'activity' && (
@@ -408,6 +602,7 @@ function ResultsTab({
   candidates,
   onLike,
   onDislike,
+  onInspect,
   streamStatus,
   hasRun,
   onFindMore,
@@ -422,6 +617,7 @@ function ResultsTab({
   candidates: RunCandidate[];
   onLike: (id: string) => void;
   onDislike: (id: string) => void;
+  onInspect: (id: string) => void;
   streamStatus: string;
   hasRun: boolean;
   onFindMore: () => void;
@@ -547,7 +743,15 @@ function ResultsTab({
             {t('agents.workbench.drawer.noMatches', 'No candidates in this view yet.')}
           </div>
         ) : (
-          candidates.map((c) => <CandidateCard key={c.id} candidate={c} onLike={onLike} onDislike={onDislike} />)
+          candidates.map((c) => (
+            <CandidateCard
+              key={c.id}
+              candidate={c}
+              onLike={onLike}
+              onDislike={onDislike}
+              onInspect={onInspect}
+            />
+          ))
         )}
       </div>
     </div>
@@ -584,16 +788,36 @@ function CandidateCard({
   candidate,
   onLike,
   onDislike,
+  onInspect,
 }: {
   candidate: RunCandidate;
   onLike: (id: string) => void;
   onDislike: (id: string) => void;
+  onInspect: (id: string) => void;
 }) {
   const { t } = useTranslation();
   const disabled = candidate.status !== 'pending';
 
+  // Stop propagation on the action buttons so they don't also fire the
+  // card-level click that opens the inspect view.
+  const stop = (fn: () => void) => (e: MouseEvent) => {
+    e.stopPropagation();
+    fn();
+  };
+
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onInspect(candidate.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onInspect(candidate.id);
+        }
+      }}
+      className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:border-violet-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-200"
+    >
       <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-violet-50 text-sm font-semibold text-violet-700">
         {candidate.name.slice(0, 1).toUpperCase()}
       </div>
@@ -622,7 +846,7 @@ function CandidateCard({
       </div>
       <div className="flex flex-none items-center gap-1.5">
         <button
-          onClick={() => onDislike(candidate.id)}
+          onClick={stop(() => onDislike(candidate.id))}
           disabled={disabled}
           className={`rounded-full border p-2 transition-colors ${
             candidate.status === 'disliked'
@@ -636,7 +860,7 @@ function CandidateCard({
           </svg>
         </button>
         <button
-          onClick={() => onLike(candidate.id)}
+          onClick={stop(() => onLike(candidate.id))}
           disabled={disabled}
           className={`rounded-full border p-2 transition-colors ${
             candidate.status === 'liked'
@@ -682,6 +906,11 @@ interface RunProgressPayload {
     matched: number;
     errors: number;
     sourceHits: number;
+    totalPool: number;
+    processed: number;
+    remaining: number;
+    model: string | null;
+    provider: string | null;
     // Admin-only
     llmCallCount?: number;
     tokensIn?: number;
@@ -697,14 +926,19 @@ function RunsTab({
   agentId,
   onSelectRun,
   onRefresh,
+  onDeleteRun,
 }: {
   runs: RunSummary[];
   activeRunId: string | null;
   agentId: string;
   onSelectRun: (id: string) => void;
   onRefresh: () => void;
+  onDeleteRun: (runId: string) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isUserAdmin = user?.role === 'admin';
+  const [expandedRunId, setExpandedRunId] = useState<string | null>(null);
 
   if (runs.length === 0) {
     return (
@@ -730,39 +964,243 @@ function RunsTab({
             />
           );
         }
+        const isExpanded = expandedRunId === run.id;
+        const duration = run.durationMs
+          ? formatElapsed(run.durationMs)
+          : run.startedAt && run.completedAt
+            ? formatElapsed(new Date(run.completedAt).getTime() - new Date(run.startedAt).getTime())
+            : null;
         return (
-          <button
-            key={run.id}
-            onClick={() => onSelectRun(run.id)}
-            className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors hover:bg-slate-50 ${
-              run.id === activeRunId ? 'border-violet-300 bg-violet-50' : 'border-slate-200'
-            }`}
-          >
-            <StatusDot status={run.status} />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-slate-900">
-                  {t(`agents.workbench.drawer.runStatusLabel.${run.status}`, run.status)}
-                </span>
-                <span className="text-xs text-slate-500">· {run.triggeredBy}</span>
+          <div key={run.id} className={`overflow-hidden rounded-xl border transition-colors ${isExpanded ? 'border-violet-300' : 'border-slate-200'}`}>
+            <button
+              onClick={() => setExpandedRunId(isExpanded ? null : run.id)}
+              className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 ${isExpanded ? 'bg-violet-50' : ''}`}
+            >
+              <StatusDot status={run.status} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-slate-900">
+                    {t(`agents.workbench.drawer.runStatusLabel.${run.status}`, run.status)}
+                  </span>
+                  <span className="text-xs text-slate-500">· {run.triggeredBy}</span>
+                </div>
+                <p className="mt-0.5 text-xs text-slate-500">{new Date(run.createdAt).toLocaleString()}</p>
               </div>
-              <p className="mt-0.5 text-xs text-slate-500">{new Date(run.createdAt).toLocaleString()}</p>
-            </div>
-            <div className="text-right text-xs text-slate-500">
-              <div>
-                {t('agents.workbench.drawer.matchedCount', '{{count}} matched', {
-                  count: run._count?.candidates ?? 0,
-                })}
+              <div className="text-right text-xs text-slate-500">
+                <div>
+                  {t('agents.workbench.drawer.matchedCount', '{{count}} matched', {
+                    count: run._count?.candidates ?? 0,
+                  })}
+                </div>
+                <div className="text-[10px] text-slate-400">
+                  {t('agents.workbench.drawer.activityCount', '{{count}} events', {
+                    count: run._count?.activities ?? 0,
+                  })}
+                </div>
               </div>
-              <div className="text-[10px] text-slate-400">
-                {t('agents.workbench.drawer.activityCount', '{{count}} events', {
-                  count: run._count?.activities ?? 0,
-                })}
-              </div>
-            </div>
-          </button>
+              <svg className={`h-4 w-4 flex-none text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isExpanded && (
+              <RunDetailPanel
+                agentId={agentId}
+                run={run}
+                duration={duration}
+                onViewResults={() => onSelectRun(run.id)}
+                canDelete={isUserAdmin}
+                onDelete={async () => {
+                  setExpandedRunId(null);
+                  await onDeleteRun(run.id);
+                }}
+              />
+            )}
+          </div>
         );
       })}
+    </div>
+  );
+}
+
+function RunDetailPanel({
+  agentId,
+  run,
+  duration,
+  onViewResults,
+  canDelete,
+  onDelete,
+}: {
+  agentId: string;
+  run: RunSummary;
+  duration: string | null;
+  onViewResults: () => void;
+  canDelete: boolean;
+  onDelete: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const [activities, setActivities] = useState<RunActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    axios
+      .get(`/api/v1/agents/${agentId}/activity`, {
+        params: { runId: run.id, limit: 100 },
+      })
+      .then((res) => {
+        if (cancelled) return;
+        setActivities((res.data?.data as RunActivity[]) ?? []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId, run.id]);
+
+  const errorActivity = activities.find(
+    (a) => a.severity === 'error' || a.eventType === 'run.failed',
+  );
+
+  return (
+    <div className="border-t border-slate-100 bg-slate-50/50">
+      {/* Stats row */}
+      <div className="flex flex-wrap gap-4 px-4 py-3 text-xs">
+        {duration && (
+          <div>
+            <span className="text-slate-500">{t('agents.workbench.runDetail.duration', 'Duration')}</span>
+            <span className="ml-1 font-medium text-slate-700">{duration}</span>
+          </div>
+        )}
+        <div>
+          <span className="text-slate-500">{t('agents.workbench.runDetail.candidates', 'Candidates')}</span>
+          <span className="ml-1 font-medium text-slate-700">{run._count?.candidates ?? 0}</span>
+        </div>
+        <div>
+          <span className="text-slate-500">{t('agents.workbench.runDetail.events', 'Events')}</span>
+          <span className="ml-1 font-medium text-slate-700">{run._count?.activities ?? 0}</span>
+        </div>
+        {isAdmin && run.costUsd != null && (
+          <div>
+            <span className="text-slate-500">{t('agents.workbench.runDetail.cost', 'Cost')}</span>
+            <span className="ml-1 font-medium text-slate-700">${run.costUsd.toFixed(4)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Error banner for failed runs */}
+      {run.status === 'failed' && errorActivity && (
+        <div className="mx-4 mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          <span className="font-medium">{t('agents.workbench.runDetail.failReason', 'Failure reason:')}</span>{' '}
+          {errorActivity.message || errorActivity.eventType}
+        </div>
+      )}
+
+      {/* Activity timeline */}
+      <div className="max-h-64 overflow-y-auto px-4 pb-3">
+        {loading ? (
+          <div className="flex items-center gap-2 py-4 text-xs text-slate-400">
+            <svg className="h-3.5 w-3.5 animate-spin text-violet-500" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            {t('common.loading', 'Loading…')}
+          </div>
+        ) : activities.length === 0 ? (
+          <p className="py-3 text-center text-xs text-slate-400">
+            {t('agents.workbench.drawer.noActivity', 'No activity yet.')}
+          </p>
+        ) : (
+          <ol className="relative border-l border-slate-200 pl-4">
+            {activities.map((a) => {
+              const severityClass =
+                a.severity === 'error'
+                  ? 'bg-red-100 text-red-700'
+                  : a.severity === 'warn'
+                    ? 'bg-amber-100 text-amber-700'
+                    : a.eventType.startsWith('llm.')
+                      ? 'bg-violet-100 text-violet-700'
+                      : a.eventType === 'match.scored'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : a.eventType.startsWith('source.')
+                          ? 'bg-sky-100 text-sky-700'
+                          : 'bg-slate-100 text-slate-600';
+
+              const payload = a.payload as Record<string, unknown> | null;
+              let metrics: string | null = null;
+              if (a.eventType === 'llm.call.completed' && payload) {
+                const lat = payload.latencyMs as number | undefined;
+                if (isAdmin) {
+                  const tIn = payload.tokensIn as number | undefined;
+                  const tOut = payload.tokensOut as number | undefined;
+                  const cost = payload.costUsd as number | undefined;
+                  metrics = `${tIn ?? 0}↑ ${tOut ?? 0}↓ · $${(cost ?? 0).toFixed(5)} · ${lat ?? 0}ms`;
+                } else if (lat !== undefined) {
+                  metrics = `${lat}ms`;
+                }
+              }
+
+              return (
+                <li key={a.id} className="mb-2 ml-2">
+                  <span className="absolute -left-1 mt-1.5 h-2 w-2 rounded-full border border-white bg-slate-300" />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className={`rounded px-1 py-0.5 font-mono text-[10px] font-medium ${severityClass}`}>
+                      {a.eventType}
+                    </span>
+                    <span className="text-[10px] text-slate-400">{new Date(a.createdAt).toLocaleTimeString()}</span>
+                    {metrics && <span className="font-mono text-[10px] text-violet-600">· {metrics}</span>}
+                  </div>
+                  {a.message && <p className="mt-0.5 text-[11px] leading-snug text-slate-600">{a.message}</p>}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </div>
+
+      {/* Footer actions */}
+      {((run._count?.candidates ?? 0) > 0 || canDelete) && (
+        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2">
+          <div>
+            {(run._count?.candidates ?? 0) > 0 && (
+              <button
+                onClick={onViewResults}
+                className="text-xs font-medium text-violet-600 hover:text-violet-800"
+              >
+                {t('agents.workbench.runDetail.viewResults', 'View results →')}
+              </button>
+            )}
+          </div>
+          {canDelete && (
+            <button
+              disabled={deleting}
+              onClick={async () => {
+                if (!window.confirm(t('agents.workbench.runDetail.confirmDelete', 'Delete this run and all its data? This cannot be undone.'))) return;
+                setDeleting(true);
+                try {
+                  await onDelete();
+                } catch {
+                  setDeleting(false);
+                }
+              }}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              {deleting
+                ? t('common.deleting', 'Deleting…')
+                : t('agents.workbench.runDetail.delete', 'Delete')}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -823,7 +1261,11 @@ function LiveRunCard({
   // first poll returns. Avoids the "header-only orphan" state that previously
   // showed just "运行中 0ms" with no body.
   const elapsed = progress?.elapsedMs ?? 0;
-  const live = progress?.live ?? { scored: 0, matched: 0, errors: 0, sourceHits: 0 };
+  const live = progress?.live ?? {
+    scored: 0, matched: 0, errors: 0, sourceHits: 0,
+    totalPool: 0, processed: 0, remaining: 0,
+    model: null as string | null, provider: null as string | null,
+  };
   const last = progress?.lastActivity ?? null;
   const hasProgress = progress !== null;
 
@@ -844,10 +1286,39 @@ function LiveRunCard({
           {t(`agents.workbench.drawer.runStatusLabel.${run.status}`, run.status)}
         </span>
         <span className="text-[11px] text-slate-500">· {run.triggeredBy}</span>
+        {live.model && (
+          <span className="rounded-md bg-slate-900 px-1.5 py-0.5 text-[10px] font-medium text-white">
+            {live.model}
+          </span>
+        )}
         <span className="ml-auto font-mono text-xs text-violet-700">
           {formatElapsed(elapsed)}
         </span>
       </div>
+
+      {/* Pool progress bar */}
+      {live.totalPool > 0 && (
+        <div className="border-b border-violet-100 bg-violet-50/30 px-4 py-2">
+          <div className="mb-1 flex items-center justify-between text-[10px]">
+            <span className="font-medium text-slate-700">
+              {t('agents.workbench.drawer.live.poolProgress', '{{done}}/{{total}} resumes processed · {{remaining}} remaining', {
+                done: live.processed,
+                total: live.totalPool,
+                remaining: live.remaining,
+              })}
+            </span>
+            <span className="font-semibold text-emerald-700">
+              {live.matched} {t('agents.workbench.drawer.live.matched', 'matched')}
+            </span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-violet-100">
+            <div
+              className="h-full rounded-full bg-violet-500 transition-all duration-500"
+              style={{ width: `${Math.min(100, (live.processed / live.totalPool) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Body — always renders, even before the first poll returns */}
       <div className="px-4 py-3">

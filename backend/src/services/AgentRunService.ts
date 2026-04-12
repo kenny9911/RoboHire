@@ -248,6 +248,11 @@ async function executeRun(runId: string, agentId: string, signal: AbortSignal): 
 
       for (const mode of modes) {
         if (signal.aborted) throw new CancelledError();
+        // Out-of-process cancel check: an admin force-cancel or watchdog
+        // sweep flips the DB row directly and may not have access to the
+        // in-memory AbortController. Catch that here at the source-mode
+        // boundary so the executor stops chewing tokens.
+        if (await isRunCancelledInDb(runId)) throw new CancelledError();
 
         if (mode === 'instant_search') {
           const r = await runInstantSearch(agent, runId, signal, runCtx);
@@ -292,8 +297,12 @@ async function executeRun(runId: string, agentId: string, signal: AbortSignal): 
       ...(runCtx.icpVersion != null ? { icpVersion: runCtx.icpVersion } : {}),
     };
 
-    await prisma.agentRun.update({
-      where: { id: runId },
+    // Guarded write — only flip to 'completed' if the row is still in a
+    // pre-terminal state. If the cancel endpoint or watchdog beat us to
+    // it (race window between the LLM batch finishing and this update),
+    // their authoritative status stays put.
+    await prisma.agentRun.updateMany({
+      where: { id: runId, status: { in: ['queued', 'running'] } },
       data: {
         status: 'completed',
         completedAt,
@@ -331,8 +340,13 @@ async function executeRun(runId: string, agentId: string, signal: AbortSignal): 
     const cancelled = err instanceof CancelledError || signal.aborted;
     const errorMsg = err instanceof Error ? err.message : String(err);
 
-    await prisma.agentRun.update({
-      where: { id: runId },
+    // Use updateMany with a status guard so we don't overwrite an already-
+    // terminal row written by the cancel endpoint or the watchdog. Prevents
+    // races where the user clicked cancel (DB → 'cancelled') and then the
+    // executor's catch block fired before the AbortController took effect —
+    // without the guard, this `update` would flip the row back to 'failed'.
+    await prisma.agentRun.updateMany({
+      where: { id: runId, status: { in: ['queued', 'running'] } },
       data: {
         status: cancelled ? 'cancelled' : 'failed',
         completedAt: new Date(),
@@ -732,6 +746,26 @@ class CancelledError extends Error {
   constructor() {
     super('Cancelled');
     this.name = 'CancelledError';
+  }
+}
+
+/**
+ * Out-of-process cancel detection. The in-memory AbortController only
+ * catches cancels initiated by *this* worker process. An admin force-cancel,
+ * a watchdog sweep, or a cancel routed through a sibling worker writes the
+ * status directly to the DB. We poll between source-mode boundaries so the
+ * executor stops as soon as it sees a terminal status.
+ */
+async function isRunCancelledInDb(runId: string): Promise<boolean> {
+  try {
+    const row = await prisma.agentRun.findUnique({
+      where: { id: runId },
+      select: { status: true },
+    });
+    if (!row) return true; // row deleted out from under us → bail
+    return row.status === 'cancelled' || row.status === 'failed';
+  } catch {
+    return false;
   }
 }
 

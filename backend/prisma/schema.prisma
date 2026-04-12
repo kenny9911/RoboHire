@@ -869,6 +869,12 @@ model Agent {
   totalRejected  Int @default(0)
   totalContacted Int @default(0)
 
+  // Calibration loop — recruiter must approve 3 consecutive profiles before
+  // the agent goes autonomous. See docs/agent-sourcing-redesign.md §2.
+  calibrationState       String    @default("pending") // pending | calibrating | calibrated
+  consecutiveLikes       Int       @default(0)
+  calibrationCompletedAt DateTime?
+
   lastRunAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -901,6 +907,11 @@ model AgentCandidate {
   status         String    @default("pending") // pending, liked, disliked, invited, contacted, messaged, interviewed, hired, rejected, archived
   outreachSentAt DateTime?
   notes          String?
+
+  // Structured rejection feedback — fuels the next ICP regeneration.
+  // See docs/agent-sourcing-redesign.md §3.
+  rejectionReason String?  @db.Text
+  rejectionTags   String[] @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -936,6 +947,13 @@ model AgentRun {
   avgLatencyMs Int   @default(0) // mean per-call latency
   durationMs   Int   @default(0) // total wall-clock (completedAt - startedAt)
 
+  // Heartbeat + watchdog (admin-agent-manager-prd §6, §7).
+  // Updated by AgentActivityLogger on every event with a runId so the
+  // watchdog can detect runs that have stopped progressing.
+  lastHeartbeatAt DateTime?
+  swept           Boolean   @default(false) // true if force-failed by sweep
+  sweepReason     String? // 'boot' | 'watchdog' | 'admin' | null
+
   createdAt DateTime @default(now())
 
   agent      Agent              @relation(fields: [agentId], references: [id], onDelete: Cascade)
@@ -945,6 +963,7 @@ model AgentRun {
   @@index([agentId, createdAt])
   @@index([status])
   @@index([costUsd])
+  @@index([status, lastHeartbeatAt])
 }
 
 model AgentCriteriaPreset {

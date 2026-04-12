@@ -2093,7 +2093,9 @@
       "interviewRoom": "面試房間",
       "agents": "Agents",
       "agentDetail": "Agent 詳情",
-      "interviewHub": "面試庫"
+      "interviewHub": "面試庫",
+      "agentManager": "Agent 管理",
+      "readOnly": "唯讀"
     },
     "dashboard": {
       "welcome": "歡迎回來",
@@ -4262,50 +4264,156 @@
       "duration": "耗時"
     },
     "memory": {
-        "users": "有記憶資料的使用者",
-        "searchPlaceholder": "依電郵或姓名搜尋…",
-        "showingN": "顯示 {{shown}} / {{total}} 位使用者",
-        "noUsers": "無符合使用者",
-        "pickUser": "請選擇使用者以檢視其記憶資料",
-        "interactions": "次互動",
-        "breakGlass": "破窗存取 · 已稽核",
-        "tabs": {
-          "profile": "設定檔",
-          "memories": "記憶",
-          "interactions": "互動",
-          "audit": "稽核"
-        },
-        "signalsLearned": "學習訊號",
-        "agents": "代理",
-        "lastRebuilt": "最近重建",
-        "topSkills": "主要技能",
-        "topAntiSkills": "負面技能",
-        "topLocations": "主要地點",
-        "topIndustries": "主要產業",
-        "rebuild": "重建設定檔",
-        "rebuilding": "重建中…",
-        "reset": "重置設定檔",
-        "confirmReset": "確定要重置此使用者的記憶設定檔嗎？此操作無法復原。",
-        "buildProfile": "立即建立設定檔",
-        "noProfile": "此使用者尚無招募設定檔。",
-        "noMemories": "此使用者尚無記憶條目。",
-        "noInteractions": "尚未擷取任何互動事件。",
-        "noAudit": "暫無稽核記錄。",
-        "auditHint": "每一次管理員對此使用者資料的操作都會記錄於此。稽核條目不可變更。",
-        "lastSeen": "最近使用",
-        "expires": "過期",
-        "confirmDelete": "確定要刪除此記憶條目嗎？稽核記錄會保留。",
-        "saveFailed": "儲存失敗",
-        "editModal": {
-          "title": "編輯記憶",
-          "warning": "這是一次破窗編輯。操作、前後內容、以及可選原因都會記入不可變的稽核記錄。",
-          "content": "內容",
-          "weight": "權重（0-10）",
-          "reason": "原因（可選，會記入稽核記錄）",
-          "reasonPlaceholder": "例：support ticket #1234，更正過時記憶"
-        }
+      "users": "有記憶資料的使用者",
+      "searchPlaceholder": "依電郵或姓名搜尋…",
+      "showingN": "顯示 {{shown}} / {{total}} 位使用者",
+      "noUsers": "無符合使用者",
+      "pickUser": "請選擇使用者以檢視其記憶資料",
+      "interactions": "次互動",
+      "breakGlass": "破窗存取 · 已稽核",
+      "tabs": {
+        "profile": "設定檔",
+        "memories": "記憶",
+        "interactions": "互動",
+        "audit": "稽核"
+      },
+      "signalsLearned": "學習訊號",
+      "agents": "代理",
+      "lastRebuilt": "最近重建",
+      "topSkills": "主要技能",
+      "topAntiSkills": "負面技能",
+      "topLocations": "主要地點",
+      "topIndustries": "主要產業",
+      "rebuild": "重建設定檔",
+      "rebuilding": "重建中…",
+      "reset": "重置設定檔",
+      "confirmReset": "確定要重置此使用者的記憶設定檔嗎？此操作無法復原。",
+      "buildProfile": "立即建立設定檔",
+      "noProfile": "此使用者尚無招募設定檔。",
+      "noMemories": "此使用者尚無記憶條目。",
+      "noInteractions": "尚未擷取任何互動事件。",
+      "noAudit": "暫無稽核記錄。",
+      "auditHint": "每一次管理員對此使用者資料的操作都會記錄於此。稽核條目不可變更。",
+      "lastSeen": "最近使用",
+      "expires": "過期",
+      "confirmDelete": "確定要刪除此記憶條目嗎？稽核記錄會保留。",
+      "saveFailed": "儲存失敗",
+      "editModal": {
+        "title": "編輯記憶",
+        "warning": "這是一次破窗編輯。操作、前後內容、以及可選原因都會記入不可變的稽核記錄。",
+        "content": "內容",
+        "weight": "權重（0-10）",
+        "reason": "原因（可選，會記入稽核記錄）",
+        "reasonPlaceholder": "例：support ticket #1234，更正過時記憶"
       }
-  
+    },
+    "agentManager": {
+      "title": "Agent 管理",
+      "heading": "Agent 管理",
+      "subheading": "AI Agent 全域控制中心。",
+      "forbidden": {
+        "title": "僅限管理員",
+        "body": "您需要管理員或內部帳號才能存取 Agent 管理。"
+      },
+      "tabs": {
+        "agents": "Agent 清單",
+        "runs": "執行紀錄",
+        "cost": "成本"
+      },
+      "summary": {
+        "totalAgents": "Agent 數",
+        "activeAgents": "活躍 Agent",
+        "liveRuns": "執行中",
+        "staleRuns": "殭屍執行",
+        "todayRuns": "今日 · 執行",
+        "todayCost": "今日 · 花費",
+        "todayTokens": "今日 · Token",
+        "totalRuns": "執行總數",
+        "runSweep": "執行清掃",
+        "sweeping": "清掃中…",
+        "sweptN": "已清掃 {{n}} 個殭屍執行",
+        "sweepFailed": "清掃失敗",
+        "sweepHint": "清掃所有 {{n}} 分鐘內無心跳的執行。"
+      },
+      "filters": {
+        "search": "搜尋",
+        "searchPh": "名稱或描述…",
+        "status": "狀態",
+        "calibration": "校準狀態",
+        "stuckOnly": "僅顯示殭屍",
+        "staleOnly": "僅顯示殭屍",
+        "durationGt": "時長 > (秒)",
+        "costGt": "花費 > ($)",
+        "any": "全部",
+        "totalRows": "共 {{n}} 個 Agent",
+        "totalRunRows": "共 {{n}} 個執行"
+      },
+      "bulk": {
+        "selected": "已選 {{n}} 項",
+        "clear": "清除",
+        "partial": "{{ok}} 成功, {{failed}} 失敗",
+        "failed": "批次操作失敗",
+        "confirmDelete": "永久刪除 {{n}} 個 Agent?此操作無法復原。"
+      },
+      "actions": {
+        "cancel": "取消執行",
+        "markFailed": "標記失敗…",
+        "pause": "暫停",
+        "unpause": "恢復",
+        "delete": "刪除",
+        "forceRun": "強制重跑"
+      },
+      "cols": {
+        "name": "名稱",
+        "owner": "擁有者",
+        "status": "狀態",
+        "calibration": "校準",
+        "live": "當前執行",
+        "stats": "候選池",
+        "lastRun": "上次執行",
+        "agent": "Agent",
+        "runStatus": "狀態",
+        "duration": "時長",
+        "cost": "花費",
+        "tokens": "Token",
+        "candidates": "候選",
+        "heartbeat": "最後心跳",
+        "created": "建立"
+      },
+      "table": {
+        "empty": "當前篩選下沒有 Agent。",
+        "emptyRuns": "當前篩選下沒有執行紀錄。"
+      },
+      "reason": {
+        "markFailedTitle": "請說明標記失敗的原因",
+        "placeholder": "例如:行程已重啟,執行器已經死亡。"
+      },
+      "cost": {
+        "window": {
+          "today": "今日",
+          "7d": "最近 7 天",
+          "30d": "最近 30 天"
+        },
+        "totalRuns": "執行",
+        "totalCost": "花費",
+        "totalTokens": "Token",
+        "llmCalls": "LLM 呼叫",
+        "byDay": "每日花費",
+        "byUser": "依擁有者",
+        "byAgentTitle": "依 Agent",
+        "noData": "該時間段內無資料。",
+        "col": {
+          "name": "名稱",
+          "runs": "執行",
+          "cost": "花費",
+          "tokens": "Token"
+        }
+      },
+      "readOnly": {
+        "title": "唯讀檢視",
+        "body": "內部使用者可以檢視整個 Agent 群體,但無法執行批次操作、取消執行或清掃。若需介入請聯絡管理員。"
+      }
+    }
   },
   "agents": {
     "title": "Agents",
@@ -4395,6 +4503,16 @@
           "warmingUp": "正在準備…"
         }
       },
+      "runDetail": {
+        "duration": "耗時",
+        "candidates": "候選人",
+        "events": "事件",
+        "cost": "費用",
+        "failReason": "失敗原因：",
+        "viewResults": "查看結果 →",
+        "delete": "刪除",
+        "confirmDelete": "刪除此運行記錄及所有相關資料？此操作不可撤銷。"
+      },
       "review": {
         "title": "審閱候選人",
         "introTitle": "我找到了一些初步的匹配結果，請審閱這些候選人並分享你的意見。",
@@ -4418,9 +4536,9 @@
           "education": "教育背景",
           "skills": "技能"
         },
-        "noExperience": "未從該履歷中解析到工作經歷。",
-        "noEducation": "未從該履歷中解析到教育背景。",
-        "noSkills": "未從該履歷中解析到技能資訊。",
+        "noExperience": "Agent 工作中,工作經歷即將呈現。",
+        "noEducation": "Agent 工作中,教育背景即將呈現。",
+        "noSkills": "Agent 工作中,技能圖譜即將呈現。",
         "unknownCompany": "未知公司",
         "skillGroups": {
           "all": "技能",
@@ -4434,7 +4552,20 @@
         },
         "addCriteria": "新增標準",
         "editCriteria": "編輯標準",
-        "editCriteriaHint": "使用"
+        "editCriteriaHint": "使用",
+        "status": {
+          "liked": "已喜歡",
+          "disliked": "已略過",
+          "contacted": "已聯絡",
+          "pending": "待處理",
+          "invited": "已邀請"
+        },
+        "loadingExperience": "Agent 正在整理工作經歷…",
+        "workingExperience": "Agent 工作中,工作經歷即將呈現。",
+        "loadingEducation": "Agent 正在整理教育背景…",
+        "workingEducation": "Agent 工作中,教育背景即將呈現。",
+        "loadingSkills": "Agent 正在梳理技能圖譜…",
+        "workingSkills": "Agent 工作中,技能圖譜即將呈現。"
       },
       "criteria": {
         "title": "評估標準",
@@ -4692,17 +4823,22 @@
       "approved": "已通過",
       "rejected": "已拒絕",
       "contacted": "已聯繫",
-      "all": "全部"
+      "all": "全部",
+      "liked": "已喜歡",
+      "skipped": "已略過"
     },
     "stat": {
       "sourced": "已發現",
       "approved": "已通過",
       "rejected": "已拒絕",
-      "contacted": "已聯繫"
+      "contacted": "已聯繫",
+      "liked": "已喜歡",
+      "skipped": "已略過"
     },
     "candidateStatus": {
       "contacted": "已聯繫",
-      "rejected": "已拒絕"
+      "rejected": "已拒絕",
+      "disliked": "已略過"
     },
     "pending": "待審核",
     "disapproved": "未通過",
@@ -4720,7 +4856,54 @@
     "collaborators": "協作者",
     "collaboratorsDesc": "這些團隊成員將與您一起參與此專案",
     "noCollaborators": "未選擇協作者",
-    "saveChanges": "儲存變更"
+    "saveChanges": "儲存變更",
+    "calibration": {
+      "headline": "校準中 · 已通過 {{n}} / {{total}} 位優質候選人",
+      "subtext": "拒絕一位會重置連擊,系統將為你帶來 3 位新候選人。",
+      "pending": "等待首次執行",
+      "calibrating": "校準中",
+      "calibrated": "已啟用 · 正在尋源"
+    },
+    "missionControl": {
+      "reviewPending": "審閱 {{n}} 位待處理候選人",
+      "openWorkbench": "開啟工作台",
+      "runAgain": "再次執行",
+      "running": "執行中…",
+      "runAgainHint": "(略過已看過的)",
+      "latestRun": "最近一次執行",
+      "runSummary": "已篩選 {{sourced}} 份 · 命中 {{matched}} 份 · 由 {{by}} 觸發",
+      "openRun": "開啟執行 →"
+    },
+    "whyMatched": {
+      "title": "為什麼我們匹配了這位候選人",
+      "good": "良好匹配",
+      "potential": "潛在匹配",
+      "concern": "需要探討",
+      "strengths": "優勢",
+      "areasToExplore": "待了解的面向"
+    },
+    "rejection": {
+      "title": "幫助 Alex 學習 — 為什麼這位不合適?",
+      "subtitle": "你提供的細節越多,下一批就越精準。",
+      "about": "略過 {{name}}",
+      "tagsLabel": "選擇所有適用項",
+      "tags": {
+        "wrong_industry": "產業不符",
+        "wrong_location": "地點不符",
+        "too_junior": "資歷不足",
+        "too_senior": "資歷過高",
+        "missing_key_skill": "缺乏關鍵技能",
+        "wrong_background": "背景不符",
+        "culture_mismatch": "文化不符",
+        "other": "其他"
+      },
+      "reasonLabel": "告訴我們更多",
+      "reasonPlaceholder": "哪裡不對或缺什麼?例如:他們有 HVAC 經驗,但只做住宅 — 我們需要商業。",
+      "hint": "至少選擇一個標籤,或填寫 10 個以上字元的回饋。",
+      "submit": "略過此候選人"
+    },
+    "like": "喜歡",
+    "review": "審閱"
   },
   "interviewHub": {
     "title": "面試庫",

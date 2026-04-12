@@ -61,6 +61,21 @@ export interface RunCandidateResume {
   parsedData?: ParsedResumeData | null;
 }
 
+export interface WhyMatchedReason {
+  type: 'good' | 'potential' | 'concern';
+  title: string;
+  detail: string;
+}
+
+export interface WhyMatched {
+  reasons: WhyMatchedReason[];
+  strengths: string[];
+  areasToExplore: string[];
+  skillMap: { matched: string[]; missing: string[]; extra: string[] };
+  overallVerdict: string;
+  grade: string;
+}
+
 export interface RunCandidate {
   id: string;
   agentId: string;
@@ -76,6 +91,15 @@ export interface RunCandidate {
   resumeId: string | null;
   resume?: RunCandidateResume | null;
   createdAt: string;
+}
+
+/** Extract the structured why-matched payload from a candidate's metadata. */
+export function extractWhyMatched(candidate: { metadata?: unknown } | null | undefined): WhyMatched | null {
+  if (!candidate || !candidate.metadata || typeof candidate.metadata !== 'object') return null;
+  const meta = candidate.metadata as Record<string, unknown>;
+  const wm = meta.whyMatched;
+  if (!wm || typeof wm !== 'object') return null;
+  return wm as WhyMatched;
 }
 
 export interface RunActivity {

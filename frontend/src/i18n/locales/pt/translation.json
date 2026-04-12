@@ -1689,7 +1689,9 @@
       "interviewRoom": "Sala de Entrevista",
       "agents": "Agentes",
       "agentDetail": "Detalhe do Agente",
-      "interviewHub": "Central de Entrevistas"
+      "interviewHub": "Central de Entrevistas",
+      "agentManager": "Gerenciador de agentes",
+      "readOnly": "ver"
     },
     "dashboard": {
       "welcome": "Bem-vindo de volta",
@@ -3742,50 +3744,156 @@
       "duration": "duração"
     },
     "memory": {
-        "users": "Usuários com dados de memória",
-        "searchPlaceholder": "Buscar por email ou nome…",
-        "showingN": "{{shown}} de {{total}} usuários",
-        "noUsers": "Nenhum usuário correspondente",
-        "pickUser": "Selecione um usuário para ver seus dados de memória",
-        "interactions": "interações",
-        "breakGlass": "BREAK-GLASS · AUDITADO",
-        "tabs": {
-          "profile": "Perfil",
-          "memories": "Memórias",
-          "interactions": "Interações",
-          "audit": "Auditoria"
-        },
-        "signalsLearned": "Sinais aprendidos",
-        "agents": "Agentes",
-        "lastRebuilt": "Última reconstrução",
-        "topSkills": "Principais habilidades",
-        "topAntiSkills": "Anti-habilidades",
-        "topLocations": "Localizações principais",
-        "topIndustries": "Indústrias principais",
-        "rebuild": "Reconstruir perfil",
-        "rebuilding": "Reconstruindo…",
-        "reset": "Redefinir perfil",
-        "confirmReset": "Redefinir o perfil de memória deste usuário? Não pode ser desfeito.",
-        "buildProfile": "Criar perfil agora",
-        "noProfile": "Sem perfil de recrutador ainda.",
-        "noMemories": "Sem memórias para este usuário.",
-        "noInteractions": "Sem eventos de interação capturados.",
-        "noAudit": "Sem entradas de auditoria.",
-        "auditHint": "Toda ação de admin sobre os dados deste usuário é registrada aqui. Entradas imutáveis.",
-        "lastSeen": "Visto",
-        "expires": "expira",
-        "confirmDelete": "Excluir esta memória? A auditoria manterá o registro.",
-        "saveFailed": "Falha ao salvar",
-        "editModal": {
-          "title": "Editar memória",
-          "warning": "Edição break-glass. A ação, antes/depois e razão opcional ficam em log de auditoria imutável.",
-          "content": "Conteúdo",
-          "weight": "Peso (0-10)",
-          "reason": "Razão (opcional, registrada na auditoria)",
-          "reasonPlaceholder": "ex: ticket de suporte #1234, corrigindo fato obsoleto"
-        }
+      "users": "Usuários com dados de memória",
+      "searchPlaceholder": "Buscar por email ou nome…",
+      "showingN": "{{shown}} de {{total}} usuários",
+      "noUsers": "Nenhum usuário correspondente",
+      "pickUser": "Selecione um usuário para ver seus dados de memória",
+      "interactions": "interações",
+      "breakGlass": "BREAK-GLASS · AUDITADO",
+      "tabs": {
+        "profile": "Perfil",
+        "memories": "Memórias",
+        "interactions": "Interações",
+        "audit": "Auditoria"
+      },
+      "signalsLearned": "Sinais aprendidos",
+      "agents": "Agentes",
+      "lastRebuilt": "Última reconstrução",
+      "topSkills": "Principais habilidades",
+      "topAntiSkills": "Anti-habilidades",
+      "topLocations": "Localizações principais",
+      "topIndustries": "Indústrias principais",
+      "rebuild": "Reconstruir perfil",
+      "rebuilding": "Reconstruindo…",
+      "reset": "Redefinir perfil",
+      "confirmReset": "Redefinir o perfil de memória deste usuário? Não pode ser desfeito.",
+      "buildProfile": "Criar perfil agora",
+      "noProfile": "Sem perfil de recrutador ainda.",
+      "noMemories": "Sem memórias para este usuário.",
+      "noInteractions": "Sem eventos de interação capturados.",
+      "noAudit": "Sem entradas de auditoria.",
+      "auditHint": "Toda ação de admin sobre os dados deste usuário é registrada aqui. Entradas imutáveis.",
+      "lastSeen": "Visto",
+      "expires": "expira",
+      "confirmDelete": "Excluir esta memória? A auditoria manterá o registro.",
+      "saveFailed": "Falha ao salvar",
+      "editModal": {
+        "title": "Editar memória",
+        "warning": "Edição break-glass. A ação, antes/depois e razão opcional ficam em log de auditoria imutável.",
+        "content": "Conteúdo",
+        "weight": "Peso (0-10)",
+        "reason": "Razão (opcional, registrada na auditoria)",
+        "reasonPlaceholder": "ex: ticket de suporte #1234, corrigindo fato obsoleto"
       }
-  
+    },
+    "agentManager": {
+      "title": "Gerenciador de agentes",
+      "heading": "Gerenciador de agentes",
+      "subheading": "Painel de controle para toda a frota de agentes IA.",
+      "forbidden": {
+        "title": "Somente admin",
+        "body": "Você precisa de uma conta de administrador ou interna para acessar o Gerenciador de agentes."
+      },
+      "tabs": {
+        "agents": "Agentes",
+        "runs": "Execuções",
+        "cost": "Custo"
+      },
+      "summary": {
+        "totalAgents": "Agentes",
+        "activeAgents": "Agentes ativos",
+        "liveRuns": "Em execução",
+        "staleRuns": "Travadas",
+        "todayRuns": "Hoje · execuções",
+        "todayCost": "Hoje · gasto",
+        "todayTokens": "Hoje · tokens",
+        "totalRuns": "Total de execuções",
+        "runSweep": "Executar limpeza",
+        "sweeping": "Limpando…",
+        "sweptN": "{{n}} execução(ões) travada(s) recuperada(s)",
+        "sweepFailed": "Limpeza falhou",
+        "sweepHint": "Recupera execuções sem pulso há {{n}} min."
+      },
+      "filters": {
+        "search": "Buscar",
+        "searchPh": "nome ou descrição…",
+        "status": "Status",
+        "calibration": "Calibração",
+        "stuckOnly": "Somente travadas",
+        "staleOnly": "Somente travadas",
+        "durationGt": "Duração > (s)",
+        "costGt": "Custo > ($)",
+        "any": "Qualquer",
+        "totalRows": "{{n}} agente(s)",
+        "totalRunRows": "{{n}} execução(ões)"
+      },
+      "bulk": {
+        "selected": "{{n}} selecionado(s)",
+        "clear": "Limpar",
+        "partial": "{{ok}} com sucesso, {{failed}} falharam",
+        "failed": "Ação em massa falhou",
+        "confirmDelete": "Excluir permanentemente {{n}} agente(s)? Não pode ser desfeito."
+      },
+      "actions": {
+        "cancel": "Cancelar",
+        "markFailed": "Marcar falho…",
+        "pause": "Pausar",
+        "unpause": "Retomar",
+        "delete": "Excluir",
+        "forceRun": "Reexecutar"
+      },
+      "cols": {
+        "name": "Nome",
+        "owner": "Proprietário",
+        "status": "Status",
+        "calibration": "Calibração",
+        "live": "Em execução",
+        "stats": "Pool",
+        "lastRun": "Última execução",
+        "agent": "Agente",
+        "runStatus": "Status",
+        "duration": "Duração",
+        "cost": "Custo",
+        "tokens": "Tokens",
+        "candidates": "Cands",
+        "heartbeat": "Último pulso",
+        "created": "Criado"
+      },
+      "table": {
+        "empty": "Nenhum agente corresponde aos filtros.",
+        "emptyRuns": "Nenhuma execução corresponde aos filtros."
+      },
+      "reason": {
+        "markFailedTitle": "Por que está marcando como falho?",
+        "placeholder": "ex.: processo reiniciado; o executor está morto."
+      },
+      "cost": {
+        "window": {
+          "today": "Hoje",
+          "7d": "Últimos 7 dias",
+          "30d": "Últimos 30 dias"
+        },
+        "totalRuns": "Execuções",
+        "totalCost": "Gasto",
+        "totalTokens": "Tokens",
+        "llmCalls": "Chamadas LLM",
+        "byDay": "Gasto por dia",
+        "byUser": "Por proprietário",
+        "byAgentTitle": "Por agente",
+        "noData": "Sem dados no período.",
+        "col": {
+          "name": "Nome",
+          "runs": "Execuções",
+          "cost": "Custo",
+          "tokens": "Tokens"
+        }
+      },
+      "readOnly": {
+        "title": "Visualização somente leitura",
+        "body": "Usuários internos podem ver toda a frota, mas não podem executar ações em massa, cancelar execuções ou fazer limpeza. Peça a um administrador se precisar intervir."
+      }
+    }
   },
   "agents": {
     "title": "Agentes",
@@ -3875,6 +3983,16 @@
           "warmingUp": "Iniciando…"
         }
       },
+      "runDetail": {
+        "duration": "Duração",
+        "candidates": "Candidatos",
+        "events": "Eventos",
+        "cost": "Custo",
+        "failReason": "Motivo da falha:",
+        "viewResults": "Ver resultados →",
+        "delete": "Excluir",
+        "confirmDelete": "Excluir esta execução e todos os seus dados? Esta ação não pode ser desfeita."
+      },
       "review": {
         "title": "Revisar perfis",
         "introTitle": "Encontrei correspondências iniciais. Revise estes perfis e compartilhe seu feedback.",
@@ -3898,9 +4016,9 @@
           "education": "Educação",
           "skills": "Habilidades"
         },
-        "noExperience": "Nenhum dado de experiência extraído deste currículo.",
-        "noEducation": "Nenhum dado de educação extraído deste currículo.",
-        "noSkills": "Nenhum dado de habilidades extraído deste currículo.",
+        "noExperience": "O Agente está nisso — o histórico profissional aparecerá aqui.",
+        "noEducation": "O Agente está nisso — a educação aparecerá aqui.",
+        "noSkills": "O Agente está nisso — o mapa de habilidades aparecerá aqui.",
         "unknownCompany": "Desconhecido",
         "skillGroups": {
           "all": "Habilidades",
@@ -3914,7 +4032,20 @@
         },
         "addCriteria": "Adicionar critérios",
         "editCriteria": "Editar critérios",
-        "editCriteriaHint": "Marque critérios como obrigatórios ou reordene por importância com "
+        "editCriteriaHint": "Marque critérios como obrigatórios ou reordene por importância com ",
+        "status": {
+          "liked": "Curtido",
+          "disliked": "Ignorado",
+          "contacted": "Contatado",
+          "pending": "Pendente",
+          "invited": "Convidado"
+        },
+        "loadingExperience": "O Agente está reunindo o histórico profissional…",
+        "workingExperience": "O Agente está nisso — o histórico profissional aparecerá aqui.",
+        "loadingEducation": "O Agente está reunindo dados de educação…",
+        "workingEducation": "O Agente está nisso — a educação aparecerá aqui.",
+        "loadingSkills": "O Agente está mapeando as habilidades…",
+        "workingSkills": "O Agente está nisso — o mapa de habilidades aparecerá aqui."
       },
       "criteria": {
         "title": "Critérios",
@@ -4172,17 +4303,22 @@
       "approved": "Aprovados",
       "rejected": "Rejeitados",
       "contacted": "Contatados",
-      "all": "Todos"
+      "all": "Todos",
+      "liked": "Curtidos",
+      "skipped": "Ignorados"
     },
     "stat": {
       "sourced": "Encontrados",
       "approved": "Aprovados",
       "rejected": "Rejeitados",
-      "contacted": "Contatados"
+      "contacted": "Contatados",
+      "liked": "Curtidos",
+      "skipped": "Ignorados"
     },
     "candidateStatus": {
       "contacted": "Contatado",
-      "rejected": "Rejeitado"
+      "rejected": "Rejeitado",
+      "disliked": "Ignorado"
     },
     "pending": "Pendente",
     "disapproved": "Reprovado",
@@ -4200,7 +4336,54 @@
     "collaborators": "Colaboradores",
     "collaboratorsDesc": "Estes membros da equipe serão atribuídos a este projeto com você",
     "noCollaborators": "Nenhum colaborador selecionado",
-    "saveChanges": "Salvar Alterações"
+    "saveChanges": "Salvar Alterações",
+    "calibration": {
+      "headline": "Calibrando · aprove {{n}} de {{total}} perfis adequados",
+      "subtext": "Pular um reinicia a sequência e traz 3 novos perfis.",
+      "pending": "Aguardando primeira execução",
+      "calibrating": "Calibrando",
+      "calibrated": "Ativo · buscando"
+    },
+    "missionControl": {
+      "reviewPending": "Revisar {{n}} perfil(is) pendentes",
+      "openWorkbench": "Abrir painel",
+      "runAgain": "Executar novamente",
+      "running": "Executando…",
+      "runAgainHint": "(ignora os já vistos)",
+      "latestRun": "Última execução",
+      "runSummary": "{{sourced}} analisados · {{matched}} encontrados · acionado por {{by}}",
+      "openRun": "Abrir execução →"
+    },
+    "whyMatched": {
+      "title": "Por que combinamos este perfil",
+      "good": "Boa correspondência",
+      "potential": "Possível correspondência",
+      "concern": "Vale a pena explorar",
+      "strengths": "Pontos fortes",
+      "areasToExplore": "Áreas a explorar"
+    },
+    "rejection": {
+      "title": "Ajude Alex a aprender — por que não é uma boa opção?",
+      "subtitle": "Quanto mais detalhes você compartilhar, mais inteligente será o próximo lote.",
+      "about": "Pulando {{name}}",
+      "tagsLabel": "Selecione tudo o que se aplica",
+      "tags": {
+        "wrong_industry": "Indústria errada",
+        "wrong_location": "Local errado",
+        "too_junior": "Muito júnior",
+        "too_senior": "Muito sênior",
+        "missing_key_skill": "Faltam habilidades-chave",
+        "wrong_background": "Trajetória errada",
+        "culture_mismatch": "Incompatibilidade cultural",
+        "other": "Outro"
+      },
+      "reasonLabel": "Conte-nos mais",
+      "reasonPlaceholder": "O que está faltando ou errado? Ex.: têm experiência em HVAC mas apenas residencial — precisamos de comercial.",
+      "hint": "Escolha pelo menos uma etiqueta ou escreva 10+ caracteres de feedback.",
+      "submit": "Pular perfil"
+    },
+    "like": "Curtir",
+    "review": "Revisar"
   },
   "interviewHub": {
     "title": "Central de Entrevistas",

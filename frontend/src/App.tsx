@@ -51,6 +51,7 @@ const UsageDashboard = lazy(() => import('./pages/UsageDashboard'));
 const CallDetail = lazy(() => import('./pages/CallDetail'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminAgentsTerminal = lazy(() => import('./pages/AdminAgentsTerminal'));
+const AdminAgentManager = lazy(() => import('./pages/AdminAgentManager'));
 const AdminLiveTerminal = lazy(() => import('./pages/AdminLiveTerminal'));
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
 const ResumeDetail = lazy(() => import('./pages/ResumeDetail'));
@@ -159,6 +160,7 @@ function App() {
               <Route path="admin" element={<AdminDashboard />} />
               <Route path="admin/users/:userId" element={<AdminUserDetail />} />
               <Route path="admin/agents-terminal" element={<AdminAgentsTerminal />} />
+              <Route path="admin/agent-manager" element={<AdminAgentManager />} />
             </Route>
 
             {/* Legacy dashboard redirects to /product */}

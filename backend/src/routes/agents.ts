@@ -456,11 +456,20 @@ router.get('/:id/candidates', requireAuth, async (req, res) => {
     const [candidates, total] = await Promise.all([
       prisma.agentCandidate.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ matchScore: 'desc' }, { createdAt: 'desc' }],
         take,
         skip,
         include: {
-          resume: { select: { id: true, name: true, currentRole: true, email: true } },
+          // Match the resumeListSelect used by the SSE stream so the Results
+          // tab can render identical cards regardless of which source loaded
+          // them. parsedData is intentionally excluded — the review view
+          // lazy-loads it via /:id/candidates/:candidateId/details.
+          resume: {
+            select: {
+              id: true, name: true, currentRole: true, email: true, phone: true,
+              tags: true, summary: true, highlight: true, experienceYears: true,
+            },
+          },
         },
       }),
       prisma.agentCandidate.count({ where }),
@@ -497,14 +506,37 @@ router.get('/:id/candidates/:candidateId/details', requireAuth, async (req, res)
       },
     });
     if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
-    res.json({ data: candidate });
+
+    // Surface the structured "why we matched" payload at the top level for
+    // easy frontend consumption — it lives inside metadata.whyMatched.
+    const meta = (candidate.metadata ?? null) as Record<string, unknown> | null;
+    const whyMatched = meta && typeof meta === 'object' && 'whyMatched' in meta ? meta.whyMatched : null;
+
+    res.json({ data: { ...candidate, whyMatched } });
   } catch (err) {
     console.error('Failed to get candidate details:', err);
     res.status(500).json({ error: 'Failed to get candidate details' });
   }
 });
 
-// ── Update candidate status (approve/reject) ──
+// Map legacy status values to the canonical liked/disliked taxonomy used by
+// the workbench drawer + IdealProfileService. The old `approved`/`rejected`
+// labels are still accepted from older clients for one release.
+function normalizeCandidateStatus(s: unknown): string | undefined {
+  if (typeof s !== 'string') return undefined;
+  if (s === 'approved') return 'liked';
+  if (s === 'rejected') return 'disliked';
+  return s;
+}
+
+const CALIBRATION_THRESHOLD = 3;
+
+// ── Update candidate status (like / dislike / contact) ──
+//
+// This endpoint enforces the calibration loop: 3 consecutive likes graduate
+// the agent to autonomous sourcing; any dislike resets the counter and
+// (synchronously) records the rejection feedback. The fresh batch of 3 new
+// candidates is fired off asynchronously so the UI doesn't block.
 router.patch('/:id/candidates/:candidateId', requireAuth, async (req, res) => {
   try {
     const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
@@ -518,19 +550,48 @@ router.patch('/:id/candidates/:candidateId', requireAuth, async (req, res) => {
     });
     if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
 
-    const { status, notes } = req.body;
+    const { notes, rejectionReason, rejectionTags } = req.body;
+    const status = normalizeCandidateStatus(req.body.status);
+
     const data: any = {};
     if (status !== undefined) data.status = status;
     if (notes !== undefined) data.notes = notes;
+    if (rejectionReason !== undefined) data.rejectionReason = rejectionReason;
+    if (Array.isArray(rejectionTags)) {
+      data.rejectionTags = rejectionTags.filter((t): t is string => typeof t === 'string');
+    }
 
-    // Update agent counters
+    // Calibration + counter side-effects only when status actually changes.
+    let calibrationJustCompleted = false;
+    let needsFreshBatch = false;
     if (status && status !== candidate.status) {
-      const inc: any = {};
-      if (status === 'approved') inc.totalApproved = { increment: 1 };
-      if (status === 'rejected') inc.totalRejected = { increment: 1 };
-      if (status === 'contacted') inc.totalContacted = { increment: 1 };
-      if (Object.keys(inc).length > 0) {
-        await prisma.agent.update({ where: { id: agent.id }, data: inc });
+      const agentUpdate: any = {};
+      // Legacy stat counters (kept in sync — UI still reads them)
+      if (status === 'liked') agentUpdate.totalApproved = { increment: 1 };
+      if (status === 'disliked') agentUpdate.totalRejected = { increment: 1 };
+      if (status === 'contacted') agentUpdate.totalContacted = { increment: 1 };
+
+      // Calibration state machine
+      if (agent.calibrationState !== 'calibrated') {
+        if (status === 'liked') {
+          const next = (agent.consecutiveLikes ?? 0) + 1;
+          agentUpdate.consecutiveLikes = next;
+          if (next >= CALIBRATION_THRESHOLD) {
+            agentUpdate.calibrationState = 'calibrated';
+            agentUpdate.calibrationCompletedAt = new Date();
+            calibrationJustCompleted = true;
+          } else {
+            agentUpdate.calibrationState = 'calibrating';
+          }
+        } else if (status === 'disliked') {
+          agentUpdate.consecutiveLikes = 0;
+          agentUpdate.calibrationState = 'calibrating';
+          needsFreshBatch = true;
+        }
+      }
+
+      if (Object.keys(agentUpdate).length > 0) {
+        await prisma.agent.update({ where: { id: agent.id }, data: agentUpdate });
       }
     }
 
@@ -542,10 +603,114 @@ router.patch('/:id/candidates/:candidateId', requireAuth, async (req, res) => {
       },
     });
 
-    res.json({ data: updated });
+    if (calibrationJustCompleted) {
+      // Activity log + (optional future) hand-off to the scheduler
+      void agentActivityLogger.log({
+        agentId: agent.id,
+        actor: `user:${req.user!.id}`,
+        eventType: 'calibration.completed',
+        message: `Agent calibrated after ${CALIBRATION_THRESHOLD} consecutive likes`,
+        payload: { threshold: CALIBRATION_THRESHOLD },
+      });
+    }
+
+    if (needsFreshBatch) {
+      // Fire-and-forget: regenerate ICP from the new dislike + reason, then
+      // kick off a fresh batch run. The UI will poll /runs or open the SSE
+      // stream once the response returns.
+      void (async () => {
+        try {
+          await idealProfileService.generateForAgent(agent.id, { triggeredBy: 'user' });
+        } catch (err) {
+          console.error('[calibration] ICP regen failed:', err);
+        }
+        try {
+          await startAgentRun({
+            agentId: agent.id,
+            triggeredBy: 'user',
+            triggeredById: req.user!.id,
+          });
+        } catch (err) {
+          console.error('[calibration] follow-up run failed:', err);
+        }
+      })();
+    }
+
+    // Return the freshest agent state alongside the candidate so the client
+    // can re-render calibration progress without a second round-trip.
+    const freshAgent = await prisma.agent.findUnique({
+      where: { id: agent.id },
+      select: {
+        id: true,
+        calibrationState: true,
+        consecutiveLikes: true,
+        calibrationCompletedAt: true,
+        totalApproved: true,
+        totalRejected: true,
+        totalContacted: true,
+      },
+    });
+
+    res.json({
+      data: updated,
+      agent: freshAgent,
+      meta: {
+        calibrationJustCompleted,
+        freshBatchTriggered: needsFreshBatch,
+      },
+    });
   } catch (err) {
     console.error('Failed to update candidate:', err);
     res.status(500).json({ error: 'Failed to update candidate' });
+  }
+});
+
+// ── Calibration: explicitly fetch the next batch of profiles ──
+//
+// Used when the recruiter wants more profiles to review without having to
+// dislike one first (e.g. they liked all 3 in the current batch but the
+// agent is still in calibrating state — should normally not happen because
+// the third like graduates them, but kept as a safety valve).
+router.post('/:id/calibration/next-batch', requireAuth, async (req, res) => {
+  try {
+    const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
+    const agent = await prisma.agent.findFirst({ where: accessWhere });
+    if (!agent) return res.status(404).json({ error: 'Agent not found' });
+
+    if (agent.calibrationState === 'calibrated') {
+      return res.status(400).json({
+        error: 'Agent is already calibrated. Use POST /:id/runs for normal runs.',
+      });
+    }
+
+    // Same duplicate-run guard as POST /:id/runs
+    const existing = await prisma.agentRun.findFirst({
+      where: { agentId: agent.id, status: { in: ['queued', 'running'] } },
+      select: { id: true, status: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (existing) {
+      return res.status(409).json({
+        error: 'Agent already has a live run',
+        data: { runId: existing.id, status: existing.status },
+      });
+    }
+
+    const { runId } = await startAgentRun({
+      agentId: agent.id,
+      triggeredBy: 'user',
+      triggeredById: req.user!.id,
+    });
+
+    res.status(201).json({
+      data: {
+        runId,
+        streamUrl: `/api/v1/agents/${agent.id}/runs/${runId}/stream`,
+      },
+    });
+  } catch (err) {
+    console.error('Failed to start calibration batch:', err);
+    res.status(500).json({ error: 'Failed to start calibration batch' });
   }
 });
 
@@ -588,6 +753,25 @@ router.post('/:id/runs', requireAuth, async (req, res) => {
     const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
     const agent = await prisma.agent.findFirst({ where: accessWhere });
     if (!agent) return res.status(404).json({ error: 'Agent not found' });
+
+    // Duplicate-run guard: refuse to start a new run if one is already
+    // queued or running for this agent. Returns the existing run so the
+    // frontend can reconnect to its SSE stream instead of sitting idle.
+    const existing = await prisma.agentRun.findFirst({
+      where: { agentId: agent.id, status: { in: ['queued', 'running'] } },
+      select: { id: true, status: true, startedAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (existing) {
+      return res.status(409).json({
+        error: 'Agent already has a live run',
+        data: {
+          runId: existing.id,
+          status: existing.status,
+          streamUrl: `/api/v1/agents/${agent.id}/runs/${existing.id}/stream`,
+        },
+      });
+    }
 
     const { runId } = await startAgentRun({
       agentId: agent.id,
@@ -675,7 +859,16 @@ router.get('/:id/runs/:runId', requireAuth, async (req, res) => {
   }
 });
 
-// Cancel a running agent run
+// Cancel a running agent run.
+//
+// admin-agent-manager-prd §5 Track A4 — DB-backed cancel:
+//   1. Flip AgentRun.status='cancelled' immediately so the row converges
+//      even if the in-memory AbortController is gone (process restart,
+//      different worker, late cancel after the run already finished).
+//   2. Then call cancelAgentRun() to abort the in-flight controller in this
+//      process. The executor's catch block will see signal.aborted and exit
+//      cleanly; if the row is already at 'cancelled' the catch block's
+//      update is a harmless no-op (it sets the same status again).
 router.post('/:id/runs/:runId/cancel', requireAuth, async (req, res) => {
   try {
     const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
@@ -690,11 +883,65 @@ router.post('/:id/runs/:runId/cancel', requireAuth, async (req, res) => {
       return res.status(400).json({ error: `Cannot cancel run in status: ${run.status}` });
     }
 
-    const cancelled = cancelAgentRun(run.id);
-    res.json({ data: { cancelled } });
+    // (1) Authoritative DB write — converges from the database side even
+    //     when the in-memory map can't help us.
+    await prisma.agentRun.updateMany({
+      where: { id: run.id, status: { in: ['queued', 'running'] } },
+      data: {
+        status: 'cancelled',
+        completedAt: new Date(),
+        error: `Cancelled by user:${req.user!.id}`,
+      },
+    });
+    void agentActivityLogger.log({
+      agentId: agent.id,
+      runId: run.id,
+      actor: `user:${req.user!.id}`,
+      eventType: 'run.cancelled',
+      message: 'Run cancelled by user',
+    });
+
+    // (2) Best-effort in-memory abort so the executor stops chewing tokens
+    //     ASAP rather than waiting for its next batch boundary check.
+    const aborted = cancelAgentRun(run.id);
+    res.json({ data: { cancelled: true, abortedInMemory: aborted } });
   } catch (err) {
     console.error('Failed to cancel run:', err);
     res.status(500).json({ error: 'Failed to cancel run' });
+  }
+});
+
+// Delete a run and its related data (candidates, activity). Admin only.
+router.delete('/:id/runs/:runId', requireAuth, async (req, res) => {
+  try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const accessWhere = await buildAgentAccessWhere(req.user!, req.params.id);
+    const agent = await prisma.agent.findFirst({ where: accessWhere });
+    if (!agent) return res.status(404).json({ error: 'Agent not found' });
+
+    const run = await prisma.agentRun.findFirst({
+      where: { id: req.params.runId, agentId: agent.id },
+    });
+    if (!run) return res.status(404).json({ error: 'Run not found' });
+
+    if (run.status === 'running' || run.status === 'queued') {
+      return res.status(400).json({ error: 'Cannot delete a running run. Cancel it first.' });
+    }
+
+    // Cascade delete: activity logs → candidates → run
+    await prisma.$transaction([
+      prisma.agentActivityLog.deleteMany({ where: { runId: run.id } }),
+      prisma.agentCandidate.deleteMany({ where: { runId: run.id } }),
+      prisma.agentRun.delete({ where: { id: run.id } }),
+    ]);
+
+    res.json({ data: { deleted: true } });
+  } catch (err) {
+    console.error('Failed to delete run:', err);
+    res.status(500).json({ error: 'Failed to delete run' });
   }
 });
 
@@ -993,11 +1240,41 @@ router.get('/:id/runs/:runId/progress', requireAuth, async (req, res) => {
     }
 
     const adminOnly = isAdmin(req.user);
+
+    // Extract model from the first llm.call.completed event
+    let model: string | null = null;
+    let provider: string | null = null;
+    for (const ev of llmCompletedEvents) {
+      const p = (ev.payload ?? {}) as { model?: string; provider?: string };
+      if (p.model) { model = p.model; provider = p.provider ?? null; break; }
+    }
+
+    // Pool progress: total resumes in the pool (from source hit events)
+    // and how many we've processed (scored + rejected_below_threshold).
+    const [hrApplied, belowThreshold] = await Promise.all([
+      prisma.agentActivityLog.findFirst({
+        where: { agentId: agent.id, runId: run.id, eventType: 'hard_requirements.applied' },
+        select: { payload: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.agentActivityLog.count({
+        where: { agentId: agent.id, runId: run.id, eventType: 'match.rejected_below_threshold' },
+      }),
+    ]);
+    const hrPayload = (hrApplied?.payload ?? null) as { passed?: number; poolSize?: number } | null;
+    const totalPool = hrPayload?.passed ?? hrPayload?.poolSize ?? 0;
+    const processed = scoredCount + belowThreshold + errorCount;
+
     const live: Record<string, unknown> = {
       scored: scoredCount,
       matched: matchedCount,
       errors: errorCount,
       sourceHits,
+      totalPool,
+      processed,
+      remaining: Math.max(0, totalPool - processed),
+      model,
+      provider,
     };
     if (adminOnly) {
       live.llmCallCount = llmCompletedEvents.length;

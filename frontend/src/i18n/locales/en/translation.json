@@ -2010,7 +2010,9 @@
         "ai": "AI",
         "insights": "Insights",
         "system": "System"
-      }
+      },
+      "agentManager": "Agent Manager",
+      "readOnly": "view"
     },
     "dashboard": {
       "welcome": "Welcome back",
@@ -4247,50 +4249,156 @@
       "duration": "duration"
     },
     "memory": {
-        "users": "Users with memory data",
-        "searchPlaceholder": "Search by email or name…",
-        "showingN": "{{shown}} of {{total}} users",
-        "noUsers": "No users match",
-        "pickUser": "Select a user to view their memory data",
-        "interactions": "interactions",
-        "breakGlass": "BREAK-GLASS · AUDITED",
-        "tabs": {
-          "profile": "Profile",
-          "memories": "Memories",
-          "interactions": "Interactions",
-          "audit": "Audit"
-        },
-        "signalsLearned": "Signals learned",
-        "agents": "Agents",
-        "lastRebuilt": "Last rebuilt",
-        "topSkills": "Top skills",
-        "topAntiSkills": "Top anti-skills",
-        "topLocations": "Top locations",
-        "topIndustries": "Top industries",
-        "rebuild": "Rebuild profile",
-        "rebuilding": "Rebuilding…",
-        "reset": "Reset profile",
-        "confirmReset": "Reset this user's memory profile? This cannot be undone.",
-        "buildProfile": "Build profile now",
-        "noProfile": "No recruiter profile yet.",
-        "noMemories": "No memories yet for this user.",
-        "noInteractions": "No interaction events captured yet.",
-        "noAudit": "No audit entries yet.",
-        "auditHint": "Every admin action on this user's data is captured here. Audit entries are immutable.",
-        "lastSeen": "Last seen",
-        "expires": "expires",
-        "confirmDelete": "Delete this memory? Audit will retain the record.",
-        "saveFailed": "Failed to save",
-        "editModal": {
-          "title": "Edit memory",
-          "warning": "This is a break-glass edit. The action, before/after, and optional reason are stored in an immutable audit log.",
-          "content": "Content",
-          "weight": "Weight (0-10)",
-          "reason": "Reason (optional, captured in audit log)",
-          "reasonPlaceholder": "e.g. support ticket #1234, correcting stale fact"
-        }
+      "users": "Users with memory data",
+      "searchPlaceholder": "Search by email or name…",
+      "showingN": "{{shown}} of {{total}} users",
+      "noUsers": "No users match",
+      "pickUser": "Select a user to view their memory data",
+      "interactions": "interactions",
+      "breakGlass": "BREAK-GLASS · AUDITED",
+      "tabs": {
+        "profile": "Profile",
+        "memories": "Memories",
+        "interactions": "Interactions",
+        "audit": "Audit"
+      },
+      "signalsLearned": "Signals learned",
+      "agents": "Agents",
+      "lastRebuilt": "Last rebuilt",
+      "topSkills": "Top skills",
+      "topAntiSkills": "Top anti-skills",
+      "topLocations": "Top locations",
+      "topIndustries": "Top industries",
+      "rebuild": "Rebuild profile",
+      "rebuilding": "Rebuilding…",
+      "reset": "Reset profile",
+      "confirmReset": "Reset this user's memory profile? This cannot be undone.",
+      "buildProfile": "Build profile now",
+      "noProfile": "No recruiter profile yet.",
+      "noMemories": "No memories yet for this user.",
+      "noInteractions": "No interaction events captured yet.",
+      "noAudit": "No audit entries yet.",
+      "auditHint": "Every admin action on this user's data is captured here. Audit entries are immutable.",
+      "lastSeen": "Last seen",
+      "expires": "expires",
+      "confirmDelete": "Delete this memory? Audit will retain the record.",
+      "saveFailed": "Failed to save",
+      "editModal": {
+        "title": "Edit memory",
+        "warning": "This is a break-glass edit. The action, before/after, and optional reason are stored in an immutable audit log.",
+        "content": "Content",
+        "weight": "Weight (0-10)",
+        "reason": "Reason (optional, captured in audit log)",
+        "reasonPlaceholder": "e.g. support ticket #1234, correcting stale fact"
       }
-  
+    },
+    "agentManager": {
+      "title": "Agent Manager",
+      "heading": "Agent Manager",
+      "subheading": "Fleet-wide control plane for AI agents.",
+      "forbidden": {
+        "title": "Admin only",
+        "body": "You need an administrator or internal account to access the Agent Manager."
+      },
+      "tabs": {
+        "agents": "Agents",
+        "runs": "Runs",
+        "cost": "Cost"
+      },
+      "summary": {
+        "totalAgents": "Agents",
+        "activeAgents": "Active agents",
+        "liveRuns": "Live runs",
+        "staleRuns": "Stale runs",
+        "todayRuns": "Today · runs",
+        "todayCost": "Today · spend",
+        "todayTokens": "Today · tokens",
+        "totalRuns": "Total runs",
+        "runSweep": "Run sweep",
+        "sweeping": "Sweeping…",
+        "sweptN": "Reaped {{n}} stale run(s)",
+        "sweepFailed": "Sweep failed",
+        "sweepHint": "Reap any run with no heartbeat for {{n}} min."
+      },
+      "filters": {
+        "search": "Search",
+        "searchPh": "name or description…",
+        "status": "Status",
+        "calibration": "Calibration",
+        "stuckOnly": "Stuck runs only",
+        "staleOnly": "Stale only",
+        "durationGt": "Duration > (sec)",
+        "costGt": "Cost > ($)",
+        "any": "Any",
+        "totalRows": "{{n}} agent(s)",
+        "totalRunRows": "{{n}} run(s)"
+      },
+      "bulk": {
+        "selected": "{{n}} selected",
+        "clear": "Clear",
+        "partial": "{{ok}} succeeded, {{failed}} failed",
+        "failed": "Bulk action failed",
+        "confirmDelete": "Permanently delete {{n}} agent(s)? This cannot be undone."
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "markFailed": "Mark failed…",
+        "pause": "Pause",
+        "unpause": "Unpause",
+        "delete": "Delete",
+        "forceRun": "Force re-run"
+      },
+      "cols": {
+        "name": "Name",
+        "owner": "Owner",
+        "status": "Status",
+        "calibration": "Calibration",
+        "live": "Live run",
+        "stats": "Pool",
+        "lastRun": "Last run",
+        "agent": "Agent",
+        "runStatus": "Status",
+        "duration": "Duration",
+        "cost": "Cost",
+        "tokens": "Tokens",
+        "candidates": "Cands",
+        "heartbeat": "Last beat",
+        "created": "Created"
+      },
+      "table": {
+        "empty": "No agents match the current filters.",
+        "emptyRuns": "No runs match the current filters."
+      },
+      "reason": {
+        "markFailedTitle": "Why are you marking these as failed?",
+        "placeholder": "e.g. Process restarted; executor process is dead."
+      },
+      "cost": {
+        "window": {
+          "today": "Today",
+          "7d": "Last 7 days",
+          "30d": "Last 30 days"
+        },
+        "totalRuns": "Runs",
+        "totalCost": "Spend",
+        "totalTokens": "Tokens",
+        "llmCalls": "LLM calls",
+        "byDay": "Spend by day",
+        "byUser": "By owner",
+        "byAgentTitle": "By agent",
+        "noData": "No data in window.",
+        "col": {
+          "name": "Name",
+          "runs": "Runs",
+          "cost": "Cost",
+          "tokens": "Tokens"
+        }
+      },
+      "readOnly": {
+        "title": "Read-only view",
+        "body": "Internal users can see the full fleet but cannot run bulk actions, cancel runs, or sweep. Ask an admin if you need to intervene."
+      }
+    }
   },
   "agents": {
     "title": "Agents",
@@ -4380,6 +4488,16 @@
           "warmingUp": "Warming up…"
         }
       },
+      "runDetail": {
+        "duration": "Duration",
+        "candidates": "Candidates",
+        "events": "Events",
+        "cost": "Cost",
+        "failReason": "Failure reason:",
+        "viewResults": "View results →",
+        "delete": "Delete",
+        "confirmDelete": "Delete this run and all its data? This cannot be undone."
+      },
       "review": {
         "title": "Review Profiles",
         "introTitle": "I've found initial matches. Please review these profiles and share your feedback.",
@@ -4403,9 +4521,9 @@
           "education": "Education",
           "skills": "Skills"
         },
-        "noExperience": "No experience data parsed from this resume.",
-        "noEducation": "No education data parsed from this resume.",
-        "noSkills": "No skills data parsed from this resume.",
+        "noExperience": "Agent is on it — work history will appear here.",
+        "noEducation": "Agent is on it — education details will appear here.",
+        "noSkills": "Agent is on it — skill map will appear here.",
         "unknownCompany": "Unknown",
         "skillGroups": {
           "all": "Skills",
@@ -4419,7 +4537,20 @@
         },
         "addCriteria": "Add Criteria",
         "editCriteria": "Edit Criteria",
-        "editCriteriaHint": "Pin criteria as mandatory or re-order by importance using "
+        "editCriteriaHint": "Pin criteria as mandatory or re-order by importance using ",
+        "status": {
+          "liked": "Liked",
+          "disliked": "Skipped",
+          "contacted": "Contacted",
+          "pending": "Pending",
+          "invited": "Invited"
+        },
+        "loadingExperience": "Agent is gathering work history…",
+        "workingExperience": "Agent is on it — work history will appear here.",
+        "loadingEducation": "Agent is gathering education details…",
+        "workingEducation": "Agent is on it — education details will appear here.",
+        "loadingSkills": "Agent is mapping skills…",
+        "workingSkills": "Agent is on it — skill map will appear here."
       },
       "criteria": {
         "title": "Criteria",
@@ -4677,17 +4808,22 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "contacted": "Contacted",
-      "all": "All"
+      "all": "All",
+      "liked": "Liked",
+      "skipped": "Skipped"
     },
     "stat": {
       "sourced": "Sourced",
       "approved": "Approved",
       "rejected": "Rejected",
-      "contacted": "Contacted"
+      "contacted": "Contacted",
+      "liked": "Liked",
+      "skipped": "Skipped"
     },
     "candidateStatus": {
       "contacted": "Contacted",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "disliked": "Skipped"
     },
     "pending": "Pending",
     "disapproved": "Disapproved",
@@ -4705,7 +4841,54 @@
     "collaborators": "Collaborators",
     "collaboratorsDesc": "These team members will be assigned to this project with you",
     "noCollaborators": "No collaborators selected",
-    "saveChanges": "Save Changes"
+    "saveChanges": "Save Changes",
+    "calibration": {
+      "headline": "Calibrating · approve {{n}} of {{total}} good profiles",
+      "subtext": "A skip resets the streak and brings 3 fresh profiles.",
+      "pending": "Awaiting first run",
+      "calibrating": "Calibrating",
+      "calibrated": "Active · sourcing"
+    },
+    "missionControl": {
+      "reviewPending": "Review {{n}} pending profile(s)",
+      "openWorkbench": "Open workbench",
+      "runAgain": "Run again",
+      "running": "Running…",
+      "runAgainHint": "(skips already-seen)",
+      "latestRun": "Latest run",
+      "runSummary": "{{sourced}} screened · {{matched}} surfaced · triggered by {{by}}",
+      "openRun": "Open run →"
+    },
+    "whyMatched": {
+      "title": "Why we matched this profile",
+      "good": "Good Match",
+      "potential": "Potential Fit",
+      "concern": "Worth Exploring",
+      "strengths": "Strengths",
+      "areasToExplore": "Areas to explore"
+    },
+    "rejection": {
+      "title": "Help Alex learn — why isn't this a fit?",
+      "subtitle": "The more detail you share, the smarter the next batch.",
+      "about": "Skipping {{name}}",
+      "tagsLabel": "Pick all that apply",
+      "tags": {
+        "wrong_industry": "Wrong industry",
+        "wrong_location": "Wrong location",
+        "too_junior": "Too junior",
+        "too_senior": "Too senior",
+        "missing_key_skill": "Missing key skill",
+        "wrong_background": "Wrong background",
+        "culture_mismatch": "Culture mismatch",
+        "other": "Other"
+      },
+      "reasonLabel": "Tell us more",
+      "reasonPlaceholder": "What's missing or off? E.g., they have HVAC experience but only residential — we need commercial.",
+      "hint": "Pick at least one tag, or write 10+ characters of feedback.",
+      "submit": "Skip Profile"
+    },
+    "like": "Like",
+    "review": "Review"
   },
   "interviewHub": {
     "title": "Interview Hub",
